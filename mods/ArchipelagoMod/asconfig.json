@@ -1,0 +1,19 @@
+{
+    "config": "air",
+    "type": "app",
+    "compilerOptions": {
+        "source-path": ["src"],
+        "output": "obj/ArchipelagoMod.swf",
+        "default-frame-rate": 30,
+        "default-size": { "width": 800, "height": 600 },
+        "target-player": "17.0",
+        "debug": false,
+        "omit-trace-statements": true,
+        "external-library-path": [
+            "D:/VS - TempPrograms/GCFW/BezelLibs/BezelModLoader.swc",
+            "D:/VS - TempPrograms/GCFW/BezelLibs/GemCraft.Frostborn.Wrath.swc",
+            "D:/VS - TempPrograms/GCFW/BezelLibs/ANEBytecodeEditor.swc"
+        ]
+    },
+    "mainClass": "ArchipelagoMod"
+}
