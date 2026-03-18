@@ -13,6 +13,19 @@ class Goal(Choice):
     default = 0
 
 
+class SkillPlacement(Choice):
+    """Controls where the 24 skill items are placed.
+
+    spread: Skills are placed anywhere in the world by the randomizer.
+    per_zone: One skill is guaranteed to appear somewhere within each zone (A–Z).
+    """
+    display_name = "Skill Placement"
+    option_spread = 0
+    option_per_zone = 1
+    default = 1
+
+
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal: Goal
+    skill_placement: SkillPlacement

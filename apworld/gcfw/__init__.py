@@ -10,7 +10,7 @@ from worlds.AutoWorld import WebWorld, World
 
 from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
-from .options import GCFWOptions
+from .options import GCFWOptions, SkillPlacement
 from .rules import set_rules
 
 
@@ -108,48 +108,50 @@ class GemcraftFrostbornWrathWorld(World):
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
 
-        # --- Zone-based skill placement ---
-        # One skill is locked to a random location inside each non-W, non-A zone.
-        # We have exactly 24 skills and 24 such zones, so they map 1-to-1.
-        stages = _load_stages()
+        # --- Skill placement ---
+        if self.options.skill_placement == SkillPlacement.option_per_zone:
+            # One skill is locked to a random location inside each non-W, non-A zone.
+            # We have exactly 24 skills and 24 such zones, so they map 1-to-1.
+            stages = _load_stages()
 
-        # Group in-scope stage str_ids by their zone letter (first character)
-        zone_stages: Dict[str, List[str]] = {}
-        for stage in stages:
-            if stage["loc_ap_id"] > 109:
-                continue
-            zone = stage["str_id"][0]
-            zone_stages.setdefault(zone, []).append(stage["str_id"])
+            # Group in-scope stage str_ids by their zone letter (first character)
+            zone_stages: Dict[str, List[str]] = {}
+            for stage in stages:
+                if stage["loc_ap_id"] > 109:
+                    continue
+                zone = stage["str_id"][0]
+                zone_stages.setdefault(zone, []).append(stage["str_id"])
 
-        # The zones that get a skill: every zone except W (starting) and A (endgame)
-        skill_zones = sorted(z for z in zone_stages if z not in ("W", "A"))
+            # The zones that get a skill: every zone except W (starting) and A (endgame)
+            skill_zones = sorted(z for z in zone_stages if z not in ("W", "A"))
 
-        all_skills = [name for name in item_table if name.endswith(" Skill")]
-        shuffled_skills = list(all_skills)
-        self.random.shuffle(shuffled_skills)
+            all_skills = [name for name in item_table if name.endswith(" Skill")]
+            shuffled_skills = list(all_skills)
+            self.random.shuffle(shuffled_skills)
 
-        placed_skills: set = set()
-        for zone, skill_name in zip(skill_zones, shuffled_skills):
-            stage_ids = list(zone_stages[zone])
-            self.random.shuffle(stage_ids)
-            placed = False
-            for chosen_stage in stage_ids:
-                suffixes = ["Journey", "Bonus"]
-                self.random.shuffle(suffixes)
-                for suffix in suffixes:
-                    loc_name = f"Complete {chosen_stage} - {suffix}"
-                    loc = self.multiworld.get_location(loc_name, self.player)
-                    if loc.item is None:
-                        loc.place_locked_item(self.create_item(skill_name))
-                        placed_skills.add(skill_name)
-                        placed = True
+            placed_skills: set = set()
+            for zone, skill_name in zip(skill_zones, shuffled_skills):
+                stage_ids = list(zone_stages[zone])
+                self.random.shuffle(stage_ids)
+                placed = False
+                for chosen_stage in stage_ids:
+                    suffixes = ["Journey", "Bonus"]
+                    self.random.shuffle(suffixes)
+                    for suffix in suffixes:
+                        loc_name = f"Complete {chosen_stage} - {suffix}"
+                        loc = self.multiworld.get_location(loc_name, self.player)
+                        if loc.item is None:
+                            loc.place_locked_item(self.create_item(skill_name))
+                            placed_skills.add(skill_name)
+                            placed = True
+                            break
+                    if placed:
                         break
-                if placed:
-                    break
 
-        # Remove placed skills from the shared item pool so counts stay balanced
-        for skill_name in placed_skills:
-            for item in self.multiworld.itempool:
-                if item.player == self.player and item.name == skill_name:
-                    self.multiworld.itempool.remove(item)
-                    break
+            # Remove placed skills from the shared item pool so counts stay balanced
+            for skill_name in placed_skills:
+                for item in self.multiworld.itempool:
+                    if item.player == self.player and item.name == skill_name:
+                        self.multiworld.itempool.remove(item)
+                        break
+        # else: spread — skills stay in the pool and are placed anywhere by the fill algorithm
