@@ -29,10 +29,18 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{stage['str_id']} Field Token"
         table[name] = ItemData(stage["item_ap_id"], ItemClassification.progression)
 
-    # Skills (useful — unlock gem types and tower abilities)
+    # Gem unlocks — Crit is progression because every non-W1 level requires it.
+    # Others are useful until specific level requirements are researched.
+    for gem in data["gem_unlocks"]:
+        name = f"{gem['name']} Gem Unlock"
+        cls = (ItemClassification.progression if gem["name"] == "Crit"
+               else ItemClassification.useful)
+        table[name] = ItemData(gem["ap_id"], cls)
+
+    # Skills — all progression: each is locked to a zone and all are required for A4
     for skill in data["skills"]:
         name = f"{skill['name']} Skill"
-        table[name] = ItemData(skill["ap_id"], ItemClassification.useful)
+        table[name] = ItemData(skill["ap_id"], ItemClassification.progression)
 
     # XP tiers (filler — help meet wizard level requirements)
     table["Small XP Bonus"]  = ItemData(500, ItemClassification.filler)

@@ -1,208 +1,2240 @@
 {
   "_notes": {
-    "item_id_buckets":     "Stages (Field Tokens): 1-199 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499",
+    "item_id_buckets": "Stages (Field Tokens): 1-199 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP/Filler: 500-599 | Gem Unlocks: 600-699",
     "location_id_buckets": "Stages (Journey): 1-199 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
-    "trial_locked_note":   "Some stages are only reachable via trial drops (FLDZ1, FLDA5, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5). Excluded from alpha scope."
+    "trial_locked_note": "Some stages are only reachable via trial drops (FLDZ1, FLDA5, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5). Excluded from alpha scope."
   },
-
+  "gem_unlocks": [
+    {
+      "game_id": 0,
+      "name": "Crit",
+      "color": "Yellow",
+      "ap_id": 600
+    },
+    {
+      "game_id": 1,
+      "name": "Leech",
+      "color": "Orange",
+      "ap_id": 601
+    },
+    {
+      "game_id": 2,
+      "name": "Bleed",
+      "color": "Red",
+      "ap_id": 602
+    },
+    {
+      "game_id": 3,
+      "name": "Armor Tear",
+      "color": "Purple",
+      "ap_id": 603
+    },
+    {
+      "game_id": 4,
+      "name": "Poison",
+      "color": "Green",
+      "ap_id": 604
+    },
+    {
+      "game_id": 5,
+      "name": "Slow",
+      "color": "Blue",
+      "ap_id": 605
+    }
+  ],
   "skills": [
-    { "game_id": 0,  "name": "Mana Stream",     "ap_id": 300 },
-    { "game_id": 1,  "name": "True Colors",      "ap_id": 301 },
-    { "game_id": 2,  "name": "Fusion",            "ap_id": 302, "note": "Unlocked by default" },
-    { "game_id": 3,  "name": "Orb of Presence",  "ap_id": 303 },
-    { "game_id": 4,  "name": "Resonance",         "ap_id": 304 },
-    { "game_id": 5,  "name": "Demolition",        "ap_id": 305 },
-    { "game_id": 6,  "name": "Critical Hit",      "ap_id": 306 },
-    { "game_id": 7,  "name": "Mana Leech",        "ap_id": 307 },
-    { "game_id": 8,  "name": "Bleeding",          "ap_id": 308 },
-    { "game_id": 9,  "name": "Armor Tearing",     "ap_id": 309 },
-    { "game_id": 10, "name": "Poison",            "ap_id": 310 },
-    { "game_id": 11, "name": "Slowing",           "ap_id": 311 },
-    { "game_id": 12, "name": "Freeze",            "ap_id": 312, "note": "Unlocked by default in some modes" },
-    { "game_id": 13, "name": "Whiteout",          "ap_id": 313 },
-    { "game_id": 14, "name": "Ice Shards",        "ap_id": 314 },
-    { "game_id": 15, "name": "Bolt",              "ap_id": 315 },
-    { "game_id": 16, "name": "Beam",              "ap_id": 316, "note": "Unlocked by default in some modes" },
-    { "game_id": 17, "name": "Barrage",           "ap_id": 317 },
-    { "game_id": 18, "name": "Fury",              "ap_id": 318 },
-    { "game_id": 19, "name": "Amplifiers",        "ap_id": 319 },
-    { "game_id": 20, "name": "Pylons",            "ap_id": 320 },
-    { "game_id": 21, "name": "Lanterns",          "ap_id": 321 },
-    { "game_id": 22, "name": "Traps",             "ap_id": 322 },
-    { "game_id": 23, "name": "Seeker Sense",      "ap_id": 323 }
+    {
+      "game_id": 0,
+      "name": "Mana Stream",
+      "ap_id": 300
+    },
+    {
+      "game_id": 1,
+      "name": "True Colors",
+      "ap_id": 301
+    },
+    {
+      "game_id": 2,
+      "name": "Fusion",
+      "ap_id": 302,
+      "note": "Unlocked by default"
+    },
+    {
+      "game_id": 3,
+      "name": "Orb of Presence",
+      "ap_id": 303
+    },
+    {
+      "game_id": 4,
+      "name": "Resonance",
+      "ap_id": 304
+    },
+    {
+      "game_id": 5,
+      "name": "Demolition",
+      "ap_id": 305
+    },
+    {
+      "game_id": 6,
+      "name": "Critical Hit",
+      "ap_id": 306
+    },
+    {
+      "game_id": 7,
+      "name": "Mana Leech",
+      "ap_id": 307
+    },
+    {
+      "game_id": 8,
+      "name": "Bleeding",
+      "ap_id": 308
+    },
+    {
+      "game_id": 9,
+      "name": "Armor Tearing",
+      "ap_id": 309
+    },
+    {
+      "game_id": 10,
+      "name": "Poison",
+      "ap_id": 310
+    },
+    {
+      "game_id": 11,
+      "name": "Slowing",
+      "ap_id": 311
+    },
+    {
+      "game_id": 12,
+      "name": "Freeze",
+      "ap_id": 312,
+      "note": "Unlocked by default in some modes"
+    },
+    {
+      "game_id": 13,
+      "name": "Whiteout",
+      "ap_id": 313
+    },
+    {
+      "game_id": 14,
+      "name": "Ice Shards",
+      "ap_id": 314
+    },
+    {
+      "game_id": 15,
+      "name": "Bolt",
+      "ap_id": 315
+    },
+    {
+      "game_id": 16,
+      "name": "Beam",
+      "ap_id": 316,
+      "note": "Unlocked by default in some modes"
+    },
+    {
+      "game_id": 17,
+      "name": "Barrage",
+      "ap_id": 317
+    },
+    {
+      "game_id": 18,
+      "name": "Fury",
+      "ap_id": 318
+    },
+    {
+      "game_id": 19,
+      "name": "Amplifiers",
+      "ap_id": 319
+    },
+    {
+      "game_id": 20,
+      "name": "Pylons",
+      "ap_id": 320
+    },
+    {
+      "game_id": 21,
+      "name": "Lanterns",
+      "ap_id": 321
+    },
+    {
+      "game_id": 22,
+      "name": "Traps",
+      "ap_id": 322
+    },
+    {
+      "game_id": 23,
+      "name": "Seeker Sense",
+      "ap_id": 323
+    }
   ],
-
   "battle_traits": [
-    { "game_id": 0,  "name": "Adaptive Carapace",    "ap_id": 400, "description": "After each shot taken, monsters gain damage reduction stacking up to a cap" },
-    { "game_id": 1,  "name": "Dark Masonry",          "ap_id": 401, "description": "Barricades, nests, beacons and watchtowers have more armor/HP; extra beacons spawn every 10 waves" },
-    { "game_id": 2,  "name": "Swarmling Domination",  "ap_id": 402, "description": "Swarmlings have reduced debuff duration and more speed; some reaver waves turn into swarmlings" },
-    { "game_id": 3,  "name": "Overcrowd",             "ap_id": 403, "description": "More monsters arrive each wave" },
-    { "game_id": 4,  "name": "Corrupted Banishment",  "ap_id": 404, "description": "Banished monsters return with more HP, armor, and shield layers" },
-    { "game_id": 5,  "name": "Awakening",             "ap_id": 405, "description": "Monster waves have increasing HP increment per wave" },
-    { "game_id": 6,  "name": "Insulation",            "ap_id": 406, "description": "Every monster enters with extra shield layers" },
-    { "game_id": 7,  "name": "Hatred",                "ap_id": 407, "description": "Monsters have more total HP" },
-    { "game_id": 8,  "name": "Swarmling Parasites",   "ap_id": 408, "description": "Killed monsters spawn 2 swarmlings with a portion of the monster's max HP" },
-    { "game_id": 9,  "name": "Haste",                 "ap_id": 409, "description": "Wave stones move faster" },
-    { "game_id": 10, "name": "Thick Air",             "ap_id": 410, "description": "Damage to monsters is capped at a fraction of their total HP per hit" },
-    { "game_id": 11, "name": "Vital Link",            "ap_id": 411, "description": "Each monster waiting to enter gives bonus HP to monsters already on the battlefield" },
-    { "game_id": 12, "name": "Giant Domination",      "ap_id": 412, "description": "Giants have thicker armor and more HP; some reaver waves turn into giants" },
-    { "game_id": 13, "name": "Strength in Numbers",   "ap_id": 413, "description": "Each monster on the battlefield gives all others extra non-destructible armor" },
-    { "game_id": 14, "name": "Ritual",                "ap_id": 414, "description": "Powerful enemy creatures may be lured to the battle" }
+    {
+      "game_id": 0,
+      "name": "Adaptive Carapace",
+      "ap_id": 400,
+      "description": "After each shot taken, monsters gain damage reduction stacking up to a cap"
+    },
+    {
+      "game_id": 1,
+      "name": "Dark Masonry",
+      "ap_id": 401,
+      "description": "Barricades, nests, beacons and watchtowers have more armor/HP; extra beacons spawn every 10 waves"
+    },
+    {
+      "game_id": 2,
+      "name": "Swarmling Domination",
+      "ap_id": 402,
+      "description": "Swarmlings have reduced debuff duration and more speed; some reaver waves turn into swarmlings"
+    },
+    {
+      "game_id": 3,
+      "name": "Overcrowd",
+      "ap_id": 403,
+      "description": "More monsters arrive each wave"
+    },
+    {
+      "game_id": 4,
+      "name": "Corrupted Banishment",
+      "ap_id": 404,
+      "description": "Banished monsters return with more HP, armor, and shield layers"
+    },
+    {
+      "game_id": 5,
+      "name": "Awakening",
+      "ap_id": 405,
+      "description": "Monster waves have increasing HP increment per wave"
+    },
+    {
+      "game_id": 6,
+      "name": "Insulation",
+      "ap_id": 406,
+      "description": "Every monster enters with extra shield layers"
+    },
+    {
+      "game_id": 7,
+      "name": "Hatred",
+      "ap_id": 407,
+      "description": "Monsters have more total HP"
+    },
+    {
+      "game_id": 8,
+      "name": "Swarmling Parasites",
+      "ap_id": 408,
+      "description": "Killed monsters spawn 2 swarmlings with a portion of the monster's max HP"
+    },
+    {
+      "game_id": 9,
+      "name": "Haste",
+      "ap_id": 409,
+      "description": "Wave stones move faster"
+    },
+    {
+      "game_id": 10,
+      "name": "Thick Air",
+      "ap_id": 410,
+      "description": "Damage to monsters is capped at a fraction of their total HP per hit"
+    },
+    {
+      "game_id": 11,
+      "name": "Vital Link",
+      "ap_id": 411,
+      "description": "Each monster waiting to enter gives bonus HP to monsters already on the battlefield"
+    },
+    {
+      "game_id": 12,
+      "name": "Giant Domination",
+      "ap_id": 412,
+      "description": "Giants have thicker armor and more HP; some reaver waves turn into giants"
+    },
+    {
+      "game_id": 13,
+      "name": "Strength in Numbers",
+      "ap_id": 413,
+      "description": "Each monster on the battlefield gives all others extra non-destructible armor"
+    },
+    {
+      "game_id": 14,
+      "name": "Ritual",
+      "ap_id": 414,
+      "description": "Powerful enemy creatures may be lured to the battle"
+    }
   ],
-
   "map_tiles": [
-    { "game_id": 0,  "ap_id": 200 },
-    { "game_id": 1,  "ap_id": 201 },
-    { "game_id": 2,  "ap_id": 202 },
-    { "game_id": 3,  "ap_id": 203 },
-    { "game_id": 4,  "ap_id": 204 },
-    { "game_id": 5,  "ap_id": 205 },
-    { "game_id": 6,  "ap_id": 206 },
-    { "game_id": 7,  "ap_id": 207 },
-    { "game_id": 8,  "ap_id": 208 },
-    { "game_id": 9,  "ap_id": 209 },
-    { "game_id": 10, "ap_id": 210 },
-    { "game_id": 11, "ap_id": 211 },
-    { "game_id": 12, "ap_id": 212 },
-    { "game_id": 13, "ap_id": 213 },
-    { "game_id": 14, "ap_id": 214 },
-    { "game_id": 15, "ap_id": 215 },
-    { "game_id": 16, "ap_id": 216 },
-    { "game_id": 17, "ap_id": 217 },
-    { "game_id": 18, "ap_id": 218 },
-    { "game_id": 19, "ap_id": 219 },
-    { "game_id": 20, "ap_id": 220 },
-    { "game_id": 21, "ap_id": 221 },
-    { "game_id": 22, "ap_id": 222 },
-    { "game_id": 23, "ap_id": 223 },
-    { "game_id": 24, "ap_id": 224 },
-    { "game_id": 25, "ap_id": 225 }
+    {
+      "game_id": 0,
+      "ap_id": 200
+    },
+    {
+      "game_id": 1,
+      "ap_id": 201
+    },
+    {
+      "game_id": 2,
+      "ap_id": 202
+    },
+    {
+      "game_id": 3,
+      "ap_id": 203
+    },
+    {
+      "game_id": 4,
+      "ap_id": 204
+    },
+    {
+      "game_id": 5,
+      "ap_id": 205
+    },
+    {
+      "game_id": 6,
+      "ap_id": 206
+    },
+    {
+      "game_id": 7,
+      "ap_id": 207
+    },
+    {
+      "game_id": 8,
+      "ap_id": 208
+    },
+    {
+      "game_id": 9,
+      "ap_id": 209
+    },
+    {
+      "game_id": 10,
+      "ap_id": 210
+    },
+    {
+      "game_id": 11,
+      "ap_id": 211
+    },
+    {
+      "game_id": 12,
+      "ap_id": 212
+    },
+    {
+      "game_id": 13,
+      "ap_id": 213
+    },
+    {
+      "game_id": 14,
+      "ap_id": 214
+    },
+    {
+      "game_id": 15,
+      "ap_id": 215
+    },
+    {
+      "game_id": 16,
+      "ap_id": 216
+    },
+    {
+      "game_id": 17,
+      "ap_id": 217
+    },
+    {
+      "game_id": 18,
+      "ap_id": 218
+    },
+    {
+      "game_id": 19,
+      "ap_id": 219
+    },
+    {
+      "game_id": 20,
+      "ap_id": 220
+    },
+    {
+      "game_id": 21,
+      "ap_id": 221
+    },
+    {
+      "game_id": 22,
+      "ap_id": 222
+    },
+    {
+      "game_id": 23,
+      "ap_id": 223
+    },
+    {
+      "game_id": 24,
+      "ap_id": 224
+    },
+    {
+      "game_id": 25,
+      "ap_id": 225
+    }
   ],
-
   "stages": [
-    { "str_id": "W1", "type": "NORMAL",        "item_ap_id": null,  "loc_ap_id": 1,   "note": "Starting stage — no field token needed", "unlocks": ["W2"] },
-    { "str_id": "W2", "type": "NORMAL",        "item_ap_id": 1,     "loc_ap_id": 2,   "unlocks": ["W3"] },
-    { "str_id": "W3", "type": "STORY_RELATED", "item_ap_id": 2,     "loc_ap_id": 3,   "unlocks": ["W4"] },
-    { "str_id": "W4", "type": "EPIC",          "item_ap_id": 3,     "loc_ap_id": 4,   "unlocks": ["S1"] },
-    { "str_id": "S1", "type": "NORMAL",        "item_ap_id": 4,     "loc_ap_id": 5,   "unlocks": ["S2", "S3"] },
-    { "str_id": "S2", "type": "NORMAL",        "item_ap_id": 5,     "loc_ap_id": 6,   "unlocks": [] },
-    { "str_id": "S3", "type": "NORMAL",        "item_ap_id": 6,     "loc_ap_id": 7,   "unlocks": ["S4"] },
-    { "str_id": "S4", "type": "EPIC",          "item_ap_id": 7,     "loc_ap_id": 8,   "unlocks": ["V1"] },
-    { "str_id": "V1", "type": "NORMAL",        "item_ap_id": 8,     "loc_ap_id": 9,   "unlocks": ["V2"] },
-    { "str_id": "V2", "type": "NORMAL",        "item_ap_id": 9,     "loc_ap_id": 10,  "unlocks": ["V3", "V4"] },
-    { "str_id": "V3", "type": "NORMAL",        "item_ap_id": 10,    "loc_ap_id": 11,  "unlocks": [] },
-    { "str_id": "V4", "type": "EPIC",          "item_ap_id": 11,    "loc_ap_id": 12,  "unlocks": ["R1"] },
-    { "str_id": "R1", "type": "NORMAL",        "item_ap_id": 12,    "loc_ap_id": 13,  "unlocks": ["R2"] },
-    { "str_id": "R2", "type": "EPIC",          "item_ap_id": 13,    "loc_ap_id": 14,  "unlocks": ["Q1"] },
-    { "str_id": "R3", "type": "NORMAL",        "item_ap_id": 14,    "loc_ap_id": 15,  "unlocks": ["R4"] },
-    { "str_id": "R4", "type": "NORMAL",        "item_ap_id": 15,    "loc_ap_id": 16,  "unlocks": ["R5"] },
-    { "str_id": "R5", "type": "EPIC",          "item_ap_id": 16,    "loc_ap_id": 17,  "unlocks": ["O1", "N1"] },
-    { "str_id": "Q1", "type": "NORMAL",        "item_ap_id": 17,    "loc_ap_id": 18,  "unlocks": ["Q2"] },
-    { "str_id": "Q2", "type": "NORMAL",        "item_ap_id": 18,    "loc_ap_id": 19,  "unlocks": ["Q3"] },
-    { "str_id": "Q3", "type": "NORMAL",        "item_ap_id": 19,    "loc_ap_id": 20,  "unlocks": ["Q4", "Q5"] },
-    { "str_id": "Q4", "type": "EPIC",          "item_ap_id": 20,    "loc_ap_id": 21,  "unlocks": ["T1"] },
-    { "str_id": "Q5", "type": "NORMAL",        "item_ap_id": 21,    "loc_ap_id": 22,  "unlocks": ["R3"] },
-    { "str_id": "T1", "type": "NORMAL",        "item_ap_id": 22,    "loc_ap_id": 23,  "unlocks": ["T2"] },
-    { "str_id": "T2", "type": "STORY_RELATED", "item_ap_id": 23,    "loc_ap_id": 24,  "unlocks": ["T3"] },
-    { "str_id": "T3", "type": "NORMAL",        "item_ap_id": 24,    "loc_ap_id": 25,  "unlocks": ["T4"] },
-    { "str_id": "T4", "type": "EPIC",          "item_ap_id": 25,    "loc_ap_id": 26,  "unlocks": ["U1"] },
-    { "str_id": "U1", "type": "NORMAL",        "item_ap_id": 26,    "loc_ap_id": 27,  "unlocks": ["U2", "U3"] },
-    { "str_id": "U2", "type": "NORMAL",        "item_ap_id": 27,    "loc_ap_id": 28,  "unlocks": ["U4"] },
-    { "str_id": "U3", "type": "NORMAL",        "item_ap_id": 28,    "loc_ap_id": 29,  "unlocks": [] },
-    { "str_id": "U4", "type": "EPIC",          "item_ap_id": 29,    "loc_ap_id": 30,  "unlocks": ["Y1"] },
-    { "str_id": "Y1", "type": "NORMAL",        "item_ap_id": 30,    "loc_ap_id": 31,  "unlocks": ["Y2"] },
-    { "str_id": "Y2", "type": "NORMAL",        "item_ap_id": 31,    "loc_ap_id": 32,  "unlocks": ["Y3"] },
-    { "str_id": "Y3", "type": "STORY_RELATED", "item_ap_id": 32,    "loc_ap_id": 33,  "unlocks": ["Y4"] },
-    { "str_id": "Y4", "type": "EPIC",          "item_ap_id": 33,    "loc_ap_id": 34,  "unlocks": ["X1"] },
-    { "str_id": "X1", "type": "NORMAL",        "item_ap_id": 34,    "loc_ap_id": 35,  "unlocks": ["X2", "X3"] },
-    { "str_id": "X2", "type": "NORMAL",        "item_ap_id": 35,    "loc_ap_id": 36,  "unlocks": [] },
-    { "str_id": "X3", "type": "NORMAL",        "item_ap_id": 36,    "loc_ap_id": 37,  "unlocks": ["X4"] },
-    { "str_id": "X4", "type": "EPIC",          "item_ap_id": 37,    "loc_ap_id": 38,  "unlocks": [] },
-    { "str_id": "Z1", "type": "NORMAL",        "item_ap_id": 38,    "loc_ap_id": 39,  "unlocks": ["Z2", "Z3", "Z4"] },
-    { "str_id": "Z2", "type": "NORMAL",        "item_ap_id": 39,    "loc_ap_id": 40,  "unlocks": [] },
-    { "str_id": "Z3", "type": "NORMAL",        "item_ap_id": 40,    "loc_ap_id": 41,  "unlocks": [] },
-    { "str_id": "Z4", "type": "NORMAL",        "item_ap_id": 41,    "loc_ap_id": 42,  "unlocks": [] },
-    { "str_id": "O1", "type": "NORMAL",        "item_ap_id": 42,    "loc_ap_id": 43,  "unlocks": ["O2", "O3"] },
-    { "str_id": "O2", "type": "NORMAL",        "item_ap_id": 43,    "loc_ap_id": 44,  "unlocks": [] },
-    { "str_id": "O3", "type": "NORMAL",        "item_ap_id": 44,    "loc_ap_id": 45,  "unlocks": ["O4"] },
-    { "str_id": "O4", "type": "EPIC",          "item_ap_id": 45,    "loc_ap_id": 46,  "unlocks": ["P1"] },
-    { "str_id": "N1", "type": "NORMAL",        "item_ap_id": 46,    "loc_ap_id": 47,  "unlocks": ["N2", "N3"] },
-    { "str_id": "N2", "type": "NORMAL",        "item_ap_id": 47,    "loc_ap_id": 48,  "unlocks": [] },
-    { "str_id": "N3", "type": "NORMAL",        "item_ap_id": 48,    "loc_ap_id": 49,  "unlocks": [] },
-    { "str_id": "N4", "type": "NORMAL",        "item_ap_id": 49,    "loc_ap_id": 50,  "unlocks": [] },
-    { "str_id": "N5", "type": "NORMAL",        "item_ap_id": 50,    "loc_ap_id": 51,  "unlocks": [] },
-    { "str_id": "P1", "type": "NORMAL",        "item_ap_id": 51,    "loc_ap_id": 52,  "unlocks": ["P2", "P3"] },
-    { "str_id": "P2", "type": "NORMAL",        "item_ap_id": 52,    "loc_ap_id": 53,  "unlocks": [] },
-    { "str_id": "P3", "type": "NORMAL",        "item_ap_id": 53,    "loc_ap_id": 54,  "unlocks": ["P4", "P5"] },
-    { "str_id": "P4", "type": "EPIC",          "item_ap_id": 54,    "loc_ap_id": 55,  "unlocks": ["L1"] },
-    { "str_id": "P5", "type": "NORMAL",        "item_ap_id": 55,    "loc_ap_id": 56,  "unlocks": [] },
-    { "str_id": "L1", "type": "NORMAL",        "item_ap_id": 56,    "loc_ap_id": 57,  "unlocks": ["L2"] },
-    { "str_id": "L2", "type": "NORMAL",        "item_ap_id": 57,    "loc_ap_id": 58,  "unlocks": ["L3"] },
-    { "str_id": "L3", "type": "NORMAL",        "item_ap_id": 58,    "loc_ap_id": 59,  "unlocks": ["L4", "L5"] },
-    { "str_id": "L4", "type": "EPIC",          "item_ap_id": 59,    "loc_ap_id": 60,  "unlocks": ["K1"] },
-    { "str_id": "L5", "type": "EPIC",          "item_ap_id": 60,    "loc_ap_id": 61,  "unlocks": ["H1"] },
-    { "str_id": "K1", "type": "STORY_RELATED", "item_ap_id": 61,    "loc_ap_id": 62,  "unlocks": ["K2"] },
-    { "str_id": "K2", "type": "NORMAL",        "item_ap_id": 62,    "loc_ap_id": 63,  "unlocks": ["K3"] },
-    { "str_id": "K3", "type": "NORMAL",        "item_ap_id": 63,    "loc_ap_id": 64,  "unlocks": ["K4"] },
-    { "str_id": "K4", "type": "EPIC",          "item_ap_id": 64,    "loc_ap_id": 65,  "unlocks": ["G1"] },
-    { "str_id": "H1", "type": "NORMAL",        "item_ap_id": 65,    "loc_ap_id": 66,  "unlocks": ["H2"] },
-    { "str_id": "H2", "type": "NORMAL",        "item_ap_id": 66,    "loc_ap_id": 67,  "unlocks": ["H3"] },
-    { "str_id": "H3", "type": "TILE_GIVING",   "item_ap_id": 67,    "loc_ap_id": 68,  "unlocks": ["H4"] },
-    { "str_id": "H4", "type": "NORMAL",        "item_ap_id": 68,    "loc_ap_id": 69,  "unlocks": ["E1"] },
-    { "str_id": "G1", "type": "NORMAL",        "item_ap_id": 69,    "loc_ap_id": 70,  "unlocks": ["G2", "G3", "J1"] },
-    { "str_id": "G2", "type": "NORMAL",        "item_ap_id": 70,    "loc_ap_id": 71,  "unlocks": [] },
-    { "str_id": "G3", "type": "EPIC",          "item_ap_id": 71,    "loc_ap_id": 72,  "unlocks": ["M1", "G4"] },
-    { "str_id": "G4", "type": "TILE_GIVING",   "item_ap_id": 72,    "loc_ap_id": 73,  "unlocks": ["F1"] },
-    { "str_id": "J1", "type": "NORMAL",        "item_ap_id": 73,    "loc_ap_id": 74,  "unlocks": ["J2", "J3"] },
-    { "str_id": "J2", "type": "NORMAL",        "item_ap_id": 74,    "loc_ap_id": 75,  "unlocks": [] },
-    { "str_id": "J3", "type": "NORMAL",        "item_ap_id": 75,    "loc_ap_id": 76,  "unlocks": ["J4"] },
-    { "str_id": "J4", "type": "TILE_GIVING",   "item_ap_id": 76,    "loc_ap_id": 77,  "unlocks": [] },
-    { "str_id": "M1", "type": "NORMAL",        "item_ap_id": 77,    "loc_ap_id": 78,  "unlocks": ["M2"] },
-    { "str_id": "M2", "type": "NORMAL",        "item_ap_id": 78,    "loc_ap_id": 79,  "unlocks": ["M3"] },
-    { "str_id": "M3", "type": "NORMAL",        "item_ap_id": 79,    "loc_ap_id": 80,  "unlocks": ["M4", "N5"] },
-    { "str_id": "M4", "type": "NORMAL",        "item_ap_id": 80,    "loc_ap_id": 81,  "unlocks": ["N4"] },
-    { "str_id": "F1", "type": "NORMAL",        "item_ap_id": 81,    "loc_ap_id": 82,  "unlocks": ["F2"] },
-    { "str_id": "F2", "type": "NORMAL",        "item_ap_id": 82,    "loc_ap_id": 83,  "unlocks": [] },
-    { "str_id": "F3", "type": "NORMAL",        "item_ap_id": 83,    "loc_ap_id": 84,  "unlocks": ["F4"] },
-    { "str_id": "F4", "type": "NORMAL",        "item_ap_id": 84,    "loc_ap_id": 85,  "unlocks": [] },
-    { "str_id": "E1", "type": "NORMAL",        "item_ap_id": 85,    "loc_ap_id": 86,  "unlocks": ["E2"] },
-    { "str_id": "E2", "type": "NORMAL",        "item_ap_id": 86,    "loc_ap_id": 87,  "unlocks": ["E3"] },
-    { "str_id": "E3", "type": "NORMAL",        "item_ap_id": 87,    "loc_ap_id": 88,  "unlocks": ["E4"] },
-    { "str_id": "E4", "type": "EPIC",          "item_ap_id": 88,    "loc_ap_id": 89,  "unlocks": ["D1", "B1"] },
-    { "str_id": "D1", "type": "NORMAL",        "item_ap_id": 89,    "loc_ap_id": 90,  "unlocks": ["D2"] },
-    { "str_id": "D2", "type": "NORMAL",        "item_ap_id": 90,    "loc_ap_id": 91,  "unlocks": ["D3", "D4"] },
-    { "str_id": "D3", "type": "EPIC",          "item_ap_id": 91,    "loc_ap_id": 92,  "unlocks": ["C1"] },
-    { "str_id": "D4", "type": "NORMAL",        "item_ap_id": 92,    "loc_ap_id": 93,  "unlocks": [] },
-    { "str_id": "B1", "type": "NORMAL",        "item_ap_id": 93,    "loc_ap_id": 94,  "unlocks": ["B2"] },
-    { "str_id": "B2", "type": "NORMAL",        "item_ap_id": 94,    "loc_ap_id": 95,  "unlocks": ["B3", "B4"] },
-    { "str_id": "B3", "type": "NORMAL",        "item_ap_id": 95,    "loc_ap_id": 96,  "unlocks": [] },
-    { "str_id": "B4", "type": "NORMAL",        "item_ap_id": 96,    "loc_ap_id": 97,  "unlocks": [] },
-    { "str_id": "C1", "type": "NORMAL",        "item_ap_id": 97,    "loc_ap_id": 98,  "unlocks": ["C2", "C3"] },
-    { "str_id": "C2", "type": "NORMAL",        "item_ap_id": 98,    "loc_ap_id": 99,  "unlocks": [] },
-    { "str_id": "C3", "type": "NORMAL",        "item_ap_id": 99,    "loc_ap_id": 100, "unlocks": ["C4"] },
-    { "str_id": "C4", "type": "TILE_GIVING",   "item_ap_id": 100,   "loc_ap_id": 101, "unlocks": ["C5"] },
-    { "str_id": "C5", "type": "EPIC",          "item_ap_id": 101,   "loc_ap_id": 102, "unlocks": ["A1"] },
-    { "str_id": "A1", "type": "NORMAL",        "item_ap_id": 102,   "loc_ap_id": 103, "unlocks": ["A2"] },
-    { "str_id": "A2", "type": "NORMAL",        "item_ap_id": 103,   "loc_ap_id": 104, "unlocks": ["A3"] },
-    { "str_id": "A3", "type": "NORMAL",        "item_ap_id": 104,   "loc_ap_id": 105, "unlocks": ["A4"] },
-    { "str_id": "A4", "type": "NORMAL",        "item_ap_id": 105,   "loc_ap_id": 106, "unlocks": [] },
-    { "str_id": "I2", "type": "NORMAL",        "item_ap_id": 106,   "loc_ap_id": 107, "unlocks": ["I3"] },
-    { "str_id": "I3", "type": "NORMAL",        "item_ap_id": 107,   "loc_ap_id": 108, "unlocks": ["I4"] },
-    { "str_id": "I4", "type": "NORMAL",        "item_ap_id": 108,   "loc_ap_id": 109, "unlocks": [] },
-
-    { "str_id": "W5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 110, "note": "Secret — unlock method TBD, excluded from alpha" },
-    { "str_id": "Z5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 111, "note": "Secret — trial-locked (FLDZ5 in Z4 trial drop)" },
-    { "str_id": "T5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 112, "note": "Secret — trial-locked" },
-    { "str_id": "R6", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 113, "note": "Secret — trial-locked (FLDR6 in N1 trial drop)" },
-    { "str_id": "P6", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 114, "note": "Secret — trial-locked (FLDP6 in P5 trial drop)" },
-    { "str_id": "K5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 115, "note": "Secret — trial-locked (FLDK5 in G2 trial drop)" },
-    { "str_id": "H5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 116, "note": "Secret — trial-locked (FLDH5 in H2 trial drop)" },
-    { "str_id": "G5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 117, "note": "Secret — unlock method TBD" },
-    { "str_id": "F5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 118, "note": "Secret — trial-locked" },
-    { "str_id": "E5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 119, "note": "Secret — trial-locked" },
-    { "str_id": "B5", "type": "SECRET",        "item_ap_id": null,  "loc_ap_id": 120, "note": "Secret — trial-locked (FLDB5 in B2 trial drop)" },
-    { "str_id": "A5", "type": "NORMAL",        "item_ap_id": null,  "loc_ap_id": 121, "note": "Trial-locked (FLDA5 in A3 trial drop)" },
-    { "str_id": "A6", "type": "NORMAL",        "item_ap_id": null,  "loc_ap_id": 122, "note": "Trial-locked (FLDA6 in A4 trial drop)" }
+    {
+      "str_id": "W1",
+      "type": "NORMAL",
+      "item_ap_id": null,
+      "loc_ap_id": 1,
+      "note": "Starting stage — no field token needed",
+      "unlocks": [
+        "W2"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 6
+    },
+    {
+      "str_id": "W2",
+      "type": "NORMAL",
+      "item_ap_id": 1,
+      "loc_ap_id": 2,
+      "unlocks": [
+        "W3"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 8
+    },
+    {
+      "str_id": "W3",
+      "type": "STORY_RELATED",
+      "item_ap_id": 2,
+      "loc_ap_id": 3,
+      "unlocks": [
+        "W4"
+      ],
+      "available_gems": [
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 12
+    },
+    {
+      "str_id": "W4",
+      "type": "EPIC",
+      "item_ap_id": 3,
+      "loc_ap_id": 4,
+      "unlocks": [
+        "S1"
+      ],
+      "available_gems": [
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 14
+    },
+    {
+      "str_id": "S1",
+      "type": "NORMAL",
+      "item_ap_id": 4,
+      "loc_ap_id": 5,
+      "unlocks": [
+        "S2",
+        "S3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 14
+    },
+    {
+      "str_id": "S2",
+      "type": "NORMAL",
+      "item_ap_id": 5,
+      "loc_ap_id": 6,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 16
+    },
+    {
+      "str_id": "S3",
+      "type": "NORMAL",
+      "item_ap_id": 6,
+      "loc_ap_id": 7,
+      "unlocks": [
+        "S4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 14
+    },
+    {
+      "str_id": "S4",
+      "type": "EPIC",
+      "item_ap_id": 7,
+      "loc_ap_id": 8,
+      "unlocks": [
+        "V1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 20
+    },
+    {
+      "str_id": "V1",
+      "type": "NORMAL",
+      "item_ap_id": 8,
+      "loc_ap_id": 9,
+      "unlocks": [
+        "V2"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 20
+    },
+    {
+      "str_id": "V2",
+      "type": "NORMAL",
+      "item_ap_id": 9,
+      "loc_ap_id": 10,
+      "unlocks": [
+        "V3",
+        "V4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech"
+      ],
+      "required_skills": [],
+      "wave_count": 22
+    },
+    {
+      "str_id": "V3",
+      "type": "NORMAL",
+      "item_ap_id": 10,
+      "loc_ap_id": 11,
+      "unlocks": [],
+      "available_gems": [
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 24
+    },
+    {
+      "str_id": "V4",
+      "type": "EPIC",
+      "item_ap_id": 11,
+      "loc_ap_id": 12,
+      "unlocks": [
+        "R1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 24
+    },
+    {
+      "str_id": "R1",
+      "type": "NORMAL",
+      "item_ap_id": 12,
+      "loc_ap_id": 13,
+      "unlocks": [
+        "R2"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 22
+    },
+    {
+      "str_id": "R2",
+      "type": "EPIC",
+      "item_ap_id": 13,
+      "loc_ap_id": 14,
+      "unlocks": [
+        "Q1"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 22
+    },
+    {
+      "str_id": "R3",
+      "type": "NORMAL",
+      "item_ap_id": 14,
+      "loc_ap_id": 15,
+      "unlocks": [
+        "R4"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "R4",
+      "type": "NORMAL",
+      "item_ap_id": 15,
+      "loc_ap_id": 16,
+      "unlocks": [
+        "R5"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "R5",
+      "type": "EPIC",
+      "item_ap_id": 16,
+      "loc_ap_id": 17,
+      "unlocks": [
+        "O1",
+        "N1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 32
+    },
+    {
+      "str_id": "Q1",
+      "type": "NORMAL",
+      "item_ap_id": 17,
+      "loc_ap_id": 18,
+      "unlocks": [
+        "Q2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 24
+    },
+    {
+      "str_id": "Q2",
+      "type": "NORMAL",
+      "item_ap_id": 18,
+      "loc_ap_id": 19,
+      "unlocks": [
+        "Q3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 22
+    },
+    {
+      "str_id": "Q3",
+      "type": "NORMAL",
+      "item_ap_id": 19,
+      "loc_ap_id": 20,
+      "unlocks": [
+        "Q4",
+        "Q5"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 24
+    },
+    {
+      "str_id": "Q4",
+      "type": "EPIC",
+      "item_ap_id": 20,
+      "loc_ap_id": 21,
+      "unlocks": [
+        "T1"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 26
+    },
+    {
+      "str_id": "Q5",
+      "type": "NORMAL",
+      "item_ap_id": 21,
+      "loc_ap_id": 22,
+      "unlocks": [
+        "R3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 26
+    },
+    {
+      "str_id": "T1",
+      "type": "NORMAL",
+      "item_ap_id": 22,
+      "loc_ap_id": 23,
+      "unlocks": [
+        "T2"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 26
+    },
+    {
+      "str_id": "T2",
+      "type": "STORY_RELATED",
+      "item_ap_id": 23,
+      "loc_ap_id": 24,
+      "unlocks": [
+        "T3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech"
+      ],
+      "required_skills": [],
+      "wave_count": 28
+    },
+    {
+      "str_id": "T3",
+      "type": "NORMAL",
+      "item_ap_id": 24,
+      "loc_ap_id": 25,
+      "unlocks": [
+        "T4"
+      ],
+      "available_gems": [
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 28
+    },
+    {
+      "str_id": "T4",
+      "type": "EPIC",
+      "item_ap_id": 25,
+      "loc_ap_id": 26,
+      "unlocks": [
+        "U1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "U1",
+      "type": "NORMAL",
+      "item_ap_id": 26,
+      "loc_ap_id": 27,
+      "unlocks": [
+        "U2",
+        "U3"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "U2",
+      "type": "NORMAL",
+      "item_ap_id": 27,
+      "loc_ap_id": 28,
+      "unlocks": [
+        "U4"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 32
+    },
+    {
+      "str_id": "U3",
+      "type": "NORMAL",
+      "item_ap_id": 28,
+      "loc_ap_id": 29,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Leech"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "U4",
+      "type": "EPIC",
+      "item_ap_id": 29,
+      "loc_ap_id": 30,
+      "unlocks": [
+        "Y1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "Y1",
+      "type": "NORMAL",
+      "item_ap_id": 30,
+      "loc_ap_id": 31,
+      "unlocks": [
+        "Y2"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 32
+    },
+    {
+      "str_id": "Y2",
+      "type": "NORMAL",
+      "item_ap_id": 31,
+      "loc_ap_id": 32,
+      "unlocks": [
+        "Y3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 35
+    },
+    {
+      "str_id": "Y3",
+      "type": "STORY_RELATED",
+      "item_ap_id": 32,
+      "loc_ap_id": 33,
+      "unlocks": [
+        "Y4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 30
+    },
+    {
+      "str_id": "Y4",
+      "type": "EPIC",
+      "item_ap_id": 33,
+      "loc_ap_id": 34,
+      "unlocks": [
+        "X1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "X1",
+      "type": "NORMAL",
+      "item_ap_id": 34,
+      "loc_ap_id": 35,
+      "unlocks": [
+        "X2",
+        "X3"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 42
+    },
+    {
+      "str_id": "X2",
+      "type": "NORMAL",
+      "item_ap_id": 35,
+      "loc_ap_id": 36,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 48
+    },
+    {
+      "str_id": "X3",
+      "type": "NORMAL",
+      "item_ap_id": 36,
+      "loc_ap_id": 37,
+      "unlocks": [
+        "X4"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 44
+    },
+    {
+      "str_id": "X4",
+      "type": "EPIC",
+      "item_ap_id": 37,
+      "loc_ap_id": 38,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "Z1",
+      "type": "NORMAL",
+      "item_ap_id": 38,
+      "loc_ap_id": 39,
+      "unlocks": [
+        "Z2",
+        "Z3",
+        "Z4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 44
+    },
+    {
+      "str_id": "Z2",
+      "type": "NORMAL",
+      "item_ap_id": 39,
+      "loc_ap_id": 40,
+      "unlocks": [],
+      "available_gems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "Z3",
+      "type": "NORMAL",
+      "item_ap_id": 40,
+      "loc_ap_id": 41,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "Z4",
+      "type": "NORMAL",
+      "item_ap_id": 41,
+      "loc_ap_id": 42,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 48
+    },
+    {
+      "str_id": "O1",
+      "type": "NORMAL",
+      "item_ap_id": 42,
+      "loc_ap_id": 43,
+      "unlocks": [
+        "O2",
+        "O3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 34
+    },
+    {
+      "str_id": "O2",
+      "type": "NORMAL",
+      "item_ap_id": 43,
+      "loc_ap_id": 44,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 35
+    },
+    {
+      "str_id": "O3",
+      "type": "NORMAL",
+      "item_ap_id": 44,
+      "loc_ap_id": 45,
+      "unlocks": [
+        "O4"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 32
+    },
+    {
+      "str_id": "O4",
+      "type": "EPIC",
+      "item_ap_id": 45,
+      "loc_ap_id": 46,
+      "unlocks": [
+        "P1"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 33
+    },
+    {
+      "str_id": "N1",
+      "type": "NORMAL",
+      "item_ap_id": 46,
+      "loc_ap_id": 47,
+      "unlocks": [
+        "N2",
+        "N3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 35
+    },
+    {
+      "str_id": "N2",
+      "type": "NORMAL",
+      "item_ap_id": 47,
+      "loc_ap_id": 48,
+      "unlocks": [],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 36
+    },
+    {
+      "str_id": "N3",
+      "type": "NORMAL",
+      "item_ap_id": 48,
+      "loc_ap_id": 49,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 38
+    },
+    {
+      "str_id": "N4",
+      "type": "NORMAL",
+      "item_ap_id": 49,
+      "loc_ap_id": 50,
+      "unlocks": [],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 70
+    },
+    {
+      "str_id": "N5",
+      "type": "NORMAL",
+      "item_ap_id": 50,
+      "loc_ap_id": 51,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 68
+    },
+    {
+      "str_id": "P1",
+      "type": "NORMAL",
+      "item_ap_id": 51,
+      "loc_ap_id": 52,
+      "unlocks": [
+        "P2",
+        "P3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 38
+    },
+    {
+      "str_id": "P2",
+      "type": "NORMAL",
+      "item_ap_id": 52,
+      "loc_ap_id": 53,
+      "unlocks": [],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 42
+    },
+    {
+      "str_id": "P3",
+      "type": "NORMAL",
+      "item_ap_id": 53,
+      "loc_ap_id": 54,
+      "unlocks": [
+        "P4",
+        "P5"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "P4",
+      "type": "EPIC",
+      "item_ap_id": 54,
+      "loc_ap_id": 55,
+      "unlocks": [
+        "L1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "P5",
+      "type": "NORMAL",
+      "item_ap_id": 55,
+      "loc_ap_id": 56,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "L1",
+      "type": "NORMAL",
+      "item_ap_id": 56,
+      "loc_ap_id": 57,
+      "unlocks": [
+        "L2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 44
+    },
+    {
+      "str_id": "L2",
+      "type": "NORMAL",
+      "item_ap_id": 57,
+      "loc_ap_id": 58,
+      "unlocks": [
+        "L3"
+      ],
+      "available_gems": [
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "L3",
+      "type": "NORMAL",
+      "item_ap_id": 58,
+      "loc_ap_id": 59,
+      "unlocks": [
+        "L4",
+        "L5"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "L4",
+      "type": "EPIC",
+      "item_ap_id": 59,
+      "loc_ap_id": 60,
+      "unlocks": [
+        "K1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 50
+    },
+    {
+      "str_id": "L5",
+      "type": "EPIC",
+      "item_ap_id": 60,
+      "loc_ap_id": 61,
+      "unlocks": [
+        "H1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [
+        "Freeze",
+        "Bolt",
+        "Beam",
+        "Barrage"
+      ],
+      "wave_count": 64
+    },
+    {
+      "str_id": "K1",
+      "type": "STORY_RELATED",
+      "item_ap_id": 61,
+      "loc_ap_id": 62,
+      "unlocks": [
+        "K2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "K2",
+      "type": "NORMAL",
+      "item_ap_id": 62,
+      "loc_ap_id": 63,
+      "unlocks": [
+        "K3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "K3",
+      "type": "NORMAL",
+      "item_ap_id": 63,
+      "loc_ap_id": 64,
+      "unlocks": [
+        "K4"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 50
+    },
+    {
+      "str_id": "K4",
+      "type": "EPIC",
+      "item_ap_id": 64,
+      "loc_ap_id": 65,
+      "unlocks": [
+        "G1"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 46
+    },
+    {
+      "str_id": "H1",
+      "type": "NORMAL",
+      "item_ap_id": 65,
+      "loc_ap_id": 66,
+      "unlocks": [
+        "H2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 64
+    },
+    {
+      "str_id": "H2",
+      "type": "NORMAL",
+      "item_ap_id": 66,
+      "loc_ap_id": 67,
+      "unlocks": [
+        "H3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 66
+    },
+    {
+      "str_id": "H3",
+      "type": "TILE_GIVING",
+      "item_ap_id": 67,
+      "loc_ap_id": 68,
+      "unlocks": [
+        "H4"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 64
+    },
+    {
+      "str_id": "H4",
+      "type": "NORMAL",
+      "item_ap_id": 68,
+      "loc_ap_id": 69,
+      "unlocks": [
+        "E1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 70
+    },
+    {
+      "str_id": "G1",
+      "type": "NORMAL",
+      "item_ap_id": 69,
+      "loc_ap_id": 70,
+      "unlocks": [
+        "G2",
+        "G3",
+        "J1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 50
+    },
+    {
+      "str_id": "G2",
+      "type": "NORMAL",
+      "item_ap_id": 70,
+      "loc_ap_id": 71,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 52
+    },
+    {
+      "str_id": "G3",
+      "type": "EPIC",
+      "item_ap_id": 71,
+      "loc_ap_id": 72,
+      "unlocks": [
+        "M1",
+        "G4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 55
+    },
+    {
+      "str_id": "G4",
+      "type": "TILE_GIVING",
+      "item_ap_id": 72,
+      "loc_ap_id": 73,
+      "unlocks": [
+        "F1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech"
+      ],
+      "required_skills": [],
+      "wave_count": 56
+    },
+    {
+      "str_id": "J1",
+      "type": "NORMAL",
+      "item_ap_id": 73,
+      "loc_ap_id": 74,
+      "unlocks": [
+        "J2",
+        "J3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 55
+    },
+    {
+      "str_id": "J2",
+      "type": "NORMAL",
+      "item_ap_id": 74,
+      "loc_ap_id": 75,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 54
+    },
+    {
+      "str_id": "J3",
+      "type": "NORMAL",
+      "item_ap_id": 75,
+      "loc_ap_id": 76,
+      "unlocks": [
+        "J4"
+      ],
+      "available_gems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 56
+    },
+    {
+      "str_id": "J4",
+      "type": "TILE_GIVING",
+      "item_ap_id": 76,
+      "loc_ap_id": 77,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 58
+    },
+    {
+      "str_id": "M1",
+      "type": "NORMAL",
+      "item_ap_id": 77,
+      "loc_ap_id": 78,
+      "unlocks": [
+        "M2"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 60
+    },
+    {
+      "str_id": "M2",
+      "type": "NORMAL",
+      "item_ap_id": 78,
+      "loc_ap_id": 79,
+      "unlocks": [
+        "M3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 62
+    },
+    {
+      "str_id": "M3",
+      "type": "NORMAL",
+      "item_ap_id": 79,
+      "loc_ap_id": 80,
+      "unlocks": [
+        "M4",
+        "N5"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 64
+    },
+    {
+      "str_id": "M4",
+      "type": "NORMAL",
+      "item_ap_id": 80,
+      "loc_ap_id": 81,
+      "unlocks": [
+        "N4"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 66
+    },
+    {
+      "str_id": "F1",
+      "type": "NORMAL",
+      "item_ap_id": 81,
+      "loc_ap_id": 82,
+      "unlocks": [
+        "F2"
+      ],
+      "available_gems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 60
+    },
+    {
+      "str_id": "F2",
+      "type": "NORMAL",
+      "item_ap_id": 82,
+      "loc_ap_id": 83,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 64
+    },
+    {
+      "str_id": "F3",
+      "type": "NORMAL",
+      "item_ap_id": 83,
+      "loc_ap_id": 84,
+      "unlocks": [
+        "F4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 85
+    },
+    {
+      "str_id": "F4",
+      "type": "NORMAL",
+      "item_ap_id": 84,
+      "loc_ap_id": 85,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 88
+    },
+    {
+      "str_id": "E1",
+      "type": "NORMAL",
+      "item_ap_id": 85,
+      "loc_ap_id": 86,
+      "unlocks": [
+        "E2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 70
+    },
+    {
+      "str_id": "E2",
+      "type": "NORMAL",
+      "item_ap_id": 86,
+      "loc_ap_id": 87,
+      "unlocks": [
+        "E3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 62
+    },
+    {
+      "str_id": "E3",
+      "type": "NORMAL",
+      "item_ap_id": 87,
+      "loc_ap_id": 88,
+      "unlocks": [
+        "E4"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 74
+    },
+    {
+      "str_id": "E4",
+      "type": "EPIC",
+      "item_ap_id": 88,
+      "loc_ap_id": 89,
+      "unlocks": [
+        "D1",
+        "B1"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 74
+    },
+    {
+      "str_id": "D1",
+      "type": "NORMAL",
+      "item_ap_id": 89,
+      "loc_ap_id": 90,
+      "unlocks": [
+        "D2"
+      ],
+      "available_gems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 72
+    },
+    {
+      "str_id": "D2",
+      "type": "NORMAL",
+      "item_ap_id": 90,
+      "loc_ap_id": 91,
+      "unlocks": [
+        "D3",
+        "D4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 75
+    },
+    {
+      "str_id": "D3",
+      "type": "EPIC",
+      "item_ap_id": 91,
+      "loc_ap_id": 92,
+      "unlocks": [
+        "C1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 77
+    },
+    {
+      "str_id": "D4",
+      "type": "NORMAL",
+      "item_ap_id": 92,
+      "loc_ap_id": 93,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 70
+    },
+    {
+      "str_id": "B1",
+      "type": "NORMAL",
+      "item_ap_id": 93,
+      "loc_ap_id": 94,
+      "unlocks": [
+        "B2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 76
+    },
+    {
+      "str_id": "B2",
+      "type": "NORMAL",
+      "item_ap_id": 94,
+      "loc_ap_id": 95,
+      "unlocks": [
+        "B3",
+        "B4"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 80
+    },
+    {
+      "str_id": "B3",
+      "type": "NORMAL",
+      "item_ap_id": 95,
+      "loc_ap_id": 96,
+      "unlocks": [],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 86
+    },
+    {
+      "str_id": "B4",
+      "type": "NORMAL",
+      "item_ap_id": 96,
+      "loc_ap_id": 97,
+      "unlocks": [],
+      "available_gems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 80
+    },
+    {
+      "str_id": "C1",
+      "type": "NORMAL",
+      "item_ap_id": 97,
+      "loc_ap_id": 98,
+      "unlocks": [
+        "C2",
+        "C3"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 82
+    },
+    {
+      "str_id": "C2",
+      "type": "NORMAL",
+      "item_ap_id": 98,
+      "loc_ap_id": 99,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 80
+    },
+    {
+      "str_id": "C3",
+      "type": "NORMAL",
+      "item_ap_id": 99,
+      "loc_ap_id": 100,
+      "unlocks": [
+        "C4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 84
+    },
+    {
+      "str_id": "C4",
+      "type": "TILE_GIVING",
+      "item_ap_id": 100,
+      "loc_ap_id": 101,
+      "unlocks": [
+        "C5"
+      ],
+      "available_gems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 87
+    },
+    {
+      "str_id": "C5",
+      "type": "EPIC",
+      "item_ap_id": 101,
+      "loc_ap_id": 102,
+      "unlocks": [
+        "A1"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 90
+    },
+    {
+      "str_id": "A1",
+      "type": "NORMAL",
+      "item_ap_id": 102,
+      "loc_ap_id": 103,
+      "unlocks": [
+        "A2"
+      ],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 90
+    },
+    {
+      "str_id": "A2",
+      "type": "NORMAL",
+      "item_ap_id": 103,
+      "loc_ap_id": 104,
+      "unlocks": [
+        "A3"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 90
+    },
+    {
+      "str_id": "A3",
+      "type": "NORMAL",
+      "item_ap_id": 104,
+      "loc_ap_id": 105,
+      "unlocks": [
+        "A4"
+      ],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 90
+    },
+    {
+      "str_id": "A4",
+      "type": "NORMAL",
+      "item_ap_id": 105,
+      "loc_ap_id": 106,
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 100
+    },
+    {
+      "str_id": "I2",
+      "type": "NORMAL",
+      "item_ap_id": 106,
+      "loc_ap_id": 107,
+      "unlocks": [
+        "I3"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 78
+    },
+    {
+      "str_id": "I3",
+      "type": "NORMAL",
+      "item_ap_id": 107,
+      "loc_ap_id": 108,
+      "unlocks": [
+        "I4"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 80
+    },
+    {
+      "str_id": "I4",
+      "type": "NORMAL",
+      "item_ap_id": 108,
+      "loc_ap_id": 109,
+      "unlocks": [],
+      "available_gems": [
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 82
+    },
+    {
+      "str_id": "W5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 110,
+      "note": "Secret — unlock method TBD, excluded from alpha"
+    },
+    {
+      "str_id": "Z5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 111,
+      "note": "Secret — trial-locked (FLDZ5 in Z4 trial drop)",
+      "available_gems": [
+        "Leech"
+      ],
+      "required_skills": [],
+      "wave_count": 50
+    },
+    {
+      "str_id": "T5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 112,
+      "note": "Secret — trial-locked",
+      "available_gems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "R6",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 113,
+      "note": "Secret — trial-locked (FLDR6 in N1 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 36
+    },
+    {
+      "str_id": "P6",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 114,
+      "note": "Secret — trial-locked (FLDP6 in P5 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 40
+    },
+    {
+      "str_id": "K5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 115,
+      "note": "Secret — trial-locked (FLDK5 in G2 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 54
+    },
+    {
+      "str_id": "H5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 116,
+      "note": "Secret — trial-locked (FLDH5 in H2 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 68
+    },
+    {
+      "str_id": "G5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 117,
+      "note": "Secret — unlock method TBD"
+    },
+    {
+      "str_id": "F5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 118,
+      "note": "Secret — trial-locked",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 90
+    },
+    {
+      "str_id": "E5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 119,
+      "note": "Secret — trial-locked",
+      "available_gems": [
+        "Crit",
+        "Poison"
+      ],
+      "required_skills": [],
+      "wave_count": 78
+    },
+    {
+      "str_id": "B5",
+      "type": "SECRET",
+      "item_ap_id": null,
+      "loc_ap_id": 120,
+      "note": "Secret — trial-locked (FLDB5 in B2 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 84
+    },
+    {
+      "str_id": "A5",
+      "type": "NORMAL",
+      "item_ap_id": null,
+      "loc_ap_id": 121,
+      "note": "Trial-locked (FLDA5 in A3 trial drop)",
+      "available_gems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 96
+    },
+    {
+      "str_id": "A6",
+      "type": "NORMAL",
+      "item_ap_id": null,
+      "loc_ap_id": 122,
+      "note": "Trial-locked (FLDA6 in A4 trial drop)",
+      "available_gems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
+      "required_skills": [],
+      "wave_count": 99
+    }
   ]
 }
