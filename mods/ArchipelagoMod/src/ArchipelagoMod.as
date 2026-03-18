@@ -15,10 +15,17 @@ package {
         public function get MOD_NAME():String      { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String { return "2.1.1"; }
 
+        // Offset from the top-left of the game content (inside the letterbox).
+        private static const TOAST_OFFSET_X:Number = 52;
+        private static const TOAST_OFFSET_Y:Number = 10;
+
         private var _logger:Logger;
         private var _bezel:Bezel;
         private var _btn:ArchipelagoButton;
         private var _buttonAdded:Boolean = false;
+
+        private var _toast:ToastPanel;
+        private var _toastOnStage:Boolean = false;
 
         public function ArchipelagoMod() {
             super();
@@ -28,11 +35,23 @@ package {
         public function bind(bezel:Bezel, gameObjects:Object):void {
             _bezel = bezel;
             _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
+
+            _toast       = new ToastPanel();
+            _toast.alpha = 0;
+
             addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
         }
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            if (this.stage != null) {
+                this.stage.removeEventListener(Event.RESIZE, onStageResize);
+            }
+            if (_toast != null && _toast.parent != null) {
+                _toast.parent.removeChild(_toast);
+            }
+            _toast = null;
+            _toastOnStage = false;
             if (_btn != null && _btn.parent != null) {
                 _btn.parent.removeChild(_btn);
                 _btn = null;
@@ -44,10 +63,19 @@ package {
         // -----------------------------------------------------------------------
 
         private function onEnterFrame(e:Event):void {
+            // Add toast to stage using the mod's own stage reference — available on any screen.
+            if (!_toastOnStage && _toast != null && this.stage != null) {
+                this.stage.addChild(_toast);
+                _toastOnStage = true;
+                positionToast();
+                this.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
+            }
+
             if (GV.selectorCore == null) return;
 
             var mc:* = GV.selectorCore.mc;
-            if (mc == null || mc.stage == null) return;
+            if (mc == null) return;
+
             if (mc.btnTutorial == null) return;
 
             if (!_buttonAdded) {
@@ -60,6 +88,19 @@ package {
             if (_btn != null) {
                 _btn.x = mc.btnTutorial.x;
             }
+        }
+
+        private function positionToast():void {
+            if (_toast == null || this.stage == null) return;
+            // stage[0] is [object Main] — the game's content root.
+            // Multiply offsets by Main's scale so they stay in game units at any window size.
+            var gameRoot:* = this.stage.getChildAt(0);
+            _toast.x = gameRoot.x + TOAST_OFFSET_X * gameRoot.scaleX;
+            _toast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
+        }
+
+        private function onStageResize(e:Event):void {
+            positionToast();
         }
 
         private function addArchipelagoButton(mc:*):void {
