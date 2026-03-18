@@ -11,8 +11,7 @@
         "omit-trace-statements": true,
         "external-library-path": [
             "${BezelLibs}/BezelLibrary.swc",
-            "${BezelLibs}/GemCraftFrostbornWrath.swc",
-            "${BezelLibs}/ANEBytecodeEditor.swc"
+            "${BezelLibs}/GemCraftFrostbornWrath.swc"
         ]
     },
     "mainClass": "src/droplogger/DropLogger.as"

@@ -17,7 +17,7 @@ class SkillPlacement(Choice):
     """Controls where the 24 skill items are placed.
 
     spread: Skills are placed anywhere in the world by the randomizer.
-    per_zone: One skill is guaranteed to appear somewhere within each zone (A–Z).
+    per_zone: One skill is guaranteed to appear somewhere within each zone (excluding W and Z zones).
     """
     display_name = "Skill Placement"
     option_spread = 0
