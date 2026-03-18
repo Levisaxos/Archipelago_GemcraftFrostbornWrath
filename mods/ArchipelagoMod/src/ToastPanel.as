@@ -1,10 +1,7 @@
 package {
-    import flash.display.Bitmap;
-    import flash.display.BitmapData;
-    import flash.display.PixelSnapping;
+    import flash.display.Shape;
     import flash.display.Sprite;
     import flash.events.Event;
-    import flash.geom.Rectangle;
     import flash.text.AntiAliasType;
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
@@ -14,126 +11,164 @@ package {
 
     /**
      * Persistent HUD panel for Archipelago messages.
-     * Visual style mirrors McFloaterPanel: semi-transparent dark fill,
-     * coloured 1px border, rounded corners cut.
      *
-     * Call setLines(texts, colors) to populate or update content.
+     * Holds up to MAX_SLOTS visible rows; extras wait in a queue.
+     * Each row fades in, stays visible, then fades out independently.
+     * The panel background resizes to fit the current rows and hides
+     * automatically when no rows remain.
      */
     public class ToastPanel extends Sprite {
 
-        // Match McFloaterPanel's fill: 0xBB000000 (semi-transparent black)
-        private static const BG_COLOR:uint    = 0xBB000000;
-        // Archipelago brand purple for the border
-        private static const FRAME_COLOR:uint = 0xFF7B52AB;
         private static const FONT:String      = "Celtic Garamond for GemCraft";
         private static const TEXT_SIZE:int    = 11;
         private static const PAD_X:int        = 8;
-        private static const PAD_TOP:int      = 10;
+        private static const PAD_TOP:int      = 8;
         private static const PAD_BOTTOM:int   = 8;
-        // Same as McFloaterPanel: nextTfPos += height - 2
-        private static const LINE_GAP:Number  = -2;
+        private static const SLOT_HEIGHT:int  = 18;
+        private static const MIN_WIDTH:int    = 160;
+        private static const MAX_SLOTS:int    = 5;
 
-        private static const FADE_IN_MS:int  = 500;
-        private static const VISIBLE_MS:int  = 3000;
-        private static const FADE_OUT_MS:int = 1000;
+        private static const FADE_IN_MS:int   = 500;
+        private static const VISIBLE_MS:int   = 5000;
+        private static const FADE_OUT_MS:int  = 1000;
+        private static const TOTAL_MS:int     = FADE_IN_MS + VISIBLE_MS + FADE_OUT_MS;
 
-        private var _animStart:int = -1;
+        // Dark fill + Archipelago purple border
+        private static const BG_ALPHA:Number  = 0.73; // 0xBB / 0xFF
+        private static const BORDER_COLOR:uint = 0x7B52AB;
+
+        private var _bg:Shape;
+        private var _slots:Array;  // { row:Sprite, startTime:int }
+        private var _queue:Array;  // { text:String, color:uint }
 
         public function ToastPanel() {
             super();
             mouseEnabled  = false;
             mouseChildren = false;
-        }
-
-        /**
-         * Show the panel with a single line of text and a fade-in / visible / fade-out cycle.
-         * Calling again while a toast is already visible restarts the cycle.
-         */
-        public function showToast(text:String, color:uint):void {
-            setLines([text], [color]);
-            _animStart = getTimer();
             alpha = 0;
-            if (!hasEventListener(Event.ENTER_FRAME)) {
-                addEventListener(Event.ENTER_FRAME, onAnimFrame, false, 0, true);
-            }
+
+            _bg    = new Shape();
+            _slots = [];
+            _queue = [];
+            addChild(_bg);
+
+            addEventListener(Event.ENTER_FRAME, onFrame, false, 0, true);
         }
 
-        private function onAnimFrame(e:Event):void {
-            var elapsed:int = getTimer() - _animStart;
-            var fadeInEnd:int    = FADE_IN_MS;
-            var visibleEnd:int   = FADE_IN_MS + VISIBLE_MS;
-            var fadeOutEnd:int   = FADE_IN_MS + VISIBLE_MS + FADE_OUT_MS;
-
-            if (elapsed <= fadeInEnd) {
-                alpha = elapsed / FADE_IN_MS;
-            } else if (elapsed <= visibleEnd) {
-                alpha = 1;
-            } else if (elapsed <= fadeOutEnd) {
-                alpha = 1 - (elapsed - visibleEnd) / FADE_OUT_MS;
-            } else {
-                alpha = 0;
-                removeEventListener(Event.ENTER_FRAME, onAnimFrame);
-            }
-        }
+        // -----------------------------------------------------------------------
+        // Public API
 
         /**
-         * Draws (or redraws) the panel with new content.
-         * texts  - up to 5 strings
-         * colors - matching ARGB colours, one per line
+         * Enqueue a message. Shows immediately if a slot is free,
+         * otherwise waits until a slot becomes available.
          */
-        public function setLines(texts:Array, colors:Array):void {
-            removeChildren();
+        public function addMessage(text:String, color:uint):void {
+            if (_slots.length < MAX_SLOTS) {
+                addSlot(text, color);
+            } else {
+                _queue.push({ text: text, color: color });
+            }
+        }
 
-            var fields:Array = [];
-            var nextY:Number = PAD_TOP;
-            var maxW:Number  = 0;
+        // -----------------------------------------------------------------------
+        // Internal
 
-            for (var i:int = 0; i < texts.length; i++) {
-                var fmt:TextFormat   = new TextFormat(FONT, TEXT_SIZE);
-                fmt.align            = TextFormatAlign.LEFT;
-                fmt.bold             = true;
+        private function addSlot(text:String, color:uint):void {
+            var fmt:TextFormat   = new TextFormat(FONT, TEXT_SIZE);
+            fmt.align            = TextFormatAlign.LEFT;
+            fmt.bold             = true;
 
-                var tf:TextField     = new TextField();
-                tf.mouseEnabled      = false;
-                tf.selectable        = false;
-                // embedFonts=false so the panel works even before the game
-                // font is in scope; swap to true once confirmed working.
-                tf.embedFonts        = false;
-                tf.antiAliasType     = AntiAliasType.ADVANCED;
-                tf.defaultTextFormat = fmt;
-                tf.multiline         = false;
-                tf.wordWrap          = false;
-                tf.autoSize          = TextFieldAutoSize.LEFT;
-                tf.text              = texts[i];
-                tf.textColor         = colors[i];
-                tf.x                 = PAD_X;
-                tf.y                 = nextY;
+            var tf:TextField     = new TextField();
+            tf.mouseEnabled      = false;
+            tf.selectable        = false;
+            tf.embedFonts        = false;
+            tf.antiAliasType     = AntiAliasType.ADVANCED;
+            tf.defaultTextFormat = fmt;
+            tf.multiline         = false;
+            tf.wordWrap          = false;
+            tf.autoSize          = TextFieldAutoSize.LEFT;
+            tf.textColor         = color;
+            tf.text              = text;
+            tf.x                 = PAD_X;
+            tf.y                 = 0;
 
-                maxW   = Math.max(maxW, tf.width + PAD_X * 2);
-                nextY += tf.height + LINE_GAP;
-                fields.push(tf);
+            var row:Sprite = new Sprite();
+            row.mouseEnabled = false;
+            row.addChild(tf);
+            row.alpha = 0;
+
+            _slots.push({ row: row, startTime: getTimer() });
+            addChild(row);
+
+            layoutSlots();
+            redrawBg();
+        }
+
+        private function layoutSlots():void {
+            for (var i:int = 0; i < _slots.length; i++) {
+                _slots[i].row.y = PAD_TOP + i * SLOT_HEIGHT;
+            }
+        }
+
+        private function redrawBg():void {
+            _bg.graphics.clear();
+            var n:int = _slots.length;
+            if (n == 0) return;
+
+            // Compute width from widest current row
+            var pw:Number = MIN_WIDTH;
+            for (var i:int = 0; i < n; i++) {
+                var tf:TextField = TextField(_slots[i].row.getChildAt(0));
+                pw = Math.max(pw, tf.width + PAD_X * 2);
+            }
+            pw = Math.ceil(pw);
+            var ph:int = PAD_TOP + n * SLOT_HEIGHT + PAD_BOTTOM;
+
+            _bg.graphics.beginFill(BORDER_COLOR, 1);
+            _bg.graphics.drawRect(0, 0, pw, ph);
+            _bg.graphics.endFill();
+            _bg.graphics.beginFill(0x000000, BG_ALPHA);
+            _bg.graphics.drawRect(1, 1, pw - 2, ph - 2);
+            _bg.graphics.endFill();
+        }
+
+        private function onFrame(e:Event):void {
+            if (_slots.length == 0) {
+                alpha = 0;
+                return;
             }
 
-            var pw:int = Math.ceil(maxW);
-            var ph:int = Math.ceil(nextY + PAD_BOTTOM);
+            alpha = 1;
 
-            // Build background bitmap identical to McFloaterPanel
-            var bmpd:BitmapData = new BitmapData(pw, ph, true, FRAME_COLOR);
-            bmpd.fillRect(new Rectangle(1, 1, pw - 2, ph - 2), BG_COLOR);
-            // Cut corners (McFloaterPanel does the same)
-            bmpd.setPixel32(0,      0,      0x00000000);
-            bmpd.setPixel32(0,      ph - 1, 0x00000000);
-            bmpd.setPixel32(pw - 1, 0,      0x00000000);
-            bmpd.setPixel32(pw - 1, ph - 1, 0x00000000);
+            var changed:Boolean = false;
 
-            // Render text fields onto the background
-            for each (var field:TextField in fields) {
-                addChild(field);
+            // Iterate backwards so splicing doesn't affect unvisited indices
+            for (var i:int = _slots.length - 1; i >= 0; i--) {
+                var slot:Object = _slots[i];
+                var elapsed:int = getTimer() - slot.startTime;
+
+                if (elapsed >= TOTAL_MS) {
+                    removeChild(slot.row);
+                    _slots.splice(i, 1);
+                    changed = true;
+                } else if (elapsed >= FADE_IN_MS + VISIBLE_MS) {
+                    slot.row.alpha = 1 - (elapsed - FADE_IN_MS - VISIBLE_MS) / FADE_OUT_MS;
+                } else if (elapsed >= FADE_IN_MS) {
+                    slot.row.alpha = 1;
+                } else {
+                    slot.row.alpha = elapsed / FADE_IN_MS;
+                }
             }
-            bmpd.draw(this);
-            removeChildren();
 
-            addChild(new Bitmap(bmpd, PixelSnapping.ALWAYS, false));
+            if (changed) {
+                // Fill freed slots from the queue
+                while (_slots.length < MAX_SLOTS && _queue.length > 0) {
+                    var pending:Object = _queue.shift();
+                    addSlot(pending.text, pending.color);
+                }
+                layoutSlots();
+                redrawBg();
+            }
         }
     }
 }
