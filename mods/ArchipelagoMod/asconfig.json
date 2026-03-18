@@ -10,9 +10,9 @@
         "debug": false,
         "omit-trace-statements": true,
         "external-library-path": [
-            "D:/VS - TempPrograms/GCFW/BezelLibs/BezelModLoader.swc",
-            "D:/VS - TempPrograms/GCFW/BezelLibs/GemCraft.Frostborn.Wrath.swc",
-            "D:/VS - TempPrograms/GCFW/BezelLibs/ANEBytecodeEditor.swc"
+            "${BEZEL_LIBS}/BezelModLoader.swc",
+            "${BEZEL_LIBS}/GemCraft.Frostborn.Wrath.swc",
+            "${BEZEL_LIBS}/ANEBytecodeEditor.swc"
         ]
     },
     "mainClass": "ArchipelagoMod"
