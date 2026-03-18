@@ -27,8 +27,8 @@ package {
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
 
-        // Test state: cycle through skill AP IDs 300-323 one per click.
-        private var _testSkillApId:int = 300;
+        // Test state: cycles skills (300-323) then battle traits (400-414) on each click.
+        private var _testApId:int = 300;
 
         // Skill names indexed by game_id (matches SkillId constants).
         private static const SKILL_NAMES:Array = [
@@ -40,6 +40,14 @@ package {
             "Pylons", "Lanterns", "Traps", "Seeker Sense"
         ];
 
+        // Battle trait names indexed by game_id (matches BattleTraitId constants).
+        private static const BATTLE_TRAIT_NAMES:Array = [
+            "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
+            "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
+            "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",
+            "Giant Domination", "Strength in Numbers", "Ritual"
+        ];
+
         public function ArchipelagoMod() {
             super();
             _logger = Logger.getLogger(MOD_NAME);
@@ -49,8 +57,7 @@ package {
             _bezel = bezel;
             _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
 
-            _toast       = new ToastPanel();
-            _toast.alpha = 0;
+            _toast = new ToastPanel();
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
         }
@@ -133,10 +140,15 @@ package {
         }
 
         private function onArchipelagoClicked(e:MouseEvent):void {
-            _logger.log(MOD_NAME, "Archipelago button clicked!");
-            unlockSkill(_testSkillApId);
-            _testSkillApId++;
-            if (_testSkillApId > 323) _testSkillApId = 300;
+            _logger.log(MOD_NAME, "Archipelago button clicked! Testing AP ID " + _testApId);
+            if (_testApId >= 300 && _testApId <= 323) {
+                unlockSkill(_testApId);
+            } else if (_testApId >= 400 && _testApId <= 414) {
+                unlockBattleTrait(_testApId);
+            }
+            _testApId++;
+            if (_testApId == 324) _testApId = 400; // skip gap between skills and traits
+            if (_testApId > 414) _testApId = 300;  // wrap back to start
         }
 
         // -----------------------------------------------------------------------
@@ -160,7 +172,28 @@ package {
             GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
             var skillName:String = SKILL_NAMES[gameId];
             _logger.log(MOD_NAME, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
-            _toast.showToast("Skill Unlocked: " + skillName, 0xFFDDA0FF);
+            _toast.addMessage("Skill Unlocked: " + skillName, 0xFFDDA0FF);
+        }
+
+        /**
+         * Unlock a battle trait by its Archipelago item ID (400-414).
+         * Sets the gained flag and initialises the selected level to 0.
+         */
+        public function unlockBattleTrait(apId:int):void {
+            var gameId:int = apId - 400;
+            if (gameId < 0 || gameId > 14) {
+                _logger.log(MOD_NAME, "unlockBattleTrait: invalid AP ID " + apId);
+                return;
+            }
+            if (GV.ppd == null) {
+                _logger.log(MOD_NAME, "unlockBattleTrait: GV.ppd is null, cannot unlock trait " + apId);
+                return;
+            }
+            GV.ppd.gainedBattleTraits[gameId] = true;
+            GV.ppd.selectedBattleTraitLevels[gameId].s(Math.max(GV.ppd.selectedBattleTraitLevels[gameId].g(), 0));
+            var traitName:String = BATTLE_TRAIT_NAMES[gameId];
+            _logger.log(MOD_NAME, "Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
+            _toast.addMessage("Trait Unlocked: " + traitName, 0xFFFFAA44);
         }
     }
 }
