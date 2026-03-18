@@ -27,6 +27,19 @@ package {
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
 
+        // Test state: cycle through skill AP IDs 300-323 one per click.
+        private var _testSkillApId:int = 300;
+
+        // Skill names indexed by game_id (matches SkillId constants).
+        private static const SKILL_NAMES:Array = [
+            "Mana Stream", "True Colors", "Fusion", "Orb of Presence",
+            "Resonance", "Demolition", "Critical Hit", "Mana Leech",
+            "Bleeding", "Armor Tearing", "Poison", "Slowing",
+            "Freeze", "Whiteout", "Ice Shards", "Bolt",
+            "Beam", "Barrage", "Fury", "Amplifiers",
+            "Pylons", "Lanterns", "Traps", "Seeker Sense"
+        ];
+
         public function ArchipelagoMod() {
             super();
             _logger = Logger.getLogger(MOD_NAME);
@@ -121,6 +134,33 @@ package {
 
         private function onArchipelagoClicked(e:MouseEvent):void {
             _logger.log(MOD_NAME, "Archipelago button clicked!");
+            unlockSkill(_testSkillApId);
+            _testSkillApId++;
+            if (_testSkillApId > 323) _testSkillApId = 300;
+        }
+
+        // -----------------------------------------------------------------------
+        // Archipelago item handling
+
+        /**
+         * Unlock a skill by its Archipelago item ID (300-323).
+         * Sets the skill tome flag and initialises the level to 0 if not yet available.
+         */
+        public function unlockSkill(apId:int):void {
+            var gameId:int = apId - 300;
+            if (gameId < 0 || gameId > 23) {
+                _logger.log(MOD_NAME, "unlockSkill: invalid AP ID " + apId);
+                return;
+            }
+            if (GV.ppd == null) {
+                _logger.log(MOD_NAME, "unlockSkill: GV.ppd is null, cannot unlock skill " + apId);
+                return;
+            }
+            GV.ppd.gainedSkillTomes[gameId] = true;
+            GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
+            var skillName:String = SKILL_NAMES[gameId];
+            _logger.log(MOD_NAME, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
+            _toast.showToast("Skill Unlocked: " + skillName, 0xFFDDA0FF);
         }
     }
 }

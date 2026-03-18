@@ -3,12 +3,14 @@ package {
     import flash.display.BitmapData;
     import flash.display.PixelSnapping;
     import flash.display.Sprite;
+    import flash.events.Event;
     import flash.geom.Rectangle;
     import flash.text.AntiAliasType;
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
+    import flash.utils.getTimer;
 
     /**
      * Persistent HUD panel for Archipelago messages.
@@ -31,10 +33,47 @@ package {
         // Same as McFloaterPanel: nextTfPos += height - 2
         private static const LINE_GAP:Number  = -2;
 
+        private static const FADE_IN_MS:int  = 500;
+        private static const VISIBLE_MS:int  = 3000;
+        private static const FADE_OUT_MS:int = 1000;
+
+        private var _animStart:int = -1;
+
         public function ToastPanel() {
             super();
             mouseEnabled  = false;
             mouseChildren = false;
+        }
+
+        /**
+         * Show the panel with a single line of text and a fade-in / visible / fade-out cycle.
+         * Calling again while a toast is already visible restarts the cycle.
+         */
+        public function showToast(text:String, color:uint):void {
+            setLines([text], [color]);
+            _animStart = getTimer();
+            alpha = 0;
+            if (!hasEventListener(Event.ENTER_FRAME)) {
+                addEventListener(Event.ENTER_FRAME, onAnimFrame, false, 0, true);
+            }
+        }
+
+        private function onAnimFrame(e:Event):void {
+            var elapsed:int = getTimer() - _animStart;
+            var fadeInEnd:int    = FADE_IN_MS;
+            var visibleEnd:int   = FADE_IN_MS + VISIBLE_MS;
+            var fadeOutEnd:int   = FADE_IN_MS + VISIBLE_MS + FADE_OUT_MS;
+
+            if (elapsed <= fadeInEnd) {
+                alpha = elapsed / FADE_IN_MS;
+            } else if (elapsed <= visibleEnd) {
+                alpha = 1;
+            } else if (elapsed <= fadeOutEnd) {
+                alpha = 1 - (elapsed - visibleEnd) / FADE_OUT_MS;
+            } else {
+                alpha = 0;
+                removeEventListener(Event.ENTER_FRAME, onAnimFrame);
+            }
         }
 
         /**
