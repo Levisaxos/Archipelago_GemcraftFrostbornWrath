@@ -84,9 +84,9 @@ Before writing anything permanent, answer these questions:
 - [ ] Understand how the game tracks story progress (journey pages? stage completion flags?)
 
 **Item granting**
-- [ ] Confirm we can call the reward functions (e.g. grant a Field Token, a Skill Tome) from mod code without side effects
-- [ ] Determine whether a coremod is needed to intercept `updatePpdWithDrops` or whether hooking around it (via `SAVE_SAVE` / `INGAME_NEW_SCENE`) is sufficient
-- [ ] Understand the save system well enough to safely add "received from AP" state without corrupting existing save data
+- [x] Confirm we can call the reward functions (e.g. grant a Field Token, a Skill Tome) from mod code without side effects
+- [x] Determine whether a coremod is needed to intercept `updatePpdWithDrops` or whether hooking around it (via `SAVE_SAVE` / `INGAME_NEW_SCENE`) is sufficient — `SAVE_SAVE` is sufficient; `ProgressionBlocker` reverts and re-saves cleanly
+- [ ] Understand the save system well enough to safely add "received from AP" state without corrupting existing save data — partial; known issue: `PlayerProgressData` re-applies `orbDrops` on load, will need a `LOAD_SAVE` hook
 
 **Network connectivity**
 - [ ] Confirm the game runs as an AIR application (not sandboxed Flash Player)
@@ -94,7 +94,8 @@ Before writing anything permanent, answer these questions:
 - [ ] If native WebSocket is unavailable, evaluate a small companion process (e.g. a local proxy) as a fallback
 
 **Item / location counts**
-- [ ] Count all skill tomes (partial data found: at least 22+, need exact number)
+- [x] Count all skill tomes — 24 total (game_id 0–23, AP IDs 300–323)
+- [x] Count all battle traits — 15 total (game_id 0–14, AP IDs 400–414)
 - [ ] Enumerate all field tokens and their stage unlock targets
 - [ ] Map the full stage dependency graph (which stages unlock which)
 
@@ -106,26 +107,35 @@ Build the fundamental plumbing. No Archipelago server yet — just the mod-inter
 
 **Item grant system**
 Design a single function `grantItem(itemId)` that can be called from anywhere (level completion or AP connection) and correctly applies the item:
-- Grant a Field Token → unlock the target stage
-- Grant a Skill Tome → add skill to player's tome list
-- Grant a Battle Trait Scroll → add trait
-- Grant a Map Tile → reveal map tile
-- Grant Shadow Cores / Skill Points → add to totals
-- Handle duplicates gracefully (don't double-grant)
+- [x] Grant a Field Token → `unlockStage(stageStrId)` implemented in `ArchipelagoMod`
+- [x] Grant a Skill Tome → `unlockSkill(apId)` implemented; shows toast notification
+- [x] Grant a Battle Trait Scroll → `unlockBattleTrait(apId)` implemented; shows toast notification
+- [x] Grant a Map Tile → handled as part of stage unlock; `syncMapTilesWithStages()` keeps tiles in sync on selector open
+- [ ] Grant Shadow Cores / Skill Points → not yet implemented (filler items, low priority)
+- [ ] Handle duplicates gracefully (don't double-grant) — currently the grant functions are additive; dedup logic needed when AP delivers items
+
+**Progression blocking**
+- [x] Intercept post-victory `SAVE_SAVE` event via `ProgressionBlocker`
+- [x] Revert automatic field token, map tile, skill tome, and battle trait unlocks from `dropIcons`
+- [x] Strip pending selector animations (TOKEN_APPEARING, MAP_TILE_APPEARING) from the event queue
+- [x] Re-save immediately so the reverted state is persisted
+- [ ] Hook `LOAD_SAVE` to strip `orbDrops`-driven re-unlocks when a save is loaded
 
 **Location check system**
 Hook into level completion to fire `sendCheck(locationId)`:
-- Intercept the post-victory flow (currently researched via `SAVE_SAVE`; may require a coremod)
-- Track which locations have already been sent (store in save or a sidecar file)
+- [ ] Detect which stage was just completed from the post-victory context
+- [ ] Map stage ID to Archipelago location ID
+- [ ] Track which locations have already been sent (store in save or a sidecar file)
 
 **Persistence**
-- Decide where to store AP-received items and sent checks
+- [ ] Decide where to store AP-received items and sent checks
   - Options: piggyback on `GV.ppd` (risky), use a sidecar JSON in the game's Local Store, or use Bezel's settings manager
-- Implement load/save of this state so nothing is double-granted or lost on crash
+- [ ] Implement load/save of this state so nothing is double-granted or lost on crash
 
 **Test in solo mode**
-- Hardcode a set of item grants on load to verify the grant functions work correctly
-- Complete a stage and verify the check is detected
+- [x] Debug panel (`ScrDebugOptions`) allows manually locking/unlocking skills, battle traits, and stages — used to verify grant functions work correctly
+- [x] `ProgressionBlocker` verified: completing a level no longer automatically unlocks the next stage
+- [ ] Complete a stage and verify the check is detected and could be forwarded to AP
 
 ---
 
@@ -261,7 +271,9 @@ Use sub-range buckets per category so each can grow independently:
 - **What is the exact "game beaten" trigger?** Needs code research. Likely tied to specific EPIC/STORY_RELATED stages or the final journey page.
 - **Can we grant items safely mid-battle?** Or should grants always happen on the map screen?
 - **WebSocket in AIR:** Flash Player cannot do WebSocket natively in older versions. AIR can. Needs a quick feasibility test. If not possible, a lightweight local proxy (Node.js or Python script) can translate TCP ↔ WebSocket.
-- **How many skill tomes exist?** Partial count found (22+). Need exact number from code.
+- ~~**How many skill tomes exist?**~~ **Resolved:** 24 skill tomes (game_id 0–23).
+- ~~**How many battle traits exist?**~~ **Resolved:** 15 battle traits (game_id 0–14).
+- **`orbDrops` on save load:** `PlayerProgressData` re-processes `orbDrops` strings every time a save is loaded, re-unlocking any stages that were beaten. `ProgressionBlocker` reverts at save time but the next load will undo it. Needs a `LOAD_SAVE` hook.
 - **Item IDs must be stable.** Once an apworld is released, item and location IDs cannot change. Get these right before any public release.
 
 ---
