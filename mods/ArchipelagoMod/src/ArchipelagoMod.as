@@ -3,6 +3,7 @@ package {
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import flash.net.SharedObject;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -30,7 +31,20 @@ package {
 
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
+        private var _ws:WebSocketClient;
+        private var _tokenMap:Object = {};       // item AP ID (string) → stage str_id
+        private var _tokenStages:Object = {};    // stage str_id → true  (has an AP token)
+        private var _apState:SharedObject;       // persistent AP-specific state (xp, checks, etc.)
         private var _keyListenerAdded:Boolean = false;
+
+        // -----------------------------------------------------------------------
+        // Archipelago connection settings — replace with UI config later.
+        private static const AP_HOST:String     = "localhost";
+        private static const AP_PORT:int        = 38281;
+        private static const AP_SLOT:String     = "Levisaxos";
+        private static const AP_PASSWORD:String = "";
+        private static const AP_SECURE:Boolean  = false; // local server = plain ws://
+        // -----------------------------------------------------------------------
 
         // Set to false whenever the selector closes so unlockAllMapTiles() re-runs on next open.
         private var _mapTilesUnlocked:Boolean = false;
@@ -70,12 +84,27 @@ package {
         public function bind(bezel:Bezel, gameObjects:Object):void {
             try {
                 _bezel = bezel;
+                _apState = SharedObject.getLocal("gcfw_archipelago");
+                if (_apState.data.apXpGranted == undefined) _apState.data.apXpGranted = 0;
                 _toast = new ToastPanel();
                 _debugOptions = new ScrDebugOptions(this);
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
                 _progressionBlocker.enable(_bezel);
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
+
+                _ws = new WebSocketClient(_logger);
+                _ws.onOpen    = function():void {
+                    _toast.addMessage("AP connected!", 0xFF88FF88);
+                };
+                _ws.onMessage = onApMessage;
+                _ws.onError   = function(msg:String):void {
+                    _toast.addMessage("AP error: " + msg, 0xFFFF6666);
+                };
+                _ws.onClose   = function():void {
+                    _toast.addMessage("AP disconnected", 0xFFFFAA44);
+                };
+                _ws.connect(AP_HOST, AP_PORT, AP_SECURE);
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -83,6 +112,10 @@ package {
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            if (_ws != null) {
+                _ws.disconnect();
+                _ws = null;
+            }
             if (_progressionBlocker != null) {
                 _progressionBlocker.disable();
                 _progressionBlocker = null;
@@ -370,6 +403,274 @@ package {
             var traitName:String = BATTLE_TRAIT_NAMES[gameId];
             _logger.log(MOD_NAME, "Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
             _toast.addMessage("Trait Unlocked: " + traitName, 0xFFFFAA44);
+        }
+
+        // -----------------------------------------------------------------------
+        // Archipelago protocol
+
+        /** Dispatch all packets in an incoming AP message (JSON array). */
+        private function onApMessage(text:String):void {
+            try {
+                var packets:Array = JSON.parse(text) as Array;
+                for each (var packet:Object in packets) {
+                    handlePacket(packet);
+                }
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "Failed to parse AP message: " + e.message);
+                _toast.addMessage("AP parse error: " + e.message, 0xFFFF6666);
+            }
+        }
+
+        private function handlePacket(p:Object):void {
+            var cmd:String = p.cmd;
+            _logger.log(MOD_NAME, "AP << " + cmd);
+
+            switch (cmd) {
+                case "RoomInfo":
+                    _logger.log(MOD_NAME, "  seed=" + p.seed_name + "  server=" +
+                        p.version.major + "." + p.version.minor + "." + p.version.build);
+                    _toast.addMessage("AP: Have fun and play well!", 0xFF88DDFF);
+                    sendConnect();
+                    break;
+
+                case "Connected":
+                    handleConnected(p);
+                    break;
+
+                case "ReceivedItems":
+                    handleReceivedItems(p);
+                    break;
+
+                case "ConnectionRefused":
+                    var errors:Array = p.errors as Array;
+                    var errMsg:String = errors && errors.length > 0 ? errors.join(", ") : "unknown reason";
+                    _logger.log(MOD_NAME, "  ConnectionRefused: " + errMsg);
+                    _toast.addMessage("AP refused: " + errMsg, 0xFFFF6666);
+                    break;
+
+                case "PrintJSON":
+                    // Ignore chat/notifications for now
+                    break;
+
+                default:
+                    _logger.log(MOD_NAME, "  (unhandled)");
+            }
+        }
+
+        private function handleReceivedItems(p:Object):void {
+            var index:int   = p.index;
+            var items:Array = p.items as Array;
+            _logger.log(MOD_NAME, "ReceivedItems index=" + index + " count=" + items.length);
+
+            if (index == 0) {
+                // Initial sync: diff AP inventory against game state and reconcile.
+                syncWithAP(items);
+            } else {
+                // Incremental: grant only the new items in this packet.
+                for each (var networkItem:Object in items) {
+                    var apId:int = networkItem.item;
+                    _logger.log(MOD_NAME, "  + item=" + apId + " (" + itemName(apId) + ")");
+                    grantItem(apId);
+                }
+            }
+        }
+
+        /**
+         * Diff the full AP item list against the current game state and reconcile.
+         * Only changes what is actually different — preserves skill levels, trait
+         * levels and any completed stage XP.
+         */
+        private function syncWithAP(items:Array):void {
+            if (GV.ppd == null) return;
+
+            // Build expected state from the complete AP inventory
+            var apSkills:Object = {};   // gameId (0-23) → true
+            var apTraits:Object = {};   // gameId (0-14) → true
+            var apTokens:Object = {};   // str_id → true
+            var apXpTotal:int   = 0;    // wizard-level equivalents from AP
+
+            for each (var item:Object in items) {
+                var apId:int = item.item;
+                if (apId >= 300 && apId <= 323) {
+                    apSkills[apId - 300] = true;
+                } else if (apId >= 400 && apId <= 414) {
+                    apTraits[apId - 400] = true;
+                } else if (_tokenMap[String(apId)] != null) {
+                    apTokens[_tokenMap[String(apId)]] = true;
+                } else if (apId == 500) apXpTotal += 1;
+                  else if (apId == 501) apXpTotal += 3;
+                  else if (apId == 502) apXpTotal += 9;
+            }
+
+            // --- Skills ---
+            var skillChanges:int = 0;
+            for (var i:int = 0; i < 24; i++) {
+                var shouldHaveSkill:Boolean = apSkills[i] == true;
+                if (GV.ppd.gainedSkillTomes[i] != shouldHaveSkill) {
+                    GV.ppd.gainedSkillTomes[i] = shouldHaveSkill;
+                    if (shouldHaveSkill) {
+                        GV.ppd.setSkillLevel(i, Math.max(GV.ppd.getSkillLevel(i), 0));
+                    } else {
+                        GV.ppd.setSkillLevel(i, -1);
+                    }
+                    skillChanges++;
+                }
+            }
+
+            // --- Traits ---
+            var traitChanges:int = 0;
+            for (var j:int = 0; j < 15; j++) {
+                var shouldHaveTrait:Boolean = apTraits[j] == true;
+                if (GV.ppd.gainedBattleTraits[j] != shouldHaveTrait) {
+                    GV.ppd.gainedBattleTraits[j] = shouldHaveTrait;
+                    if (shouldHaveTrait) {
+                        GV.ppd.selectedBattleTraitLevels[j].s(
+                            Math.max(GV.ppd.selectedBattleTraitLevels[j].g(), 0));
+                    }
+                    traitChanges++;
+                }
+            }
+
+            // --- Stages ---
+            var stageChanges:int = 0;
+            if (GV.stageCollection != null) {
+                var metas:Array = GV.stageCollection.stageMetas;
+                for (var k:int = 0; k < metas.length; k++) {
+                    var meta:* = metas[k];
+                    if (meta == null) continue;
+                    var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
+                    if (xp == 0) {
+                        // Only log accessible-but-unplayed stages — these are the interesting ones
+                        var inTokenStages:Boolean = _tokenStages[meta.strId] == true;
+                        var shouldHaveToken:Boolean = apTokens[meta.strId] == true;
+                        _logger.log(MOD_NAME, "  stage=" + meta.strId
+                            + " xp=" + xp
+                            + " inTokenStages=" + inTokenStages
+                            + " shouldHave=" + shouldHaveToken);
+                    }
+                    if (!_tokenStages[meta.strId]) continue; // no AP token (W1 etc) — always accessible
+                    var shouldHave:Boolean = apTokens[meta.strId] == true;
+                    if (shouldHave && xp < 0) {
+                        unlockStage(meta.strId);
+                        stageChanges++;
+                    } else if (!shouldHave && xp == 0) {
+                        lockStage(meta.strId);
+                        stageChanges++;
+                    }
+                    // xp > 0 → stage completed, leave it alone
+                }
+            }
+
+            // --- XP ---
+            // Store AP-granted XP in SharedObject so it's tracked separately from
+            // level-earned XP. Application (what in-game effect it has) is TODO.
+            _apState.data.apXpGranted = apXpTotal;
+            _apState.flush();
+
+            _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
+                " traits:" + traitChanges + " stages:" + stageChanges +
+                " apXp:" + apXpTotal);
+        }
+
+        /** Grant an item by its AP item ID. */
+        private function grantItem(apId:int):void {
+            // Field token
+            var strId:String = _tokenMap[String(apId)];
+            if (strId != null) {
+                unlockStage(strId);
+                _toast.addMessage("Unlocked: " + strId + " Field Token", 0xFFFFDD55);
+                return;
+            }
+
+            // Skill (300–323)
+            if (apId >= 300 && apId <= 323) {
+                unlockSkill(apId);
+                return;
+            }
+
+            // Battle trait (400–414)
+            if (apId >= 400 && apId <= 414) {
+                unlockBattleTrait(apId);
+                return;
+            }
+
+            // XP / filler — nothing to do in-game yet
+            _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
+        }
+
+        private function handleConnected(p:Object):void {
+            _logger.log(MOD_NAME, "  team=" + p.team + "  slot=" + p.slot);
+
+            // Log all players in this multiworld
+            var players:Array = p.players as Array;
+            if (players) {
+                for each (var player:Object in players) {
+                    _logger.log(MOD_NAME, "  player: slot=" + player.slot +
+                        "  name=" + player.alias + "  game=" + player.game);
+                }
+            }
+
+            // Store token map and build inverse (str_id → has token)
+            if (p.slot_data && p.slot_data.token_map) {
+                _tokenMap = p.slot_data.token_map;
+                _tokenStages = {};
+                var tokenCount:int = 0;
+                for (var apIdStr:String in _tokenMap) {
+                    _tokenStages[_tokenMap[apIdStr]] = true;
+                    tokenCount++;
+                }
+                _logger.log(MOD_NAME, "  token_map loaded: " + tokenCount + " entries");
+            }
+            _logger.log(MOD_NAME, "  goal=" + p.slot_data.goal + "  skill_placement=" + p.slot_data.skill_placement);
+
+            var missing:Array  = p.missing_locations as Array;
+            var checked:Array  = p.checked_locations as Array;
+            _logger.log(MOD_NAME, "  missing_locations=" + (missing ? missing.length : "?") +
+                "  checked_locations=" + (checked ? checked.length : "?"));
+
+            _toast.addMessage("Slot connected! " + missing.length + " locations remaining", 0xFF88FF88);
+
+            // TODO: remove — hardcoded test check for W1 (Journey=1, Bonus=501)
+            sendLocationChecks([1, 501]);
+        }
+
+        /**
+         * Tell the server one or more locations have been checked.
+         * For a Journey completion, pass both the Journey ID and Bonus ID (journey + 500).
+         */
+        public function sendLocationChecks(locationIds:Array):void {
+            if (_ws == null || locationIds.length == 0) return;
+            var packet:String = '[{"cmd":"LocationChecks","locations":[' + locationIds.join(",") + ']}]';
+            _logger.log(MOD_NAME, "AP >> LocationChecks  ids=" + locationIds.join(","));
+            _ws.send(packet);
+        }
+
+        /**
+         * Human-readable name for an AP item ID.
+         * Returns the raw ID as a string if not recognised.
+         */
+        private function itemName(apId:int):String {
+            if (apId >= 300 && apId <= 323) return SKILL_NAMES[apId - 300] + " Skill";
+            if (apId >= 400 && apId <= 414) return BATTLE_TRAIT_NAMES[apId - 400] + " Battle Trait";
+            if (apId >= 1   && apId <= 199) return "Field Token (id=" + apId + ")";
+            if (apId == 500) return "Small XP Bonus";
+            if (apId == 501) return "Medium XP Bonus";
+            if (apId == 502) return "Large XP Bonus";
+            return "Item #" + apId;
+        }
+
+        /** Send the Connect packet to identify this slot to the server. */
+        private function sendConnect():void {
+            var packet:String = '[{"cmd":"Connect",' +
+                '"game":"GemCraft: Frostborn Wrath",' +
+                '"name":"' + AP_SLOT + '",' +
+                '"password":"' + AP_PASSWORD + '",' +
+                '"version":{"major":0,"minor":6,"build":6,"class":"Version"},' +
+                '"items_handling":7,' +
+                '"tags":[],' +
+                '"uuid":"gcfw-mod"}]';
+            _logger.log(MOD_NAME, "AP >> Connect  slot=" + AP_SLOT);
+            _ws.send(packet);
         }
     }
 }
