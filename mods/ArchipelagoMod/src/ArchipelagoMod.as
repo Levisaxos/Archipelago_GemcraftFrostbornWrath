@@ -1,7 +1,9 @@
 package {
     import flash.display.MovieClip;
     import flash.events.Event;
+    import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import flash.ui.Keyboard;
 
     import Bezel.Bezel;
     import Bezel.BezelMod;
@@ -27,8 +29,17 @@ package {
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
 
-        // Test state: cycles skills (300-323) then battle traits (400-414) on each click.
-        private var _testApId:int = 300;
+        private var _debugOptions:ScrDebugOptions;
+        private var _keyListenerAdded:Boolean = false;
+
+        // -----------------------------------------------------------------------
+        // Debug mode — toggled at runtime by Ctrl+Shift+Alt+End.
+        // Set DEBUG_MODE_DEFAULT = true to start with debug mode already on,
+        // useful during development so you don't need the hotkey every session.
+        // For a public release, leave it false.
+        private static const DEBUG_MODE_DEFAULT:Boolean = false;
+        private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
+        // -----------------------------------------------------------------------
 
         // Skill names indexed by game_id (matches SkillId constants).
         private static const SKILL_NAMES:Array = [
@@ -58,6 +69,7 @@ package {
             _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
 
             _toast = new ToastPanel();
+            _debugOptions = new ScrDebugOptions(this);
 
             addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
         }
@@ -72,6 +84,14 @@ package {
             }
             _toast = null;
             _toastOnStage = false;
+            if (_keyListenerAdded && this.stage != null) {
+                this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+                _keyListenerAdded = false;
+            }
+            if (_debugOptions != null && _debugOptions.isOpen) {
+                _debugOptions.close();
+            }
+            _debugOptions = null;
             if (_btn != null && _btn.parent != null) {
                 _btn.parent.removeChild(_btn);
                 _btn = null;
@@ -91,6 +111,12 @@ package {
                 this.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
             }
 
+            // Register the debug hotkey (Ctrl+Shift+Alt+End) once the stage exists.
+            if (!_keyListenerAdded && this.stage != null) {
+                this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
+                _keyListenerAdded = true;
+            }
+
             if (GV.selectorCore == null) return;
 
             var mc:* = GV.selectorCore.mc;
@@ -107,6 +133,11 @@ package {
             // Sync x every frame so the button rides the slide-in animation.
             if (_btn != null) {
                 _btn.x = mc.btnTutorial.x;
+            }
+
+            // Drive scroll-knob drag in the debug options panel.
+            if (_debugOptions != null && _debugOptions.isOpen) {
+                _debugOptions.doEnterFrame();
             }
         }
 
@@ -133,22 +164,35 @@ package {
             _btn = new ArchipelagoButton(btnTutorial);
             _btn.x = btnTutorial.x;
             _btn.y = btnTutorial.y + stepY;
+            _btn.visible = _debugMode;
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
 
             mc.addChild(_btn);
             _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ")");
         }
 
-        private function onArchipelagoClicked(e:MouseEvent):void {
-            _logger.log(MOD_NAME, "Archipelago button clicked! Testing AP ID " + _testApId);
-            if (_testApId >= 300 && _testApId <= 323) {
-                unlockSkill(_testApId);
-            } else if (_testApId >= 400 && _testApId <= 414) {
-                unlockBattleTrait(_testApId);
+        private function onKeyDown(e:KeyboardEvent):void {
+            if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
+                _debugMode = !_debugMode;
+                _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
+                if (_btn != null) _btn.visible = _debugMode;
+                // If debug mode was just turned off, close the panel if it is open.
+                if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
+                    _debugOptions.close();
+                }
             }
-            _testApId++;
-            if (_testApId == 324) _testApId = 400; // skip gap between skills and traits
-            if (_testApId > 414) _testApId = 300;  // wrap back to start
+        }
+
+        private function onArchipelagoClicked(e:MouseEvent):void {
+            if (!_debugMode) return;
+            if (_debugOptions == null) return;
+            if (_debugOptions.isOpen) {
+                _logger.log(MOD_NAME, "Closing debug options panel");
+                _debugOptions.close();
+            } else {
+                _logger.log(MOD_NAME, "Opening debug options panel");
+                _debugOptions.open();
+            }
         }
 
         // -----------------------------------------------------------------------
