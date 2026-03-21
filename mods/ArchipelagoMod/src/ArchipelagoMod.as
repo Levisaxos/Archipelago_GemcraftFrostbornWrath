@@ -128,14 +128,12 @@ package {
 
             if (GV.ppd == null || GV.selectorCore.renderer == null) return;
 
-            // Show all tile bitmaps once per selector session.
+            // Sync tile visibility with stage unlock state once per selector session.
             if (!_mapTilesUnlocked) {
-                for (var ti:int = 0; ti < GV.ppd.gainedMapTiles.length; ti++) {
-                    GV.ppd.gainedMapTiles[ti] = true;
-                }
+                syncMapTilesWithStages();
                 GV.selectorCore.renderer.setMapTilesVisibility();
                 _mapTilesUnlocked = true;
-                _logger.log(MOD_NAME, "All map tiles unlocked (" + GV.ppd.gainedMapTiles.length + " tiles)");
+                _logger.log(MOD_NAME, "Map tile visibility synced with stage states");
             }
 
             // Enforce full-world scroll limits every frame so the W4 lock in
@@ -240,6 +238,92 @@ package {
             var skillName:String = SKILL_NAMES[gameId];
             _logger.log(MOD_NAME, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
             _toast.addMessage("Skill Unlocked: " + skillName, 0xFFDDA0FF);
+        }
+
+        // -----------------------------------------------------------------------
+        // Stage / tile unlock API (called by debug panel and later by AP manager)
+
+        /**
+         * Reveal the map tile for a given stage letter, and for every stage
+         * whose Journey XP is already >= 0.  Called once per selector session.
+         */
+        private function syncMapTilesWithStages():void {
+            if (GV.ppd == null || GV.stageCollection == null) return;
+            var metas:Array = GV.stageCollection.stageMetas;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null) continue;
+                if (GV.ppd.stageHighestXpsJourney[meta.id].g() >= 0) {
+                    var tileIdx:int = 90 - meta.strId.charCodeAt(0);
+                    if (tileIdx >= 0 && tileIdx < GV.ppd.gainedMapTiles.length) {
+                        GV.ppd.gainedMapTiles[tileIdx] = true;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Make a stage available (Journey XP = 0) and reveal its map tile.
+         * Refreshes the selector display if it is currently open.
+         */
+        public function unlockStage(stageStrId:String):void {
+            if (GV.ppd == null) return;
+            var stageId:int = GV.getFieldId(stageStrId);
+            if (stageId < 0) {
+                _logger.log(MOD_NAME, "unlockStage: unknown stage " + stageStrId);
+                return;
+            }
+            GV.ppd.stageHighestXpsJourney[stageId].s(0);
+            var tileIdx:int = 90 - stageStrId.charCodeAt(0);
+            if (tileIdx >= 0 && tileIdx < GV.ppd.gainedMapTiles.length) {
+                GV.ppd.gainedMapTiles[tileIdx] = true;
+            }
+            refreshSelectorIfOpen();
+            _logger.log(MOD_NAME, "Stage unlocked: " + stageStrId);
+        }
+
+        /**
+         * Lock a stage (Journey XP = -1).  Hides the map tile if no other
+         * stage on the same tile is still unlocked.
+         */
+        public function lockStage(stageStrId:String):void {
+            if (GV.ppd == null) return;
+            var stageId:int = GV.getFieldId(stageStrId);
+            if (stageId < 0) return;
+            GV.ppd.stageHighestXpsJourney[stageId].s(-1);
+            // Re-evaluate tile visibility.
+            var letter:String = stageStrId.charAt(0);
+            var tileIdx:int = 90 - letter.charCodeAt(0);
+            if (tileIdx >= 0 && tileIdx < GV.ppd.gainedMapTiles.length) {
+                var anyUnlocked:Boolean = false;
+                var metas:Array = GV.stageCollection.stageMetas;
+                for (var i:int = 0; i < metas.length; i++) {
+                    var meta:* = metas[i];
+                    if (meta != null && meta.strId.charAt(0) == letter
+                            && GV.ppd.stageHighestXpsJourney[meta.id].g() >= 0) {
+                        anyUnlocked = true;
+                        break;
+                    }
+                }
+                GV.ppd.gainedMapTiles[tileIdx] = anyUnlocked;
+            }
+            refreshSelectorIfOpen();
+            _logger.log(MOD_NAME, "Stage locked: " + stageStrId);
+        }
+
+        /** Returns true if the stage's Journey XP >= 0 (available or completed). */
+        public function isStageUnlocked(stageStrId:String):Boolean {
+            if (GV.ppd == null) return false;
+            var stageId:int = GV.getFieldId(stageStrId);
+            if (stageId < 0) return false;
+            return GV.ppd.stageHighestXpsJourney[stageId].g() >= 0;
+        }
+
+        /** Refreshes field-token and tile visibility on the selector if it is open. */
+        public function refreshSelectorIfOpen():void {
+            if (GV.selectorCore == null || GV.selectorCore.renderer == null) return;
+            GV.selectorCore.renderer.setMapTilesVisibility();
+            GV.selectorCore.renderer.adjustFieldTokens();
         }
 
         /**
