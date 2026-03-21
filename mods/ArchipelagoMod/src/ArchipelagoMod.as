@@ -32,6 +32,9 @@ package {
         private var _debugOptions:ScrDebugOptions;
         private var _keyListenerAdded:Boolean = false;
 
+        // Set to false whenever the selector closes so unlockAllMapTiles() re-runs on next open.
+        private var _mapTilesUnlocked:Boolean = false;
+
         // -----------------------------------------------------------------------
         // Debug mode — toggled at runtime by Ctrl+Shift+Alt+End.
         // Set DEBUG_MODE_DEFAULT = true to start with debug mode already on,
@@ -117,7 +120,27 @@ package {
                 _keyListenerAdded = true;
             }
 
-            if (GV.selectorCore == null) return;
+            if (GV.selectorCore == null) {
+                // Selector closed — reset so tile visibility is re-applied next time it opens.
+                _mapTilesUnlocked = false;
+                return;
+            }
+
+            if (GV.ppd == null || GV.selectorCore.renderer == null) return;
+
+            // Show all tile bitmaps once per selector session.
+            if (!_mapTilesUnlocked) {
+                for (var ti:int = 0; ti < GV.ppd.gainedMapTiles.length; ti++) {
+                    GV.ppd.gainedMapTiles[ti] = true;
+                }
+                GV.selectorCore.renderer.setMapTilesVisibility();
+                _mapTilesUnlocked = true;
+                _logger.log(MOD_NAME, "All map tiles unlocked (" + GV.ppd.gainedMapTiles.length + " tiles)");
+            }
+
+            // Enforce full-world scroll limits every frame so the W4 lock in
+            // setVpLimits() can never stick — even after returning from a level.
+            enforceFullWorldScrollLimits();
 
             var mc:* = GV.selectorCore.mc;
             if (mc == null) return;
@@ -217,6 +240,25 @@ package {
             var skillName:String = SKILL_NAMES[gameId];
             _logger.log(MOD_NAME, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
             _toast.addMessage("Skill Unlocked: " + skillName, 0xFFDDA0FF);
+        }
+
+        /**
+         * Override the scroll limits to the full world extent every frame.
+         *
+         * setVpLimits() in SelectorCore has a hard-coded override that collapses
+         * the scroll area to just the W tile whenever W4 Journey hasn't been
+         * completed.  It is called both on selector open and whenever the event
+         * queue processes a level-return, so a one-shot fix is not enough.
+         *
+         * The constants are the global-clamp values from setVpLimits() lines 1030-1033,
+         * which represent the widest bounds the game ever allows:
+         *   vpXMin = 264, vpXMax = 1864, vpYMin = 330, vpYMax = 3712
+         */
+        private function enforceFullWorldScrollLimits():void {
+            GV.selectorCore.vpXMin = 200 + 104 - 40 - 544 + 960 - 416;  // 264
+            GV.selectorCore.vpXMax = 1400 - 408 + 40 - 544 + 960 + 416; // 1864
+            GV.selectorCore.vpYMin = 0 + 61 - 40 + 115 - 40 - 306 + 540; // 330
+            GV.selectorCore.vpYMax = 3300 - 306 + 540 + 178;              // 3712
         }
 
         /**
