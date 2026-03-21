@@ -108,10 +108,15 @@ package {
             _mc.mcScrollBar.addEventListener(MouseEvent.MOUSE_DOWN, ehScrollKnobDown, true, 0, true);
             _mc.btnScrollKnob.addEventListener(MouseEvent.MOUSE_DOWN, ehScrollKnobDown, true, 0, true);
 
-            // Skill panel click + hover
+            // Skill panel click + hover.
+            // CLICK goes on spnl (the McOptPanel container) not spnl.plate because
+            // plate.mouseEnabled is false in the FLA symbol, so MOUSE_DOWN never
+            // lands on plate and CLICK is never synthesised there.
+            // MOUSE_OVER/OUT still work on plate (Flash dispatches them regardless
+            // of mouseEnabled for rollover-tracking purposes).
             for (i = 0; i < _mc.skillPanels.length; i++) {
                 var spnl:McOptPanel = McOptPanel(_mc.skillPanels[i]);
-                spnl.plate.addEventListener(MouseEvent.CLICK,      makeSkillClickHandler(i), false, 0, true);
+                spnl.addEventListener(      MouseEvent.CLICK,      makeSkillClickHandler(i), false, 0, true);
                 spnl.plate.addEventListener(MouseEvent.MOUSE_OVER, ehPanelMouseOver,          false, 0, true);
                 spnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,           false, 0, true);
             }
@@ -119,7 +124,7 @@ package {
             // Battle trait panel click + hover
             for (i = 0; i < _mc.traitPanels.length; i++) {
                 var tpnl:McOptPanel = McOptPanel(_mc.traitPanels[i]);
-                tpnl.plate.addEventListener(MouseEvent.CLICK,      makeTraitClickHandler(i), false, 0, true);
+                tpnl.addEventListener(      MouseEvent.CLICK,      makeTraitClickHandler(i), false, 0, true);
                 tpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, ehPanelMouseOver,          false, 0, true);
                 tpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,           false, 0, true);
             }
@@ -127,7 +132,7 @@ package {
             // Stage panel click + hover — same pattern, keyed by stageStrId.
             for (var stageId:String in _mc.stageIdToPanel) {
                 var stagePnl:McOptPanel = McOptPanel(_mc.stageIdToPanel[stageId]);
-                stagePnl.plate.addEventListener(MouseEvent.CLICK,      makeStageClickHandler(stageId), false, 0, true);
+                stagePnl.addEventListener(      MouseEvent.CLICK,      makeStageClickHandler(stageId), false, 0, true);
                 stagePnl.plate.addEventListener(MouseEvent.MOUSE_OVER, ehPanelMouseOver,                false, 0, true);
                 stagePnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,                 false, 0, true);
             }
