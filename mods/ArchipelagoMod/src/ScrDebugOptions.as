@@ -9,7 +9,7 @@ package {
     /**
      * Manages the Debug Options panel lifecycle and interaction.
      * Mirrors ScrOptions in scroll / drag / viewport / wheel logic.
-     * Replaces the boolean option toggles with skill and battle trait lock/unlock.
+     * Replaces the boolean option toggles with skill, battle trait, and stage lock/unlock.
      */
     public class ScrDebugOptions {
 
@@ -123,15 +123,27 @@ package {
                 tpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, ehPanelMouseOver,          false, 0, true);
                 tpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,           false, 0, true);
             }
+
+            // Stage panel click + hover — same pattern, keyed by stageStrId.
+            for (var stageId:String in _mc.stageIdToPanel) {
+                var stagePnl:McOptPanel = McOptPanel(_mc.stageIdToPanel[stageId]);
+                stagePnl.plate.addEventListener(MouseEvent.CLICK,      makeStageClickHandler(stageId), false, 0, true);
+                stagePnl.plate.addEventListener(MouseEvent.MOUSE_OVER, ehPanelMouseOver,                false, 0, true);
+                stagePnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,                 false, 0, true);
+            }
         }
 
-        // Closures to capture the panel index.
+        // Closures to capture the panel index / id.
         private function makeSkillClickHandler(gameId:int):Function {
             return function(e:MouseEvent):void { onSkillClick(gameId); };
         }
 
         private function makeTraitClickHandler(gameId:int):Function {
             return function(e:MouseEvent):void { onTraitClick(gameId); };
+        }
+
+        private function makeStageClickHandler(stageId:String):Function {
+            return function(e:MouseEvent):void { onStageClick(stageId); };
         }
 
         // -----------------------------------------------------------------------
@@ -162,6 +174,15 @@ package {
             renderDebugOptions();
         }
 
+        private function onStageClick(stageId:String):void {
+            if (_mod.isStageUnlocked(stageId)) {
+                _mod.lockStage(stageId);
+            } else {
+                _mod.unlockStage(stageId);
+            }
+            renderDebugOptions();
+        }
+
         // -----------------------------------------------------------------------
         // Render state
 
@@ -176,6 +197,11 @@ package {
             }
             for (i = 0; i < _mc.traitPanels.length; i++) {
                 McOptPanel(_mc.traitPanels[i]).btn.gotoAndStop(GV.ppd.gainedBattleTraits[i] ? 2 : 1);
+            }
+            for (var stageId:String in _mc.stageIdToPanel) {
+                McOptPanel(_mc.stageIdToPanel[stageId]).btn.gotoAndStop(
+                    _mod.isStageUnlocked(stageId) ? 2 : 1
+                );
             }
         }
 
