@@ -34,7 +34,8 @@ package {
         private var _ws:WebSocketClient;
         private var _tokenMap:Object = {};       // item AP ID (string) → stage str_id
         private var _tokenStages:Object = {};    // stage str_id → true  (has an AP token)
-        private var _apState:SharedObject;       // persistent AP-specific state (xp, checks, etc.)
+        private var _apState:SharedObject;       // persistent AP-specific state (checks, etc.)
+        private var _apWizardLevel:int = 0;      // total AP-granted wizard levels this session
         private var _keyListenerAdded:Boolean = false;
 
         // -----------------------------------------------------------------------
@@ -85,7 +86,10 @@ package {
             try {
                 _bezel = bezel;
                 _apState = SharedObject.getLocal("gcfw_archipelago");
-                if (_apState.data.apXpGranted == undefined) _apState.data.apXpGranted = 0;
+                // Restore persisted wizard level so the bonus XP can be re-applied
+                // immediately on load (before the AP server reconnects and resyncs).
+                _apWizardLevel = (_apState.data.apWizardLevels != undefined)
+                    ? int(_apState.data.apWizardLevels) : 0;
                 _toast = new ToastPanel();
                 _debugOptions = new ScrDebugOptions(this);
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
@@ -161,11 +165,18 @@ package {
                 _keyListenerAdded = true;
             }
 
-            // selectorCore is never null — use renderer == null as the "not in selector" signal.
-            if (GV.ppd == null || GV.selectorCore.renderer == null) {
+            // Gate: wait until the selector and its async tile generation are fully ready.
+            // mapTiles is null until WorldMapBuilder.finishCreatingMapTiles() completes;
+            // setMapTilesVisibility() accesses mapTiles internals and crashes before that.
+            if (GV.ppd == null
+                    || GV.selectorCore.renderer == null
+                    || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
                 return;
             }
+
+            var mc:* = GV.selectorCore.mc;
+            if (mc == null) return;
 
             // Sync tile visibility with stage unlock state once per selector session.
             if (!_mapTilesUnlocked) {
@@ -178,9 +189,6 @@ package {
             // Enforce full-world scroll limits every frame so the W4 lock in
             // setVpLimits() can never stick — even after returning from a level.
             enforceFullWorldScrollLimits();
-
-            var mc:* = GV.selectorCore.mc;
-            if (mc == null) return;
 
             if (mc.btnTutorial == null) return;
 
@@ -406,6 +414,93 @@ package {
         }
 
         // -----------------------------------------------------------------------
+        // XP / wizard level handling
+
+        /**
+         * Grant AP wizard levels from a received XP Bonus item.
+         * Small=2, Medium=5, Large=10 wizard levels — always additive on top
+         * of the player's current wizard level, regardless of what it is.
+         */
+        public function grantXpBonus(apId:int):void {
+            var levels:int = 0;
+            var label:String = "";
+            if      (apId == 500) { levels = 2;  label = "Small";  }
+            else if (apId == 501) { levels = 5;  label = "Medium"; }
+            else if (apId == 502) { levels = 10; label = "Large";  }
+            else return;
+
+            _apWizardLevel += levels;
+            _apState.data.apWizardLevels = _apWizardLevel;
+            _apState.flush();
+
+            _logger.log(MOD_NAME, label + " XP Bonus → +" + levels
+                + " wizard levels (AP total: " + _apWizardLevel + ")");
+            _toast.addMessage("+" + levels + " Wizard Levels (total: "
+                + _apWizardLevel + ")", 0xFF88CCFF);
+
+            applyApWizardLevels(_apWizardLevel);
+        }
+
+        /**
+         * Ensure the game's wizard level is at least 'targetLevel', regardless
+         * of what the player has earned from playing stages.
+         *
+         * How it works:
+         *   getXp() (on PlayerProgressData) sums stageHighestXpsJourney +
+         *   Endurance + Trial for every stage (values clamped to ≥0).
+         *   W1 has no endurance mode so stageHighestXpsEndurance[W1] is always
+         *   -1 (unused) and contributes 0 to the sum normally.
+         *   We store our AP bonus XP there; the game's own sum picks it up and
+         *   the wizard level display updates automatically.
+         *
+         * NOTE: we do NOT call GV.calculator or GV.ppd.getXp()/getWizLevel()
+         * because Calculator → Monster → IngameRenderer pulls in mcStat UI
+         * classes that are absent from the SWC stub (VerifyError #1014).
+         * Instead we replicate the formula and XP sum locally.
+         */
+        private function applyApWizardLevels(targetLevel:int):void {
+            if (GV.ppd == null || GV.stageCollection == null) return;
+            if (targetLevel <= 0) return;
+
+            var W1_END_IDX:int = GV.getFieldId("W1");
+
+            // Read any bonus XP we previously stored in the W1 endurance slot.
+            var prevBonus:Number = Math.max(0, GV.ppd.stageHighestXpsEndurance[W1_END_IDX].g());
+
+            // Replicate PlayerProgressData.getXp() without calling the method.
+            // Excludes our own bonus slot so we don't double-count.
+            var normalXp:Number = 0;
+            var metas:Array = GV.stageCollection.stageMetas;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null) continue;
+                normalXp += Math.max(0, GV.ppd.stageHighestXpsJourney[meta.id].g());
+                normalXp += Math.max(0, GV.ppd.stageHighestXpsTrial[meta.id].g());
+                if (meta.id != W1_END_IDX) {
+                    normalXp += Math.max(0, GV.ppd.stageHighestXpsEndurance[meta.id].g());
+                }
+            }
+
+            // XP threshold for targetLevel — replicated from Calculator.calculatePlayerLevelXpReq.
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(targetLevel) - normalXp);
+
+            GV.ppd.stageHighestXpsEndurance[W1_END_IDX].s(bonusXp > 0 ? bonusXp : -1);
+            _logger.log(MOD_NAME, "applyApWizardLevels: target=" + targetLevel
+                + " normalXp=" + normalXp + " bonusXp=" + bonusXp);
+        }
+
+        /**
+         * XP required to reach wizard level pLevel.
+         * Copied verbatim from Calculator.calculatePlayerLevelXpReq() to avoid
+         * linking Calculator (and its mcStat dependency chain) into our SWF.
+         */
+        private function apXpForWizLevel(pLevel:int):Number {
+            var vDelta2:Number = 30 + (pLevel - 1) * 5;
+            var vDelta:Number  = 600 + vDelta2 / 2 * (pLevel - 1);
+            return -10 + 10 * Math.round(0.8 * (300 + vDelta / 2 * (pLevel - 1)) / 10);
+        }
+
+        // -----------------------------------------------------------------------
         // Archipelago protocol
 
         /** Dispatch all packets in an incoming AP message (JSON array). */
@@ -497,9 +592,9 @@ package {
                     apTraits[apId - 400] = true;
                 } else if (_tokenMap[String(apId)] != null) {
                     apTokens[_tokenMap[String(apId)]] = true;
-                } else if (apId == 500) apXpTotal += 1;
-                  else if (apId == 501) apXpTotal += 3;
-                  else if (apId == 502) apXpTotal += 9;
+                } else if (apId == 500) apXpTotal += 2;
+                  else if (apId == 501) apXpTotal += 5;
+                  else if (apId == 502) apXpTotal += 10;
             }
 
             // --- Skills ---
@@ -561,15 +656,17 @@ package {
                 }
             }
 
-            // --- XP ---
-            // Store AP-granted XP in SharedObject so it's tracked separately from
-            // level-earned XP. Application (what in-game effect it has) is TODO.
-            _apState.data.apXpGranted = apXpTotal;
+            // --- Wizard levels ---
+            // Recompute the exact AP wizard level total from the full item list
+            // (index=0 sync always gives us the ground truth from the server).
+            _apWizardLevel = apXpTotal;
+            _apState.data.apWizardLevels = _apWizardLevel;
             _apState.flush();
+            applyApWizardLevels(_apWizardLevel);
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
-                " apXp:" + apXpTotal);
+                " apWizardLevel:" + _apWizardLevel);
         }
 
         /** Grant an item by its AP item ID. */
@@ -594,7 +691,12 @@ package {
                 return;
             }
 
-            // XP / filler — nothing to do in-game yet
+            // XP Bonus (500–502)
+            if (apId >= 500 && apId <= 502) {
+                grantXpBonus(apId);
+                return;
+            }
+
             _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
         }
 
