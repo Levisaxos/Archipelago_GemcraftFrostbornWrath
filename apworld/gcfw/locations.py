@@ -24,9 +24,8 @@ def _load_location_table() -> Dict[str, LocationData]:
     table: Dict[str, LocationData] = {}
 
     for stage in data["stages"]:
-        # Exclude SECRET and trial-locked stages (loc_ap_id 110-122)
-        if stage["loc_ap_id"] > 109:
-            continue
+        # All stages are completable and send AP checks — including W1 which has
+        # no field token item but IS the starting location (accessible from Menu).
         str_id = stage["str_id"]
         table[f"Complete {str_id} - Journey"] = LocationData(stage["loc_ap_id"],       str_id)
         table[f"Complete {str_id} - Bonus"]   = LocationData(stage["loc_ap_id"] + 500, str_id)
