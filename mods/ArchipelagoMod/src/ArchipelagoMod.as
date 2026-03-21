@@ -8,7 +8,6 @@ package {
     import Bezel.Bezel;
     import Bezel.BezelMod;
     import Bezel.Logger;
-
     import com.giab.games.gcfw.GV;
 
     public class ArchipelagoMod extends MovieClip implements BezelMod {
@@ -30,6 +29,7 @@ package {
         private var _toastOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
+        private var _progressionBlocker:ProgressionBlocker;
         private var _keyListenerAdded:Boolean = false;
 
         // Set to false whenever the selector closes so unlockAllMapTiles() re-runs on next open.
@@ -68,17 +68,25 @@ package {
         }
 
         public function bind(bezel:Bezel, gameObjects:Object):void {
-            _bezel = bezel;
-            _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
-
-            _toast = new ToastPanel();
-            _debugOptions = new ScrDebugOptions(this);
-
-            addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+            try {
+                _bezel = bezel;
+                _toast = new ToastPanel();
+                _debugOptions = new ScrDebugOptions(this);
+                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
+                _progressionBlocker.enable(_bezel);
+                addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+                _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
+            }
         }
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            if (_progressionBlocker != null) {
+                _progressionBlocker.disable();
+                _progressionBlocker = null;
+            }
             if (this.stage != null) {
                 this.stage.removeEventListener(Event.RESIZE, onStageResize);
             }
@@ -120,13 +128,11 @@ package {
                 _keyListenerAdded = true;
             }
 
-            if (GV.selectorCore == null) {
-                // Selector closed — reset so tile visibility is re-applied next time it opens.
+            // selectorCore is never null — use renderer == null as the "not in selector" signal.
+            if (GV.ppd == null || GV.selectorCore.renderer == null) {
                 _mapTilesUnlocked = false;
                 return;
             }
-
-            if (GV.ppd == null || GV.selectorCore.renderer == null) return;
 
             // Sync tile visibility with stage unlock state once per selector session.
             if (!_mapTilesUnlocked) {
