@@ -1,7 +1,6 @@
 package {
     import flash.display.Sprite;
     import flash.events.MouseEvent;
-    import flash.net.SharedObject;
     import flash.text.TextField;
     import flash.text.TextFieldType;
     import flash.text.TextFormat;
@@ -9,7 +8,7 @@ package {
 
     /**
      * A self-contained overlay panel for entering Archipelago connection settings.
-     * Persists values in the gcfw_archipelago SharedObject alongside other AP state.
+     * Call prefill() after adding to stage to populate the fields from saved settings.
      *
      * Usage:
      *   var panel:ConnectionPanel = new ConnectionPanel();
@@ -17,6 +16,7 @@ package {
      *   panel.onCancel  = function():void { ... };
      *   stage.addChild(panel);
      *   panel.centerOnStage(stage.stageWidth, stage.stageHeight);
+     *   panel.prefill(host, port, slot, password);
      */
     public class ConnectionPanel extends Sprite {
 
@@ -61,7 +61,6 @@ package {
         public function ConnectionPanel() {
             super();
             build();
-            loadSettings();
         }
 
         // -----------------------------------------------------------------------
@@ -227,7 +226,6 @@ package {
         // Actions
 
         private function onConnectClicked(e:MouseEvent):void {
-            saveSettings();
             setConnecting(true);
             if (onConnect != null) {
                 onConnect(_tfHost.text, int(_tfPort.text), _tfSlot.text, _tfPassword.text);
@@ -262,23 +260,13 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Persistence
+        // Pre-fill from saved settings (called by ArchipelagoMod after creating the panel)
 
-        private function loadSettings():void {
-            var so:SharedObject = SharedObject.getLocal("gcfw_archipelago");
-            _tfHost.text     = (so.data.apHost     != undefined) ? String(so.data.apHost)     : "localhost";
-            _tfPort.text     = (so.data.apPort     != undefined) ? String(so.data.apPort)     : "38281";
-            _tfSlot.text     = (so.data.apSlot     != undefined) ? String(so.data.apSlot)     : "";
-            _tfPassword.text = (so.data.apPassword != undefined) ? String(so.data.apPassword) : "";
-        }
-
-        private function saveSettings():void {
-            var so:SharedObject = SharedObject.getLocal("gcfw_archipelago");
-            so.data.apHost     = _tfHost.text;
-            so.data.apPort     = int(_tfPort.text) > 0 ? int(_tfPort.text) : 38281;
-            so.data.apSlot     = _tfSlot.text;
-            so.data.apPassword = _tfPassword.text;
-            so.flush();
+        public function prefill(host:String, port:int, slot:String, password:String):void {
+            _tfHost.text     = host;
+            _tfPort.text     = String(port > 0 ? port : 38281);
+            _tfSlot.text     = slot;
+            _tfPassword.text = password;
         }
 
         // -----------------------------------------------------------------------
