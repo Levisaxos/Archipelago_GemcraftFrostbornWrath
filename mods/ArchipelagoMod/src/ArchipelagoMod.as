@@ -65,6 +65,7 @@ package {
         private var _pendingModeTarget:* = null; // e.target at intercept (child clicked inside button)
         private var _allowModeClick:Boolean     = false;
         private var _modeSelectorHooked:Boolean = false;
+        private var _pendingDeleteSlot:int      = 0; // slot whose delete btn was clicked (pre-confirm)
         // -----------------------------------------------------------------------
 
         // Set to false whenever the selector closes so unlockAllMapTiles() re-runs on next open.
@@ -257,7 +258,7 @@ package {
                         // Leaving LOADGAME toward gameplay.
                         // If already connected (re-dispatch just triggered the transition),
                         // leave connection state alone; otherwise force a fresh connect.
-                        _currentSlot = int(GV.loaderSaver.activeSlotId);
+                        _currentSlot = int(GV.loaderSaver.activeSlotId) + 1; // activeSlotId is 0-indexed; slots are 1-indexed
                         if (!_isConnected) {
                             _needsConnection = true;
                             if (_ws != null) _ws.disconnect();
@@ -398,13 +399,21 @@ package {
 
         private function tryHookModeSelector():void {
             try {
-                var sel:* = GV.main.cntScreens.mcLoadGame.mcModeSelector;
+                var lg:*  = GV.main.cntScreens.mcLoadGame;
+                var sel:* = lg.mcModeSelector;
                 if (sel == null) return;
                 sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true, 100, true);
+                // Observe delete buttons — record pending slot; actual archive happens on D confirmation.
+                for (var n:int = 1; n <= 8; n++) {
+                    var btn:* = lg["btnResetSlotL" + n];
+                    if (btn != null) btn.addEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false, 0, true);
+                }
+                // Capture D key before the game processes it so we archive before deletion.
+                this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onConfirmDeleteKey, true, 100, true);
                 _modeSelectorHooked = true;
-                _logger.log(MOD_NAME, "Mode selector hooked (Chilling + Frostborn + Iron)");
+                _logger.log(MOD_NAME, "LOADGAME buttons hooked (Chilling + Frostborn + Iron + Delete x8)");
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "tryHookModeSelector error: " + err.message);
             }
@@ -413,17 +422,28 @@ package {
         private function unhookModeSelector():void {
             if (!_modeSelectorHooked) return;
             try {
-                var sel:* = GV.main.cntScreens.mcLoadGame.mcModeSelector;
+                var lg:*  = GV.main.cntScreens.mcLoadGame;
+                var sel:* = lg != null ? lg.mcModeSelector : null;
                 if (sel != null) {
                     sel.btnModeChilling.removeEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true);
                     sel.btnModeFrostborn.removeEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true);
                     sel.btnModeIron.removeEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true);
                 }
+                if (lg != null) {
+                    for (var n:int = 1; n <= 8; n++) {
+                        var btn:* = lg["btnResetSlotL" + n];
+                        if (btn != null) btn.removeEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false);
+                    }
+                }
+                if (this.stage != null) {
+                    this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onConfirmDeleteKey, true);
+                }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "unhookModeSelector error: " + err.message);
             }
+            _pendingDeleteSlot = 0;
             _modeSelectorHooked = false;
-            _logger.log(MOD_NAME, "Mode selector unhooked");
+            _logger.log(MOD_NAME, "LOADGAME buttons unhooked");
         }
 
         private function onModeBtnUp(e:MouseEvent):void {
@@ -442,6 +462,64 @@ package {
             e.stopImmediatePropagation();
             _toast.addMessage("Iron is not allowed (yet) for Archipelago", 0xFFFF8844);
             _logger.log(MOD_NAME, "Iron mode blocked — not supported in AP");
+        }
+
+        private function onDeleteBtnUp(e:MouseEvent):void {
+            // Identify slot by comparing object reference against each known delete button.
+            var lg:* = GV.main.cntScreens.mcLoadGame;
+            var slotId:int = 0;
+            for (var n:int = 1; n <= 8; n++) {
+                if (lg["btnResetSlotL" + n] == e.currentTarget) { slotId = n; break; }
+            }
+            if (slotId <= 0) {
+                _logger.log(MOD_NAME, "onDeleteBtnUp: could not identify slot — btn.name=" + e.currentTarget.name);
+                return;
+            }
+            _pendingDeleteSlot = slotId;
+            _logger.log(MOD_NAME, "Delete button clicked for slot " + slotId + " — waiting for D confirmation");
+        }
+
+        private function onConfirmDeleteKey(e:KeyboardEvent):void {
+            if (e.keyCode != Keyboard.D || _pendingDeleteSlot <= 0) return;
+            _logger.log(MOD_NAME, "D key confirmed — archiving slot " + _pendingDeleteSlot);
+            archiveSlot(_pendingDeleteSlot);
+            _pendingDeleteSlot = 0;
+        }
+
+        private function archiveSlot(slotId:int):void {
+            if (_configDir == null) return;
+            var timestamp:String = String(new Date().getTime());
+            var deletedDir:File = _configDir.resolvePath("deleted");
+            try {
+                if (!deletedDir.exists) deletedDir.createDirectory();
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "archiveSlot: failed to create deleted/ — " + err.message);
+                return;
+            }
+            // Move our AP slot file into deleted/.
+            var apFile:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            _logger.log(MOD_NAME, "archiveSlot: checking AP file=" + apFile.nativePath + " exists=" + apFile.exists);
+            if (apFile.exists) {
+                try {
+                    apFile.moveTo(deletedDir.resolvePath("slot_" + slotId + "_" + timestamp + ".json"), true);
+                    _logger.log(MOD_NAME, "Archived AP data for slot " + slotId);
+                } catch (err:Error) {
+                    _logger.log(MOD_NAME, "archiveSlot AP data error: " + err.message);
+                }
+            }
+            // Copy the game's own save file into deleted/.
+            var saveFile:File = File.applicationStorageDirectory.resolvePath("saveslot" + slotId + ".dat");
+            if (saveFile.exists) {
+                try {
+                    saveFile.copyTo(deletedDir.resolvePath("saveslot" + slotId + "_" + timestamp + ".dat"), true);
+                    _logger.log(MOD_NAME, "Archived game save for slot " + slotId
+                        + " (" + saveFile.size + " bytes)");
+                } catch (err:Error) {
+                    _logger.log(MOD_NAME, "archiveSlot game save error: " + err.message);
+                }
+            } else {
+                _logger.log(MOD_NAME, "archiveSlot: no game save found at " + saveFile.nativePath);
+            }
         }
 
         // -----------------------------------------------------------------------
