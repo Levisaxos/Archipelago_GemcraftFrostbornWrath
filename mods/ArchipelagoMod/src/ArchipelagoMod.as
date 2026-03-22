@@ -1,5 +1,6 @@
 package {
     import flash.display.MovieClip;
+    import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
@@ -10,6 +11,7 @@ package {
     import Bezel.BezelMod;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.ScreenId;
 
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
@@ -39,12 +41,26 @@ package {
         private var _keyListenerAdded:Boolean = false;
 
         // -----------------------------------------------------------------------
-        // Archipelago connection settings — replace with UI config later.
-        private static const AP_HOST:String     = "localhost";
-        private static const AP_PORT:int        = 38281;
-        private static const AP_SLOT:String     = "Levisaxos";
-        private static const AP_PASSWORD:String = "";
-        private static const AP_SECURE:Boolean  = false; // local server = plain ws://
+        // Archipelago connection settings — loaded from SharedObject, editable via ConnectionPanel.
+        private var _apHost:String     = "localhost";
+        private var _apPort:int        = 38281;
+        private var _apSlot:String     = "";
+        private var _apPassword:String = "";
+        private static const AP_SECURE:Boolean = false; // local server = plain ws://
+
+        private var _connectionPanel:ConnectionPanel;
+        private var _blockingOverlay:Sprite;      // covers the game while not connected
+        private var _isConnected:Boolean     = false;
+        private var _needsConnection:Boolean = false; // true after leaving LOADGAME toward gameplay
+        private var _currentSlot:int         = 0;  // GV.loaderSaver.activeSlotId at game entry
+        private var _lastScreen:int          = -1; // previous GV.main.currentScreen value
+
+        // Mode-selector interception — we stop the Chilling/Frostborn click,
+        // show the connection panel, and re-dispatch once connected.
+        private var _pendingModeButton:* = null; // e.currentTarget at intercept (the button MC)
+        private var _pendingModeTarget:* = null; // e.target at intercept (child clicked inside button)
+        private var _allowModeClick:Boolean     = false;
+        private var _modeSelectorHooked:Boolean = false;
         // -----------------------------------------------------------------------
 
         // Set to false whenever the selector closes so unlockAllMapTiles() re-runs on next open.
@@ -90,6 +106,14 @@ package {
                 // immediately on load (before the AP server reconnects and resyncs).
                 _apWizardLevel = (_apState.data.apWizardLevels != undefined)
                     ? int(_apState.data.apWizardLevels) : 0;
+
+                // Load connection settings from persistent storage.
+                if (_apState.data.apHost     != undefined) _apHost     = String(_apState.data.apHost);
+                if (_apState.data.apPort     != undefined) _apPort     = int(_apState.data.apPort);
+                if (_apState.data.apSlot     != undefined) _apSlot     = String(_apState.data.apSlot);
+                if (_apState.data.apPassword != undefined) _apPassword = String(_apState.data.apPassword);
+                _logger.log(MOD_NAME, "Settings loaded — host=" + _apHost + " port=" + _apPort
+                    + " slot='" + _apSlot + "' hasPassword=" + (_apPassword != ""));
                 _toast = new ToastPanel();
                 _debugOptions = new ScrDebugOptions(this);
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
@@ -99,16 +123,40 @@ package {
 
                 _ws = new WebSocketClient(_logger);
                 _ws.onOpen    = function():void {
+                    _logger.log(MOD_NAME, "WS onOpen — _isConnected: false → true  _needsConnection: " + _needsConnection + " → false");
+                    _isConnected = true;
+                    _needsConnection = false;
+                    dismissConnectionOverlay();
+                    // If we intercepted a mode-selector click, re-dispatch it now so the
+                    // game continues with the chosen difficulty.
+                    if (_pendingModeButton != null) {
+                        _logger.log(MOD_NAME, "Re-dispatching mode button MOUSE_UP — btn=" + _pendingModeButton + "  target=" + _pendingModeTarget);
+                        GV.pressedButton = _pendingModeButton;
+                        _allowModeClick  = true;
+                        _pendingModeTarget.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP, true, false));
+                        _allowModeClick  = false;
+                        _pendingModeButton = null;
+                        _pendingModeTarget = null;
+                    }
                     _toast.addMessage("AP connected!", 0xFF88FF88);
                 };
                 _ws.onMessage = onApMessage;
                 _ws.onError   = function(msg:String):void {
+                    _logger.log(MOD_NAME, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
+                    _isConnected = false;
                     _toast.addMessage("AP error: " + msg, 0xFFFF6666);
                 };
                 _ws.onClose   = function():void {
+                    _logger.log(MOD_NAME, "WS onClose — _isConnected: " + _isConnected + " → false");
+                    _isConnected = false;
                     _toast.addMessage("AP disconnected", 0xFFFFAA44);
                 };
-                _ws.connect(AP_HOST, AP_PORT, AP_SECURE);
+                if (_apSlot != "") {
+                    _logger.log(MOD_NAME, "Auto-connecting on startup (slot is set)");
+                    _ws.connect(_apHost, _apPort, AP_SECURE);
+                } else {
+                    _logger.log(MOD_NAME, "No slot set — skipping auto-connect");
+                }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -140,6 +188,15 @@ package {
                 _debugOptions.close();
             }
             _debugOptions = null;
+            unhookModeSelector();
+            _pendingModeButton = null;
+            _pendingModeTarget = null;
+            dismissConnectionOverlay();
+            if (_connectionPanel != null && _connectionPanel.parent != null) {
+                _connectionPanel.parent.removeChild(_connectionPanel);
+            }
+            _connectionPanel = null;
+            _blockingOverlay = null;
             if (_btn != null && _btn.parent != null) {
                 _btn.parent.removeChild(_btn);
                 _btn = null;
@@ -163,6 +220,47 @@ package {
             if (!_keyListenerAdded && this.stage != null) {
                 this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
                 _keyListenerAdded = true;
+            }
+
+            // Track screen transitions and detect selector entry.
+            var screen:int = int(GV.main.currentScreen);
+            if (_lastScreen == -1) {
+                _lastScreen = screen;
+                _logger.log(MOD_NAME, "Screen init — currentScreen=" + screen);
+            }
+            if (screen != _lastScreen) {
+                _logger.log(MOD_NAME, "Screen change: " + _lastScreen + " → " + screen
+                    + "  _isConnected=" + _isConnected + "  _needsConnection=" + _needsConnection);
+
+                if (_lastScreen == ScreenId.LOADGAME) {
+                    unhookModeSelector();
+                    if (screen != ScreenId.MAINMENU) {
+                        // Leaving LOADGAME toward gameplay.
+                        // If already connected (re-dispatch just triggered the transition),
+                        // leave connection state alone; otherwise force a fresh connect.
+                        _currentSlot = int(GV.loaderSaver.activeSlotId);
+                        if (!_isConnected) {
+                            _needsConnection = true;
+                            if (_ws != null) _ws.disconnect();
+                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _currentSlot
+                                + "  needsConnection=true");
+                        } else {
+                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _currentSlot);
+                        }
+                    }
+                }
+                _lastScreen = screen;
+            }
+
+            // Hook mode selector buttons while on LOADGAME so we can intercept
+            // Chilling/Frostborn clicks before the game transitions.
+            if (screen == ScreenId.LOADGAME && !_modeSelectorHooked) {
+                tryHookModeSelector();
+            }
+
+            // Show connection overlay on any screen while a fresh connection is required.
+            if (_needsConnection && !_isConnected && this.stage != null) {
+                ensureConnectionOverlay();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -232,7 +330,7 @@ package {
             _btn = new ArchipelagoButton(btnTutorial);
             _btn.x = btnTutorial.x;
             _btn.y = btnTutorial.y + stepY;
-            _btn.visible = _debugMode;
+            _btn.visible = true;
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
 
             mc.addChild(_btn);
@@ -243,8 +341,7 @@ package {
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
-                if (_btn != null) _btn.visible = _debugMode;
-                // If debug mode was just turned off, close the panel if it is open.
+                // If debug mode was just turned off, close the debug panel if it is open.
                 if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
                     _debugOptions.close();
                 }
@@ -252,7 +349,6 @@ package {
         }
 
         private function onArchipelagoClicked(e:MouseEvent):void {
-            if (!_debugMode) return;
             if (_debugOptions == null) return;
             if (_debugOptions.isOpen) {
                 _logger.log(MOD_NAME, "Closing debug options panel");
@@ -261,6 +357,114 @@ package {
                 _logger.log(MOD_NAME, "Opening debug options panel");
                 _debugOptions.open();
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // Mode-selector interception
+
+        private function tryHookModeSelector():void {
+            try {
+                var sel:* = GV.main.cntScreens.mcLoadGame.mcModeSelector;
+                if (sel == null) return;
+                sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
+                sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
+                _modeSelectorHooked = true;
+                _logger.log(MOD_NAME, "Mode selector hooked (Chilling + Frostborn)");
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "tryHookModeSelector error: " + err.message);
+            }
+        }
+
+        private function unhookModeSelector():void {
+            if (!_modeSelectorHooked) return;
+            try {
+                var sel:* = GV.main.cntScreens.mcLoadGame.mcModeSelector;
+                if (sel != null) {
+                    sel.btnModeChilling.removeEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true);
+                    sel.btnModeFrostborn.removeEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true);
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "unhookModeSelector error: " + err.message);
+            }
+            _modeSelectorHooked = false;
+            _logger.log(MOD_NAME, "Mode selector unhooked");
+        }
+
+        private function onModeBtnUp(e:MouseEvent):void {
+            if (_allowModeClick) return; // our own re-dispatch — let it through
+            e.stopImmediatePropagation();
+            _pendingModeButton = e.currentTarget; // the button MovieClip
+            _pendingModeTarget = e.target;        // the child that was actually clicked
+            _logger.log(MOD_NAME, "Mode button intercepted — btn=" + _pendingModeButton
+                + "  target=" + _pendingModeTarget);
+            ensureConnectionOverlay();
+        }
+
+        // -----------------------------------------------------------------------
+        // Connection overlay — shown over the game when not connected to AP.
+
+        private function ensureConnectionOverlay():void {
+            if (_blockingOverlay != null && _blockingOverlay.parent != null) {
+                // Already on stage — nothing to do.
+                return;
+            }
+
+            _logger.log(MOD_NAME, "ensureConnectionOverlay — building overlay"
+                + "  overlayNull=" + (_blockingOverlay == null)
+                + "  panelNull=" + (_connectionPanel == null)
+                + "  stage=" + this.stage);
+
+            if (_blockingOverlay == null) {
+                _blockingOverlay = new Sprite();
+                // Full-stage dark fill intercepts all mouse events below.
+                _blockingOverlay.graphics.beginFill(0x000000, 0.88);
+                _blockingOverlay.graphics.drawRect(-500, -500, 3000, 3000);
+                _blockingOverlay.graphics.endFill();
+            }
+
+            if (_connectionPanel == null) {
+                _connectionPanel = new ConnectionPanel();
+                _logger.log(MOD_NAME, "ConnectionPanel created");
+            }
+            _connectionPanel.onConnect = onConnectionPanelConnect;
+            _connectionPanel.onCancel  = dismissConnectionOverlay;
+
+            if (_connectionPanel.parent != null) {
+                _connectionPanel.parent.removeChild(_connectionPanel);
+            }
+            _blockingOverlay.addChild(_connectionPanel);
+            _connectionPanel.centerOnStage(this.stage.stageWidth, this.stage.stageHeight);
+
+            this.stage.addChild(_blockingOverlay);
+            _logger.log(MOD_NAME, "Connection overlay shown — stageW=" + this.stage.stageWidth
+                + " stageH=" + this.stage.stageHeight
+                + " overlayChildren=" + _blockingOverlay.numChildren);
+        }
+
+        private function dismissConnectionOverlay():void {
+            var wasOnStage:Boolean = _blockingOverlay != null && _blockingOverlay.parent != null;
+            if (wasOnStage) {
+                _blockingOverlay.parent.removeChild(_blockingOverlay);
+            }
+            // If user cancelled, clear the pending click so they can retry.
+            _pendingModeButton = null;
+            _pendingModeTarget = null;
+            _logger.log(MOD_NAME, "dismissConnectionOverlay — wasOnStage=" + wasOnStage);
+        }
+
+        private function onConnectionPanelConnect(host:String, port:int,
+                                                   slot:String, password:String):void {
+            _apHost     = host;
+            _apPort     = port;
+            _apSlot     = slot;
+            _apPassword = password;
+            if (_ws != null) {
+                _ws.disconnect();
+                _ws.connect(_apHost, _apPort, AP_SECURE);
+                _logger.log(MOD_NAME, "Connecting to " + _apHost + ":" + _apPort
+                    + "  slot=" + _apSlot);
+            }
+            // Overlay stays up until onOpen fires and sets _isConnected = true.
         }
 
         // -----------------------------------------------------------------------
@@ -765,13 +969,13 @@ package {
         private function sendConnect():void {
             var packet:String = '[{"cmd":"Connect",' +
                 '"game":"GemCraft: Frostborn Wrath",' +
-                '"name":"' + AP_SLOT + '",' +
-                '"password":"' + AP_PASSWORD + '",' +
+                '"name":"' + _apSlot + '",' +
+                '"password":"' + _apPassword + '",' +
                 '"version":{"major":0,"minor":6,"build":6,"class":"Version"},' +
                 '"items_handling":7,' +
                 '"tags":[],' +
                 '"uuid":"gcfw-mod"}]';
-            _logger.log(MOD_NAME, "AP >> Connect  slot=" + AP_SLOT);
+            _logger.log(MOD_NAME, "AP >> Connect  slot=" + _apSlot);
             _ws.send(packet);
         }
     }
