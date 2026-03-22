@@ -42,9 +42,14 @@ package {
         public function get isOpen():Boolean { return _isOpen; }
 
         public function ScrDebugOptions(mod:ArchipelagoMod) {
-            var i:int = 0;
             _mod = mod;
-            _mc  = new McDebugOptions();
+            // _mc is created lazily on first open() — McOptions is not yet registered
+            // in the application domain when the mod first loads on a cold start.
+        }
+
+        private function initPanel():void {
+            var i:int = 0;
+            _mc = new McDebugOptions();
 
             _mc.scaleX = PANEL_SCALE;
             _mc.scaleY = PANEL_SCALE;
@@ -58,7 +63,6 @@ package {
             }
 
             buttonsInit();
-            renderViewport();
         }
 
         // -----------------------------------------------------------------------
@@ -66,6 +70,7 @@ package {
 
         public function open():void {
             if (_isOpen) return;
+            if (_mc == null) initPanel();
             _isOpen = true;
 
             // Hide all navigation buttons — this is a debug-only panel on the selector screen.
@@ -87,7 +92,7 @@ package {
         public function close():void {
             if (!_isOpen) return;
             _isOpen = false;
-            GV.main.removeChild(_mc);
+            if (_mc != null && _mc.parent != null) _mc.parent.removeChild(_mc);
             removeWheelListener();
         }
 

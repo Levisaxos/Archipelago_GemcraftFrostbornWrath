@@ -1,9 +1,9 @@
 {
   "_notes": {
-    "item_id_buckets": "Stages (Field Tokens): 1-199 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP/Filler: 500-599 | Gem Unlocks: 600-699",
-    "location_id_buckets": "Stages (Journey): 1-199 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499",
+    "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP/Filler: 500-599",
+    "location_id_buckets": "Stages (Journey): 1-124 | Stages (Bonus): 501-624 | Map Tiles: 200-299",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
-    "trial_locked_note": "Some stages are only reachable via trial drops (FLDZ1, FLDA5, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5). Excluded from alpha scope."
+    "scope_note": "All stages are now in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 have unknown original unlock mechanics but are included as AP token stages."
   },
   "gem_unlocks": [
     {
@@ -2063,14 +2063,18 @@
     {
       "str_id": "W5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 109,
       "loc_ap_id": 110,
-      "note": "Secret — unlock method TBD, excluded from alpha"
+      "note": "Secret — original unlock method TBD; accessible via AP token",
+      "unlocks": [],
+      "available_gems": [],
+      "required_skills": [],
+      "wave_count": 0
     },
     {
       "str_id": "Z5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 110,
       "loc_ap_id": 111,
       "note": "Secret — trial-locked (FLDZ5 in Z4 trial drop)",
       "available_gems": [
@@ -2082,7 +2086,7 @@
     {
       "str_id": "T5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 111,
       "loc_ap_id": 112,
       "note": "Secret — trial-locked",
       "available_gems": [
@@ -2096,7 +2100,7 @@
     {
       "str_id": "R6",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 112,
       "loc_ap_id": 113,
       "note": "Secret — trial-locked (FLDR6 in N1 trial drop)",
       "available_gems": [
@@ -2110,7 +2114,7 @@
     {
       "str_id": "P6",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 113,
       "loc_ap_id": 114,
       "note": "Secret — trial-locked (FLDP6 in P5 trial drop)",
       "available_gems": [
@@ -2127,7 +2131,7 @@
     {
       "str_id": "K5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 114,
       "loc_ap_id": 115,
       "note": "Secret — trial-locked (FLDK5 in G2 trial drop)",
       "available_gems": [
@@ -2140,7 +2144,7 @@
     {
       "str_id": "H5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 115,
       "loc_ap_id": 116,
       "note": "Secret — trial-locked (FLDH5 in H2 trial drop)",
       "available_gems": [
@@ -2157,14 +2161,18 @@
     {
       "str_id": "G5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 116,
       "loc_ap_id": 117,
-      "note": "Secret — unlock method TBD"
+      "note": "Secret — original unlock method TBD; accessible via AP token",
+      "unlocks": [],
+      "available_gems": [],
+      "required_skills": [],
+      "wave_count": 0
     },
     {
       "str_id": "F5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 117,
       "loc_ap_id": 118,
       "note": "Secret — trial-locked",
       "available_gems": [
@@ -2181,7 +2189,7 @@
     {
       "str_id": "E5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 118,
       "loc_ap_id": 119,
       "note": "Secret — trial-locked",
       "available_gems": [
@@ -2194,7 +2202,7 @@
     {
       "str_id": "B5",
       "type": "SECRET",
-      "item_ap_id": null,
+      "item_ap_id": 119,
       "loc_ap_id": 120,
       "note": "Secret — trial-locked (FLDB5 in B2 trial drop)",
       "available_gems": [
@@ -2211,7 +2219,7 @@
     {
       "str_id": "A5",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 120,
       "loc_ap_id": 121,
       "note": "Trial-locked (FLDA5 in A3 trial drop)",
       "available_gems": [
@@ -2225,7 +2233,7 @@
     {
       "str_id": "A6",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 121,
       "loc_ap_id": 122,
       "note": "Trial-locked (FLDA6 in A4 trial drop)",
       "available_gems": [
@@ -2235,6 +2243,38 @@
       ],
       "required_skills": [],
       "wave_count": 99
+    },
+    {
+      "str_id": "I1",
+      "type": "NORMAL",
+      "item_ap_id": 122,
+      "loc_ap_id": 123,
+      "note": "Trial-locked (FLDI1); accessible via AP token",
+      "unlocks": [
+        "I2"
+      ],
+      "available_gems": [
+        "Bleed",
+        "Poison",
+        "Slow"
+      ],
+      "required_skills": [],
+      "wave_count": 76
+    },
+    {
+      "str_id": "D5",
+      "type": "NORMAL",
+      "item_ap_id": 123,
+      "loc_ap_id": 124,
+      "note": "Trial-locked (FLDD5); accessible via AP token",
+      "unlocks": [],
+      "available_gems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "required_skills": [],
+      "wave_count": 78
     }
   ]
 }
