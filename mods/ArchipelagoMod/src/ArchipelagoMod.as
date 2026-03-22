@@ -4,7 +4,9 @@ package {
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
-    import flash.net.SharedObject;
+    import flash.filesystem.File;
+    import flash.filesystem.FileMode;
+    import flash.filesystem.FileStream;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -37,12 +39,12 @@ package {
         private var _ws:WebSocketClient;
         private var _tokenMap:Object = {};       // item AP ID (string) → stage str_id
         private var _tokenStages:Object = {};    // stage str_id → true  (has an AP token)
-        private var _apState:SharedObject;       // persistent AP-specific state (checks, etc.)
+        private var _configDir:File;             // {game_dir}/Mods/config/ — readable/writable JSON files
         private var _apWizardLevel:int = 0;      // total AP-granted wizard levels this session
         private var _keyListenerAdded:Boolean = false;
 
         // -----------------------------------------------------------------------
-        // Archipelago connection settings — loaded from SharedObject, editable via ConnectionPanel.
+        // Archipelago connection settings — loaded from connection.json, editable via ConnectionPanel.
         private var _apHost:String     = "localhost";
         private var _apPort:int        = 38281;
         private var _apSlot:String     = "";
@@ -138,19 +140,8 @@ package {
         public function bind(bezel:Bezel, gameObjects:Object):void {
             try {
                 _bezel = bezel;
-                _apState = SharedObject.getLocal("gcfw_archipelago");
-                // Restore persisted wizard level so the bonus XP can be re-applied
-                // immediately on load (before the AP server reconnects and resyncs).
-                _apWizardLevel = (_apState.data.apWizardLevels != undefined)
-                    ? int(_apState.data.apWizardLevels) : 0;
-
-                // Load connection settings from persistent storage.
-                if (_apState.data.apHost     != undefined) _apHost     = String(_apState.data.apHost);
-                if (_apState.data.apPort     != undefined) _apPort     = int(_apState.data.apPort);
-                if (_apState.data.apSlot     != undefined) _apSlot     = String(_apState.data.apSlot);
-                if (_apState.data.apPassword != undefined) _apPassword = String(_apState.data.apPassword);
-                _logger.log(MOD_NAME, "Settings loaded — host=" + _apHost + " port=" + _apPort
-                    + " slot='" + _apSlot + "' hasPassword=" + (_apPassword != ""));
+                _configDir = File.applicationStorageDirectory.resolvePath("archipelago");
+                _logger.log(MOD_NAME, "Config dir: " + _configDir.nativePath);
                 _toast = new ToastPanel();
                 _debugOptions = new ScrDebugOptions(this);
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
@@ -438,10 +429,12 @@ package {
         private function onModeBtnUp(e:MouseEvent):void {
             if (_allowModeClick) return; // our own re-dispatch — let it through
             e.stopImmediatePropagation();
+            _currentSlot       = int(GV.loaderSaver.activeSlotId); // capture slot before overlay
             _pendingModeButton = e.currentTarget; // the button MovieClip
             _pendingModeTarget = e.target;        // the child that was actually clicked
             _logger.log(MOD_NAME, "Mode button intercepted — btn=" + _pendingModeButton
-                + "  target=" + _pendingModeTarget);
+                + "  target=" + _pendingModeTarget + "  slot=" + _currentSlot);
+            loadSlotData(_currentSlot); // pre-load saved connection + AP state for this slot
             ensureConnectionOverlay();
         }
 
@@ -479,6 +472,7 @@ package {
             }
             _connectionPanel.onConnect = onConnectionPanelConnect;
             _connectionPanel.onCancel  = dismissConnectionOverlay;
+            _connectionPanel.prefill(_apHost, _apPort, _apSlot, _apPassword);
 
             if (_connectionPanel.parent != null) {
                 _connectionPanel.parent.removeChild(_connectionPanel);
@@ -513,6 +507,7 @@ package {
             _apPort     = port;
             _apSlot     = slot;
             _apPassword = password;
+            saveSlotData();
             if (_ws != null) {
                 _reconnecting = true;
                 _ws.disconnect();   // fires onClose synchronously — suppressed by _reconnecting
@@ -691,8 +686,7 @@ package {
             else return;
 
             _apWizardLevel += levels;
-            _apState.data.apWizardLevels = _apWizardLevel;
-            _apState.flush();
+            saveSlotData();
 
             _logger.log(MOD_NAME, label + " XP Bonus → +" + levels
                 + " wizard levels (AP total: " + _apWizardLevel + ")");
@@ -926,8 +920,7 @@ package {
             // Recompute the exact AP wizard level total from the full item list
             // (index=0 sync always gives us the ground truth from the server).
             _apWizardLevel = apXpTotal;
-            _apState.data.apWizardLevels = _apWizardLevel;
-            _apState.flush();
+            saveSlotData();
             applyApWizardLevels(_apWizardLevel);
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
@@ -969,6 +962,7 @@ package {
         private function handleConnected(p:Object):void {
             _isConnected = true;
             _needsConnection = false;
+            loadSlotData(_currentSlot);
             // Save pending refs before dismissConnectionOverlay() clears them.
             var pendingBtn:* = _pendingModeButton;
             var pendingTarget:* = _pendingModeTarget;
@@ -1030,33 +1024,118 @@ package {
          * Detects battle victories and sends any newly-completed stage locations to AP.
          */
         private function onSaveSave(e:*):void {
+            _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _isConnected
+                + "  missingCount=" + countKeys(_missingLocations));
             if (!_isConnected) return;
             try {
-                if (GV.ingameController == null || GV.ingameController.core == null) return;
+                var hasController:Boolean = GV.ingameController != null;
+                var hasCore:Boolean = hasController && GV.ingameController.core != null;
+                _logger.log(MOD_NAME, "  ingameController=" + hasController + "  core=" + hasCore);
+                if (!hasController || !hasCore) return;
+
                 var ending:* = GV.ingameController.core.ending;
+                _logger.log(MOD_NAME, "  ending=" + ending
+                    + "  isBattleWon=" + (ending != null ? ending.isBattleWon : "n/a"));
                 if (ending == null || !ending.isBattleWon) return;
 
+                var hasPpd:Boolean       = GV.ppd != null;
+                var hasMetas:Boolean     = GV.stageCollection != null && GV.stageCollection.stageMetas != null;
+                _logger.log(MOD_NAME, "  ppd=" + hasPpd + "  stageMetas=" + hasMetas);
+                if (!hasPpd || !hasMetas) return;
+
                 var metas:Array = GV.stageCollection.stageMetas;
+                _logger.log(MOD_NAME, "  metas.length=" + metas.length);
+
                 var toSend:Array = [];
                 for (var i:int = 0; i < metas.length; i++) {
                     var meta:* = metas[i];
                     if (meta == null) continue;
-                    if (GV.ppd.stageHighestXpsJourney[meta.id].g() <= 0) continue;
+                    var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
+                    if (xp <= 0) continue;
                     var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
+                    _logger.log(MOD_NAME, "  stage=" + meta.strId + "  xp=" + xp
+                        + "  locId=" + locId
+                        + "  journeyMissing=" + (_missingLocations[locId] == true)
+                        + "  bonusMissing="   + (_missingLocations[locId + 500] == true));
                     if (locId <= 0) continue;
                     if (_missingLocations[locId])       toSend.push(locId);
                     if (_missingLocations[locId + 500]) toSend.push(locId + 500);
                 }
+                _logger.log(MOD_NAME, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " checks)");
                 if (toSend.length > 0) {
                     for each (var sentId:int in toSend) {
                         delete _missingLocations[sentId];
                     }
                     sendLocationChecks(toSend);
-                    _logger.log(MOD_NAME, "Sent " + toSend.length + " location check(s) after battle win");
                 }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // File-based config storage
+        // connection.json  — host/port/slot/password (shared across all slots)
+        // slot_N.json      — per-save-slot AP state (wizard levels, etc.)
+
+        private function loadSlotData(slotId:int):void {
+            // Reset to defaults before loading — ensures clean state for each slot.
+            _apHost        = "localhost";
+            _apPort        = 38281;
+            _apSlot        = "";
+            _apPassword    = "";
+            _apWizardLevel = 0;
+            if (slotId <= 0) return;
+            var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            if (!f.exists) {
+                _logger.log(MOD_NAME, "No slot_" + slotId + ".json — fresh slot, using defaults");
+                return;
+            }
+            try {
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                var data:Object = JSON.parse(raw);
+                if (data.host           !== undefined) _apHost        = String(data.host);
+                if (data.port           !== undefined) _apPort        = int(data.port);
+                if (data.slot           !== undefined) _apSlot        = String(data.slot);
+                if (data.password       !== undefined) _apPassword    = String(data.password);
+                if (data.apWizardLevels !== undefined) _apWizardLevel = int(data.apWizardLevels);
+                _logger.log(MOD_NAME, "Loaded slot_" + slotId + ".json — host=" + _apHost
+                    + " port=" + _apPort + " slot='" + _apSlot
+                    + "' apWizardLevels=" + _apWizardLevel);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "loadSlotData ERROR: " + err.message);
+            }
+        }
+
+        private function saveSlotData():void {
+            if (_currentSlot <= 0 || _configDir == null) return;
+            try {
+                if (!_configDir.exists) _configDir.createDirectory();
+                var f:File = _configDir.resolvePath("slot_" + _currentSlot + ".json");
+                var data:Object = {
+                    host:          _apHost,
+                    port:          _apPort,
+                    slot:          _apSlot,
+                    password:      _apPassword,
+                    apWizardLevels: _apWizardLevel
+                };
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.WRITE);
+                stream.writeUTFBytes(JSON.stringify(data, null, 2));
+                stream.close();
+                _logger.log(MOD_NAME, "Saved slot_" + _currentSlot + ".json");
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "saveSlotData ERROR: " + err.message);
+            }
+        }
+
+        private function countKeys(obj:Object):int {
+            var n:int = 0;
+            for (var k:String in obj) n++;
+            return n;
         }
 
         /**
