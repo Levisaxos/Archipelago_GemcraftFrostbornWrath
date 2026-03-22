@@ -10,6 +10,7 @@ package {
     import Bezel.Bezel;
     import Bezel.BezelMod;
     import Bezel.Logger;
+    import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.ScreenId;
 
@@ -51,6 +52,7 @@ package {
         private var _connectionPanel:ConnectionPanel;
         private var _blockingOverlay:Sprite;      // covers the game while not connected
         private var _isConnected:Boolean     = false;
+        private var _reconnecting:Boolean    = false; // true while deliberately disconnecting before reconnect
         private var _needsConnection:Boolean = false; // true after leaving LOADGAME toward gameplay
         private var _currentSlot:int         = 0;  // GV.loaderSaver.activeSlotId at game entry
         private var _lastScreen:int          = -1; // previous GV.main.currentScreen value
@@ -93,6 +95,41 @@ package {
             "Giant Domination", "Strength in Numbers", "Ritual"
         ];
 
+        // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
+        // Must match game_data.json loc_ap_id values exactly.
+        private static const STAGE_LOC_AP_IDS:Object = {
+            "W1":1,  "W2":2,  "W3":3,  "W4":4,  "W5":110,
+            "S1":5,  "S2":6,  "S3":7,  "S4":8,
+            "V1":9,  "V2":10, "V3":11, "V4":12,
+            "R1":13, "R2":14, "R3":15, "R4":16, "R5":17, "R6":113,
+            "Q1":18, "Q2":19, "Q3":20, "Q4":21, "Q5":22,
+            "T1":23, "T2":24, "T3":25, "T4":26, "T5":112,
+            "U1":27, "U2":28, "U3":29, "U4":30,
+            "Y1":31, "Y2":32, "Y3":33, "Y4":34,
+            "X1":35, "X2":36, "X3":37, "X4":38,
+            "Z1":39, "Z2":40, "Z3":41, "Z4":42, "Z5":111,
+            "O1":43, "O2":44, "O3":45, "O4":46,
+            "N1":47, "N2":48, "N3":49, "N4":50, "N5":51,
+            "P1":52, "P2":53, "P3":54, "P4":55, "P5":56, "P6":114,
+            "L1":57, "L2":58, "L3":59, "L4":60, "L5":61,
+            "K1":62, "K2":63, "K3":64, "K4":65, "K5":115,
+            "H1":66, "H2":67, "H3":68, "H4":69, "H5":116,
+            "G1":70, "G2":71, "G3":72, "G4":73, "G5":117,
+            "J1":74, "J2":75, "J3":76, "J4":77,
+            "M1":78, "M2":79, "M3":80, "M4":81,
+            "F1":82, "F2":83, "F3":84, "F4":85, "F5":118,
+            "E1":86, "E2":87, "E3":88, "E4":89, "E5":119,
+            "D1":90, "D2":91, "D3":92, "D4":93, "D5":124,
+            "B1":94, "B2":95, "B3":96, "B4":97, "B5":120,
+            "C1":98, "C2":99, "C3":100,"C4":101,"C5":102,
+            "A1":103,"A2":104,"A3":105,"A4":106,"A5":121,"A6":122,
+            "I1":123,"I2":107,"I3":108,"I4":109
+        };
+
+        // AP location IDs not yet checked according to the server.
+        // Populated from handleConnected; updated as checks are sent.
+        private var _missingLocations:Object = {};
+
         public function ArchipelagoMod() {
             super();
             _logger = Logger.getLogger(MOD_NAME);
@@ -118,45 +155,35 @@ package {
                 _debugOptions = new ScrDebugOptions(this);
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
                 _progressionBlocker.enable(_bezel);
+                _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
 
                 _ws = new WebSocketClient(_logger);
                 _ws.onOpen    = function():void {
-                    _logger.log(MOD_NAME, "WS onOpen — _isConnected: false → true  _needsConnection: " + _needsConnection + " → false");
-                    _isConnected = true;
-                    _needsConnection = false;
-                    dismissConnectionOverlay();
-                    // If we intercepted a mode-selector click, re-dispatch it now so the
-                    // game continues with the chosen difficulty.
-                    if (_pendingModeButton != null) {
-                        _logger.log(MOD_NAME, "Re-dispatching mode button MOUSE_UP — btn=" + _pendingModeButton + "  target=" + _pendingModeTarget);
-                        GV.pressedButton = _pendingModeButton;
-                        _allowModeClick  = true;
-                        _pendingModeTarget.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP, true, false));
-                        _allowModeClick  = false;
-                        _pendingModeButton = null;
-                        _pendingModeTarget = null;
-                    }
-                    _toast.addMessage("AP connected!", 0xFF88FF88);
+                    _logger.log(MOD_NAME, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");
+                    // Don't set _isConnected yet — wait for the AP Connected packet.
+                    // Show "Authenticating..." in the panel so the button stays disabled.
+                    if (_connectionPanel != null) _connectionPanel.showError("Authenticating...");
                 };
                 _ws.onMessage = onApMessage;
                 _ws.onError   = function(msg:String):void {
                     _logger.log(MOD_NAME, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
                     _isConnected = false;
+                    if (_connectionPanel != null) {
+                        _connectionPanel.resetState();
+                        _connectionPanel.showError("Connection failed: " + msg);
+                    }
                     _toast.addMessage("AP error: " + msg, 0xFFFF6666);
                 };
                 _ws.onClose   = function():void {
-                    _logger.log(MOD_NAME, "WS onClose — _isConnected: " + _isConnected + " → false");
+                    _logger.log(MOD_NAME, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
                     _isConnected = false;
-                    _toast.addMessage("AP disconnected", 0xFFFFAA44);
+                    // Suppress reset when we deliberately disconnected before reconnecting.
+                    if (!_reconnecting && _connectionPanel != null) _connectionPanel.resetState();
+                    if (!_reconnecting) _toast.addMessage("AP disconnected", 0xFFFFAA44);
                 };
-                if (_apSlot != "") {
-                    _logger.log(MOD_NAME, "Auto-connecting on startup (slot is set)");
-                    _ws.connect(_apHost, _apPort, AP_SECURE);
-                } else {
-                    _logger.log(MOD_NAME, "No slot set — skipping auto-connect");
-                }
+                _logger.log(MOD_NAME, "No auto-connect — waiting for slot selection");
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -164,6 +191,7 @@ package {
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_ws != null) {
                 _ws.disconnect();
                 _ws = null;
@@ -250,6 +278,21 @@ package {
                     }
                 }
                 _lastScreen = screen;
+            }
+
+            // When entering LOADGAME, drop any existing connection — the player
+            // must connect fresh for whichever slot they choose.
+            if (screen == ScreenId.LOADGAME && _lastScreen != ScreenId.LOADGAME) {
+                if (_ws != null) {
+                    _reconnecting = false; // ensure onClose side-effects fire
+                    _ws.disconnect();
+                }
+                _isConnected     = false;
+                _needsConnection = false;
+                dismissConnectionOverlay();
+                _pendingModeButton = null;
+                _pendingModeTarget = null;
+                _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
             }
 
             // Hook mode selector buttons while on LOADGAME so we can intercept
@@ -368,8 +411,9 @@ package {
                 if (sel == null) return;
                 sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
+                sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true, 100, true);
                 _modeSelectorHooked = true;
-                _logger.log(MOD_NAME, "Mode selector hooked (Chilling + Frostborn)");
+                _logger.log(MOD_NAME, "Mode selector hooked (Chilling + Frostborn + Iron)");
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "tryHookModeSelector error: " + err.message);
             }
@@ -382,6 +426,7 @@ package {
                 if (sel != null) {
                     sel.btnModeChilling.removeEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true);
                     sel.btnModeFrostborn.removeEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true);
+                    sel.btnModeIron.removeEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true);
                 }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "unhookModeSelector error: " + err.message);
@@ -398,6 +443,12 @@ package {
             _logger.log(MOD_NAME, "Mode button intercepted — btn=" + _pendingModeButton
                 + "  target=" + _pendingModeTarget);
             ensureConnectionOverlay();
+        }
+
+        private function onIronBtnUp(e:MouseEvent):void {
+            e.stopImmediatePropagation();
+            _toast.addMessage("Iron is not allowed (yet) for Archipelago", 0xFFFF8844);
+            _logger.log(MOD_NAME, "Iron mode blocked — not supported in AP");
         }
 
         // -----------------------------------------------------------------------
@@ -436,6 +487,10 @@ package {
             _connectionPanel.centerOnStage(this.stage.stageWidth, this.stage.stageHeight);
 
             this.stage.addChild(_blockingOverlay);
+            // Keep the toast above the overlay so messages remain visible.
+            if (_toast != null && _toast.parent == this.stage) {
+                this.stage.setChildIndex(_toast, this.stage.numChildren - 1);
+            }
             _logger.log(MOD_NAME, "Connection overlay shown — stageW=" + this.stage.stageWidth
                 + " stageH=" + this.stage.stageHeight
                 + " overlayChildren=" + _blockingOverlay.numChildren);
@@ -459,7 +514,9 @@ package {
             _apSlot     = slot;
             _apPassword = password;
             if (_ws != null) {
-                _ws.disconnect();
+                _reconnecting = true;
+                _ws.disconnect();   // fires onClose synchronously — suppressed by _reconnecting
+                _reconnecting = false;
                 _ws.connect(_apHost, _apPort, AP_SECURE);
                 _logger.log(MOD_NAME, "Connecting to " + _apHost + ":" + _apPort
                     + "  slot=" + _apSlot);
@@ -744,6 +801,11 @@ package {
                     var errors:Array = p.errors as Array;
                     var errMsg:String = errors && errors.length > 0 ? errors.join(", ") : "unknown reason";
                     _logger.log(MOD_NAME, "  ConnectionRefused: " + errMsg);
+                    _isConnected = false;
+                    if (_connectionPanel != null) {
+                        _connectionPanel.resetState();
+                        _connectionPanel.showError("Refused: " + errMsg);
+                    }
                     _toast.addMessage("AP refused: " + errMsg, 0xFFFF6666);
                     break;
 
@@ -905,6 +967,24 @@ package {
         }
 
         private function handleConnected(p:Object):void {
+            _isConnected = true;
+            _needsConnection = false;
+            // Save pending refs before dismissConnectionOverlay() clears them.
+            var pendingBtn:* = _pendingModeButton;
+            var pendingTarget:* = _pendingModeTarget;
+            dismissConnectionOverlay();
+            // If we intercepted a mode-selector click, re-dispatch it now so the
+            // game continues with the chosen difficulty.
+            if (pendingBtn != null) {
+                _logger.log(MOD_NAME, "Re-dispatching mode button MOUSE_UP — btn=" + pendingBtn + "  target=" + pendingTarget);
+                GV.pressedButton = pendingBtn;
+                _allowModeClick  = true;
+                pendingTarget.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_UP, true, false));
+                _allowModeClick  = false;
+                _pendingModeButton = null;
+                _pendingModeTarget = null;
+            }
+            _toast.addMessage("AP connected!", 0xFF88FF88);
             _logger.log(MOD_NAME, "  team=" + p.team + "  slot=" + p.slot);
 
             // Log all players in this multiworld
@@ -934,10 +1014,49 @@ package {
             _logger.log(MOD_NAME, "  missing_locations=" + (missing ? missing.length : "?") +
                 "  checked_locations=" + (checked ? checked.length : "?"));
 
-            _toast.addMessage("Slot connected! " + missing.length + " locations remaining", 0xFF88FF88);
+            // Build the missing-locations set so onSaveSave can check against it.
+            _missingLocations = {};
+            if (missing != null) {
+                for each (var locId:int in missing) {
+                    _missingLocations[locId] = true;
+                }
+            }
 
-            // TODO: remove — hardcoded test check for W1 (Journey=1, Bonus=501)
-            sendLocationChecks([1, 501]);
+            _toast.addMessage("Slot connected! " + missing.length + " locations remaining", 0xFF88FF88);
+        }
+
+        /**
+         * Called by the Bezel event bus after every save.
+         * Detects battle victories and sends any newly-completed stage locations to AP.
+         */
+        private function onSaveSave(e:*):void {
+            if (!_isConnected) return;
+            try {
+                if (GV.ingameController == null || GV.ingameController.core == null) return;
+                var ending:* = GV.ingameController.core.ending;
+                if (ending == null || !ending.isBattleWon) return;
+
+                var metas:Array = GV.stageCollection.stageMetas;
+                var toSend:Array = [];
+                for (var i:int = 0; i < metas.length; i++) {
+                    var meta:* = metas[i];
+                    if (meta == null) continue;
+                    if (GV.ppd.stageHighestXpsJourney[meta.id].g() <= 0) continue;
+                    var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
+                    if (locId <= 0) continue;
+                    if (_missingLocations[locId])       toSend.push(locId);
+                    if (_missingLocations[locId + 500]) toSend.push(locId + 500);
+                }
+                if (toSend.length > 0) {
+                    for each (var sentId:int in toSend) {
+                        delete _missingLocations[sentId];
+                    }
+                    sendLocationChecks(toSend);
+                    _logger.log(MOD_NAME, "Sent " + toSend.length + " location check(s) after battle win");
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
+            }
         }
 
         /**
