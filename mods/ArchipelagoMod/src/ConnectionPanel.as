@@ -50,6 +50,8 @@ package {
 
         private var _btnConnect:Sprite;
         private var _btnCancel:Sprite;
+        private var _tfConnectLabel:TextField;
+        private var _tfStatus:TextField;
 
         /** Called with (host, port, slot, password) when the user clicks Connect. */
         public var onConnect:Function;
@@ -91,11 +93,19 @@ package {
             addRow("Slot name:", startY + ROW_H * 2, false, function(tf:TextField):void { _tfSlot     = tf; });
             addRow("Password:",  startY + ROW_H * 3, true,  function(tf:TextField):void { _tfPassword = tf; });
 
+            // Status line — hidden until there is something to show.
+            _tfStatus = makeLabelTf("", PANEL_W - PADDING * 2, 20, 0xFF6666AA, 12, false, true);
+            _tfStatus.x       = PADDING;
+            _tfStatus.y       = PANEL_H - 70;
+            _tfStatus.visible = false;
+            addChild(_tfStatus);
+
             // Buttons
             var btnY:Number = PANEL_H - 55;
             var centerX:Number = PANEL_W / 2;
 
             _btnConnect = makeButton("Connect", COL_BTN_OK, 105, 32);
+            _tfConnectLabel = TextField(_btnConnect.getChildAt(0));
             _btnConnect.x = centerX - 115;
             _btnConnect.y = btnY;
             _btnConnect.addEventListener(MouseEvent.CLICK,      onConnectClicked, false, 0, true);
@@ -218,6 +228,7 @@ package {
 
         private function onConnectClicked(e:MouseEvent):void {
             saveSettings();
+            setConnecting(true);
             if (onConnect != null) {
                 onConnect(_tfHost.text, int(_tfPort.text), _tfSlot.text, _tfPassword.text);
             }
@@ -225,6 +236,29 @@ package {
 
         private function onCancelClicked(e:MouseEvent):void {
             if (onCancel != null) onCancel();
+        }
+
+        /** Switch the Connect button between normal and connecting state. */
+        private function setConnecting(connecting:Boolean):void {
+            _tfConnectLabel.text      = connecting ? "Connecting..." : "Connect";
+            _btnConnect.mouseEnabled  = !connecting;
+            _btnConnect.buttonMode    = !connecting;
+            _btnConnect.useHandCursor = !connecting;
+            _btnConnect.alpha         = connecting ? 0.45 : 1.0;
+            if (connecting) {
+                _tfStatus.visible = false; // clear any previous error when retrying
+            }
+        }
+
+        /** Reset the panel to its idle state (call after a failed connection attempt). */
+        public function resetState():void {
+            setConnecting(false);
+        }
+
+        /** Show an error message inside the panel. */
+        public function showError(msg:String):void {
+            _tfStatus.text    = msg;
+            _tfStatus.visible = true;
         }
 
         // -----------------------------------------------------------------------
