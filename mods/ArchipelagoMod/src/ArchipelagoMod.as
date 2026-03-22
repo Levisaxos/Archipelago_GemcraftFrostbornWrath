@@ -269,6 +269,11 @@ package {
                         }
                     }
                 }
+                if (screen == ScreenId.TRANS_SELECTOR_TO_INGAME1 ||
+                    screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
+                    screen == ScreenId.INGAME) {
+                    skipAllTutorials();
+                }
                 _lastScreen = screen;
             }
 
@@ -395,6 +400,26 @@ package {
         }
 
         // -----------------------------------------------------------------------
+        private function skipAllTutorials():void {
+            try {
+                // Mark all tutorial pages as seen so requestTutor() ignores them.
+                var pages:Array = GV.ppd.gainedTutorialPages;
+                for (var i:int = 0; i < pages.length; i++) {
+                    pages[i] = true;
+                }
+                // Flush anything already queued before we got here.
+                GV.main.ctrlTutorPanels.dismissAllTutorsInQueue();
+                // Kill the first-stage mask tutorial (the black overlay on W1).
+                if (GV.ingameCore != null) {
+                    GV.ingameCore.isFirstStageFirstTime      = false;
+                    GV.ingameCore.isFirstStageTutorialRunning = false;
+                }
+                _logger.log(MOD_NAME, "Tutorials skipped (pages marked, queue flushed, first-stage mask disabled)");
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "skipAllTutorials error: " + err.message);
+            }
+        }
+
         // Mode-selector interception
 
         private function tryHookModeSelector():void {
