@@ -44,17 +44,14 @@ def _load_item_table() -> Dict[str, ItemData]:
         table[name] = ItemData(trait["ap_id"], ItemClassification.useful)
 
     # XP tiers — each gives wizard levels used to gate stage locations.
-    # Small=2, Medium=5, Large=10 wizard levels.
-    # The threshold check (_wizard_level >= N) accepts any combination, so
-    # 1 Large, 2 Medium, 5 Small, 4 Small+1 Medium, etc. are all valid paths.
-    # Large and Medium are both progression so the fill algorithm guarantees
-    # they land in accessible locations — making the 1-Large AND 2-Medium
-    # routes both reliable in practice (not just in theory).
-    # Small is useful: it contributes to thresholds and fills gaps, but you
-    # accumulate it naturally without it needing to be guaranteed early.
-    table["Small XP Bonus"]  = ItemData(500, ItemClassification.progression)
-    table["Medium XP Bonus"] = ItemData(501, ItemClassification.progression)
-    table["Large XP Bonus"]  = ItemData(502, ItemClassification.progression)
+    # Small=1, Medium=3, Large=9 wizard levels (powers of 3, easy mental math).
+    # Pool contains 2 Large + 10 Medium + ~74 Small (fills remaining slots).
+    # Players also earn wizard levels naturally from completing stages, so
+    # the pool only supplements. All three are progression so the fill
+    # algorithm places them in reachable locations first.
+    table["Tattered Scroll"]  = ItemData(500, ItemClassification.progression)
+    table["Worn Tome"] = ItemData(501, ItemClassification.progression)
+    table["Ancient Grimoire"]  = ItemData(502, ItemClassification.progression)
 
     # Generic filler
     table["Shadow Core"] = ItemData(503, ItemClassification.filler)

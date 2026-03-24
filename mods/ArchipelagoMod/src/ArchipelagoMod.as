@@ -475,9 +475,9 @@ package {
                     apTraits[apId - 400] = true;
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
-                } else if (apId == 500) apXpTotal += 2;
-                  else if (apId == 501) apXpTotal += 5;
-                  else if (apId == 502) apXpTotal += 10;
+                } else if (apId == 500) apXpTotal += 1;
+                  else if (apId == 501) apXpTotal += 3;
+                  else if (apId == 502) apXpTotal += 9;
             }
 
             // --- Skills ---

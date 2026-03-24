@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 # Region connections are gated by the field token ONLY, so every token placed
 # immediately opens that stage's region and advances the sphere. Wizard-level
 # gates control whether the checks inside that stage can be collected.
-# XP item values: Small=2, Medium=5, Large=10 wizard levels.
+# XP item values: Small=1, Medium=3, Large=9 wizard levels.
 # Tier table lives in rulesdata.WIZARD_LEVEL_TIERS (editable without touching code).
 
 
@@ -26,9 +26,9 @@ def _load_stages():
 def _wizard_level(state, player: int) -> int:
     """Total wizard levels from all XP Bonus items the player has received."""
     return (
-        state.count("Small XP Bonus",  player) * 2 +
-        state.count("Medium XP Bonus", player) * 5 +
-        state.count("Large XP Bonus",  player) * 10
+        state.count("Tattered Scroll",  player) * 1 +
+        state.count("Worn Tome", player) * 3 +
+        state.count("Ancient Grimoire",  player) * 9
     )
 
 

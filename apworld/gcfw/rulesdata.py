@@ -17,26 +17,26 @@ class StageRule:
 # ---------------------------------------------------------------------------
 # Wizard-level tier table
 # ---------------------------------------------------------------------------
-# XP items give wizard levels: Small = 2, Medium = 5, Large = 10.
+# XP items give wizard levels: Small = 1, Medium = 3, Large = 9.
 # Each stage's minimum wizard level is derived from its wave_count using the
 # table below.  "about 10" stages are free (wave_count ≤ 20); the rest are
-# gated in steps of 10, each step requiring one additional Large XP Bonus.
+# gated by increasing wizard level thresholds.
 #
 # wave_count  →  min_wizard_level
 #    0            0   (SECRET stages with unknown wave count — treated free)
 #    1–20         0   (free: ~9 stages plus W1 start)
-#   21–26        10   (1 Large XP)
-#   27–32        20   (2 Large XP)
-#   33–38        30   (3 Large XP)
-#   39–44        40   (4 Large XP)
-#   45–52        50   (5 Large XP)
-#   53–58        60   (6 Large XP)
-#   59–64        70   (7 Large XP)
-#   65–70        80   (8 Large XP)
-#   71–76        90   (9 Large XP)
-#   77–82       100   (10 Large XP)
-#   83–90       110   (11 Large XP)
-#   91+         120   (12 Large XP — A4/A5/A6 endgame)
+#   21–26        10   (e.g. 1 Large + 1 Small)
+#   27–32        20   (e.g. 2 Large + 2 Small)
+#   33–38        30   (e.g. 3 Large + 3 Small)
+#   39–44        40   (e.g. 4 Large + 4 Small, or 3 Large + 13 Small)
+#   45–52        50   (e.g. 5 Large + 5 Small)
+#   53–58        60   (e.g. 6 Large + 6 Small, or 3 Large + 8 Medium + 5 Small)
+#   59–64        70   (e.g. 7 Large + 7 Small)
+#   65–70        80   (e.g. 8 Large + 8 Small)
+#   71–76        90   (e.g. 9 Large, or 3 Large + 21 Medium)
+#   77–82       100   (e.g. 3 Large + 20 Medium + 1 Small + many Small)
+#   83–90       110   (mix of M+S to reach 110)
+#   91+         120   (A4/A5/A6 endgame — need all XP items)
 #
 # To adjust a single stage, add it to STAGE_RULES below with an explicit
 # min_xp value; that overrides the tier table for that stage only.

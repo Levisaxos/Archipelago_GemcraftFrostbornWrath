@@ -4,7 +4,7 @@ package {
 
     /**
      * Handles AP wizard level / XP bonus grants.
-     * XP Bonus AP IDs: 500 (Small=+2), 501 (Medium=+5), 502 (Large=+10).
+     * XP Bonus AP IDs: 500 (Tattered Scroll=+1), 501 (Worn Tome=+3), 502 (Ancient Grimoire=+9).
      */
     public class LevelUnlocker {
 
@@ -27,15 +27,14 @@ package {
 
         /**
          * Grant AP wizard levels from a received XP Bonus item.
-         * Small=2, Medium=5, Large=10 wizard levels — always additive on top
-         * of the player's current wizard level, regardless of what it is.
+         * Tattered Scroll=1, Worn Tome=3, Ancient Grimoire=9 wizard levels.
          */
         public function grantXpBonus(apId:int):void {
             var levels:int = 0;
             var label:String = "";
-            if      (apId == 500) { levels = 2;  label = "Small";  }
-            else if (apId == 501) { levels = 5;  label = "Medium"; }
-            else if (apId == 502) { levels = 10; label = "Large";  }
+            if      (apId == 500) { levels = 1; label = "Tattered Scroll";  }
+            else if (apId == 501) { levels = 3; label = "Worn Tome";        }
+            else if (apId == 502) { levels = 9; label = "Ancient Grimoire"; }
             else return;
 
             _apWizardLevel += levels;
