@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, PerGameCommonOptions
+from Options import Choice, DeathLink, PerGameCommonOptions, Range
 
 
 class Goal(Choice):
@@ -25,7 +25,70 @@ class SkillPlacement(Choice):
     default = 1
 
 
+class DeathLinkPunishment(Choice):
+    """What happens when a DeathLink signal is received.
+
+    gem_loss:    A percentage of placed gems (and their towers/traps) are destroyed.
+    wave_surge:  A set of enraged waves is injected immediately.
+    instant_fail: The current level fails immediately (traditional DeathLink).
+    """
+    display_name = "DeathLink Punishment"
+    option_gem_loss    = 0
+    option_wave_surge  = 1
+    option_instant_fail = 2
+    default = 0
+
+
+class GemLossPercent(Range):
+    """Percentage of placed gems destroyed on a DeathLink (gem_loss punishment only).
+    Always rounded up — so even 1 gem with 10% loses that gem.
+    """
+    display_name = "Gem Loss Percent"
+    range_start = 10
+    range_end   = 50
+    default     = 20
+
+
+class WaveSurgeCount(Range):
+    """Number of enraged waves injected on a DeathLink (wave_surge punishment only)."""
+    display_name = "Wave Surge Count"
+    range_start = 1
+    range_end   = 10
+    default     = 3
+
+
+class WaveSurgeGemLevel(Range):
+    """Gem level used to calculate the enrage multiplier for surge waves (wave_surge only)."""
+    display_name = "Wave Surge Gem Level"
+    range_start = 1
+    range_end   = 9
+    default     = 5
+
+
+class DeathLinkGracePeriod(Range):
+    """Seconds of immunity at the start of each level before a queued DeathLink can trigger."""
+    display_name = "DeathLink Grace Period"
+    range_start = 10
+    range_end   = 30
+    default     = 15
+
+
+class DeathLinkCooldown(Range):
+    """Minimum seconds between two DeathLink punishments. Extra DeathLinks are queued."""
+    display_name = "DeathLink Cooldown"
+    range_start = 10
+    range_end   = 30
+    default     = 20
+
+
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
-    goal: Goal
-    skill_placement: SkillPlacement
+    goal:                      Goal
+    skill_placement:           SkillPlacement
+    death_link:                DeathLink
+    death_link_punishment:     DeathLinkPunishment
+    gem_loss_percent:          GemLossPercent
+    wave_surge_count:          WaveSurgeCount
+    wave_surge_gem_level:      WaveSurgeGemLevel
+    death_link_grace_period:   DeathLinkGracePeriod
+    death_link_cooldown:       DeathLinkCooldown
