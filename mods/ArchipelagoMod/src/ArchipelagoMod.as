@@ -24,7 +24,9 @@ package {
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
-     *   FileHandler              — Slot JSON persistence
+     *   GameCompletion           — Detects A4 goal completion, fires onGoalReached once
+     *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
+     *   FileHandler              — Raw slot file I/O
      *   ToastPanel               — On-screen notifications
      *   ScrDebugOptions          — Debug panel
      */
@@ -50,17 +52,18 @@ package {
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
+        private var _gameCompletion:GameCompletion;
         private var _fileHandler:FileHandler;
+        private var _saveManager:SaveManager;
         private var _skillUnlocker:SkillUnlocker;
         private var _traitUnlocker:TraitUnlocker;
         private var _stageUnlocker:StageUnlocker;
         private var _levelUnlocker:LevelUnlocker;
 
-        private var _keyListenerAdded:Boolean = false;
-        private var _needsConnection:Boolean  = false;
-        private var _currentSlot:int          = 0;
-        private var _lastScreen:int           = -1;
-        private var _mapTilesUnlocked:Boolean = false;
+        private var _keyListenerAdded:Boolean  = false;
+        private var _needsConnection:Boolean   = false;
+        private var _lastScreen:int            = -1;
+        private var _mapTilesUnlocked:Boolean  = false;
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -85,7 +88,6 @@ package {
                 _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _toast);
                 _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
                 _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _toast);
-                _levelUnlocker.onDataChanged = saveSlotData;
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -102,12 +104,20 @@ package {
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
 
+                _saveManager = new SaveManager(_logger, MOD_NAME,
+                    _fileHandler, _connectionManager, _levelUnlocker);
+                _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
+
+                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
+                _gameCompletion.onGoalReached = onGoalReached;
+
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
 
                 // Mode-selector interceptor
                 _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _toast);
                 _modeInterceptor.onModeIntercepted    = onModeIntercepted;
+                _modeInterceptor.onSlotDeleteWarning   = onSlotDeleteWarning;
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
@@ -162,7 +172,7 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Delegating wrappers — used by ScrDebugOptions.
+        // Delegating wrappers — used by ScrDebugOptions and external callers.
 
         public function unlockSkill(apId:int):void { _skillUnlocker.unlockSkill(apId); }
         public function unlockBattleTrait(apId:int):void { _traitUnlocker.unlockBattleTrait(apId); }
@@ -199,17 +209,28 @@ package {
                     + "  _isConnected=" + _connectionManager.isConnected
                     + "  _needsConnection=" + _needsConnection);
 
+                // Entering LOADGAME — always reset connection so leaving LOADGAME
+                // sees _isConnected=false and triggers the overlay when needed.
+                if (screen == ScreenId.LOADGAME) {
+                    _connectionManager.disconnectAndReset();
+                    _needsConnection = false;
+                    if (_connectionPanel != null) _connectionPanel.dismiss();
+                    _modeInterceptor.clearPending();
+                    _gameCompletion.reset();
+                    _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
+                }
+
                 if (_lastScreen == ScreenId.LOADGAME) {
                     _modeInterceptor.unhook();
                     if (screen != ScreenId.MAINMENU) {
-                        _currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
+                        _saveManager.currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
                         if (!_connectionManager.isConnected) {
                             _needsConnection = true;
                             _connectionManager.disconnect();
-                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _currentSlot
+                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _saveManager.currentSlot
                                 + "  needsConnection=true");
                         } else {
-                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _currentSlot);
+                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _saveManager.currentSlot);
                         }
                     }
                 }
@@ -221,23 +242,15 @@ package {
                 _lastScreen = screen;
             }
 
-            // When entering LOADGAME, drop any existing connection.
-            if (screen == ScreenId.LOADGAME && _lastScreen != ScreenId.LOADGAME) {
-                _connectionManager.disconnectAndReset();
-                _needsConnection = false;
-                if (_connectionPanel != null) _connectionPanel.dismiss();
-                _modeInterceptor.clearPending();
-                _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
-            }
-
             // Hook mode selector buttons while on LOADGAME.
             if (screen == ScreenId.LOADGAME && !_modeInterceptor.isHooked) {
                 _modeInterceptor.hook(this.stage);
             }
 
-            // Show connection overlay while a fresh connection is required.
+            // Connection required (e.g. Continue button bypassed our interceptor).
             if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
-                ensureConnectionOverlay();
+                _needsConnection = false;
+                startConnectionForSlot();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -343,24 +356,55 @@ package {
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "skipAllTutorials error: " + err.message);
             }
-            _stageUnlocker.logStageEntered(_currentSlot);
+            _stageUnlocker.logStageEntered(_saveManager.currentSlot);
         }
 
         // -----------------------------------------------------------------------
         // ModeSelectorInterceptor callbacks
 
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
-            _currentSlot = slotId;
-            loadSlotData(_currentSlot);
-            ensureConnectionOverlay();
+            _saveManager.currentSlot = slotId;
+            startConnectionForSlot();
+        }
+
+        private function onSlotDeleteWarning(slotId:int):void {
+            if (!_saveManager.isSlotCompleted(slotId)) {
+                _toast.addMessage(
+                    "Warning: slot " + slotId + " is not yet completed.\n"
+                    + "Deleting will lose most of your progress.\n"
+                    + "Press D to confirm.",
+                    0xFFFF8844);
+            }
         }
 
         private function onSlotDeleteConfirmed(slotId:int):void {
-            _fileHandler.archiveSlot(slotId);
+            _saveManager.deleteSlot(slotId);
         }
 
         // -----------------------------------------------------------------------
-        // Connection overlay
+        // Connection
+
+        /**
+         * Load saved credentials for the current slot and either auto-connect
+         * (if a slot name is on file) or show the connection overlay.
+         * Called whenever we need a connection — on mode/continue intercept
+         * and as a fallback when leaving LOADGAME undetected.
+         */
+        private function startConnectionForSlot():void {
+            _saveManager.loadSlotData(_saveManager.currentSlot);
+            if (_connectionManager.apSlot.length > 0) {
+                _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
+                    + "  host=" + _connectionManager.apHost
+                    + "  apSlot=" + _connectionManager.apSlot);
+                _connectionManager.connect(
+                    _connectionManager.apHost,
+                    _connectionManager.apPort,
+                    _connectionManager.apSlot,
+                    _connectionManager.apPassword);
+            } else {
+                ensureConnectionOverlay();
+            }
+        }
 
         private function ensureConnectionOverlay():void {
             if (_connectionPanel != null && _connectionPanel.isShowing) return;
@@ -387,7 +431,7 @@ package {
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
             _connectionManager.connect(host, port, slot, password);
-            saveSlotData();
+            _saveManager.saveSlotData();
         }
 
         private function onConnectionPanelCancel():void {
@@ -400,45 +444,25 @@ package {
 
         private function onApConnected(p:Object):void {
             _needsConnection = false;
-            loadSlotData(_currentSlot);
+            _saveManager.loadSlotData(_saveManager.currentSlot);
+            _levelUnlocker.applyBonusLevels();
+            if (_saveManager.slotCompleted) {
+                _gameCompletion.markAlreadyCompleted();
+            } else {
+                _gameCompletion.check(); // catches A4 beaten while offline
+            }
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
 
         private function onConnectionError(msg:String):void {
+            // Auto-connect failed — show the overlay so the player can correct settings.
+            ensureConnectionOverlay();
             if (_connectionPanel != null) _connectionPanel.showError(msg);
         }
 
         private function onConnectionPanelReset():void {
             if (_connectionPanel != null) _connectionPanel.resetState();
-        }
-
-        // -----------------------------------------------------------------------
-        // Slot data
-
-        private function loadSlotData(slotId:int):void {
-            _connectionManager.resetSettings();
-            _levelUnlocker.apWizardLevel = 0;
-            var data:Object = _fileHandler.loadSlotData(slotId);
-            if (data != null) {
-                if (data.host           !== undefined) _connectionManager.apHost     = String(data.host);
-                if (data.port           !== undefined) _connectionManager.apPort     = int(data.port);
-                if (data.slot           !== undefined) _connectionManager.apSlot     = String(data.slot);
-                if (data.password       !== undefined) _connectionManager.apPassword = String(data.password);
-                if (data.apWizardLevels !== undefined) _levelUnlocker.apWizardLevel  = int(data.apWizardLevels);
-            }
-        }
-
-        private function saveSlotData():void {
-            if (_currentSlot <= 0) return;
-            var data:Object = {
-                host:           _connectionManager.apHost,
-                port:           _connectionManager.apPort,
-                slot:           _connectionManager.apSlot,
-                password:       _connectionManager.apPassword,
-                apWizardLevels: _levelUnlocker.apWizardLevel
-            };
-            _fileHandler.saveSlotData(_currentSlot, data);
         }
 
         // -----------------------------------------------------------------------
@@ -475,9 +499,9 @@ package {
                     apTraits[apId - 400] = true;
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
-                } else if (apId == 500) apXpTotal += 2;
-                  else if (apId == 501) apXpTotal += 5;
-                  else if (apId == 502) apXpTotal += 10;
+                } else if (apId == 500) apXpTotal += 1;
+                  else if (apId == 501) apXpTotal += 3;
+                  else if (apId == 502) apXpTotal += 9;
             }
 
             // --- Skills ---
@@ -536,13 +560,13 @@ package {
             }
 
             // --- Wizard levels ---
-            _levelUnlocker.apWizardLevel = apXpTotal;
-            saveSlotData();
-            _levelUnlocker.applyApWizardLevels(_levelUnlocker.apWizardLevel);
+            _levelUnlocker.bonusWizardLevel = apXpTotal;
+            _levelUnlocker.applyBonusLevels();
+            _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
-                " apWizardLevel:" + _levelUnlocker.apWizardLevel);
+                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
         }
 
         // -----------------------------------------------------------------------
@@ -551,6 +575,12 @@ package {
         private function onSaveSave(e:*):void {
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
+            _gameCompletion.check();
+        }
+
+        private function onGoalReached():void {
+            _connectionManager.sendGoalComplete();
+            _saveManager.markSlotCompleted();
         }
 
         // -----------------------------------------------------------------------

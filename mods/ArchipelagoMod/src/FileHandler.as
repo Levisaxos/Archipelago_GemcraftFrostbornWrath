@@ -10,10 +10,15 @@ package {
      *
      * Directory structure:
      *   {applicationStorageDirectory}/archipelago/
-     *     slot_N.json          — per-save-slot AP state
-     *     deleted/
-     *       slot_N_{ts}.json   — archived AP data
-     *       saveslot_N_{ts}.dat — archived game saves
+     *     slot_N.json   — per-save-slot AP state
+     *
+     * Slot file fields:
+     *   host             — AP server host
+     *   port             — AP server port
+     *   slot             — AP slot name
+     *   password         — AP password
+     *   bonusWizardLevel — accumulated wizard levels from XP tome items
+     *   completed        — true once the player has reached the AP goal
      */
     public class FileHandler {
 
@@ -30,14 +35,15 @@ package {
 
         /**
          * Load saved slot data from slot_N.json.
-         * Returns an Object with fields: host, port, slot, password, apWizardLevels.
+         * Returns an Object with fields: host, port, slot, password,
+         *   bonusWizardLevel, completed.
          * Returns null if the file does not exist or cannot be read.
          */
         public function loadSlotData(slotId:int):Object {
             if (slotId <= 0) return null;
             var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
             if (!f.exists) {
-                _logger.log(_modName, "No slot_" + slotId + ".json — fresh slot, using defaults");
+                _logger.log(_modName, "No slot_" + slotId + ".json — fresh slot");
                 return null;
             }
             try {
@@ -46,9 +52,11 @@ package {
                 var raw:String = stream.readUTFBytes(stream.bytesAvailable);
                 stream.close();
                 var data:Object = JSON.parse(raw);
-                _logger.log(_modName, "Loaded slot_" + slotId + ".json — host=" + data.host
-                    + " port=" + data.port + " slot='" + data.slot
-                    + "' apWizardLevels=" + data.apWizardLevels);
+                _logger.log(_modName, "Loaded slot_" + slotId + ".json"
+                    + "  host=" + data.host + " port=" + data.port
+                    + " slot='" + data.slot + "'"
+                    + " bonusWizardLevel=" + data.bonusWizardLevel
+                    + " completed=" + data.completed);
                 return data;
             } catch (err:Error) {
                 _logger.log(_modName, "loadSlotData ERROR: " + err.message);
@@ -59,7 +67,8 @@ package {
         /**
          * Save slot data to slot_N.json.
          * @param slotId  The 1-indexed save slot number.
-         * @param data    Object with fields: host, port, slot, password, apWizardLevels.
+         * @param data    Object with fields: host, port, slot, password,
+         *                bonusWizardLevel, completed.
          */
         public function saveSlotData(slotId:int, data:Object):void {
             if (slotId <= 0 || _configDir == null) return;
@@ -77,41 +86,38 @@ package {
         }
 
         /**
-         * Archive a deleted slot's AP data and game save into the deleted/ subdirectory.
+         * Returns true if the slot file exists and completed=true.
+         * Returns false if the file is missing, unreadable, or completed is not set.
          */
-        public function archiveSlot(slotId:int):void {
-            if (_configDir == null) return;
-            var timestamp:String = String(new Date().getTime());
-            var deletedDir:File = _configDir.resolvePath("deleted");
+        public function isSlotCompleted(slotId:int):Boolean {
+            if (slotId <= 0) return false;
+            var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            if (!f.exists) return false;
             try {
-                if (!deletedDir.exists) deletedDir.createDirectory();
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                var data:Object = JSON.parse(raw);
+                return data.completed === true;
             } catch (err:Error) {
-                _logger.log(_modName, "archiveSlot: failed to create deleted/ — " + err.message);
-                return;
+                _logger.log(_modName, "isSlotCompleted ERROR: " + err.message);
             }
-            // Move our AP slot file into deleted/.
-            var apFile:File = _configDir.resolvePath("slot_" + slotId + ".json");
-            _logger.log(_modName, "archiveSlot: checking AP file=" + apFile.nativePath + " exists=" + apFile.exists);
-            if (apFile.exists) {
-                try {
-                    apFile.moveTo(deletedDir.resolvePath("slot_" + slotId + "_" + timestamp + ".json"), true);
-                    _logger.log(_modName, "Archived AP data for slot " + slotId);
-                } catch (err:Error) {
-                    _logger.log(_modName, "archiveSlot AP data error: " + err.message);
-                }
-            }
-            // Copy the game's own save file into deleted/.
-            var saveFile:File = File.applicationStorageDirectory.resolvePath("saveslot" + slotId + ".dat");
-            if (saveFile.exists) {
-                try {
-                    saveFile.copyTo(deletedDir.resolvePath("saveslot" + slotId + "_" + timestamp + ".dat"), true);
-                    _logger.log(_modName, "Archived game save for slot " + slotId
-                        + " (" + saveFile.size + " bytes)");
-                } catch (err:Error) {
-                    _logger.log(_modName, "archiveSlot game save error: " + err.message);
-                }
-            } else {
-                _logger.log(_modName, "archiveSlot: no game save found at " + saveFile.nativePath);
+            return false;
+        }
+
+        /**
+         * Delete the slot file for the given slot.
+         */
+        public function deleteSlot(slotId:int):void {
+            if (slotId <= 0 || _configDir == null) return;
+            var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            if (!f.exists) return;
+            try {
+                f.deleteFile();
+                _logger.log(_modName, "Deleted slot_" + slotId + ".json");
+            } catch (err:Error) {
+                _logger.log(_modName, "deleteSlot ERROR: " + err.message);
             }
         }
     }
