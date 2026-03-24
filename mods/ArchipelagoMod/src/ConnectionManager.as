@@ -172,9 +172,10 @@ package {
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
-            if (onError != null) onError("Connection failed: " + msg);
-            _toast.addMessage("Failed to connect to " + _apHost + ":" + _apPort
-                + " with name " + _apSlot, 0xFFFF6666);
+            var failMsg:String = "Failed to connect to " + _apHost + ":" + _apPort
+                + " with name " + _apSlot;
+            if (onError != null) onError(failMsg);
+            _toast.addMessage(failMsg, 0xFFFF6666);
             if (onConnectionStateChanged != null) onConnectionStateChanged(false);
         }
 

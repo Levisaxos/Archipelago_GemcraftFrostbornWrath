@@ -199,6 +199,16 @@ package {
                     + "  _isConnected=" + _connectionManager.isConnected
                     + "  _needsConnection=" + _needsConnection);
 
+                // Entering LOADGAME — always reset connection so leaving LOADGAME
+                // sees _isConnected=false and triggers the overlay when needed.
+                if (screen == ScreenId.LOADGAME) {
+                    _connectionManager.disconnectAndReset();
+                    _needsConnection = false;
+                    if (_connectionPanel != null) _connectionPanel.dismiss();
+                    _modeInterceptor.clearPending();
+                    _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
+                }
+
                 if (_lastScreen == ScreenId.LOADGAME) {
                     _modeInterceptor.unhook();
                     if (screen != ScreenId.MAINMENU) {
@@ -221,23 +231,15 @@ package {
                 _lastScreen = screen;
             }
 
-            // When entering LOADGAME, drop any existing connection.
-            if (screen == ScreenId.LOADGAME && _lastScreen != ScreenId.LOADGAME) {
-                _connectionManager.disconnectAndReset();
-                _needsConnection = false;
-                if (_connectionPanel != null) _connectionPanel.dismiss();
-                _modeInterceptor.clearPending();
-                _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
-            }
-
             // Hook mode selector buttons while on LOADGAME.
             if (screen == ScreenId.LOADGAME && !_modeInterceptor.isHooked) {
                 _modeInterceptor.hook(this.stage);
             }
 
-            // Show connection overlay while a fresh connection is required.
+            // Connection required (e.g. Continue button bypassed our interceptor).
             if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
-                ensureConnectionOverlay();
+                _needsConnection = false;
+                startConnectionForSlot();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -351,8 +353,7 @@ package {
 
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
             _currentSlot = slotId;
-            loadSlotData(_currentSlot);
-            ensureConnectionOverlay();
+            startConnectionForSlot();
         }
 
         private function onSlotDeleteConfirmed(slotId:int):void {
@@ -360,7 +361,29 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Connection overlay
+        // Connection
+
+        /**
+         * Load saved credentials for the current slot and either auto-connect
+         * (if a slot name is on file) or show the connection overlay.
+         * Called whenever we need a connection — on mode/continue intercept
+         * and as a fallback when leaving LOADGAME undetected.
+         */
+        private function startConnectionForSlot():void {
+            loadSlotData(_currentSlot);
+            if (_connectionManager.apSlot.length > 0) {
+                _logger.log(MOD_NAME, "Auto-connecting slot=" + _currentSlot
+                    + "  host=" + _connectionManager.apHost
+                    + "  apSlot=" + _connectionManager.apSlot);
+                _connectionManager.connect(
+                    _connectionManager.apHost,
+                    _connectionManager.apPort,
+                    _connectionManager.apSlot,
+                    _connectionManager.apPassword);
+            } else {
+                ensureConnectionOverlay();
+            }
+        }
 
         private function ensureConnectionOverlay():void {
             if (_connectionPanel != null && _connectionPanel.isShowing) return;
@@ -406,6 +429,8 @@ package {
         }
 
         private function onConnectionError(msg:String):void {
+            // Auto-connect failed — show the overlay so the player can correct settings.
+            ensureConnectionOverlay();
             if (_connectionPanel != null) _connectionPanel.showError(msg);
         }
 

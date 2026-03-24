@@ -72,6 +72,24 @@ package {
                 sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true, 100, true);
+
+                // Hook Continue button for existing saves (name unknown — log all children
+                // so we can identify it, then try the most likely names).
+                var nc:int = sel.numChildren;
+                _logger.log(_modName, "  mcModeSelector children (" + nc + "):");
+                for (var ci:int = 0; ci < nc; ci++) {
+                    _logger.log(_modName, "    [" + ci + "] name=" + sel.getChildAt(ci).name
+                        + "  type=" + Object(sel.getChildAt(ci)).constructor);
+                }
+                var continueNames:Array = ["btnContinue", "btnResume", "btnContinueGame",
+                                           "btnResumeGame", "btnLoad", "btnPlay"];
+                for each (var cname:String in continueNames) {
+                    if (sel[cname] != null) {
+                        sel[cname].addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
+                        _logger.log(_modName, "  hooked continue button: " + cname);
+                    }
+                }
+
                 for (var n:int = 1; n <= 8; n++) {
                     var btn:* = lg["btnResetSlotL" + n];
                     if (btn != null) btn.addEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false, 0, true);
