@@ -24,6 +24,7 @@ package {
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
+     *   GameCompletion           — Detects A4 goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
      *   ToastPanel               — On-screen notifications
@@ -51,6 +52,7 @@ package {
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
+        private var _gameCompletion:GameCompletion;
         private var _fileHandler:FileHandler;
         private var _saveManager:SaveManager;
         private var _skillUnlocker:SkillUnlocker;
@@ -105,6 +107,9 @@ package {
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                     _fileHandler, _connectionManager, _levelUnlocker);
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
+
+                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
+                _gameCompletion.onGoalReached = onGoalReached;
 
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
@@ -170,8 +175,6 @@ package {
         // Delegating wrappers — used by ScrDebugOptions and external callers.
 
         public function unlockSkill(apId:int):void { _skillUnlocker.unlockSkill(apId); }
-        /** Call when the player reaches the Archipelago goal. */
-        public function markSlotCompleted():void { _saveManager.markSlotCompleted(); }
         public function unlockBattleTrait(apId:int):void { _traitUnlocker.unlockBattleTrait(apId); }
         public function unlockStage(stageStrId:String):void { _stageUnlocker.unlockStage(stageStrId); }
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
@@ -213,6 +216,7 @@ package {
                     _needsConnection = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
+                    _gameCompletion.reset();
                     _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
                 }
 
@@ -442,6 +446,11 @@ package {
             _needsConnection = false;
             _saveManager.loadSlotData(_saveManager.currentSlot);
             _levelUnlocker.applyBonusLevels();
+            if (_saveManager.slotCompleted) {
+                _gameCompletion.markAlreadyCompleted();
+            } else {
+                _gameCompletion.check(); // catches A4 beaten while offline
+            }
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
@@ -566,6 +575,12 @@ package {
         private function onSaveSave(e:*):void {
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
+            _gameCompletion.check();
+        }
+
+        private function onGoalReached():void {
+            _connectionManager.sendGoalComplete();
+            _saveManager.markSlotCompleted();
         }
 
         // -----------------------------------------------------------------------
