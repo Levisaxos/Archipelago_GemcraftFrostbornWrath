@@ -24,7 +24,8 @@ package {
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
-     *   FileHandler              — Slot JSON persistence
+     *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
+     *   FileHandler              — Raw slot file I/O
      *   ToastPanel               — On-screen notifications
      *   ScrDebugOptions          — Debug panel
      */
@@ -51,6 +52,7 @@ package {
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _fileHandler:FileHandler;
+        private var _saveManager:SaveManager;
         private var _skillUnlocker:SkillUnlocker;
         private var _traitUnlocker:TraitUnlocker;
         private var _stageUnlocker:StageUnlocker;
@@ -58,10 +60,8 @@ package {
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
-        private var _currentSlot:int           = 0;
         private var _lastScreen:int            = -1;
         private var _mapTilesUnlocked:Boolean  = false;
-        private var _slotCompleted:Boolean     = false;
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -86,7 +86,6 @@ package {
                 _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _toast);
                 _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
                 _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _toast);
-                _levelUnlocker.onDataChanged = saveSlotData;
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -102,6 +101,10 @@ package {
                 _connectionManager.onPanelReset           = onConnectionPanelReset;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
+
+                _saveManager = new SaveManager(_logger, MOD_NAME,
+                    _fileHandler, _connectionManager, _levelUnlocker);
+                _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
@@ -164,9 +167,11 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Delegating wrappers — used by ScrDebugOptions.
+        // Delegating wrappers — used by ScrDebugOptions and external callers.
 
         public function unlockSkill(apId:int):void { _skillUnlocker.unlockSkill(apId); }
+        /** Call when the player reaches the Archipelago goal. */
+        public function markSlotCompleted():void { _saveManager.markSlotCompleted(); }
         public function unlockBattleTrait(apId:int):void { _traitUnlocker.unlockBattleTrait(apId); }
         public function unlockStage(stageStrId:String):void { _stageUnlocker.unlockStage(stageStrId); }
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
@@ -214,14 +219,14 @@ package {
                 if (_lastScreen == ScreenId.LOADGAME) {
                     _modeInterceptor.unhook();
                     if (screen != ScreenId.MAINMENU) {
-                        _currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
+                        _saveManager.currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
                         if (!_connectionManager.isConnected) {
                             _needsConnection = true;
                             _connectionManager.disconnect();
-                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _currentSlot
+                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _saveManager.currentSlot
                                 + "  needsConnection=true");
                         } else {
-                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _currentSlot);
+                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _saveManager.currentSlot);
                         }
                     }
                 }
@@ -347,19 +352,19 @@ package {
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "skipAllTutorials error: " + err.message);
             }
-            _stageUnlocker.logStageEntered(_currentSlot);
+            _stageUnlocker.logStageEntered(_saveManager.currentSlot);
         }
 
         // -----------------------------------------------------------------------
         // ModeSelectorInterceptor callbacks
 
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
-            _currentSlot = slotId;
+            _saveManager.currentSlot = slotId;
             startConnectionForSlot();
         }
 
         private function onSlotDeleteWarning(slotId:int):void {
-            if (!_fileHandler.isSlotCompleted(slotId)) {
+            if (!_saveManager.isSlotCompleted(slotId)) {
                 _toast.addMessage(
                     "Warning: slot " + slotId + " is not yet completed.\n"
                     + "Deleting will lose most of your progress.\n"
@@ -369,7 +374,7 @@ package {
         }
 
         private function onSlotDeleteConfirmed(slotId:int):void {
-            _fileHandler.deleteSlot(slotId);
+            _saveManager.deleteSlot(slotId);
         }
 
         // -----------------------------------------------------------------------
@@ -382,9 +387,9 @@ package {
          * and as a fallback when leaving LOADGAME undetected.
          */
         private function startConnectionForSlot():void {
-            loadSlotData(_currentSlot);
+            _saveManager.loadSlotData(_saveManager.currentSlot);
             if (_connectionManager.apSlot.length > 0) {
-                _logger.log(MOD_NAME, "Auto-connecting slot=" + _currentSlot
+                _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
                     + "  host=" + _connectionManager.apHost
                     + "  apSlot=" + _connectionManager.apSlot);
                 _connectionManager.connect(
@@ -422,7 +427,7 @@ package {
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
             _connectionManager.connect(host, port, slot, password);
-            saveSlotData();
+            _saveManager.saveSlotData();
         }
 
         private function onConnectionPanelCancel():void {
@@ -435,7 +440,7 @@ package {
 
         private function onApConnected(p:Object):void {
             _needsConnection = false;
-            loadSlotData(_currentSlot);
+            _saveManager.loadSlotData(_saveManager.currentSlot);
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
@@ -448,44 +453,6 @@ package {
 
         private function onConnectionPanelReset():void {
             if (_connectionPanel != null) _connectionPanel.resetState();
-        }
-
-        // -----------------------------------------------------------------------
-        // Slot data
-
-        private function loadSlotData(slotId:int):void {
-            _connectionManager.resetSettings();
-            _levelUnlocker.bonusWizardLevel = 0;
-            _slotCompleted = false;
-            var data:Object = _fileHandler.loadSlotData(slotId);
-            if (data != null) {
-                if (data.host             !== undefined) _connectionManager.apHost       = String(data.host);
-                if (data.port             !== undefined) _connectionManager.apPort       = int(data.port);
-                if (data.slot             !== undefined) _connectionManager.apSlot       = String(data.slot);
-                if (data.password         !== undefined) _connectionManager.apPassword   = String(data.password);
-                if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
-                if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
-            }
-        }
-
-        private function saveSlotData():void {
-            if (_currentSlot <= 0) return;
-            var data:Object = {
-                host:             _connectionManager.apHost,
-                port:             _connectionManager.apPort,
-                slot:             _connectionManager.apSlot,
-                password:         _connectionManager.apPassword,
-                bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
-                completed:        _slotCompleted
-            };
-            _fileHandler.saveSlotData(_currentSlot, data);
-        }
-
-        /** Call this when the player reaches the Archipelago goal. */
-        public function markSlotCompleted():void {
-            _slotCompleted = true;
-            saveSlotData();
-            _logger.log(MOD_NAME, "Slot " + _currentSlot + " marked as completed");
         }
 
         // -----------------------------------------------------------------------
@@ -584,7 +551,7 @@ package {
 
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
-            saveSlotData();
+            _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
