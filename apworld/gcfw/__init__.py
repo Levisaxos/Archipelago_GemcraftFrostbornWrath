@@ -61,13 +61,16 @@ class GemcraftFrostbornWrathWorld(World):
             if name.endswith(" Battle Trait"):
                 pool.append(self.create_item(name))
 
-        # Pad remaining slots with cycling XP tiers
-        xp_tiers = ["Large XP Bonus", "Medium XP Bonus", "Small XP Bonus"]
+        # Pad remaining slots with XP tiers: 2 Large, 10 Medium, rest Small.
+        # Players also earn wizard levels naturally from completing stages, so
+        # the pool only needs to supplement — 2+10+N Small is sufficient.
         location_count = len(location_table)
-        i = 0
+        xp_counts = {"Ancient Grimoire": 2, "Worn Tome": 10}
+        for name, count in xp_counts.items():
+            for _ in range(count):
+                pool.append(self.create_item(name))
         while len(pool) < location_count:
-            pool.append(self.create_item(xp_tiers[i % len(xp_tiers)]))
-            i += 1
+            pool.append(self.create_item("Tattered Scroll"))
 
         self.multiworld.itempool += pool
 

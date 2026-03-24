@@ -383,9 +383,9 @@ package {
                 if (name != null) return name;
             }
             if (apId >= 1   && apId <= 199) return "Field Token (id=" + apId + ")";
-            if (apId == 500) return "Small XP Bonus";
-            if (apId == 501) return "Medium XP Bonus";
-            if (apId == 502) return "Large XP Bonus";
+            if (apId == 500) return "Tattered Scroll";
+            if (apId == 501) return "Worn Tome";
+            if (apId == 502) return "Ancient Grimoire";
             return "Item #" + apId;
         }
 
