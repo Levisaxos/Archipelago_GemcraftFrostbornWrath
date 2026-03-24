@@ -178,8 +178,15 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is None
         ]
         return {
-            "goal":            self.options.goal.value,
-            "skill_placement": self.options.skill_placement.value,
-            "token_map":       token_map,
-            "free_stages":     free_stages,
+            "goal":                  self.options.goal.value,
+            "skill_placement":       self.options.skill_placement.value,
+            "token_map":             token_map,
+            "free_stages":           free_stages,
+            "death_link":              bool(self.options.death_link.value),
+            "death_link_punishment":   self.options.death_link_punishment.value,
+            "gem_loss_percent":        self.options.gem_loss_percent.value,
+            "wave_surge_count":        self.options.wave_surge_count.value,
+            "wave_surge_gem_level":    self.options.wave_surge_gem_level.value,
+            "death_link_grace_period": self.options.death_link_grace_period.value,
+            "death_link_cooldown":     self.options.death_link_cooldown.value,
         }

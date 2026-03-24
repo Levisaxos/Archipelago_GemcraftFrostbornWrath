@@ -24,6 +24,7 @@ package {
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
+     *   DeathLinkHandler         — DeathLink send/receive and punishment application
      *   GameCompletion           — Detects A4 goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
@@ -52,6 +53,7 @@ package {
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
+        private var _deathLinkHandler:DeathLinkHandler;
         private var _gameCompletion:GameCompletion;
         private var _fileHandler:FileHandler;
         private var _saveManager:SaveManager;
@@ -107,6 +109,11 @@ package {
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                     _fileHandler, _connectionManager, _levelUnlocker);
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
+
+                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
+                _deathLinkHandler.onPlayerDied        = onPlayerDied;
+                _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
+                _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
                 _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
                 _gameCompletion.onGoalReached = onGoalReached;
@@ -238,6 +245,7 @@ package {
                     screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
                     screen == ScreenId.INGAME) {
                     skipAllTutorials();
+                    _deathLinkHandler.resetForNewStage();
                 }
                 _lastScreen = screen;
             }
@@ -251,6 +259,12 @@ package {
             if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
                 _needsConnection = false;
                 startConnectionForSlot();
+            }
+
+            // DeathLink: detect player death (send) and drain punishment queue (receive).
+            if (screen == ScreenId.INGAME) {
+                _deathLinkHandler.checkForDeath();
+                _deathLinkHandler.checkQueue();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -446,6 +460,18 @@ package {
             _needsConnection = false;
             _saveManager.loadSlotData(_saveManager.currentSlot);
             _levelUnlocker.applyBonusLevels();
+
+            // DeathLink: for new slots use the YAML setting; existing slots keep the local override.
+            if (!_saveManager.deathLinkEnabledSet && p.slot_data) {
+                _saveManager.deathLinkEnabled = p.slot_data.death_link === true;
+                _saveManager.saveSlotData();
+            }
+            _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+            if (p.slot_data) _deathLinkHandler.configure(p.slot_data);
+            if (_saveManager.deathLinkEnabled) {
+                _connectionManager.sendConnectUpdate(["DeathLink"]);
+            }
+
             if (_saveManager.slotCompleted) {
                 _gameCompletion.markAlreadyCompleted();
             } else {
@@ -582,6 +608,39 @@ package {
             _connectionManager.sendGoalComplete();
             _saveManager.markSlotCompleted();
         }
+
+        // -----------------------------------------------------------------------
+        // DeathLink callbacks
+
+        private function onPlayerDied():void {
+            _connectionManager.sendDeathLink(_connectionManager.apSlot);
+        }
+
+        private function onPunishmentReceived(source:String):void {
+            _toast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
+        }
+
+        private function onDeathLinkReceived(source:String):void {
+            _deathLinkHandler.queuePunishment(source);
+        }
+
+        /**
+         * Toggle DeathLink on/off for this slot.
+         * Persists the preference and sends ConnectUpdate to the server.
+         * Expose via ScrDebugOptions or a dedicated UI button.
+         */
+        public function toggleDeathLink():void {
+            _saveManager.deathLinkEnabled = !_saveManager.deathLinkEnabled;
+            _saveManager.saveSlotData();
+            _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+            var tags:Array = _saveManager.deathLinkEnabled ? ["DeathLink"] : [];
+            _connectionManager.sendConnectUpdate(tags);
+            _logger.log(MOD_NAME, "DeathLink toggled: " + (_saveManager.deathLinkEnabled ? "ON" : "OFF"));
+            _toast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
+                _saveManager.deathLinkEnabled ? 0xFF88FF88 : 0xFFFFAA44);
+        }
+
+        public function get deathLinkEnabled():Boolean { return _saveManager.deathLinkEnabled; }
 
         // -----------------------------------------------------------------------
         // Helpers

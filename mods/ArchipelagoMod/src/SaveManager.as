@@ -7,7 +7,7 @@ package {
      * Coordinates between FileHandler (raw I/O), ConnectionManager (credentials),
      * and LevelUnlocker (bonusWizardLevel) so ArchipelagoMod stays a thin shell.
      *
-     * Slot file fields: host, port, slot, password, bonusWizardLevel, completed.
+     * Slot file fields: host, port, slot, password, bonusWizardLevel, completed, deathLinkEnabled.
      */
     public class SaveManager {
 
@@ -17,8 +17,10 @@ package {
         private var _connectionManager:ConnectionManager;
         private var _levelUnlocker:LevelUnlocker;
 
-        private var _currentSlot:int   = 0;
+        private var _currentSlot:int       = 0;
         private var _slotCompleted:Boolean = false;
+        private var _deathLinkEnabled:Boolean    = false;
+        private var _deathLinkEnabledSet:Boolean = false; // false = no saved value yet (new slot)
 
         public function SaveManager(logger:Logger, modName:String,
                                     fileHandler:FileHandler,
@@ -34,6 +36,10 @@ package {
         public function get currentSlot():int        { return _currentSlot; }
         public function set currentSlot(v:int):void  { _currentSlot = v; }
         public function get slotCompleted():Boolean   { return _slotCompleted; }
+        public function get deathLinkEnabled():Boolean        { return _deathLinkEnabled; }
+        public function set deathLinkEnabled(v:Boolean):void  { _deathLinkEnabled = v; _deathLinkEnabledSet = true; }
+        /** False if the slot file had no saved deathlink preference (new slot). */
+        public function get deathLinkEnabledSet():Boolean { return _deathLinkEnabledSet; }
 
         /**
          * Load saved slot data into ConnectionManager and LevelUnlocker.
@@ -43,7 +49,9 @@ package {
             _currentSlot = slotId;
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
-            _slotCompleted = false;
+            _slotCompleted       = false;
+            _deathLinkEnabled    = false;
+            _deathLinkEnabledSet = false;
 
             var data:Object = _fileHandler.loadSlotData(slotId);
             if (data != null) {
@@ -53,6 +61,10 @@ package {
                 if (data.password         !== undefined) _connectionManager.apPassword   = String(data.password);
                 if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
                 if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
+                if (data.deathLinkEnabled !== undefined) {
+                    _deathLinkEnabled    = data.deathLinkEnabled === true;
+                    _deathLinkEnabledSet = true;
+                }
             }
         }
 
@@ -68,7 +80,8 @@ package {
                 slot:             _connectionManager.apSlot,
                 password:         _connectionManager.apPassword,
                 bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
-                completed:        _slotCompleted
+                completed:        _slotCompleted,
+                deathLinkEnabled: _deathLinkEnabled
             };
             _fileHandler.saveSlotData(_currentSlot, data);
         }
