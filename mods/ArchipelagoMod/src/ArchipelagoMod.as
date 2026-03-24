@@ -343,6 +343,7 @@ package {
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "skipAllTutorials error: " + err.message);
             }
+            _stageUnlocker.logStageEntered(_currentSlot);
         }
 
         // -----------------------------------------------------------------------
@@ -382,6 +383,9 @@ package {
 
         private function onConnectionPanelConnect(host:String, port:int,
                                                    slot:String, password:String):void {
+            _logger.log(MOD_NAME, "PLAYER_SUBMITTED_CONNECTION host=" + host
+                + "  port=" + port + "  slot=" + slot
+                + "  hasPassword=" + (password.length > 0));
             _connectionManager.connect(host, port, slot, password);
             saveSlotData();
         }

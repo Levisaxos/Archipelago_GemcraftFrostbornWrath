@@ -349,15 +349,16 @@ package {
                     var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
                     if (xp <= 0) continue;
                     var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
-                    _logger.log(_modName, "  stage=" + meta.strId + "  xp=" + xp
-                        + "  locId=" + locId
-                        + "  journeyMissing=" + (_missingLocations[locId] == true)
-                        + "  bonusMissing="   + (_missingLocations[locId + 500] == true));
+                    var journeyNew:Boolean = _missingLocations[locId] == true;
+                    var bonusNew:Boolean   = _missingLocations[locId + 500] == true;
+                    _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
+                        + "  xp=" + xp + "  locId=" + locId
+                        + "  journeyNew=" + journeyNew + "  bonusNew=" + bonusNew);
                     if (locId <= 0) continue;
-                    if (_missingLocations[locId])       toSend.push(locId);
-                    if (_missingLocations[locId + 500]) toSend.push(locId + 500);
+                    if (journeyNew) toSend.push(locId);
+                    if (bonusNew)   toSend.push(locId + 500);
                 }
-                _logger.log(_modName, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " checks)");
+                _logger.log(_modName, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " new checks)");
                 if (toSend.length > 0) {
                     for each (var sentId:int in toSend) {
                         delete _missingLocations[sentId];

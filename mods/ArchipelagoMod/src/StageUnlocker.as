@@ -99,6 +99,40 @@ package {
         }
 
         /**
+         * Attempt to log which stage is currently being entered.
+         * Probes several potential GV paths; any that work will be logged.
+         * This helps us discover the right API property once the game runs.
+         */
+        public function logStageEntered(slotId:int):void {
+            var stageStrId:String = null;
+            try {
+                if (GV.ingameController != null && GV.ingameController.core != null) {
+                    var core:* = GV.ingameController.core;
+                    if (stageStrId == null && core.stageMeta != null)
+                        stageStrId = String(core.stageMeta.strId);
+                    if (stageStrId == null && core.stage != null)
+                        stageStrId = String(core.stage.strId);
+                    if (stageStrId == null && core.stageStrId != null)
+                        stageStrId = String(core.stageStrId);
+                }
+            } catch (e1:Error) { /* property didn't exist */ }
+            try {
+                if (stageStrId == null && GV.ingameCore != null) {
+                    var ic:* = GV.ingameCore;
+                    if (stageStrId == null && ic.stageMeta != null)
+                        stageStrId = String(ic.stageMeta.strId);
+                    if (stageStrId == null && ic.stage != null)
+                        stageStrId = String(ic.stage.strId);
+                    if (stageStrId == null && ic.stageStrId != null)
+                        stageStrId = String(ic.stageStrId);
+                }
+            } catch (e2:Error) { /* property didn't exist */ }
+            _logger.log(_modName, "PLAYER_ENTERED_STAGE stage="
+                + (stageStrId != null ? stageStrId : "(unknown — needs API probe)")
+                + "  slot=" + slotId);
+        }
+
+        /**
          * Override the scroll limits to the full world extent every frame.
          *
          * setVpLimits() in SelectorCore has a hard-coded override that collapses
