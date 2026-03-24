@@ -1,5 +1,7 @@
 package {
+    import flash.display.DisplayObjectContainer;
     import flash.display.Sprite;
+    import flash.display.Stage;
     import flash.events.MouseEvent;
     import flash.text.TextField;
     import flash.text.TextFieldType;
@@ -8,15 +10,15 @@ package {
 
     /**
      * A self-contained overlay panel for entering Archipelago connection settings.
-     * Call prefill() after adding to stage to populate the fields from saved settings.
+     * Manages its own blocking overlay — call showWithOverlay() to display it
+     * over the game, and dismiss() to remove it.
      *
      * Usage:
      *   var panel:ConnectionPanel = new ConnectionPanel();
      *   panel.onConnect = function(host:String, port:int, slot:String, password:String):void { ... };
      *   panel.onCancel  = function():void { ... };
-     *   stage.addChild(panel);
-     *   panel.centerOnStage(stage.stageWidth, stage.stageHeight);
      *   panel.prefill(host, port, slot, password);
+     *   panel.showWithOverlay(stage, toastPanel);
      */
     public class ConnectionPanel extends Sprite {
 
@@ -52,6 +54,7 @@ package {
         private var _btnCancel:Sprite;
         private var _tfConnectLabel:TextField;
         private var _tfStatus:TextField;
+        private var _blockingOverlay:Sprite;
 
         /** Called with (host, port, slot, password) when the user clicks Connect. */
         public var onConnect:Function;
@@ -275,6 +278,51 @@ package {
         public function centerOnStage(stageW:Number, stageH:Number):void {
             x = Math.round((stageW - PANEL_W) / 2);
             y = Math.round((stageH - PANEL_H) / 2);
+        }
+
+        // -----------------------------------------------------------------------
+        // Overlay management — the panel manages its own blocking overlay.
+
+        /** Returns true if the overlay is currently shown on stage. */
+        public function get isShowing():Boolean {
+            return _blockingOverlay != null && _blockingOverlay.parent != null;
+        }
+
+        /**
+         * Show the panel with a full-stage blocking overlay.
+         * If a toastPanel is provided, it is kept above the overlay.
+         */
+        public function showWithOverlay(stg:Stage, toastPanel:DisplayObjectContainer = null):void {
+            if (isShowing) return;
+
+            if (_blockingOverlay == null) {
+                _blockingOverlay = new Sprite();
+                _blockingOverlay.graphics.beginFill(0x000000, 0.88);
+                _blockingOverlay.graphics.drawRect(-500, -500, 3000, 3000);
+                _blockingOverlay.graphics.endFill();
+            }
+
+            if (this.parent != null) {
+                this.parent.removeChild(this);
+            }
+            _blockingOverlay.addChild(this);
+            centerOnStage(stg.stageWidth, stg.stageHeight);
+
+            stg.addChild(_blockingOverlay);
+
+            // Keep the toast above the overlay so messages remain visible.
+            if (toastPanel != null && toastPanel.parent == stg) {
+                stg.setChildIndex(toastPanel, stg.numChildren - 1);
+            }
+        }
+
+        /**
+         * Remove the blocking overlay (and this panel) from the stage.
+         */
+        public function dismiss():void {
+            if (_blockingOverlay != null && _blockingOverlay.parent != null) {
+                _blockingOverlay.parent.removeChild(_blockingOverlay);
+            }
         }
     }
 }
