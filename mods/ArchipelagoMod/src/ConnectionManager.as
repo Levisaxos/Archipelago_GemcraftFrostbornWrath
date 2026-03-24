@@ -32,6 +32,8 @@ package {
         private var _tokenMap:Object    = {};   // item AP ID (string) → stage str_id
         private var _tokenStages:Object = {};   // stage str_id → true  (has an AP token)
         private var _missingLocations:Object = {};
+        private var _mySlot:int         = 0;
+        private var _playerNames:Object = {};   // slot (int) → alias (String)
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -171,7 +173,8 @@ package {
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
             if (onError != null) onError("Connection failed: " + msg);
-            _toast.addMessage("AP error: " + msg, 0xFFFF6666);
+            _toast.addMessage("Failed to connect to " + _apHost + ":" + _apPort
+                + " with name " + _apSlot, 0xFFFF6666);
             if (onConnectionStateChanged != null) onConnectionStateChanged(false);
         }
 
@@ -206,7 +209,6 @@ package {
                 case "RoomInfo":
                     _logger.log(_modName, "  seed=" + p.seed_name + "  server=" +
                         p.version.major + "." + p.version.minor + "." + p.version.build);
-                    _toast.addMessage("AP: Have fun and play well!", 0xFF88DDFF);
                     sendConnect();
                     break;
 
@@ -229,6 +231,7 @@ package {
                     break;
 
                 case "PrintJSON":
+                    handlePrintJSON(p);
                     break;
 
                 default:
@@ -238,12 +241,14 @@ package {
 
         private function handleConnected(p:Object):void {
             _isConnected = true;
-            _toast.addMessage("AP connected!", 0xFF88FF88);
+            _mySlot = int(p.slot);
             _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
 
+            _playerNames = {};
             var players:Array = p.players as Array;
             if (players) {
                 for each (var player:Object in players) {
+                    _playerNames[int(player.slot)] = String(player.alias);
                     _logger.log(_modName, "  player: slot=" + player.slot +
                         "  name=" + player.alias + "  game=" + player.game);
                 }
@@ -273,7 +278,8 @@ package {
                 }
             }
 
-            _toast.addMessage("Slot connected! " + missing.length + " locations remaining", 0xFF88FF88);
+            _toast.addMessage("Successfully connected to " + _apHost + ":" + _apPort
+                + " with name " + _apSlot, 0xFF88FF88);
 
             if (onConnected != null) onConnected(p);
         }
@@ -291,6 +297,26 @@ package {
                     _logger.log(_modName, "  + item=" + apId + " (" + itemName(apId) + ")");
                     if (onItemReceived != null) onItemReceived(apId);
                 }
+            }
+        }
+
+        private function handlePrintJSON(p:Object):void {
+            if (p.type != "ItemSend") return;
+            var receiving:int  = int(p.receiving);
+            var senderSlot:int = int(p.item.player);
+            var name:String    = itemName(int(p.item.item));
+
+            if (receiving == _mySlot && senderSlot != _mySlot) {
+                var sender:String = _playerNames[senderSlot] || ("Player " + senderSlot);
+                _logger.log(_modName, "  ItemSend: received " + name + " from " + sender);
+                _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
+            } else if (receiving == _mySlot && senderSlot == _mySlot) {
+                _logger.log(_modName, "  ItemSend: found " + name);
+                _toast.addMessage("Found " + name, 0xFF88DDFF);
+            } else if (senderSlot == _mySlot) {
+                var receiver:String = _playerNames[receiving] || ("Player " + receiving);
+                _logger.log(_modName, "  ItemSend: sent " + name + " to " + receiver);
+                _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
             }
         }
 
