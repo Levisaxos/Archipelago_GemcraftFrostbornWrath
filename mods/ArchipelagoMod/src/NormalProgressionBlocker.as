@@ -15,14 +15,14 @@ package {
      * Archipelago will later send the correct items; this class just ensures the
      * game cannot hand them out on its own.
      */
-    public class ProgressionBlocker {
+    public class NormalProgressionBlocker {
 
         private var _logger:Logger;
         private var _modName:String;
         private var _bezel:Bezel;
         private var _isSaving:Boolean = false;
 
-        public function ProgressionBlocker(logger:Logger, modName:String) {
+        public function NormalProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
         }
@@ -101,7 +101,7 @@ package {
                 }
             } catch (err:Error) {
                 _isSaving = false;
-                _logger.log(_modName, "ProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
+                _logger.log(_modName, "NormalProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
             }
         }
     }
