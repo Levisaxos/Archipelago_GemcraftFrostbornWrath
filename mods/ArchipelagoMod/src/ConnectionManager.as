@@ -344,6 +344,14 @@ package {
             _ws.send(packet);
         }
 
+        /** Send the goal-complete status to the AP server (status 30 = CLIENT_GOAL). */
+        public function sendGoalComplete():void {
+            if (_ws == null || !_isConnected) return;
+            var packet:String = '[{"cmd":"StatusUpdate","status":30}]';
+            _logger.log(_modName, "AP >> StatusUpdate (Goal complete)");
+            _ws.send(packet);
+        }
+
         /**
          * Scan completed stages and send any unchecked locations to the server.
          * Called after battle victories.
