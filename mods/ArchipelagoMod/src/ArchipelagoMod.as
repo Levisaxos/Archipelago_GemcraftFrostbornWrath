@@ -441,6 +441,7 @@ package {
         private function onApConnected(p:Object):void {
             _needsConnection = false;
             _saveManager.loadSlotData(_saveManager.currentSlot);
+            _levelUnlocker.applyBonusLevels();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
@@ -551,6 +552,7 @@ package {
 
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
+            _levelUnlocker.applyBonusLevels();
             _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
