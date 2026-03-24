@@ -148,8 +148,11 @@ package {
             var slotId:int = int(GV.loaderSaver.activeSlotId);
             _pendingModeButton = e.currentTarget;
             _pendingModeTarget = e.target;
-            _logger.log(_modName, "Mode button intercepted — btn=" + _pendingModeButton
-                + "  target=" + _pendingModeTarget + "  slot=" + slotId);
+            var btnName:String = Object(e.currentTarget).name;
+            var modeName:String = (btnName == "btnModeChilling") ? "Chilling"
+                                : (btnName == "btnModeFrostborn") ? "Frostborn"
+                                : btnName;
+            _logger.log(_modName, "PLAYER_SELECTED_MODE mode=" + modeName + "  slot=" + slotId);
             if (onModeIntercepted != null) onModeIntercepted(slotId, _pendingModeButton, _pendingModeTarget);
         }
 
