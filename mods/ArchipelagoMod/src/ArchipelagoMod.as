@@ -56,11 +56,12 @@ package {
         private var _stageUnlocker:StageUnlocker;
         private var _levelUnlocker:LevelUnlocker;
 
-        private var _keyListenerAdded:Boolean = false;
-        private var _needsConnection:Boolean  = false;
-        private var _currentSlot:int          = 0;
-        private var _lastScreen:int           = -1;
-        private var _mapTilesUnlocked:Boolean = false;
+        private var _keyListenerAdded:Boolean  = false;
+        private var _needsConnection:Boolean   = false;
+        private var _currentSlot:int           = 0;
+        private var _lastScreen:int            = -1;
+        private var _mapTilesUnlocked:Boolean  = false;
+        private var _slotCompleted:Boolean     = false;
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -108,6 +109,7 @@ package {
                 // Mode-selector interceptor
                 _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _toast);
                 _modeInterceptor.onModeIntercepted    = onModeIntercepted;
+                _modeInterceptor.onSlotDeleteWarning   = onSlotDeleteWarning;
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
@@ -356,8 +358,18 @@ package {
             startConnectionForSlot();
         }
 
+        private function onSlotDeleteWarning(slotId:int):void {
+            if (!_fileHandler.isSlotCompleted(slotId)) {
+                _toast.addMessage(
+                    "Warning: slot " + slotId + " is not yet completed.\n"
+                    + "Deleting will lose most of your progress.\n"
+                    + "Press D to confirm.",
+                    0xFFFF8844);
+            }
+        }
+
         private function onSlotDeleteConfirmed(slotId:int):void {
-            _fileHandler.archiveSlot(slotId);
+            _fileHandler.deleteSlot(slotId);
         }
 
         // -----------------------------------------------------------------------
@@ -443,27 +455,37 @@ package {
 
         private function loadSlotData(slotId:int):void {
             _connectionManager.resetSettings();
-            _levelUnlocker.apWizardLevel = 0;
+            _levelUnlocker.bonusWizardLevel = 0;
+            _slotCompleted = false;
             var data:Object = _fileHandler.loadSlotData(slotId);
             if (data != null) {
-                if (data.host           !== undefined) _connectionManager.apHost     = String(data.host);
-                if (data.port           !== undefined) _connectionManager.apPort     = int(data.port);
-                if (data.slot           !== undefined) _connectionManager.apSlot     = String(data.slot);
-                if (data.password       !== undefined) _connectionManager.apPassword = String(data.password);
-                if (data.apWizardLevels !== undefined) _levelUnlocker.apWizardLevel  = int(data.apWizardLevels);
+                if (data.host             !== undefined) _connectionManager.apHost       = String(data.host);
+                if (data.port             !== undefined) _connectionManager.apPort       = int(data.port);
+                if (data.slot             !== undefined) _connectionManager.apSlot       = String(data.slot);
+                if (data.password         !== undefined) _connectionManager.apPassword   = String(data.password);
+                if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
+                if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
             }
         }
 
         private function saveSlotData():void {
             if (_currentSlot <= 0) return;
             var data:Object = {
-                host:           _connectionManager.apHost,
-                port:           _connectionManager.apPort,
-                slot:           _connectionManager.apSlot,
-                password:       _connectionManager.apPassword,
-                apWizardLevels: _levelUnlocker.apWizardLevel
+                host:             _connectionManager.apHost,
+                port:             _connectionManager.apPort,
+                slot:             _connectionManager.apSlot,
+                password:         _connectionManager.apPassword,
+                bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
+                completed:        _slotCompleted
             };
             _fileHandler.saveSlotData(_currentSlot, data);
+        }
+
+        /** Call this when the player reaches the Archipelago goal. */
+        public function markSlotCompleted():void {
+            _slotCompleted = true;
+            saveSlotData();
+            _logger.log(MOD_NAME, "Slot " + _currentSlot + " marked as completed");
         }
 
         // -----------------------------------------------------------------------
@@ -561,13 +583,12 @@ package {
             }
 
             // --- Wizard levels ---
-            _levelUnlocker.apWizardLevel = apXpTotal;
+            _levelUnlocker.bonusWizardLevel = apXpTotal;
             saveSlotData();
-            _levelUnlocker.applyApWizardLevels(_levelUnlocker.apWizardLevel);
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
-                " apWizardLevel:" + _levelUnlocker.apWizardLevel);
+                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
         }
 
         // -----------------------------------------------------------------------

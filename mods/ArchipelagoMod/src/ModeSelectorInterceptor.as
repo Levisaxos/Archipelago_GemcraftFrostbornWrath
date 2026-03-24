@@ -38,6 +38,13 @@ package {
         public var onModeIntercepted:Function;
 
         /**
+         * Called when a delete button is clicked, before D confirmation.
+         * Use this to warn the player if the slot's game is not yet completed.
+         * Signature: (slotId:int):void
+         */
+        public var onSlotDeleteWarning:Function;
+
+        /**
          * Called when the D key confirms a slot deletion.
          * Signature: (slotId:int):void
          */
@@ -192,6 +199,7 @@ package {
             }
             _pendingDeleteSlot = slotId;
             _logger.log(_modName, "Delete button clicked for slot " + slotId + " — waiting for D confirmation");
+            if (onSlotDeleteWarning != null) onSlotDeleteWarning(slotId);
         }
 
         private function onConfirmDeleteKey(e:KeyboardEvent):void {
