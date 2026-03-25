@@ -67,6 +67,7 @@ package {
         private var _needsConnection:Boolean   = false;
         private var _lastScreen:int            = -1;
         private var _mapTilesUnlocked:Boolean  = false;
+        private var _standalone:Boolean        = false;
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -227,6 +228,7 @@ package {
                 if (screen == ScreenId.LOADGAME) {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
+                    _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
                     _gameCompletion.reset();
@@ -253,7 +255,7 @@ package {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
                 }
-                if (screen == ScreenId.INGAME && this.stage != null) {
+                if (screen == ScreenId.INGAME && this.stage != null && !_standalone) {
                     _deathLinkTestOverlay.show(this.stage);
                 } else {
                     _deathLinkTestOverlay.hide();
@@ -274,7 +276,7 @@ package {
 
             // DeathLink: detect player death (send), drain punishment queue (receive),
             // and maintain any active wave-surge.
-            if (screen == ScreenId.INGAME) {
+            if (screen == ScreenId.INGAME && !_standalone) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
                 _deathLinkHandler.checkWaveSurge();
@@ -340,16 +342,17 @@ package {
             _btn = new ArchipelagoButton(mc.btnTutorial);
             _btn.x = mc.btnTutorial.x;
             _btn.y = mc.btnTutorial.y + stepY;
-            _btn.visible = true;
+            _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
             mc.addChild(_btn);
-            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ")");
+            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ") [hidden]");
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
+                if (_btn != null) _btn.visible = _debugMode;
                 if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
                     _debugOptions.close();
                 }
@@ -419,6 +422,16 @@ package {
          */
         private function startConnectionForSlot():void {
             _saveManager.loadSlotData(_saveManager.currentSlot);
+
+            // Slot file exists and player previously chose standalone — skip popup entirely.
+            if (_saveManager.standaloneSet && _saveManager.standalone) {
+                _standalone = true;
+                _normalProgressionBlocker.disable();
+                _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
+                _modeInterceptor.redispatchPendingClick();
+                return;
+            }
+
             if (_connectionManager.apSlot.length > 0) {
                 _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
                     + "  host=" + _connectionManager.apHost
@@ -440,8 +453,9 @@ package {
                 _connectionPanel = new ConnectionPanel();
                 _logger.log(MOD_NAME, "ConnectionPanel created");
             }
-            _connectionPanel.onConnect = onConnectionPanelConnect;
-            _connectionPanel.onCancel  = onConnectionPanelCancel;
+            _connectionPanel.onConnect    = onConnectionPanelConnect;
+            _connectionPanel.onCancel     = onConnectionPanelCancel;
+            _connectionPanel.onStandalone = onConnectionPanelStandalone;
             _connectionPanel.prefill(
                 _connectionManager.apHost,
                 _connectionManager.apPort,
@@ -458,12 +472,22 @@ package {
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
             _connectionManager.connect(host, port, slot, password);
-            _saveManager.saveSlotData();
         }
 
         private function onConnectionPanelCancel():void {
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.clearPending();
+        }
+
+        private function onConnectionPanelStandalone():void {
+            _saveManager.standalone = true;
+            _saveManager.saveSlotData();
+            _standalone = true;
+            _normalProgressionBlocker.disable();
+            if (_connectionPanel != null) _connectionPanel.dismiss();
+            _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
+            _toast.addMessage("Playing without Archipelago", 0xFF88FF88);
+            _modeInterceptor.redispatchPendingClick();
         }
 
         // -----------------------------------------------------------------------
@@ -612,6 +636,7 @@ package {
         // Save hook — detects battle victories and sends location checks
 
         private function onSaveSave(e:*):void {
+            if (_standalone) return;
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
             _gameCompletion.check();

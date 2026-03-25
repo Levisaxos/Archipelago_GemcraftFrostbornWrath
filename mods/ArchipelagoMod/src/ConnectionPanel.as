@@ -24,7 +24,7 @@ package {
 
         // Panel dimensions — used externally for centering.
         public static const PANEL_W:Number = 430;
-        public static const PANEL_H:Number = 295;
+        public static const PANEL_H:Number = 340;
 
         private static const LABEL_W:Number = 110;
         private static const FIELD_W:Number = 240;
@@ -42,6 +42,7 @@ package {
         private static const COL_FIELD_TX:uint = 0xEEDDFF;
         private static const COL_BTN_OK:uint   = 0x3A1A6E;
         private static const COL_BTN_CN:uint   = 0x3A1010;
+        private static const COL_BTN_SA:uint   = 0x0A2010;
         private static const COL_BTN_BD:uint   = 0xAA77EE;
         private static const COL_BTN_TX:uint   = 0xFFFFFF;
 
@@ -52,6 +53,7 @@ package {
 
         private var _btnConnect:Sprite;
         private var _btnCancel:Sprite;
+        private var _btnStandalone:Sprite;
         private var _tfConnectLabel:TextField;
         private var _tfStatus:TextField;
         private var _blockingOverlay:Sprite;
@@ -60,6 +62,8 @@ package {
         public var onConnect:Function;
         /** Called when the user clicks Cancel. */
         public var onCancel:Function;
+        /** Called when the user clicks "Play without Archipelago". */
+        public var onStandalone:Function;
 
         public function ConnectionPanel() {
             super();
@@ -98,12 +102,12 @@ package {
             // Status line — hidden until there is something to show.
             _tfStatus = makeLabelTf("", PANEL_W - PADDING * 2, 20, 0xFF6666AA, 12, false, true);
             _tfStatus.x       = PADDING;
-            _tfStatus.y       = PANEL_H - 70;
+            _tfStatus.y       = PANEL_H - 115;
             _tfStatus.visible = false;
             addChild(_tfStatus);
 
-            // Buttons
-            var btnY:Number = PANEL_H - 55;
+            // Connect / Cancel buttons
+            var btnY:Number    = PANEL_H - 95;
             var centerX:Number = PANEL_W / 2;
 
             _btnConnect = makeButton("Connect", COL_BTN_OK, 105, 32);
@@ -118,10 +122,24 @@ package {
             _btnCancel = makeButton("Cancel", COL_BTN_CN, 105, 32);
             _btnCancel.x = centerX + 10;
             _btnCancel.y = btnY;
-            _btnCancel.addEventListener(MouseEvent.CLICK,      onCancelClicked, false, 0, true);
-            _btnCancel.addEventListener(MouseEvent.MOUSE_OVER, onBtnOver,       false, 0, true);
-            _btnCancel.addEventListener(MouseEvent.MOUSE_OUT,  onBtnOut,        false, 0, true);
+            _btnCancel.addEventListener(MouseEvent.CLICK,      onCancelClicked,   false, 0, true);
+            _btnCancel.addEventListener(MouseEvent.MOUSE_OVER, onBtnOver,         false, 0, true);
+            _btnCancel.addEventListener(MouseEvent.MOUSE_OUT,  onBtnOut,          false, 0, true);
             addChild(_btnCancel);
+
+            // Standalone button — full-width separator below Connect/Cancel
+            graphics.lineStyle(1, COL_BORDER, 0.3);
+            graphics.moveTo(PADDING, PANEL_H - 54);
+            graphics.lineTo(PANEL_W - PADDING, PANEL_H - 54);
+
+            var saW:Number = PANEL_W - PADDING * 2;
+            _btnStandalone = makeButton("Play without randomizer", COL_BTN_SA, saW, 28);
+            _btnStandalone.x = PADDING;
+            _btnStandalone.y = PANEL_H - 46;
+            _btnStandalone.addEventListener(MouseEvent.CLICK,      onStandaloneClicked, false, 0, true);
+            _btnStandalone.addEventListener(MouseEvent.MOUSE_OVER, onStandaloneBtnOver, false, 0, true);
+            _btnStandalone.addEventListener(MouseEvent.MOUSE_OUT,  onStandaloneBtnOut,  false, 0, true);
+            addChild(_btnStandalone);
         }
 
         private function addRow(labelText:String, y:Number, isPassword:Boolean, setter:Function):void {
@@ -225,6 +243,14 @@ package {
             drawButtonFace(btn, bgColor, 105, 32, false);
         }
 
+        private function onStandaloneBtnOver(e:MouseEvent):void {
+            drawButtonFace(_btnStandalone, COL_BTN_SA, PANEL_W - PADDING * 2, 28, true);
+        }
+
+        private function onStandaloneBtnOut(e:MouseEvent):void {
+            drawButtonFace(_btnStandalone, COL_BTN_SA, PANEL_W - PADDING * 2, 28, false);
+        }
+
         // -----------------------------------------------------------------------
         // Actions
 
@@ -237,6 +263,10 @@ package {
 
         private function onCancelClicked(e:MouseEvent):void {
             if (onCancel != null) onCancel();
+        }
+
+        private function onStandaloneClicked(e:MouseEvent):void {
+            if (onStandalone != null) onStandalone();
         }
 
         /** Switch the Connect button between normal and connecting state. */
