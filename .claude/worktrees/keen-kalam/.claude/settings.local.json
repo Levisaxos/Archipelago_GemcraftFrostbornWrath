@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -l \"SKT.*TRS\\\\|stashDrops\" \"D:\\\\GitHome\\\\Archipelago_GemcraftFrostbornWrath\\\\do not commit\\\\GCFW\\\\scripts\\\\com\\\\giab\\\\games\\\\gcfw\\\\stages\"*.as)",
+      "Bash(grep -r \"SKT\\\\|SHC\\\\|TAL\\\\|TRS\\\\|MTL\" D:GitHomeArchipelago_GemcraftFrostbornWrath --include=*.md)"
+    ]
+  }
+}
