@@ -21,6 +21,8 @@ package {
         private var _slotCompleted:Boolean = false;
         private var _deathLinkEnabled:Boolean    = false;
         private var _deathLinkEnabledSet:Boolean = false; // false = no saved value yet (new slot)
+        private var _standalone:Boolean    = false;
+        private var _standaloneSet:Boolean = false;       // false = no saved value yet (new slot)
 
         public function SaveManager(logger:Logger, modName:String,
                                     fileHandler:FileHandler,
@@ -40,6 +42,10 @@ package {
         public function set deathLinkEnabled(v:Boolean):void  { _deathLinkEnabled = v; _deathLinkEnabledSet = true; }
         /** False if the slot file had no saved deathlink preference (new slot). */
         public function get deathLinkEnabledSet():Boolean { return _deathLinkEnabledSet; }
+        public function get standalone():Boolean        { return _standalone; }
+        public function set standalone(v:Boolean):void  { _standalone = v; _standaloneSet = true; }
+        /** False if the slot file had no saved standalone flag (new slot). */
+        public function get standaloneSet():Boolean { return _standaloneSet; }
 
         /**
          * Load saved slot data into ConnectionManager and LevelUnlocker.
@@ -52,6 +58,8 @@ package {
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
+            _standalone          = false;
+            _standaloneSet       = false;
 
             var data:Object = _fileHandler.loadSlotData(slotId);
             if (data != null) {
@@ -65,6 +73,10 @@ package {
                     _deathLinkEnabled    = data.deathLinkEnabled === true;
                     _deathLinkEnabledSet = true;
                 }
+                if (data.standalone !== undefined) {
+                    _standalone    = data.standalone === true;
+                    _standaloneSet = true;
+                }
             }
         }
 
@@ -73,7 +85,7 @@ package {
          * No-ops if currentSlot is not set.
          */
         public function saveSlotData():void {
-            if (_currentSlot <= 0) return;
+            if (_currentSlot < 0) return;
             var data:Object = {
                 host:             _connectionManager.apHost,
                 port:             _connectionManager.apPort,
@@ -81,7 +93,8 @@ package {
                 password:         _connectionManager.apPassword,
                 bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
                 completed:        _slotCompleted,
-                deathLinkEnabled: _deathLinkEnabled
+                deathLinkEnabled: _deathLinkEnabled,
+                standalone:       _standalone
             };
             _fileHandler.saveSlotData(_currentSlot, data);
         }
@@ -108,6 +121,8 @@ package {
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
+            _standalone          = false;
+            _standaloneSet       = false;
             _logger.log(_modName, "Slot " + slotId + " deleted — in-memory state cleared");
         }
     }

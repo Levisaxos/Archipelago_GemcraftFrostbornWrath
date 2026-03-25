@@ -159,7 +159,7 @@ package {
         private function onModeBtnUp(e:MouseEvent):void {
             if (_allowModeClick) return; // our own re-dispatch — let it through
             e.stopImmediatePropagation();
-            var slotId:int = int(GV.loaderSaver.activeSlotId);
+            var slotId:int = int(GV.loaderSaver.activeSlotId)+1;
             _pendingModeButton = e.currentTarget;
             _pendingModeTarget = e.target;
             var btnName:String = Object(e.currentTarget).name;
@@ -170,7 +170,7 @@ package {
             if (onModeIntercepted != null) onModeIntercepted(slotId, _pendingModeButton, _pendingModeTarget);
         }
 
-        private function onIronBtnUp(e:MouseEvent):void {
+        private function onIronBtnUp(e:MouseEvent):void {            
             e.stopImmediatePropagation();
             _toast.addMessage("Iron is not allowed (yet) for Archipelago", 0xFFFF8844);
             _logger.log(_modName, "Iron mode blocked — not supported in AP");
@@ -191,7 +191,7 @@ package {
             }
             _pendingModeButton = e.currentTarget;
             _pendingModeTarget = e.target;
-            _logger.log(_modName, "PLAYER_CONTINUE slot=" + slotId);
+            _logger.log(_modName, "PLAYER_CONTINUE slot=" + slotId + " - " + GV.loaderSaver.activeSlotId);
             if (onModeIntercepted != null) onModeIntercepted(slotId, _pendingModeButton, _pendingModeTarget);
         }
 
