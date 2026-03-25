@@ -122,7 +122,6 @@ package {
                 _deathLinkHandler.onPlayerDied         = onPlayerDied;
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
-                _deathLinkTestOverlay = new DeathLinkTestOverlay(_deathLinkHandler);
 
                 _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
                 _gameCompletion.onGoalReached = onGoalReached;
@@ -161,10 +160,6 @@ package {
             }
             if (this.stage != null) {
                 this.stage.removeEventListener(Event.RESIZE, onStageResize);
-            }
-            if (_deathLinkTestOverlay != null) {
-                _deathLinkTestOverlay.hide();
-                _deathLinkTestOverlay = null;
             }
             if (_toast != null && _toast.parent != null) {
                 _toast.parent.removeChild(_toast);
@@ -273,11 +268,6 @@ package {
                     screen == ScreenId.INGAME) {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
-                }
-                if (screen == ScreenId.INGAME && this.stage != null && !_standalone) {
-                    _deathLinkTestOverlay.show(this.stage);
-                } else {
-                    _deathLinkTestOverlay.hide();
                 }
                 _lastScreen = screen;
             }
