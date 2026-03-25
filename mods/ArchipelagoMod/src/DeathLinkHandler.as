@@ -142,6 +142,13 @@ package {
         }
 
         // -----------------------------------------------------------------------
+        // Test helpers — call directly from debug overlay, bypasses queue/timer.
+
+        public function testGemLoss():void    { applyGemLoss(); }
+        public function testWaveSurge():void  { applyWaveSurge(); }
+        public function testInstantFail():void { applyInstantFail(); }
+
+        // -----------------------------------------------------------------------
         // Punishment implementations
 
         private function applyPunishmentNow(source:String):void {
@@ -238,14 +245,15 @@ package {
         }
 
         private function applyInstantFail():void {
-            var core:* = GV.ingameController.core;
+            var core:*       = GV.ingameController.core;
+            var controller:* = GV.ingameController;
             // TODO: confirm the correct fail method via logs.
             _logger.log(_modName, "  instantFail probe — controller type: "
-                + Object(GV.ingameController).constructor);
-            if      (GV.ingameController.endBattle  != null) GV.ingameController.endBattle(false);
-            else if (GV.ingameController.failBattle  != null) GV.ingameController.failBattle();
-            else if (core.endBattle                  != null) core.endBattle(false);
-            else if (core.failBattle                 != null) core.failBattle();
+                + Object(controller).constructor);
+            if      (controller.endBattle  != null) controller.endBattle(false);
+            else if (controller.failBattle != null) controller.failBattle();
+            else if (core.endBattle        != null) core.endBattle(false);
+            else if (core.failBattle       != null) core.failBattle();
             else _logger.log(_modName, "  instantFail: no fail method found — check probe log above");
             _toast.addMessage("DeathLink! Level failed!", 0xFFFF4444);
         }
