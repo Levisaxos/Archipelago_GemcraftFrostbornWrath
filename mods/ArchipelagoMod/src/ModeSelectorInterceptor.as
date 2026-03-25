@@ -79,18 +79,18 @@ package {
                 // Mark hooked immediately so a later exception cannot cause a retry loop.
                 _hooked = true;
 
-                sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
-                sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
-                sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true, 100, true);
-                // McModeSelector has no Continue button — existing saves fall through
-                // to the _needsConnection fallback in ArchipelagoMod.onEnterFrame.
+                sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp,     true, 100, true);
+                sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp,     true, 100, true);
+                sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp,     true, 100, true);
 
                 for (var n:int = 1; n <= 8; n++) {
+                    var cont:* = lg["btnContinueSlotL" + n];
+                    if (cont != null) cont.addEventListener(MouseEvent.MOUSE_UP, onContinueBtnUp, true, 100, true);
                     var btn:* = lg["btnResetSlotL" + n];
                     if (btn != null) btn.addEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false, 0, true);
                 }
                 _stage.addEventListener(KeyboardEvent.KEY_DOWN, onConfirmDeleteKey, true, 100, true);
-                _logger.log(_modName, "LOADGAME buttons hooked (Chilling + Frostborn + Iron + Delete x8)");
+                _logger.log(_modName, "LOADGAME buttons hooked (Chilling + Frostborn + Iron + Continue x8 + Delete x8)");
             } catch (err:Error) {
                 _logger.log(_modName, "ModeSelectorInterceptor.hook error: " + err.message);
             }
@@ -111,6 +111,8 @@ package {
                 }
                 if (lg != null) {
                     for (var n:int = 1; n <= 8; n++) {
+                        var cont:* = lg["btnContinueSlotL" + n];
+                        if (cont != null) cont.removeEventListener(MouseEvent.MOUSE_UP, onContinueBtnUp, true);
                         var btn:* = lg["btnResetSlotL" + n];
                         if (btn != null) btn.removeEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false);
                     }
@@ -172,6 +174,25 @@ package {
             e.stopImmediatePropagation();
             _toast.addMessage("Iron is not allowed (yet) for Archipelago", 0xFFFF8844);
             _logger.log(_modName, "Iron mode blocked — not supported in AP");
+        }
+
+        private function onContinueBtnUp(e:MouseEvent):void {
+            if (_allowModeClick) return; // our own re-dispatch — let it through
+            e.stopImmediatePropagation();
+            // Derive slot from button name: "btnContinueSlotL3" → 3
+            var lg:* = GV.main.cntScreens.mcLoadGame;
+            var slotId:int = 0;
+            for (var n:int = 1; n <= 8; n++) {
+                if (lg["btnContinueSlotL" + n] == e.currentTarget) { slotId = n; break; }
+            }
+            if (slotId <= 0) {
+                _logger.log(_modName, "onContinueBtnUp: could not identify slot");
+                return;
+            }
+            _pendingModeButton = e.currentTarget;
+            _pendingModeTarget = e.target;
+            _logger.log(_modName, "PLAYER_CONTINUE slot=" + slotId);
+            if (onModeIntercepted != null) onModeIntercepted(slotId, _pendingModeButton, _pendingModeTarget);
         }
 
         private function onDeleteBtnUp(e:MouseEvent):void {
