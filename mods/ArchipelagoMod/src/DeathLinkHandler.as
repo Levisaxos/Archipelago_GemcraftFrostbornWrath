@@ -250,16 +250,14 @@ package {
         private function applyGemLoss():void {
             var core:* = GV.ingameController.core;
 
-            // Collect all occupied buildings (tower + trap that have a gem inserted).
+            // Collect all occupied buildings (tower / trap / lantern with a gem).
             var occupied:Array = [];
-            var towers:Array = core.towers as Array;
-            var traps:Array  = core.traps  as Array;
-            for each (var t:* in towers) {
-                if (t != null && t.insertedGem != null) occupied.push(t);
-            }
-            for each (var trap:* in traps) {
-                if (trap != null && trap.insertedGem != null) occupied.push(trap);
-            }
+            var towers:Array   = core.towers   as Array;
+            var traps:Array    = core.traps    as Array;
+            var lanterns:Array = core.lanterns as Array;
+            for each (var t:*    in towers)   { if (t    != null && t.insertedGem    != null) occupied.push(t); }
+            for each (var trap:* in traps)    { if (trap != null && trap.insertedGem != null) occupied.push(trap); }
+            for each (var l:*    in lanterns) { if (l    != null && l.insertedGem    != null) occupied.push(l); }
 
             if (occupied.length == 0) {
                 _toast.addMessage("DeathLink: no gems on the field!", 0xFFFF8844);
@@ -271,14 +269,43 @@ package {
 
             for (var i:int = 0; i < toDestroy; i++) {
                 var building:* = occupied[i];
-                // Demolish building and its gem — pIsByEnemy=true mimics Wizard Hunter attack.
-                core.destroyer.demolishOwnBuilding(building.x, building.y, false, true, false);
-                _logger.log(_modName, "  demolished building at ("
-                    + building.x + "," + building.y + ")");
+                // demolishOwnBuilding expects tile coords (fieldX/fieldY), not pixel coords.
+                // pIsByPlayer=false: don't consume a demolition charge.
+                // pIsByEnemy=false:  don't skip traps/walls.
+                //
+                // Trap special case: the Trap branch in demolishOwnBuilding only fires when
+                // insertedGem == null (no !pIsByPlayer bypass exists for traps). Strip the
+                // gem first so the demolish path can proceed normally.
+                if (traps != null && traps.indexOf(building) >= 0) {
+                    stripGemFromBuilding(core, building);
+                }
+                core.destroyer.demolishOwnBuilding(
+                    building.fieldX, building.fieldY, false, false, false);
+                _logger.log(_modName, "  demolished building at tile ("
+                    + building.fieldX + "," + building.fieldY + ")");
             }
 
             _toast.addMessage("DeathLink! " + toDestroy + " gem"
                 + (toDestroy == 1 ? "" : "s") + " destroyed!", 0xFFFF4444);
+        }
+
+        /**
+         * Removes a gem from a building's display containers and game arrays without
+         * demolishing the building. Used before demolishOwnBuilding for building types
+         * (Trap) that don't handle the occupied case natively.
+         */
+        private function stripGemFromBuilding(core:*, building:*):void {
+            var gem:* = building.insertedGem;
+            if (gem == null) return;
+            var cnt:* = core.cnt;
+            try { cnt.cntDraggedGem.removeChild(gem.mc); }        catch (e:Error) {}
+            try { cnt.cntGemsInInventory.removeChild(gem.mc); }   catch (e:Error) {}
+            try { cnt.cntGemsInTowers.removeChild(gem.mc); }      catch (e:Error) {}
+            try { cnt.cntGemInEnragingSlot.removeChild(gem.mc); } catch (e:Error) {}
+            var idx:int = (core.gems as Array).indexOf(gem);
+            if (idx >= 0) (core.gems as Array).splice(idx, 1);
+            gem.removeData();
+            building.insertedGem = null;
         }
 
         private function applyWaveSurge():void {
