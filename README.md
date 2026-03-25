@@ -27,22 +27,120 @@ Its progression is well-suited to randomization: unlocks are plentiful, stages g
 
 ---
 
-## This Project
+## Pre-Alpha Testing
 
-This repository contains a GemCraft: Frostborn Wrath mod built using [BezelModLoader](https://github.com/gemforce-team/BezelModLoader), the community mod loader for the game.
+> **Note:** This is an early pre-alpha. Expect rough edges. Feedback is very welcome.
 
-The goal is to implement a full Archipelago integration — turning GemCraft: Frostborn Wrath into an Archipelago-compatible game that can participate in multiworld sessions alongside other supported titles.
+### Requirements
 
-### Planned features
+- **GemCraft: Frostborn Wrath** (Steam)
+- **[BezelModLoader](https://github.com/gemforce-team/BezelModLoader)** installed for the game
+- **[Archipelago](https://archipelago.gg)** client/server (0.6.x recommended)
+- An active Archipelago session with `gcfw` included
 
-- **Randomized progression** — stage unlocks, skill tomes, battle traits, talismans, and other rewards are shuffled and may be received from other players' games instead of earned locally
-- **Multiworld item exchange** — completing stages or meeting objectives sends items to other players; their completions send items back to you
-- **Logic-aware placement** — the randomizer will understand which items are needed to access which stages, ensuring seeds are always completable
-- **Archipelago client integration** — connects directly to an Archipelago server to send and receive items in real time
+---
 
-### Randomizer logic
+### Step 1 — Install BezelModLoader
 
-_Coming soon._
+Follow the instructions at the [BezelModLoader repository](https://github.com/gemforce-team/BezelModLoader).
+
+Once installed, a `Mods` folder will appear inside your GemCraft: Frostborn Wrath install directory:
+
+```
+Steam\steamapps\common\GemCraft Frostborn Wrath\
+└── Mods\
+```
+
+---
+
+### Step 2 — Install the Archipelago mod
+
+Download `ArchipelagoMod.swf` from the [Releases](../../releases) page and place it in your `Mods` folder:
+
+```
+GemCraft Frostborn Wrath\
+└── Mods\
+    └── ArchipelagoMod.swf
+```
+
+---
+
+### Step 3 — Install the apworld
+
+Download `gcfw.apworld` from the [Releases](../../releases) page and place it in the `lib/worlds` folder of your Archipelago installation:
+
+```
+Archipelago\
+└── lib\
+    └── worlds\
+        └── gcfw.apworld
+```
+
+---
+
+### Step 4 — Set up an Archipelago session
+
+Generate a multiworld that includes GemCraft: Frostborn Wrath. You can host locally using the Archipelago launcher or connect to an existing hosted session.
+
+A minimal YAML for solo testing:
+
+```yaml
+name: YourName
+game: GemCraft - Frostborn Wrath
+GemCraft - Frostborn Wrath:
+  progression_balancing: 50
+  accessibility: items
+```
+
+---
+
+### Step 5 — Launch and connect
+
+1. Start **GemCraft: Frostborn Wrath** with BezelModLoader active
+2. Select or create a save slot — a connection panel will appear
+3. Enter your Archipelago server address, port, slot name, and password (if any)
+4. Click **Connect**
+
+Once connected, the game will sync your received items and begin tracking location checks automatically.
+
+To play without an Archipelago server (vanilla progression), click **Play without randomizer** on the connection panel.
+
+---
+
+### Finding the log file
+
+If something isn't working, the Bezel log contains detailed output from the mod.
+
+It is located at:
+
+```
+GemCraft Frostborn Wrath\
+└── Mods\
+    └── bezel_log.txt
+```
+
+Please include this file when reporting issues.
+
+---
+
+## What's randomized
+
+| Item pool | Details |
+|---|---|
+| Field tokens | Unlock stages across the world map |
+| Skill tomes | 24 skills (one per zone) |
+| Battle traits | 15 traits |
+| Wizard XP bonuses | Small (+1), Medium (+3), Large (+9) bonus wizard levels |
+
+Location checks are sent when you **complete a stage in Journey mode**. The goal is to complete stage **A4**.
+
+---
+
+## Known limitations (pre-alpha)
+
+- Iron Wizard mode is not yet supported — only Chilling and Frostborn modes work
+- Talisman and shard rewards are not yet randomized
+- DeathLink is implemented but may have edge cases
 
 ---
 
@@ -50,14 +148,14 @@ _Coming soon._
 
 ```
 mods/
-└── DropLogger/       # Development/exploration mod — logs reward drops to file
+└── ArchipelagoMod/   # ActionScript 3 mod (Bezel) — runs inside the game
+apworld/
+└── gcfw/             # Python apworld — runs on the Archipelago server
 ```
 
 ---
 
 ## Development
-
-This project is in early stages. The current code is exploratory — reading game internals and understanding how rewards and progression work before the randomizer logic is written.
 
 **Tools used:**
 - [BezelModLoader](https://github.com/gemforce-team/BezelModLoader) — mod loader for GemCraft: Frostborn Wrath
