@@ -15,6 +15,7 @@ package {
         private var _logger:Logger;
         private var _modName:String;
         private var _toast:ToastPanel;
+        private var _itemToast:ItemToastPanel;
         private var _ws:WebSocketClient;
 
         // Connection state
@@ -104,6 +105,9 @@ package {
         public function set apSlot(v:String):void { _apSlot = v; }
         public function get apPassword():String { return _apPassword; }
         public function set apPassword(v:String):void { _apPassword = v; }
+
+        /** Provide the item-notification panel used for received/found/sent item toasts. */
+        public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
 
         // -----------------------------------------------------------------------
         // Lifecycle
@@ -324,14 +328,17 @@ package {
             if (receiving == _mySlot && senderSlot != _mySlot) {
                 var sender:String = _playerNames[senderSlot] || ("Player " + senderSlot);
                 _logger.log(_modName, "  ItemSend: received " + name + " from " + sender);
-                _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
+                if (_itemToast != null) _itemToast.addItem("Received " + name + " from " + sender, 0x88DDFF);
+                else _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
             } else if (receiving == _mySlot && senderSlot == _mySlot) {
                 _logger.log(_modName, "  ItemSend: found " + name);
-                _toast.addMessage("Found " + name, 0xFF88DDFF);
+                if (_itemToast != null) _itemToast.addItem("Found " + name, 0x88DDFF);
+                else _toast.addMessage("Found " + name, 0xFF88DDFF);
             } else if (senderSlot == _mySlot) {
                 var receiver:String = _playerNames[receiving] || ("Player " + receiving);
                 _logger.log(_modName, "  ItemSend: sent " + name + " to " + receiver);
-                _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
+                if (_itemToast != null) _itemToast.addItem("Sent " + name + " to " + receiver, 0xDDFF88);
+                else _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
             }
         }
 
