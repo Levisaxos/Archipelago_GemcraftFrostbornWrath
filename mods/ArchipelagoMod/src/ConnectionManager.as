@@ -80,6 +80,8 @@ package {
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
         public var onPanelReset:Function;
+        /** Called when a DeathLink bounce is received. Signature: (source:String):void */
+        public var onDeathLinkReceived:Function;
 
         // -----------------------------------------------------------------------
 
@@ -235,6 +237,10 @@ package {
                     handlePrintJSON(p);
                     break;
 
+                case "Bounced":
+                    handleBounced(p);
+                    break;
+
                 default:
                     _logger.log(_modName, "  (unhandled)");
             }
@@ -301,6 +307,14 @@ package {
             }
         }
 
+        private function handleBounced(p:Object):void {
+            var tags:Array = p.tags as Array;
+            if (tags == null || tags.indexOf("DeathLink") < 0) return;
+            var source:String = (p.data && p.data.source) ? String(p.data.source) : "unknown";
+            _logger.log(_modName, "DeathLink received from " + source);
+            if (onDeathLinkReceived != null) onDeathLinkReceived(source);
+        }
+
         private function handlePrintJSON(p:Object):void {
             if (p.type != "ItemSend") return;
             var receiving:int  = int(p.receiving);
@@ -341,6 +355,27 @@ package {
             if (_ws == null || locationIds.length == 0) return;
             var packet:String = '[{"cmd":"LocationChecks","locations":[' + locationIds.join(",") + ']}]';
             _logger.log(_modName, "AP >> LocationChecks  ids=" + locationIds.join(","));
+            _ws.send(packet);
+        }
+
+        /** Send a DeathLink bounce to all DeathLink-tagged players. */
+        public function sendDeathLink(source:String):void {
+            if (_ws == null || !_isConnected) return;
+            var packet:String = '[{"cmd":"Bounce","tags":["DeathLink"],"data":{"time":0,"cause":"died","source":"' + source + '"}}]';
+            _logger.log(_modName, "AP >> Bounce (DeathLink) source=" + source);
+            _ws.send(packet);
+        }
+
+        /**
+         * Update our tag list on the server (e.g. add/remove DeathLink after connect).
+         * @param tags  Array of tag strings, e.g. ["DeathLink"] or [].
+         */
+        public function sendConnectUpdate(tags:Array):void {
+            if (_ws == null || !_isConnected) return;
+            var tagJson:String = '["' + tags.join('","') + '"]';
+            if (tags.length == 0) tagJson = "[]";
+            var packet:String = '[{"cmd":"ConnectUpdate","tags":' + tagJson + '}]';
+            _logger.log(_modName, "AP >> ConnectUpdate tags=" + tagJson);
             _ws.send(packet);
         }
 
