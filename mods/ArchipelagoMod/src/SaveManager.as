@@ -98,9 +98,17 @@ package {
             return _fileHandler.isSlotCompleted(slotId);
         }
 
-        /** Delete the slot file for the given slot. */
+        /** Delete the slot file for the given slot and wipe all in-memory state. */
         public function deleteSlot(slotId:int):void {
             _fileHandler.deleteSlot(slotId);
+            // Clear in-memory credentials so that any subsequent saveSlotData() call
+            // cannot resurrect the old slot name and trigger an auto-connect.
+            _connectionManager.resetSettings();
+            _levelUnlocker.bonusWizardLevel = 0;
+            _slotCompleted       = false;
+            _deathLinkEnabled    = false;
+            _deathLinkEnabledSet = false;
+            _logger.log(_modName, "Slot " + slotId + " deleted — in-memory state cleared");
         }
     }
 }
