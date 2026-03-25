@@ -58,7 +58,6 @@ package {
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _deathLinkHandler:DeathLinkHandler;
-        private var _deathLinkTestOverlay:DeathLinkTestOverlay;
         private var _gameCompletion:GameCompletion;
         private var _fileHandler:FileHandler;
         private var _saveManager:SaveManager;
@@ -72,6 +71,7 @@ package {
         private var _lastScreen:int            = -1;
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
+        private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -301,6 +301,11 @@ package {
                 _deathLinkHandler.checkWaveSurge();
             }
 
+
+            // Apply any sync that was deferred because GV.ppd was null at connect time.
+            if (_pendingSyncItems != null && GV.ppd != null) {
+                syncWithAP(_pendingSyncItems);
+            }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
             if (GV.ppd == null
@@ -571,14 +576,29 @@ package {
                 _toast.addMessage("Unlocked: " + strId + " Field Token", 0xFFFFDD55);
                 return;
             }
-            if (apId >= 300 && apId <= 323) { _skillUnlocker.unlockSkill(apId); return; }
-            if (apId >= 400 && apId <= 414) { _traitUnlocker.unlockBattleTrait(apId); return; }
+            if (apId >= 300 && apId <= 323) {
+                if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 300);
+                _skillUnlocker.unlockSkill(apId);
+                return;
+            }
+            if (apId >= 400 && apId <= 414) {
+                if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 400);
+                _traitUnlocker.unlockBattleTrait(apId);
+                return;
+            }
             if (apId >= 500 && apId <= 502) { _levelUnlocker.grantXpBonus(apId); return; }
             _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
         }
 
         private function syncWithAP(items:Array):void {
-            if (GV.ppd == null) return;
+            if (GV.ppd == null) {
+                _pendingSyncItems = items;
+                _logger.log(MOD_NAME, "syncWithAP: GV.ppd null, deferring sync (" + items.length + " items)");
+                return;
+            }
+            _pendingSyncItems = null;
+
+            if (_normalProgressionBlocker != null) _normalProgressionBlocker.resetGrants();
 
             var apSkills:Object = {};
             var apTraits:Object = {};
@@ -604,6 +624,8 @@ package {
             var skillChanges:int = 0;
             for (var i:int = 0; i < 24; i++) {
                 var shouldHaveSkill:Boolean = apSkills[i] == true;
+                if (shouldHaveSkill && _normalProgressionBlocker != null)
+                    _normalProgressionBlocker.markSkillGranted(i);
                 if (GV.ppd.gainedSkillTomes[i] != shouldHaveSkill) {
                     GV.ppd.gainedSkillTomes[i] = shouldHaveSkill;
                     if (shouldHaveSkill) {
@@ -619,6 +641,8 @@ package {
             var traitChanges:int = 0;
             for (var j:int = 0; j < 15; j++) {
                 var shouldHaveTrait:Boolean = apTraits[j] == true;
+                if (shouldHaveTrait && _normalProgressionBlocker != null)
+                    _normalProgressionBlocker.markTraitGranted(j);
                 if (GV.ppd.gainedBattleTraits[j] != shouldHaveTrait) {
                     GV.ppd.gainedBattleTraits[j] = shouldHaveTrait;
                     if (shouldHaveTrait) {
@@ -721,6 +745,8 @@ package {
             if (skillName != null) return skillName + " Skill";
             var traitName:String = _traitUnlocker.getTraitName(apId);
             if (traitName != null) return traitName + " Battle Trait";
+            var strId:String = _connectionManager.tokenMap[String(apId)];
+            if (strId != null) return strId + " Field Token";
             return null; // let ConnectionManager handle the rest
         }
     }
