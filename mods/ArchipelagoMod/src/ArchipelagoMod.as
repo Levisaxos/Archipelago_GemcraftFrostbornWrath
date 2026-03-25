@@ -37,8 +37,9 @@ package {
         public function get MOD_NAME():String      { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String { return "2.1.1"; }
 
-        private static const TOAST_OFFSET_X:Number = 52;
-        private static const TOAST_OFFSET_Y:Number = 10;
+        private static const TOAST_OFFSET_X:Number      = 52;
+        private static const TOAST_OFFSET_Y:Number      = 10;
+        private static const ITEM_TOAST_OFFSET_Y:Number = 18; // game pixels from top edge
 
         private var _logger:Logger;
         private var _bezel:Bezel;
@@ -47,6 +48,9 @@ package {
 
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
+
+        private var _itemToast:ItemToastPanel;
+        private var _itemToastOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
         private var _normalProgressionBlocker:NormalProgressionBlocker;
@@ -87,6 +91,7 @@ package {
 
                 // Create subsystems
                 _toast         = new ToastPanel();
+                _itemToast     = new ItemToastPanel();
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _toast);
                 _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _toast);
@@ -100,6 +105,7 @@ package {
 
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
+                _connectionManager.setItemToast(_itemToast);
                 _connectionManager.onConnected            = onApConnected;
                 _connectionManager.onFullSync             = syncWithAP;
                 _connectionManager.onItemReceived         = grantItem;
@@ -165,6 +171,11 @@ package {
             }
             _toast = null;
             _toastOnStage = false;
+            if (_itemToast != null && _itemToast.parent != null) {
+                _itemToast.parent.removeChild(_itemToast);
+            }
+            _itemToast = null;
+            _itemToastOnStage = false;
             if (_keyListenerAdded && this.stage != null) {
                 this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
                 _keyListenerAdded = false;
@@ -198,12 +209,20 @@ package {
         // Frame loop
 
         private function onEnterFrame(e:Event):void {
-            // Add toast to stage once available.
+            // Add toasts to stage once available.
             if (!_toastOnStage && _toast != null && this.stage != null) {
                 this.stage.addChild(_toast);
                 _toastOnStage = true;
                 positionToast();
                 this.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
+            }
+            if (!_itemToastOnStage && _itemToast != null && this.stage != null) {
+                this.stage.addChild(_itemToast);
+                _itemToastOnStage = true;
+            }
+            // Keep item toast horizontally centered as panelWidth may change each item.
+            if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
+                positionItemToast();
             }
 
             // Register the debug hotkey once the stage exists.
@@ -282,6 +301,7 @@ package {
                 _deathLinkHandler.checkWaveSurge();
             }
 
+
             // Gate: wait until the selector and its async tile generation are fully ready.
             if (GV.ppd == null
                     || GV.selectorCore.renderer == null
@@ -330,8 +350,18 @@ package {
             _toast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
+        private function positionItemToast():void {
+            if (_itemToast == null || this.stage == null) return;
+            var gameRoot:* = this.stage.getChildAt(0);
+            // gameRoot.width is in stage (screen) pixels, so this always hits the true centre.
+            var gameCenterX:Number = gameRoot.x + gameRoot.width * 0.5;
+            _itemToast.x = gameCenterX - _itemToast.panelWidth * 0.5;
+            _itemToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
+        }
+
         private function onStageResize(e:Event):void {
             positionToast();
+            positionItemToast();
         }
 
         // -----------------------------------------------------------------------
@@ -495,6 +525,9 @@ package {
 
         private function onApConnected(p:Object):void {
             _needsConnection = false;
+            // Persist credentials before loadSlotData resets them via resetSettings().
+            // Without this, first-time connection data is never written to the slot file.
+            _saveManager.saveSlotData();
             _saveManager.loadSlotData(_saveManager.currentSlot);
             _levelUnlocker.applyBonusLevels();
 
