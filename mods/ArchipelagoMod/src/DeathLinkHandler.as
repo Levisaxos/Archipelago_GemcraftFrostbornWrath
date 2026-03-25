@@ -1,6 +1,8 @@
 package {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.SB;
+    import com.giab.games.gcfw.constants.BattleMode;
     import flash.utils.getTimer;
 
     /**
@@ -312,17 +314,24 @@ package {
         }
 
         private function applyInstantFail():void {
-            var core:*       = GV.ingameController.core;
-            var controller:* = GV.ingameController;
-            // TODO: confirm the correct fail method via logs.
-            _logger.log(_modName, "  instantFail probe — controller type: "
-                + Object(controller).constructor);
-            if      (controller.endBattle  != null) controller.endBattle(false);
-            else if (controller.failBattle != null) controller.failBattle();
-            else if (core.endBattle        != null) core.endBattle(false);
-            else if (core.failBattle       != null) core.failBattle();
-            else _logger.log(_modName, "  instantFail: no fail method found — check probe log above");
+            var core:* = GV.ingameController.core;
+            try {
+                 SB.playSound("sndorbdestroyed");                  
+                GV.vfxEngine.createOrbDestroy(core.orb.x, core.orb.y);
+                core.isScreenShaking=true;
+                core.screenShakingEnergy = Math.max(core.screenShakingEnergy,12);
+                  if(GV.ingameCore.battleMode == BattleMode.ENDURANCE)
+                  {
+                     core.ending.endGameWithVictory();
+                  }
+                  else
+                  {
+                     core.ending.endGameWithDefeat();
+                  }
+            } catch (e:Error) { /* VFX is cosmetic — ignore if unavailable */ }
+            
             _toast.addMessage("DeathLink! Level failed!", 0xFFFF4444);
+            _logger.log(_modName, "  instantFail: endGameWithDefeat called");
         }
 
         // -----------------------------------------------------------------------
