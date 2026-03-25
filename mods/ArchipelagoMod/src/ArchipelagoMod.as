@@ -44,6 +44,7 @@ package {
         private var _logger:Logger;
         private var _bezel:Bezel;
         private var _btn:ArchipelagoButton;
+        private var _reportBtn:ReportIssuesButton;
         private var _buttonAdded:Boolean = false;
 
         private var _toast:ToastPanel;
@@ -183,6 +184,10 @@ package {
                 _connectionPanel.dismiss();
             }
             _connectionPanel = null;
+            if (_reportBtn != null && _reportBtn.parent != null) {
+                _reportBtn.parent.removeChild(_reportBtn);
+                _reportBtn = null;
+            }
             if (_btn != null && _btn.parent != null) {
                 _btn.parent.removeChild(_btn);
                 _btn = null;
@@ -326,6 +331,9 @@ package {
                 _buttonAdded = true;
             }
 
+            if (_reportBtn != null) {
+                _reportBtn.x = mc.btnTutorial.x;
+            }
             if (_btn != null) {
                 _btn.x = mc.btnTutorial.x;
             }
@@ -364,9 +372,16 @@ package {
 
         private function addArchipelagoButton(mc:*):void {
             var stepY:Number = mc.btnTalisman.y - mc.btnSkills.y;
+
+            _reportBtn = new ReportIssuesButton(mc.btnTutorial);
+            _reportBtn.x = mc.btnTutorial.x;
+            _reportBtn.y = mc.btnTutorial.y + stepY;
+            mc.addChild(_reportBtn);
+            _logger.log(MOD_NAME, "Report Issues button added at (" + _reportBtn.x + ", " + _reportBtn.y + ")");
+
             _btn = new ArchipelagoButton(mc.btnTutorial);
             _btn.x = mc.btnTutorial.x;
-            _btn.y = mc.btnTutorial.y + stepY;
+            _btn.y = mc.btnTutorial.y + stepY * 2;
             _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
             mc.addChild(_btn);
