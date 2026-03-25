@@ -24,6 +24,7 @@ package {
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
+     *   DeathLinkHandler         — DeathLink send/receive and punishment application
      *   GameCompletion           — Detects A4 goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
@@ -52,6 +53,8 @@ package {
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
+        private var _deathLinkHandler:DeathLinkHandler;
+        private var _deathLinkTestOverlay:DeathLinkTestOverlay;
         private var _gameCompletion:GameCompletion;
         private var _fileHandler:FileHandler;
         private var _saveManager:SaveManager;
@@ -64,6 +67,7 @@ package {
         private var _needsConnection:Boolean   = false;
         private var _lastScreen:int            = -1;
         private var _mapTilesUnlocked:Boolean  = false;
+        private var _standalone:Boolean        = false;
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -108,6 +112,12 @@ package {
                     _fileHandler, _connectionManager, _levelUnlocker);
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
+                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
+                _deathLinkHandler.onPlayerDied         = onPlayerDied;
+                _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
+                _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
+                _deathLinkTestOverlay = new DeathLinkTestOverlay(_deathLinkHandler);
+
                 _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
                 _gameCompletion.onGoalReached = onGoalReached;
 
@@ -145,6 +155,10 @@ package {
             }
             if (this.stage != null) {
                 this.stage.removeEventListener(Event.RESIZE, onStageResize);
+            }
+            if (_deathLinkTestOverlay != null) {
+                _deathLinkTestOverlay.hide();
+                _deathLinkTestOverlay = null;
             }
             if (_toast != null && _toast.parent != null) {
                 _toast.parent.removeChild(_toast);
@@ -214,6 +228,7 @@ package {
                 if (screen == ScreenId.LOADGAME) {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
+                    _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
                     _gameCompletion.reset();
@@ -238,6 +253,12 @@ package {
                     screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
                     screen == ScreenId.INGAME) {
                     skipAllTutorials();
+                    _deathLinkHandler.resetForNewStage();
+                }
+                if (screen == ScreenId.INGAME && this.stage != null && !_standalone) {
+                    _deathLinkTestOverlay.show(this.stage);
+                } else {
+                    _deathLinkTestOverlay.hide();
                 }
                 _lastScreen = screen;
             }
@@ -251,6 +272,14 @@ package {
             if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
                 _needsConnection = false;
                 startConnectionForSlot();
+            }
+
+            // DeathLink: detect player death (send), drain punishment queue (receive),
+            // and maintain any active wave-surge.
+            if (screen == ScreenId.INGAME && !_standalone) {
+                _deathLinkHandler.checkForDeath();
+                _deathLinkHandler.checkQueue();
+                _deathLinkHandler.checkWaveSurge();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -313,16 +342,17 @@ package {
             _btn = new ArchipelagoButton(mc.btnTutorial);
             _btn.x = mc.btnTutorial.x;
             _btn.y = mc.btnTutorial.y + stepY;
-            _btn.visible = true;
+            _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
             mc.addChild(_btn);
-            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ")");
+            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ") [hidden]");
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
+                if (_btn != null) _btn.visible = _debugMode;
                 if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
                     _debugOptions.close();
                 }
@@ -392,6 +422,16 @@ package {
          */
         private function startConnectionForSlot():void {
             _saveManager.loadSlotData(_saveManager.currentSlot);
+
+            // Slot file exists and player previously chose standalone — skip popup entirely.
+            if (_saveManager.standaloneSet && _saveManager.standalone) {
+                _standalone = true;
+                _normalProgressionBlocker.disable();
+                _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
+                _modeInterceptor.redispatchPendingClick();
+                return;
+            }
+
             if (_connectionManager.apSlot.length > 0) {
                 _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
                     + "  host=" + _connectionManager.apHost
@@ -413,8 +453,9 @@ package {
                 _connectionPanel = new ConnectionPanel();
                 _logger.log(MOD_NAME, "ConnectionPanel created");
             }
-            _connectionPanel.onConnect = onConnectionPanelConnect;
-            _connectionPanel.onCancel  = onConnectionPanelCancel;
+            _connectionPanel.onConnect    = onConnectionPanelConnect;
+            _connectionPanel.onCancel     = onConnectionPanelCancel;
+            _connectionPanel.onStandalone = onConnectionPanelStandalone;
             _connectionPanel.prefill(
                 _connectionManager.apHost,
                 _connectionManager.apPort,
@@ -431,12 +472,22 @@ package {
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
             _connectionManager.connect(host, port, slot, password);
-            _saveManager.saveSlotData();
         }
 
         private function onConnectionPanelCancel():void {
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.clearPending();
+        }
+
+        private function onConnectionPanelStandalone():void {
+            _saveManager.standalone = true;
+            _saveManager.saveSlotData();
+            _standalone = true;
+            _normalProgressionBlocker.disable();
+            if (_connectionPanel != null) _connectionPanel.dismiss();
+            _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
+            _toast.addMessage("Playing without Archipelago", 0xFF88FF88);
+            _modeInterceptor.redispatchPendingClick();
         }
 
         // -----------------------------------------------------------------------
@@ -446,6 +497,18 @@ package {
             _needsConnection = false;
             _saveManager.loadSlotData(_saveManager.currentSlot);
             _levelUnlocker.applyBonusLevels();
+
+            // DeathLink: for new slots use the YAML setting; existing slots keep the local override.
+            if (!_saveManager.deathLinkEnabledSet && p.slot_data) {
+                _saveManager.deathLinkEnabled = p.slot_data.death_link === true;
+                _saveManager.saveSlotData();
+            }
+            _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+            if (p.slot_data) _deathLinkHandler.configure(p.slot_data);
+            if (_saveManager.deathLinkEnabled) {
+                _connectionManager.sendConnectUpdate(["DeathLink"]);
+            }
+
             if (_saveManager.slotCompleted) {
                 _gameCompletion.markAlreadyCompleted();
             } else {
@@ -573,6 +636,7 @@ package {
         // Save hook — detects battle victories and sends location checks
 
         private function onSaveSave(e:*):void {
+            if (_standalone) return;
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
             _gameCompletion.check();
@@ -582,6 +646,39 @@ package {
             _connectionManager.sendGoalComplete();
             _saveManager.markSlotCompleted();
         }
+
+        // -----------------------------------------------------------------------
+        // DeathLink callbacks
+
+        private function onPlayerDied():void {
+            _connectionManager.sendDeathLink(_connectionManager.apSlot);
+        }
+
+        private function onPunishmentReceived(source:String):void {
+            _toast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
+        }
+
+        private function onDeathLinkReceived(source:String):void {
+            _deathLinkHandler.queuePunishment(source);
+        }
+
+        /**
+         * Toggle DeathLink on/off for this slot.
+         * Persists the preference and sends ConnectUpdate to the server.
+         * Expose via ScrDebugOptions or a dedicated UI button.
+         */
+        public function toggleDeathLink():void {
+            _saveManager.deathLinkEnabled = !_saveManager.deathLinkEnabled;
+            _saveManager.saveSlotData();
+            _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+            var tags:Array = _saveManager.deathLinkEnabled ? ["DeathLink"] : [];
+            _connectionManager.sendConnectUpdate(tags);
+            _logger.log(MOD_NAME, "DeathLink toggled: " + (_saveManager.deathLinkEnabled ? "ON" : "OFF"));
+            _toast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
+                _saveManager.deathLinkEnabled ? 0xFF88FF88 : 0xFFFFAA44);
+        }
+
+        public function get deathLinkEnabled():Boolean { return _saveManager.deathLinkEnabled; }
 
         // -----------------------------------------------------------------------
         // Helpers
