@@ -9,8 +9,10 @@ package {
      * Punishment modes (set from slot_data):
      *   gem_loss    (0) — destroy Math.ceil(occupiedBuildings * gemLossPercent / 100) random
      *                     buildings (tower/trap) that contain a gem, along with their gem.
-     *   wave_surge  (1) — inject waveSurgeCount extra waves, temporarily using a gem of
-     *                     waveSurgeGemLevel grade in the enraging slot.
+     *   wave_surge  (1) — boost the enrage slot gem's grade by waveSurgeGemLevel for
+     *                     waveSurgeCount wave activations, then restore.
+     *                     If the slot is empty, no gem is created; instead the enrage formulas
+     *                     are applied directly to each monster as it spawns (monster-patch mode).
      *   instant_fail(2) — fail the current level immediately (TODO: confirm API).
      *
      * Queuing:
@@ -18,7 +20,7 @@ package {
      *   - Grace period starts when the player first unpauses (currentWave >= 0).
      *   - Cooldown enforced between successive punishments.
      *
-     * Call checkForDeath() and checkQueue() each frame while on INGAME screen.
+     * Call checkForDeath(), checkQueue(), and checkWaveSurge() each frame while on INGAME screen.
      * Call resetForNewStage() on every stage transition.
      * Call configure(slotData) after AP connects.
      */
@@ -46,6 +48,19 @@ package {
         private var _stageStartTime:int     = -1; // set on first unpause; -1 = not yet
         private var _lastPunishmentTime:int = 0;
         private var _deathProcessed:Boolean = false;
+
+        // Wave-surge state
+        // Two modes, mutually exclusive:
+        //   Boost mode  (_surgeGem != null, _savedGrade >= 0):
+        //       Player had a gem in the slot; its grade is raised in-place and restored on end.
+        //   Monster-patch mode (_surgeActive == true, _surgeGem == null):
+        //       Slot was empty; enrage formulas are applied directly to each monster as it
+        //       spawns (via isFromEnragedWave flag). No gem object is created.
+        private var _surgeGem:*         = null;
+        private var _savedEnrageGem:*   = null; // player's gem that was in the slot (boost mode)
+        private var _savedGrade:int     = -1;   // original grade (boost mode only)
+        private var _surgeStartWave:int = -1;   // core.currentWave value when surge began
+        private var _surgeActive:Boolean = false; // true while monster-patch mode is running
 
         /** Fired when the player's orb is destroyed. ():void */
         public var onPlayerDied:Function;
@@ -77,10 +92,13 @@ package {
         }
 
         public function resetForNewStage():void {
+            endWaveSurge();
             _deathProcessed     = false;
             _stageStartTime     = -1;
             _lastPunishmentTime = getTimer();
             _pendingQueue       = [];
+            _savedGrade         = -1;
+            _surgeActive        = false;
         }
 
         // -----------------------------------------------------------------------
@@ -124,6 +142,70 @@ package {
                 applyPunishmentNow(source);
             } catch (err:Error) {
                 _logger.log(_modName, "checkQueue error: " + err.message);
+            }
+        }
+
+        /**
+         * Called every frame while on INGAME screen.
+         *
+         * Boost mode:       ends the surge if the player sold/moved their gem, or after N waves.
+         * Monster-patch mode: applies the enrage formulas to any monster that has just spawned
+         *                     (isFromEnragedWave == false).  Once flagged, a monster is never
+         *                     touched again, so the per-frame cost is minimal.
+         *                     Ends after N waves.
+         *
+         * TODO: pre-boost Wave.numOfMonsters for the count portion of enrage.
+         */
+        public function checkWaveSurge():void {
+            if (_surgeGem == null && !_surgeActive) return;
+            try {
+                if (GV.ingameController == null || GV.ingameController.core == null) {
+                    endWaveSurge();
+                    return;
+                }
+                var core:* = GV.ingameController.core;
+
+                // ── Boost mode: detect if player sold/moved their gem ────────────
+                if (_surgeGem != null && core.gemInEnragingSlot != _surgeGem) {
+                    _logger.log(_modName, "  waveSurge: gem removed from slot — ending surge early");
+                    _toast.addMessage("Wave surge ended (gem removed)", 0xFFFF8844);
+                    _surgeGem       = null;
+                    _savedEnrageGem = null;
+                    _surgeStartWave = -1;
+                    _savedGrade     = -1;
+                    return;
+                }
+
+                // ── Wave-count limit (both modes) ────────────────────────────────
+                var wavesSinceStart:int = core.currentWave.g() - _surgeStartWave;
+                if (wavesSinceStart >= _waveSurgeCount) {
+                    _logger.log(_modName, "  waveSurge: " + _waveSurgeCount + " waves completed — ending");
+                    _toast.addMessage("Wave surge ended", 0xFFFF8844);
+                    endWaveSurge();
+                    return;
+                }
+
+                // ── Monster-patch mode: boost newly spawned monsters ─────────────
+                if (_surgeActive) {
+                    var monsters:Array = core.monstersOnScene as Array;
+                    if (monsters == null) return;
+                    var grade:int = _waveSurgeGemLevel - 1;
+                    var hpFactor:Number  = Math.pow(1.8, grade + 1) - 1;
+                    var armFactor:Number = Math.pow(1.5, grade + 1) - 1;
+                    var xpFactor:Number  = Math.pow(1.2, grade + 1) - 1;
+                    for each (var m:* in monsters) {
+                        if (m == null || m.isFromEnragedWave) continue;
+                        m.hp.s(Math.floor(m.hp.g() * (1 + hpFactor)));
+                        m.hpMax.s(m.hp.g());
+                        m.armorLevel.s(Math.floor(m.armorLevel.g() * (1 + armFactor)));
+                        m.xpBase.s(m.xpBase.g() * (1 + xpFactor));
+                        m.isFromEnragedWave = true;
+                    }
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "checkWaveSurge error: " + err.message);
+                _surgeGem    = null;
+                _surgeActive = false;
             }
         }
 
@@ -199,49 +281,34 @@ package {
 
         private function applyWaveSurge():void {
             var core:* = GV.ingameController.core;
+            endWaveSurge();
 
-            // Temporarily place a gem of the configured grade in the enraging slot
-            // so the injected waves get the right difficulty multiplier.
-            var savedEnrageGem:* = core.gemInEnragingSlot;
-            var targetGrade:int  = _waveSurgeGemLevel - 1; // grade is 0-indexed
+            _savedEnrageGem = core.gemInEnragingSlot;
+            _surgeStartWave = core.currentWave.g();
 
-            // Find any gem of sufficient grade to use as temporary enrager.
-            var surgeGem:* = null;
-            var gems:Array = core.gems as Array;
-            for each (var g:* in gems) {
-                if (g != null && g.grade != null && g.grade.g() >= targetGrade) {
-                    surgeGem = g;
-                    break;
-                }
-            }
-            if (surgeGem != null) {
-                core.gemInEnragingSlot = surgeGem;
-                _logger.log(_modName, "  waveSurge: using gem grade "
-                    + surgeGem.grade.g() + " as temporary enrager");
+            if (_savedEnrageGem != null) {
+                // ── Boost mode ──────────────────────────────────────────────────
+                // The player already has a gem in the slot.  Raise its grade in-place;
+                // display is completely unchanged.
+                _savedGrade = int(_savedEnrageGem.grade.g());
+                _savedEnrageGem.grade.s(_savedGrade + _waveSurgeGemLevel);
+                _surgeGem = _savedEnrageGem;
+                _logger.log(_modName, "  waveSurge boost: grade-" + (_savedGrade + 1)
+                    + " → grade-" + (_savedGrade + 1 + _waveSurgeGemLevel)
+                    + " for " + _waveSurgeCount + " waves");
             } else {
-                _logger.log(_modName, "  waveSurge: no gem of grade >=" + targetGrade
-                    + " found — injecting without extra enrage");
+                // ── Monster-patch mode ───────────────────────────────────────────
+                // Slot is empty.  No gem is created.  Instead, checkWaveSurge() applies
+                // the enrage formulas directly to each monster as it spawns.
+                _surgeActive = true;
+                _savedGrade  = -1;
+                _logger.log(_modName, "  waveSurge patch: monster-patch mode, grade="
+                    + _waveSurgeGemLevel + " for " + _waveSurgeCount + " waves");
             }
 
-            // Inject waves, bypassing the normal timer guard.
-            var injected:int = 0;
-            for (var i:int = 0; i < _waveSurgeCount; i++) {
-                if (core.currentWave.g() < core.waves.length - 1) {
-                    core.timeUntilNextWave = 0;
-                    GV.ingameController.activateNextWave();
-                    injected++;
-                }
-            }
-
-            // Restore original enraging gem.
-            core.gemInEnragingSlot = savedEnrageGem;
-
-            if (injected > 0) {
-                _toast.addMessage("DeathLink! " + injected + " enraged wave"
-                    + (injected == 1 ? "" : "s") + " incoming!", 0xFFFF4444);
-            } else {
-                _toast.addMessage("DeathLink: no waves left to inject!", 0xFFFF8844);
-            }
+            _toast.addMessage("DeathLink! Wave enrage +" + _waveSurgeGemLevel
+                + " for " + _waveSurgeCount + " wave" + (_waveSurgeCount == 1 ? "" : "s") + "!",
+                0xFFFF4444);
         }
 
         private function applyInstantFail():void {
@@ -256,6 +323,36 @@ package {
             else if (core.failBattle       != null) core.failBattle();
             else _logger.log(_modName, "  instantFail: no fail method found — check probe log above");
             _toast.addMessage("DeathLink! Level failed!", 0xFFFF4444);
+        }
+
+        // -----------------------------------------------------------------------
+        // Wave-surge cleanup
+
+        /**
+         * End the active wave surge.
+         * Boost mode: restores the original grade on the player's gem.
+         * Ghost mode: removes the hidden gem from the slot and its display container.
+         * Safe to call even if no surge is active.
+         */
+        public function endWaveSurge():void {
+            if (_surgeGem == null && !_surgeActive) return;
+            try {
+                if (_savedGrade >= 0 && _savedEnrageGem != null) {
+                    // Boost mode: restore the player's gem grade.
+                    _savedEnrageGem.grade.s(_savedGrade);
+                    _logger.log(_modName, "  waveSurge ended: restored grade to " + (_savedGrade + 1));
+                } else if (_surgeActive) {
+                    // Monster-patch mode: boosted monsters keep their stats (nothing to undo).
+                    _logger.log(_modName, "  waveSurge ended: monster-patch mode complete");
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "endWaveSurge cleanup error: " + err.message);
+            }
+            _surgeGem       = null;
+            _savedEnrageGem = null;
+            _surgeStartWave = -1;
+            _savedGrade     = -1;
+            _surgeActive    = false;
         }
 
         // -----------------------------------------------------------------------
