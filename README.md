@@ -81,16 +81,7 @@ Archipelago\
 ### Step 4 — Set up an Archipelago session
 
 Generate a multiworld that includes GemCraft: Frostborn Wrath. You can host locally using the Archipelago launcher or connect to an existing hosted session.
-
-A minimal YAML for solo testing:
-
-```yaml
-name: YourName
-game: GemCraft - Frostborn Wrath
-GemCraft - Frostborn Wrath:
-  progression_balancing: 50
-  accessibility: items
-```
+This can also be a solo GemCraft: Frostborn Wrath game.
 
 ---
 
@@ -114,9 +105,11 @@ If something isn't working, the Bezel log contains detailed output from the mod.
 It is located at:
 
 ```
-GemCraft Frostborn Wrath\
-└── Mods\
-    └── bezel_log.txt
+%appdata%\
+└── com.giab.games.gcfw.steam\
+    └── Local Store\
+        └── Bezel Mod Loader\
+            └── bezel_log.txt
 ```
 
 Please include this file when reporting issues.
@@ -128,9 +121,9 @@ Please include this file when reporting issues.
 | Item pool | Details |
 |---|---|
 | Field tokens | Unlock stages across the world map |
-| Skill tomes | 24 skills (one per zone) |
+| Skill tomes | 24 skills |
 | Battle traits | 15 traits |
-| Wizard XP bonuses | Small (+1), Medium (+3), Large (+9) bonus wizard levels |
+| Wizard XP bonuses | Tattered Scroll (+1), Worn Tome (+3), Ancient Grimoire (+9) bonus wizard levels |
 
 Location checks are sent when you **complete a stage in Journey mode**. The goal is to complete stage **A4**.
 
@@ -141,17 +134,6 @@ Location checks are sent when you **complete a stage in Journey mode**. The goal
 - Iron Wizard mode is not yet supported — only Chilling and Frostborn modes work
 - Talisman and shard rewards are not yet randomized
 - DeathLink is implemented but may have edge cases
-
----
-
-## Repository structure
-
-```
-mods/
-└── ArchipelagoMod/   # ActionScript 3 mod (Bezel) — runs inside the game
-apworld/
-└── gcfw/             # Python apworld — runs on the Archipelago server
-```
 
 ---
 
