@@ -137,8 +137,7 @@ class GemcraftFrostbornWrathWorld(World):
 
             placed_skills: set = set()
             for zone, skill_name in zip(skill_zones, shuffled_skills):
-                stage_ids = list(zone_stages[zone])
-                self.random.shuffle(stage_ids)
+                stage_ids = sorted(zone_stages[zone])
                 placed = False
                 for chosen_stage in stage_ids:
                     suffixes = ["Journey", "Bonus"]
