@@ -20,12 +20,12 @@ package {
     public class ToastPanel extends Sprite {
 
         private static const FONT:String      = "Celtic Garamond for GemCraft";
-        private static const TEXT_SIZE:int    = 11;
-        private static const PAD_X:int        = 8;
-        private static const PAD_TOP:int      = 8;
-        private static const PAD_BOTTOM:int   = 8;
-        private static const SLOT_HEIGHT:int  = 18;
-        private static const MIN_WIDTH:int    = 160;
+        private static const TEXT_SIZE:int    = 12;
+        private static const PAD_X:int        = 10;
+        private static const PAD_TOP:int      = 9;
+        private static const PAD_BOTTOM:int   = 9;
+        private static const SLOT_HEIGHT:int  = 20;
+        private static const MIN_WIDTH:int    = 180;
         private static const MAX_SLOTS:int    = 5;
 
         private static const FADE_IN_MS:int   = 500;
@@ -34,8 +34,8 @@ package {
         private static const TOTAL_MS:int     = FADE_IN_MS + VISIBLE_MS + FADE_OUT_MS;
 
         // Dark fill + Archipelago purple border
-        private static const BG_ALPHA:Number  = 0.73; // 0xBB / 0xFF
-        private static const BORDER_COLOR:uint = 0x7B52AB;
+        private static const BG_ALPHA:Number   = 0.82;
+        private static const BORDER_COLOR:uint = 0x9966CC;
 
         private var _bg:Shape;
         private var _slots:Array;  // { row:Sprite, startTime:int }
