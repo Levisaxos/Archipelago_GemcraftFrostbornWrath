@@ -272,10 +272,12 @@ package {
                 startConnectionForSlot();
             }
 
-            // DeathLink: detect player death (send) and drain punishment queue (receive).
+            // DeathLink: detect player death (send), drain punishment queue (receive),
+            // and maintain any active wave-surge.
             if (screen == ScreenId.INGAME) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
+                _deathLinkHandler.checkWaveSurge();
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.

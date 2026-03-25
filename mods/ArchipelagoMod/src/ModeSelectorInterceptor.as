@@ -76,33 +76,20 @@ package {
                 var lg:*  = GV.main.cntScreens.mcLoadGame;
                 var sel:* = lg.mcModeSelector;
                 if (sel == null) return;
+                // Mark hooked immediately so a later exception cannot cause a retry loop.
+                _hooked = true;
+
                 sel.btnModeChilling.addEventListener( MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeFrostborn.addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
                 sel.btnModeIron.addEventListener(     MouseEvent.MOUSE_UP, onIronBtnUp, true, 100, true);
-
-                // Hook Continue button for existing saves (name unknown — log all children
-                // so we can identify it, then try the most likely names).
-                var nc:int = sel.numChildren;
-                _logger.log(_modName, "  mcModeSelector children (" + nc + "):");
-                for (var ci:int = 0; ci < nc; ci++) {
-                    _logger.log(_modName, "    [" + ci + "] name=" + sel.getChildAt(ci).name
-                        + "  type=" + Object(sel.getChildAt(ci)).constructor);
-                }
-                var continueNames:Array = ["btnContinue", "btnResume", "btnContinueGame",
-                                           "btnResumeGame", "btnLoad", "btnPlay"];
-                for each (var cname:String in continueNames) {
-                    if (sel[cname] != null) {
-                        sel[cname].addEventListener(MouseEvent.MOUSE_UP, onModeBtnUp, true, 100, true);
-                        _logger.log(_modName, "  hooked continue button: " + cname);
-                    }
-                }
+                // McModeSelector has no Continue button — existing saves fall through
+                // to the _needsConnection fallback in ArchipelagoMod.onEnterFrame.
 
                 for (var n:int = 1; n <= 8; n++) {
                     var btn:* = lg["btnResetSlotL" + n];
                     if (btn != null) btn.addEventListener(MouseEvent.MOUSE_UP, onDeleteBtnUp, false, 0, true);
                 }
                 _stage.addEventListener(KeyboardEvent.KEY_DOWN, onConfirmDeleteKey, true, 100, true);
-                _hooked = true;
                 _logger.log(_modName, "LOADGAME buttons hooked (Chilling + Frostborn + Iron + Delete x8)");
             } catch (err:Error) {
                 _logger.log(_modName, "ModeSelectorInterceptor.hook error: " + err.message);
