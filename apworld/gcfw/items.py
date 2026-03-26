@@ -43,15 +43,14 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{trait['name']} Battle Trait"
         table[name] = ItemData(trait["ap_id"], ItemClassification.useful)
 
-    # XP tiers — each gives wizard levels used to gate stage locations.
-    # Small=1, Medium=3, Large=9 wizard levels (powers of 3, easy mental math).
+    # XP tiers — each gives wizard levels (Small=1, Medium=3, Large=9).
     # Pool contains 2 Large + 10 Medium + ~74 Small (fills remaining slots).
-    # Players also earn wizard levels naturally from completing stages, so
-    # the pool only supplements. All three are progression so the fill
-    # algorithm places them in reachable locations first.
-    table["Tattered Scroll"]  = ItemData(500, ItemClassification.progression)
-    table["Worn Tome"] = ItemData(501, ItemClassification.progression)
-    table["Ancient Grimoire"]  = ItemData(502, ItemClassification.progression)
+    # Classified as useful (not progression): stage access is gated by field
+    # tokens and tier completion, not wizard levels.  XP helps the player
+    # power up but is never required to unlock new locations.
+    table["Tattered Scroll"]  = ItemData(500, ItemClassification.useful)
+    table["Worn Tome"]        = ItemData(501, ItemClassification.useful)
+    table["Ancient Grimoire"] = ItemData(502, ItemClassification.useful)
 
     # Generic filler
     table["Shadow Core"] = ItemData(503, ItemClassification.filler)
