@@ -19,11 +19,11 @@ class StageRule:
 # wizard-level thresholds).  Each tier requires the player to have collected
 # a minimum number of field tokens from the *immediately previous* tier.
 #
-# FREE_STAGES (W2-W5) are accessible from W1 without any token — they are
+# FREE_STAGES (W2-W4) are accessible from W1 without any token — they are
 # the tutorial zone and mirror the real game's natural map progression.
 # Their field tokens still exist as items and count toward Tier 1's gate.
 #
-# Other Tier 0 stages (S1-S4, V1, G5) require their own field token but
+# Other Tier 0 stages (S1-S4, V1) require their own field token but
 # have no tier requirement on top.
 #
 # Tier 1+ stages require their own field token AND N tokens from the
@@ -31,11 +31,11 @@ class StageRule:
 
 # Stages accessible from W1 without needing their field token.
 # Their tokens still exist as progression items (needed for Tier 1 gate).
-FREE_STAGES: set = {"W2", "W3", "W4", "W5"}
+FREE_STAGES: set = {"W2", "W3", "W4"}
 
 # Tier definitions: tier_number → list of stage str_ids in that tier.
 TIERS: Dict[int, List[str]] = {
-    0:  ["W2", "W3", "W4", "W5", "S1", "S2", "S3", "S4", "V1", "G5"],
+    0:  ["W2", "W3", "W4", "S1", "S2", "S3", "S4", "V1"],
     1:  ["V2", "V3", "V4", "R1", "R2", "Q1", "Q2", "Q3", "Q4", "Q5", "T1"],
     2:  ["R3", "R4", "R5", "T2", "T3", "T4", "U1", "U2", "U3", "U4", "Y1", "Y3", "O3"],
     3:  ["R6", "Y2", "O1", "O2", "O4", "N1", "N2", "N3", "P1"],
@@ -86,7 +86,6 @@ STAGE_RULES: dict[str, StageRule] = {
     "W2": StageRule(),                              # tier 0 — free from W1
     "W3": StageRule(),                              # tier 0
     "W4": StageRule(),                              # tier 0
-    "W5": StageRule(),                              # tier 0 — secret
 
     # ── Zone S ────────────────────────────────────────────────────────────
     "S1": StageRule(),                              # tier 0
@@ -197,7 +196,6 @@ STAGE_RULES: dict[str, StageRule] = {
     "G2": StageRule(tier=5),                        # tier 5
     "G3": StageRule(tier=6),                        # tier 6
     "G4": StageRule(tier=6),                        # tier 6
-    "G5": StageRule(),                              # tier 0 — secret
 
     # ── Zone J ────────────────────────────────────────────────────────────
     "J1": StageRule(tier=6),                        # tier 6

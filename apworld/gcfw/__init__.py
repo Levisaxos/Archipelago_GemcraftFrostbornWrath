@@ -52,7 +52,7 @@ class GemcraftFrostbornWrathWorld(World):
                 continue  # W1 — no token
             token = self.create_item(f"{stage['str_id']} Field Token")
             if stage["str_id"] in FREE_STAGES:
-                # W2-W5: give at start so the mod unlocks them on connect.
+                # W2-W4: give at start so the mod unlocks them on connect.
                 # They still count as Tier 0 tokens for tier progression.
                 self.multiworld.push_precollected(token)
             else:
@@ -130,7 +130,7 @@ class GemcraftFrostbornWrathWorld(World):
             for s in stages
             if s["item_ap_id"] is not None
         }
-        # Free stages: W1 (starting, no token) + W2-W5 (tutorial zone, no token).
+        # Free stages: W1 (starting, no token) + W2-W4 (tutorial zone, no token).
         # The mod should unlock these on connect.
         free_stages = [
             s["str_id"]
