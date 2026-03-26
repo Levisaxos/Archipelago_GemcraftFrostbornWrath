@@ -21,7 +21,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     Apply access rules to all regions and locations.
 
     Region connections (from W1 hub):
-      - FREE_STAGES (W2-W5): no token or tier requirement (tutorial zone).
+      - FREE_STAGES (W2-W4): no token or tier requirement (tutorial zone).
       - Other Tier 0 stages: own field token only (no tier gate).
       - Tier 1+ stages: own field token AND N tokens from previous tier.
     Location rules: WIZLOCK skill requirements only (L5).
@@ -54,7 +54,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         token_name = f"{str_id} Field Token"
 
         if str_id in FREE_STAGES:
-            # Free stages (W2-W5): accessible from W1 with no requirements.
+            # Free stages (W2-W4): accessible from W1 with no requirements.
             # Their tokens still exist as items for Tier 1 gate.
             pass
         elif tier == 0:

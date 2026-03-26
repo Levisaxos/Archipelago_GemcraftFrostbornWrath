@@ -3,7 +3,7 @@
     "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP/Filler: 500-599",
     "location_id_buckets": "Stages (Journey): 1-124 | Stages (Bonus): 501-624 | Map Tiles: 200-299",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
-    "scope_note": "All stages are now in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 have unknown original unlock mechanics but are included as AP token stages."
+    "scope_note": "All 122 stages are in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 do not exist in the game and have been removed."
   },
   "gem_unlocks": [
     {
@@ -2061,17 +2061,6 @@
       "wave_count": 82
     },
     {
-      "str_id": "W5",
-      "type": "SECRET",
-      "item_ap_id": 109,
-      "loc_ap_id": 110,
-      "note": "Secret — original unlock method TBD; accessible via AP token",
-      "unlocks": [],
-      "available_gems": [],
-      "required_skills": [],
-      "wave_count": 0
-    },
-    {
       "str_id": "Z5",
       "type": "SECRET",
       "item_ap_id": 110,
@@ -2157,17 +2146,6 @@
       ],
       "required_skills": [],
       "wave_count": 68
-    },
-    {
-      "str_id": "G5",
-      "type": "SECRET",
-      "item_ap_id": 116,
-      "loc_ap_id": 117,
-      "note": "Secret — original unlock method TBD; accessible via AP token",
-      "unlocks": [],
-      "available_gems": [],
-      "required_skills": [],
-      "wave_count": 0
     },
     {
       "str_id": "F5",
