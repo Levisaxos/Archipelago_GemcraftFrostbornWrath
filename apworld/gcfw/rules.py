@@ -76,9 +76,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
 
-    # --- Victory: A4 accessible AND all 24 skills collected ---
+    # --- A4 locations + Victory: require all 24 skills ---
     all_skill_names = [f"{skill['name']} Skill" for skill in data["skills"]]
+    all_skills_rule = lambda state: all(state.has(s, player) for s in all_skill_names)
+
+    for suffix in ("Journey", "Bonus"):
+        loc = multiworld.get_location(f"Complete A4 - {suffix}", player)
+        existing_rule = loc.access_rule
+        loc.access_rule = lambda state, er=existing_rule: er(state) and all_skills_rule(state)
+
     victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
-    victory_location.access_rule = lambda state: all(state.has(s, player) for s in all_skill_names)
+    victory_location.access_rule = all_skills_rule
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)
