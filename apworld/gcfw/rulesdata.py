@@ -8,7 +8,7 @@ from typing import List
 # XP items to bootstrap the wizard-level chain.  While False, min_wizard_level
 # values are stored here for reference but NOT applied as access rules — only
 # WIZLOCK skill requirements are enforced.
-WIZARD_LEVEL_GATING_ENABLED: bool = False
+WIZARD_LEVEL_GATING_ENABLED: bool = True
 
 
 @dataclass
