@@ -12,6 +12,7 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import GCFWOptions
 from .rules import set_rules
+from .rulesdata import FREE_STAGES, TIERS
 
 
 def _load_stages():
@@ -49,7 +50,13 @@ class GemcraftFrostbornWrathWorld(World):
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue  # W1 — no token
-            pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+            token = self.create_item(f"{stage['str_id']} Field Token")
+            if stage["str_id"] in FREE_STAGES:
+                # W2-W5: give at start so the mod unlocks them on connect.
+                # They still count as Tier 0 tokens for tier progression.
+                self.multiworld.push_precollected(token)
+            else:
+                pool.append(token)
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -123,12 +130,13 @@ class GemcraftFrostbornWrathWorld(World):
             for s in stages
             if s["item_ap_id"] is not None
         }
-        # Stages with no token (W1 — starting stage) — always accessible, never lock these
+        # Free stages: W1 (starting, no token) + W2-W5 (tutorial zone, no token).
+        # The mod should unlock these on connect.
         free_stages = [
             s["str_id"]
             for s in stages
             if s["item_ap_id"] is None
-        ]
+        ] + sorted(FREE_STAGES)
         return {
             "goal":                  self.options.goal.value,
             "token_map":             token_map,
