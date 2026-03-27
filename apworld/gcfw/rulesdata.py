@@ -83,9 +83,9 @@ STAGE_RULES: dict[str, StageRule] = {
 
     # ── Zone W — starting zone ────────────────────────────────────────────
     "W1": StageRule(),                              # free (starting stage, no token)
-    "W2": StageRule(),                              # tier 0 — free from W1
-    "W3": StageRule(),                              # tier 0
-    "W4": StageRule(),                              # tier 0
+    "W2": StageRule(),                              # free (starting stage, no token)
+    "W3": StageRule(),                              # free (starting stage, no token)
+    "W4": StageRule(),                              # free (starting stage, no token)
 
     # ── Zone S ────────────────────────────────────────────────────────────
     "S1": StageRule(),                              # tier 0
