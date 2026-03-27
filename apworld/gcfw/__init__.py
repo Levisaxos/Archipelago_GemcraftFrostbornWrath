@@ -10,8 +10,9 @@ from worlds.AutoWorld import WebWorld, World
 
 from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
-from .options import GCFWOptions, SkillPlacement
+from .options import GCFWOptions
 from .rules import set_rules
+from .rulesdata import FREE_STAGES, TIERS
 
 
 def _load_stages():
@@ -49,7 +50,13 @@ class GemcraftFrostbornWrathWorld(World):
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue  # W1 — no token
-            pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+            token = self.create_item(f"{stage['str_id']} Field Token")
+            if stage["str_id"] in FREE_STAGES:
+                # W2-W4: give at start so the mod unlocks them on connect.
+                # They still count as Tier 0 tokens for tier progression.
+                self.multiworld.push_precollected(token)
+            else:
+                pool.append(token)
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -112,54 +119,7 @@ class GemcraftFrostbornWrathWorld(World):
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
 
-        # --- Skill placement ---
-        if self.options.skill_placement == SkillPlacement.option_per_zone:
-            # One skill is locked to a random location inside each non-W, non-A zone.
-            # We have exactly 24 skills and 24 such zones, so they map 1-to-1.
-            stages = _load_stages()
-
-            # Group stage str_ids by zone letter (first character).
-            # Skip W1 (no token, no target for skill placement).
-            zone_stages: Dict[str, List[str]] = {}
-            for stage in stages:
-                if stage["item_ap_id"] is None:
-                    continue  # W1 — skip
-                str_id = stage["str_id"]
-                zone = str_id[0]
-                zone_stages.setdefault(zone, []).append(str_id)
-
-            # The zones that get a skill: every zone except W (starting) and A (endgame)
-            skill_zones = sorted(z for z in zone_stages if z not in ("W", "A"))
-
-            all_skills = [name for name in item_table if name.endswith(" Skill")]
-            shuffled_skills = list(all_skills)
-            self.random.shuffle(shuffled_skills)
-
-            placed_skills: set = set()
-            for zone, skill_name in zip(skill_zones, shuffled_skills):
-                stage_ids = sorted(zone_stages[zone])
-                placed = False
-                for chosen_stage in stage_ids:
-                    suffixes = ["Journey", "Bonus"]
-                    self.random.shuffle(suffixes)
-                    for suffix in suffixes:
-                        loc_name = f"Complete {chosen_stage} - {suffix}"
-                        loc = self.multiworld.get_location(loc_name, self.player)
-                        if loc.item is None:
-                            loc.place_locked_item(self.create_item(skill_name))
-                            placed_skills.add(skill_name)
-                            placed = True
-                            break
-                    if placed:
-                        break
-
-            # Remove placed skills from the shared item pool so counts stay balanced
-            for skill_name in placed_skills:
-                for item in self.multiworld.itempool:
-                    if item.player == self.player and item.name == skill_name:
-                        self.multiworld.itempool.remove(item)
-                        break
-        # else: spread — skills stay in the pool and are placed anywhere by the fill algorithm
+        # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
 
     def fill_slot_data(self) -> Dict:
         stages = _load_stages()
@@ -170,15 +130,15 @@ class GemcraftFrostbornWrathWorld(World):
             for s in stages
             if s["item_ap_id"] is not None
         }
-        # Stages with no token (W1 — starting stage) — always accessible, never lock these
+        # Free stages: W1 (starting, no token) + W2-W4 (tutorial zone, no token).
+        # The mod should unlock these on connect.
         free_stages = [
             s["str_id"]
             for s in stages
             if s["item_ap_id"] is None
-        ]
+        ] + sorted(FREE_STAGES)
         return {
             "goal":                  self.options.goal.value,
-            "skill_placement":       self.options.skill_placement.value,
             "token_map":             token_map,
             "free_stages":           free_stages,
             "death_link":              bool(self.options.death_link.value),
