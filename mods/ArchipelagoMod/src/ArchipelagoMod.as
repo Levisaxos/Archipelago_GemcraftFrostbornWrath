@@ -282,6 +282,22 @@ package {
                 _modeInterceptor.hook(this.stage);
             }
 
+            // Prevent the game from auto-launching W1 on new game.
+            // startNewGame2() sets willStartNewGame=true, which makes
+            // LoaderSaver bypass the selector and jump straight into W1.
+            // We clear it so the player lands on the selector and can
+            // choose their starting level from the unlocked stages.
+            if (!_standalone
+                    && GV.loaderSaver != null
+                    && GV.loaderSaver.willStartNewGame) {
+                GV.loaderSaver.willStartNewGame = false;
+                if (GV.ingameCore != null) {
+                    GV.ingameCore.isFirstStageFirstTime = false;
+                }
+                _logger.log(MOD_NAME,
+                    "Cleared willStartNewGame — player will land on selector");
+            }
+
             // Connection required (e.g. Continue button bypassed our interceptor).
             if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
                 _needsConnection = false;
