@@ -64,6 +64,17 @@ package {
             _messageLog = log;
         }
 
+        /** Remove all visible and queued messages immediately. */
+        public function clear():void {
+            for (var i:int = _slots.length - 1; i >= 0; i--) {
+                removeChild(_slots[i].row);
+            }
+            _slots.length = 0;
+            _queue.length = 0;
+            _bg.graphics.clear();
+            alpha = 0;
+        }
+
         /**
          * Enqueue a message. Shows immediately if a slot is free,
          * otherwise waits until a slot becomes available.

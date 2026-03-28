@@ -269,7 +269,9 @@ package {
                     _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _gameCompletion.reset();
-                    _logger.log(MOD_NAME, "Entered MAINMENU — connection reset");
+                    if (_toast != null) _toast.clear();
+                    if (_itemToast != null) _itemToast.clear();
+                    _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
                 }
 
                 // Entering LOADGAME — always reset connection so leaving LOADGAME

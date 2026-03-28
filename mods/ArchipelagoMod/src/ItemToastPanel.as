@@ -99,6 +99,16 @@ package {
             _messageLog = log;
         }
 
+        /** Remove the current item and all queued items immediately. */
+        public function clear():void {
+            if (_current != null && _current.container != null) {
+                removeChild(_current.container);
+            }
+            _current = null;
+            _queue.length = 0;
+            alpha = 0;
+        }
+
         /**
          * Enqueue an item notification.
          * @param text   The full message string (e.g. "Received Stone of Order from Alice")
