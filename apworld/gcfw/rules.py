@@ -10,10 +10,21 @@ if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
 
 
-def _has_tier_tokens(state, player: int, tier_token_names: List[str], count: int) -> bool:
+# Pre-build token name lists per tier for use in access rules.
+# this is never gonna change just make it a global instead of rebuilding it every time set_rules is run
+TIER_TOKEN_NAMES: dict[int, List[str]] = {}
+for tier_num, stage_ids in TIERS.items():
+    TIER_TOKEN_NAMES[tier_num] = [f"{sid} Field Token" for sid in stage_ids]
+
+
+def _has_tier_tokens(state, player: int, tier: int) -> bool:
     """Check whether the player has collected at least *count* field tokens
     from the given list of tier token names."""
-    return sum(1 for name in tier_token_names if state.has(name, player)) >= count
+    prev, count = TIER_REQUIREMENTS[tier]
+    if prev == 0:
+        return sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) >= count
+    return sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) >= count and _has_tier_tokens(state, player, prev)
+    # theres a cleaner way to do this ^ im just writing it like this to debug
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -23,7 +34,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     Region connections (from W1 hub):
       - FREE_STAGES (W2-W4): no token or tier requirement (tutorial zone).
       - Other Tier 0 stages: own field token only (no tier gate).
-      - Tier 1+ stages: own field token AND N tokens from previous tier.
+      - Tier 1+ stages: own field token AND N tokens from previous tier. (AND prev tier unlocked)
     Location rules: WIZLOCK skill requirements only (L5).
     Victory: A4 reachable AND all 24 skills collected.
     """
@@ -35,11 +46,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     stage_map = {s["str_id"]: s for s in stages}
 
     w1_region = multiworld.get_region("W1", player)
-
-    # Pre-build token name lists per tier for use in access rules.
-    tier_token_names: dict[int, List[str]] = {}
-    for tier_num, stage_ids in TIERS.items():
-        tier_token_names[tier_num] = [f"{sid} Field Token" for sid in stage_ids]
 
     # --- Region connections: W1 → every non-W1 stage ---
     for stage in stages:
@@ -64,11 +70,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             )
         else:
             # Tier 1+: require own field token + N tokens from previous tier.
-            prev_tier, tokens_needed = TIER_REQUIREMENTS[tier]
-            prev_tokens = tier_token_names[prev_tier]
+            # prev_tier, tokens_needed = TIER_REQUIREMENTS[tier]
+            # prev_tokens = tier_token_names[prev_tier]
             connection.access_rule = (
-                lambda state, tok=token_name, pt=prev_tokens, n=tokens_needed: (
-                    state.has(tok, player) and _has_tier_tokens(state, player, pt, n)
+                lambda state, tok=token_name, ti=tier: (
+                    state.has(tok, player) and _has_tier_tokens(state, player, ti)
                 )
             )
 
