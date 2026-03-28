@@ -149,6 +149,20 @@ class GemcraftFrostbornWrathWorld(World):
                         prog_idx -= 1  # to counteract the +=1 below
                 prog_idx += 1  # this should never exceed the length of the progitempool. assuming reasonable tier tables.
 
+            # IF we want skills to appear earlier, then after each tier (except the very first tiers (0 or 1 (i was getting skills *too* early >_>))
+            # move a skill into the space between this tier and the next tier.
+            if t > 2:
+                prog_idx = 0
+                moved_skill = False
+                while not moved_skill:
+                    this_item_name = progitempool[prog_idx].name
+                    if this_item_name.endswith(" Skill"):
+                        # move to end
+                        # print(f"Moving {this_field} to end")
+                        progitempool.append(progitempool.pop(prog_idx))
+                        moved_skill = True  # isnt this what continue is for. or break. idk im never confident in using those in nested loops lol
+                    prog_idx += 1
+
         # print("PRINTING WHOLE PROG POOL IN ORDER:")
         # for i in progitempool:
         #     print(f"{i.name}")
@@ -174,6 +188,7 @@ class GemcraftFrostbornWrathWorld(World):
             "goal":                  self.options.goal.value,
             "token_map":             token_map,
             "free_stages":           free_stages,
+            "force_early_skills":      bool(self.options.force_early_skills.value),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

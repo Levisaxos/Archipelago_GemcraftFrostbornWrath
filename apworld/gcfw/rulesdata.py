@@ -79,6 +79,9 @@ TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
 # Tier assignments derived from wave counts via the former wizard-level table.
 # Explicit WIZLOCK data taken from game_data.json required_skills fields.
 
+# TODO: refactor to be programatically generated using game_data.json and TIERS list to make future edits easier
+# reminder to self to make the loaded game_data.json a global since its very costly to load and is already being loaded like 5 times
+
 STAGE_RULES: dict[str, StageRule] = {
 
     # ── Zone W — starting zone ────────────────────────────────────────────
