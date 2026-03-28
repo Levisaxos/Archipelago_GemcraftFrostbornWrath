@@ -121,8 +121,7 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
 
-    @classmethod
-    def stage_fill_hook(cls, multiworld, progitempool, usefulitempool, filleritempool, fill_locations):
+    def fill_hook(self, progitempool, usefulitempool, filleritempool, fill_locations):
         # goal: look at the TIER_REQUIREMENTS table and use that to force the fill to put enough stages of
         # each tier in order first before filling the rest of the items. this should make gens 100% consistent.
 
@@ -151,17 +150,18 @@ class GemcraftFrostbornWrathWorld(World):
 
             # IF we want skills to appear earlier, then after each tier (except the very first tiers (0 or 1 (i was getting skills *too* early >_>))
             # move a skill into the space between this tier and the next tier.
-            if t > 2:
-                prog_idx = 0
-                moved_skill = False
-                while not moved_skill:
-                    this_item_name = progitempool[prog_idx].name
-                    if this_item_name.endswith(" Skill"):
-                        # move to end
-                        # print(f"Moving {this_field} to end")
-                        progitempool.append(progitempool.pop(prog_idx))
-                        moved_skill = True  # isnt this what continue is for. or break. idk im never confident in using those in nested loops lol
-                    prog_idx += 1
+            if bool(self.options.force_early_skills.value):
+                if t > 2:
+                    prog_idx = 0
+                    moved_skill = False
+                    while not moved_skill:
+                        this_item_name = progitempool[prog_idx].name
+                        if this_item_name.endswith(" Skill"):
+                            # move to end
+                            # print(f"Moving {this_field} to end")
+                            progitempool.append(progitempool.pop(prog_idx))
+                            moved_skill = True  # isnt this what continue is for. or break. idk im never confident in using those in nested loops lol
+                        prog_idx += 1
 
         # print("PRINTING WHOLE PROG POOL IN ORDER:")
         # for i in progitempool:
