@@ -27,6 +27,7 @@ package {
         private var _apPort:int        = 38281;
         private var _apSlot:String     = "";
         private var _apPassword:String = "";
+        private var _saveSlot:int      = 0;
         // TLS is used only for archipelago.gg; local/IP servers use plain ws://
         private static function isSecureHost(host:String):Boolean {
             return host.toLowerCase() == "archipelago.gg";
@@ -108,6 +109,8 @@ package {
         public function set apSlot(v:String):void { _apSlot = v; }
         public function get apPassword():String { return _apPassword; }
         public function set apPassword(v:String):void { _apPassword = v; }
+        public function get saveSlot():int { return _saveSlot; }
+        public function set saveSlot(v:int):void { _saveSlot = v; }
 
         /** Provide the item-notification panel used for received/found/sent item toasts. */
         public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
@@ -143,7 +146,7 @@ package {
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
-                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + "...", 0xFFFFDD55);
+                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
                 _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
                 _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
                     + "  slot=" + _apSlot);
@@ -295,7 +298,7 @@ package {
             }
 
             _toast.addMessage("Connected to " + _apHost + ":" + _apPort
-                + " as slot " + _apSlot, 0xFF88FF88);
+                + " as " + _apSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
 
             if (onConnected != null) onConnected(p);
         }

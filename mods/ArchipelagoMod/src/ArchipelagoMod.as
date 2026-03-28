@@ -528,7 +528,7 @@ package {
                 _standalone = true;
                 _normalProgressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
-                _toast.addMessage("Solo mode — playing without randomizer", 0xFF88CCFF);
+                _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
                 return;
             }
@@ -537,6 +537,7 @@ package {
                 _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
                     + "  host=" + _connectionManager.apHost
                     + "  apSlot=" + _connectionManager.apSlot);
+                _connectionManager.saveSlot = _saveManager.currentSlot;
                 _connectionManager.connect(
                     _connectionManager.apHost,
                     _connectionManager.apPort,
@@ -572,6 +573,7 @@ package {
             _logger.log(MOD_NAME, "PLAYER_SUBMITTED_CONNECTION host=" + host
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
+            _connectionManager.saveSlot = _saveManager.currentSlot;
             _connectionManager.connect(host, port, slot, password);
         }
 
@@ -587,7 +589,7 @@ package {
             _normalProgressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _toast.addMessage("Solo mode — playing without randomizer", 0xFF88CCFF);
+            _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 
