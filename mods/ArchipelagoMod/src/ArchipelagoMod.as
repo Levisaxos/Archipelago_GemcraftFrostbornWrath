@@ -261,6 +261,17 @@ package {
                     + "  _isConnected=" + _connectionManager.isConnected
                     + "  _needsConnection=" + _needsConnection);
 
+                // Entering MAINMENU — disconnect early so the connection doesn't
+                // linger while the player is on the main menu.
+                if (screen == ScreenId.MAINMENU) {
+                    _connectionManager.disconnectAndReset();
+                    _needsConnection = false;
+                    _standalone      = false;
+                    if (_connectionPanel != null) _connectionPanel.dismiss();
+                    _gameCompletion.reset();
+                    _logger.log(MOD_NAME, "Entered MAINMENU — connection reset");
+                }
+
                 // Entering LOADGAME — always reset connection so leaving LOADGAME
                 // sees _isConnected=false and triggers the overlay when needed.
                 if (screen == ScreenId.LOADGAME) {
@@ -391,9 +402,8 @@ package {
         private function positionItemToast():void {
             if (_itemToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
-            // gameRoot.width is in stage (screen) pixels, so this always hits the true centre.
-            var gameCenterX:Number = gameRoot.x + gameRoot.width * 0.5;
-            _itemToast.x = gameCenterX - _itemToast.panelWidth * 0.5;
+            // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
+            _itemToast.x = this.stage.stageWidth * 0.5 - _itemToast.panelWidth * 0.5;
             _itemToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
@@ -532,8 +542,6 @@ package {
         }
 
         private function ensureConnectionOverlay():void {
-            if (_connectionPanel != null && _connectionPanel.isShowing) return;
-
             if (_connectionPanel == null) {
                 _connectionPanel = new ConnectionPanel();
                 _logger.log(MOD_NAME, "ConnectionPanel created");
@@ -547,8 +555,10 @@ package {
                 _connectionManager.apSlot,
                 _connectionManager.apPassword
             );
-            _connectionPanel.showWithOverlay(this.stage, _toast);
-            _logger.log(MOD_NAME, "Connection overlay shown");
+            if (!_connectionPanel.isShowing) {
+                _connectionPanel.showWithOverlay(this.stage, _toast);
+                _logger.log(MOD_NAME, "Connection overlay shown");
+            }
         }
 
         private function onConnectionPanelConnect(host:String, port:int,
@@ -599,9 +609,11 @@ package {
 
             if (_saveManager.slotCompleted) {
                 _gameCompletion.markAlreadyCompleted();
-            } else {
-                _gameCompletion.check(); // catches A4 beaten while offline
             }
+            // Note: we do NOT call _gameCompletion.check() here because GV.ppd
+            // may still hold data from a previously loaded save slot (e.g. a
+            // standalone game where A4 was already beaten).  The onSaveSave hook
+            // will catch a legitimate A4 victory when the player wins a battle.
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }

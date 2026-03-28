@@ -27,7 +27,10 @@ package {
         private var _apPort:int        = 38281;
         private var _apSlot:String     = "";
         private var _apPassword:String = "";
-        private static const AP_SECURE:Boolean = false;
+        // TLS is used only for archipelago.gg; local/IP servers use plain ws://
+        private static function isSecureHost(host:String):Boolean {
+            return host.toLowerCase() == "archipelago.gg";
+        }
 
         // AP slot data
         private var _tokenMap:Object    = {};   // item AP ID (string) → stage str_id
@@ -140,7 +143,8 @@ package {
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
-                _ws.connect(_apHost, _apPort, AP_SECURE);
+                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + "...", 0xFFFFDD55);
+                _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
                 _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
                     + "  slot=" + _apSlot);
             }

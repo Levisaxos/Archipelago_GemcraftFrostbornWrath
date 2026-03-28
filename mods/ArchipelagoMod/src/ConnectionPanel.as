@@ -57,6 +57,7 @@ package {
         private var _tfConnectLabel:TextField;
         private var _tfStatus:TextField;
         private var _blockingOverlay:Sprite;
+        private var _isConnecting:Boolean = false;
 
         /** Called with (host, port, slot, password) when the user clicks Connect. */
         public var onConnect:Function;
@@ -81,7 +82,7 @@ package {
             graphics.endFill();
 
             // Title
-            var title:TextField = makeLabelTf("Archipelago", PANEL_W, 28, COL_TITLE, 17, true, true);
+            var title:TextField = makeLabelTf("Archipelago Connection", PANEL_W, 28, COL_TITLE, 17, true, true);
             title.x = 0;
             title.y = PADDING - 2;
             addChild(title);
@@ -102,8 +103,9 @@ package {
             // Status line — hidden until there is something to show.
             _tfStatus = makeLabelTf("", PANEL_W - PADDING * 2, 20, 0xFF6666AA, 12, false, true);
             _tfStatus.x       = PADDING;
-            _tfStatus.y       = PANEL_H - 115;
+            _tfStatus.y       = PANEL_H - 125;
             _tfStatus.visible = false;
+            _tfStatus.textColor = 0xDC3545;
             addChild(_tfStatus);
 
             // Connect / Cancel buttons
@@ -255,6 +257,8 @@ package {
         // Actions
 
         private function onConnectClicked(e:MouseEvent):void {
+            if (_isConnecting) return;
+            _isConnecting = true;
             setConnecting(true);
             if (onConnect != null) {
                 onConnect(_tfHost.text, int(_tfPort.text), _tfSlot.text, _tfPassword.text);
@@ -283,6 +287,7 @@ package {
 
         /** Reset the panel to its idle state (call after a failed connection attempt). */
         public function resetState():void {
+            _isConnecting = false;
             setConnecting(false);
         }
 
@@ -353,6 +358,10 @@ package {
             if (_blockingOverlay != null && _blockingOverlay.parent != null) {
                 _blockingOverlay.parent.removeChild(_blockingOverlay);
             }
+            _tfStatus.text = "";
+            _tfStatus.visible = false;
+            _isConnecting = false;
+            setConnecting(false);
         }
     }
 }
