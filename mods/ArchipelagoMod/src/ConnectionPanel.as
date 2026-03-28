@@ -2,11 +2,13 @@ package {
     import flash.display.DisplayObjectContainer;
     import flash.display.Sprite;
     import flash.display.Stage;
+    import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
     import flash.text.TextField;
     import flash.text.TextFieldType;
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
+    import flash.ui.Keyboard;
 
     /**
      * A self-contained overlay panel for entering Archipelago connection settings.
@@ -257,12 +259,49 @@ package {
         // Actions
 
         private function onConnectClicked(e:MouseEvent):void {
+            attemptConnect();
+        }
+
+        private function onKeyPressed(e:KeyboardEvent):void {
+            if (e.keyCode == Keyboard.ENTER) {
+                attemptConnect();
+            }
+        }
+
+        private function attemptConnect():void {
             if (_isConnecting) return;
+
+            // Validate required fields
+            var host:String = trim(_tfHost.text);
+            var portStr:String = trim(_tfPort.text);
+            var slot:String = trim(_tfSlot.text);
+
+            if (host.length == 0) {
+                showError("Host is required");
+                return;
+            }
+            if (portStr.length == 0 || int(portStr) <= 0) {
+                showError("Port is required");
+                return;
+            }
+            if (slot.length == 0) {
+                showError("Slot name is required");
+                return;
+            }
+
             _isConnecting = true;
             setConnecting(true);
             if (onConnect != null) {
-                onConnect(_tfHost.text, int(_tfPort.text), _tfSlot.text, _tfPassword.text);
+                onConnect(host, int(portStr), slot, _tfPassword.text);
             }
+        }
+
+        private static function trim(s:String):String {
+            var start:int = 0;
+            var end:int = s.length;
+            while (start < end && s.charCodeAt(start) <= 32) start++;
+            while (end > start && s.charCodeAt(end - 1) <= 32) end--;
+            return s.substring(start, end);
         }
 
         private function onCancelClicked(e:MouseEvent):void {
@@ -344,6 +383,7 @@ package {
             centerOnStage(stg.stageWidth, stg.stageHeight);
 
             stg.addChild(_blockingOverlay);
+            stg.addEventListener(KeyboardEvent.KEY_DOWN, onKeyPressed, false, 0, true);
 
             // Keep the toast above the overlay so messages remain visible.
             if (toastPanel != null && toastPanel.parent == stg) {
@@ -356,6 +396,10 @@ package {
          */
         public function dismiss():void {
             if (_blockingOverlay != null && _blockingOverlay.parent != null) {
+                var stg:Stage = _blockingOverlay.parent as Stage;
+                if (stg != null) {
+                    stg.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyPressed);
+                }
                 _blockingOverlay.parent.removeChild(_blockingOverlay);
             }
             _tfStatus.text = "";
