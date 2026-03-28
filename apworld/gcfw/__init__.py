@@ -12,7 +12,7 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import GCFWOptions
 from .rules import set_rules
-from .rulesdata import FREE_STAGES, TIERS
+from .rulesdata import FREE_STAGES, TIERS, TIER_REQUIREMENTS
 
 
 def _load_stages():
@@ -120,6 +120,39 @@ class GemcraftFrostbornWrathWorld(World):
         )
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
+
+    @classmethod
+    def stage_fill_hook(cls, multiworld, progitempool, usefulitempool, filleritempool, fill_locations):
+        # goal: look at the TIER_REQUIREMENTS table and use that to force the fill to put enough stages of
+        # each tier in order first before filling the rest of the items. this should make gens 100% consistent.
+
+        # for each tier, in reverse order (hardcoded as 12 tiers right now; TODO make more robust)
+        # (reverse order since progitempool is popped off of to choose items, so im moving items to the end;
+        # so moving tier 11 to the end then tier 10 then etc etc down to tier 1 so that in the end tier 1's unlocks
+        # are at the end, which means they will be placed first you get the idea)
+        for t in range(12, 0, -1):
+            prev_tier, level_req = TIER_REQUIREMENTS[t]
+            moved_levels = 0
+            # ok test time
+            # level_req = len(TIERS[prev_tier])
+            prog_idx = 0
+            while moved_levels < level_req:
+                this_item_name = progitempool[prog_idx].name
+                if this_item_name.endswith(" Field Token"):
+                    this_field = this_item_name[:2]
+                    if this_field in TIERS[prev_tier]:
+                        # move to end
+                        # print(f"Moving {this_field} to end")
+                        progitempool.append(progitempool.pop(prog_idx))
+
+                        moved_levels += 1
+                        prog_idx -= 1  # to counteract the +=1 below
+                prog_idx += 1  # this should never exceed the length of the progitempool. assuming reasonable tier tables.
+
+        # print("PRINTING WHOLE PROG POOL IN ORDER:")
+        # for i in progitempool:
+        #     print(f"{i.name}")
+
 
     def fill_slot_data(self) -> Dict:
         stages = _load_stages()
