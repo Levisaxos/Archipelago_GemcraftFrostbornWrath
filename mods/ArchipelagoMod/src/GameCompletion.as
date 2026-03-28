@@ -15,16 +15,16 @@ package {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _itemToast:ItemToastPanel;
         private var _goalSent:Boolean = false;
 
         /** Fired once when A4 is detected as beaten and goal not yet reported. */
         public var onGoalReached:Function; // ():void
 
-        public function GameCompletion(logger:Logger, modName:String, toast:ToastPanel) {
-            _logger  = logger;
-            _modName = modName;
-            _toast   = toast;
+        public function GameCompletion(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+            _logger    = logger;
+            _modName   = modName;
+            _itemToast = itemToast;
         }
 
         /**
@@ -46,7 +46,7 @@ package {
 
             _goalSent = true;
             _logger.log(_modName, "GOAL REACHED — A4 Journey completed (xp=" + xp + ")");
-            _toast.addMessage("Goal Complete! A4 - Frostborn Wrath Victory!", 0xFFFFDD00);
+            _itemToast.addItem("Goal Complete! A4 - Frostborn Wrath Victory!", 0xFFDD00);
             if (onGoalReached != null) onGoalReached();
         }
 

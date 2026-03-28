@@ -10,7 +10,7 @@ package {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _itemToast:ItemToastPanel;
 
         // Battle trait names indexed by game_id (matches BattleTraitId constants).
         private static const BATTLE_TRAIT_NAMES:Array = [
@@ -20,10 +20,10 @@ package {
             "Giant Domination", "Strength in Numbers", "Ritual"
         ];
 
-        public function TraitUnlocker(logger:Logger, modName:String, toast:ToastPanel) {
-            _logger  = logger;
-            _modName = modName;
-            _toast   = toast;
+        public function TraitUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+            _logger    = logger;
+            _modName   = modName;
+            _itemToast = itemToast;
         }
 
         /**
@@ -44,7 +44,7 @@ package {
             GV.ppd.selectedBattleTraitLevels[gameId].s(Math.max(GV.ppd.selectedBattleTraitLevels[gameId].g(), 0));
             var traitName:String = BATTLE_TRAIT_NAMES[gameId];
             _logger.log(_modName, "Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
-            _toast.addMessage("Trait Unlocked: " + traitName, 0xFFFFAA44);
+            _itemToast.addItem("Trait Unlocked: " + traitName, 0xFFAA44);
         }
 
         /** Returns the human-readable trait name for an AP ID (400-414), or null if out of range. */

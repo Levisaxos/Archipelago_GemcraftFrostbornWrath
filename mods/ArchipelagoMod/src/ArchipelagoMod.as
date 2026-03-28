@@ -33,7 +33,7 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String       { return "0.0.1"; }
+        public function get VERSION():String       { return "0.0.2"; }
         public function get MOD_NAME():String      { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String { return "2.1.1"; }
 
@@ -52,6 +52,10 @@ package {
 
         private var _itemToast:ItemToastPanel;
         private var _itemToastOnStage:Boolean = false;
+
+        private var _messageLog:MessageLog;
+        private var _messageLogPanel:MessageLogPanel;
+        private var _messageLogOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
         private var _normalProgressionBlocker:NormalProgressionBlocker;
@@ -91,13 +95,17 @@ package {
                 _bezel = bezel;
 
                 // Create subsystems
+                _messageLog    = new MessageLog();
                 _toast         = new ToastPanel();
                 _itemToast     = new ItemToastPanel();
+                _toast.messageLog     = _messageLog;
+                _itemToast.messageLog = _messageLog;
+                _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _toast);
-                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _toast);
+                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
+                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
                 _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _toast);
+                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -124,7 +132,7 @@ package {
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
-                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
+                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _itemToast);
                 _gameCompletion.onGoalReached = onGoalReached;
 
                 // Connection panel (lazy — created on first use)
@@ -172,6 +180,13 @@ package {
             }
             _itemToast = null;
             _itemToastOnStage = false;
+            if (_messageLogPanel != null) {
+                if (_messageLogPanel.isOpen) _messageLogPanel.close();
+                if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
+            }
+            _messageLogPanel = null;
+            _messageLog = null;
+            _messageLogOnStage = false;
             if (_keyListenerAdded && this.stage != null) {
                 this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
                 _keyListenerAdded = false;
@@ -220,6 +235,10 @@ package {
                 this.stage.addChild(_itemToast);
                 _itemToastOnStage = true;
             }
+            if (!_messageLogOnStage && _messageLogPanel != null && this.stage != null) {
+                this.stage.addChild(_messageLogPanel);
+                _messageLogOnStage = true;
+            }
             // Keep item toast horizontally centered as panelWidth may change each item.
             if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
                 positionItemToast();
@@ -241,6 +260,19 @@ package {
                 _logger.log(MOD_NAME, "Screen change: " + _lastScreen + " → " + screen
                     + "  _isConnected=" + _connectionManager.isConnected
                     + "  _needsConnection=" + _needsConnection);
+
+                // Entering MAINMENU — disconnect early so the connection doesn't
+                // linger while the player is on the main menu.
+                if (screen == ScreenId.MAINMENU) {
+                    _connectionManager.disconnectAndReset();
+                    _needsConnection = false;
+                    _standalone      = false;
+                    if (_connectionPanel != null) _connectionPanel.dismiss();
+                    _gameCompletion.reset();
+                    if (_toast != null) _toast.clear();
+                    if (_itemToast != null) _itemToast.clear();
+                    _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
+                }
 
                 // Entering LOADGAME — always reset connection so leaving LOADGAME
                 // sees _isConnected=false and triggers the overlay when needed.
@@ -372,15 +404,17 @@ package {
         private function positionItemToast():void {
             if (_itemToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
-            // gameRoot.width is in stage (screen) pixels, so this always hits the true centre.
-            var gameCenterX:Number = gameRoot.x + gameRoot.width * 0.5;
-            _itemToast.x = gameCenterX - _itemToast.panelWidth * 0.5;
+            // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
+            _itemToast.x = this.stage.stageWidth * 0.5 - _itemToast.panelWidth * 0.5;
             _itemToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
         private function onStageResize(e:Event):void {
             positionToast();
             positionItemToast();
+            if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
+                _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -405,6 +439,16 @@ package {
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
+            // Backtick / tilde (keyCode 192) — toggle message log
+            if (e.keyCode == 192 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                if (_messageLogPanel != null && this.stage != null) {
+                    _messageLogPanel.toggle(this.stage.stageWidth, this.stage.stageHeight);
+                    if (_messageLogPanel.isOpen && _messageLogPanel.parent == this.stage) {
+                        this.stage.setChildIndex(_messageLogPanel, this.stage.numChildren - 1);
+                    }
+                }
+                return;
+            }
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
@@ -484,6 +528,7 @@ package {
                 _standalone = true;
                 _normalProgressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
+                _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
                 return;
             }
@@ -492,6 +537,7 @@ package {
                 _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
                     + "  host=" + _connectionManager.apHost
                     + "  apSlot=" + _connectionManager.apSlot);
+                _connectionManager.saveSlot = _saveManager.currentSlot;
                 _connectionManager.connect(
                     _connectionManager.apHost,
                     _connectionManager.apPort,
@@ -503,8 +549,6 @@ package {
         }
 
         private function ensureConnectionOverlay():void {
-            if (_connectionPanel != null && _connectionPanel.isShowing) return;
-
             if (_connectionPanel == null) {
                 _connectionPanel = new ConnectionPanel();
                 _logger.log(MOD_NAME, "ConnectionPanel created");
@@ -518,8 +562,10 @@ package {
                 _connectionManager.apSlot,
                 _connectionManager.apPassword
             );
-            _connectionPanel.showWithOverlay(this.stage, _toast);
-            _logger.log(MOD_NAME, "Connection overlay shown");
+            if (!_connectionPanel.isShowing) {
+                _connectionPanel.showWithOverlay(this.stage, _toast, _messageLogPanel);
+                _logger.log(MOD_NAME, "Connection overlay shown");
+            }
         }
 
         private function onConnectionPanelConnect(host:String, port:int,
@@ -527,6 +573,7 @@ package {
             _logger.log(MOD_NAME, "PLAYER_SUBMITTED_CONNECTION host=" + host
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
+            _connectionManager.saveSlot = _saveManager.currentSlot;
             _connectionManager.connect(host, port, slot, password);
         }
 
@@ -542,7 +589,7 @@ package {
             _normalProgressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _toast.addMessage("Playing without Archipelago", 0xFF88FF88);
+            _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -570,9 +617,11 @@ package {
 
             if (_saveManager.slotCompleted) {
                 _gameCompletion.markAlreadyCompleted();
-            } else {
-                _gameCompletion.check(); // catches A4 beaten while offline
             }
+            // Note: we do NOT call _gameCompletion.check() here because GV.ppd
+            // may still hold data from a previously loaded save slot (e.g. a
+            // standalone game where A4 was already beaten).  The onSaveSave hook
+            // will catch a legitimate A4 victory when the player wins a battle.
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
@@ -594,7 +643,7 @@ package {
             var strId:String = _connectionManager.tokenMap[String(apId)];
             if (strId != null) {
                 _stageUnlocker.unlockStage(strId);
-                _toast.addMessage("Unlocked: " + strId + " Field Token", 0xFFFFDD55);
+                _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
                 return;
             }
             if (apId >= 300 && apId <= 323) {

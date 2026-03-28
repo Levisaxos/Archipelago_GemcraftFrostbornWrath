@@ -10,7 +10,7 @@ package {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _itemToast:ItemToastPanel;
 
         // Skill names indexed by game_id (matches SkillId constants).
         private static const SKILL_NAMES:Array = [
@@ -22,10 +22,10 @@ package {
             "Pylons", "Lanterns", "Traps", "Seeker Sense"
         ];
 
-        public function SkillUnlocker(logger:Logger, modName:String, toast:ToastPanel) {
-            _logger  = logger;
-            _modName = modName;
-            _toast   = toast;
+        public function SkillUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+            _logger    = logger;
+            _modName   = modName;
+            _itemToast = itemToast;
         }
 
         /**
@@ -46,7 +46,7 @@ package {
             GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
             var skillName:String = SKILL_NAMES[gameId];
             _logger.log(_modName, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
-            _toast.addMessage("Skill Unlocked: " + skillName, 0xFFDDA0FF);
+            _itemToast.addItem("Skill Unlocked: " + skillName, 0xDDA0FF);
         }
 
         /** Returns the human-readable skill name for an AP ID (300-323), or null if out of range. */

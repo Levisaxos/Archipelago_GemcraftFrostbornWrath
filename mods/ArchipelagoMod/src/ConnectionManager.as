@@ -23,11 +23,15 @@ package {
         private var _reconnecting:Boolean = false;
 
         // Connection settings
-        private var _apHost:String     = "localhost";
+        private var _apHost:String     = "archipelago.gg";
         private var _apPort:int        = 38281;
         private var _apSlot:String     = "";
         private var _apPassword:String = "";
-        private static const AP_SECURE:Boolean = false;
+        private var _saveSlot:int      = 0;
+        // TLS is used only for archipelago.gg; local/IP servers use plain ws://
+        private static function isSecureHost(host:String):Boolean {
+            return host.toLowerCase() == "archipelago.gg";
+        }
 
         // AP slot data
         private var _tokenMap:Object    = {};   // item AP ID (string) → stage str_id
@@ -105,6 +109,8 @@ package {
         public function set apSlot(v:String):void { _apSlot = v; }
         public function get apPassword():String { return _apPassword; }
         public function set apPassword(v:String):void { _apPassword = v; }
+        public function get saveSlot():int { return _saveSlot; }
+        public function set saveSlot(v:int):void { _saveSlot = v; }
 
         /** Provide the item-notification panel used for received/found/sent item toasts. */
         public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
@@ -140,7 +146,8 @@ package {
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
-                _ws.connect(_apHost, _apPort, AP_SECURE);
+                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
+                _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
                 _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
                     + "  slot=" + _apSlot);
             }
@@ -160,7 +167,7 @@ package {
 
         /** Reset connection settings to defaults. */
         public function resetSettings():void {
-            _apHost     = "localhost";
+            _apHost     = "archipelago.gg";
             _apPort     = 38281;
             _apSlot     = "";
             _apPassword = "";
@@ -186,10 +193,11 @@ package {
         }
 
         private function wsOnClose():void {
+            var wasConnected:Boolean = _isConnected;
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
-            if (!_reconnecting) _toast.addMessage("AP disconnected", 0xFFFFAA44);
+            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);
             if (onConnectionStateChanged != null) onConnectionStateChanged(false);
         }
 
@@ -289,8 +297,8 @@ package {
                 }
             }
 
-            _toast.addMessage("Successfully connected to " + _apHost + ":" + _apPort
-                + " with name " + _apSlot, 0xFF88FF88);
+            _toast.addMessage("Connected to " + _apHost + ":" + _apPort
+                + " as " + _apSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
 
             if (onConnected != null) onConnected(p);
         }
