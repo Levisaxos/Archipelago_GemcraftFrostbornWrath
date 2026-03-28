@@ -142,16 +142,16 @@ class GemcraftFrostbornWrathWorld(World):
                     this_field = this_item_name[:2]
                     if this_field in TIERS[prev_tier]:
                         # move to end
-                        print(f"Moving {this_field} to end")
+                        # print(f"Moving {this_field} to end")
                         progitempool.append(progitempool.pop(prog_idx))
 
                         moved_levels += 1
                         prog_idx -= 1  # to counteract the +=1 below
                 prog_idx += 1  # this should never exceed the length of the progitempool. assuming reasonable tier tables.
 
-        print("PRINTING WHOLE PROG POOL IN ORDER:")
-        for i in progitempool:
-            print(f"{i.name}")
+        # print("PRINTING WHOLE PROG POOL IN ORDER:")
+        # for i in progitempool:
+        #     print(f"{i.name}")
 
 
     def fill_slot_data(self) -> Dict:
