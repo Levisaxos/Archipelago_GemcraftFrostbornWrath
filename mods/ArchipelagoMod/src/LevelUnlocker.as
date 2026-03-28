@@ -15,16 +15,16 @@ package {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _itemToast:ItemToastPanel;
         private var _bonusWizardLevel:int = 0;
 
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
 
-        public function LevelUnlocker(logger:Logger, modName:String, toast:ToastPanel) {
-            _logger  = logger;
-            _modName = modName;
-            _toast   = toast;
+        public function LevelUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+            _logger    = logger;
+            _modName   = modName;
+            _itemToast = itemToast;
         }
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
@@ -48,8 +48,8 @@ package {
 
             _logger.log(_modName, label + " → +" + levels
                 + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            _toast.addMessage("+" + levels + " Wizard Levels (bonus total: "
-                + _bonusWizardLevel + ")", 0xFF88CCFF);
+            _itemToast.addItem("+" + levels + " Wizard Levels (bonus total: "
+                + _bonusWizardLevel + ")", 0x88CCFF);
         }
 
         /**

@@ -20,12 +20,12 @@ package {
     public class ToastPanel extends Sprite {
 
         private static const FONT:String      = "Celtic Garamond for GemCraft";
-        private static const TEXT_SIZE:int    = 12;
-        private static const PAD_X:int        = 10;
-        private static const PAD_TOP:int      = 9;
-        private static const PAD_BOTTOM:int   = 9;
-        private static const SLOT_HEIGHT:int  = 20;
-        private static const MIN_WIDTH:int    = 180;
+        private static const TEXT_SIZE:int    = 17;
+        private static const PAD_X:int        = 14;
+        private static const PAD_TOP:int      = 11;
+        private static const PAD_BOTTOM:int   = 11;
+        private static const SLOT_HEIGHT:int  = 26;
+        private static const MIN_WIDTH:int    = 220;
         private static const MAX_SLOTS:int    = 5;
 
         private static const FADE_IN_MS:int   = 500;
@@ -40,6 +40,7 @@ package {
         private var _bg:Shape;
         private var _slots:Array;  // { row:Sprite, startTime:int }
         private var _queue:Array;  // { text:String, color:uint }
+        private var _messageLog:MessageLog;
 
         public function ToastPanel() {
             super();
@@ -58,11 +59,19 @@ package {
         // -----------------------------------------------------------------------
         // Public API
 
+        /** Attach a MessageLog so every message is recorded for the log panel. */
+        public function set messageLog(log:MessageLog):void {
+            _messageLog = log;
+        }
+
         /**
          * Enqueue a message. Shows immediately if a slot is free,
          * otherwise waits until a slot becomes available.
          */
         public function addMessage(text:String, color:uint):void {
+            if (_messageLog != null) {
+                _messageLog.add(text, color, MessageLog.SOURCE_SYSTEM);
+            }
             if (_slots.length < MAX_SLOTS) {
                 addSlot(text, color);
             } else {

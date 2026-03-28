@@ -23,7 +23,7 @@ package {
         private var _reconnecting:Boolean = false;
 
         // Connection settings
-        private var _apHost:String     = "localhost";
+        private var _apHost:String     = "archipelago.gg";
         private var _apPort:int        = 38281;
         private var _apSlot:String     = "";
         private var _apPassword:String = "";
@@ -160,7 +160,7 @@ package {
 
         /** Reset connection settings to defaults. */
         public function resetSettings():void {
-            _apHost     = "localhost";
+            _apHost     = "archipelago.gg";
             _apPort     = 38281;
             _apSlot     = "";
             _apPassword = "";

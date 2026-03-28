@@ -33,7 +33,7 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String       { return "0.0.1"; }
+        public function get VERSION():String       { return "0.0.2"; }
         public function get MOD_NAME():String      { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String { return "2.1.1"; }
 
@@ -52,6 +52,10 @@ package {
 
         private var _itemToast:ItemToastPanel;
         private var _itemToastOnStage:Boolean = false;
+
+        private var _messageLog:MessageLog;
+        private var _messageLogPanel:MessageLogPanel;
+        private var _messageLogOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
         private var _normalProgressionBlocker:NormalProgressionBlocker;
@@ -91,13 +95,17 @@ package {
                 _bezel = bezel;
 
                 // Create subsystems
+                _messageLog    = new MessageLog();
                 _toast         = new ToastPanel();
                 _itemToast     = new ItemToastPanel();
+                _toast.messageLog     = _messageLog;
+                _itemToast.messageLog = _messageLog;
+                _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _toast);
-                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _toast);
+                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
+                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
                 _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _toast);
+                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -124,7 +132,7 @@ package {
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
-                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _toast);
+                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _itemToast);
                 _gameCompletion.onGoalReached = onGoalReached;
 
                 // Connection panel (lazy — created on first use)
@@ -172,6 +180,13 @@ package {
             }
             _itemToast = null;
             _itemToastOnStage = false;
+            if (_messageLogPanel != null) {
+                if (_messageLogPanel.isOpen) _messageLogPanel.close();
+                if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
+            }
+            _messageLogPanel = null;
+            _messageLog = null;
+            _messageLogOnStage = false;
             if (_keyListenerAdded && this.stage != null) {
                 this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
                 _keyListenerAdded = false;
@@ -219,6 +234,10 @@ package {
             if (!_itemToastOnStage && _itemToast != null && this.stage != null) {
                 this.stage.addChild(_itemToast);
                 _itemToastOnStage = true;
+            }
+            if (!_messageLogOnStage && _messageLogPanel != null && this.stage != null) {
+                this.stage.addChild(_messageLogPanel);
+                _messageLogOnStage = true;
             }
             // Keep item toast horizontally centered as panelWidth may change each item.
             if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
@@ -381,6 +400,9 @@ package {
         private function onStageResize(e:Event):void {
             positionToast();
             positionItemToast();
+            if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
+                _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -405,6 +427,13 @@ package {
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
+            // Backtick / tilde (keyCode 192) — toggle message log
+            if (e.keyCode == 192 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                if (_messageLogPanel != null && this.stage != null) {
+                    _messageLogPanel.toggle(this.stage.stageWidth, this.stage.stageHeight);
+                }
+                return;
+            }
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
@@ -594,7 +623,7 @@ package {
             var strId:String = _connectionManager.tokenMap[String(apId)];
             if (strId != null) {
                 _stageUnlocker.unlockStage(strId);
-                _toast.addMessage("Unlocked: " + strId + " Field Token", 0xFFFFDD55);
+                _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
                 return;
             }
             if (apId >= 300 && apId <= 323) {
