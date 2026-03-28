@@ -98,9 +98,9 @@ package {
             _isOpen = true;
             visible = true;
 
-            // Scroll to bottom (newest)
+            // Newest on top — start at offset 0
             _visibleLines = Math.floor((_panelH - HEADER_H - PAD_Y * 2) / LINE_HEIGHT);
-            _scrollOffset = Math.max(0, _log.length - _visibleLines);
+            _scrollOffset = 0;
 
             redraw();
             addEventListener(MouseEvent.MOUSE_WHEEL, onWheel, false, 0, true);
@@ -136,8 +136,8 @@ package {
         // -----------------------------------------------------------------------
 
         private function onWheel(e:MouseEvent):void {
-            // delta > 0 = scroll up, delta < 0 = scroll down
-            _scrollOffset -= e.delta > 0 ? SCROLL_STEP : -SCROLL_STEP;
+            // delta > 0 = scroll up (toward older), delta < 0 = scroll down (toward newer)
+            _scrollOffset += e.delta > 0 ? SCROLL_STEP : -SCROLL_STEP;
             _scrollOffset = Math.max(0, Math.min(_scrollOffset, Math.max(0, _log.length - _visibleLines)));
             redraw();
         }
@@ -170,9 +170,11 @@ package {
             timeFmt.align = TextFormatAlign.LEFT;
 
             var yPos:Number = HEADER_H + PAD_Y;
-            var end:int = Math.min(_scrollOffset + _visibleLines, _log.length);
+            // Render newest first: start from the end and work backwards
+            var startIdx:int = _log.length - 1 - _scrollOffset;
+            var count:int = 0;
 
-            for (var i:int = _scrollOffset; i < end; i++) {
+            for (var i:int = startIdx; i >= 0 && count < _visibleLines; i--, count++) {
                 var entry:Object = _log.getEntry(i);
                 var d:Date = entry.time as Date;
 
@@ -198,10 +200,9 @@ package {
 
             // Scroll indicator
             if (_log.length > _visibleLines) {
-                var pct:int = _log.length <= _visibleLines ? 100
-                    : Math.round((_scrollOffset + _visibleLines) / _log.length * 100);
+                var shown:int = Math.min(_visibleLines, _log.length - _scrollOffset);
                 _header.text = "Archipelago Message Log  (` to close, scroll to browse)  ["
-                    + (_scrollOffset + 1) + "-" + end + " of " + _log.length + "]";
+                    + shown + " of " + _log.length + "]";
             } else {
                 _header.text = "Archipelago Message Log  (` to close)  [" + _log.length + " messages]";
             }

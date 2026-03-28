@@ -443,6 +443,9 @@ package {
             if (e.keyCode == 192 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
                 if (_messageLogPanel != null && this.stage != null) {
                     _messageLogPanel.toggle(this.stage.stageWidth, this.stage.stageHeight);
+                    if (_messageLogPanel.isOpen && _messageLogPanel.parent == this.stage) {
+                        this.stage.setChildIndex(_messageLogPanel, this.stage.numChildren - 1);
+                    }
                 }
                 return;
             }
@@ -525,6 +528,7 @@ package {
                 _standalone = true;
                 _normalProgressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
+                _toast.addMessage("Solo mode — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
                 return;
             }
@@ -558,7 +562,7 @@ package {
                 _connectionManager.apPassword
             );
             if (!_connectionPanel.isShowing) {
-                _connectionPanel.showWithOverlay(this.stage, _toast);
+                _connectionPanel.showWithOverlay(this.stage, _toast, _messageLogPanel);
                 _logger.log(MOD_NAME, "Connection overlay shown");
             }
         }
@@ -583,7 +587,7 @@ package {
             _normalProgressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _toast.addMessage("Playing without Archipelago", 0xFF88FF88);
+            _toast.addMessage("Solo mode — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 

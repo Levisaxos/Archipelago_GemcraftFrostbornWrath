@@ -143,7 +143,7 @@ package {
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
-                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + "...", 0xFFFFDD55);
+                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + "...", 0xFFFFDD55);
                 _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
                 _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
                     + "  slot=" + _apSlot);
@@ -190,10 +190,11 @@ package {
         }
 
         private function wsOnClose():void {
+            var wasConnected:Boolean = _isConnected;
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
-            if (!_reconnecting) _toast.addMessage("AP disconnected", 0xFFFFAA44);
+            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);
             if (onConnectionStateChanged != null) onConnectionStateChanged(false);
         }
 
@@ -293,8 +294,8 @@ package {
                 }
             }
 
-            _toast.addMessage("Successfully connected to " + _apHost + ":" + _apPort
-                + " with name " + _apSlot, 0xFF88FF88);
+            _toast.addMessage("Connected to " + _apHost + ":" + _apPort
+                + " as slot " + _apSlot, 0xFF88FF88);
 
             if (onConnected != null) onConnected(p);
         }

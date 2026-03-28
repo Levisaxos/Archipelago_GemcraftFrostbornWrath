@@ -366,7 +366,7 @@ package {
          * Show the panel with a full-stage blocking overlay.
          * If a toastPanel is provided, it is kept above the overlay.
          */
-        public function showWithOverlay(stg:Stage, toastPanel:DisplayObjectContainer = null):void {
+        public function showWithOverlay(stg:Stage, toastPanel:DisplayObjectContainer = null, messageLogPanel:DisplayObjectContainer = null):void {
             if (isShowing) return;
 
             if (_blockingOverlay == null) {
@@ -388,6 +388,10 @@ package {
             // Keep the toast above the overlay so messages remain visible.
             if (toastPanel != null && toastPanel.parent == stg) {
                 stg.setChildIndex(toastPanel, stg.numChildren - 1);
+            }
+            // Keep the message log above the overlay so it remains accessible.
+            if (messageLogPanel != null && messageLogPanel.parent == stg) {
+                stg.setChildIndex(messageLogPanel, stg.numChildren - 1);
             }
         }
 
