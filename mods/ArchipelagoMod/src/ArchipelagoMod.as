@@ -152,7 +152,7 @@ package {
                 _connectionManager.load();
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
-                    _fileHandler, _connectionManager, _levelUnlocker);
+                _fileHandler, _connectionManager, _levelUnlocker);
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
@@ -527,11 +527,7 @@ package {
 
         private function onSlotDeleteWarning(slotId:int):void {
             if (!_saveManager.isSlotCompleted(slotId)) {
-                _toast.addMessage(
-                    "Warning: slot " + slotId + " is not yet completed.\n"
-                    + "Deleting will lose most of your progress.\n"
-                    + "Press D to confirm.",
-                    0xFFFF8844);
+                _toast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
             }
         }
 
@@ -660,6 +656,7 @@ package {
         private function onConnectionError(msg:String):void {
             // Auto-connect failed — show the overlay so the player can correct settings.
             ensureConnectionOverlay();
+            _connectionManager.failConnection();
             if (_connectionPanel != null) _connectionPanel.showError(msg);
         }
 

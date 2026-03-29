@@ -22,6 +22,7 @@ package net {
 
         // Connection state
         private var _isConnected:Boolean  = false;
+        private var _isConnecting:Boolean = false;
         private var _reconnecting:Boolean = false;
 
         // Connection settings
@@ -82,9 +83,7 @@ package net {
         /** Called with the full item list on initial sync (index=0). Signature: (items:Array):void */
         public var onFullSync:Function;
         /** Called for each incremental item grant. Signature: (apId:int):void */
-        public var onItemReceived:Function;
-        /** Called when connection state changes. Signature: (connected:Boolean):void */
-        public var onConnectionStateChanged:Function;
+        public var onItemReceived:Function;       
         /** Called when the connection panel should show an error. Signature: (msg:String):void */
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
@@ -148,19 +147,21 @@ package net {
             _apPort     = port;
             _apSlot     = slot;
             _apPassword = password;
-            if (_ws != null) {
+            if (_ws != null && _isConnecting == false) {
+                _isConnecting = true;
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
                 _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
                 _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
-                _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
-                    + "  slot=" + _apSlot);
+                _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort + "  slot=" + _apSlot);
             }
         }
 
         public function disconnect():void {
-            if (_ws != null) _ws.disconnect();
+            if (_ws != null) {
+                _ws.disconnect();                
+            }
         }
 
         public function disconnectAndReset():void {
@@ -179,23 +180,26 @@ package net {
             _apPassword = "";
         }
 
+        public function failConnection():void {
+            _isConnecting=false;
+        }
+
         // -----------------------------------------------------------------------
         // WebSocket callbacks
 
         private function wsOnOpen():void {
-            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");
+            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");                        
             if (onError != null) onError("Authenticating...");
         }
 
-        private function wsOnError(msg:String):void {
+        private function wsOnError(msg:String):void {            
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
             var failMsg:String = "Failed to connect to " + _apHost + ":" + _apPort
                 + " with name " + _apSlot;
             if (onError != null) onError(failMsg);
-            _toast.addMessage(failMsg, 0xFFFF6666);
-            if (onConnectionStateChanged != null) onConnectionStateChanged(false);
+            _toast.addMessage(failMsg, 0xFFFF6666);            
         }
 
         private function wsOnClose():void {
@@ -203,8 +207,7 @@ package net {
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
-            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);
-            if (onConnectionStateChanged != null) onConnectionStateChanged(false);
+            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);            
         }
 
         // -----------------------------------------------------------------------
