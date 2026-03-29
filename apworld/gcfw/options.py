@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range
+from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 
 
 class Goal(Choice):
@@ -11,6 +11,15 @@ class Goal(Choice):
     display_name = "Goal"
     option_beat_game = 0
     default = 0
+
+
+class ForceEarlySkills(Toggle):
+    """Whether or not skills should be redistributed to appear roughly uniformly throughout the game.
+    The current generation method often results in skills appearing later on average; setting this to true
+    will force some skills to appear near the start of the game.
+    """
+    display_name = "Force Early Skills"
+    default = True
 
 
 class DeathLinkPunishment(Choice):
@@ -72,6 +81,7 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
+    force_early_skills:        ForceEarlySkills
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent
