@@ -1,6 +1,7 @@
-package {
+package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import ui.ItemToastPanel;
 
     /**
      * Handles AP wizard level / XP bonus grants.

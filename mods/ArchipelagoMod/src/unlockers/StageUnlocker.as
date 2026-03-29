@@ -1,4 +1,4 @@
-package {
+package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
 

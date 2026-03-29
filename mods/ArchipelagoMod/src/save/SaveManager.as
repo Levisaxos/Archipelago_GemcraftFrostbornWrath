@@ -1,5 +1,8 @@
-package {
+package save {
     import Bezel.Logger;
+
+    import net.ConnectionManager;
+    import unlockers.LevelUnlocker;
 
     /**
      * Owns all slot-data persistence for the Archipelago mod.

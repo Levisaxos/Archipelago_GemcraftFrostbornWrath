@@ -1,6 +1,8 @@
-package {
+package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import ui.ToastPanel;
+    import ui.ItemToastPanel;
 
     /**
      * Manages the Archipelago server connection lifecycle and protocol.
@@ -39,6 +41,8 @@ package {
         private var _missingLocations:Object = {};
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
+        private var _goal:int           = 0;    // 0 = beat_game, 1 = full_talisman
+        private var _talismanMinRarity:int = 1;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -100,6 +104,8 @@ package {
         public function get tokenMap():Object { return _tokenMap; }
         public function get tokenStages():Object { return _tokenStages; }
         public function get missingLocations():Object { return _missingLocations; }
+        public function get goal():int { return _goal; }
+        public function get talismanMinRarity():int { return _talismanMinRarity; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -283,7 +289,11 @@ package {
                 }
                 _logger.log(_modName, "  token_map loaded: " + tokenCount + " entries");
             }
-            _logger.log(_modName, "  goal=" + p.slot_data.goal + "  skill_placement=" + p.slot_data.skill_placement);
+            if (p.slot_data) {
+                _goal = int(p.slot_data.goal);
+                _talismanMinRarity = int(p.slot_data.talisman_min_rarity);
+            }
+            _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 
             var missing:Array  = p.missing_locations as Array;
             var checked:Array  = p.checked_locations as Array;

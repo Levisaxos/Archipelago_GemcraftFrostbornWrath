@@ -6,11 +6,24 @@ from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
-    beat_game: Defeat the final boss (complete A4 — placeholder pending Phase 0 research).
+    beat_game: Defeat the final boss (complete A4).
+    full_talisman: Fill all 25 talisman sockets with fragments that each meet the minimum rarity.
     """
     display_name = "Goal"
     option_beat_game = 0
+    option_full_talisman = 1
     default = 0
+
+
+class TalismanMinRarity(Range):
+    """Minimum rarity each of the 25 socketed talisman fragments must have to complete
+    the full_talisman goal. Higher rarity fragments are harder to find.
+    Only used when goal is set to full_talisman.
+    """
+    display_name = "Talisman Minimum Rarity"
+    range_start = 1
+    range_end   = 100
+    default     = 1
 
 
 class ForceEarlySkills(Toggle):
@@ -81,6 +94,7 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
+    talisman_min_rarity:       TalismanMinRarity
     force_early_skills:        ForceEarlySkills
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment

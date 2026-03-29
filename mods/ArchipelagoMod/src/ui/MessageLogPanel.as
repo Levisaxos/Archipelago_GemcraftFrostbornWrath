@@ -1,4 +1,4 @@
-package {
+package ui {
 
     import flash.display.Shape;
     import flash.display.Sprite;
@@ -9,6 +9,8 @@ package {
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
+
+    import ui.MessageLog;
 
     /**
      * Full-screen overlay that shows the message log history.
@@ -98,7 +100,7 @@ package {
             _isOpen = true;
             visible = true;
 
-            // Newest on top — start at offset 0
+            // Newest on top -- start at offset 0
             _visibleLines = Math.floor((_panelH - HEADER_H - PAD_Y * 2) / LINE_HEIGHT);
             _scrollOffset = 0;
 

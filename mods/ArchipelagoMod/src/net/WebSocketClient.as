@@ -1,4 +1,4 @@
-package {
+package net {
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.ProgressEvent;

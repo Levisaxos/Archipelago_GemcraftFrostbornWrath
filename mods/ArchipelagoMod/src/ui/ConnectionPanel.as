@@ -1,4 +1,4 @@
-package {
+package ui {
     import flash.display.DisplayObjectContainer;
     import flash.display.Sprite;
     import flash.display.Stage;
@@ -10,9 +10,12 @@ package {
     import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
+    import ui.ToastPanel;
+    import ui.MessageLogPanel;
+
     /**
      * A self-contained overlay panel for entering Archipelago connection settings.
-     * Manages its own blocking overlay — call showWithOverlay() to display it
+     * Manages its own blocking overlay -- call showWithOverlay() to display it
      * over the game, and dismiss() to remove it.
      *
      * Usage:
@@ -24,7 +27,7 @@ package {
      */
     public class ConnectionPanel extends Sprite {
 
-        // Panel dimensions — used externally for centering.
+        // Panel dimensions -- used externally for centering.
         public static const PANEL_W:Number = 430;
         public static const PANEL_H:Number = 340;
 
@@ -102,7 +105,7 @@ package {
             addRow("Slot name:", startY + ROW_H * 2, false, function(tf:TextField):void { _tfSlot     = tf; });
             addRow("Password:",  startY + ROW_H * 3, true,  function(tf:TextField):void { _tfPassword = tf; });
 
-            // Status line — hidden until there is something to show.
+            // Status line -- hidden until there is something to show.
             _tfStatus = makeLabelTf("", PANEL_W - PADDING * 2, 20, 0xFF6666AA, 12, false, true);
             _tfStatus.x       = PADDING;
             _tfStatus.y       = PANEL_H - 125;
@@ -131,7 +134,7 @@ package {
             _btnCancel.addEventListener(MouseEvent.MOUSE_OUT,  onBtnOut,          false, 0, true);
             addChild(_btnCancel);
 
-            // Standalone button — full-width separator below Connect/Cancel
+            // Standalone button -- full-width separator below Connect/Cancel
             graphics.lineStyle(1, COL_BORDER, 0.3);
             graphics.moveTo(PADDING, PANEL_H - 54);
             graphics.lineTo(PANEL_W - PADDING, PANEL_H - 54);
@@ -355,7 +358,7 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Overlay management — the panel manages its own blocking overlay.
+        // Overlay management -- the panel manages its own blocking overlay.
 
         /** Returns true if the overlay is currently shown on stage. */
         public function get isShowing():Boolean {

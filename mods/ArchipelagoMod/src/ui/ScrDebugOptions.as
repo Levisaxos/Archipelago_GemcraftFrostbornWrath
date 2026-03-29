@@ -1,10 +1,12 @@
-package {
+package ui {
     import com.giab.common.utils.MathToolbox;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.McOptPanel;
     import flash.display.MovieClip;
     import flash.events.Event;
     import flash.events.MouseEvent;
+
+    import ui.McDebugOptions;
 
     /**
      * Manages the Debug Options panel lifecycle and interaction.
@@ -18,7 +20,7 @@ package {
 
         private var _isOpen:Boolean = false;
 
-        // Scroll / drag state — identical to ScrOptions.
+        // Scroll / drag state -- identical to ScrOptions.
         private var _isDragging:Boolean;
         private var _isVpDragging:Boolean;
         private var _draggedKnob:MovieClip;
@@ -26,11 +28,11 @@ package {
         private var _vpYMin:Number;
         private var _vpYMax:Number;
 
-        // Overall panel scale — scales the entire dialog down so it fits on screen.
+        // Overall panel scale -- scales the entire dialog down so it fits on screen.
         // 1.0 = native size of symbol3117 added to stage (not GV.main).
         private static const PANEL_SCALE:Number = 1.0;
 
-        // Viewport / scroll constants — tweak these if the scroll range or clipping feels wrong.
+        // Viewport / scroll constants -- tweak these if the scroll range or clipping feels wrong.
         private static const VIEWPORT_HEIGHT:Number  = 735; // Visible height of the scroll area; used to compute max scroll
         private static const CLIP_TOP:Number         = 50;  // Items above this Y are hidden (top of the visible region)
         private static const CLIP_BOTTOM:Number      = 920; // Items below this Y are hidden (bottom of the visible region)
@@ -43,7 +45,7 @@ package {
 
         public function ScrDebugOptions(mod:ArchipelagoMod) {
             _mod = mod;
-            // _mc is created lazily on first open() — McOptions is not yet registered
+            // _mc is created lazily on first open() -- McOptions is not yet registered
             // in the application domain when the mod first loads on a cold start.
         }
 
@@ -73,7 +75,7 @@ package {
             if (_mc == null) initPanel();
             _isOpen = true;
 
-            // Hide all navigation buttons — this is a debug-only panel on the selector screen.
+            // Hide all navigation buttons -- this is a debug-only panel on the selector screen.
             _mc.btnConfirmRetry.visible    = false;
             _mc.btnConfirmReturn.visible   = false;
             _mc.btnConfirmEndBattle.visible = false;
@@ -97,7 +99,7 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Button wiring — mirrors ScrOptions.buttonsInit() for the common buttons.
+        // Button wiring -- mirrors ScrOptions.buttonsInit() for the common buttons.
 
         private function buttonsInit():void {
             var i:int = 0;
@@ -134,7 +136,7 @@ package {
                 tpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  ehPanelMouseOut,           false, 0, true);
             }
 
-            // Stage panel click + hover — same pattern, keyed by stageStrId.
+            // Stage panel click + hover -- same pattern, keyed by stageStrId.
             for (var stageId:String in _mc.stageIdToPanel) {
                 var stagePnl:McOptPanel = McOptPanel(_mc.stageIdToPanel[stageId]);
                 stagePnl.addEventListener(      MouseEvent.CLICK,      makeStageClickHandler(stageId), false, 0, true);
@@ -216,7 +218,7 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Button / hover handlers — identical to ScrOptions equivalents.
+        // Button / hover handlers -- identical to ScrOptions equivalents.
 
         private function ehBtnCloseClick(e:MouseEvent):void {
             close();
@@ -248,7 +250,7 @@ package {
         }
 
         // -----------------------------------------------------------------------
-        // Scroll / drag / viewport — verbatim from ScrOptions.
+        // Scroll / drag / viewport -- verbatim from ScrOptions.
 
         private function ehScrollKnobDown(e:Event):void {
             _draggedKnob = _mc.btnScrollKnob;

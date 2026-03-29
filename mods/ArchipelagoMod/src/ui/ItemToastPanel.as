@@ -1,4 +1,4 @@
-package {
+package ui {
     import flash.display.Bitmap;
     import flash.display.GradientType;
     import flash.display.Shape;
@@ -11,6 +11,8 @@ package {
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
     import flash.utils.getTimer;
+
+    import ui.MessageLog;
 
     /**
      * Top-center HUD panel for Archipelago item notifications.
@@ -25,7 +27,7 @@ package {
      */
     public class ItemToastPanel extends Sprite {
 
-        [Embed(source='images/IconColorSmall.png')]
+        [Embed(source='../images/IconColorSmall.png')]
         private static const ICON_CLASS:Class;
 
         // -----------------------------------------------------------------------
@@ -185,7 +187,7 @@ package {
         private function redrawBg(w:Number, h:Number):void {
             _bg.graphics.clear();
 
-            // Gradient fill (top → bottom: dark purple → near-black)
+            // Gradient fill (top -> bottom: dark purple -> near-black)
             var mat:Matrix = new Matrix();
             mat.createGradientBox(w, h, Math.PI / 2, 0, 0);
 
@@ -200,7 +202,7 @@ package {
             _bg.graphics.drawRoundRect(0, 0, w, h, CORNER_R * 2, CORNER_R * 2);
             _bg.graphics.endFill();
 
-            // Subtle top-edge shine — clear the stroke first so no second border appears
+            // Subtle top-edge shine -- clear the stroke first so no second border appears
             _bg.graphics.lineStyle(NaN);
             var shineH:Number = Math.ceil(h * 0.22);
             var shineMat:Matrix = new Matrix();
