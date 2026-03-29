@@ -386,6 +386,8 @@ package {
                 return;
             }
 
+            _levelUnlocker.renderXpBarIfDirty();
+
             var mc:* = GV.selectorCore.mc;
             if (mc == null) return;
 
@@ -713,9 +715,9 @@ package {
                     apTraits[apId - 400] = true;
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
-                } else if (apId == 500) apXpTotal += 1;
-                  else if (apId == 501) apXpTotal += 3;
-                  else if (apId == 502) apXpTotal += 9;
+                } else if (apId >= 500 && apId <= 502) {
+                    apXpTotal += LevelUnlocker.levelsForApId(apId);
+                }
             }
 
             // --- Skills ---

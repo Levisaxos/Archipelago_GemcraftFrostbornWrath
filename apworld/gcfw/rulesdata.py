@@ -54,18 +54,18 @@ TIERS: Dict[int, List[str]] = {
 # Tier requirements: tier_number → (previous_tier, tokens_needed_from_prev).
 # Tier 0 has no entry (it is free).
 TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
-    1:  (0,  2),
-    2:  (1,  2),
-    3:  (2,  3),
-    4:  (3,  3),
-    5:  (4,  4),
-    6:  (5,  3),
-    7:  (6,  3),
-    8:  (7,  4),
-    9:  (8,  2),
-    10: (9,  3),
-    11: (10, 4),
-    12: (11, 5),
+    1:  (0,  6),
+    2:  (1,  6),
+    3:  (2,  6),
+    4:  (3,  6),
+    5:  (4,  6),
+    6:  (5,  6),
+    7:  (6,  6),
+    8:  (7,  6),
+    9:  (8,  4),
+    10: (9,  6),
+    11: (10, 6),
+    12: (11, 6),
 }
 
 
