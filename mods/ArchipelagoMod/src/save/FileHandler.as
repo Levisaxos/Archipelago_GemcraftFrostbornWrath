@@ -86,6 +86,27 @@ package save {
         }
 
         /**
+         * Returns true if the slot file exists and standalone=true.
+         * Returns false if the file is missing, unreadable, or standalone is not set.
+         */
+        public function isSlotStandalone(slotId:int):Boolean {
+            if (slotId <= 0) return false;
+            var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            if (!f.exists) return false;
+            try {
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                var data:Object = JSON.parse(raw);
+                return data.standalone === true;
+            } catch (err:Error) {
+                _logger.log(_modName, "isSlotStandalone ERROR: " + err.message);
+            }
+            return false;
+        }
+
+        /**
          * Returns true if the slot file exists and completed=true.
          * Returns false if the file is missing, unreadable, or completed is not set.
          */
