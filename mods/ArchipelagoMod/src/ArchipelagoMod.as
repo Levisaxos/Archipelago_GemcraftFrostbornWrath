@@ -31,6 +31,8 @@ package {
     import unlockers.TraitUnlocker
     import unlockers.LevelUnlocker
     import unlockers.StageUnlocker
+    import unlockers.TalismanUnlocker
+    import unlockers.ShadowCoreUnlocker
 
     import net.ConnectionManager
 
@@ -100,6 +102,8 @@ package {
         private var _traitUnlocker:TraitUnlocker;
         private var _stageUnlocker:StageUnlocker;
         private var _levelUnlocker:LevelUnlocker;
+        private var _talismanUnlocker:TalismanUnlocker;
+        private var _shadowCoreUnlocker:ShadowCoreUnlocker;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -132,10 +136,12 @@ package {
                 _itemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
-                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
-                _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
+                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
+                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
+                _stageUnlocker      = new StageUnlocker(_logger, MOD_NAME);
+                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
+                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
+                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -155,6 +161,7 @@ package {
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
+                _saveManager.shadowCoreUnlocker = _shadowCoreUnlocker;
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
@@ -653,6 +660,19 @@ package {
                 _connectionManager.sendConnectUpdate(["DeathLink"]);
             }
 
+            _levelUnlocker.configure(
+                _connectionManager.tatteredScrollLevels,
+                _connectionManager.wornTomeLevels,
+                _connectionManager.ancientGrimoireLevels
+            );
+            _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
+            _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
+            _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
+            _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
+            if (_normalProgressionBlocker != null) {
+                _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
+            }
+
             _goalManager.configure(
                 _connectionManager.goal,
                 _connectionManager.talismanMinRarity);
@@ -699,6 +719,12 @@ package {
                 return;
             }
             if (apId >= 500 && apId <= 502) { _levelUnlocker.grantXpBonus(apId); return; }
+            if (apId >= 700 && apId <= 799) {
+                _talismanUnlocker.grantFragment(apId);
+                _saveManager.saveSlotData();
+                return;
+            }
+            if (apId >= 800 && apId <= 868) { _shadowCoreUnlocker.grantShadowCores(apId); _saveManager.saveSlotData(); return; }
             _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
         }
 
@@ -716,6 +742,8 @@ package {
             var apTraits:Object = {};
             var apTokens:Object = {};
             var apXpTotal:int   = 0;
+            var apTalismans:Array  = [];
+            var apShadowCores:Array = [];
             var tokenMap:Object    = _connectionManager.tokenMap;
             var tokenStages:Object = _connectionManager.tokenStages;
 
@@ -728,7 +756,11 @@ package {
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
                 } else if (apId >= 500 && apId <= 502) {
-                    apXpTotal += LevelUnlocker.levelsForApId(apId);
+                    apXpTotal += _levelUnlocker.levelsForApId(apId);
+                } else if (apId >= 700 && apId <= 799) {
+                    apTalismans.push(apId);
+                } else if (apId >= 800 && apId <= 868) {
+                    apShadowCores.push(apId);
                 }
             }
 
@@ -794,6 +826,13 @@ package {
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
             _levelUnlocker.applyBonusLevels();
+
+            // --- Talisman fragments ---
+            _talismanUnlocker.syncTalismans(apTalismans);
+
+            // --- Shadow cores ---
+            _shadowCoreUnlocker.syncShadowCores(apShadowCores);
+
             _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
@@ -859,6 +898,14 @@ package {
             if (traitName != null) return traitName + " Battle Trait";
             var strId:String = _connectionManager.tokenMap[String(apId)];
             if (strId != null) return strId + " Field Token";
+            if (apId >= 700 && apId <= 799) {
+                var talName:String = _connectionManager.talismanNameMap[String(apId)];
+                return talName != null ? talName : ("Talisman Fragment #" + apId);
+            }
+            if (apId >= 800 && apId <= 868) {
+                var scName:String = _connectionManager.shadowCoreNameMap[String(apId)];
+                return scName != null ? scName : ("Shadow Cores #" + apId);
+            }
             return null; // let ConnectionManager handle the rest
         }
     }

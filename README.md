@@ -118,21 +118,55 @@ Please include this file when reporting issues.
 
 ## What's randomized
 
-| Item pool | Details |
-|---|---|
-| Field tokens | Unlock stages across the world map |
-| Skill tomes | 24 skills |
-| Battle traits | 15 traits |
-| Wizard XP bonuses | Tattered Scroll (+1), Worn Tome (+3), Ancient Grimoire (+9) bonus wizard levels |
+**366 locations** across three check types:
 
-Location checks are sent when you **complete a stage in Journey mode**. The goal is to complete stage **A4**.
+| Location type | Count | Trigger |
+|---|---|---|
+| Stage clear — Journey | 122 | Complete any stage in Journey mode |
+| Stage clear — Bonus | 122 | Reach 50+ waves in Journey mode |
+| Wizard stash clear | 122 | Defeat the wizard stash on any stage |
+
+**366 items** across the following categories:
+
+| Item | Count | Notes |
+|---|---|---|
+| Field tokens | 118 | Unlock stages across the world map |
+| Skills | 24 | Includes 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
+| Battle traits | 15 | |
+| Talisman fragments (specific) | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
+| Talisman fragments (extra) | 47 | "Extra Talisman Fragment #1–47" — rarity spread from 2 to 94 |
+| Shadow core stashes (specific) | 17 | Named by original field, e.g. "Z2 Shadow Cores" — original drop amount |
+| Shadow core stashes (extra) | 52 | "Extra Shadow Cores #1–52" — amounts from 60 to 1080 |
+| XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls |
+
+**Always free (not randomized):**
+- W1 is the starting stage
+- W2, W3, and W4 are unlocked automatically on connect
+- Talisman fragments from normal wave completion are untouched
+- Shadow cores earned during gameplay are untouched (only wizard stash grants are intercepted)
+
+---
+
+## YAML options
+
+| Option | Default | Description |
+|---|---|---|
+| `goal` | `beat_game` | `beat_game` — defeat the final boss (complete A4 with all 24 skills unlocked). |
+| `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tome values in a 1:2:3 ratio. |
+| `force_early_skills` | `true` | Redistributes skills to appear more evenly across the run rather than clustering late. |
+| `death_link` | `false` | Enables DeathLink with other players in the session. |
+| `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, or `instant_fail`. |
+| `gem_loss_percent` | `20` | Percentage of placed gems destroyed on `gem_loss` punishment (10–50). |
+| `wave_surge_count` | `3` | Number of enraged waves injected on `wave_surge` punishment (1–10). |
+| `wave_surge_gem_level` | `5` | Gem level used to calculate the surge wave enrage multiplier (1–9). |
+| `death_link_grace_period` | `15` | Seconds of immunity at the start of each stage before a queued DeathLink triggers (10–30). |
+| `death_link_cooldown` | `20` | Minimum seconds between two DeathLink punishments (10–30). |
 
 ---
 
 ## Known limitations (pre-alpha)
 
 - Iron Wizard mode is not yet supported — only Chilling and Frostborn modes work
-- Talisman and shard rewards are not yet randomized
 - DeathLink is implemented but may have edge cases
 
 ---

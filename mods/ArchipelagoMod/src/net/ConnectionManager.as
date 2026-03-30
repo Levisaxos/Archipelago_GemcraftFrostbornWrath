@@ -39,11 +39,19 @@ package net {
         // AP slot data
         private var _tokenMap:Object    = {};   // item AP ID (string) → stage str_id
         private var _tokenStages:Object = {};   // stage str_id → true  (has an AP token)
+        private var _talismanMap:Object = {};     // item AP ID (string) → "seed/rarity/type/upgradeLevel"
+        private var _talismanNameMap:Object = {}; // item AP ID (string) → str_id (e.g. "Z3")
+        private var _shadowCoreMap:Object = {};     // item AP ID (string) → amount (int)
+        private var _shadowCoreNameMap:Object = {}; // item AP ID (string) → str_id (e.g. "Z2")
+        private var _wizStashTalData:Object = {};   // str_id → "seed/rarity/type/upgradeLevel"
         private var _missingLocations:Object = {};
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
         private var _goal:int           = 0;    // 0 = beat_game, 1 = full_talisman
         private var _talismanMinRarity:int = 1;
+        private var _tatteredScrollLevels:int  = 1;
+        private var _wornTomeLevels:int        = 2;
+        private var _ancientGrimoireLevels:int = 3;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -102,9 +110,17 @@ package net {
         public function get isConnected():Boolean { return _isConnected; }
         public function get tokenMap():Object { return _tokenMap; }
         public function get tokenStages():Object { return _tokenStages; }
+        public function get talismanMap():Object { return _talismanMap; }
+        public function get talismanNameMap():Object { return _talismanNameMap; }
+        public function get shadowCoreMap():Object { return _shadowCoreMap; }
+        public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
+        public function get wizStashTalData():Object { return _wizStashTalData; }
         public function get missingLocations():Object { return _missingLocations; }
         public function get goal():int { return _goal; }
         public function get talismanMinRarity():int { return _talismanMinRarity; }
+        public function get tatteredScrollLevels():int  { return _tatteredScrollLevels; }
+        public function get wornTomeLevels():int        { return _wornTomeLevels; }
+        public function get ancientGrimoireLevels():int { return _ancientGrimoireLevels; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -292,9 +308,32 @@ package net {
                 }
                 _logger.log(_modName, "  token_map loaded: " + tokenCount + " entries");
             }
+            if (p.slot_data && p.slot_data.talisman_map) {
+                _talismanMap = p.slot_data.talisman_map;
+                _logger.log(_modName, "  talisman_map loaded");
+            }
+            if (p.slot_data && p.slot_data.talisman_name_map) {
+                _talismanNameMap = p.slot_data.talisman_name_map;
+            }
+            if (p.slot_data && p.slot_data.shadow_core_map) {
+                _shadowCoreMap = p.slot_data.shadow_core_map;
+                _logger.log(_modName, "  shadow_core_map loaded");
+            }
+            if (p.slot_data && p.slot_data.shadow_core_name_map) {
+                _shadowCoreNameMap = p.slot_data.shadow_core_name_map;
+            }
+            if (p.slot_data && p.slot_data.wiz_stash_tal_data) {
+                _wizStashTalData = p.slot_data.wiz_stash_tal_data;
+            }
+            if (p.slot_data && p.slot_data.free_stages) {
+                _freeStages = p.slot_data.free_stages as Array;
+            }
             if (p.slot_data) {
                 _goal = int(p.slot_data.goal);
                 _talismanMinRarity = int(p.slot_data.talisman_min_rarity);
+                if (p.slot_data.tattered_scroll_levels  !== undefined) _tatteredScrollLevels  = int(p.slot_data.tattered_scroll_levels);
+                if (p.slot_data.worn_tome_levels         !== undefined) _wornTomeLevels         = int(p.slot_data.worn_tome_levels);
+                if (p.slot_data.ancient_grimoire_levels  !== undefined) _ancientGrimoireLevels  = int(p.slot_data.ancient_grimoire_levels);
             }
             _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 
@@ -452,6 +491,17 @@ package net {
                     if (locId <= 0) continue;
                     if (journeyNew) toSend.push(locId);
                     if (bonusNew)   toSend.push(locId + 500);
+
+                    // Wiz stash check: OPEN (1) or DESTROYED (2) = stash was cleared.
+                    var wizStashLocId:int = locId + 1000;
+                    if (_missingLocations[wizStashLocId] == true) {
+                        var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
+                        if (stashStatus == 1 || stashStatus == 2) {
+                            toSend.push(wizStashLocId);
+                            _logger.log(_modName, "  WIZ_STASH_CLEARED stage=" + meta.strId
+                                + "  status=" + stashStatus + "  wizStashLocId=" + wizStashLocId);
+                        }
+                    }
                 }
                 _logger.log(_modName, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " new checks)");
                 if (toSend.length > 0) {

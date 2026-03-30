@@ -6,12 +6,10 @@ from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
-    beat_game: Defeat the final boss (complete A4).
-    full_talisman: Fill all 25 talisman sockets with fragments that each meet the minimum rarity.
+    beat_game: Defeat the final boss (complete A4) with all 24 skills unlocked.
     """
     display_name = "Goal"
     option_beat_game = 0
-    option_full_talisman = 1
     default = 0
 
 
@@ -24,6 +22,23 @@ class TalismanMinRarity(Range):
     range_start = 1
     range_end   = 100
     default     = 1
+
+
+class XpTomeBonus(Range):
+    """Approximate total wizard levels granted by all XP tomes in the item pool combined.
+
+    The pool contains 92 Tattered Scrolls, 10 Worn Tomes, and 2 Ancient Grimoires.
+    Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.
+
+    At the default of 100 each tome gives 1 / 2 / 3 levels (118 total).
+    Values below ~100 all resolve to the same minimum (1/2/3 levels, ~118 total).
+    At 200 tomes give roughly 2/3/5 levels (~224 total).
+    At 300 tomes give roughly 3/5/8 levels (~342 total).
+    """
+    display_name = "XP Tome Bonus"
+    range_start = 50
+    range_end   = 300
+    default     = 150
 
 
 class ForceEarlySkills(Toggle):
@@ -95,6 +110,7 @@ class DeathLinkCooldown(Range):
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
     talisman_min_rarity:       TalismanMinRarity
+    xp_tome_bonus:             XpTomeBonus
     force_early_skills:        ForceEarlySkills
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment

@@ -12,12 +12,15 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import GCFWOptions
 from .rules import set_rules
-from .rulesdata import FREE_STAGES, TIERS, TIER_REQUIREMENTS
+from .rulesdata import TIERS, TIER_REQUIREMENTS
+
+
+def _load_game_data():
+    return json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
 
 
 def _load_stages():
-    data = json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
-    return data["stages"]
+    return _load_game_data()["stages"]
 
 
 class GCFWWebWorld(WebWorld):
@@ -46,17 +49,12 @@ class GemcraftFrostbornWrathWorld(World):
         stages = _load_stages()
         pool: List[GCFWItem] = []
 
-        # Field tokens
+        # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
+        # W2/W3/W4 are always accessible (free stages); the mod unlocks them on connect.
         for stage in stages:
             if stage["item_ap_id"] is None:
-                continue  # W1 — no token
-            token = self.create_item(f"{stage['str_id']} Field Token")
-            if stage["str_id"] in FREE_STAGES:
-                # W2-W4: give at start so the mod unlocks them on connect.
-                # They still count as Tier 0 tokens for tier progression.
-                self.multiworld.push_precollected(token)
-            else:
-                pool.append(token)
+                continue
+            pool.append(self.create_item(f"{stage['str_id']} Field Token"))
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -68,16 +66,28 @@ class GemcraftFrostbornWrathWorld(World):
             if name.endswith(" Battle Trait"):
                 pool.append(self.create_item(name))
 
-        # Pad remaining slots with XP tiers: 2 Large, 10 Medium, rest Small.
-        # Players also earn wizard levels naturally from completing stages, so
-        # the pool only needs to supplement — 2+10+N Small is sufficient.
-        location_count = len(location_table)
-        xp_counts = {"Ancient Grimoire": 2, "Worn Tome": 10}
-        for name, count in xp_counts.items():
+        # Location-specific talisman fragments (53) and shadow core stashes (17)
+        for name in item_table:
+            if name.endswith(" Talisman Fragment") and name != "Talisman Fragment":
+                pool.append(self.create_item(name))
+            elif name.endswith(" Shadow Cores"):
+                pool.append(self.create_item(name))
+
+        gd = _load_game_data()
+
+        # Extra talisman fragments (IDs 753–799)
+        for frag in gd["extra_talisman_fragments"]:
+            pool.append(self.create_item(frag["name"]))
+
+        # Extra shadow core stashes (IDs 817–868)
+        for sc in gd["extra_shadow_core_stashes"]:
+            pool.append(self.create_item(sc["name"]))
+
+        # XP tomes — fixed counts scaled so option=50→50 levels, option=300→300 levels.
+        # 32 Tattered + 6 Worn + 2 Ancient = 40 tomes; at multiplier 1 (option=50): 32+12+6=50.
+        for name, count in (("Ancient Grimoire", 2), ("Worn Tome", 6), ("Tattered Scroll", 32)):
             for _ in range(count):
                 pool.append(self.create_item(name))
-        while len(pool) < location_count:
-            pool.append(self.create_item("Tattered Scroll"))
 
         self.multiworld.itempool += pool
 
@@ -100,6 +110,9 @@ class GemcraftFrostbornWrathWorld(World):
                 loc_data = location_table[loc_name]
                 loc = GCFWLocation(self.player, loc_name, loc_data.id, region)
                 region.locations.append(loc)
+            wiz_loc_name = f"Complete {str_id} - Wizard stash"
+            wiz_loc_data = location_table[wiz_loc_name]
+            region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
             # Victory event for beat_game goal lives inside the A4 region
             if str_id == "A4" and self.options.goal.value == 0:
                 region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, region))
@@ -181,26 +194,88 @@ class GemcraftFrostbornWrathWorld(World):
 
 
     def fill_slot_data(self) -> Dict:
-        stages = _load_stages()
-        # Map item AP ID → stage str_id so the mod can call unlockStage() on receipt.
-        # Field token map: item AP ID → stage str_id
+        gd = _load_game_data()
+        stages = gd["stages"]
+
+        # Field token map: item AP ID (str) → stage str_id
         token_map = {
             str(s["item_ap_id"]): s["str_id"]
             for s in stages
             if s["item_ap_id"] is not None
         }
-        # Free stages: W1 (starting, no token) + W2-W4 (tutorial zone, no token).
-        # The mod should unlock these on connect.
-        free_stages = [
-            s["str_id"]
-            for s in stages
-            if s["item_ap_id"] is None
-        ] + sorted(FREE_STAGES)
+
+        # Free stages: all stages with item_ap_id=None (W1, W2, W3, W4).
+        free_stages = [s["str_id"] for s in stages if s["item_ap_id"] is None]
+
+        # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
+        talisman_map = {
+            str(frag["item_ap_id"]): frag["tal_data"]
+            for frag in gd["talisman_fragments"]
+        }
+        talisman_map.update({
+            str(frag["item_ap_id"]): frag["tal_data"]
+            for frag in gd["extra_talisman_fragments"]
+        })
+
+        # Talisman name map: item AP ID (str) → display name (IDs 700–799)
+        talisman_name_map = {
+            str(frag["item_ap_id"]): f"{frag['str_id']} Talisman Fragment"
+            for frag in gd["talisman_fragments"]
+        }
+        talisman_name_map.update({
+            str(frag["item_ap_id"]): frag["name"]
+            for frag in gd["extra_talisman_fragments"]
+        })
+
+        # Wiz stash talisman data: str_id → "seed/rarity/type/upgradeLevel"
+        # Used by NormalProgressionBlocker to identify and remove stash-granted fragments.
+        wiz_stash_tal_data = {
+            frag["str_id"]: frag["tal_data"]
+            for frag in gd["talisman_fragments"]
+        }
+
+        # Shadow core map: item AP ID (str) → amount (IDs 800–868)
+        shadow_core_map = {
+            str(sc["item_ap_id"]): sc["total"]
+            for sc in gd["shadow_core_stashes"]
+        }
+        shadow_core_map.update({
+            str(sc["item_ap_id"]): sc["amount"]
+            for sc in gd["extra_shadow_core_stashes"]
+        })
+
+        # Shadow core name map: item AP ID (str) → display name (IDs 800–868)
+        shadow_core_name_map = {
+            str(sc["item_ap_id"]): f"{sc['str_id']} Shadow Cores"
+            for sc in gd["shadow_core_stashes"]
+        }
+        shadow_core_name_map.update({
+            str(sc["item_ap_id"]): sc["name"]
+            for sc in gd["extra_shadow_core_stashes"]
+        })
+
+        # XP tome levels — 32 Tattered + 6 Worn + 2 Ancient = 40 tomes.
+        # At multiplier 1 (option=50): 32×1 + 6×2 + 2×3 = 50 levels exactly.
+        # At multiplier 6 (option=300): 32×6 + 6×12 + 2×18 = 300 levels exactly.
+        xp_target = self.options.xp_tome_bonus.value
+        multiplier = xp_target / 50.0
+        tattered_levels = max(1, round(multiplier))
+        worn_levels     = max(1, round(multiplier * 2))
+        ancient_levels  = max(1, round(multiplier * 3))
+
         return {
             "goal":                  self.options.goal.value,
             "talisman_min_rarity":   self.options.talisman_min_rarity.value,
+            "tattered_scroll_levels": tattered_levels,
+            "worn_tome_levels":       worn_levels,
+            "ancient_grimoire_levels": ancient_levels,
             "token_map":             token_map,
             "free_stages":           free_stages,
+            "talisman_map":          talisman_map,
+            "talisman_name_map":     talisman_name_map,
+            "wiz_stash_tal_data":    wiz_stash_tal_data,
+            "shadow_core_map":       shadow_core_map,
+            "shadow_core_name_map":  shadow_core_name_map,
             "force_early_skills":      bool(self.options.force_early_skills.value),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,

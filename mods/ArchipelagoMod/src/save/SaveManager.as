@@ -3,14 +3,18 @@ package save {
 
     import net.ConnectionManager;
     import unlockers.LevelUnlocker;
+    import unlockers.ShadowCoreUnlocker;
 
     /**
      * Owns all slot-data persistence for the Archipelago mod.
      *
      * Coordinates between FileHandler (raw I/O), ConnectionManager (credentials),
-     * and LevelUnlocker (bonusWizardLevel) so ArchipelagoMod stays a thin shell.
+     * LevelUnlocker (bonusWizardLevel), ShadowCoreUnlocker (totalShadowCoresGranted),
+     * and TalismanUnlocker (genericTalismansGranted) so ArchipelagoMod stays a thin shell.
      *
-     * Slot file fields: host, port, slot, password, bonusWizardLevel, completed, deathLinkEnabled.
+     * Slot file fields: host, port, slot, password, bonusWizardLevel,
+     *                   totalShadowCoresGranted, genericTalismansGranted,
+     *                   completed, deathLinkEnabled, standalone.
      */
     public class SaveManager {
 
@@ -19,6 +23,7 @@ package save {
         private var _fileHandler:FileHandler;
         private var _connectionManager:ConnectionManager;
         private var _levelUnlocker:LevelUnlocker;
+        private var _shadowCoreUnlocker:ShadowCoreUnlocker;
 
         private var _currentSlot:int       = 0;
         private var _slotCompleted:Boolean = false;
@@ -37,6 +42,9 @@ package save {
             _connectionManager = connectionManager;
             _levelUnlocker     = levelUnlocker;
         }
+
+        /** Wire in after construction so SaveManager can persist shadow core state. */
+        public function set shadowCoreUnlocker(v:ShadowCoreUnlocker):void { _shadowCoreUnlocker = v; }
 
         public function get currentSlot():int        { return _currentSlot; }
         public function set currentSlot(v:int):void  { _currentSlot = v; }
@@ -58,6 +66,7 @@ package save {
             _currentSlot = slotId;
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
+            if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
@@ -71,6 +80,8 @@ package save {
                 if (data.slot             !== undefined) _connectionManager.apSlot       = String(data.slot);
                 if (data.password         !== undefined) _connectionManager.apPassword   = String(data.password);
                 if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
+                if (data.totalShadowCoresGranted !== undefined && _shadowCoreUnlocker != null)
+                    _shadowCoreUnlocker.totalGranted = int(data.totalShadowCoresGranted);
                 if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
                 if (data.deathLinkEnabled !== undefined) {
                     _deathLinkEnabled    = data.deathLinkEnabled === true;
@@ -95,6 +106,7 @@ package save {
                 slot:             _connectionManager.apSlot,
                 password:         _connectionManager.apPassword,
                 bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
+                totalShadowCoresGranted: _shadowCoreUnlocker != null ? _shadowCoreUnlocker.totalGranted : 0,
                 completed:        _slotCompleted,
                 deathLinkEnabled: _deathLinkEnabled,
                 standalone:       _standalone
@@ -126,6 +138,7 @@ package save {
             // cannot resurrect the old slot name and trigger an auto-connect.
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
+            if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
