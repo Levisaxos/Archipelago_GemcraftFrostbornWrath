@@ -141,7 +141,8 @@ class GemcraftFrostbornWrathWorld(World):
         # so moving tier 11 to the end then tier 10 then etc etc down to tier 1 so that in the end tier 1's unlocks
         # are at the end, which means they will be placed first you get the idea)
         for t in range(12, 0, -1):
-            prev_tier, level_req = TIER_REQUIREMENTS[t]
+            prev_tier = t-1
+            level_req = len(TIERS[prev_tier]) * self.options.tier_requirements_percent // 100
             moved_levels = 0
             # ok test time
             # level_req = len(TIERS[prev_tier])
@@ -201,6 +202,7 @@ class GemcraftFrostbornWrathWorld(World):
             "token_map":             token_map,
             "free_stages":           free_stages,
             "force_early_skills":      bool(self.options.force_early_skills.value),
+            "token_requirement_percent": self.options.tier_requirements_percent.value,
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

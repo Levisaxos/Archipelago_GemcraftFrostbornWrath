@@ -95,6 +95,9 @@ TIERS: Dict[int, List[str]] = {
 
 # Tier requirements: tier_number → (previous_tier, tokens_needed_from_prev).
 # Tier 0 has no entry (it is free).
+
+# deprecated - every tier T needs tier T-1, and tokens needed from prev is determined by an option.
+
 TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
     1:  (0,  2),
     2:  (1,  2),
@@ -120,6 +123,8 @@ TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
 #
 # Tier assignments derived from wave counts via the former wizard-level table.
 # Explicit WIZLOCK data taken from game_data.json required_skills fields.
+
+# deprecated
 
 # STAGE_RULES_OLD: dict[str, StageRule] = {
 #

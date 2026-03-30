@@ -35,6 +35,17 @@ class ForceEarlySkills(Toggle):
     default = True
 
 
+class TierRequirementsPercentage(Range):
+    """Logic is currently determined by grouping stages into tiers based on difficulty, then requiring a percentage of the
+    stages in all previous tiers to be accessible in order to consider the next tier accessible.
+    This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
+    """
+    display_name = "Tier Completion Percentage"
+    range_start = 30
+    range_end = 100
+    default = 65
+
+
 class DeathLinkPunishment(Choice):
     """What happens when a DeathLink signal is received.
 
@@ -96,6 +107,7 @@ class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
     talisman_min_rarity:       TalismanMinRarity
     force_early_skills:        ForceEarlySkills
+    tier_requirements_percent: TierRequirementsPercentage
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent

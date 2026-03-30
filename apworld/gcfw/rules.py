@@ -23,11 +23,12 @@ TIER_SKILL_NAMES: dict[str, List[str]] = {
 }
 
 
-def _has_tier_tokens(state, player: int, tier: int) -> bool:
+def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     """Check whether the player has collected enough field tokens from the
     previous tier AND at least one skill from each required skill category
     for this tier (and all lower tiers, recursively)."""
-    prev, count = TIER_REQUIREMENTS[tier]
+    prev = tier-1
+    count = len(TIERS[prev]) * token_percent // 100
     # Check token requirement from previous tier.
     if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
         return False
@@ -38,7 +39,7 @@ def _has_tier_tokens(state, player: int, tier: int) -> bool:
     # Recurse to ensure all lower tiers are also satisfied.
     if prev == 0:
         return True
-    return _has_tier_tokens(state, player, prev)
+    return _has_tier_tokens(state, player, prev, token_percent)
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -57,6 +58,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     stages = GAME_DATA["stages"]
     stage_map = {s["str_id"]: s for s in stages}
+
+    token_percent = world.options.tier_requirements_percent.value
 
     w1_region = multiworld.get_region("W1", player)
 
@@ -87,8 +90,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # prev_tier, tokens_needed = TIER_REQUIREMENTS[tier]
             # prev_tokens = tier_token_names[prev_tier]
             connection.access_rule = (
-                lambda state, tok=token_name, ti=tier: (
-                    state.has(tok, player) and _has_tier_tokens(state, player, ti)
+                lambda state, tok=token_name, ti=tier, tper = token_percent: (
+                    state.has(tok, player) and _has_tier_tokens(state, player, ti, tper)
                 )
             )
 
