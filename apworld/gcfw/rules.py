@@ -119,7 +119,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         existing_rule = loc.access_rule
         loc.access_rule = lambda state, er=existing_rule: er(state) and all_skills_rule(state)
 
-    victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
-    victory_location.access_rule = all_skills_rule
+    if world.options.goal.value == 0:
+        victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
+        victory_location.access_rule = all_skills_rule
+    # full_talisman victory has no access rule — fragments drop from any battle
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

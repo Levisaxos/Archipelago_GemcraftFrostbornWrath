@@ -11,6 +11,34 @@ package {
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.ScreenId;
+    
+    import goals.GoalManager;
+
+    import ui.ArchipelagoButton
+    import ui.ReportIssuesButton
+    import ui.ToastPanel
+    import ui.ItemToastPanel
+    import ui.MessageLog
+    import ui.MessageLogPanel
+    import ui.ScrDebugOptions
+    import ui.ConnectionPanel
+    
+    import deathlink.DeathLinkHandler
+    import deathlink.EnragerOverride
+
+    import unlockers.NormalProgressionBlocker
+    import unlockers.SkillUnlocker
+    import unlockers.TraitUnlocker
+    import unlockers.LevelUnlocker
+    import unlockers.StageUnlocker
+
+    import net.ConnectionManager
+
+    import save.FileHandler
+    import save.SaveManager
+
+    
+    
 
     /**
      * Main mod class — orchestrates all subsystems.
@@ -25,7 +53,7 @@ package {
      *   StageUnlocker            — Stage / tile unlock logic
      *   LevelUnlocker            — Wizard level / XP bonus logic
      *   DeathLinkHandler         — DeathLink send/receive and punishment application
-     *   GameCompletion           — Detects A4 goal completion, fires onGoalReached once
+     *   GoalManager              — Detects goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
      *   ToastPanel               — On-screen notifications
@@ -63,7 +91,7 @@ package {
         private var _connectionPanel:ConnectionPanel;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _deathLinkHandler:DeathLinkHandler;
-        private var _gameCompletion:GameCompletion;
+        private var _goalManager:GoalManager;
         private var _fileHandler:FileHandler;
         private var _saveManager:SaveManager;
         private var _skillUnlocker:SkillUnlocker;
@@ -124,7 +152,7 @@ package {
                 _connectionManager.load();
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
-                    _fileHandler, _connectionManager, _levelUnlocker);
+                _fileHandler, _connectionManager, _levelUnlocker);
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
@@ -132,8 +160,8 @@ package {
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
-                _gameCompletion = new GameCompletion(_logger, MOD_NAME, _itemToast);
-                _gameCompletion.onGoalReached = onGoalReached;
+                _goalManager = new GoalManager(_logger, MOD_NAME, _itemToast);
+                _goalManager.onGoalReached = onGoalReached;
 
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
@@ -268,7 +296,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
-                    _gameCompletion.reset();
+                    _goalManager.reset();
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
@@ -282,7 +310,7 @@ package {
                     _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
-                    _gameCompletion.reset();
+                    _goalManager.reset();
                     _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
                 }
 
@@ -357,6 +385,8 @@ package {
                 _mapTilesUnlocked = false;
                 return;
             }
+
+            _levelUnlocker.renderXpBarIfDirty();
 
             var mc:* = GV.selectorCore.mc;
             if (mc == null) return;
@@ -499,11 +529,7 @@ package {
 
         private function onSlotDeleteWarning(slotId:int):void {
             if (!_saveManager.isSlotCompleted(slotId)) {
-                _toast.addMessage(
-                    "Warning: slot " + slotId + " is not yet completed.\n"
-                    + "Deleting will lose most of your progress.\n"
-                    + "Press D to confirm.",
-                    0xFFFF8844);
+                _toast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
             }
         }
 
@@ -615,13 +641,16 @@ package {
                 _connectionManager.sendConnectUpdate(["DeathLink"]);
             }
 
+            _goalManager.configure(
+                _connectionManager.goal,
+                _connectionManager.talismanMinRarity);
+
             if (_saveManager.slotCompleted) {
-                _gameCompletion.markAlreadyCompleted();
+                _goalManager.markAlreadyCompleted();
             }
-            // Note: we do NOT call _gameCompletion.check() here because GV.ppd
-            // may still hold data from a previously loaded save slot (e.g. a
-            // standalone game where A4 was already beaten).  The onSaveSave hook
-            // will catch a legitimate A4 victory when the player wins a battle.
+            // Note: we do NOT call _goalManager.check() here because GV.ppd
+            // may still hold data from a previously loaded save slot.
+            // The onSaveSave hook will catch a legitimate victory.
             if (_connectionPanel != null) _connectionPanel.dismiss();
             _modeInterceptor.redispatchPendingClick();
         }
@@ -629,6 +658,7 @@ package {
         private function onConnectionError(msg:String):void {
             // Auto-connect failed — show the overlay so the player can correct settings.
             ensureConnectionOverlay();
+            _connectionManager.failConnection();
             if (_connectionPanel != null) _connectionPanel.showError(msg);
         }
 
@@ -685,9 +715,9 @@ package {
                     apTraits[apId - 400] = true;
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
-                } else if (apId == 500) apXpTotal += 1;
-                  else if (apId == 501) apXpTotal += 3;
-                  else if (apId == 502) apXpTotal += 9;
+                } else if (apId >= 500 && apId <= 502) {
+                    apXpTotal += LevelUnlocker.levelsForApId(apId);
+                }
             }
 
             // --- Skills ---
@@ -766,7 +796,7 @@ package {
             if (_standalone) return;
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
-            _gameCompletion.check();
+            _goalManager.check();
         }
 
         private function onGoalReached():void {

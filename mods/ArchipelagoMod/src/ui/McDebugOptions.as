@@ -1,4 +1,4 @@
-package {
+package ui {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.McOptPanel;
     import com.giab.games.gcfw.mcDyn.McOptTitle;
@@ -16,20 +16,20 @@ package {
      * McOptions is not in the SWC stub (and its source depends on fl.motion.AdjustColor
      * which is Flash-authoring-only), so we cannot extend it at compile time.
      * Instead we extend plain MovieClip and instantiate McOptions at runtime via
-     * getDefinitionByName — the class is present in the game SWF.
+     * getDefinitionByName -- the class is present in the game SWF.
      *
      * Critical: McOptions extends SpriteExt extends Sprite (NOT MovieClip), so the
      * inner instance must be typed * (not MovieClip) to avoid a silent null from "as MovieClip".
      */
     public class McDebugOptions extends MovieClip {
 
-        // ── Our own additions (NOT in McOptions) ────────────────────────────
+        // -- Our own additions (NOT in McOptions) --
         public var skillPanels:Array;
         public var traitPanels:Array;
-        // stageStrId → McOptPanel
+        // stageStrId -> McOptPanel
         public var stageIdToPanel:Object;
 
-        // ── Inner McOptions instance (typed * because McOptions extends Sprite, not MovieClip) ──
+        // -- Inner McOptions instance (typed * because McOptions extends Sprite, not MovieClip) --
         private var _inner:*;
 
         public function get arrCntContents():Array           { return _inner.arrCntContents; }
@@ -80,7 +80,7 @@ package {
             super();
 
             // Instantiate the real McOptions from the game SWF at runtime.
-            // Must NOT cast to MovieClip — McOptions extends Sprite, not MovieClip.
+            // Must NOT cast to MovieClip -- McOptions extends Sprite, not MovieClip.
             var McOptionsClass:Class =
                 getDefinitionByName("com.giab.games.gcfw.mcStat.McOptions") as Class;
             _inner = new McOptionsClass();
@@ -88,7 +88,7 @@ package {
 
             overlayTitle("Archipelago Debug");
 
-            // Clear normal options content — only our panels go in.
+            // Clear normal options content -- only our panels go in.
             while (_inner.cnt.numChildren > 0) _inner.cnt.removeChildAt(0);
             _inner.arrCntContents = new Array();
             skillPanels    = new Array();
@@ -97,7 +97,7 @@ package {
 
             var vY:Number = CONTENT_START_Y;
 
-            // ── Skills ────────────────────────────────────────────────────────
+            // -- Skills --
             _inner.arrCntContents.push(new McOptTitle("Skills", TITLE_X, vY));
             vY += ROW_HEIGHT;
             for (i = 0; i < 24; i++) {
@@ -110,7 +110,7 @@ package {
 
             vY += SECTION_GAP;
 
-            // ── Battle Traits ─────────────────────────────────────────────────
+            // -- Battle Traits --
             _inner.arrCntContents.push(new McOptTitle("Battle Traits", TITLE_X, vY));
             vY += ROW_HEIGHT;
             for (i = 0; i < 15; i++) {
@@ -122,7 +122,7 @@ package {
             }
             vY += ROW_HEIGHT; // last trait row (15 is odd)
 
-            // ── Stages ────────────────────────────────────────────────────────
+            // -- Stages --
             if (GV.stageCollection != null) {
                 vY += SECTION_GAP;
                 _inner.arrCntContents.push(new McOptTitle("Stages", TITLE_X, vY));

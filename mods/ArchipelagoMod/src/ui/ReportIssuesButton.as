@@ -1,4 +1,4 @@
-package {
+package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.DisplayObject;
@@ -7,29 +7,34 @@ package {
     import flash.events.MouseEvent;
     import flash.filters.ColorMatrixFilter;
     import flash.geom.Matrix;
+    import flash.net.URLRequest;
+    import flash.net.navigateToURL;
     import flash.text.TextField;
 
-    public class ArchipelagoButton extends Sprite {
+    public class ReportIssuesButton extends Sprite {
 
-        public function ArchipelagoButton(btnTemplate:*) {
+        private static const ISSUES_URL:String =
+            "https://github.com/Levisaxos/Archipelago_GemcraftFrostbornWrath/issues";
+
+        public function ReportIssuesButton(btnTemplate:*) {
             super();
             build(btnTemplate);
             buttonMode    = true;
             useHandCursor = true;
             addEventListener(MouseEvent.MOUSE_OVER, onOver, false, 0, true);
             addEventListener(MouseEvent.MOUSE_OUT,  onOut,  false, 0, true);
+            addEventListener(MouseEvent.CLICK,      onClick, false, 0, true);
         }
 
         private function build(btnTemplate:*):void {
             var bw:Number = btnTemplate.width;
             var bh:Number = btnTemplate.height;
 
-            // Swap the native label text, snapshot the button, then restore it.
             var nativeLabel:TextField = findTextField(btnTemplate);
             var originalText:String   = null;
             if (nativeLabel != null) {
                 originalText     = nativeLabel.text;
-                nativeLabel.text = "Archipelago";
+                nativeLabel.text = "Report Issues";
             }
 
             var bd:BitmapData = new BitmapData(bw, bh, true, 0x00000000);
@@ -42,6 +47,10 @@ package {
             if (nativeLabel != null) nativeLabel.text = originalText;
         }
 
+        private function onClick(e:MouseEvent):void {
+            navigateToURL(new URLRequest(ISSUES_URL), "_blank");
+        }
+
         private function onOver(e:MouseEvent):void {
             filters = [makeBrightnessFilter(1.35)];
         }
@@ -49,8 +58,6 @@ package {
         private function onOut(e:MouseEvent):void {
             filters = [];
         }
-
-        // -----------------------------------------------------------------------
 
         private function findTextField(obj:DisplayObject):TextField {
             if (obj is TextField) return obj as TextField;

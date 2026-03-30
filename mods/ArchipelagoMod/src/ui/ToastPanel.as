@@ -1,4 +1,4 @@
-package {
+package ui {
     import flash.display.Shape;
     import flash.display.Sprite;
     import flash.events.Event;
@@ -8,6 +8,8 @@ package {
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
     import flash.utils.getTimer;
+
+    import ui.MessageLog;
 
     /**
      * Persistent HUD panel for Archipelago messages.

@@ -1,4 +1,4 @@
-package {
+package net {
     import flash.events.Event;
     import flash.events.IOErrorEvent;
     import flash.events.ProgressEvent;
@@ -49,6 +49,8 @@ package {
         public var onError:Function;   // (msg:String):void
         public var onClose:Function;   // ():void
 
+        public var isConnecting:Boolean = false;
+
         public function WebSocketClient(logger:Logger) {
             _logger = logger;
             _buf = new ByteArray();
@@ -61,12 +63,13 @@ package {
         /**
          * @param secure  true = wss:// (TLS), false = ws:// (plain)
          */
-        public function connect(host:String, port:int, secure:Boolean = false):void {
+        public function connect(host:String, port:int, secure:Boolean = false):void {            
             _host = host;
             _port = port;
             _state = STATE_TCP;
             _buf.length = 0;
 
+            
             _socket = secure ? new SecureSocket() : new Socket();
             _socket.endian = Endian.BIG_ENDIAN;
             _socket.addEventListener(Event.CONNECT,                     onTcpConnect,    false, 0, false);

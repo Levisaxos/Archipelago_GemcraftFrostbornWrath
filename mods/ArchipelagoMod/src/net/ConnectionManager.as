@@ -1,6 +1,8 @@
-package {
+package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import ui.ToastPanel;
+    import ui.ItemToastPanel;
 
     /**
      * Manages the Archipelago server connection lifecycle and protocol.
@@ -20,6 +22,7 @@ package {
 
         // Connection state
         private var _isConnected:Boolean  = false;
+        private var _isConnecting:Boolean = false;
         private var _reconnecting:Boolean = false;
 
         // Connection settings
@@ -39,6 +42,8 @@ package {
         private var _missingLocations:Object = {};
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
+        private var _goal:int           = 0;    // 0 = beat_game, 1 = full_talisman
+        private var _talismanMinRarity:int = 1;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -78,9 +83,7 @@ package {
         /** Called with the full item list on initial sync (index=0). Signature: (items:Array):void */
         public var onFullSync:Function;
         /** Called for each incremental item grant. Signature: (apId:int):void */
-        public var onItemReceived:Function;
-        /** Called when connection state changes. Signature: (connected:Boolean):void */
-        public var onConnectionStateChanged:Function;
+        public var onItemReceived:Function;       
         /** Called when the connection panel should show an error. Signature: (msg:String):void */
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
@@ -100,6 +103,8 @@ package {
         public function get tokenMap():Object { return _tokenMap; }
         public function get tokenStages():Object { return _tokenStages; }
         public function get missingLocations():Object { return _missingLocations; }
+        public function get goal():int { return _goal; }
+        public function get talismanMinRarity():int { return _talismanMinRarity; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -142,19 +147,21 @@ package {
             _apPort     = port;
             _apSlot     = slot;
             _apPassword = password;
-            if (_ws != null) {
+            if (_ws != null && _isConnecting == false) {
+                _isConnecting = true;
                 _reconnecting = true;
                 _ws.disconnect();
                 _reconnecting = false;
                 _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
                 _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
-                _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort
-                    + "  slot=" + _apSlot);
+                _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort + "  slot=" + _apSlot);
             }
         }
 
         public function disconnect():void {
-            if (_ws != null) _ws.disconnect();
+            if (_ws != null) {
+                _ws.disconnect();                
+            }
         }
 
         public function disconnectAndReset():void {
@@ -173,23 +180,26 @@ package {
             _apPassword = "";
         }
 
+        public function failConnection():void {
+            _isConnecting=false;
+        }
+
         // -----------------------------------------------------------------------
         // WebSocket callbacks
 
         private function wsOnOpen():void {
-            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");
+            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");                        
             if (onError != null) onError("Authenticating...");
         }
 
-        private function wsOnError(msg:String):void {
+        private function wsOnError(msg:String):void {            
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
             var failMsg:String = "Failed to connect to " + _apHost + ":" + _apPort
                 + " with name " + _apSlot;
             if (onError != null) onError(failMsg);
-            _toast.addMessage(failMsg, 0xFFFF6666);
-            if (onConnectionStateChanged != null) onConnectionStateChanged(false);
+            _toast.addMessage(failMsg, 0xFFFF6666);            
         }
 
         private function wsOnClose():void {
@@ -197,8 +207,7 @@ package {
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
-            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);
-            if (onConnectionStateChanged != null) onConnectionStateChanged(false);
+            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);            
         }
 
         // -----------------------------------------------------------------------
@@ -283,7 +292,11 @@ package {
                 }
                 _logger.log(_modName, "  token_map loaded: " + tokenCount + " entries");
             }
-            _logger.log(_modName, "  goal=" + p.slot_data.goal + "  skill_placement=" + p.slot_data.skill_placement);
+            if (p.slot_data) {
+                _goal = int(p.slot_data.goal);
+                _talismanMinRarity = int(p.slot_data.talisman_min_rarity);
+            }
+            _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 
             var missing:Array  = p.missing_locations as Array;
             var checked:Array  = p.checked_locations as Array;
