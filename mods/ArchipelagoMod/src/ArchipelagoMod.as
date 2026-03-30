@@ -528,6 +528,8 @@ package {
         }
 
         private function onSlotDeleteWarning(slotId:int):void {
+            // Standalone slots have no Archipelago goal — skip the completion warning.
+            if (_saveManager.isSlotStandalone(slotId)) return;
             if (!_saveManager.isSlotCompleted(slotId)) {
                 _toast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
             }

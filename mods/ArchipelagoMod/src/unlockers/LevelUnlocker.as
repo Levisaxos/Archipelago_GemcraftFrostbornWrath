@@ -70,10 +70,8 @@ package unlockers {
             if (onDataChanged != null) onDataChanged();
             applyBonusLevels();
 
-            _logger.log(_modName, label + " → +" + levels
-                + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            _itemToast.addItem("+" + levels + " Wizard Levels (bonus total: "
-                + _bonusWizardLevel + ")", 0x88CCFF);
+            _logger.log(_modName, label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
+            _itemToast.addItem("Found " + label, 0x88CCFF);
         }
 
         /**

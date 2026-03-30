@@ -149,3 +149,138 @@ Since we mod via Bezel (AS3 hooks), we can intercept the stash damage functions:
 4. Test battle trait restriction — confirm trait must be active
 5. Test gem bomb interaction
 6. Test visual feedback (toast/overlay)
+
+---
+
+## Wizard Stash Reference — All Fields
+
+Every field has exactly one wizard stash. None appear in Trial mode (Journey or Endurance only).
+
+**How to open:** Shoot with gems or drop gem bombs until HP reaches 0. The stash gives ALL listed rewards simultaneously.
+
+**Note on multi-element SHC rewards:** The wizard stash gives all shadow core amounts at once. These fields also have separate Alloy Stash buildings that give individual tier amounts.
+
+| Field | Mode | Reward |
+|-------|------|--------|
+| Z1 | Journey | Battle Trait: Insulation |
+| Z2 | Endurance | 120+60+80+100+120 Shadow Cores |
+| Z3 | Endurance | Talisman Fragment |
+| Z4 | Endurance | Field Token: Z5 |
+| Z5 | Endurance | Skill Tome: Mana Leeching |
+| Y1 | Endurance | Battle Trait: Swarmling Domination |
+| Y2 | Journey | Talisman Fragment |
+| Y3 | Journey | Skill Tome: Freeze |
+| Y4 | Endurance | Field Token: Z1 + Map Tile #0 |
+| X1 | Journey | 30+40+50+60+70+80 Shadow Cores |
+| X2 | Endurance | Talisman Fragment |
+| X3 | Endurance | Talisman Fragment |
+| X4 | Journey | Skill Tome: Beam |
+| W1 | Endurance | Skill Tome: Orb of Presence |
+| W2 | Endurance | 30+20+40+30 Shadow Cores |
+| W3 | Endurance | Talisman Fragment |
+| W4 | Endurance | Talisman Fragment |
+| V1 | Journey | Battle Trait: Overcrowd |
+| V2 | Endurance | Talisman Fragment |
+| V3 | Journey | Talisman Fragment |
+| V4 | Endurance | Skill Tome: Amplifiers |
+| U1 | Journey | Talisman Fragment |
+| U2 | Endurance | Talisman Fragment |
+| U3 | Journey | Skill Tome: Pylons |
+| U4 | Journey | 80+50+90+70 Shadow Cores |
+| T1 | Journey | Skill Tome: Lanterns |
+| T2 | Endurance | Talisman Fragment |
+| T3 | Endurance | Field Token: T5 |
+| T4 | Endurance | Battle Trait: Swarmling Parasites |
+| T5 | Journey | Talisman Fragment |
+| S1 | Endurance | Talisman Fragment |
+| S2 | Endurance | Battle Trait: Haste |
+| S3 | Endurance | 40+50+60+30 Shadow Cores |
+| S4 | Journey | Skill Tome: Traps |
+| R1 | Endurance | 50+100+50 Shadow Cores |
+| R2 | Endurance | Talisman Fragment |
+| R3 | Endurance | Battle Trait: Adaptive Carapace |
+| R4 | Journey | Skill Tome: Resonance |
+| R5 | Endurance | Talisman Fragment |
+| R6 | Journey | Talisman Fragment |
+| Q1 | Journey | Skill Tome: Bolt |
+| Q2 | Journey | 100+100+100 Shadow Cores |
+| Q3 | Endurance | Talisman Fragment |
+| Q4 | Journey | Talisman Fragment |
+| Q5 | Endurance | Talisman Fragment |
+| P1 | Endurance | Skill Tome: Poison |
+| P2 | Journey | Talisman Fragment |
+| P3 | Journey | 70+70+80+90+100+70 Shadow Cores |
+| P4 | Endurance | Battle Trait: Giant Domination |
+| P5 | Endurance | Field Token: P6 |
+| P6 | Endurance | Talisman Fragment |
+| O1 | Journey | Talisman Fragment |
+| O2 | Endurance | Battle Trait: Corrupted Banishment |
+| O3 | Journey | Talisman Fragment |
+| O4 | Endurance | Talisman Fragment |
+| N1 | Endurance | Field Token: R6 |
+| N2 | Endurance | Talisman Fragment |
+| N3 | Journey | Skill Tome: Armor Tearing |
+| N4 | Journey | Talisman Fragment |
+| N5 | Endurance | Skill Tome: Slowing |
+| M1 | Endurance | 220+110+330 Shadow Cores |
+| M2 | Endurance | Talisman Fragment |
+| M3 | Journey | Skill Tome: Barrage |
+| M4 | Endurance | Talisman Fragment |
+| L1 | Endurance | Talisman Fragment |
+| L2 | Endurance | 200+150+100+50+100 Shadow Cores |
+| L3 | Journey | Skill Tome: Demolition |
+| L4 | Endurance | Talisman Fragment |
+| L5 | Endurance | Talisman Fragment |
+| K1 | Endurance | Battle Trait: Dark Masonry |
+| K2 | Endurance | Talisman Fragment |
+| K3 | Journey | Talisman Fragment |
+| K4 | Endurance | Talisman Fragment |
+| K5 | Journey | 60+90+120+150+180+120 Shadow Cores |
+| J1 | Endurance | Skill Tome: True Colors |
+| J2 | Journey | Talisman Fragment |
+| J3 | Journey | Talisman Fragment |
+| J4 | Journey | Battle Trait: Vital Link |
+| I1 | Journey | Talisman Fragment |
+| I2 | Journey | Battle Trait: Awakening |
+| I3 | Endurance | 200+240+160+240 Shadow Cores |
+| I4 | Endurance | Skill Tome: Bleeding |
+| H1 | Endurance | 100+200+300+200 Shadow Cores |
+| H2 | Journey | Field Token: H5 |
+| H3 | Journey | Battle Trait: Thick Air |
+| H4 | Endurance | Skill Tome: Iceshards |
+| H5 | Journey | Talisman Fragment |
+| G1 | Journey | Talisman Fragment |
+| G2 | Endurance | Field Token: K5 |
+| G3 | Endurance | Skill Tome: Whiteout |
+| G4 | Endurance | Talisman Fragment |
+| F1 | Endurance | Talisman Fragment |
+| F2 | Journey | Battle Trait: Strength in Numbers |
+| F3 | Journey | 140+360+500 Shadow Cores |
+| F4 | Endurance | Field Token: F5 |
+| F5 | Endurance | Talisman Fragment |
+| E1 | Journey | Talisman Fragment |
+| E2 | Endurance | Skill Tome: Fury |
+| E3 | Endurance | Field Token: E5 |
+| E4 | Endurance | Field Token: I1 + Map Tile #17 |
+| E5 | Journey | Talisman Fragment |
+| D1 | Endurance | Battle Trait: Ritual |
+| D2 | Journey | Talisman Fragment |
+| D3 | Endurance | Talisman Fragment |
+| D4 | Endurance | Field Token: D5 |
+| D5 | Endurance | Skill Tome: Seeker Sense |
+| C1 | Endurance | 333+334+333 Shadow Cores |
+| C2 | Journey | Talisman Fragment |
+| C3 | Endurance | Battle Trait: Hatred |
+| C4 | Endurance | Field Token: F3 + Map Tile #20 |
+| C5 | Endurance | Talisman Fragment |
+| B1 | Endurance | Talisman Fragment |
+| B2 | Endurance | Field Token: B5 |
+| B3 | Endurance | Talisman Fragment |
+| B4 | Endurance | 270+70+110+170+280 Shadow Cores |
+| B5 | Journey | Skill Tome: Critical Hit |
+| A1 | Endurance | Talisman Fragment |
+| A2 | Endurance | 200+300+400+300 Shadow Cores |
+| A3 | Endurance | Field Token: A5 |
+| A4 | Endurance | Field Token: A6 |
+| A5 | Endurance | 400+300+600+700 Shadow Cores + Talisman Fragment |
+| A6 | Journey | 350+450+650+750 Shadow Cores + Talisman Fragment |

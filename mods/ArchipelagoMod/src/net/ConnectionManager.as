@@ -349,17 +349,14 @@ package net {
             if (receiving == _mySlot && senderSlot != _mySlot) {
                 var sender:String = _playerNames[senderSlot] || ("Player " + senderSlot);
                 _logger.log(_modName, "  ItemSend: received " + name + " from " + sender);
-                if (_itemToast != null) _itemToast.addItem("Received " + name + " from " + sender, 0x88DDFF);
-                else _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
+                _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
             } else if (receiving == _mySlot && senderSlot == _mySlot) {
                 _logger.log(_modName, "  ItemSend: found " + name);
-                if (_itemToast != null) _itemToast.addItem("Found " + name, 0x88DDFF);
-                else _toast.addMessage("Found " + name, 0xFF88DDFF);
+                 _toast.addMessage("Found " + name, 0xFF88DDFF);
             } else if (senderSlot == _mySlot) {
                 var receiver:String = _playerNames[receiving] || ("Player " + receiving);
                 _logger.log(_modName, "  ItemSend: sent " + name + " to " + receiver);
-                if (_itemToast != null) _itemToast.addItem("Sent " + name + " to " + receiver, 0xDDFF88);
-                else _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
+                _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
             }
         }
 

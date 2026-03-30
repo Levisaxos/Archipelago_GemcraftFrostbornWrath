@@ -109,6 +109,11 @@ package save {
             _logger.log(_modName, "Slot " + _currentSlot + " marked as completed");
         }
 
+        /** Returns true if the slot file exists and standalone=true. */
+        public function isSlotStandalone(slotId:int):Boolean {
+            return _fileHandler.isSlotStandalone(slotId);
+        }
+
         /** Returns true if the slot file exists and completed=true. */
         public function isSlotCompleted(slotId:int):Boolean {
             return _fileHandler.isSlotCompleted(slotId);
