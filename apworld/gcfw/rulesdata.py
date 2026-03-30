@@ -4,6 +4,41 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 
+# ---------------------------------------------------------------------------
+# Skill categories (the 4 rows of the in-game skill tree, 6 skills each)
+# ---------------------------------------------------------------------------
+SKILL_CATEGORIES: Dict[str, List[str]] = {
+    "generic":   ["Mana Stream", "True Colors", "Fusion", "Orb of Presence", "Resonance", "Demolition"],
+    "skills":    ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
+    "spells":    ["Freeze", "Whiteout", "Ice Shards", "Bolt", "Beam", "Barrage"],
+    "buildings": ["Fury", "Amplifiers", "Pylons", "Lanterns", "Traps", "Seeker Sense"],
+}
+
+# Which skill category rows must have at least one skill collected before
+# accessing each tier.  Tiers not listed have no skill gate.
+#
+# Tier 1: spells + buildings        Tier 7:  spells + generic
+# Tier 2: skills                    Tier 8:  skills + buildings + generic
+# Tier 3: spells                    Tier 9:  spells + buildings + generic
+# Tier 4: skills + buildings        Tier 10: skills + generic
+# Tier 5: spells + buildings        Tier 11: spells + buildings + generic
+# Tier 6: skills                    Tier 12: skills + generic
+TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
+    1:  ["spells", "buildings"],
+    2:  ["skills"],
+    3:  ["spells"],
+    4:  ["skills", "buildings"],
+    5:  ["spells", "buildings"],
+    6:  ["skills"],
+    7:  ["spells", "generic"],
+    8:  ["skills", "buildings", "generic"],
+    9:  ["spells", "buildings", "generic"],
+    10: ["skills", "generic"],
+    11: ["spells", "buildings", "generic"],
+    12: ["skills", "generic"],
+}
+
+
 @dataclass
 class StageRule:
     # Tier this stage belongs to (0 = free from W1, 1+ = gated by previous tier).
@@ -167,7 +202,10 @@ STAGE_RULES: dict[str, StageRule] = {
     "P2": StageRule(tier=4),                        # tier 4
     "P3": StageRule(tier=4),                        # tier 4
     "P4": StageRule(tier=4),                        # tier 4
-    "P5": StageRule(tier=4),                        # tier 4
+    "P5": StageRule(                                # tier 4 — WIZLOCK: trap & poison gem required
+        tier=4,
+        skills=["Traps", "Poison"],
+    ),
     "P6": StageRule(tier=4),                        # tier 4
 
     # ── Zone L ────────────────────────────────────────────────────────────

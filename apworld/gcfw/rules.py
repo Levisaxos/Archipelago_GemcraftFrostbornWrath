@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import FREE_STAGES, STAGE_RULES, TIERS, TIER_REQUIREMENTS
+from .rulesdata import FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, TIER_REQUIREMENTS, TIER_SKILL_REQUIREMENTS
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -16,15 +16,29 @@ TIER_TOKEN_NAMES: dict[int, List[str]] = {}
 for tier_num, stage_ids in TIERS.items():
     TIER_TOKEN_NAMES[tier_num] = [f"{sid} Field Token" for sid in stage_ids]
 
+# Pre-build skill name lists per category.
+TIER_SKILL_NAMES: dict[str, List[str]] = {
+    cat: [f"{s} Skill" for s in skills]
+    for cat, skills in SKILL_CATEGORIES.items()
+}
+
 
 def _has_tier_tokens(state, player: int, tier: int) -> bool:
-    """Check whether the player has collected at least *count* field tokens
-    from the given list of tier token names."""
+    """Check whether the player has collected enough field tokens from the
+    previous tier AND at least one skill from each required skill category
+    for this tier (and all lower tiers, recursively)."""
     prev, count = TIER_REQUIREMENTS[tier]
+    # Check token requirement from previous tier.
+    if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
+        return False
+    # Check skill category requirements for this tier.
+    for category in TIER_SKILL_REQUIREMENTS.get(tier, []):
+        if not state.has_any(TIER_SKILL_NAMES[category], player):
+            return False
+    # Recurse to ensure all lower tiers are also satisfied.
     if prev == 0:
-        return sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) >= count
-    return sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) >= count and _has_tier_tokens(state, player, prev)
-    # theres a cleaner way to do this ^ im just writing it like this to debug
+        return True
+    return _has_tier_tokens(state, player, prev)
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
