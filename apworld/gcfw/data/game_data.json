@@ -1207,7 +1207,8 @@
         "Leech",
         "Poison"
       ],
-      "required_skills": [],
+      "note": "towers can't be placed, therefore,",
+      "required_skills": ["Traps"],
       "wave_count": 40
     },
     {

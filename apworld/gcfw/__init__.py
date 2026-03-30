@@ -12,12 +12,11 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import GCFWOptions
 from .rules import set_rules
-from .rulesdata import FREE_STAGES, TIERS, TIER_REQUIREMENTS
+from .rulesdata import FREE_STAGES, TIERS, TIER_REQUIREMENTS, GAME_DATA
 
 
 def _load_stages():
-    data = json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
-    return data["stages"]
+    return GAME_DATA["stages"]
 
 
 class GCFWWebWorld(WebWorld):

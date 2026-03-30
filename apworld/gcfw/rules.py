@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, TIER_REQUIREMENTS, TIER_SKILL_REQUIREMENTS
+from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, TIER_REQUIREMENTS, TIER_SKILL_REQUIREMENTS
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -55,8 +55,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     player = world.player
     multiworld = world.multiworld
 
-    data = json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
-    stages = data["stages"]
+    stages = GAME_DATA["stages"]
     stage_map = {s["str_id"]: s for s in stages}
 
     w1_region = multiworld.get_region("W1", player)
@@ -73,6 +72,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         tier = rule.tier if rule else 0
         token_name = f"{str_id} Field Token"
 
+        # print(f"{token_name}: tier {tier}")
         if str_id in FREE_STAGES:
             # Free stages (W2-W4): accessible from W1 with no requirements.
             # Their tokens still exist as items for Tier 1 gate.
@@ -111,7 +111,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location.access_rule = make_rule(conditions)
 
     # --- A4 locations + Victory: require all 24 skills ---
-    all_skill_names = [f"{skill['name']} Skill" for skill in data["skills"]]
+    all_skill_names = [f"{skill['name']} Skill" for skill in GAME_DATA["skills"]]
     all_skills_rule = lambda state: all(state.has(s, player) for s in all_skill_names)
 
     for suffix in ("Journey", "Bonus"):
