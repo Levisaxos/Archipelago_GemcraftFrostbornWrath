@@ -1,9 +1,11 @@
-package {
+package deathlink {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.SB;
     import com.giab.games.gcfw.constants.BattleMode;
     import flash.utils.getTimer;
+
+    import ui.ToastPanel;
 
     /**
      * Handles DeathLink send and receive for the Archipelago mod.
@@ -343,7 +345,7 @@ package {
         private function applyInstantFail():void {
             var core:* = GV.ingameController.core;
             try {
-                 SB.playSound("sndorbdestroyed");                  
+                 SB.playSound("sndorbdestroyed");
                 GV.vfxEngine.createOrbDestroy(core.orb.x, core.orb.y);
                 core.isScreenShaking=true;
                 core.screenShakingEnergy = Math.max(core.screenShakingEnergy,12);
@@ -356,7 +358,7 @@ package {
                      core.ending.endGameWithDefeat();
                   }
             } catch (e:Error) { /* VFX is cosmetic — ignore if unavailable */ }
-            
+
             _toast.addMessage("DeathLink! Level failed!", 0xFFFF4444);
             _logger.log(_modName, "  instantFail: endGameWithDefeat called");
         }

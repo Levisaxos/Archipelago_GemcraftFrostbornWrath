@@ -100,11 +100,19 @@ class GemcraftFrostbornWrathWorld(World):
                 loc_data = location_table[loc_name]
                 loc = GCFWLocation(self.player, loc_name, loc_data.id, region)
                 region.locations.append(loc)
-            # Victory event lives inside the A4 region (ID=None → event, not networked)
-            if str_id == "A4":
+            # Victory event for beat_game goal lives inside the A4 region
+            if str_id == "A4" and self.options.goal.value == 0:
                 region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
+
+        # full_talisman goal: victory event in a dedicated region (no item requirements)
+        if self.options.goal.value == 1:
+            talisman_region = Region("Talisman Goal", self.player, self.multiworld)
+            talisman_region.locations.append(
+                GCFWLocation(self.player, "Full Talisman Victory", None, talisman_region))
+            self.multiworld.regions.append(talisman_region)
+            menu_region.connect(talisman_region, "Talisman")
 
         # Connect Menu → W1 (starting stage — all other stages connect from W1 in set_rules)
         menu_region.connect(stage_regions["W1"], "Start")
@@ -113,8 +121,12 @@ class GemcraftFrostbornWrathWorld(World):
         set_rules(self)
 
     def generate_basic(self) -> None:
-        # Place the Victory event so the spoiler log shows A4 as the goal.
-        victory_loc = self.multiworld.get_location("Complete A4 - Frostborn Wrath Victory", self.player)
+        # Place the Victory event at the goal-appropriate location.
+        if self.options.goal.value == 0:
+            victory_name = "Complete A4 - Frostborn Wrath Victory"
+        else:
+            victory_name = "Full Talisman Victory"
+        victory_loc = self.multiworld.get_location(victory_name, self.player)
         victory_loc.place_locked_item(
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
@@ -186,6 +198,7 @@ class GemcraftFrostbornWrathWorld(World):
         ] + sorted(FREE_STAGES)
         return {
             "goal":                  self.options.goal.value,
+            "talisman_min_rarity":   self.options.talisman_min_rarity.value,
             "token_map":             token_map,
             "free_stages":           free_stages,
             "force_early_skills":      bool(self.options.force_early_skills.value),

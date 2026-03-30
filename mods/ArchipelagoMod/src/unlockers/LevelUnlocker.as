@@ -1,10 +1,11 @@
-package {
+package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import ui.ItemToastPanel;
 
     /**
      * Handles AP wizard level / XP bonus grants.
-     * XP Bonus AP IDs: 500 (Tattered Scroll=+1), 501 (Worn Tome=+3), 502 (Ancient Grimoire=+9).
+     * XP Bonus AP IDs: 500 (Tattered Scroll=+3), 501 (Worn Tome=+6), 502 (Ancient Grimoire=+18).
      *
      * Bonus wizard levels are persisted in the slot JSON file and injected into
      * A4's trial XP slot so the game's own XP sum picks them up automatically.
@@ -17,6 +18,7 @@ package {
         private var _modName:String;
         private var _itemToast:ItemToastPanel;
         private var _bonusWizardLevel:int = 0;
+        private var _xpBarDirty:Boolean = false;
 
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
@@ -30,17 +32,39 @@ package {
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
 
+        /** Canonical wizard-level values per AP item ID. */
+        public static function levelsForApId(apId:int):int {
+            if (apId == 500) return 3;   // Tattered Scroll
+            if (apId == 501) return 6;   // Worn Tome
+            if (apId == 502) return 18;  // Ancient Grimoire
+            return 0;
+        }
+
+        /**
+         * Render the XP bar if it was marked dirty by applyBonusLevels().
+         * Safe to call every frame — returns immediately if nothing changed
+         * or the selector renderer is unavailable.
+         */
+        public function renderXpBarIfDirty():Boolean {
+            if (!_xpBarDirty) return false;
+            if (GV.selectorCore == null || GV.selectorCore.renderer == null) return false;
+            GV.selectorCore.renderer.renderXpBar(GV.ppd.getXp());
+            _xpBarDirty = false;
+            return true;
+        }
+
         /**
          * Grant AP wizard levels from a received XP Bonus item.
-         * Tattered Scroll=1, Worn Tome=3, Ancient Grimoire=9 wizard levels.
+         * Tattered Scroll=3, Worn Tome=6, Ancient Grimoire=18 wizard levels.
          */
         public function grantXpBonus(apId:int):void {
-            var levels:int = 0;
+            var levels:int = levelsForApId(apId);
+            if (levels <= 0) return;
+
             var label:String = "";
-            if      (apId == 500) { levels = 1; label = "Tattered Scroll";  }
-            else if (apId == 501) { levels = 3; label = "Worn Tome";        }
-            else if (apId == 502) { levels = 9; label = "Ancient Grimoire"; }
-            else return;
+            if      (apId == 500) label = "Tattered Scroll";
+            else if (apId == 501) label = "Worn Tome";
+            else if (apId == 502) label = "Ancient Grimoire";
 
             _bonusWizardLevel += levels;
             if (onDataChanged != null) onDataChanged();
@@ -70,6 +94,7 @@ package {
                 // Clear any previously stored bonus.
                 var clearIdx:int = GV.getFieldId("A4");
                 if (clearIdx >= 0) GV.ppd.stageHighestXpsTrial[clearIdx].s(-1);
+                _xpBarDirty = true;
                 return;
             }
 
@@ -98,6 +123,7 @@ package {
             var bonusXp:Number   = Math.max(0, apXpForWizLevel(targetLevel) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
+            _xpBarDirty = true;
             _logger.log(_modName, "applyBonusLevels: currentLevel=" + currentLevel
                 + " bonusLevels=" + _bonusWizardLevel
                 + " targetLevel=" + targetLevel

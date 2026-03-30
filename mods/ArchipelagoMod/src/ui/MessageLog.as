@@ -1,4 +1,4 @@
-package {
+package ui {
 
     /**
      * Shared message store for all Archipelago toast messages.

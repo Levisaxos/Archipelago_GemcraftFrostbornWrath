@@ -1,4 +1,4 @@
-package {
+package unlockers {
     import Bezel.Bezel;
     import Bezel.Logger;
     import Bezel.GCFW.Events.EventTypes;
