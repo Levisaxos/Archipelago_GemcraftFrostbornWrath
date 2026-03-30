@@ -38,34 +38,34 @@ TIERS: Dict[int, List[str]] = {
     0:  ["W2", "W3", "W4", "S1", "S2", "S3", "S4", "V1"],
     1:  ["V2", "V3", "V4", "R1", "R2", "Q1", "Q2", "Q3", "Q4", "Q5", "T1"],
     2:  ["R3", "R4", "R5", "T2", "T3", "T4", "U1", "U2", "U3", "U4", "Y1", "Y3", "O3"],
-    3:  ["R6", "Y2", "O1", "O2", "O4", "N1", "N2", "N3", "P1"],
-    4:  ["T5", "Y4", "X1", "X3", "X4", "Z1", "Z2", "Z3",
-         "P2", "P3", "P4", "P5", "P6", "L1", "L2", "L3", "K1", "K2", "K4"],
-    5:  ["X2", "Z4", "Z5", "G1", "G2", "K3", "L4"],
-    6:  ["G3", "G4", "J1", "J2", "J3", "J4", "K5"],
-    7:  ["H1", "H2", "H3", "H5", "M1", "M2", "M3", "M4", "F1", "F2", "E2", "N5", "L5"],
-    8:  ["H4", "N4", "E1", "D4"],
-    9:  ["D1", "D2", "D3", "B1", "E3", "E4", "I1"],
-    10: ["E5", "D5", "B2", "B4", "C1", "C2", "I2", "I3", "I4"],
-    11: ["F3", "F4", "F5", "B3", "B5", "C3", "C4", "C5", "A1", "A2", "A3"],
+    3:  ["R6", "Y2", "O1", "O2", "O4", "N1", "N2", "P5", "T5"],
+    4:  ["Y4", "X1", "X3", "X4", "Z1", "Z2", "P1", "P2", "P3",
+         "P4", "P6", "N3", "L1", "L2", "G2", "X2", "K1", "K2", "K4"],
+    5:  ["Z4", "G1", "K3", "L3", "L4", "J1", "G3"],
+    6:  ["G4", "J2", "J3", "K5", "Z3", "Z5", "M1"],
+    7:  ["H2", "H3", "M2", "M3", "M4", "F1", "F2", "E2", "N5", "L5", "J4", "E1", "D1"],
+    8:  ["N4", "H1", "H5", "E3"],
+    9:  ["D2", "D3", "E4", "H4", "D4", "B2", "D5"],
+    10: ["E5", "C1", "C2", "I1", "I2", "I3", "B1", "B5", "C3"],
+    11: ["F3", "F4", "F5", "B3", "B4", "C4", "C5", "A1", "A2", "A3", "I4"],
     12: ["A4", "A5", "A6"],
 }
 
 # Tier requirements: tier_number → (previous_tier, tokens_needed_from_prev).
 # Tier 0 has no entry (it is free).
 TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
-    1:  (0,  6),
-    2:  (1,  6),
-    3:  (2,  6),
-    4:  (3,  6),
-    5:  (4,  6),
+    1:  (0,  7),
+    2:  (1,  9),
+    3:  (2,  11),
+    4:  (3,  8),
+    5:  (4,  16),
     6:  (5,  6),
     7:  (6,  6),
-    8:  (7,  6),
-    9:  (8,  4),
+    8:  (7,  11),
+    9:  (8,  3),
     10: (9,  6),
-    11: (10, 6),
-    12: (11, 6),
+    11: (10, 8),
+    12: (11, 9),
 }
 
 
@@ -122,7 +122,7 @@ STAGE_RULES: dict[str, StageRule] = {
     "T2": StageRule(tier=2),                        # tier 2
     "T3": StageRule(tier=2),                        # tier 2
     "T4": StageRule(tier=2),                        # tier 2
-    "T5": StageRule(tier=4),                        # tier 4
+    "T5": StageRule(tier=3),                        # tier 3
 
     # ── Zone U ────────────────────────────────────────────────────────────
     "U1": StageRule(tier=2),                        # tier 2
@@ -138,16 +138,16 @@ STAGE_RULES: dict[str, StageRule] = {
 
     # ── Zone X ────────────────────────────────────────────────────────────
     "X1": StageRule(tier=4),                        # tier 4
-    "X2": StageRule(tier=5),                        # tier 5
+    "X2": StageRule(tier=4),                        # tier 4
     "X3": StageRule(tier=4),                        # tier 4
     "X4": StageRule(tier=4),                        # tier 4
 
     # ── Zone Z ────────────────────────────────────────────────────────────
     "Z1": StageRule(tier=4),                        # tier 4
     "Z2": StageRule(tier=4),                        # tier 4
-    "Z3": StageRule(tier=4),                        # tier 4
+    "Z3": StageRule(tier=6),                        # tier 6
     "Z4": StageRule(tier=5),                        # tier 5
-    "Z5": StageRule(tier=5),                        # tier 5
+    "Z5": StageRule(tier=6),                        # tier 6
 
     # ── Zone O ────────────────────────────────────────────────────────────
     "O1": StageRule(tier=3),                        # tier 3
@@ -158,22 +158,22 @@ STAGE_RULES: dict[str, StageRule] = {
     # ── Zone N ────────────────────────────────────────────────────────────
     "N1": StageRule(tier=3),                        # tier 3
     "N2": StageRule(tier=3),                        # tier 3
-    "N3": StageRule(tier=3),                        # tier 3
+    "N3": StageRule(tier=4),                        # tier 4
     "N4": StageRule(tier=8),                        # tier 8 — significantly harder than N1-N3
     "N5": StageRule(tier=7),                        # tier 7
 
     # ── Zone P ────────────────────────────────────────────────────────────
-    "P1": StageRule(tier=3),                        # tier 3
+    "P1": StageRule(tier=4),                        # tier 4
     "P2": StageRule(tier=4),                        # tier 4
     "P3": StageRule(tier=4),                        # tier 4
     "P4": StageRule(tier=4),                        # tier 4
-    "P5": StageRule(tier=4),                        # tier 4
+    "P5": StageRule(tier=3),                        # tier 3
     "P6": StageRule(tier=4),                        # tier 4
 
     # ── Zone L ────────────────────────────────────────────────────────────
     "L1": StageRule(tier=4),                        # tier 4
     "L2": StageRule(tier=4),                        # tier 4
-    "L3": StageRule(tier=4),                        # tier 4
+    "L3": StageRule(tier=5),                        # tier 5
     "L4": StageRule(tier=5),                        # tier 5
     "L5": StageRule(                                # tier 7 — WIZLOCK: requires 4 skills
         tier=7,
@@ -188,26 +188,26 @@ STAGE_RULES: dict[str, StageRule] = {
     "K5": StageRule(tier=6),                        # tier 6
 
     # ── Zone H ────────────────────────────────────────────────────────────
-    "H1": StageRule(tier=7),                        # tier 7
+    "H1": StageRule(tier=8),                        # tier 8
     "H2": StageRule(tier=7),                        # tier 7
     "H3": StageRule(tier=7),                        # tier 7
-    "H4": StageRule(tier=8),                        # tier 8
-    "H5": StageRule(tier=7),                        # tier 7
+    "H4": StageRule(tier=9),                        # tier 9
+    "H5": StageRule(tier=8),                        # tier 8
 
     # ── Zone G ────────────────────────────────────────────────────────────
     "G1": StageRule(tier=5),                        # tier 5
-    "G2": StageRule(tier=5),                        # tier 5
-    "G3": StageRule(tier=6),                        # tier 6
+    "G2": StageRule(tier=4),                        # tier 4
+    "G3": StageRule(tier=5),                        # tier 5
     "G4": StageRule(tier=6),                        # tier 6
 
     # ── Zone J ────────────────────────────────────────────────────────────
-    "J1": StageRule(tier=6),                        # tier 6
+    "J1": StageRule(tier=5),                        # tier 5
     "J2": StageRule(tier=6),                        # tier 6
     "J3": StageRule(tier=6),                        # tier 6
-    "J4": StageRule(tier=6),                        # tier 6
+    "J4": StageRule(tier=7),                        # tier 7
 
     # ── Zone M ────────────────────────────────────────────────────────────
-    "M1": StageRule(tier=7),                        # tier 7
+    "M1": StageRule(tier=6),                        # tier 6
     "M2": StageRule(tier=7),                        # tier 7
     "M3": StageRule(tier=7),                        # tier 7
     "M4": StageRule(tier=7),                        # tier 7
@@ -220,30 +220,30 @@ STAGE_RULES: dict[str, StageRule] = {
     "F5": StageRule(tier=11),                       # tier 11
 
     # ── Zone E ────────────────────────────────────────────────────────────
-    "E1": StageRule(tier=8),                        # tier 8
+    "E1": StageRule(tier=7),                        # tier 7
     "E2": StageRule(tier=7),                        # tier 7
-    "E3": StageRule(tier=9),                        # tier 9
+    "E3": StageRule(tier=8),                        # tier 8
     "E4": StageRule(tier=9),                        # tier 9
     "E5": StageRule(tier=10),                       # tier 10
 
     # ── Zone D ────────────────────────────────────────────────────────────
-    "D1": StageRule(tier=9),                        # tier 9
+    "D1": StageRule(tier=7),                        # tier 7
     "D2": StageRule(tier=9),                        # tier 9
     "D3": StageRule(tier=9),                        # tier 9
-    "D4": StageRule(tier=8),                        # tier 8
-    "D5": StageRule(tier=10),                       # tier 10
+    "D4": StageRule(tier=9),                        # tier 9
+    "D5": StageRule(tier=9),                        # tier 9
 
     # ── Zone B ────────────────────────────────────────────────────────────
-    "B1": StageRule(tier=9),                        # tier 9
-    "B2": StageRule(tier=10),                       # tier 10
+    "B1": StageRule(tier=10),                       # tier 10
+    "B2": StageRule(tier=9),                        # tier 9
     "B3": StageRule(tier=11),                       # tier 11
-    "B4": StageRule(tier=10),                       # tier 10
-    "B5": StageRule(tier=11),                       # tier 11
+    "B4": StageRule(tier=11),                       # tier 11
+    "B5": StageRule(tier=10),                       # tier 10
 
     # ── Zone C ────────────────────────────────────────────────────────────
     "C1": StageRule(tier=10),                       # tier 10
     "C2": StageRule(tier=10),                       # tier 10
-    "C3": StageRule(tier=11),                       # tier 11
+    "C3": StageRule(tier=10),                       # tier 10
     "C4": StageRule(tier=11),                       # tier 11
     "C5": StageRule(tier=11),                       # tier 11
 
@@ -256,8 +256,8 @@ STAGE_RULES: dict[str, StageRule] = {
     "A6": StageRule(tier=12),                       # tier 12
 
     # ── Zone I ────────────────────────────────────────────────────────────
-    "I1": StageRule(tier=9),                        # tier 9
+    "I1": StageRule(tier=10),                       # tier 10
     "I2": StageRule(tier=10),                       # tier 10
     "I3": StageRule(tier=10),                       # tier 10
-    "I4": StageRule(tier=10),                       # tier 10
+    "I4": StageRule(tier=11),                       # tier 11
 }
