@@ -43,17 +43,27 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{trait['name']} Battle Trait"
         table[name] = ItemData(trait["ap_id"], ItemClassification.useful)
 
-    # XP tiers — each gives wizard levels (Small=1, Medium=3, Large=9).
-    # Pool contains 2 Large + 10 Medium + ~74 Small (fills remaining slots).
-    # Classified as useful (not progression): stage access is gated by field
-    # tokens and tier completion, not wizard levels.  XP helps the player
-    # power up but is never required to unlock new locations.
+    # XP tiers — 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls.
+    # Per-tome level values are configured from slot_data (xp_tome_bonus option).
     table["Tattered Scroll"]  = ItemData(500, ItemClassification.useful)
     table["Worn Tome"]        = ItemData(501, ItemClassification.useful)
     table["Ancient Grimoire"] = ItemData(502, ItemClassification.useful)
 
-    # Generic filler
-    table["Shadow Core"] = ItemData(503, ItemClassification.filler)
+    # Specific talisman fragments — named by original field (IDs 700–752).
+    for frag in data["talisman_fragments"]:
+        table[f"{frag['str_id']} Talisman Fragment"] = ItemData(frag["item_ap_id"], ItemClassification.useful)
+
+    # Extra talisman fragments — named "Extra Talisman Fragment #N" (IDs 753–799).
+    for frag in data["extra_talisman_fragments"]:
+        table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
+
+    # Specific shadow core stashes — named by original field (IDs 800–816).
+    for sc in data["shadow_core_stashes"]:
+        table[f"{sc['str_id']} Shadow Cores"] = ItemData(sc["item_ap_id"], ItemClassification.filler)
+
+    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 817–868).
+    for sc in data["extra_shadow_core_stashes"]:
+        table[sc["name"]] = ItemData(sc["item_ap_id"], ItemClassification.filler)
 
     return table
 

@@ -31,6 +31,8 @@ package {
     import unlockers.TraitUnlocker
     import unlockers.LevelUnlocker
     import unlockers.StageUnlocker
+    import unlockers.TalismanUnlocker
+    import unlockers.ShadowCoreUnlocker
 
     import net.ConnectionManager
 
@@ -100,6 +102,8 @@ package {
         private var _traitUnlocker:TraitUnlocker;
         private var _stageUnlocker:StageUnlocker;
         private var _levelUnlocker:LevelUnlocker;
+        private var _talismanUnlocker:TalismanUnlocker;
+        private var _shadowCoreUnlocker:ShadowCoreUnlocker;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -107,6 +111,7 @@ package {
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
+        private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -128,14 +133,15 @@ package {
                 _messageLog    = new MessageLog();
                 _toast         = new ToastPanel();
                 _itemToast     = new ItemToastPanel();
-                _toast.messageLog     = _messageLog;
-                _itemToast.messageLog = _messageLog;
+                _toast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
-                _traitUnlocker = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
-                _stageUnlocker = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
+                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
+                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
+                _stageUnlocker      = new StageUnlocker(_logger, MOD_NAME);
+                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
+                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
+                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -145,6 +151,7 @@ package {
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
                 _connectionManager.setItemToast(_itemToast);
+                _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected            = onApConnected;
                 _connectionManager.onFullSync             = syncWithAP;
                 _connectionManager.onItemReceived         = grantItem;
@@ -155,6 +162,7 @@ package {
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
+                _saveManager.shadowCoreUnlocker = _shadowCoreUnlocker;
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
@@ -379,6 +387,26 @@ package {
             // Apply any sync that was deferred because GV.ppd was null at connect time.
             if (_pendingSyncItems != null && GV.ppd != null) {
                 syncWithAP(_pendingSyncItems);
+            }
+
+            // Unlock free stages whenever a new ppd is detected (new game or slot change).
+            // syncWithAP only runs once at connect time; if a new ppd is created after that
+            // (e.g. connecting while an old slot was still loaded, then loading a new slot),
+            // _pendingSyncItems is already null and free stages would never get applied.
+            if (_connectionManager.isConnected
+                    && GV.ppd != null
+                    && GV.stageCollection != null
+                    && GV.ppd !== _lastPpd) {
+                _lastPpd = GV.ppd;
+                var freeStages:Array = _connectionManager.freeStages;
+                if (freeStages != null) {
+                    for each (var freeStrId:String in freeStages) {
+                        if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
+                            _stageUnlocker.unlockStage(freeStrId);
+                            _logger.log(MOD_NAME, "free stage unlocked on ppd change: " + freeStrId);
+                        }
+                    }
+                }
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
@@ -653,6 +681,19 @@ package {
                 _connectionManager.sendConnectUpdate(["DeathLink"]);
             }
 
+            _levelUnlocker.configure(
+                _connectionManager.tatteredScrollLevels,
+                _connectionManager.wornTomeLevels,
+                _connectionManager.ancientGrimoireLevels
+            );
+            _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
+            _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
+            _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
+            _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
+            if (_normalProgressionBlocker != null) {
+                _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
+            }
+
             _goalManager.configure(
                 _connectionManager.goal,
                 _connectionManager.talismanMinRarity);
@@ -699,6 +740,12 @@ package {
                 return;
             }
             if (apId >= 500 && apId <= 502) { _levelUnlocker.grantXpBonus(apId); return; }
+            if (apId >= 700 && apId <= 799) {
+                _talismanUnlocker.grantFragment(apId);
+                _saveManager.saveSlotData();
+                return;
+            }
+            if (apId >= 800 && apId <= 868) { _shadowCoreUnlocker.grantShadowCores(apId); _saveManager.saveSlotData(); return; }
             _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
         }
 
@@ -716,6 +763,8 @@ package {
             var apTraits:Object = {};
             var apTokens:Object = {};
             var apXpTotal:int   = 0;
+            var apTalismans:Array  = [];
+            var apShadowCores:Array = [];
             var tokenMap:Object    = _connectionManager.tokenMap;
             var tokenStages:Object = _connectionManager.tokenStages;
 
@@ -728,7 +777,11 @@ package {
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
                 } else if (apId >= 500 && apId <= 502) {
-                    apXpTotal += LevelUnlocker.levelsForApId(apId);
+                    apXpTotal += _levelUnlocker.levelsForApId(apId);
+                } else if (apId >= 700 && apId <= 799) {
+                    apTalismans.push(apId);
+                } else if (apId >= 800 && apId <= 868) {
+                    apShadowCores.push(apId);
                 }
             }
 
@@ -794,6 +847,24 @@ package {
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
             _levelUnlocker.applyBonusLevels();
+
+            // --- Talisman fragments ---
+            _talismanUnlocker.syncTalismans(apTalismans);
+
+            // --- Shadow cores ---
+            _shadowCoreUnlocker.syncShadowCores(apShadowCores);
+
+            // --- Free stages (W1, W2, W3, W4) — always unlock on sync ---
+            var freeStages:Array = _connectionManager.freeStages;
+            if (freeStages != null) {
+                for each (var freeStrId:String in freeStages) {
+                    if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
+                        _stageUnlocker.unlockStage(freeStrId);
+                        _logger.log(MOD_NAME, "  free stage unlocked: " + freeStrId);
+                    }
+                }
+            }
+
             _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
@@ -859,6 +930,14 @@ package {
             if (traitName != null) return traitName + " Battle Trait";
             var strId:String = _connectionManager.tokenMap[String(apId)];
             if (strId != null) return strId + " Field Token";
+            if (apId >= 700 && apId <= 799) {
+                var talName:String = _connectionManager.talismanNameMap[String(apId)];
+                return talName != null ? talName : ("Talisman Fragment #" + apId);
+            }
+            if (apId >= 800 && apId <= 868) {
+                var scName:String = _connectionManager.shadowCoreNameMap[String(apId)];
+                return scName != null ? scName : ("Shadow Cores #" + apId);
+            }
             return null; // let ConnectionManager handle the rest
         }
     }

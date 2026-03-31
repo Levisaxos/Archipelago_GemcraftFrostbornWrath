@@ -27,8 +27,9 @@ def _load_location_table() -> Dict[str, LocationData]:
         # All stages are completable and send AP checks — including W1 which has
         # no field token item but IS the starting location (accessible from Menu).
         str_id = stage["str_id"]
-        table[f"Complete {str_id} - Journey"] = LocationData(stage["loc_ap_id"],       str_id)
-        table[f"Complete {str_id} - Bonus"]   = LocationData(stage["loc_ap_id"] + 500, str_id)
+        table[f"Complete {str_id} - Journey"]      = LocationData(stage["loc_ap_id"],             str_id)
+        table[f"Complete {str_id} - Bonus"]        = LocationData(stage["loc_ap_id"] + 500,       str_id)
+        table[f"Complete {str_id} - Wizard stash"] = LocationData(stage["wiz_stash_loc_ap_id"],   str_id)
 
     return table
 
