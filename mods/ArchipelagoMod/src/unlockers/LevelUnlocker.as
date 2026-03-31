@@ -1,6 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import flash.utils.getDefinitionByName;
     import ui.ItemToastPanel;
 
     /**
@@ -84,9 +85,21 @@ package unlockers {
             else if (apId == 501) label = "Worn Tome";
             else if (apId == 502) label = "Ancient Grimoire";
 
+            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
+
             _bonusWizardLevel += levels;
             if (onDataChanged != null) onDataChanged();
-            applyBonusLevels();
+            applyBonusLevels(); // sets _xpBarDirty = true; also updates the A4 trial slot
+
+            // Animate XP bar on the selector instead of snapping.
+            // applyBonusLevels() already set _xpBarDirty; clear it so the frame-loop
+            // doesn't also snap to the final value while the animation is running.
+            if (GV.ppd != null) {
+                var newXp:Number = GV.ppd.getXp();
+                if (pushSelectorEvent(4, [oldXp, newXp])) { // 4 = XP_INCREASING
+                    _xpBarDirty = false;
+                }
+            }
 
             _logger.log(_modName, label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
             _itemToast.addItem("Found " + label, 0x88CCFF);
@@ -166,6 +179,25 @@ package unlockers {
             var vDelta2:Number = 30 + (pLevel - 1) * 5;
             var vDelta:Number  = 600 + vDelta2 / 2 * (pLevel - 1);
             return -10 + 10 * Math.round(0.8 * (300 + vDelta / 2 * (pLevel - 1)) / 10);
+        }
+
+        /**
+         * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
+         * if the selector is currently idle so the animation plays immediately.
+         * Returns true if the event was pushed (selector available); false otherwise.
+         */
+        private function pushSelectorEvent(type:int, args:Array):Boolean {
+            try {
+                var core:* = GV.selectorCore;
+                if (core == null) return false;
+                var SelectorEventClass:Class = getDefinitionByName("com.giab.games.gcfw.struct.SelectorEvent") as Class;
+                core.eventQueue.push(new SelectorEventClass(type, args));
+                if (core.screenStatus == 4) core.screenStatus = 3; // STAGES_IDLE → UPDATING_STAGES
+                return true;
+            } catch (err:Error) {
+                _logger.log(_modName, "pushSelectorEvent error: " + err.message);
+                return false;
+            }
         }
     }
 }
