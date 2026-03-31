@@ -103,6 +103,8 @@ package net {
         public var onDeathLinkReceived:Function;
         /** Called for each PrintJSON ItemSend event involving us. Signature: (msg:String, color:uint):void */
         public var onItemSend:Function;
+        /** Called when the connection drops unexpectedly (was connected, not a deliberate disconnect). Signature: ():void */
+        public var onUnexpectedDisconnect:Function;
 
         // -----------------------------------------------------------------------
 
@@ -232,7 +234,10 @@ package net {
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
-            if (!_reconnecting && wasConnected) _toast.addMessage("AP disconnected", 0xFFFFAA44);            
+            if (!_reconnecting && wasConnected) {
+                _toast.addMessage("AP disconnected", 0xFFFFAA44);
+                if (onUnexpectedDisconnect != null) onUnexpectedDisconnect();
+            }            
         }
 
         // -----------------------------------------------------------------------

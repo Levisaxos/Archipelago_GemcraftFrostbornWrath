@@ -22,6 +22,7 @@ package {
     import ui.MessageLogPanel
     import ui.ScrDebugOptions
     import ui.ConnectionPanel
+    import ui.DisconnectPanel
     
     import deathlink.DeathLinkHandler
     import deathlink.EnragerOverride
@@ -93,6 +94,8 @@ package {
         private var _normalProgressionBlocker:NormalProgressionBlocker;
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
+        private var _disconnectPanel:DisconnectPanel;
+        private var _disconnectPanelOnStage:Boolean = false;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _deathLinkHandler:DeathLinkHandler;
         private var _goalManager:GoalManager;
@@ -152,13 +155,18 @@ package {
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
                 _connectionManager.setItemToast(_itemToast);
                 _connectionManager.setMessageLog(_messageLog);
-                _connectionManager.onConnected            = onApConnected;
-                _connectionManager.onFullSync             = syncWithAP;
-                _connectionManager.onItemReceived         = grantItem;
-                _connectionManager.onError                = onConnectionError;
-                _connectionManager.onPanelReset           = onConnectionPanelReset;
+                _connectionManager.onConnected             = onApConnected;
+                _connectionManager.onFullSync              = syncWithAP;
+                _connectionManager.onItemReceived          = grantItem;
+                _connectionManager.onError                 = onConnectionError;
+                _connectionManager.onPanelReset            = onConnectionPanelReset;
+                _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
+
+                // Disconnect banner (shown when AP drops unexpectedly)
+                _disconnectPanel = new DisconnectPanel();
+                _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
@@ -238,6 +246,11 @@ package {
                 _connectionPanel.dismiss();
             }
             _connectionPanel = null;
+            if (_disconnectPanel != null && _disconnectPanel.parent != null) {
+                _disconnectPanel.parent.removeChild(_disconnectPanel);
+            }
+            _disconnectPanel = null;
+            _disconnectPanelOnStage = false;
             if (_reportBtn != null && _reportBtn.parent != null) {
                 _reportBtn.parent.removeChild(_reportBtn);
                 _reportBtn = null;
@@ -278,6 +291,12 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
+            if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
+                this.stage.addChild(_disconnectPanel);
+                _disconnectPanelOnStage = true;
+                _disconnectPanel.visible = false;
+                _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
+            }
             // Keep item toast horizontally centered as panelWidth may change each item.
             if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
                 positionItemToast();
@@ -307,6 +326,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
+                    hideDisconnectPanel();
                     _goalManager.reset();
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
@@ -476,6 +496,9 @@ package {
             if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
                 _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
             }
+            if (_disconnectPanel != null && this.stage != null) {
+                _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -562,6 +585,11 @@ package {
 
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
             _saveManager.currentSlot = slotId;
+            if (_disconnectPanel != null && _disconnectPanel.isShowing) {
+                _toast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
+                _modeInterceptor.clearPending();
+                return;
+            }
             startConnectionForSlot();
         }
 
@@ -654,6 +682,7 @@ package {
             _standalone = true;
             _normalProgressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
+            hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
             _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
@@ -705,6 +734,7 @@ package {
             // may still hold data from a previously loaded save slot.
             // The onSaveSave hook will catch a legitimate victory.
             if (_connectionPanel != null) _connectionPanel.dismiss();
+            hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -717,6 +747,30 @@ package {
 
         private function onConnectionPanelReset():void {
             if (_connectionPanel != null) _connectionPanel.resetState();
+            if (_disconnectPanel != null) _disconnectPanel.resetState();
+        }
+
+        private function onApUnexpectedlyDisconnected():void {
+            if (_disconnectPanel == null || !_disconnectPanelOnStage) return;
+            _disconnectPanel.resetState();
+            _disconnectPanel.visible = true;
+            // Keep it above other children so it's always readable
+            if (this.stage != null) {
+                this.stage.setChildIndex(_disconnectPanel, this.stage.numChildren - 1);
+            }
+            _logger.log(MOD_NAME, "Disconnect panel shown");
+        }
+
+        private function hideDisconnectPanel():void {
+            if (_disconnectPanel != null) {
+                _disconnectPanel.visible = false;
+                _disconnectPanel.resetState();
+            }
+        }
+
+        private function onDisconnectPanelReconnect():void {
+            _disconnectPanel.setReconnecting(true);
+            startConnectionForSlot();
         }
 
         // -----------------------------------------------------------------------
