@@ -35,9 +35,9 @@ class TierRequirementsPercentage(Range):
     This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
     """
     display_name = "Tier Completion Percentage"
-    range_start = 30
+    range_start = 40
     range_end = 100
-    default = 65
+    default = 75
 
 
 class DeathLinkPunishment(Choice):

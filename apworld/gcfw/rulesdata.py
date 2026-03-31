@@ -11,38 +11,53 @@ GAME_DATA = json.loads(files(__package__).joinpath("data/game_data.json").read_t
 
 
 # ---------------------------------------------------------------------------
-# Skill categories (the 4 rows of the in-game skill tree, 6 skills each)
+# Skill categories (by in-game grouping; component -> "gems" and strike + enhancement -> "spells"
 # ---------------------------------------------------------------------------
 SKILL_CATEGORIES: Dict[str, List[str]] = {
-    "generic":   ["Mana Stream", "True Colors", "Fusion", "Orb of Presence", "Resonance", "Demolition"],
-    "skills":    ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
+    "focus":     ["True Colors", "Fusion", "Orb of Presence", "Resonance"],
+    "gems":      ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
     "spells":    ["Freeze", "Whiteout", "Ice Shards", "Bolt", "Beam", "Barrage"],
-    "buildings": ["Fury", "Amplifiers", "Pylons", "Lanterns", "Traps", "Seeker Sense"],
+    "buildings": ["Amplifiers", "Pylons", "Lanterns", "Traps"],
+    "wrath":     ["Mana Stream", "Demolition", "Fury", "Seeker Sense"]  # <- all of these suck except mana stream LMAO
 }
 
 # Which skill category rows must have at least one skill collected before
 # accessing each tier.  Tiers not listed have no skill gate.
 #
-# Tier 1: spells + buildings        Tier 7:  spells + generic
-# Tier 2: skills                    Tier 8:  skills + buildings + generic
-# Tier 3: spells                    Tier 9:  spells + buildings + generic
-# Tier 4: skills + buildings        Tier 10: skills + generic
-# Tier 5: spells + buildings        Tier 11: spells + buildings + generic
-# Tier 6: skills                    Tier 12: skills + generic
+# Tier 1: spells + focus            Tier 7:  spells + focus
+# Tier 2: gems + buildings          Tier 8:  gems + buildings
+# Tier 3: spells + wrath            Tier 9:  spells + wrath
+# Tier 4: gems + focus              Tier 10: gems + focus
+# Tier 5: spells + buildings        Tier 11: spells + buildings
+# Tier 6: gems + wrath              Tier 12: gems + wrath
 TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
-    1:  ["spells", "buildings"],
-    2:  ["skills"],
-    3:  ["spells"],
-    4:  ["skills", "buildings"],
+    1:  ["spells", "focus"],
+    2:  ["gems", "buildings"],
+    3:  ["spells", "wrath"],
+    4:  ["gems", "focus"],
     5:  ["spells", "buildings"],
-    6:  ["skills"],
-    7:  ["spells", "generic"],
-    8:  ["skills", "buildings", "generic"],
-    9:  ["spells", "buildings", "generic"],
-    10: ["skills", "generic"],
-    11: ["spells", "buildings", "generic"],
-    12: ["skills", "generic"],
+    6:  ["gems", "wrath"],
+    7:  ["spells", "focus"],
+    8:  ["gems", "buildings"],
+    9:  ["spells", "wrath"],
+    10: ["gems", "focus"],
+    11: ["spells", "buildings"],
+    12: ["gems", "wrath"],
 }
+
+CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
+# TODO: make not hard coded to 12 tiers
+for tier in range(1,12+1):
+    this_tier_skills: Dict[str, int] = {
+        skill_name: (
+            CUMULATIVE_SKILL_REQUIREMENTS[tier-1][skill_name] if tier > 1
+            else 0
+        ) for skill_name in SKILL_CATEGORIES.keys()
+    }
+    for tier_req in TIER_SKILL_REQUIREMENTS[tier]:
+        this_tier_skills[tier_req] += 1
+    CUMULATIVE_SKILL_REQUIREMENTS[tier] = this_tier_skills
+
 
 
 @dataclass
@@ -75,7 +90,8 @@ class StageRule:
 FREE_STAGES: set = {"W2", "W3", "W4"}
 
 # Tier definitions: tier_number → list of stage str_ids in that tier.
-# TODO: refactor to be programatically generated using game_data.json
+# TODO: refactor to be programatically generated using game_data.json.
+#       also rebalance tiers - t4 is too big and t8 is too small. t0 and t12 are probably fine being small.
 # W2/W3/W4 are excluded from TIERS because they have no token items and
 # cannot contribute to any tier gate count.
 

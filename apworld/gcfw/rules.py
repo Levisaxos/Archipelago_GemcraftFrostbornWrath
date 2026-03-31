@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, TIER_REQUIREMENTS, TIER_SKILL_REQUIREMENTS
+from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -33,8 +33,9 @@ def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
         return False
     # Check skill category requirements for this tier.
-    for category in TIER_SKILL_REQUIREMENTS.get(tier, []):
-        if not state.has_any(TIER_SKILL_NAMES[category], player):
+    for category, count_req in CUMULATIVE_SKILL_REQUIREMENTS.get(tier, []).items():
+        total_category = [state.has(skill_name, player) for skill_name in TIER_SKILL_NAMES[category]].count(True)
+        if total_category < count_req:
             return False
     # Recurse to ensure all lower tiers are also satisfied.
     if prev == 0:
