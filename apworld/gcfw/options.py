@@ -12,18 +12,6 @@ class Goal(Choice):
     option_beat_game = 0
     default = 0
 
-
-class TalismanMinRarity(Range):
-    """Minimum rarity each of the 25 socketed talisman fragments must have to complete
-    the full_talisman goal. Higher rarity fragments are harder to find.
-    Only used when goal is set to full_talisman.
-    """
-    display_name = "Talisman Minimum Rarity"
-    range_start = 1
-    range_end   = 100
-    default     = 1
-
-
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes in the item pool combined.
 
@@ -39,15 +27,6 @@ class XpTomeBonus(Range):
     range_start = 50
     range_end   = 300
     default     = 150
-
-
-class ForceEarlySkills(Toggle):
-    """Whether or not skills should be redistributed to appear roughly uniformly throughout the game.
-    The current generation method often results in skills appearing later on average; setting this to true
-    will force some skills to appear near the start of the game.
-    """
-    display_name = "Force Early Skills"
-    default = True
 
 
 class DeathLinkPunishment(Choice):
@@ -109,9 +88,7 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
-    talisman_min_rarity:       TalismanMinRarity
     xp_tome_bonus:             XpTomeBonus
-    force_early_skills:        ForceEarlySkills
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent

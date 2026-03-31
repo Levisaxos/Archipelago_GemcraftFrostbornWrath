@@ -5,12 +5,23 @@ from importlib.resources import files
 from typing import Dict, List
 
 from BaseClasses import ItemClassification, Region
+from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
 
 from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
-from .options import GCFWOptions
+from .options import (
+    GCFWOptions,
+    Goal,
+    XpTomeBonus,
+    DeathLinkPunishment,
+    GemLossPercent,
+    WaveSurgeCount,
+    WaveSurgeGemLevel,
+    DeathLinkGracePeriod,
+    DeathLinkCooldown,
+)
 from .rules import set_rules
 from .rulesdata import TIERS, TIER_REQUIREMENTS
 
@@ -37,6 +48,22 @@ class GemcraftFrostbornWrathWorld(World):
     options_dataclass = GCFWOptions
     options: GCFWOptions
     topology_present = True
+
+    option_groups = [
+        OptionGroup("Game Options", [
+            Goal,
+            XpTomeBonus,
+        ]),
+        OptionGroup("DeathLink Options", [
+            DeathLink,
+            DeathLinkPunishment,
+            GemLossPercent,
+            WaveSurgeCount,
+            WaveSurgeGemLevel,
+            DeathLinkGracePeriod,
+            DeathLinkCooldown,
+        ]),
+    ]
 
     item_name_to_id: Dict[str, int] = {name: data.id for name, data in item_table.items()}
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
@@ -173,20 +200,6 @@ class GemcraftFrostbornWrathWorld(World):
                         prog_idx -= 1  # to counteract the +=1 below
                 prog_idx += 1  # this should never exceed the length of the progitempool. assuming reasonable tier tables.
 
-            # IF we want skills to appear earlier, then after each tier (except the very first tiers (0 or 1 (i was getting skills *too* early >_>))
-            # move a skill into the space between this tier and the next tier.
-            if bool(self.options.force_early_skills.value):
-                if t > 2:
-                    prog_idx = 0
-                    moved_skill = False
-                    while not moved_skill:
-                        this_item_name = progitempool[prog_idx].name
-                        if this_item_name.endswith(" Skill"):
-                            # move to end
-                            # print(f"Moving {this_field} to end")
-                            progitempool.append(progitempool.pop(prog_idx))
-                            moved_skill = True  # isnt this what continue is for. or break. idk im never confident in using those in nested loops lol
-                        prog_idx += 1
 
         # print("PRINTING WHOLE PROG POOL IN ORDER:")
         # for i in progitempool:
@@ -265,7 +278,6 @@ class GemcraftFrostbornWrathWorld(World):
 
         return {
             "goal":                  self.options.goal.value,
-            "talisman_min_rarity":   self.options.talisman_min_rarity.value,
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,
@@ -276,7 +288,6 @@ class GemcraftFrostbornWrathWorld(World):
             "wiz_stash_tal_data":    wiz_stash_tal_data,
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
-            "force_early_skills":      bool(self.options.force_early_skills.value),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,
