@@ -34,6 +34,8 @@ package {
 
     import net.ConnectionManager
 
+    import patch.WizStashes
+
     import save.FileHandler
     import save.SaveManager
 
@@ -174,6 +176,7 @@ package {
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+                patchWizStashModes();
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
@@ -496,6 +499,13 @@ package {
             } else {
                 _debugOptions.open();
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // Startup patches
+
+        private function patchWizStashModes():void {
+            WizStashes.apply(_logger, MOD_NAME);
         }
 
         // -----------------------------------------------------------------------
