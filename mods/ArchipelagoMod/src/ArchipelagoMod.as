@@ -833,6 +833,17 @@ package {
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
+            // --- Free stages (W1, W2, W3, W4) — always unlock on sync ---
+            var freeStages:Array = _connectionManager.freeStages;
+            if (freeStages != null) {
+                for each (var freeStrId:String in freeStages) {
+                    if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
+                        _stageUnlocker.unlockStage(freeStrId);
+                        _logger.log(MOD_NAME, "  free stage unlocked: " + freeStrId);
+                    }
+                }
+            }
+
             _saveManager.saveSlotData();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +

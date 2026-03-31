@@ -52,6 +52,7 @@ package net {
         private var _tatteredScrollLevels:int  = 1;
         private var _wornTomeLevels:int        = 2;
         private var _ancientGrimoireLevels:int = 3;
+        private var _freeStages:Array          = null;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -121,6 +122,7 @@ package net {
         public function get tatteredScrollLevels():int  { return _tatteredScrollLevels; }
         public function get wornTomeLevels():int        { return _wornTomeLevels; }
         public function get ancientGrimoireLevels():int { return _ancientGrimoireLevels; }
+        public function get freeStages():Array          { return _freeStages; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
