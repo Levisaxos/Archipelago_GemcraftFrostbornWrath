@@ -5,12 +5,13 @@ package unlockers {
 
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+    import com.giab.games.gcfw.entity.TalismanFragment;
 
     /**
      * Intercepts the SAVE_SAVE event and reverts any automatic field-token,
-     * map-tile, skill-tome, and battle-trait unlocks that the game wrote to
-     * PlayerProgressData.  The save file is immediately overwritten so the
-     * reverted state is persisted.
+     * map-tile, skill-tome, battle-trait, shadow-core, and talisman-fragment
+     * unlocks that the game wrote to PlayerProgressData.  The save file is
+     * immediately overwritten so the reverted state is persisted.
      *
      * Archipelago will later send the correct items; this class just ensures the
      * game cannot hand them out on its own.
@@ -20,6 +21,11 @@ package unlockers {
      * clears that happen outside of battle) it enforces AP authority: any
      * skill tome or battle trait that is set in the save data but was NOT granted
      * by AP is immediately reverted.
+     *
+     * For wizard stashes specifically, shadow cores and talisman fragments in
+     * stashDrops are also blocked: when a stash is detected as newly cleared
+     * (OPEN or DESTROYED), its SC{n} shadow-core grant is subtracted and the
+     * talisman fragment with the matching seed is removed from the inventory.
      */
     public class NormalProgressionBlocker {
 
@@ -31,6 +37,14 @@ package unlockers {
         // Tracks which skills / traits AP has granted (by game index).
         private var _apGrantedSkills:Array; // Boolean[24]
         private var _apGrantedTraits:Array; // Boolean[15]
+
+        // Wiz stash blocking: str_id → "seed/rarity/type/upgradeLevel"
+        // Set once on AP connect via setWizStashTalData().
+        private var _wizStashTalData:Object = null;
+
+        // Tracks which stage IDs have had their stash rewards blocked already
+        // so we don't double-subtract on subsequent saves.
+        private var _stashBlockedIds:Object = {}; // stageId (int key) → true
 
         public function NormalProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
@@ -75,6 +89,16 @@ package unlockers {
         /** Mark a battle trait as AP-granted so it will not be reverted on saves. */
         public function markTraitGranted(gameId:int):void {
             if (gameId >= 0 && gameId < 15) _apGrantedTraits[gameId] = true;
+        }
+
+        /**
+         * Provide the wiz stash talisman data map (str_id → "seed/rarity/type/upgradeLevel")
+         * from slot_data so the blocker knows which fragment seed to remove per stage.
+         * Also resets _stashBlockedIds so prior blocks are re-evaluated for the new slot.
+         */
+        public function setWizStashTalData(map:Object):void {
+            _wizStashTalData = map;
+            _stashBlockedIds = {};
         }
 
         // -----------------------------------------------------------------------
@@ -124,8 +148,6 @@ package unlockers {
                 }
 
                 // --- Enforce AP authority over skills and traits on every save ---
-                // This catches wizard-stash clears (and any other source) that grant
-                // skill tomes or battle traits outside of a normal battle victory.
                 if (GV.ppd != null) {
                     for (var s:int = 0; s < 24; s++) {
                         if (GV.ppd.gainedSkillTomes[s] && !_apGrantedSkills[s]) {
@@ -144,6 +166,63 @@ package unlockers {
                     }
                 }
 
+                // --- Block shadow cores and talisman fragments from wizard stashes ---
+                if (GV.ppd != null && GV.stageCollection != null && _wizStashTalData != null) {
+                    var metas:Array = GV.stageCollection.stageMetas;
+                    for (var m:int = 0; m < metas.length; m++) {
+                        var meta:* = metas[m];
+                        if (meta == null) continue;
+                        var stageId:int    = int(meta.id);
+                        var stashStatus:int = int(GV.ppd.stageWizStashStauses[stageId]);
+                        // Only process newly-cleared stashes (OPEN=1 or DESTROYED=2).
+                        if (stashStatus == 0) continue;
+                        if (_stashBlockedIds[stageId]) continue;
+
+                        var strId:String   = String(meta.strId);
+                        var stashDrops:String = String(meta.stashDrops);
+                        var parts:Array    = stashDrops.split("+");
+                        var stashReverted:int = 0;
+
+                        for (var p:int = 0; p < parts.length; p++) {
+                            var drop:String = String(parts[p]);
+
+                            // Shadow cores: "SC{amount}"
+                            if (drop.indexOf("SC") == 0) {
+                                var scAmount:int = int(drop.substring(2));
+                                if (scAmount > 0) {
+                                    var currentSC:Number = GV.ppd.shadowCoreAmount.g();
+                                    GV.ppd.shadowCoreAmount.s(Math.max(0, currentSC - scAmount));
+                                    reverted++;
+                                    stashReverted++;
+                                    _logger.log(_modName, "Blocked stash SC grant stage=" + strId
+                                        + " amount=" + scAmount);
+                                }
+                            }
+
+                            // Talisman fragment: "TAL" (actual seed from wizStashTalData)
+                            if (drop == "TAL") {
+                                var talData:* = _wizStashTalData[strId];
+                                if (talData != null) {
+                                    var talParts:Array = String(talData).split("/");
+                                    if (talParts.length >= 1) {
+                                        var seed:int = int(talParts[0]);
+                                        if (removeTalismanBySeed(seed)) {
+                                            reverted++;
+                                            stashReverted++;
+                                            _logger.log(_modName, "Blocked stash TAL grant stage=" + strId
+                                                + " seed=" + seed);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (stashReverted > 0) {
+                            _stashBlockedIds[stageId] = true;
+                        }
+                    }
+                }
+
                 if (reverted > 0) {
                     _isSaving = true;
                     GV.loaderSaver.saveGameData();
@@ -154,6 +233,27 @@ package unlockers {
                 _isSaving = false;
                 _logger.log(_modName, "NormalProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // Helpers
+
+        /**
+         * Remove the first talisman fragment with the given seed from the inventory.
+         * Returns true if a fragment was found and removed.
+         */
+        private function removeTalismanBySeed(seed:int):Boolean {
+            if (GV.ppd == null) return false;
+            var inv:Array = GV.ppd.talismanInventory;
+            if (inv == null) return false;
+            for (var i:int = 0; i < inv.length; i++) {
+                var frag:* = inv[i];
+                if (frag != null && TalismanFragment(frag).seed == seed) {
+                    inv[i] = null;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

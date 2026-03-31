@@ -5,7 +5,8 @@ package unlockers {
 
     /**
      * Handles AP wizard level / XP bonus grants.
-     * XP Bonus AP IDs: 500 (Tattered Scroll=+3), 501 (Worn Tome=+6), 502 (Ancient Grimoire=+18).
+     * XP Bonus AP IDs: 500 (Tattered Scroll), 501 (Worn Tome), 502 (Ancient Grimoire).
+     * Per-tome level values are configured from slot_data via configure().
      *
      * Bonus wizard levels are persisted in the slot JSON file and injected into
      * A4's trial XP slot so the game's own XP sum picks them up automatically.
@@ -20,6 +21,11 @@ package unlockers {
         private var _bonusWizardLevel:int = 0;
         private var _xpBarDirty:Boolean = false;
 
+        // Per-tome level values — set from slot_data on connect; fallback to 1/2/3 defaults.
+        private var _tatteredLevels:int = 1;
+        private var _wornLevels:int     = 2;
+        private var _ancientLevels:int  = 3;
+
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
 
@@ -32,11 +38,23 @@ package unlockers {
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
 
-        /** Canonical wizard-level values per AP item ID. */
-        public static function levelsForApId(apId:int):int {
-            if (apId == 500) return 3;   // Tattered Scroll
-            if (apId == 501) return 6;   // Worn Tome
-            if (apId == 502) return 18;  // Ancient Grimoire
+        /**
+         * Set per-tome level values from slot_data.
+         * Call once in onApConnected before syncing items.
+         */
+        public function configure(tattered:int, worn:int, ancient:int):void {
+            _tatteredLevels = Math.max(1, tattered);
+            _wornLevels     = Math.max(1, worn);
+            _ancientLevels  = Math.max(1, ancient);
+            _logger.log(_modName, "LevelUnlocker configured: tattered=" + _tatteredLevels
+                + " worn=" + _wornLevels + " ancient=" + _ancientLevels);
+        }
+
+        /** Wizard-level value for an AP item ID, using the configured per-tome values. */
+        public function levelsForApId(apId:int):int {
+            if (apId == 500) return _tatteredLevels;
+            if (apId == 501) return _wornLevels;
+            if (apId == 502) return _ancientLevels;
             return 0;
         }
 

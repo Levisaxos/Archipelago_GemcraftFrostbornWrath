@@ -20,8 +20,6 @@ Defines the game to the Archipelago server:
 - **Goal conditions** (what counts as "game complete")
 - **Player YAML options** (what the player can configure for their seed)
 
-This is a Python package that gets installed into an Archipelago server.
-
 ### 2. Bezel Mod (ActionScript — runs inside the game)
 The in-game client:
 - Connects to the Archipelago server via WebSocket
@@ -33,40 +31,42 @@ The in-game client:
 
 ## What gets shuffled
 
-### Items (things you receive)
-| Item type | Notes |
-|---|---|
-| Field Tokens | Unlock stages on the map — these are the primary progression gates |
-| Skill Tomes | Unlock individual skills (Freeze, Beam, etc.) — core to build variety |
-| Battle Trait Scrolls | 15 total — optional upgrades |
-| Map Tiles | 26 total — lore / map reveals |
-| Journey Pages | 36 total — story pages, one of the extended goal tracks |
-| Shadow Cores | In-game currency — likely used as filler items |
-| Skill Points | Minor upgrades — likely used as filler items |
+### Items (366 total)
 
-### Locations (things you check)
-| Location type | Notes |
-|---|---|
-| Complete stage — Journey mode | Primary location source, one per stage (122 stages total) |
-| Complete stage — Endurance mode | Optional, harder — may be included as extended locations |
-| Complete stage — Trial mode | Even harder — likely optional |
-| Achievements | 500+ achievements — ambitious, track for a future goal option |
+| Item type | Count | Notes |
+|---|---|---|
+| Field Tokens | 118 | Unlock stages on the map — primary progression gates |
+| Skills | 24 | Includes 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
+| Battle Traits | 15 | Optional upgrades |
+| Talisman Fragments (specific) | 53 | Named by original field, carries original seed/rarity |
+| Talisman Fragments (extra) | 47 | "Extra Talisman Fragment #1–47", rarity 2–94 evenly spread |
+| Shadow Core Stashes (specific) | 17 | Named by original field, original amount |
+| Shadow Core Stashes (extra) | 52 | "Extra Shadow Cores #1–52", amounts 60–1080 |
+| XP Tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls |
+
+### Locations (366 total)
+
+| Location type | Count | Trigger |
+|---|---|---|
+| Stage clear — Journey | 122 | Complete any stage in Journey mode |
+| Stage clear — Bonus | 122 | Reach 50+ waves in Journey mode |
+| Wizard stash clear | 122 | Defeat the wizard stash on any stage |
+
+### Always free (not randomized)
+- W1 is the starting stage
+- W2, W3, W4 unlock automatically on AP connect
+- Talisman fragments from wave completion (untouched)
+- Shadow cores from normal gameplay (untouched — only stash grants are intercepted)
 
 ---
 
 ## Goals
 
-### Alpha goal — Beat the game
-> **"The Frostborn Wrath"** — defeat the main boss / complete the main story.
+### Default goal — Beat the game
+**"The Frostborn Wrath"** — defeat the final boss by completing stage **A4** with all 24 skills unlocked.
 
-The exact in-game trigger for "game beaten" needs to be confirmed during research (see Phase 0). The story appears to culminate in specific STORY_RELATED and EPIC stages. Journey Page 10 is a known special reward tied to the endurance completion of the main-path stages (W1–W4, S1–S3), which suggests those stages form the story spine.
-
-### Extended goals (post-alpha)
-- Collect all Skills
-- Find all Map Tiles
-- Complete all Journey stages
-- Collect all Journey Pages
-- Collect all Achievements _(very ambitious — 500+ achievements)_
+### Optional goal — Full Talisman *(disabled — not yet tested)*
+Fill all 25 talisman sockets with fragments each meeting a minimum rarity (configurable).
 
 ---
 
@@ -74,210 +74,90 @@ The exact in-game trigger for "game beaten" needs to be confirmed during researc
 
 ---
 
-### Phase 0 — Research & Feasibility
+### Phase 0 — Research & Feasibility ✅
 
-Before writing anything permanent, answer these questions:
-
-**Victory condition**
-- [ ] Identify exactly what triggers "game beaten" in the code
-- [ ] Confirm whether there is a single final stage or a cumulative story condition
-- [ ] Understand how the game tracks story progress (journey pages? stage completion flags?)
-
-**Item granting**
-- [x] Confirm we can call the reward functions (e.g. grant a Field Token, a Skill Tome) from mod code without side effects
-- [x] Determine whether a coremod is needed to intercept `updatePpdWithDrops` or whether hooking around it (via `SAVE_SAVE` / `INGAME_NEW_SCENE`) is sufficient — `SAVE_SAVE` is sufficient; `ProgressionBlocker` reverts and re-saves cleanly
-- [ ] Understand the save system well enough to safely add "received from AP" state without corrupting existing save data — partial; known issue: `PlayerProgressData` re-applies `orbDrops` on load, will need a `LOAD_SAVE` hook
-
-**Network connectivity**
-- [ ] Confirm the game runs as an AIR application (not sandboxed Flash Player)
-- [ ] Test whether `flash.net.Socket` or AIR's WebSocket support can connect to an Archipelago server
-- [ ] If native WebSocket is unavailable, evaluate a small companion process (e.g. a local proxy) as a fallback
-
-**Item / location counts**
-- [x] Count all skill tomes — 24 total (game_id 0–23, AP IDs 300–323)
-- [x] Count all battle traits — 15 total (game_id 0–14, AP IDs 400–414)
-- [ ] Enumerate all field tokens and their stage unlock targets
-- [ ] Map the full stage dependency graph (which stages unlock which)
+- [x] Identify "game beaten" trigger — A4 completion with all 24 skills
+- [x] Confirm item grant functions work without side effects
+- [x] `SAVE_SAVE` hook sufficient for progression blocking
+- [x] WebSocket confirmed working in AIR runtime
+- [x] Counted all skill tomes (24), battle traits (15), stages (122)
 
 ---
 
-### Phase 1 — Core Mod: Item Grant & Location Check System
+### Phase 1 — Core Mod: Item Grant & Location Check System ✅
 
-Build the fundamental plumbing. No Archipelago server yet — just the mod-internal logic.
-
-**Item grant system**
-Design a single function `grantItem(itemId)` that can be called from anywhere (level completion or AP connection) and correctly applies the item:
-- [x] Grant a Field Token → `unlockStage(stageStrId)` implemented in `ArchipelagoMod`
-- [x] Grant a Skill Tome → `unlockSkill(apId)` implemented; shows toast notification
-- [x] Grant a Battle Trait Scroll → `unlockBattleTrait(apId)` implemented; shows toast notification
-- [x] Grant a Map Tile → handled as part of stage unlock; `syncMapTilesWithStages()` keeps tiles in sync on selector open
-- [ ] Grant Shadow Cores / Skill Points → not yet implemented (filler items, low priority)
-- [ ] Handle duplicates gracefully (don't double-grant) — currently the grant functions are additive; dedup logic needed when AP delivers items
-
-**Progression blocking**
-- [x] Intercept post-victory `SAVE_SAVE` event via `ProgressionBlocker`
-- [x] Revert automatic field token, map tile, skill tome, and battle trait unlocks from `dropIcons`
-- [x] Strip pending selector animations (TOKEN_APPEARING, MAP_TILE_APPEARING) from the event queue
-- [x] Re-save immediately so the reverted state is persisted
-- [ ] Hook `LOAD_SAVE` to strip `orbDrops`-driven re-unlocks when a save is loaded
-
-**Location check system**
-Hook into level completion to fire `sendCheck(locationId)`:
-- [ ] Detect which stage was just completed from the post-victory context
-- [ ] Map stage ID to Archipelago location ID
-- [ ] Track which locations have already been sent (store in save or a sidecar file)
-
-**Persistence**
-- [ ] Decide where to store AP-received items and sent checks
-  - Options: piggyback on `GV.ppd` (risky), use a sidecar JSON in the game's Local Store, or use Bezel's settings manager
-- [ ] Implement load/save of this state so nothing is double-granted or lost on crash
-
-**Test in solo mode**
-- [x] Debug panel (`ScrDebugOptions`) allows manually locking/unlocking skills, battle traits, and stages — used to verify grant functions work correctly
-- [x] `ProgressionBlocker` verified: completing a level no longer automatically unlocks the next stage
-- [ ] Complete a stage and verify the check is detected and could be forwarded to AP
+- [x] `unlockStage(stageStrId)` — field token grant
+- [x] `unlockSkill(apId)` — skill tome grant with toast
+- [x] `unlockBattleTrait(apId)` — battle trait grant with toast
+- [x] `grantXpBonus(apId)` — wizard level grant (Tattered Scroll / Worn Tome / Ancient Grimoire)
+- [x] `grantFragment(apId)` — talisman fragment grant by seed/rarity/type
+- [x] `grantShadowCores(apId)` — shadow core grant by amount
+- [x] `NormalProgressionBlocker` — reverts field tokens, map tiles, skills, traits, shadow cores, and talisman fragments from wizard stashes on `SAVE_SAVE`
+- [x] Location checks sent on stage completion (Journey + Bonus) and wizard stash clear
+- [x] Full sync on reconnect — deduplicates by seed for talismans, delta-grants for shadow cores
 
 ---
 
-### Phase 2 — apworld (Archipelago Server Side)
+### Phase 2 — apworld ✅
 
-Build the Python package that tells Archipelago how this game works.
-
-**File structure**
-```
-worlds/gcfw/
-├── __init__.py        # World class — main entry point
-├── Items.py           # Item definitions and IDs
-├── Locations.py       # Location definitions and IDs
-├── Rules.py           # Logic: which items are needed to reach which locations
-├── Options.py         # Player-configurable YAML settings
-└── data/
-    └── stages.json    # Stage graph data (IDs, unlock chains, types)
-```
-
-**Items**
-- Assign a unique numeric ID to every item (Field Tokens, Skill Tomes, etc.)
-- Mark items as progression, useful, or filler
-
-**Locations**
-- Assign a unique numeric ID to every location (one per stage per included mode)
-- For alpha: Journey completions only
-
-**Logic / Rules**
-- Encode the stage dependency graph: stage X is accessible only if the player has the Field Token that unlocks it
-- For alpha: pure token logic is sufficient (no skill requirements)
-- Later: optionally add skill-based access rules for harder stages
-
-**Goal**
-- Define the win condition that matches the in-game "beat the game" trigger
-
-**Options**
-- Include/exclude Endurance and Trial locations
-- Goal selection (beat game, collect all skills, all pages, etc.)
-- Starting inventory (e.g. start with the first few field tokens so the player isn't immediately locked out)
+- [x] Item table: field tokens, skills, traits, talismans, shadow cores, XP tomes
+- [x] Location table: Journey, Bonus, Wizard Stash per stage (366 total)
+- [x] Logic rules: tier system with token gates + skill requirements
+- [x] Goal: `beat_game` (A4 + all skills) and `full_talisman`
+- [x] `fill_slot_data`: token_map, talisman_map, shadow_core_map, name maps, XP tome levels, free stages
+- [x] `fill_hook`: forces tier-ordered placement for generation consistency
+- [x] Options: goal, talisman_min_rarity, xp_tome_bonus, force_early_skills, death_link + punishment options
 
 ---
 
-### Phase 3 — Archipelago Client (In-Game Connection)
+### Phase 3 — Archipelago Client ✅
 
-Connect the Bezel mod to a live Archipelago server.
-
-**WebSocket / connection**
-- Implement the Archipelago client protocol in ActionScript
-  - Connect to `ws://<host>:<port>`
-  - Send `Connect` packet (game name, slot name, password)
-  - Handle `Connected`, `ReceivedItems`, `RoomInfo`, `PrintJSON` packets
-  - Send `LocationChecks`, `StatusUpdate` (goal complete) packets
-- Handle reconnection on disconnect
-- On connect/reconnect, sync: re-request any items not yet received, confirm already-sent checks
-
-**Item delivery**
-- On `ReceivedItems` packet, call `grantItem()` for each new item
-- Track item index to avoid re-granting on reconnect
-
-**Location checks**
-- On level completion, call `sendCheck()` which emits a `LocationChecks` packet
-
-**Goal reporting**
-- When the win condition is met, send `StatusUpdate` with goal complete
-
-**UI (minimal)**
-- Show connection status somewhere in the game (small overlay or log)
-- Optionally: show item received messages (AP sends these as `PrintJSON`)
+- [x] WebSocket client + AP protocol (Connect, Connected, ReceivedItems, LocationChecks, StatusUpdate, PrintJSON, Bounced)
+- [x] Full sync on index=0, incremental grant on index>0
+- [x] DeathLink: send on player death, receive and apply punishment (gem loss / wave surge / instant fail)
+- [x] Connection panel UI, auto-reconnect, standalone (no-AP) mode
+- [x] Item toast notifications with proper names for all item types
+- [x] Message log (backtick toggle)
+- [x] Slot file persistence (host, port, slot, password, bonusWizardLevel, totalShadowCoresGranted, completed, deathLinkEnabled, standalone)
 
 ---
 
-### Phase 4 — Alpha Release
+### Phase 4 — Alpha Release 🔄 (in progress)
 
-Playable end-to-end with the core shuffle working.
-
-**Scope**
-- Goal: beat the main boss / complete the main story
-- Shuffled: Field Tokens, Skill Tomes, Battle Trait Scrolls
-- Locations: Journey mode completions only
-- Logic: field token dependency graph
-- Starting inventory: a defined set of early-game tokens so the player can start
-
-**Checklist**
-- [ ] All items and locations have stable IDs (do not change after release)
-- [ ] apworld passes Archipelago's generation tests
-- [ ] Mod connects to AP server, receives items, sends checks
-- [ ] Win condition fires correctly
+- [x] All items and locations defined with stable IDs
+- [x] apworld structure complete
+- [x] Mod connects, receives, and sends correctly
+- [x] Win condition fires correctly
+- [x] Installation instructions written (README.md)
+- [ ] End-to-end testing
+- [ ] apworld passes Archipelago generation tests
 - [ ] No save corruption on install or removal
-- [ ] Installation instructions written
 
 ---
 
-### Phase 5 — Extended Goals & Polish
+### Phase 5 — Polish & Extended Features
 
-After alpha:
-- Add Endurance and Trial locations as optional settings
-- Add Map Tiles and Journey Pages to the item pool
-- Implement additional goal options (collect all skills, all pages, etc.)
-- Add Shadow Cores / Skill Points as filler items
-- Achievement goal research (large scope — hundreds of locations)
-- Deathlink support (optional community feature — dying sends a death to other players)
-- Trap items (fun negative items that can appear in the pool)
-- Hints and in-game AP chat display
+- [ ] Wizard stash display/indication on map (which stashes are cleared)
+- [ ] Hints and in-game AP chat display
+- [ ] Trap items
+- [ ] Iron Wizard mode support
+- [ ] Achievement locations (very large scope — 500+ achievements)
+- [ ] Trial mode locations as optional setting
 
 ---
 
 ## ID assignment
 
-Every item and every location gets a unique integer ID. Items and locations have separate namespaces (the same number can appear in both without conflict), but within each list every ID must be unique and **must never change** after a multiworld has been generated with it — the Archipelago server stores raw IDs in save data with no migration path.
-
-### Rules
-- Items: each gets a unique ID, starting from `1`
-- Locations: each gets a unique ID, starting from `1` (independent from items)
-- Once assigned, an ID is permanent — never renumber, never reuse a retired ID
-- New items/locations always get a new number appended at the end of their category bucket
-
-### Structure
-Use sub-range buckets per category so each can grow independently:
+Every item and every location gets a unique integer ID. IDs are stable — never renumber or reuse after any public release.
 
 | Category | Item ID range | Location ID range |
 |---|---|---|
-| Stages (Field Tokens / Completions) | 1 – 199 | 1 – 199 |
-| Map Tiles | 200 – 299 | 200 – 299 |
-| Skills | 300 – 399 | 300 – 399 |
-| Battle Traits | 400 – 499 | 400 – 499 |
-
-> **Note on global uniqueness:** Archipelago namespaces IDs by game name, so there is no requirement to be unique across other games. Starting from 1 is valid. We keep items and locations unique within their own lists, and use the bucket structure above to make future additions safe without renumbering anything.
-
----
-
-## Open questions
-
-- **What is the exact "game beaten" trigger?** Needs code research. Likely tied to specific EPIC/STORY_RELATED stages or the final journey page.
-- **Can we grant items safely mid-battle?** Or should grants always happen on the map screen?
-- **WebSocket in AIR:** Flash Player cannot do WebSocket natively in older versions. AIR can. Needs a quick feasibility test. If not possible, a lightweight local proxy (Node.js or Python script) can translate TCP ↔ WebSocket.
-- ~~**How many skill tomes exist?**~~ **Resolved:** 24 skill tomes (game_id 0–23).
-- ~~**How many battle traits exist?**~~ **Resolved:** 15 battle traits (game_id 0–14).
-- **`orbDrops` on save load:** `PlayerProgressData` re-processes `orbDrops` strings every time a save is loaded, re-unlocking any stages that were beaten. `ProgressionBlocker` reverts at save time but the next load will undo it. Needs a `LOAD_SAVE` hook.
-- **Item IDs must be stable.** Once an apworld is released, item and location IDs cannot change. Get these right before any public release.
-
----
-
-## Notes on the DropLogger mod
-
-`mods/DropLogger` is an exploratory mod that logs the contents of `IngameEnding.dropIcons` on every `SAVE_SAVE` event. It is not part of the randomizer itself — it exists to help understand what the game gives out and when, feeding into the research for Phase 0.
+| Stages (Field Tokens) | 1–124 | 1–124 (Journey) / 501–624 (Bonus) / 1001–1124 (Wiz Stash) |
+| Map Tiles | 200–299 | 200–299 |
+| Skills | 300–399 | — |
+| Battle Traits | 400–499 | — |
+| XP Tomes | 500–599 | — |
+| Talisman Fragments (specific) | 700–752 | — |
+| Talisman Fragments (extra) | 753–799 | — |
+| Shadow Core Stashes (specific) | 800–816 | — |
+| Shadow Core Stashes (extra) | 817–868 | — |

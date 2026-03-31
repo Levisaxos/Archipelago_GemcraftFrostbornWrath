@@ -78,7 +78,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         # print(f"{token_name}: tier {tier}")
         if str_id in FREE_STAGES:
             # Free stages (W2-W4): accessible from W1 with no requirements.
-            # Their tokens still exist as items for Tier 1 gate.
+            # They have no token items; the mod unlocks them on connect.
             pass
         elif tier == 0:
             # Other Tier 0: require own field token only (no tier gate).
