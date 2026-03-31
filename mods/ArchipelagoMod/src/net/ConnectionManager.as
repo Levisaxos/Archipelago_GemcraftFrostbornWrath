@@ -389,42 +389,54 @@ package net {
         }
 
         private function handlePrintJSON(p:Object):void {
-            if (p.type != "ItemSend") return;
-            var receiving:int  = int(p.receiving);
-            var senderSlot:int = int(p.item.player);
+            var msgType:String = (p.type != null) ? String(p.type) : "";
 
-            if (receiving != _mySlot && senderSlot != _mySlot) return;
+            if (msgType == "ItemSend") {
+                var receiving:int  = int(p.receiving);
+                var senderSlot:int = int(p.item.player);
+                if (receiving != _mySlot && senderSlot != _mySlot) return;
 
-            // The AP server sends raw numeric IDs in part.text for typed parts.
-            // Resolve each part using our local maps and the item name resolver.
-            var logText:String = "";
-            if (p.data) {
-                var parts:Array = p.data as Array;
-                for each (var part:Object in parts) {
-                    var ptype:String = (part.type != null) ? String(part.type) : "text";
-                    if (ptype == "player_id") {
-                        var pSlot:int = int(part.text);
-                        logText += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
-                    } else if (ptype == "item_id") {
-                        var iName:String = itemName(int(part.text));
-                        logText += (iName != null) ? iName : ("Item #" + int(part.text));
-                    } else if (ptype == "location_id") {
-                        logText += resolveLocationName(int(part.text));
-                    } else {
-                        if (part.text != null) logText += String(part.text);
-                    }
+                var logText:String = resolvePartsText(p.data);
+                _logger.log(_modName, "  ItemSend: " + logText);
+
+                if (senderSlot == _mySlot && receiving != _mySlot) {
+                    // Player sent an item for someone else — show in toast (also logs via toast).
+                    _toast.addMessage(logText, 0xFFCC99FF);
+                } else {
+                    // Player is receiving — grantItem handles the itemToast display; just log here.
+                    if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
+                }
+                return;
+            }
+
+            if (msgType == "Chat" || msgType == "ServerChat") {
+                var chatText:String = resolvePartsText(p.data);
+                _logger.log(_modName, "  Chat: " + chatText);
+                _toast.addMessage(chatText, 0xFFFFFFDD);
+                return;
+            }
+        }
+
+        /** Resolve a PrintJSON data array to a human-readable string. */
+        private function resolvePartsText(data:*):String {
+            var result:String = "";
+            if (data == null) return result;
+            var parts:Array = data as Array;
+            for each (var part:Object in parts) {
+                var ptype:String = (part.type != null) ? String(part.type) : "text";
+                if (ptype == "player_id") {
+                    var pSlot:int = int(part.text);
+                    result += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
+                } else if (ptype == "item_id") {
+                    var iName:String = itemName(int(part.text));
+                    result += (iName != null) ? iName : ("Item #" + int(part.text));
+                } else if (ptype == "location_id") {
+                    result += resolveLocationName(int(part.text));
+                } else {
+                    if (part.text != null) result += String(part.text);
                 }
             }
-
-            _logger.log(_modName, "  ItemSend: " + logText);
-
-            if (senderSlot == _mySlot && receiving != _mySlot) {
-                // Player sent an item for someone else — show in toast (also logs via toast).
-                _toast.addMessage(logText, 0xFFCC99FF);
-            } else {
-                // Player is receiving — grantItem handles the itemToast display; just log here.
-                if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
-            }
+            return result;
         }
 
         private function resolveLocationName(locId:int):String {
