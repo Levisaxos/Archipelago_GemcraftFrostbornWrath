@@ -12,8 +12,6 @@ package ui {
     import flash.text.TextFormatAlign;
     import flash.utils.getTimer;
 
-    import ui.MessageLog;
-
     /**
      * Top-center HUD panel for Archipelago item notifications.
      *
@@ -70,7 +68,6 @@ package ui {
         private var _bg:Shape;
         private var _queue:Array;   // { text:String, color:uint }
         private var _current:Object; // { text:String, color:uint, startTime:int, container:Sprite }
-        private var _messageLog:MessageLog;
 
         /** Width of the currently displayed panel in stage pixels.
          *  Updated each time showNext() builds a new container.
@@ -96,11 +93,6 @@ package ui {
         // -----------------------------------------------------------------------
         // Public API
 
-        /** Attach a MessageLog so every item notification is recorded. */
-        public function set messageLog(log:MessageLog):void {
-            _messageLog = log;
-        }
-
         /** Remove the current item and all queued items immediately. */
         public function clear():void {
             if (_current != null && _current.container != null) {
@@ -117,9 +109,6 @@ package ui {
          * @param color  Text colour as 0xRRGGBB (no alpha component needed)
          */
         public function addItem(text:String, color:uint):void {
-            if (_messageLog != null) {
-                _messageLog.add(text, color, MessageLog.SOURCE_COLLECTION);
-            }
             _queue.push({ text: text, color: color });
             if (_current == null) showNext();
         }

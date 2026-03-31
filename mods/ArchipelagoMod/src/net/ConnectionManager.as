@@ -3,6 +3,7 @@ package net {
     import com.giab.games.gcfw.GV;
     import ui.ToastPanel;
     import ui.ItemToastPanel;
+    import ui.MessageLog;
 
     /**
      * Manages the Archipelago server connection lifecycle and protocol.
@@ -18,6 +19,7 @@ package net {
         private var _modName:String;
         private var _toast:ToastPanel;
         private var _itemToast:ItemToastPanel;
+        private var _messageLog:MessageLog;
         private var _ws:WebSocketClient;
 
         // Connection state
@@ -99,6 +101,8 @@ package net {
         public var onPanelReset:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
+        /** Called for each PrintJSON ItemSend event involving us. Signature: (msg:String, color:uint):void */
+        public var onItemSend:Function;
 
         // -----------------------------------------------------------------------
 
@@ -137,6 +141,9 @@ package net {
 
         /** Provide the item-notification panel used for received/found/sent item toasts. */
         public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
+
+        /** Provide the message log so item send/receive events are recorded. */
+        public function setMessageLog(log:MessageLog):void { _messageLog = log; }
 
         // -----------------------------------------------------------------------
         // Lifecycle
@@ -385,20 +392,50 @@ package net {
             if (p.type != "ItemSend") return;
             var receiving:int  = int(p.receiving);
             var senderSlot:int = int(p.item.player);
-            var name:String    = itemName(int(p.item.item));
 
-            if (receiving == _mySlot && senderSlot != _mySlot) {
-                var sender:String = _playerNames[senderSlot] || ("Player " + senderSlot);
-                _logger.log(_modName, "  ItemSend: received " + name + " from " + sender);
-                _toast.addMessage("Received " + name + " from " + sender, 0xFF88DDFF);
-            } else if (receiving == _mySlot && senderSlot == _mySlot) {
-                _logger.log(_modName, "  ItemSend: found " + name);
-                 _toast.addMessage("Found " + name, 0xFF88DDFF);
-            } else if (senderSlot == _mySlot) {
-                var receiver:String = _playerNames[receiving] || ("Player " + receiving);
-                _logger.log(_modName, "  ItemSend: sent " + name + " to " + receiver);
-                _toast.addMessage("Sent " + name + " to " + receiver, 0xFFDDFF88);
+            if (receiving != _mySlot && senderSlot != _mySlot) return;
+
+            // The AP server sends raw numeric IDs in part.text for typed parts.
+            // Resolve each part using our local maps and the item name resolver.
+            var logText:String = "";
+            if (p.data) {
+                var parts:Array = p.data as Array;
+                for each (var part:Object in parts) {
+                    var ptype:String = (part.type != null) ? String(part.type) : "text";
+                    if (ptype == "player_id") {
+                        var pSlot:int = int(part.text);
+                        logText += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
+                    } else if (ptype == "item_id") {
+                        var iName:String = itemName(int(part.text));
+                        logText += (iName != null) ? iName : ("Item #" + int(part.text));
+                    } else if (ptype == "location_id") {
+                        logText += resolveLocationName(int(part.text));
+                    } else {
+                        if (part.text != null) logText += String(part.text);
+                    }
+                }
             }
+
+            _logger.log(_modName, "  ItemSend: " + logText);
+
+            if (senderSlot == _mySlot && receiving != _mySlot) {
+                // Player sent an item for someone else — show in toast (also logs via toast).
+                _toast.addMessage(logText, 0xFFCC99FF);
+            } else {
+                // Player is receiving — grantItem handles the itemToast display; just log here.
+                if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
+            }
+        }
+
+        private function resolveLocationName(locId:int):String {
+            var suffix:String = "";
+            var baseId:int = locId;
+            if (baseId >= 1000) { baseId -= 1000; suffix = " Stash"; }
+            else if (baseId >= 500) { baseId -= 500; suffix = " Bonus"; }
+            for (var strId:String in STAGE_LOC_AP_IDS) {
+                if (int(STAGE_LOC_AP_IDS[strId]) == baseId) return strId + suffix;
+            }
+            return "Location #" + locId;
         }
 
         private function sendConnect():void {

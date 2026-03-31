@@ -111,6 +111,7 @@ package {
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
+        private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
 
         // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -132,8 +133,7 @@ package {
                 _messageLog    = new MessageLog();
                 _toast         = new ToastPanel();
                 _itemToast     = new ItemToastPanel();
-                _toast.messageLog     = _messageLog;
-                _itemToast.messageLog = _messageLog;
+                _toast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
@@ -151,6 +151,7 @@ package {
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
                 _connectionManager.setItemToast(_itemToast);
+                _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected            = onApConnected;
                 _connectionManager.onFullSync             = syncWithAP;
                 _connectionManager.onItemReceived         = grantItem;
@@ -386,6 +387,26 @@ package {
             // Apply any sync that was deferred because GV.ppd was null at connect time.
             if (_pendingSyncItems != null && GV.ppd != null) {
                 syncWithAP(_pendingSyncItems);
+            }
+
+            // Unlock free stages whenever a new ppd is detected (new game or slot change).
+            // syncWithAP only runs once at connect time; if a new ppd is created after that
+            // (e.g. connecting while an old slot was still loaded, then loading a new slot),
+            // _pendingSyncItems is already null and free stages would never get applied.
+            if (_connectionManager.isConnected
+                    && GV.ppd != null
+                    && GV.stageCollection != null
+                    && GV.ppd !== _lastPpd) {
+                _lastPpd = GV.ppd;
+                var freeStages:Array = _connectionManager.freeStages;
+                if (freeStages != null) {
+                    for each (var freeStrId:String in freeStages) {
+                        if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
+                            _stageUnlocker.unlockStage(freeStrId);
+                            _logger.log(MOD_NAME, "free stage unlocked on ppd change: " + freeStrId);
+                        }
+                    }
+                }
             }
 
             // Gate: wait until the selector and its async tile generation are fully ready.
