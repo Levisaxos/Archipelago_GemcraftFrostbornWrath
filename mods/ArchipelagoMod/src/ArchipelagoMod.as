@@ -1,9 +1,14 @@
 package {
+    import flash.display.Bitmap;
     import flash.display.MovieClip;
+    import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
     import flash.text.TextField;
+    import flash.text.TextFieldAutoSize;
+    import flash.text.TextFormat;
+    import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -473,6 +478,7 @@ package {
                 mc.mcXpBar.addEventListener(MouseEvent.MOUSE_OVER, onXpBarOver, false, 0, true);
                 _hookedXpBar = mc.mcXpBar;
                 _xpBarHooked = true;
+                _logger.log(MOD_NAME, "hooked MOUSE_OVER on mcXpBar");
             }
 
 
@@ -492,64 +498,77 @@ package {
         // XP-bar hover popup patch
 
         /**
-         * Fires after the game's own ehXpBarOver() has already run and built GV.mcInfoPanel.
-         * Walks the panel's display list looking for the "Wizard Level X" TextField and
-         * replaces it with "Wizard Level <base> (+<bonus>)".
-         * No formula needed — we parse the number the game already wrote.
+         * Fires when the mouse enters the XP bar.  The game's own ehXpBarOver() is
+         * registered on a parent container and runs during the bubble phase, AFTER
+         * this target-phase listener.  So we defer the patch by one frame to give
+         * the game time to build GV.mcInfoPanel first.
          */
         private function onXpBarOver(e:MouseEvent):void {
+            _logger.log(MOD_NAME, "onXpBarOver fired; bonusWizardLevel=" + (_levelUnlocker != null ? _levelUnlocker.bonusWizardLevel : "null"));
             if (_levelUnlocker == null || _levelUnlocker.bonusWizardLevel <= 0) return;
+            stage.addEventListener(Event.ENTER_FRAME, onXpBarOverDeferred, false, 0, true);
+        }
+
+        private function onXpBarOverDeferred(e:Event):void {
+            stage.removeEventListener(Event.ENTER_FRAME, onXpBarOverDeferred);
             try {
                 var panel:* = GV.mcInfoPanel;
                 if (panel == null) return;
                 var bonus:int = _levelUnlocker.bonusWizardLevel;
-                patchWizLevelInPanel(panel, bonus);
+                patchWizLevelBitmap(panel, bonus);
             } catch (err:Error) {
-                _logger.log(MOD_NAME, "onXpBarOver error: " + err.message);
+                _logger.log(MOD_NAME, "onXpBarOverDeferred error: " + err.message);
             }
         }
 
         /**
-         * Search direct children and one level deeper for a TextField whose text
-         * starts with "Wizard Level ".  When found, rewrite it and stop.
+         * The game renders the McInfoPanel entirely to a single Bitmap child.
+         * BitmapData.draw() cannot access the game's embedded fonts, so we instead
+         * add a live overlay Sprite on top of the Bitmap.  Live TextFields on the
+         * display list go through Flash's normal rendering pipeline and DO use the
+         * game's registered "Celtic Garamond for GemCraft" font.
+         * The overlay is a child of the panel, so it is discarded automatically
+         * when the game rebuilds the panel on the next hover.
          */
-        private function patchWizLevelInPanel(panel:*, bonus:int):void {
-            var n:int = panel.numChildren;
-            for (var i:int = 0; i < n; i++) {
-                var child:* = panel.getChildAt(i);
-                if (patchWizLevelTextField(child, bonus)) return;
-                // One level deeper (addTextfield() may wrap the tf in a Sprite row)
-                try {
-                    var m:int = child.numChildren;
-                    for (var j:int = 0; j < m; j++) {
-                        if (patchWizLevelTextField(child.getChildAt(j), bonus)) return;
-                    }
-                } catch (e2:*) { /* child has no children */ }
-            }
-        }
+        private function patchWizLevelBitmap(panel:*, bonus:int):void {
+            if (panel.numChildren == 0) return;
+            var bmp:Bitmap = panel.getChildAt(0) as Bitmap;
+            if (bmp == null || bmp.bitmapData == null) return;
 
-        /**
-         * If obj is a TextField whose text starts with "Wizard Level ", patch it and return true.
-         * Parses the level number the game wrote so there is no dependency on our XP formula.
-         */
-        private function patchWizLevelTextField(obj:*, bonus:int):Boolean {
-            try {
-                var tf:* = obj;
-                if (tf == null || !(tf is TextField)) return false;
-                var txt:String = tf.text;
-                var prefix:String = "Wizard Level ";
-                if (txt.indexOf(prefix) != 0) return false;
-                // Already patched this session — don't double-apply.
-                if (txt.indexOf("(+") >= 0) return true;
-                var levelStr:String = txt.substring(prefix.length).split(",").join("");
-                var total:int = int(levelStr);
-                if (total <= 0) return false;
-                var base:int = total - bonus;
-                tf.text = prefix + base + " (+" + bonus + ")";
-                return true;
-            } catch (e:*) {
-                return false;
-            }
+            var baseLevel:int = _levelUnlocker.naturalWizardLevel;
+
+            // Sample the tooltip background colour from inside the border.
+            var bgColor:uint = bmp.bitmapData.getPixel(3, 3);
+
+            // Overlay Sprite covering just the title row (inset 1 px from the border).
+            var overlay:Sprite = new Sprite();
+            overlay.mouseEnabled  = false;
+            overlay.mouseChildren = false;
+            overlay.graphics.beginFill(bgColor, 1);
+            overlay.graphics.drawRect(0, 0, bmp.width - 2, 28);
+            overlay.graphics.endFill();
+            overlay.x = 1;
+            overlay.y = 1;
+
+            // Live TextField — uses the game's font via Flash's display pipeline.
+            var fmt:TextFormat = new TextFormat("Celtic Garamond for GemCraft", 20, 0xFFFFFF, true);
+            fmt.align = TextFormatAlign.CENTER;
+            var tf:TextField = new TextField();
+            tf.defaultTextFormat = fmt;
+            tf.embedFonts  = false;
+            tf.selectable  = false;
+            tf.mouseEnabled = false;
+            tf.multiline   = false;
+            tf.wordWrap    = false;
+            tf.autoSize    = TextFieldAutoSize.NONE;
+            tf.width       = bmp.width - 4;
+            tf.height      = 28;
+            tf.text        = "Wizard Level " + baseLevel + " (+" + bonus + ")";
+            tf.x = 2;
+            tf.y = 1;
+
+            overlay.addChild(tf);
+            panel.addChild(overlay);
         }
 
         /** Remove the MOUSE_OVER listener from the hooked XP bar MC, if any. */

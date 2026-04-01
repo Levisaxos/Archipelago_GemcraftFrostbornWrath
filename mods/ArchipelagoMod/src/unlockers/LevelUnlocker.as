@@ -20,6 +20,7 @@ package unlockers {
         private var _modName:String;
         private var _itemToast:ItemToastPanel;
         private var _bonusWizardLevel:int = 0;
+        private var _naturalWizardLevel:int = 1;
         private var _xpBarDirty:Boolean = false;
 
         // Per-tome level values — set from slot_data on connect; fallback to 1/2/3 defaults.
@@ -38,6 +39,7 @@ package unlockers {
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
+        public function get naturalWizardLevel():int { return _naturalWizardLevel; }
 
         /**
          * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
@@ -155,16 +157,13 @@ package unlockers {
                 }
             }
 
-            // XP required to reach _bonusWizardLevel above the player's current level.
-            var currentLevel:int = currentWizardLevel(normalXp);
-            var targetLevel:int  = currentLevel + _bonusWizardLevel;
-            var bonusXp:Number   = Math.max(0, apXpForWizLevel(targetLevel) - normalXp);
+            _naturalWizardLevel = currentWizardLevel(normalXp);
+
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(_bonusWizardLevel) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
-            _logger.log(_modName, "applyBonusLevels: currentLevel=" + currentLevel
-                + " bonusLevels=" + _bonusWizardLevel
-                + " targetLevel=" + targetLevel
+            _logger.log(_modName, "applyBonusLevels: targetLevel=" + _bonusWizardLevel
                 + " normalXp=" + normalXp
                 + " bonusXp=" + bonusXp);
         }
