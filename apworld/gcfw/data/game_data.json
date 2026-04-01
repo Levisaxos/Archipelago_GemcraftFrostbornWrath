@@ -1262,7 +1262,8 @@
         "Leech",
         "Poison"
       ],
-      "required_skills": [],
+      "note": "towers can't be placed, therefore,",
+      "required_skills": ["Traps"],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 1056
     },

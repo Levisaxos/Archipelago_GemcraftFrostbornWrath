@@ -29,6 +29,17 @@ class XpTomeBonus(Range):
     default     = 150
 
 
+class TierRequirementsPercentage(Range):
+    """Logic is currently determined by grouping stages into tiers based on difficulty, then requiring a percentage of the
+    stages in all previous tiers to be accessible in order to consider the next tier accessible.
+    This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
+    """
+    display_name = "Tier Completion Percentage"
+    range_start = 40
+    range_end = 100
+    default = 75
+
+
 class DeathLinkPunishment(Choice):
     """What happens when a DeathLink signal is received.
 
@@ -88,6 +99,7 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
+    tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
