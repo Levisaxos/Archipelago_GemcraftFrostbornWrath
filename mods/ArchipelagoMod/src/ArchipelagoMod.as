@@ -3,6 +3,7 @@ package {
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import flash.text.TextField;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -116,7 +117,11 @@ package {
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
 
-        // Debug mode — toggled by Ctrl+Shift+Alt+End.
+        // XP-bar hover patch
+        private var _xpBarHooked:Boolean = false;
+        private var _hookedXpBar:*       = null;
+
+// Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
         private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
 
@@ -227,6 +232,7 @@ package {
             }
             _itemToast = null;
             _itemToastOnStage = false;
+            unhookXpBar();
             if (_messageLogPanel != null) {
                 if (_messageLogPanel.isOpen) _messageLogPanel.close();
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
@@ -434,6 +440,7 @@ package {
                     || GV.selectorCore.renderer == null
                     || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
+                unhookXpBar();
                 return;
             }
 
@@ -460,6 +467,15 @@ package {
                 _buttonAdded = true;
             }
 
+            // Hook MOUSE_OVER on the XP bar once per selector session so we can patch
+            // the hover popup after the game builds it.
+            if (!_xpBarHooked && mc.mcXpBar != null) {
+                mc.mcXpBar.addEventListener(MouseEvent.MOUSE_OVER, onXpBarOver, false, 0, true);
+                _hookedXpBar = mc.mcXpBar;
+                _xpBarHooked = true;
+            }
+
+
             if (_reportBtn != null) {
                 _reportBtn.x = mc.btnTutorial.x;
             }
@@ -470,6 +486,81 @@ package {
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // XP-bar hover popup patch
+
+        /**
+         * Fires after the game's own ehXpBarOver() has already run and built GV.mcInfoPanel.
+         * Walks the panel's display list looking for the "Wizard Level X" TextField and
+         * replaces it with "Wizard Level <base> (+<bonus>)".
+         * No formula needed — we parse the number the game already wrote.
+         */
+        private function onXpBarOver(e:MouseEvent):void {
+            if (_levelUnlocker == null || _levelUnlocker.bonusWizardLevel <= 0) return;
+            try {
+                var panel:* = GV.mcInfoPanel;
+                if (panel == null) return;
+                var bonus:int = _levelUnlocker.bonusWizardLevel;
+                patchWizLevelInPanel(panel, bonus);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "onXpBarOver error: " + err.message);
+            }
+        }
+
+        /**
+         * Search direct children and one level deeper for a TextField whose text
+         * starts with "Wizard Level ".  When found, rewrite it and stop.
+         */
+        private function patchWizLevelInPanel(panel:*, bonus:int):void {
+            var n:int = panel.numChildren;
+            for (var i:int = 0; i < n; i++) {
+                var child:* = panel.getChildAt(i);
+                if (patchWizLevelTextField(child, bonus)) return;
+                // One level deeper (addTextfield() may wrap the tf in a Sprite row)
+                try {
+                    var m:int = child.numChildren;
+                    for (var j:int = 0; j < m; j++) {
+                        if (patchWizLevelTextField(child.getChildAt(j), bonus)) return;
+                    }
+                } catch (e2:*) { /* child has no children */ }
+            }
+        }
+
+        /**
+         * If obj is a TextField whose text starts with "Wizard Level ", patch it and return true.
+         * Parses the level number the game wrote so there is no dependency on our XP formula.
+         */
+        private function patchWizLevelTextField(obj:*, bonus:int):Boolean {
+            try {
+                var tf:* = obj;
+                if (tf == null || !(tf is TextField)) return false;
+                var txt:String = tf.text;
+                var prefix:String = "Wizard Level ";
+                if (txt.indexOf(prefix) != 0) return false;
+                // Already patched this session — don't double-apply.
+                if (txt.indexOf("(+") >= 0) return true;
+                var levelStr:String = txt.substring(prefix.length).split(",").join("");
+                var total:int = int(levelStr);
+                if (total <= 0) return false;
+                var base:int = total - bonus;
+                tf.text = prefix + base + " (+" + bonus + ")";
+                return true;
+            } catch (e:*) {
+                return false;
+            }
+        }
+
+        /** Remove the MOUSE_OVER listener from the hooked XP bar MC, if any. */
+        private function unhookXpBar():void {
+            if (_hookedXpBar != null) {
+                try {
+                    _hookedXpBar.removeEventListener(MouseEvent.MOUSE_OVER, onXpBarOver);
+                } catch (err:Error) { /* MC may already be destroyed */ }
+                _hookedXpBar = null;
+            }
+            _xpBarHooked = false;
         }
 
         // -----------------------------------------------------------------------

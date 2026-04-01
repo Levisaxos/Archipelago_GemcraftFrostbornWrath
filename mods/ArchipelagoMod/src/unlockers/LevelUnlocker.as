@@ -40,6 +40,15 @@ package unlockers {
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
 
         /**
+         * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
+         * Returns 1 if GV.ppd is unavailable.
+         */
+        public function getDisplayedWizardLevel():int {
+            if (GV.ppd == null) return 1;
+            return currentWizardLevel(GV.ppd.getXp());
+        }
+
+        /**
          * Set per-tome level values from slot_data.
          * Call once in onApConnected before syncing items.
          */
