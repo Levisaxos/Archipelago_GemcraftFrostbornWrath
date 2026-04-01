@@ -13,6 +13,7 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import (
     GCFWOptions,
+    FieldTokenPlacement,
     Goal,
     XpTomeBonus,
     DeathLinkPunishment,
@@ -52,6 +53,7 @@ class GemcraftFrostbornWrathWorld(World):
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldTokenPlacement,
             XpTomeBonus,
         ]),
         OptionGroup("DeathLink Options", [
@@ -67,6 +69,33 @@ class GemcraftFrostbornWrathWorld(World):
 
     item_name_to_id: Dict[str, int] = {name: data.id for name, data in item_table.items()}
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
+
+    def pre_fill(self) -> None:
+        from Fill import FillError, fill_restrictive
+
+        placement = self.options.field_token_placement.value
+        if placement == FieldTokenPlacement.option_any_world:
+            return
+
+        tokens = [item for item in self.multiworld.itempool
+                  if item.player == self.player and item.name.endswith(" Field Token")]
+        for token in tokens:
+            self.multiworld.itempool.remove(token)
+
+        if placement == FieldTokenPlacement.option_own_world:
+            target_locations = self.multiworld.get_unfilled_locations(self.player)
+        else:  # different_world
+            if self.multiworld.players == 1:
+                raise FillError(
+                    f"{self.multiworld.get_player_name(self.player)}: "
+                    "Field Token Placement 'different_world' requires at least 2 players."
+                )
+            target_locations = [loc for loc in self.multiworld.get_unfilled_locations()
+                                 if loc.player != self.player]
+
+        state = self.multiworld.get_all_state(use_cache=False)
+        fill_restrictive(self.multiworld, state, target_locations, tokens,
+                         lock=True, allow_partial=False)
 
     def create_item(self, name: str) -> GCFWItem:
         data = item_table[name]
@@ -188,6 +217,8 @@ class GemcraftFrostbornWrathWorld(World):
             # level_req = len(TIERS[prev_tier])
             prog_idx = 0
             while moved_levels < level_req:
+                if prog_idx >= len(progitempool):
+                    break  # tokens already placed via pre_fill; remaining quota is fine
                 this_item_name = progitempool[prog_idx].name
                 if this_item_name.endswith(" Field Token"):
                     this_field = this_item_name[:2]

@@ -3,6 +3,20 @@ from dataclasses import dataclass
 from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 
 
+class FieldTokenPlacement(Choice):
+    """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
+
+    own_world:       Field tokens can only appear in your own locations.
+    any_world:       Field tokens can appear anywhere (default).
+    different_world: Field tokens can only appear in other players' worlds.
+    """
+    display_name = "Field Token Placement"
+    option_own_world       = 0
+    option_any_world       = 1
+    option_different_world = 2
+    default = 1
+
+
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
@@ -27,6 +41,17 @@ class XpTomeBonus(Range):
     range_start = 50
     range_end   = 300
     default     = 150
+
+
+class TierRequirementsPercentage(Range):
+    """Logic is currently determined by grouping stages into tiers based on difficulty, then requiring a percentage of the
+    stages in all previous tiers to be accessible in order to consider the next tier accessible.
+    This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
+    """
+    display_name = "Tier Completion Percentage"
+    range_start = 40
+    range_end = 100
+    default = 75
 
 
 class DeathLinkPunishment(Choice):
@@ -88,6 +113,8 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
+    field_token_placement:     FieldTokenPlacement
+    tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
