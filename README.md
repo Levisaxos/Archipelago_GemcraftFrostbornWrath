@@ -194,19 +194,3 @@ The mod keeps a scrollable history of all Archipelago messages received during y
 - [Archipelago](https://archipelago.gg) — multiworld randomizer platform
 
 ---
-
-## Release Notes
-
-### MinorUpgrades (current)
-
-**New features**
-- **Field Token Placement option** (`field_token_placement`): Control where field tokens are placed — `any_world` (default), `own_world`, or `different_world` (multiplayer only).
-- **Disconnect / Reconnect panel**: Reconnect to a session mid-game without restarting.
-- **Persistent message log**: The full Archipelago message history is saved to `slot_N_log.jsonl` and restored automatically when you reopen the same slot. No cap on log size.
-- **Level popup improvements**: The level-up popup now shows bonus levels received from Archipelago items.
-- **XP / SP collection UI**: XP and SP now count up to their result on the interface rather than jumping immediately.
-
-**Bug fixes**
-- Fixed a crash when `different_world` token placement ran out of valid locations.
-- Fixed the level popup not displaying additional levels granted by Archipelago.
-- Generation now raises a clear error if `different_world` is set in a solo game.
