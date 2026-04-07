@@ -44,6 +44,7 @@ package {
     import net.ConnectionManager
 
     import patch.WizStashes
+    import patch.FirstPlayBypass
 
     import save.FileHandler
     import save.SaveManager
@@ -113,6 +114,7 @@ package {
         private var _levelUnlocker:LevelUnlocker;
         private var _talismanUnlocker:TalismanUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
+        private var _firstPlayBypass:FirstPlayBypass;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -155,6 +157,7 @@ package {
                 _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
                 _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
+                _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
                 _debugOptions = new ScrDebugOptions(this);
 
@@ -376,6 +379,12 @@ package {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
                 }
+                // Reset first-play gem patch when leaving ingame so it re-runs on
+                // the next ingame entry for the same stage (after initializer resets
+                // availableGemTypes to []).
+                if (_lastScreen == ScreenId.INGAME) {
+                    _firstPlayBypass.resetIngame();
+                }
                 _lastScreen = screen;
             }
 
@@ -412,6 +421,11 @@ package {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
                 _deathLinkHandler.checkWaveSurge();
+            }
+
+            // Inject skill gems for first-play stages (every frame until done once).
+            if (screen == ScreenId.INGAME) {
+                _firstPlayBypass.onIngameFrame();
             }
 
 
@@ -471,6 +485,8 @@ package {
                 addArchipelagoButton(mc);
                 _buttonAdded = true;
             }
+
+            _firstPlayBypass.onSelectorFrame(mc);
 
             // Hook MOUSE_OVER on the XP bar once per selector session so we can patch
             // the hover popup after the game builds it.
