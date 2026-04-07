@@ -29,7 +29,7 @@ class Goal(Choice):
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes in the item pool combined.
 
-    The pool contains 92 Tattered Scrolls, 10 Worn Tomes, and 2 Ancient Grimoires.
+    The pool contains 32 Tattered Scrolls, 6 Worn Tomes, and 2 Ancient Grimoires.
     Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.
 
     At the default of 100 each tome gives 1 / 2 / 3 levels (118 total).

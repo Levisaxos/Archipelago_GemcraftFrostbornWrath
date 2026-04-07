@@ -726,6 +726,7 @@ package {
          */
         private function startConnectionForSlot():void {
             _saveManager.loadSlotData(_saveManager.currentSlot);
+            _messageLog.init(_fileHandler, _saveManager.currentSlot);
 
             // Slot file exists and player previously chose standalone — skip popup entirely.
             if (_saveManager.standaloneSet && _saveManager.standalone) {

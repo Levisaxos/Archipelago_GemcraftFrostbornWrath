@@ -1,15 +1,17 @@
 package ui {
 
+    import save.FileHandler;
+
     /**
      * Shared message store for all Archipelago toast messages.
      *
      * Both ToastPanel (system) and ItemToastPanel (collection) push entries
      * here so the MessageLogPanel can display full history.
+     *
+     * Messages are persisted to slot_N_log.jsonl and reloaded on slot open,
+     * so the full history survives across sessions for the same seed.
      */
     public class MessageLog {
-
-        /** Maximum entries kept in memory. */
-        private static const MAX_ENTRIES:int = 200;
 
         /** Source tags. */
         public static const SOURCE_SYSTEM:String     = "system";
@@ -17,20 +19,34 @@ package ui {
 
         private var _entries:Array; // { text:String, color:uint, source:String, time:Date }
 
+        private var _fileHandler:FileHandler;
+        private var _slotId:int;
+
         public function MessageLog() {
             _entries = [];
         }
 
-        /** Add a message to the log. */
+        /**
+         * Load persisted history for the given slot and wire up file persistence
+         * for all subsequent add() calls. Call once per slot open.
+         */
+        public function init(fileHandler:FileHandler, slotId:int):void {
+            _fileHandler = fileHandler;
+            _slotId      = slotId;
+            _entries     = _fileHandler.loadLog(slotId);
+        }
+
+        /** Add a message to the log (and persist it to disk if a slot is active). */
         public function add(text:String, color:uint, source:String):void {
-            _entries.push({
+            var entry:Object = {
                 text:   text,
                 color:  color,
                 source: source,
                 time:   new Date()
-            });
-            if (_entries.length > MAX_ENTRIES) {
-                _entries.shift();
+            };
+            _entries.push(entry);
+            if (_fileHandler != null && _slotId > 0) {
+                _fileHandler.appendLogEntry(_slotId, entry);
             }
         }
 
