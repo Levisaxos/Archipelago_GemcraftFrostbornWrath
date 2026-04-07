@@ -39,7 +39,6 @@ package unlockers {
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
-        public function get naturalWizardLevel():int { return _naturalWizardLevel; }
 
         /**
          * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
@@ -159,7 +158,7 @@ package unlockers {
 
             _naturalWizardLevel = currentWizardLevel(normalXp);
 
-            var bonusXp:Number = Math.max(0, apXpForWizLevel(_bonusWizardLevel) - normalXp);
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(_naturalWizardLevel + _bonusWizardLevel) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
