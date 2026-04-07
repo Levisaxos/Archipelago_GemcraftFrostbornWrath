@@ -39,7 +39,6 @@ package unlockers {
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
-        public function get naturalWizardLevel():int { return _naturalWizardLevel; }
 
         /**
          * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
