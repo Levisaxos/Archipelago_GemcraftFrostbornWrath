@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, TIER_REQUIREMENTS, TIER_SKILL_REQUIREMENTS
+from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -23,22 +23,24 @@ TIER_SKILL_NAMES: dict[str, List[str]] = {
 }
 
 
-def _has_tier_tokens(state, player: int, tier: int) -> bool:
+def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     """Check whether the player has collected enough field tokens from the
     previous tier AND at least one skill from each required skill category
     for this tier (and all lower tiers, recursively)."""
-    prev, count = TIER_REQUIREMENTS[tier]
+    prev = tier-1
+    count = len(TIERS[prev]) * token_percent // 100
     # Check token requirement from previous tier.
     if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
         return False
     # Check skill category requirements for this tier.
-    for category in TIER_SKILL_REQUIREMENTS.get(tier, []):
-        if not state.has_any(TIER_SKILL_NAMES[category], player):
+    for category, count_req in CUMULATIVE_SKILL_REQUIREMENTS.get(tier, []).items():
+        total_category = [state.has(skill_name, player) for skill_name in TIER_SKILL_NAMES[category]].count(True)
+        if total_category < count_req:
             return False
     # Recurse to ensure all lower tiers are also satisfied.
     if prev == 0:
         return True
-    return _has_tier_tokens(state, player, prev)
+    return _has_tier_tokens(state, player, prev, token_percent)
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -55,9 +57,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     player = world.player
     multiworld = world.multiworld
 
-    data = json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
-    stages = data["stages"]
+    stages = GAME_DATA["stages"]
     stage_map = {s["str_id"]: s for s in stages}
+
+    token_percent = world.options.tier_requirements_percent.value
 
     w1_region = multiworld.get_region("W1", player)
 
@@ -73,6 +76,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         tier = rule.tier if rule else 0
         token_name = f"{str_id} Field Token"
 
+        # print(f"{token_name}: tier {tier}")
         if str_id in FREE_STAGES:
             # Free stages (W2-W4): accessible from W1 with no requirements.
             # They have no token items; the mod unlocks them on connect.
@@ -87,8 +91,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # prev_tier, tokens_needed = TIER_REQUIREMENTS[tier]
             # prev_tokens = tier_token_names[prev_tier]
             connection.access_rule = (
-                lambda state, tok=token_name, ti=tier: (
-                    state.has(tok, player) and _has_tier_tokens(state, player, ti)
+                lambda state, tok=token_name, ti=tier, tper = token_percent: (
+                    state.has(tok, player) and _has_tier_tokens(state, player, ti, tper)
                 )
             )
 
@@ -111,7 +115,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location.access_rule = make_rule(conditions)
 
     # --- A4 locations + Victory: require all 24 skills ---
-    all_skill_names = [f"{skill['name']} Skill" for skill in data["skills"]]
+    all_skill_names = [f"{skill['name']} Skill" for skill in GAME_DATA["skills"]]
     all_skills_rule = lambda state: all(state.has(s, player) for s in all_skill_names)
 
     for suffix in ("Journey", "Bonus"):

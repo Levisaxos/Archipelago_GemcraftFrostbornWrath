@@ -24,11 +24,11 @@ from .options import (
     DeathLinkCooldown,
 )
 from .rules import set_rules
-from .rulesdata import TIERS, TIER_REQUIREMENTS
+from .rulesdata import TIERS, TIER_REQUIREMENTS, GAME_DATA
 
 
 def _load_game_data():
-    return json.loads(files(__package__).joinpath("data/game_data.json").read_text(encoding="utf-8"))
+    return GAME_DATA
 
 
 def _load_stages():
@@ -239,7 +239,8 @@ class GemcraftFrostbornWrathWorld(World):
         # so moving tier 11 to the end then tier 10 then etc etc down to tier 1 so that in the end tier 1's unlocks
         # are at the end, which means they will be placed first you get the idea)
         for t in range(12, 0, -1):
-            prev_tier, level_req = TIER_REQUIREMENTS[t]
+            prev_tier = t-1
+            level_req = len(TIERS[prev_tier]) * self.options.tier_requirements_percent // 100
             moved_levels = 0
             # ok test time
             # level_req = len(TIERS[prev_tier])
@@ -342,6 +343,7 @@ class GemcraftFrostbornWrathWorld(World):
             "ancient_grimoire_levels": ancient_levels,
             "token_map":             token_map,
             "free_stages":           free_stages,
+            "token_requirement_percent": self.options.tier_requirements_percent.value,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
