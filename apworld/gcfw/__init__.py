@@ -74,28 +74,49 @@ class GemcraftFrostbornWrathWorld(World):
         from Fill import FillError, fill_restrictive
 
         placement = self.options.field_token_placement.value
-        if placement == FieldTokenPlacement.option_any_world:
-            return
+        if placement != FieldTokenPlacement.option_own_world:
+            return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
         tokens = [item for item in self.multiworld.itempool
                   if item.player == self.player and item.name.endswith(" Field Token")]
         for token in tokens:
             self.multiworld.itempool.remove(token)
 
-        if placement == FieldTokenPlacement.option_own_world:
-            target_locations = self.multiworld.get_unfilled_locations(self.player)
-        else:  # different_world
-            if self.multiworld.players == 1:
-                raise FillError(
-                    f"{self.multiworld.get_player_name(self.player)}: "
-                    "Field Token Placement 'different_world' requires at least 2 players."
-                )
-            target_locations = [loc for loc in self.multiworld.get_unfilled_locations()
-                                 if loc.player != self.player]
-
+        target_locations = self.multiworld.get_unfilled_locations(self.player)
         state = self.multiworld.get_all_state(use_cache=False)
         fill_restrictive(self.multiworld, state, target_locations, tokens,
                          lock=True, allow_partial=False)
+
+    @classmethod
+    def stage_pre_fill(cls, multiworld: "MultiWorld") -> None:
+        from Fill import FillError, fill_restrictive
+
+        # Handle different_world token placement here (after all worlds' pre_fill methods
+        # have run) so that other worlds' pre_fill claims their locations first.
+        gcfw_worlds = [
+            world for world in multiworld.worlds.values()
+            if isinstance(world, GemcraftFrostbornWrathWorld)
+            and world.options.field_token_placement.value == FieldTokenPlacement.option_different_world
+        ]
+
+        for world in gcfw_worlds:
+            tokens = [item for item in multiworld.itempool
+                      if item.player == world.player and item.name.endswith(" Field Token")]
+            for token in tokens:
+                multiworld.itempool.remove(token)
+
+            state = multiworld.get_all_state(use_cache=False)
+
+            if multiworld.players > 1:
+                other_locations = [loc for loc in multiworld.get_unfilled_locations()
+                                   if loc.player != world.player]
+                fill_restrictive(multiworld, state, other_locations, tokens,
+                                 lock=True, allow_partial=True)
+
+            if tokens:
+                own_locations = multiworld.get_unfilled_locations(world.player)
+                fill_restrictive(multiworld, state, own_locations, tokens,
+                                 lock=True, allow_partial=False)
 
     def create_item(self, name: str) -> GCFWItem:
         data = item_table[name]
