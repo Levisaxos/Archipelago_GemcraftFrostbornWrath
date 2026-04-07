@@ -3,6 +3,20 @@ from dataclasses import dataclass
 from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 
 
+class FieldTokenPlacement(Choice):
+    """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
+
+    own_world:       Field tokens can only appear in your own locations.
+    any_world:       Field tokens can appear anywhere (default).
+    different_world: Field tokens can only appear in other players' worlds.
+    """
+    display_name = "Field Token Placement"
+    option_own_world       = 0
+    option_any_world       = 1
+    option_different_world = 2
+    default = 1
+
+
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
@@ -15,7 +29,7 @@ class Goal(Choice):
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes in the item pool combined.
 
-    The pool contains 92 Tattered Scrolls, 10 Worn Tomes, and 2 Ancient Grimoires.
+    The pool contains 32 Tattered Scrolls, 6 Worn Tomes, and 2 Ancient Grimoires.
     Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.
 
     At the default of 100 each tome gives 1 / 2 / 3 levels (118 total).
@@ -99,6 +113,7 @@ class DeathLinkCooldown(Range):
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
+    field_token_placement:     FieldTokenPlacement
     tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     death_link:                DeathLink

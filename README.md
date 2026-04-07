@@ -96,6 +96,8 @@ Once connected, the game will sync your received items and begin tracking locati
 
 To play without an Archipelago server (vanilla progression), click **Play without randomizer** on the connection panel.
 
+To disconnect from a session later, open the in-game **Disconnect** panel and click **Reconnect** to re-enter connection details.
+
 ---
 
 ### Finding the log file
@@ -152,8 +154,9 @@ Please include this file when reporting issues.
 | Option | Default | Description |
 |---|---|---|
 | `goal` | `beat_game` | `beat_game` — defeat the final boss (complete A4 with all 24 skills unlocked). |
+| `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
+| `tier_requirements_percent` | `75` | Percentage of stages in earlier tiers that must be accessible before later tiers are considered in logic (40–100). Lower values may require heavier use of Endurance mode. |
 | `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tome values in a 1:2:3 ratio. |
-| `force_early_skills` | `true` | Redistributes skills to appear more evenly across the run rather than clustering late. |
 | `death_link` | `false` | Enables DeathLink with other players in the session. |
 | `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, or `instant_fail`. |
 | `gem_loss_percent` | `20` | Percentage of placed gems destroyed on `gem_loss` punishment (10–50). |
@@ -161,6 +164,17 @@ Please include this file when reporting issues.
 | `wave_surge_gem_level` | `5` | Gem level used to calculate the surge wave enrage multiplier (1–9). |
 | `death_link_grace_period` | `15` | Seconds of immunity at the start of each stage before a queued DeathLink triggers (10–30). |
 | `death_link_cooldown` | `20` | Minimum seconds between two DeathLink punishments (10–30). |
+
+---
+
+## Message Log
+
+The mod keeps a scrollable history of all Archipelago messages received during your session.
+
+- **Toggle:** Press the **backtick key** (`` ` ``) at any time to open or close the log overlay
+- **Scroll:** Use the **mouse wheel** to browse history — newest messages appear at the top
+- **Persistent:** The full log is saved to `slot_N_log.jsonl` next to your slot file and reloaded automatically when you reopen the same slot — the complete message history for a seed is always available
+- Each entry shows a timestamp and a source tag: `[SYS]` for system/connection events and `[COL]` for item collection messages
 
 ---
 
@@ -178,3 +192,5 @@ Please include this file when reporting issues.
 - [JPEXS Free Flash Decompiler](https://github.com/jindrapetrik/jpexs-decompiler) — used to decompile the game's SWF for reference
 - [Harman AIR SDK](https://airsdk.harman.com/) — ActionScript compiler
 - [Archipelago](https://archipelago.gg) — multiworld randomizer platform
+
+---

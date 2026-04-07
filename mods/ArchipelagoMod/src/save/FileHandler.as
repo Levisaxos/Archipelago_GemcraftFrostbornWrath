@@ -128,17 +128,85 @@ package save {
         }
 
         /**
+         * Load all log entries from slot_N_log.jsonl.
+         * Each line is a JSON object: { text, color, source, time (epoch ms) }.
+         * Returns an empty Array if the file does not exist or cannot be read.
+         */
+        public function loadLog(slotId:int):Array {
+            if (slotId <= 0) return [];
+            var f:File = _configDir.resolvePath("slot_" + slotId + "_log.jsonl");
+            if (!f.exists) return [];
+            var entries:Array = [];
+            try {
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                var lines:Array = raw.split("\n");
+                for each (var line:String in lines) {
+                    line = line.replace(/^\s+|\s+$/g, "");
+                    if (line.length == 0) continue;
+                    try {
+                        var entry:Object = JSON.parse(line);
+                        entry.time = new Date(Number(entry.time));
+                        entries.push(entry);
+                    } catch (parseErr:Error) {
+                        _logger.log(_modName, "loadLog: skipping malformed line");
+                    }
+                }
+                _logger.log(_modName, "Loaded " + entries.length + " log entries for slot " + slotId);
+            } catch (err:Error) {
+                _logger.log(_modName, "loadLog ERROR: " + err.message);
+            }
+            return entries;
+        }
+
+        /**
+         * Append a single log entry to slot_N_log.jsonl.
+         * Time is serialized as epoch milliseconds.
+         */
+        public function appendLogEntry(slotId:int, entry:Object):void {
+            if (slotId <= 0 || _configDir == null) return;
+            try {
+                if (!_configDir.exists) _configDir.createDirectory();
+                var f:File = _configDir.resolvePath("slot_" + slotId + "_log.jsonl");
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.APPEND);
+                var serialized:Object = {
+                    text:   entry.text,
+                    color:  entry.color,
+                    source: entry.source,
+                    time:   (entry.time as Date).time
+                };
+                stream.writeUTFBytes(JSON.stringify(serialized) + "\n");
+                stream.close();
+            } catch (err:Error) {
+                _logger.log(_modName, "appendLogEntry ERROR: " + err.message);
+            }
+        }
+
+        /**
          * Delete the slot file for the given slot.
          */
         public function deleteSlot(slotId:int):void {
             if (slotId <= 0 || _configDir == null) return;
             var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
-            if (!f.exists) return;
-            try {
-                f.deleteFile();
-                _logger.log(_modName, "Deleted slot_" + slotId + ".json");
-            } catch (err:Error) {
-                _logger.log(_modName, "deleteSlot ERROR: " + err.message);
+            if (f.exists) {
+                try {
+                    f.deleteFile();
+                    _logger.log(_modName, "Deleted slot_" + slotId + ".json");
+                } catch (err:Error) {
+                    _logger.log(_modName, "deleteSlot ERROR: " + err.message);
+                }
+            }
+            var logFile:File = _configDir.resolvePath("slot_" + slotId + "_log.jsonl");
+            if (logFile.exists) {
+                try {
+                    logFile.deleteFile();
+                    _logger.log(_modName, "Deleted slot_" + slotId + "_log.jsonl");
+                } catch (err:Error) {
+                    _logger.log(_modName, "deleteSlot log ERROR: " + err.message);
+                }
             }
         }
     }

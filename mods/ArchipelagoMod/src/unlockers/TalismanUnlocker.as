@@ -118,6 +118,7 @@ package unlockers {
             _logger.log(_modName, "Granted talisman apId=" + apId
                 + " seed=" + seed + " rarity=" + rarity
                 + " type=" + type + " slot=" + slotIdx);
+            showPlusNodeOnSelector("mcPlusNodeTalisman");
         }
 
         private function hasFragmentWithSeed(seed:int):Boolean {
@@ -129,6 +130,17 @@ package unlockers {
                 if (frag != null && TalismanFragment(frag).seed == seed) return true;
             }
             return false;
+        }
+
+        private function showPlusNodeOnSelector(nodeName:String):void {
+            try {
+                var mc:* = GV.selectorCore != null ? GV.selectorCore.mc : null;
+                if (mc == null) return;
+                var node:* = mc[nodeName];
+                if (node != null) mc.addChild(node);
+            } catch (err:Error) {
+                _logger.log(_modName, "showPlusNodeOnSelector " + nodeName + " error: " + err.message);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import flash.utils.getDefinitionByName;
     import ui.ItemToastPanel;
 
     /**
@@ -56,7 +57,8 @@ package unlockers {
                 _logger.log(_modName, "grantShadowCores: GV.ppd null, cannot grant apId=" + apId);
                 return;
             }
-            GV.ppd.shadowCoreAmount.s(GV.ppd.shadowCoreAmount.g() + amount);
+            var oldAmount:Number = GV.ppd.shadowCoreAmount.g();
+            GV.ppd.shadowCoreAmount.s(oldAmount + amount);
             _totalGranted += amount;
             var label:String = (_shadowCoreNameMap != null && _shadowCoreNameMap[String(apId)] != null)
                 ? String(_shadowCoreNameMap[String(apId)])
@@ -64,6 +66,7 @@ package unlockers {
             _itemToast.addItem("Found " + label + " (+" + amount + ")", 0x88AAFF);
             _logger.log(_modName, "Granted shadow cores apId=" + apId
                 + " amount=" + amount + " totalGranted=" + _totalGranted);
+            pushSelectorEvent(5, [oldAmount, oldAmount + amount]); // 5 = SC_INCREASING
         }
 
         // -----------------------------------------------------------------------
@@ -99,6 +102,22 @@ package unlockers {
                 if (mapped != null) return int(mapped);
             }
             return 0;
+        }
+
+        /**
+         * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
+         * if the selector is currently idle so the animation plays immediately.
+         */
+        private function pushSelectorEvent(type:int, args:Array):void {
+            try {
+                var core:* = GV.selectorCore;
+                if (core == null) return;
+                var SelectorEventClass:Class = getDefinitionByName("com.giab.games.gcfw.struct.SelectorEvent") as Class;
+                core.eventQueue.push(new SelectorEventClass(type, args));
+                if (core.screenStatus == 4) core.screenStatus = 3; // STAGES_IDLE → UPDATING_STAGES
+            } catch (err:Error) {
+                _logger.log(_modName, "pushSelectorEvent error: " + err.message);
+            }
         }
     }
 }

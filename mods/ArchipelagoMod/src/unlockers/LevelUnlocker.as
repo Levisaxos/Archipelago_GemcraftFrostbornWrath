@@ -1,6 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import flash.utils.getDefinitionByName;
     import ui.ItemToastPanel;
 
     /**
@@ -19,6 +20,7 @@ package unlockers {
         private var _modName:String;
         private var _itemToast:ItemToastPanel;
         private var _bonusWizardLevel:int = 0;
+        private var _naturalWizardLevel:int = 1;
         private var _xpBarDirty:Boolean = false;
 
         // Per-tome level values — set from slot_data on connect; fallback to 1/2/3 defaults.
@@ -37,6 +39,16 @@ package unlockers {
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
+        public function get naturalWizardLevel():int { return _naturalWizardLevel; }
+
+        /**
+         * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
+         * Returns 1 if GV.ppd is unavailable.
+         */
+        public function getDisplayedWizardLevel():int {
+            if (GV.ppd == null) return 1;
+            return currentWizardLevel(GV.ppd.getXp());
+        }
 
         /**
          * Set per-tome level values from slot_data.
@@ -84,9 +96,21 @@ package unlockers {
             else if (apId == 501) label = "Worn Tome";
             else if (apId == 502) label = "Ancient Grimoire";
 
+            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
+
             _bonusWizardLevel += levels;
             if (onDataChanged != null) onDataChanged();
-            applyBonusLevels();
+            applyBonusLevels(); // sets _xpBarDirty = true; also updates the A4 trial slot
+
+            // Animate XP bar on the selector instead of snapping.
+            // applyBonusLevels() already set _xpBarDirty; clear it so the frame-loop
+            // doesn't also snap to the final value while the animation is running.
+            if (GV.ppd != null) {
+                var newXp:Number = GV.ppd.getXp();
+                if (pushSelectorEvent(4, [oldXp, newXp])) { // 4 = XP_INCREASING
+                    _xpBarDirty = false;
+                }
+            }
 
             _logger.log(_modName, label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
             _itemToast.addItem("Found " + label, 0x88CCFF);
@@ -133,16 +157,13 @@ package unlockers {
                 }
             }
 
-            // XP required to reach _bonusWizardLevel above the player's current level.
-            var currentLevel:int = currentWizardLevel(normalXp);
-            var targetLevel:int  = currentLevel + _bonusWizardLevel;
-            var bonusXp:Number   = Math.max(0, apXpForWizLevel(targetLevel) - normalXp);
+            _naturalWizardLevel = currentWizardLevel(normalXp);
+
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(_bonusWizardLevel) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
-            _logger.log(_modName, "applyBonusLevels: currentLevel=" + currentLevel
-                + " bonusLevels=" + _bonusWizardLevel
-                + " targetLevel=" + targetLevel
+            _logger.log(_modName, "applyBonusLevels: targetLevel=" + _bonusWizardLevel
                 + " normalXp=" + normalXp
                 + " bonusXp=" + bonusXp);
         }
@@ -166,6 +187,25 @@ package unlockers {
             var vDelta2:Number = 30 + (pLevel - 1) * 5;
             var vDelta:Number  = 600 + vDelta2 / 2 * (pLevel - 1);
             return -10 + 10 * Math.round(0.8 * (300 + vDelta / 2 * (pLevel - 1)) / 10);
+        }
+
+        /**
+         * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
+         * if the selector is currently idle so the animation plays immediately.
+         * Returns true if the event was pushed (selector available); false otherwise.
+         */
+        private function pushSelectorEvent(type:int, args:Array):Boolean {
+            try {
+                var core:* = GV.selectorCore;
+                if (core == null) return false;
+                var SelectorEventClass:Class = getDefinitionByName("com.giab.games.gcfw.struct.SelectorEvent") as Class;
+                core.eventQueue.push(new SelectorEventClass(type, args));
+                if (core.screenStatus == 4) core.screenStatus = 3; // STAGES_IDLE → UPDATING_STAGES
+                return true;
+            } catch (err:Error) {
+                _logger.log(_modName, "pushSelectorEvent error: " + err.message);
+                return false;
+            }
         }
     }
 }

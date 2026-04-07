@@ -48,6 +48,7 @@ package unlockers {
             var skillName:String = SKILL_NAMES[gameId];
             _logger.log(_modName, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
             _itemToast.addItem("Skill Unlocked: " + skillName, 0xDDA0FF);
+            showPlusNodeOnSelector("mcPlusNodeSkills");
         }
 
         /** Returns the human-readable skill name for an AP ID (300-323), or null if out of range. */
@@ -55,6 +56,17 @@ package unlockers {
             var gameId:int = apId - 300;
             if (gameId < 0 || gameId >= SKILL_NAMES.length) return null;
             return SKILL_NAMES[gameId];
+        }
+
+        private function showPlusNodeOnSelector(nodeName:String):void {
+            try {
+                var mc:* = GV.selectorCore != null ? GV.selectorCore.mc : null;
+                if (mc == null) return;
+                var node:* = mc[nodeName];
+                if (node != null) mc.addChild(node);
+            } catch (err:Error) {
+                _logger.log(_modName, "showPlusNodeOnSelector " + nodeName + " error: " + err.message);
+            }
         }
     }
 }

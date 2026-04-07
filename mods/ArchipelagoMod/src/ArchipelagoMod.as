@@ -1,8 +1,14 @@
 package {
+    import flash.display.Bitmap;
     import flash.display.MovieClip;
+    import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import flash.text.TextField;
+    import flash.text.TextFieldAutoSize;
+    import flash.text.TextFormat;
+    import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -22,6 +28,7 @@ package {
     import ui.MessageLogPanel
     import ui.ScrDebugOptions
     import ui.ConnectionPanel
+    import ui.DisconnectPanel
     
     import deathlink.DeathLinkHandler
     import deathlink.EnragerOverride
@@ -93,6 +100,8 @@ package {
         private var _normalProgressionBlocker:NormalProgressionBlocker;
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
+        private var _disconnectPanel:DisconnectPanel;
+        private var _disconnectPanelOnStage:Boolean = false;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _deathLinkHandler:DeathLinkHandler;
         private var _goalManager:GoalManager;
@@ -113,7 +122,11 @@ package {
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
 
-        // Debug mode — toggled by Ctrl+Shift+Alt+End.
+        // XP-bar hover patch
+        private var _xpBarHooked:Boolean = false;
+        private var _hookedXpBar:*       = null;
+
+// Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
         private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
 
@@ -152,13 +165,18 @@ package {
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
                 _connectionManager.setItemToast(_itemToast);
                 _connectionManager.setMessageLog(_messageLog);
-                _connectionManager.onConnected            = onApConnected;
-                _connectionManager.onFullSync             = syncWithAP;
-                _connectionManager.onItemReceived         = grantItem;
-                _connectionManager.onError                = onConnectionError;
-                _connectionManager.onPanelReset           = onConnectionPanelReset;
+                _connectionManager.onConnected             = onApConnected;
+                _connectionManager.onFullSync              = syncWithAP;
+                _connectionManager.onItemReceived          = grantItem;
+                _connectionManager.onError                 = onConnectionError;
+                _connectionManager.onPanelReset            = onConnectionPanelReset;
+                _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
+
+                // Disconnect banner (shown when AP drops unexpectedly)
+                _disconnectPanel = new DisconnectPanel();
+                _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
@@ -219,6 +237,7 @@ package {
             }
             _itemToast = null;
             _itemToastOnStage = false;
+            unhookXpBar();
             if (_messageLogPanel != null) {
                 if (_messageLogPanel.isOpen) _messageLogPanel.close();
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
@@ -238,6 +257,11 @@ package {
                 _connectionPanel.dismiss();
             }
             _connectionPanel = null;
+            if (_disconnectPanel != null && _disconnectPanel.parent != null) {
+                _disconnectPanel.parent.removeChild(_disconnectPanel);
+            }
+            _disconnectPanel = null;
+            _disconnectPanelOnStage = false;
             if (_reportBtn != null && _reportBtn.parent != null) {
                 _reportBtn.parent.removeChild(_reportBtn);
                 _reportBtn = null;
@@ -278,6 +302,12 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
+            if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
+                this.stage.addChild(_disconnectPanel);
+                _disconnectPanelOnStage = true;
+                _disconnectPanel.visible = false;
+                _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
+            }
             // Keep item toast horizontally centered as panelWidth may change each item.
             if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
                 positionItemToast();
@@ -307,6 +337,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     if (_connectionPanel != null) _connectionPanel.dismiss();
+                    hideDisconnectPanel();
                     _goalManager.reset();
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
@@ -414,6 +445,7 @@ package {
                     || GV.selectorCore.renderer == null
                     || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
+                unhookXpBar();
                 return;
             }
 
@@ -440,6 +472,16 @@ package {
                 _buttonAdded = true;
             }
 
+            // Hook MOUSE_OVER on the XP bar once per selector session so we can patch
+            // the hover popup after the game builds it.
+            if (!_xpBarHooked && mc.mcXpBar != null) {
+                mc.mcXpBar.addEventListener(MouseEvent.MOUSE_OVER, onXpBarOver, false, 0, true);
+                _hookedXpBar = mc.mcXpBar;
+                _xpBarHooked = true;
+                _logger.log(MOD_NAME, "hooked MOUSE_OVER on mcXpBar");
+            }
+
+
             if (_reportBtn != null) {
                 _reportBtn.x = mc.btnTutorial.x;
             }
@@ -450,6 +492,94 @@ package {
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // XP-bar hover popup patch
+
+        /**
+         * Fires when the mouse enters the XP bar.  The game's own ehXpBarOver() is
+         * registered on a parent container and runs during the bubble phase, AFTER
+         * this target-phase listener.  So we defer the patch by one frame to give
+         * the game time to build GV.mcInfoPanel first.
+         */
+        private function onXpBarOver(e:MouseEvent):void {
+            _logger.log(MOD_NAME, "onXpBarOver fired; bonusWizardLevel=" + (_levelUnlocker != null ? _levelUnlocker.bonusWizardLevel : "null"));
+            if (_levelUnlocker == null || _levelUnlocker.bonusWizardLevel <= 0) return;
+            stage.addEventListener(Event.ENTER_FRAME, onXpBarOverDeferred, false, 0, true);
+        }
+
+        private function onXpBarOverDeferred(e:Event):void {
+            stage.removeEventListener(Event.ENTER_FRAME, onXpBarOverDeferred);
+            try {
+                var panel:* = GV.mcInfoPanel;
+                if (panel == null) return;
+                var bonus:int = _levelUnlocker.bonusWizardLevel;
+                patchWizLevelBitmap(panel, bonus);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "onXpBarOverDeferred error: " + err.message);
+            }
+        }
+
+        /**
+         * The game renders the McInfoPanel entirely to a single Bitmap child.
+         * BitmapData.draw() cannot access the game's embedded fonts, so we instead
+         * add a live overlay Sprite on top of the Bitmap.  Live TextFields on the
+         * display list go through Flash's normal rendering pipeline and DO use the
+         * game's registered "Celtic Garamond for GemCraft" font.
+         * The overlay is a child of the panel, so it is discarded automatically
+         * when the game rebuilds the panel on the next hover.
+         */
+        private function patchWizLevelBitmap(panel:*, bonus:int):void {
+            if (panel.numChildren == 0) return;
+            var bmp:Bitmap = panel.getChildAt(0) as Bitmap;
+            if (bmp == null || bmp.bitmapData == null) return;
+
+            var baseLevel:int = _levelUnlocker.naturalWizardLevel;
+
+            // Sample the tooltip background colour from inside the border.
+            var bgColor:uint = bmp.bitmapData.getPixel(3, 3);
+
+            // Overlay Sprite covering just the title row (inset 1 px from the border).
+            var overlay:Sprite = new Sprite();
+            overlay.mouseEnabled  = false;
+            overlay.mouseChildren = false;
+            overlay.graphics.beginFill(bgColor, 1);
+            overlay.graphics.drawRect(0, 0, bmp.width - 2, 28);
+            overlay.graphics.endFill();
+            overlay.x = 1;
+            overlay.y = 1;
+
+            // Live TextField — uses the game's font via Flash's display pipeline.
+            var fmt:TextFormat = new TextFormat("Celtic Garamond for GemCraft", 20, 0xFFFFFF, true);
+            fmt.align = TextFormatAlign.CENTER;
+            var tf:TextField = new TextField();
+            tf.defaultTextFormat = fmt;
+            tf.embedFonts  = false;
+            tf.selectable  = false;
+            tf.mouseEnabled = false;
+            tf.multiline   = false;
+            tf.wordWrap    = false;
+            tf.autoSize    = TextFieldAutoSize.NONE;
+            tf.width       = bmp.width - 4;
+            tf.height      = 28;
+            tf.text        = "Wizard Level " + baseLevel + " (+" + bonus + ")";
+            tf.x = 2;
+            tf.y = 1;
+
+            overlay.addChild(tf);
+            panel.addChild(overlay);
+        }
+
+        /** Remove the MOUSE_OVER listener from the hooked XP bar MC, if any. */
+        private function unhookXpBar():void {
+            if (_hookedXpBar != null) {
+                try {
+                    _hookedXpBar.removeEventListener(MouseEvent.MOUSE_OVER, onXpBarOver);
+                } catch (err:Error) { /* MC may already be destroyed */ }
+                _hookedXpBar = null;
+            }
+            _xpBarHooked = false;
         }
 
         // -----------------------------------------------------------------------
@@ -475,6 +605,9 @@ package {
             positionItemToast();
             if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
                 _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
+            }
+            if (_disconnectPanel != null && this.stage != null) {
+                _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
             }
         }
 
@@ -562,6 +695,11 @@ package {
 
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
             _saveManager.currentSlot = slotId;
+            if (_disconnectPanel != null && _disconnectPanel.isShowing) {
+                _toast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
+                _modeInterceptor.clearPending();
+                return;
+            }
             startConnectionForSlot();
         }
 
@@ -588,6 +726,7 @@ package {
          */
         private function startConnectionForSlot():void {
             _saveManager.loadSlotData(_saveManager.currentSlot);
+            _messageLog.init(_fileHandler, _saveManager.currentSlot);
 
             // Slot file exists and player previously chose standalone — skip popup entirely.
             if (_saveManager.standaloneSet && _saveManager.standalone) {
@@ -654,6 +793,7 @@ package {
             _standalone = true;
             _normalProgressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
+            hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
             _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
@@ -705,6 +845,7 @@ package {
             // may still hold data from a previously loaded save slot.
             // The onSaveSave hook will catch a legitimate victory.
             if (_connectionPanel != null) _connectionPanel.dismiss();
+            hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -717,6 +858,30 @@ package {
 
         private function onConnectionPanelReset():void {
             if (_connectionPanel != null) _connectionPanel.resetState();
+            if (_disconnectPanel != null) _disconnectPanel.resetState();
+        }
+
+        private function onApUnexpectedlyDisconnected():void {
+            if (_disconnectPanel == null || !_disconnectPanelOnStage) return;
+            _disconnectPanel.resetState();
+            _disconnectPanel.visible = true;
+            // Keep it above other children so it's always readable
+            if (this.stage != null) {
+                this.stage.setChildIndex(_disconnectPanel, this.stage.numChildren - 1);
+            }
+            _logger.log(MOD_NAME, "Disconnect panel shown");
+        }
+
+        private function hideDisconnectPanel():void {
+            if (_disconnectPanel != null) {
+                _disconnectPanel.visible = false;
+                _disconnectPanel.resetState();
+            }
+        }
+
+        private function onDisconnectPanelReconnect():void {
+            _disconnectPanel.setReconnecting(true);
+            startConnectionForSlot();
         }
 
         // -----------------------------------------------------------------------

@@ -13,6 +13,7 @@ from .items import GCFWItem, ItemData, item_table
 from .locations import GCFWLocation, LocationData, location_table
 from .options import (
     GCFWOptions,
+    FieldTokenPlacement,
     Goal,
     XpTomeBonus,
     DeathLinkPunishment,
@@ -52,6 +53,7 @@ class GemcraftFrostbornWrathWorld(World):
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldTokenPlacement,
             XpTomeBonus,
         ]),
         OptionGroup("DeathLink Options", [
@@ -67,6 +69,61 @@ class GemcraftFrostbornWrathWorld(World):
 
     item_name_to_id: Dict[str, int] = {name: data.id for name, data in item_table.items()}
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
+
+    def generate_early(self) -> None:
+        if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world
+                and self.multiworld.players == 1):
+            raise Exception(
+                f"{self.player_name}: field_token_placement 'different_world' requires more than one player."
+            )
+
+    def pre_fill(self) -> None:
+        from Fill import FillError, fill_restrictive
+
+        placement = self.options.field_token_placement.value
+        if placement != FieldTokenPlacement.option_own_world:
+            return  # any_world: nothing to do; different_world: handled in stage_pre_fill
+
+        tokens = [item for item in self.multiworld.itempool
+                  if item.player == self.player and item.name.endswith(" Field Token")]
+        for token in tokens:
+            self.multiworld.itempool.remove(token)
+
+        target_locations = self.multiworld.get_unfilled_locations(self.player)
+        state = self.multiworld.get_all_state(use_cache=False)
+        fill_restrictive(self.multiworld, state, target_locations, tokens,
+                         lock=True, allow_partial=False)
+
+    @classmethod
+    def stage_pre_fill(cls, multiworld: "MultiWorld") -> None:
+        from Fill import FillError, fill_restrictive
+
+        # Handle different_world token placement here (after all worlds' pre_fill methods
+        # have run) so that other worlds' pre_fill claims their locations first.
+        gcfw_worlds = [
+            world for world in multiworld.worlds.values()
+            if isinstance(world, GemcraftFrostbornWrathWorld)
+            and world.options.field_token_placement.value == FieldTokenPlacement.option_different_world
+        ]
+
+        for world in gcfw_worlds:
+            tokens = [item for item in multiworld.itempool
+                      if item.player == world.player and item.name.endswith(" Field Token")]
+            for token in tokens:
+                multiworld.itempool.remove(token)
+
+            state = multiworld.get_all_state(use_cache=False)
+
+            if multiworld.players > 1:
+                other_locations = [loc for loc in multiworld.get_unfilled_locations()
+                                   if loc.player != world.player]
+                fill_restrictive(multiworld, state, other_locations, tokens,
+                                 lock=True, allow_partial=True)
+
+            if tokens:
+                own_locations = multiworld.get_unfilled_locations(world.player)
+                fill_restrictive(multiworld, state, own_locations, tokens,
+                                 lock=True, allow_partial=False)
 
     def create_item(self, name: str) -> GCFWItem:
         data = item_table[name]
@@ -189,6 +246,8 @@ class GemcraftFrostbornWrathWorld(World):
             # level_req = len(TIERS[prev_tier])
             prog_idx = 0
             while moved_levels < level_req:
+                if prog_idx >= len(progitempool):
+                    break  # tokens already placed via pre_fill; remaining quota is fine
                 this_item_name = progitempool[prog_idx].name
                 if this_item_name.endswith(" Field Token"):
                     this_field = this_item_name[:2]

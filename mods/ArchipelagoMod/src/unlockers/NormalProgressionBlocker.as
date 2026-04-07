@@ -148,12 +148,14 @@ package unlockers {
                 }
 
                 // --- Enforce AP authority over skills and traits on every save ---
+                var skillReverted:Boolean = false;
                 if (GV.ppd != null) {
                     for (var s:int = 0; s < 24; s++) {
                         if (GV.ppd.gainedSkillTomes[s] && !_apGrantedSkills[s]) {
                             GV.ppd.gainedSkillTomes[s] = false;
                             GV.ppd.setSkillLevel(s, -1);
                             reverted++;
+                            skillReverted = true;
                             _logger.log(_modName, "Blocked non-AP skill tome gameId=" + s);
                         }
                     }
@@ -165,6 +167,8 @@ package unlockers {
                         }
                     }
                 }
+                // If any skill tomes were reverted, suppress the '+' indicator on btnSkills.
+                if (skillReverted) removePlusNodeFromSelector("mcPlusNodeSkills");
 
                 // --- Block shadow cores and talisman fragments from wizard stashes ---
                 if (GV.ppd != null && GV.stageCollection != null && _wizStashTalData != null) {
@@ -219,6 +223,7 @@ package unlockers {
 
                         if (stashReverted > 0) {
                             _stashBlockedIds[stageId] = true;
+                            removePlusNodeFromSelector("mcPlusNodeTalisman");
                         }
                     }
                 }
@@ -237,6 +242,24 @@ package unlockers {
 
         // -----------------------------------------------------------------------
         // Helpers
+
+        /**
+         * Remove a plus-node indicator from the selector mc, if it is currently displayed.
+         * nodeName is "mcPlusNodeSkills" or "mcPlusNodeTalisman".
+         */
+        private function removePlusNodeFromSelector(nodeName:String):void {
+            try {
+                var mc:* = GV.selectorCore != null ? GV.selectorCore.mc : null;
+                if (mc == null) return;
+                var node:* = mc[nodeName];
+                if (node != null && mc.contains(node)) {
+                    mc.removeChild(node);
+                    _logger.log(_modName, "Removed " + nodeName + " (suppressed non-AP gain)");
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "removePlusNodeFromSelector " + nodeName + " error: " + err.message);
+            }
+        }
 
         /**
          * Remove the first talisman fragment with the given seed from the inventory.
