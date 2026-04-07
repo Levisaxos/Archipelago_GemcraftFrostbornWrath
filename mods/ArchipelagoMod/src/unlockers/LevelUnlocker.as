@@ -159,7 +159,7 @@ package unlockers {
 
             _naturalWizardLevel = currentWizardLevel(normalXp);
 
-            var bonusXp:Number = Math.max(0, apXpForWizLevel(_bonusWizardLevel) - normalXp);
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(_naturalWizardLevel + _bonusWizardLevel) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
