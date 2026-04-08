@@ -26,6 +26,7 @@ package unlockers {
         private var _itemToast:ItemToastPanel;
         private var _talMap:Object;      // AP ID string → "seed/rarity/type/upgradeLevel"
         private var _talNameMap:Object;  // AP ID string → display name
+        private var _grantedApIds:Object = {}; // String(apId) → true; persisted via SaveManager
 
         public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
             _logger    = logger;
@@ -38,6 +39,10 @@ package unlockers {
 
         /** Called with slot_data.talisman_name_map on AP connect. */
         public function setTalismanNameMap(map:Object):void { _talNameMap = map; }
+
+        /** Called by SaveManager on load to restore persisted granted set. */
+        public function get grantedApIds():Object { return _grantedApIds; }
+        public function set grantedApIds(v:Object):void { _grantedApIds = (v != null) ? v : {}; }
 
         // -----------------------------------------------------------------------
         // Incremental grant (ReceivedItems index > 0)
@@ -59,6 +64,7 @@ package unlockers {
         public function syncTalismans(apIds:Array):void {
             for each (var apId:int in apIds) {
                 if (apId < 700 || apId > 799) continue;
+                if (_grantedApIds[String(apId)] == true) continue; // already granted; persisted check
                 var talData:String = talDataForApId(apId);
                 if (talData == null) continue;
                 var seed:int = int(talData.split("/")[0]);
@@ -110,6 +116,7 @@ package unlockers {
 
             var frag:TalismanFragment = new TalismanFragment(seed, rarity, type, upgradeLevel);
             inv[slotIdx] = frag;
+            _grantedApIds[String(apId)] = true;
 
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
