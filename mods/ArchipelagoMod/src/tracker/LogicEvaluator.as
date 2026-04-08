@@ -74,6 +74,11 @@ package tracker {
 
         /** True iff at least one missing location on this stage is currently in logic. */
         public function isStageInLogic(strId:String):Boolean {
+            // Defensive: if rules haven't been configured yet (e.g. a paint
+            // pass races ahead of onApConnected), report everything as in
+            // logic rather than as out of logic. Better to over-show green
+            // briefly than to flash every stage red.
+            if (_stageTier == null) return true;
             if (_dirty) recompute();
             return _inLogicByStrId[strId] == true;
         }
@@ -87,8 +92,11 @@ package tracker {
                                                journeyMissing:Boolean,
                                                bonusMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (_dirty) recompute();
             if (!(journeyMissing || bonusMissing || stashMissing)) return false;
+            // Defensive: see isStageInLogic — fall back to "in logic" when
+            // rules aren't configured yet.
+            if (_stageTier == null) return true;
+            if (_dirty) recompute();
 
             // Stash has no skill gate at location level — only the tier gate
             // (which is the same as "stage in logic" for reachability purposes).
