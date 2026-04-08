@@ -88,6 +88,9 @@ package net {
             "I1":123,"I2":107,"I3":108,"I4":109
         };
 
+        /** Public read-only view of the stage -> base-Journey AP location id map. */
+        public static function get stageLocIds():Object { return STAGE_LOC_AP_IDS; }
+
         // -----------------------------------------------------------------------
         // Callbacks — set by ArchipelagoMod
 

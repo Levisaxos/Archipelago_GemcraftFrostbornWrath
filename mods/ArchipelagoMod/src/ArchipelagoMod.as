@@ -38,6 +38,10 @@ package {
 
     import net.ConnectionManager
 
+    import tracker.CollectedState
+    import tracker.LogicEvaluator
+    import tracker.StageTinter
+
     import patch.WizStashes
     import patch.FirstPlayBypass
 
@@ -110,6 +114,9 @@ package {
         private var _talismanUnlocker:TalismanUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
+        private var _collectedState:CollectedState;
+        private var _logicEvaluator:LogicEvaluator;
+        private var _stageTinter:StageTinter;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -150,6 +157,10 @@ package {
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
+                // In-game tracker (stage light tinting)
+                _collectedState  = new CollectedState(_logger, MOD_NAME);
+                _logicEvaluator  = new LogicEvaluator(_logger, MOD_NAME, _collectedState);
+
                 _debugOptions = new ScrDebugOptions(this);
 
                 _normalProgressionBlocker = new NormalProgressionBlocker(_logger, MOD_NAME);
@@ -167,6 +178,8 @@ package {
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
+
+                _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
 
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
@@ -478,6 +491,9 @@ package {
 
             _firstPlayBypass.onSelectorFrame(mc);
 
+            // In-game tracker: recolor stage lights based on logic state.
+            if (_stageTinter != null) _stageTinter.apply(mc);
+
             if (_reportBtn != null) {
                 _reportBtn.x = mc.btnTutorial.x;
             }
@@ -712,6 +728,27 @@ package {
 
         private function onApConnected(p:Object):void {
             _needsConnection = false;
+
+            // Reset + configure the in-game tracker from slot_data.  Must happen
+            // BEFORE syncWithAP (which will populate collected state via onItem).
+            if (_collectedState != null) _collectedState.reset();
+            if (p.slot_data != null) {
+                _collectedState.configure(
+                    _connectionManager.tokenMap,
+                    p.slot_data.skill_categories
+                );
+                _logicEvaluator.configure(
+                    p.slot_data.stage_tier,
+                    p.slot_data.stage_skills,
+                    p.slot_data.cumulative_skill_reqs,
+                    p.slot_data.tier_stage_counts,
+                    int(p.slot_data.token_requirement_percent),
+                    p.slot_data.free_stages as Array
+                );
+                _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
+                    + p.slot_data.logic_rules_version);
+            }
+
             // Persist credentials before loadSlotData resets them via resetSettings().
             // Without this, first-time connection data is never written to the slot file.
             _saveManager.saveSlotData();
@@ -796,6 +833,10 @@ package {
         // Item handling
 
         private function grantItem(apId:int):void {
+            // Feed the in-game tracker (idempotent — safe to call before dispatch).
+            if (_collectedState != null) _collectedState.onItem(apId);
+            if (_logicEvaluator != null) _logicEvaluator.markDirty();
+
             var strId:String = _connectionManager.tokenMap[String(apId)];
             if (strId != null) {
                 _stageUnlocker.unlockStage(strId);
@@ -841,8 +882,12 @@ package {
             var tokenMap:Object    = _connectionManager.tokenMap;
             var tokenStages:Object = _connectionManager.tokenStages;
 
+            // Rebuild tracker state from the full item list.
+            if (_collectedState != null) _collectedState.reset();
+
             for each (var item:Object in items) {
                 var apId:int = item.item;
+                if (_collectedState != null) _collectedState.onItem(apId);
                 if (apId >= 300 && apId <= 323) {
                     apSkills[apId - 300] = true;
                 } else if (apId >= 400 && apId <= 414) {
@@ -939,6 +984,8 @@ package {
             }
 
             _saveManager.saveSlotData();
+
+            if (_logicEvaluator != null) _logicEvaluator.markDirty();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
