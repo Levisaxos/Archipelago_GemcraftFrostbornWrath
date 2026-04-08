@@ -24,7 +24,14 @@ from .options import (
     DeathLinkCooldown,
 )
 from .rules import set_rules
-from .rulesdata import TIERS, TIER_REQUIREMENTS, GAME_DATA
+from .rulesdata import (
+    TIERS,
+    TIER_REQUIREMENTS,
+    GAME_DATA,
+    SKILL_CATEGORIES,
+    CUMULATIVE_SKILL_REQUIREMENTS,
+    STAGE_RULES,
+)
 
 
 def _load_game_data():
@@ -336,6 +343,26 @@ class GemcraftFrostbornWrathWorld(World):
         worn_levels     = max(1, round(multiplier * 2))
         ancient_levels  = max(1, round(multiplier * 3))
 
+        # --- In-game tracker: logic rules for client-side reachability eval ---
+        # The mod ships a LogicEvaluator that mirrors rules.py to compute which
+        # stages are currently in logic. Keep this in sync with rules.py.
+        stage_tier_map: Dict[str, int] = {
+            sid: rule.tier
+            for sid, rule in STAGE_RULES.items()
+            if rule.tier >= 0
+        }
+        stage_skills_map: Dict[str, List[str]] = {
+            sid: list(rule.skills)
+            for sid, rule in STAGE_RULES.items()
+            if rule.skills
+        }
+        tier_stage_counts: Dict[str, int] = {
+            str(t): len(stages) for t, stages in TIERS.items()
+        }
+        cumulative_skill_reqs: Dict[str, Dict[str, int]] = {
+            str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
+        }
+
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,
@@ -344,6 +371,13 @@ class GemcraftFrostbornWrathWorld(World):
             "token_map":             token_map,
             "free_stages":           free_stages,
             "token_requirement_percent": self.options.tier_requirements_percent.value,
+            # Tracker logic rules (see LogicEvaluator.as)
+            "logic_rules_version":   1,
+            "skill_categories":      SKILL_CATEGORIES,
+            "cumulative_skill_reqs": cumulative_skill_reqs,
+            "stage_tier":            stage_tier_map,
+            "stage_skills":          stage_skills_map,
+            "tier_stage_counts":     tier_stage_counts,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
