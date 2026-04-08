@@ -30,7 +30,10 @@ package patch {
 
         private var _captureListenerAdded:Boolean  = false;
         private var _blockListenersAdded:Boolean   = false;
-        private var _patchedIngameStageId:int      = -1;
+        // Tracks the availableGemTypes array reference we last injected into.
+        // When the game rebuilds this array (on restart or new stage) the
+        // reference changes and we re-inject automatically.
+        private var _patchedAvailableGemTypes:Array = null;
 
         // Which locked button is the tooltip currently showing for ("endurance",
         // "trial", or null = hidden).
@@ -152,16 +155,16 @@ package patch {
                 if (stageMeta == null) return;
                 var stageId:int = int(stageMeta.id);
 
-                if (_patchedIngameStageId == stageId) return;
-
-                if (GV.ppd.stageHighestXpsJourney[stageId].g() != 0) {
-                    _patchedIngameStageId = stageId;
-                    return;
-                }
+                if (GV.ppd.stageHighestXpsJourney[stageId].g() != 0) return;
 
                 var availableGemTypes:Array = GV.ingameCore.availableGemTypes;
                 var cnt:*                   = GV.ingameCore.cnt;
                 if (availableGemTypes == null || cnt == null) return;
+
+                // Skip if we've already injected into this exact array instance.
+                // On restart the game creates a new array, so the reference
+                // differs and we fall through to re-inject.
+                if (_patchedAvailableGemTypes === availableGemTypes) return;
 
                 var added:int = 0;
                 for each (var entry:Array in SKILL_GEM_MAP) {
@@ -177,7 +180,7 @@ package patch {
                     }
                 }
 
-                _patchedIngameStageId = stageId;
+                _patchedAvailableGemTypes = availableGemTypes;
                 if (added > 0) {
                     _logger.log(_modName, "FirstPlayBypass: injected " + added +
                         " skill gem(s) for first-play stage id=" + stageId);
@@ -189,7 +192,7 @@ package patch {
         }
 
         public function resetIngame():void {
-            _patchedIngameStageId = -1;
+            _patchedAvailableGemTypes = null;
         }
 
         // -----------------------------------------------------------------------

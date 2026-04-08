@@ -49,6 +49,8 @@ package net {
         private var _missingLocations:Object = {};
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
+        private var _playerGames:Object = {};   // slot (int) → game name (String)
+        private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
         private var _goal:int           = 0;    // 0 = beat_game, 1 = full_talisman
         private var _talismanMinRarity:int = 1;
         private var _tatteredScrollLevels:int  = 1;
@@ -288,6 +290,10 @@ package net {
                     handlePrintJSON(p);
                     break;
 
+                case "DataPackage":
+                    handleDataPackage(p);
+                    break;
+
                 case "Bounced":
                     handleBounced(p);
                     break;
@@ -303,14 +309,19 @@ package net {
             _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
 
             _playerNames = {};
+            _playerGames = {};
             var players:Array = p.players as Array;
             if (players) {
                 for each (var player:Object in players) {
                     _playerNames[int(player.slot)] = String(player.alias);
+                    if (player.game != null) _playerGames[int(player.slot)] = String(player.game);
                     _logger.log(_modName, "  player: slot=" + player.slot +
                         "  name=" + player.alias + "  game=" + player.game);
                 }
             }
+            // Fetch item name tables for every game in the room so we can
+            // resolve cross-game item names in PrintJSON events.
+            sendGetDataPackage();
 
             if (p.slot_data && p.slot_data.token_map) {
                 _tokenMap = p.slot_data.token_map;
@@ -401,12 +412,23 @@ package net {
                 var senderSlot:int = int(p.item.player);
                 if (receiving != _mySlot && senderSlot != _mySlot) return;
 
-                var logText:String = resolvePartsText(p.data);
+                // The item belongs to the receiving player's game, so use that
+                // as the fallback owner when a JSONMessagePart lacks a player field.
+                var logText:String = resolvePartsText(p.data, receiving);
                 _logger.log(_modName, "  ItemSend: " + logText);
 
                 if (senderSlot == _mySlot && receiving != _mySlot) {
                     // Player sent an item for someone else — show in toast (also logs via toast).
                     _toast.addMessage(logText, 0xFFCC99FF);
+
+                    // Also surface it on the item toast HUD.
+                    var sentItemId:int   = int(p.item.item);
+                    var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
+                    var recvName:String  = (_playerNames[receiving] != null)
+                        ? String(_playerNames[receiving]) : ("Slot " + receiving);
+                    if (_itemToast != null) {
+                        _itemToast.addItem("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
+                    }
                 } else {
                     // Player is receiving — grantItem handles the itemToast display; just log here.
                     if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
@@ -422,8 +444,13 @@ package net {
             }
         }
 
-        /** Resolve a PrintJSON data array to a human-readable string. */
-        private function resolvePartsText(data:*):String {
+        /**
+         * Resolve a PrintJSON data array to a human-readable string.
+         * defaultItemOwner is the slot to assume owns any item_id part that
+         * does not include its own player field (e.g. the receiving slot in
+         * an ItemSend PrintJSON).
+         */
+        private function resolvePartsText(data:*, defaultItemOwner:int = -1):String {
             var result:String = "";
             if (data == null) return result;
             var parts:Array = data as Array;
@@ -433,8 +460,8 @@ package net {
                     var pSlot:int = int(part.text);
                     result += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
                 } else if (ptype == "item_id") {
-                    var iName:String = itemName(int(part.text));
-                    result += (iName != null) ? iName : ("Item #" + int(part.text));
+                    var ownerSlot:int = (part.player != null) ? int(part.player) : defaultItemOwner;
+                    result += resolveItemNameForSlot(int(part.text), ownerSlot);
                 } else if (ptype == "location_id") {
                     result += resolveLocationName(int(part.text));
                 } else {
@@ -442,6 +469,28 @@ package net {
                 }
             }
             return result;
+        }
+
+        /**
+         * Resolve an item name given its AP id and the slot whose game owns it.
+         * Uses our own itemName() for items that belong to us and falls back to
+         * the cached DataPackage for other games.
+         */
+        private function resolveItemNameForSlot(itemId:int, ownerSlot:int):String {
+            if (ownerSlot == _mySlot || ownerSlot < 0) {
+                var mine:String = itemName(itemId);
+                if (mine != null) return mine;
+            } else {
+                var gameName:String = _playerGames[ownerSlot];
+                if (gameName != null) {
+                    var gameItems:Object = _itemIdToNameByGame[gameName];
+                    if (gameItems != null) {
+                        var name:String = gameItems[String(itemId)];
+                        if (name != null) return name;
+                    }
+                }
+            }
+            return "Item #" + itemId;
         }
 
         private function resolveLocationName(locId:int):String {
@@ -453,6 +502,51 @@ package net {
                 if (int(STAGE_LOC_AP_IDS[strId]) == baseId) return strId + suffix;
             }
             return "Location #" + locId;
+        }
+
+        /**
+         * Request the DataPackage for every game represented in the room so
+         * we can resolve cross-game item names in PrintJSON events.
+         */
+        private function sendGetDataPackage():void {
+            if (_ws == null) return;
+            var gamesSet:Object = {};
+            for (var slotKey:String in _playerGames) {
+                var g:String = String(_playerGames[slotKey]);
+                if (g != null && g.length > 0) gamesSet[g] = true;
+            }
+            var quoted:Array = [];
+            for (var gameName:String in gamesSet) {
+                quoted.push('"' + gameName + '"');
+            }
+            var packet:String = '[{"cmd":"GetDataPackage","games":[' + quoted.join(",") + ']}]';
+            _logger.log(_modName, "AP >> GetDataPackage  games=" + quoted.join(","));
+            _ws.send(packet);
+        }
+
+        private function handleDataPackage(p:Object):void {
+            try {
+                var data:Object = p.data;
+                if (data == null) return;
+                var games:Object = data.games;
+                if (games == null) return;
+                var loaded:int = 0;
+                for (var gameName:String in games) {
+                    var gameData:Object = games[gameName];
+                    if (gameData == null) continue;
+                    var nameToId:Object = gameData.item_name_to_id;
+                    if (nameToId == null) continue;
+                    var byId:Object = {};
+                    for (var iname:String in nameToId) {
+                        byId[String(int(nameToId[iname]))] = iname;
+                    }
+                    _itemIdToNameByGame[gameName] = byId;
+                    loaded++;
+                }
+                _logger.log(_modName, "  DataPackage loaded: " + loaded + " game(s)");
+            } catch (err:Error) {
+                _logger.log(_modName, "handleDataPackage ERROR: " + err.message);
+            }
         }
 
         private function sendConnect():void {
