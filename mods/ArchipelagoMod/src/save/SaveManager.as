@@ -4,6 +4,7 @@ package save {
     import net.ConnectionManager;
     import unlockers.LevelUnlocker;
     import unlockers.ShadowCoreUnlocker;
+    import unlockers.TalismanUnlocker;
 
     /**
      * Owns all slot-data persistence for the Archipelago mod.
@@ -25,6 +26,7 @@ package save {
         private var _levelUnlocker:LevelUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
 
+        private var _talismanUnlocker:TalismanUnlocker;
         private var _currentSlot:int       = 0;
         private var _slotCompleted:Boolean = false;
         private var _deathLinkEnabled:Boolean    = false;
@@ -45,6 +47,9 @@ package save {
 
         /** Wire in after construction so SaveManager can persist shadow core state. */
         public function set shadowCoreUnlocker(v:ShadowCoreUnlocker):void { _shadowCoreUnlocker = v; }
+
+        /** Wire in after construction so SaveManager can persist talisman grant state. */
+        public function set talismanUnlocker(v:TalismanUnlocker):void { _talismanUnlocker = v; }
 
         public function get currentSlot():int        { return _currentSlot; }
         public function set currentSlot(v:int):void  { _currentSlot = v; }
@@ -67,6 +72,7 @@ package save {
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
+            if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
@@ -82,6 +88,11 @@ package save {
                 if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
                 if (data.totalShadowCoresGranted !== undefined && _shadowCoreUnlocker != null)
                     _shadowCoreUnlocker.totalGranted = int(data.totalShadowCoresGranted);
+                if (data.grantedTalismanApIds !== undefined && _talismanUnlocker != null) {
+                    var grantedObj:Object = {};
+                    for each (var talId:* in data.grantedTalismanApIds) grantedObj[String(int(talId))] = true;
+                    _talismanUnlocker.grantedApIds = grantedObj;
+                }
                 if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
                 if (data.deathLinkEnabled !== undefined) {
                     _deathLinkEnabled    = data.deathLinkEnabled === true;
@@ -100,6 +111,11 @@ package save {
          */
         public function saveSlotData():void {
             if (_currentSlot < 0) return;
+            var grantedTalIds:Array = [];
+            if (_talismanUnlocker != null) {
+                var talIds:Object = _talismanUnlocker.grantedApIds;
+                for (var k:String in talIds) grantedTalIds.push(int(k));
+            }
             var data:Object = {
                 host:             _connectionManager.apHost,
                 port:             _connectionManager.apPort,
@@ -107,6 +123,7 @@ package save {
                 password:         _connectionManager.apPassword,
                 bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
                 totalShadowCoresGranted: _shadowCoreUnlocker != null ? _shadowCoreUnlocker.totalGranted : 0,
+                grantedTalismanApIds: grantedTalIds,
                 completed:        _slotCompleted,
                 deathLinkEnabled: _deathLinkEnabled,
                 standalone:       _standalone
@@ -139,6 +156,7 @@ package save {
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
+            if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;

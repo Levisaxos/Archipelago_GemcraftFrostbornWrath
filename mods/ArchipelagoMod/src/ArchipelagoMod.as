@@ -175,6 +175,7 @@ package {
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
                 _saveManager.shadowCoreUnlocker = _shadowCoreUnlocker;
+                _saveManager.talismanUnlocker   = _talismanUnlocker;
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
                 _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
