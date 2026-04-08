@@ -126,6 +126,13 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     if world.options.goal.value == 0:
         victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
         victory_location.access_rule = all_skills_rule
+    elif world.options.goal.value == 2:
+        # kill_swarm_queen: K4 reachable (region access already enforces tiers/tokens)
+        # plus all 24 skills — same requirement as beat_game. Without this, the 20 skills
+        # not directly named in a shorter rule have no critical-path location and cause
+        # fill failures (especially with accessibility=minimum).
+        victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)
+        victory_location.access_rule = all_skills_rule
     # full_talisman victory has no access rule — fragments drop from any battle
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

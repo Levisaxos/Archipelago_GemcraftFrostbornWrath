@@ -104,6 +104,9 @@ package ui {
         private function buttonsInit():void {
             var i:int = 0;
 
+            // Wizard level slider
+            _mc.wizardSlider.onChange = onWizardLevelChanged;
+
             // Close button
             _mc.btnClose.addEventListener(MouseEvent.MOUSE_DOWN, ehBtnDown,       true, 0, true);
             _mc.btnClose.addEventListener(MouseEvent.MOUSE_UP,   ehBtnCloseClick, true, 0, true);
@@ -198,9 +201,18 @@ package ui {
         // -----------------------------------------------------------------------
         // Render state
 
+        private function onWizardLevelChanged(level:int):void {
+            _mod.setDebugWizardLevel(level);
+        }
+
         private function renderDebugOptions():void {
             var i:int = 0;
             if (GV.ppd == null) return;
+
+            // Sync slider to current displayed level, but not while the user is dragging.
+            if (!_mc.wizardSlider.isDragging) {
+                _mc.wizardSlider.setValue(_mod.getDisplayedWizardLevel());
+            }
             // A skill is considered active when its level is >= 0.
             // gainedSkillTomes only tracks tome collection; getSkillLevel >= 0
             // is what the game uses to consider a skill available.

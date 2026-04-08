@@ -17,6 +17,8 @@ package {
 
     import ui.ArchipelagoButton
     import ui.ReportIssuesButton
+    import ui.SlotSettingsButton
+    import ui.ScrSlotSettings
     import ui.ToastPanel
     import ui.ItemToastPanel
     import ui.MessageLog
@@ -84,6 +86,8 @@ package {
         private var _bezel:Bezel;
         private var _btn:ArchipelagoButton;
         private var _reportBtn:ReportIssuesButton;
+        private var _settingsBtn:SlotSettingsButton;
+        private var _slotSettings:ScrSlotSettings;
         private var _buttonAdded:Boolean = false;
 
         private var _toast:ToastPanel;
@@ -161,7 +165,8 @@ package {
                 _collectedState  = new CollectedState(_logger, MOD_NAME);
                 _logicEvaluator  = new LogicEvaluator(_logger, MOD_NAME, _collectedState);
 
-                _debugOptions = new ScrDebugOptions(this);
+                _debugOptions  = new ScrDebugOptions(this);
+                _slotSettings  = new ScrSlotSettings();
 
                 _normalProgressionBlocker = new NormalProgressionBlocker(_logger, MOD_NAME);
                 _normalProgressionBlocker.enable(_bezel);
@@ -273,6 +278,11 @@ package {
                 _reportBtn.parent.removeChild(_reportBtn);
                 _reportBtn = null;
             }
+            if (_settingsBtn != null && _settingsBtn.parent != null) {
+                _settingsBtn.parent.removeChild(_settingsBtn);
+                _settingsBtn = null;
+            }
+            if (_slotSettings != null) _slotSettings.close();
             if (_btn != null && _btn.parent != null) {
                 _btn.parent.removeChild(_btn);
                 _btn = null;
@@ -289,6 +299,23 @@ package {
         public function unlockStage(stageStrId:String):void { _stageUnlocker.unlockStage(stageStrId); }
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
         public function isStageUnlocked(stageStrId:String):Boolean { return _stageUnlocker.isStageUnlocked(stageStrId); }
+
+        public function getDisplayedWizardLevel():int {
+            if (_levelUnlocker == null) return 1;
+            return _levelUnlocker.getDisplayedWizardLevel();
+        }
+
+        /**
+         * Debug-only: set total wizard level by adjusting the AP bonus.
+         * Clamps so bonus never goes negative (can't reduce natural level).
+         * Does NOT persist — intentionally skips onDataChanged.
+         */
+        public function setDebugWizardLevel(target:int):void {
+            if (_levelUnlocker == null) return;
+            var natural:int = _levelUnlocker.naturalWizardLevel;
+            _levelUnlocker.bonusWizardLevel = Math.max(0, target - natural);
+            _levelUnlocker.applyBonusLevels();
+        }
 
         // -----------------------------------------------------------------------
         // Frame loop
@@ -329,6 +356,11 @@ package {
             // Sweep opened wizard stashes so gems stop targeting their tile
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
+
+            // Poll the goal manager every frame so mid-battle goals (e.g. Swarm
+            // Queen kill on K4) fire as soon as the condition is met, not only
+            // on the next save event. No-ops once the goal has been sent.
+            if (!_standalone && _goalManager != null) _goalManager.check();
 
             // Track screen transitions.
             var screen:int = int(GV.main.currentScreen);
@@ -501,6 +533,9 @@ package {
             if (_reportBtn != null) {
                 _reportBtn.x = mc.btnTutorial.x;
             }
+            if (_settingsBtn != null) {
+                _settingsBtn.x = mc.btnTutorial.x;
+            }
             if (_btn != null) {
                 _btn.x = mc.btnTutorial.x;
             }
@@ -537,6 +572,7 @@ package {
             if (_disconnectPanel != null && this.stage != null) {
                 _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
             }
+            // SlotSettings panel is attached to GV.main, no resize handling needed.
         }
 
         // -----------------------------------------------------------------------
@@ -551,9 +587,17 @@ package {
             mc.addChild(_reportBtn);
             _logger.log(MOD_NAME, "Report Issues button added at (" + _reportBtn.x + ", " + _reportBtn.y + ")");
 
+            _settingsBtn = new SlotSettingsButton(mc.btnTutorial);
+            _settingsBtn.x = mc.btnTutorial.x;
+            _settingsBtn.y = mc.btnTutorial.y + stepY * 2;
+            _settingsBtn.visible = false; // shown after AP connects
+            _settingsBtn.onClick = onSettingsClicked;
+            mc.addChild(_settingsBtn);
+            _logger.log(MOD_NAME, "AP Settings button added at (" + _settingsBtn.x + ", " + _settingsBtn.y + ") [hidden until connected]");
+
             _btn = new ArchipelagoButton(mc.btnTutorial);
             _btn.x = mc.btnTutorial.x;
-            _btn.y = mc.btnTutorial.y + stepY * 2;
+            _btn.y = mc.btnTutorial.y + stepY * 3;
             _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
             mc.addChild(_btn);
@@ -793,9 +837,21 @@ package {
             // Note: we do NOT call _goalManager.check() here because GV.ppd
             // may still hold data from a previously loaded save slot.
             // The onSaveSave hook will catch a legitimate victory.
+            if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
+            if (_settingsBtn != null) _settingsBtn.visible = true;
+
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
+        }
+
+        private function onSettingsClicked():void {
+            if (_slotSettings == null) return;
+            if (_slotSettings.isOpen) {
+                _slotSettings.close();
+            } else {
+                _slotSettings.open();
+            }
         }
 
         private function onConnectionError(msg:String):void {
@@ -811,6 +867,8 @@ package {
         }
 
         private function onApUnexpectedlyDisconnected():void {
+            if (_settingsBtn != null) _settingsBtn.visible = false;
+            if (_slotSettings != null) _slotSettings.close();
             if (_disconnectPanel == null || !_disconnectPanelOnStage) return;
             _disconnectPanel.resetState();
             _disconnectPanel.visible = true;

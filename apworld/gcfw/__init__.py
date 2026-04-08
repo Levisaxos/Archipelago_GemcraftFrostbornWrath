@@ -207,6 +207,9 @@ class GemcraftFrostbornWrathWorld(World):
             # Victory event for beat_game goal lives inside the A4 region
             if str_id == "A4" and self.options.goal.value == 0:
                 region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, region))
+            # Victory event for kill_swarm_queen goal lives inside the K4 region
+            if str_id == "K4" and self.options.goal.value == 2:
+                region.locations.append(GCFWLocation(self.player, "Kill Swarm Queen Victory", None, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
@@ -228,6 +231,8 @@ class GemcraftFrostbornWrathWorld(World):
         # Place the Victory event at the goal-appropriate location.
         if self.options.goal.value == 0:
             victory_name = "Complete A4 - Frostborn Wrath Victory"
+        elif self.options.goal.value == 2:
+            victory_name = "Kill Swarm Queen Victory"
         else:
             victory_name = "Full Talisman Victory"
         victory_loc = self.multiworld.get_location(victory_name, self.player)

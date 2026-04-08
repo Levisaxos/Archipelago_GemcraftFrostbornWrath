@@ -32,12 +32,14 @@ package goals {
 
         /**
          * Create the appropriate goal strategy from AP slot data.
-         * @param goalType          0 = beat_game, 1 = full_talisman
+         * @param goalType          0 = beat_game, 1 = full_talisman, 2 = kill_swarm_queen
          * @param talismanMinRarity Minimum fragment rarity for full_talisman goal.
          */
         public function configure(goalType:int, talismanMinRarity:int):void {
             if (goalType == 1) {
                 _goal = new FullTalismanGoal(_logger, _modName, talismanMinRarity);
+            } else if (goalType == 2) {
+                _goal = new SwarmQueenGoal(_logger, _modName);
             } else {
                 _goal = new BeatGameGoal(_logger, _modName);
             }

@@ -77,8 +77,14 @@ package deathlink {
             _toast   = toast;
         }
 
-        public function get enabled():Boolean       { return _enabled; }
-        public function set enabled(v:Boolean):void { _enabled = v; }
+        public function get enabled():Boolean        { return _enabled; }
+        public function set enabled(v:Boolean):void  { _enabled = v; }
+        public function get punishment():int         { return _punishment; }
+        public function get gemLossPercent():int     { return _gemLossPercent; }
+        public function get waveSurgeCount():int     { return _waveSurgeCount; }
+        public function get waveSurgeGemLevel():int  { return _waveSurgeGemLevel; }
+        public function get gracePeriodSec():int     { return _gracePeriodMs / 1000; }
+        public function get cooldownSec():int        { return _cooldownMs / 1000; }
 
         public function configure(slotData:Object):void {
             if (slotData.death_link_punishment   !== undefined) _punishment        = int(slotData.death_link_punishment);
