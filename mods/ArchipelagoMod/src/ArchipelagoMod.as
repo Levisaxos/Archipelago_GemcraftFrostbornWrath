@@ -326,6 +326,10 @@ package {
                 _keyListenerAdded = true;
             }
 
+            // Sweep opened wizard stashes so gems stop targeting their tile
+            // after the AP check is collected. See WizStashes.tickClearOpened.
+            WizStashes.tickClearOpened(_logger, MOD_NAME);
+
             // Track screen transitions.
             var screen:int = int(GV.main.currentScreen);
             if (_lastScreen == -1) {
