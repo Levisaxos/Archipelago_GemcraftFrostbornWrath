@@ -27,6 +27,7 @@ from .rules import set_rules
 from .rulesdata import (
     TIERS,
     TIER_REQUIREMENTS,
+    TIER_SKILL_REQUIREMENTS,
     GAME_DATA,
     SKILL_CATEGORIES,
     CUMULATIVE_SKILL_REQUIREMENTS,
@@ -243,39 +244,75 @@ class GemcraftFrostbornWrathWorld(World):
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
 
     def fill_hook(self, progitempool, usefulitempool, filleritempool, fill_locations):
-        # goal: look at the TIER_REQUIREMENTS table and use that to force the fill to put enough stages of
-        # each tier in order first before filling the rest of the items. this should make gens 100% consistent.
+        # Reorder progitempool so fill_restrictive (which pops from the end) places items in
+        # this sphere order:
+        #   tier-0 tokens → skills for tier 1 → tier-1 tokens → skills for tier 2 → ...
+        #
+        # Without skill reordering, skills land in random positions and can end up being placed
+        # last, at which point all low-tier locations are filled and the remaining locations are
+        # in tiers 9-12 (which require more skills than are in the state) — causing a FillError.
+        #
+        # The 24 skills map exactly onto the 12×2 tier requirements
+        # (6 spells + 4 focus + 6 gems + 4 buildings + 4 wrath = 24), so every skill gets a slot.
+        #
+        # In own_world mode, tokens are pre_fill'd and absent from the pool; only skills are
+        # reordered here. In any_world mode, skills and tokens are interleaved correctly.
 
-        # for each tier, in reverse order (hardcoded as 12 tiers right now; TODO make more robust)
-        # (reverse order since progitempool is popped off of to choose items, so im moving items to the end;
-        # so moving tier 11 to the end then tier 10 then etc etc down to tier 1 so that in the end tier 1's unlocks
-        # are at the end, which means they will be placed first you get the idea)
+        # Build reverse lookup: skill name → category
+        skill_to_category: Dict[str, str] = {
+            skill: cat
+            for cat, skills in SKILL_CATEGORIES.items()
+            for skill in skills
+        }
+
+        # Collect this player's skill items per category
+        category_skill_items: Dict[str, list] = {cat: [] for cat in SKILL_CATEGORIES}
+        for item in progitempool:
+            if item.player == self.player and item.name.endswith(" Skill"):
+                cat = skill_to_category.get(item.name[:-6])
+                if cat:
+                    category_skill_items[cat].append(item)
+
+        category_ptr: Dict[str, int] = {cat: 0 for cat in SKILL_CATEGORIES}
+
+        # Iterate tiers from highest to lowest. Each append goes to the END of the pool,
+        # so the last appended item is popped (placed) first by fill_restrictive.
+        # After the loop the pool tail looks like:
+        #   ... [skills_for_t12][tier-11_toks][skills_for_t11][tier-10_toks]...[skills_for_t1][tier-0_toks]
+        # Popping from the right: tier-0 tokens first, then skills for tier 1, then tier-1 tokens, etc.
         for t in range(12, 0, -1):
-            prev_tier = t-1
+            prev_tier = t - 1
             level_req = len(TIERS[prev_tier]) * self.options.tier_requirements_percent // 100
+
+            # Append skills that unlock tier t (one per required category).
+            # These land just before the tier-(t-1) tokens in the pool tail, so they are
+            # placed right after those tokens unlock the tier-(t-1) stage locations.
+            for category in TIER_SKILL_REQUIREMENTS.get(t, []):
+                ptr = category_ptr[category]
+                if ptr < len(category_skill_items[category]):
+                    skill_item = category_skill_items[category][ptr]
+                    category_ptr[category] += 1
+                    pool_idx = next(
+                        (i for i, x in enumerate(progitempool) if x is skill_item), None
+                    )
+                    if pool_idx is not None:
+                        progitempool.append(progitempool.pop(pool_idx))
+
+            # Append enough tier-(prev_tier) tokens to satisfy the tier-t requirement.
             moved_levels = 0
-            # ok test time
-            # level_req = len(TIERS[prev_tier])
             prog_idx = 0
             while moved_levels < level_req:
                 if prog_idx >= len(progitempool):
-                    break  # tokens already placed via pre_fill; remaining quota is fine
-                this_item_name = progitempool[prog_idx].name
-                if this_item_name.endswith(" Field Token"):
-                    this_field = this_item_name[:2]
+                    break  # tokens already placed via pre_fill (own_world); quota is fine
+                this_item = progitempool[prog_idx]
+                if (this_item.player == self.player
+                        and this_item.name.endswith(" Field Token")):
+                    this_field = this_item.name[:2]
                     if this_field in TIERS[prev_tier]:
-                        # move to end
-                        # print(f"Moving {this_field} to end")
                         progitempool.append(progitempool.pop(prog_idx))
-
                         moved_levels += 1
-                        prog_idx -= 1  # to counteract the +=1 below
-                prog_idx += 1  # this should never exceed the length of the progitempool. assuming reasonable tier tables.
-
-
-        # print("PRINTING WHOLE PROG POOL IN ORDER:")
-        # for i in progitempool:
-        #     print(f"{i.name}")
+                        prog_idx -= 1
+                prog_idx += 1
 
 
     def fill_slot_data(self) -> Dict:
