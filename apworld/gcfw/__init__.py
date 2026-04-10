@@ -79,11 +79,10 @@ class GemcraftFrostbornWrathWorld(World):
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
 
     def generate_early(self) -> None:
-        if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world
-                and self.multiworld.players == 1):
-            raise Exception(
-                f"{self.player_name}: field_token_placement 'different_world' requires more than one player."
-            )
+        if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
+            raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
+        if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
+            raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
     def pre_fill(self) -> None:
         from Fill import FillError, fill_restrictive

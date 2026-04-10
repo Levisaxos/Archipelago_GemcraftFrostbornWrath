@@ -16,6 +16,7 @@ package {
     import goals.GoalManager;
 
     import ui.ArchipelagoButton
+    import ui.FieldsInLogicButton
     import ui.ReportIssuesButton
     import ui.SlotSettingsButton
     import ui.ScrSlotSettings
@@ -87,6 +88,7 @@ package {
         private var _btn:ArchipelagoButton;
         private var _reportBtn:ReportIssuesButton;
         private var _settingsBtn:SlotSettingsButton;
+        private var _fieldsBtn:FieldsInLogicButton;
         private var _slotSettings:ScrSlotSettings;
         private var _buttonAdded:Boolean = false;
 
@@ -530,11 +532,21 @@ package {
             // In-game tracker: recolor stage lights based on logic state.
             if (_stageTinter != null) _stageTinter.apply(mc);
 
+            // Fields-in-logic button: update count label + drive hover panel.
+            if (_fieldsBtn != null) {
+                var inLogicList:Array = _computeInLogicStages();
+                _fieldsBtn.update(inLogicList.length, inLogicList);
+                _fieldsBtn.onFrame();
+            }
+
             if (_reportBtn != null) {
                 _reportBtn.x = mc.btnTutorial.x;
             }
             if (_settingsBtn != null) {
                 _settingsBtn.x = mc.btnTutorial.x;
+            }
+            if (_fieldsBtn != null) {
+                _fieldsBtn.x = mc.btnTutorial.x;
             }
             if (_btn != null) {
                 _btn.x = mc.btnTutorial.x;
@@ -595,13 +607,48 @@ package {
             mc.addChild(_settingsBtn);
             _logger.log(MOD_NAME, "AP Settings button added at (" + _settingsBtn.x + ", " + _settingsBtn.y + ") [hidden until connected]");
 
+            _fieldsBtn = new FieldsInLogicButton(mc.btnTutorial);
+            _fieldsBtn.x = mc.btnTutorial.x;
+            _fieldsBtn.y = mc.btnTutorial.y + stepY * 3;
+            mc.addChild(_fieldsBtn);
+            _logger.log(MOD_NAME, "Fields in Logic button added at (" + _fieldsBtn.x + ", " + _fieldsBtn.y + ")");
+
             _btn = new ArchipelagoButton(mc.btnTutorial);
             _btn.x = mc.btnTutorial.x;
-            _btn.y = mc.btnTutorial.y + stepY * 3;
+            _btn.y = mc.btnTutorial.y + stepY * 4;
             _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
             _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
             mc.addChild(_btn);
             _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ") [hidden]");
+        }
+
+        /**
+         * Returns a sorted array of strIds for stages that currently have at
+         * least one AP location still missing and in logic.
+         */
+        private function _computeInLogicStages():Array {
+            var result:Array = [];
+            if (!_connectionManager.isConnected || _logicEvaluator == null) return result;
+            var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
+            if (metas == null) return result;
+            var missing:Object = _connectionManager.missingLocations;
+            var locIds:Object  = ConnectionManager.stageLocIds;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null) continue;
+                var strId:String = String(meta.strId);
+                if (GV.ppd.stageHighestXpsJourney[meta.id].g() < 0) continue; // not unlocked
+                var base:int = int(locIds[strId]);
+                if (base <= 0) continue;
+                var jMiss:Boolean = missing[base]        == true;
+                var bMiss:Boolean = missing[base + 500]  == true;
+                var sMiss:Boolean = missing[base + 1000] == true;
+                if (_logicEvaluator.stageHasInLogicMissing(strId, jMiss, bMiss, sMiss)) {
+                    result.push(strId);
+                }
+            }
+            result.sort(Array.CASEINSENSITIVE);
+            return result;
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
