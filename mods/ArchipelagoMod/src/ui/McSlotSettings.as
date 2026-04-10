@@ -62,6 +62,13 @@ package ui {
             // ── General settings ─────────────────────────────────────────────
             addSectionHeader("General", vY); vY += ROW_HEIGHT;
             addRow("Goal",                    goalName(cm.goal), vY);                               vY += ROW_HEIGHT;
+            if (cm.goal == 3)
+                { addRow("Fields Required",   cm.fieldsRequired + " fields", vY);                  vY += ROW_HEIGHT; }
+            if (cm.goal == 4) {
+                var pct:int = cm.fieldsRequiredPercentage;
+                var count:int = int(Math.ceil(pct * 122.0 / 100.0));
+                addRow("Fields Required", count + " (" + pct + "%)", vY);                          vY += ROW_HEIGHT;
+            }
             addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
             addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
             addRow("Enforce Logic",           cm.enforceLogic ? "Yes" : "No", vY);                  vY += ROW_HEIGHT;
@@ -123,8 +130,10 @@ package ui {
 
         private function goalName(goal:int):String {
             switch (goal) {
-                case 0:  return "Beat Gatekeeper (A4)";
+                case 0:  return "Kill Gatekeeper (A4)";
                 case 2:  return "Beat Swarm Queen (K4)";
+                case 3:  return "Fields Cleared (Count)";
+                case 4:  return "Fields Cleared (Percentage)";
                 default: return "Unknown (" + goal + ")";
             }
         }

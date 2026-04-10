@@ -33,14 +33,42 @@ class FieldTokenPlacement(Choice):
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
-    beat_game:        Defeat the final boss (complete A4) with all 24 skills unlocked.
-    kill_swarm_queen: Kill the Swarm Queen on K4. Requires all 24 skills (same as
-                     beat_game) but the final objective is K4 instead of A4.
+    kill_gatekeeper:    Kill the Gatekeeper on A4.
+    kill_swarm_queen:   Kill the Swarm Queen on K4.                        
+    fields_count:       Complete a fixed number of Journey stages (set by Fields Required).
+    fields_percentage:  Complete a percentage of all Journey stages (set by Fields Required Percentage).
     """
     display_name = "Goal"
-    option_beat_game = 0
-    option_kill_swarm_queen = 2
+    option_beat_game          = 0
+    option_kill_swarm_queen   = 2
+    option_fields_count       = 3
+    option_fields_percentage  = 4
     default = 0
+
+
+class FieldsRequired(Range):
+    """Number of Journey stages that must be completed to win.
+    Only used when Goal is set to 'fields_count'.
+
+    The game has 122 stages total.
+    """
+    display_name = "Fields Required"
+    range_start = 50
+    range_end   = 122
+    default     = 80
+
+
+class FieldsRequiredPercentage(Range):
+    """Percentage of Journey stages that must be completed to win.
+    Only used when Goal is set to 'fields_percentage'.
+
+    The required field count is ceil(percentage × 122 / 100).
+    Default of 66% requires exactly 80 fields (ceil(66 × 122 / 100) = 80).
+    """
+    display_name = "Fields Required Percentage"
+    range_start = 40
+    range_end   = 100
+    default     = 66
 
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes in the item pool combined.
@@ -235,8 +263,10 @@ class StartingOvercrowd(Toggle):
 
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
-    goal:                      Goal
-    field_token_placement:     FieldTokenPlacement
+    goal:                        Goal
+    fields_required:             FieldsRequired
+    fields_required_percentage:  FieldsRequiredPercentage
+    field_token_placement:       FieldTokenPlacement
     tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     enforce_logic:             EnforceLogic

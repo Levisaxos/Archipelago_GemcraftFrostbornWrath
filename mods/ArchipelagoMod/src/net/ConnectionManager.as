@@ -51,7 +51,9 @@ package net {
         private var _playerNames:Object = {};   // slot (int) → alias (String)
         private var _playerGames:Object = {};   // slot (int) → game name (String)
         private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
-        private var _goal:int           = 0;    // 0 = beat_game, 2 = kill_swarm_queen
+        private var _goal:int           = 0;    // 0 = beat_game, 2 = kill_swarm_queen, 3 = fields_count, 4 = fields_percentage
+        private var _fieldsRequired:int           = 80;
+        private var _fieldsRequiredPercentage:int = 66;
         private var _talismanMinRarity:int = 1;
         private var _tatteredScrollLevels:int  = 1;
         private var _wornTomeLevels:int        = 2;
@@ -158,6 +160,8 @@ package net {
         public function get enemyShieldMultiplier():int      { return _enemyShieldMultiplier; }
         public function get enemiesPerWaveMultiplier():int   { return _enemiesPerWaveMultiplier; }
         public function get extraWaveCount():int             { return _extraWaveCount; }
+        public function get fieldsRequired():int             { return _fieldsRequired; }
+        public function get fieldsRequiredPercentage():int   { return _fieldsRequiredPercentage; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -397,7 +401,9 @@ package net {
                 if (p.slot_data.enemy_armor_multiplier       !== undefined) _enemyArmorMultiplier     = int(p.slot_data.enemy_armor_multiplier);
                 if (p.slot_data.enemy_shield_multiplier      !== undefined) _enemyShieldMultiplier    = int(p.slot_data.enemy_shield_multiplier);
                 if (p.slot_data.enemies_per_wave_multiplier  !== undefined) _enemiesPerWaveMultiplier = int(p.slot_data.enemies_per_wave_multiplier);
-                if (p.slot_data.extra_wave_count             !== undefined) _extraWaveCount           = int(p.slot_data.extra_wave_count);
+                if (p.slot_data.extra_wave_count             !== undefined) _extraWaveCount              = int(p.slot_data.extra_wave_count);
+                if (p.slot_data.fields_required              !== undefined) _fieldsRequired              = int(p.slot_data.fields_required);
+                if (p.slot_data.fields_required_percentage   !== undefined) _fieldsRequiredPercentage    = int(p.slot_data.fields_required_percentage);
             }
             _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 
