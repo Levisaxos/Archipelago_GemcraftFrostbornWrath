@@ -165,12 +165,50 @@ Please include this file when reporting issues.
 
 ## YAML options
 
+### Goal
+
 | Option | Default | Description |
 |---|---|---|
-| `goal` | `beat_game` | `beat_game` — defeat the final boss (complete A4 with all 24 skills unlocked). |
+| `goal` | `kill_gatekeeper` | Win condition. See values below. |
+| `fields_required` | `80` | Number of Journey stages to complete. Only used when `goal` is `fields_count` (50–122). |
+| `fields_required_percentage` | `66` | Percentage of Journey stages to complete. Only used when `goal` is `fields_percentage` (40–100). |
+
+**Goal values:**
+
+| Value | Description |
+|---|---|
+| `kill_gatekeeper` | *(default)* Kill the Gatekeeper on A4 |
+| `kill_swarm_queen` | Kill the Swarm Queen on K4 |
+| `fields_count` | Complete a fixed number of Journey stages (set by `fields_required`) |
+| `fields_percentage` | Complete a percentage of all Journey stages (set by `fields_required_percentage`) |
+
+### Progression
+
+| Option | Default | Description |
+|---|---|---|
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
 | `tier_requirements_percent` | `75` | Percentage of stages in earlier tiers that must be accessible before later tiers are considered in logic (40–100). Lower values may require heavier use of Endurance mode. |
 | `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tome values in a 1:2:3 ratio. |
+| `enforce_logic` | `false` | When enabled, prevents starting out-of-logic stages in Journey mode. |
+| `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
+| `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
+
+### Difficulty
+
+| Option | Default | Description |
+|---|---|---|
+| `disable_endurance` | `false` | Permanently disables Endurance mode. |
+| `disable_trial` | `true` | Permanently disables Trial mode (no AP checks there, disabled by default). |
+| `enemy_hp_multiplier` | `100` | Enemy HP as a percentage of normal (50–200). |
+| `enemy_armor_multiplier` | `100` | Enemy armor as a percentage of normal (50–200). |
+| `enemy_shield_multiplier` | `100` | Enemy shield HP as a percentage of normal (50–200). |
+| `enemies_per_wave_multiplier` | `100` | Number of enemies per wave as a percentage of normal (50–200). |
+| `extra_wave_count` | `0` | Additional waves appended to each stage beyond its normal length (0–20). |
+
+### DeathLink
+
+| Option | Default | Description |
+|---|---|---|
 | `death_link` | `false` | Enables DeathLink with other players in the session. |
 | `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, or `instant_fail`. |
 | `gem_loss_percent` | `20` | Percentage of placed gems destroyed on `gem_loss` punishment (10–50). |
