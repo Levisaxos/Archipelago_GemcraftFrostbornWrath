@@ -564,6 +564,9 @@ package {
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
             }
+            if (_slotSettings != null && _slotSettings.isOpen) {
+                _slotSettings.doEnterFrame();
+            }
         }
 
         // -----------------------------------------------------------------------

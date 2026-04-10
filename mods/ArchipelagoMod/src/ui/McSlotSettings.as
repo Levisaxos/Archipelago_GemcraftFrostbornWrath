@@ -69,12 +69,18 @@ package ui {
             addRow("Trial Mode",              cm.disableTrial     ? "Disabled" : "Enabled", vY);    vY += ROW_HEIGHT;
             addRow("Starting Wizard Level",   cm.startingWizardLevel == 1 ? "Off" : "Level " + cm.startingWizardLevel, vY); vY += ROW_HEIGHT;
             addRow("Starting Overcrowd",      cm.startingOvercrowd ? "Yes" : "No", vY);             vY += ROW_HEIGHT;
-            addRow("XP Tomes  (T / W / A)",   cm.tatteredScrollLevels + " / "
-                                             + cm.wornTomeLevels + " / "
-                                             + cm.ancientGrimoireLevels + " levels", vY);           vY += ROW_HEIGHT;
-            addRow("Enemy HP",               cm.enemyHpMultiplier     + "%", vY);                  vY += ROW_HEIGHT;
-            addRow("Enemy Armor",            cm.enemyArmorMultiplier   + "%", vY);                  vY += ROW_HEIGHT;
-            addRow("Enemy Shield",           cm.enemyShieldMultiplier  + "%", vY);                  vY += ROW_HEIGHT;
+            addRow("Tattered Scroll",         cm.tatteredScrollLevels + " levels", vY);              vY += ROW_HEIGHT;
+            addRow("Worn Tome",               cm.wornTomeLevels       + " levels", vY);              vY += ROW_HEIGHT;
+            addRow("Ancient Grimoire",        cm.ancientGrimoireLevels + " levels", vY);             vY += ROW_HEIGHT;
+
+            // ── Difficulty Modifiers ─────────────────────────────────────────
+            vY += SECTION_GAP;
+            addSectionHeader("Difficulty Modifiers", vY); vY += ROW_HEIGHT;
+            addRow("Enemy HP",               cm.enemyHpMultiplier          + "%", vY);               vY += ROW_HEIGHT;
+            addRow("Enemy Armor",            cm.enemyArmorMultiplier        + "%", vY);              vY += ROW_HEIGHT;
+            addRow("Enemy Shield",           cm.enemyShieldMultiplier       + "%", vY);              vY += ROW_HEIGHT;
+            addRow("Enemies Per Wave",       cm.enemiesPerWaveMultiplier    + "%", vY);              vY += ROW_HEIGHT;
+            addRow("Extra Waves",            cm.extraWaveCount == 0 ? "Off" : "+" + cm.extraWaveCount, vY); vY += ROW_HEIGHT;
 
             // ── DeathLink ────────────────────────────────────────────────────
             vY += SECTION_GAP;
