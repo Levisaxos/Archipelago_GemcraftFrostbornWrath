@@ -59,8 +59,8 @@ package ui {
 
             var list:Array = (releases != null && releases.length > 0)
                 ? releases
-                : [{ tag: "—", name: "No changelog available",
-                     body: "Could not load release data.", date: "" }];
+                : [{ tag: "", name: "Could not reach GitHub", date: "",
+                     body: "Release notes are unavailable.\nPlease check your internet connection." }];
 
             for each (var entry:Object in list) {
                 var tag:String  = String(entry.tag  || "");
@@ -95,40 +95,6 @@ package ui {
             }
         }
 
-        // -----------------------------------------------------------------------
-        // Fallback data
-
-        /**
-         * Hardcoded release entries used when the GitHub API cannot be reached
-         * and no cached data is available.
-         */
-        public static function getFallbackReleases():Array {
-            return [
-                {
-                    tag:  "v0.0.2",
-                    name: "v0.0.2",
-                    date: "2025-04-07",
-                    body: "  \u2022 Added field completion goals (field count and field percentage)\n"
-                        + "  \u2022 Added wave manipulation options (start wave, wave count, custom wave speed)\n"
-                        + "  \u2022 Added visual options (stage tinting for logic state)\n"
-                        + "  \u2022 Fixed non-scrollable settings panel bug\n"
-                        + "  \u2022 More YAML world options for the randomizer"
-                },
-                {
-                    tag:  "v0.0.1",
-                    name: "v0.0.1",
-                    date: "2025-03-01",
-                    body: "  \u2022 Initial release of the Archipelago GemCraft Frostborn Wrath mod\n"
-                        + "  \u2022 Archipelago connection panel (host, port, slot, password)\n"
-                        + "  \u2022 Item and location tracking integrated with Archipelago server\n"
-                        + "  \u2022 Stage unlocking and locking based on received items\n"
-                        + "  \u2022 Skill, battle trait, talisman fragment, and shadow core unlocking\n"
-                        + "  \u2022 DeathLink support\n"
-                        + "  \u2022 Message log panel (backtick to toggle)\n"
-                        + "  \u2022 Toast notifications for items received and sent"
-                }
-            ];
-        }
 
         // -----------------------------------------------------------------------
         // Content helpers

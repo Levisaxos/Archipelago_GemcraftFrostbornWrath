@@ -226,23 +226,6 @@ package ui {
         }
 
         // -----------------------------------------------------------------------
-        // Fallback data
-
-        /**
-         * Hardcoded release entries used when the GitHub API cannot be reached
-         * and no cached data is available.
-         */
-        public static function getFallbackReleases():Array {
-            return [
-                {
-                    tag:  "unknown",
-                    date: "2025-04-07",
-                    body: "  \u2022Unable to connect to Github to collect release log"                        
-                }                
-            ];
-        }
-
-        // -----------------------------------------------------------------------
         // Scrolling
 
         private function onWheel(e:MouseEvent):void {

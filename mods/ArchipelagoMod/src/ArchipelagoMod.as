@@ -21,7 +21,6 @@ package {
     import goals.GoalManager;
 
     import ui.ArchipelagoButton
-    import ui.McChangelog
     import ui.ScrChangelog
     import ui.FieldsInLogicButton
     import ui.ReportIssuesButton
@@ -747,7 +746,8 @@ package {
             if (_scrChangelog == null) _scrChangelog = new ScrChangelog();
             var releases:Array = (_cachedReleases != null && _cachedReleases.length > 0)
                 ? _cachedReleases
-                : McChangelog.getFallbackReleases();
+                : [{ tag: "", name: "Could not reach GitHub", date: "",
+                     body: "Release notes are unavailable.\nPlease check your internet connection." }];
             _scrChangelog.populate(releases);
             _scrChangelog.show();
         }
