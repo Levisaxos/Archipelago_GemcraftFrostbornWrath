@@ -212,36 +212,39 @@ class GemcraftFrostbornWrathWorld(World):
                 region.locations.append(loc)
             wiz_loc_name = f"Complete {str_id} - Wizard stash"
             wiz_loc_data = location_table[wiz_loc_name]
-            region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
-            # Victory event for beat_game goal lives inside the A4 region
-            if str_id == "A4" and self.options.goal.value == 0:
-                region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, region))
-            # Victory event for kill_swarm_queen goal lives inside the K4 region
-            if str_id == "K4" and self.options.goal.value == 2:
-                region.locations.append(GCFWLocation(self.player, "Kill Swarm Queen Victory", None, region))
+            region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))                        
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
+
+        if self.options.goal.value == 0:
+            kill_gatekeeper_region = Region("Kill Gatekeeper Goal", self.player, self.multiworld)
+            kill_gatekeeper_region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, kill_gatekeeper_region))
+            self.multiworld.regions.append(kill_gatekeeper_region)
+            menu_region.connect(kill_gatekeeper_region, "Kill Gatekeeper")            
+
+        if self.options.goal.value == 2:
+            kill_swarm_queen_region = Region("Kill Swarm Queen Goal", self.player, self.multiworld)
+            kill_swarm_queen_region.locations.append(GCFWLocation(self.player, "Kill Swarm Queen Victory", None, kill_swarm_queen_region))
+            self.multiworld.regions.append(kill_swarm_queen_region)
+            menu_region.connect(kill_swarm_queen_region, "Kill swarm")            
 
         # full_talisman goal: victory event in a dedicated region (no item requirements)
         if self.options.goal.value == 1:
             talisman_region = Region("Talisman Goal", self.player, self.multiworld)
-            talisman_region.locations.append(
-                GCFWLocation(self.player, "Full Talisman Victory", None, talisman_region))
+            talisman_region.locations.append(GCFWLocation(self.player, "Full Talisman Victory", None, talisman_region))
             self.multiworld.regions.append(talisman_region)
             menu_region.connect(talisman_region, "Talisman")
 
         # fields_count / fields_percentage goals: victory in dedicated regions
         if self.options.goal.value == 3:
             fields_count_region = Region("Fields Count Goal", self.player, self.multiworld)
-            fields_count_region.locations.append(
-                GCFWLocation(self.player, "Fields Count Victory", None, fields_count_region))
+            fields_count_region.locations.append(GCFWLocation(self.player, "Fields Count Victory", None, fields_count_region))
             self.multiworld.regions.append(fields_count_region)
             menu_region.connect(fields_count_region, "Fields Count")
 
         if self.options.goal.value == 4:
             fields_pct_region = Region("Fields Percentage Goal", self.player, self.multiworld)
-            fields_pct_region.locations.append(
-                GCFWLocation(self.player, "Fields Percentage Victory", None, fields_pct_region))
+            fields_pct_region.locations.append(GCFWLocation(self.player, "Fields Percentage Victory", None, fields_pct_region))
             self.multiworld.regions.append(fields_pct_region)
             menu_region.connect(fields_pct_region, "Fields Percentage")
 

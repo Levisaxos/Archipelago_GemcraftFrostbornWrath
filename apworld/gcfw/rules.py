@@ -138,6 +138,19 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             loc.access_rule = lambda state, er=existing_rule: er(state) and all_skills_rule(state)
         victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)
         victory_location.access_rule = all_skills_rule
+    elif world.options.goal.value == 3:
+        required = world.options.fields_required.value
+        journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
+        victory_location = multiworld.get_location("Fields Count Victory", player)
+        victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
+            sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
+    elif world.options.goal.value == 4:
+        from math import floor
+        required = floor(world.options.fields_required_percentage.value * len(stages) / 100)
+        journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
+        victory_location = multiworld.get_location("Fields Percentage Victory", player)
+        victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
+            sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
     # full_talisman victory has no access rule — fragments drop from any battle
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)
