@@ -24,6 +24,8 @@ from .options import (
     DeathLinkCooldown,
     EnemiesPerWaveMultiplier,
     ExtraWaveCount,
+    FieldsRequired,
+    FieldsRequiredPercentage,
 )
 from .rules import set_rules
 from .rulesdata import (
@@ -228,6 +230,21 @@ class GemcraftFrostbornWrathWorld(World):
             self.multiworld.regions.append(talisman_region)
             menu_region.connect(talisman_region, "Talisman")
 
+        # fields_count / fields_percentage goals: victory in dedicated regions
+        if self.options.goal.value == 3:
+            fields_count_region = Region("Fields Count Goal", self.player, self.multiworld)
+            fields_count_region.locations.append(
+                GCFWLocation(self.player, "Fields Count Victory", None, fields_count_region))
+            self.multiworld.regions.append(fields_count_region)
+            menu_region.connect(fields_count_region, "Fields Count")
+
+        if self.options.goal.value == 4:
+            fields_pct_region = Region("Fields Percentage Goal", self.player, self.multiworld)
+            fields_pct_region.locations.append(
+                GCFWLocation(self.player, "Fields Percentage Victory", None, fields_pct_region))
+            self.multiworld.regions.append(fields_pct_region)
+            menu_region.connect(fields_pct_region, "Fields Percentage")
+
         # Connect Menu → W1 (starting stage — all other stages connect from W1 in set_rules)
         menu_region.connect(stage_regions["W1"], "Start")
 
@@ -240,6 +257,10 @@ class GemcraftFrostbornWrathWorld(World):
             victory_name = "Complete A4 - Frostborn Wrath Victory"
         elif self.options.goal.value == 2:
             victory_name = "Kill Swarm Queen Victory"
+        elif self.options.goal.value == 3:
+            victory_name = "Fields Count Victory"
+        elif self.options.goal.value == 4:
+            victory_name = "Fields Percentage Victory"
         else:
             victory_name = "Full Talisman Victory"
         victory_loc = self.multiworld.get_location(victory_name, self.player)
@@ -441,6 +462,8 @@ class GemcraftFrostbornWrathWorld(World):
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,
             "enemies_per_wave_multiplier":  self.options.enemies_per_wave_multiplier.value,
             "extra_wave_count":             self.options.extra_wave_count.value,
+            "fields_required":              self.options.fields_required.value,
+            "fields_required_percentage":   self.options.fields_required_percentage.value,
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

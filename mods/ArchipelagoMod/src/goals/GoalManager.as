@@ -32,19 +32,30 @@ package goals {
 
         /**
          * Create the appropriate goal strategy from AP slot data.
-         * @param goalType          0 = beat_game, 1 = full_talisman, 2 = kill_swarm_queen
-         * @param talismanMinRarity Minimum fragment rarity for full_talisman goal.
+         * @param goalType                  0 = beat_game, 1 = full_talisman, 2 = kill_swarm_queen,
+         *                                  3 = fields_count, 4 = fields_percentage
+         * @param talismanMinRarity         Minimum fragment rarity for full_talisman goal.
+         * @param fieldsRequired            Journey stages required for fields_count goal.
+         * @param fieldsRequiredPercentage  Percentage of stages required for fields_percentage goal.
          */
-        public function configure(goalType:int, talismanMinRarity:int):void {
+        public function configure(goalType:int, talismanMinRarity:int,
+                                  fieldsRequired:int = 80,
+                                  fieldsRequiredPercentage:int = 66):void {
             if (goalType == 1) {
                 _goal = new FullTalismanGoal(_logger, _modName, talismanMinRarity);
             } else if (goalType == 2) {
                 _goal = new SwarmQueenGoal(_logger, _modName);
+            } else if (goalType == 3) {
+                _goal = new FieldCountGoal(_logger, _modName, fieldsRequired);
+            } else if (goalType == 4) {
+                _goal = new FieldPercentageGoal(_logger, _modName, fieldsRequiredPercentage);
             } else {
                 _goal = new BeatGameGoal(_logger, _modName);
             }
             _logger.log(_modName, "GoalManager configured: goalType=" + goalType
                 + " talismanMinRarity=" + talismanMinRarity
+                + " fieldsRequired=" + fieldsRequired
+                + " fieldsRequiredPercentage=" + fieldsRequiredPercentage
                 + " → " + _goal.goalName);
         }
 

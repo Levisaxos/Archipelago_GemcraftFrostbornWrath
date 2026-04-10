@@ -898,7 +898,9 @@ package {
 
             _goalManager.configure(
                 _connectionManager.goal,
-                _connectionManager.talismanMinRarity);
+                _connectionManager.talismanMinRarity,
+                _connectionManager.fieldsRequired,
+                _connectionManager.fieldsRequiredPercentage);
 
             if (_saveManager.slotCompleted) {
                 _goalManager.markAlreadyCompleted();

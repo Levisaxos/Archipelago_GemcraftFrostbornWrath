@@ -26,7 +26,7 @@ package goals {
         }
 
         public function get goalName():String {
-            return "A4 - Frostborn Wrath Victory";
+            return "A4 - Kill Gatekeeper";
         }
     }
 }
