@@ -81,7 +81,7 @@ package ui {
                     var lines:Array = body.split("\n");
                     for each (var line:String in lines) {
                         line = line.replace(/^\s+|\s+$/g, "");
-                        if (line.length == 0) continue;
+                        if (line.length == 0) { vY += LINE_HEIGHT * 0.5; continue; }
                         vY += addBodyLine(line, vY);
                     }
                 }
