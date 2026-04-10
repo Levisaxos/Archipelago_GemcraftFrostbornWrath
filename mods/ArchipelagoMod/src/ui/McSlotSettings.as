@@ -64,6 +64,7 @@ package ui {
             addRow("Goal",                    goalName(cm.goal), vY);                               vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
             addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
+            addRow("Enforce Logic",           cm.enforceLogic ? "Yes" : "No", vY);                  vY += ROW_HEIGHT;
             addRow("XP Tomes  (T / W / A)",   cm.tatteredScrollLevels + " / "
                                              + cm.wornTomeLevels + " / "
                                              + cm.ancientGrimoireLevels + " levels", vY);           vY += ROW_HEIGHT;

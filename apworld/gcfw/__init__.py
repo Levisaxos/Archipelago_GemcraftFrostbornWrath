@@ -424,6 +424,7 @@ class GemcraftFrostbornWrathWorld(World):
             "wiz_stash_tal_data":    wiz_stash_tal_data,
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
+            "enforce_logic":           bool(self.options.enforce_logic.value),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

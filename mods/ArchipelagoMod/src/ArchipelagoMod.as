@@ -47,6 +47,7 @@ package {
 
     import patch.WizStashes
     import patch.FirstPlayBypass
+    import patch.LogicEnforcer
 
     import save.FileHandler
     import save.SaveManager
@@ -120,6 +121,7 @@ package {
         private var _talismanUnlocker:TalismanUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
+        private var _logicEnforcer:LogicEnforcer;
         private var _collectedState:CollectedState;
         private var _logicEvaluator:LogicEvaluator;
         private var _stageTinter:StageTinter;
@@ -162,6 +164,7 @@ package {
                 _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
+                _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting)
                 _collectedState  = new CollectedState(_logger, MOD_NAME);
@@ -528,6 +531,7 @@ package {
             }
 
             _firstPlayBypass.onSelectorFrame(mc);
+            if (_logicEnforcer != null) _logicEnforcer.onSelectorFrame(mc);
 
             // In-game tracker: recolor stage lights based on logic state.
             if (_stageTinter != null) _stageTinter.apply(mc);
@@ -842,6 +846,7 @@ package {
                 );
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
+                _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
             }
 
             // Persist credentials before loadSlotData resets them via resetSettings().

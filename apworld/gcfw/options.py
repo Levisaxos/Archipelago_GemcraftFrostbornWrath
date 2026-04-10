@@ -3,6 +3,19 @@ from dataclasses import dataclass
 from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 
 
+class EnforceLogic(Toggle):
+    """When enabled, prevents starting out-of-logic stages in Journey mode.
+
+    Journey mode is where Archipelago check locations live. With this on, the
+    Journey start button is disabled for stages whose tier gate is not yet met,
+    forcing the player to follow the randomizer's intended progression order.
+
+    Endurance and Trial modes are unaffected (they have no AP checks).
+    """
+    display_name = "Enforce Logic"
+    default = 0
+
+
 class FieldTokenPlacement(Choice):
     """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
 
@@ -119,6 +132,7 @@ class GCFWOptions(PerGameCommonOptions):
     field_token_placement:     FieldTokenPlacement
     tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
+    enforce_logic:             EnforceLogic
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent
