@@ -153,6 +153,7 @@ package {
         private var _updateBadge:Sprite;                // hidden until a newer version is found
         private var _mainMenuElementsOnStage:Boolean  = false;
         private var _mainMenuFetchDone:Boolean        = false; // fetch once per session
+        private var _dbgFrameCounter:int             = 0;     // for throttled screen logging
         private var _cachedReleases:Array             = null;
         private var _shouldAutoShowChangelog:Boolean  = false;
 
@@ -389,8 +390,24 @@ package {
             if (!_mainMenuElementsOnStage
                     && int(GV.main.currentScreen) == ScreenId.MAINMENU
                     && this.stage != null) {
+                _logger.log(MOD_NAME, "[MainMenuUI] Adding — screen=" + int(GV.main.currentScreen)
+                    + " MAINMENU=" + ScreenId.MAINMENU);
                 addMainMenuElements();
                 _mainMenuElementsOnStage = true;
+            }
+            // Remove them the moment we leave MAINMENU, regardless of transition path.
+            if (_mainMenuElementsOnStage
+                    && int(GV.main.currentScreen) != ScreenId.MAINMENU) {
+                _logger.log(MOD_NAME, "[MainMenuUI] Removing — screen=" + int(GV.main.currentScreen)
+                    + " MAINMENU=" + ScreenId.MAINMENU);
+                removeMainMenuElements();
+            }
+            // Throttled log: every 120 frames, report screen + flag so we can see if
+            // elements persist on a screen they shouldn't.
+            _dbgFrameCounter++;
+            if (_dbgFrameCounter % 120 == 0 && _mainMenuElementsOnStage) {
+                _logger.log(MOD_NAME, "[MainMenuUI] Still on stage — screen="
+                    + int(GV.main.currentScreen) + " MAINMENU=" + ScreenId.MAINMENU);
             }
 
             // Register the debug hotkey once the stage exists.
@@ -431,7 +448,7 @@ package {
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
-                    _mainMenuElementsOnStage = false; // triggers deferred addChild in frame loop
+                    removeMainMenuElements(); // remove any existing set before re-adding next frame
                 }
 
                 // Entering LOADGAME — always reset connection so leaving LOADGAME
@@ -719,6 +736,8 @@ package {
          * Safe to call even if elements were never added.
          */
         private function removeMainMenuElements():void {
+            _logger.log(MOD_NAME, "[MainMenuUI] removeMainMenuElements called — screen="
+                + int(GV.main.currentScreen));
             if (_versionLabel != null && _versionLabel.parent != null) {
                 _versionLabel.parent.removeChild(_versionLabel);
             }
@@ -741,8 +760,9 @@ package {
             if (_scrChangelog != null) _scrChangelog.dismiss();
         }
 
-        /** Open (or refresh) the changelog panel. */
+        /** Open (or refresh) the changelog panel. Only valid on the main menu. */
         private function openChangelog():void {
+            if (int(GV.main.currentScreen) != ScreenId.MAINMENU) return;
             if (_scrChangelog == null) _scrChangelog = new ScrChangelog();
             var releases:Array = (_cachedReleases != null && _cachedReleases.length > 0)
                 ? _cachedReleases
@@ -770,8 +790,9 @@ package {
             if (config == null) config = {};
             config.cachedReleasesJson = JSON.stringify(releases);
             _fileHandler.saveModConfig(config);
-            // If the changelog is open, refresh it with the freshly-loaded data.
-            if (_scrChangelog != null && _scrChangelog.isShowing) {
+            // If the changelog is open on the main menu, refresh it with the freshly-loaded data.
+            if (_scrChangelog != null && _scrChangelog.isShowing
+                    && int(GV.main.currentScreen) == ScreenId.MAINMENU) {
                 _scrChangelog.populate(releases);
                 _scrChangelog.show();
             }
