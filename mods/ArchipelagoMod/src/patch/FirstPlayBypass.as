@@ -30,6 +30,8 @@ package patch {
 
         private var _captureListenerAdded:Boolean  = false;
         private var _blockListenersAdded:Boolean   = false;
+        private var _disableEndurance:Boolean      = false;
+        private var _disableTrial:Boolean          = true;
         // Tracks the availableGemTypes array reference we last injected into.
         // When the game rebuilds this array (on restart or new stage) the
         // reference changes and we re-inject automatically.
@@ -67,6 +69,15 @@ package patch {
         public function FirstPlayBypass(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
+        }
+
+        /**
+         * Apply slot_data mode-disable flags. Call once after AP connects.
+         * Defaults match the option defaults: endurance ON, trial OFF.
+         */
+        public function configure(disableEndurance:Boolean, disableTrial:Boolean):void {
+            _disableEndurance = disableEndurance;
+            _disableTrial     = disableTrial;
         }
 
         // -----------------------------------------------------------------------
@@ -116,27 +127,37 @@ package patch {
             var stgSt:*           = mc.mcStageSettings;
             if (stgSt == null) return;
 
-            stgSt.btnEndurance.alpha = firstPlay ? 0.35 : 1.0;
+            // A button is locked if it's a first-play stage OR the mode is globally disabled.
+            var lockEndurance:Boolean = firstPlay || _disableEndurance;
+            var lockTrial:Boolean     = firstPlay || _disableTrial;
+
+            stgSt.btnEndurance.alpha = lockEndurance ? 0.35 : 1.0;
             if (stgSt.btnTrial.visible) {
-                stgSt.btnTrial.alpha = firstPlay ? 0.35 : 1.0;
+                stgSt.btnTrial.alpha = lockTrial ? 0.35 : 1.0;
             }
 
             // Per-frame hover detection: use stage.mouseX/Y + hitTestPoint.
             // This avoids listener registration timing issues entirely.
-            if (!firstPlay) {
+            if (!lockEndurance && !lockTrial) {
                 _hideTooltip();
             } else if (stgSt.stage != null) {
                 var mx:Number = stgSt.stage.mouseX;
                 var my:Number = stgSt.stage.mouseY;
 
-                var overEndurance:Boolean = stgSt.btnEndurance.hitTestPoint(mx, my, true);
-                var overTrial:Boolean =
-                    stgSt.btnTrial.visible && stgSt.btnTrial.hitTestPoint(mx, my, true);
+                var overEndurance:Boolean = lockEndurance && stgSt.btnEndurance.hitTestPoint(mx, my, true);
+                var overTrial:Boolean     = lockTrial && stgSt.btnTrial.visible
+                                            && stgSt.btnTrial.hitTestPoint(mx, my, true);
 
                 if (overEndurance) {
-                    _showTooltip("endurance", "Endurance Mode");
+                    var endMsg:String = _disableEndurance
+                        ? "Endurance mode is disabled for this run"
+                        : "Beat this stage in Journey mode to unlock";
+                    _showTooltip("endurance", "Endurance Mode", endMsg);
                 } else if (overTrial) {
-                    _showTooltip("trial", "Wizard Trial Mode");
+                    var trialMsg:String = _disableTrial
+                        ? "Trial mode is disabled for this run"
+                        : "Beat this stage in Journey mode to unlock";
+                    _showTooltip("trial", "Wizard Trial Mode", trialMsg);
                 } else {
                     _hideTooltip();
                 }
@@ -198,7 +219,8 @@ package patch {
         // -----------------------------------------------------------------------
         // Tooltip helpers
 
-        private function _showTooltip(btnId:String, title:String):void {
+        private function _showTooltip(btnId:String, title:String,
+                                       message:String = "Beat this stage in Journey mode to unlock"):void {
             if (_tooltipFor == btnId) return; // already showing for this button
             _tooltipFor = btnId;
             GV.mcInfoPanel.reset(410);
@@ -206,8 +228,7 @@ package patch {
                 [new GlowFilter(0x979360, 1, 25, 5, 1, 1)]);
             GV.mcInfoPanel.addExtraHeight(5);
             GV.mcInfoPanel.addSeparator(-2);
-            GV.mcInfoPanel.addTextfield(COLOR_WARN,
-                "Beat this stage in Journey mode to unlock", false, 12, null, 0xFFFFFF);
+            GV.mcInfoPanel.addTextfield(COLOR_WARN, message, false, 12, null, 0xFFFFFF);
             GV.main.cntInfoPanel.addChild(GV.mcInfoPanel);
             GV.mcInfoPanel.doEnterFrame();
         }
@@ -226,8 +247,10 @@ package patch {
         // Button click blocker (capture phase)
 
         private function _onLockedBtnBlock(pE:MouseEvent):void {
-            if (!_isFirstPlay()) return;
-            pE.stopImmediatePropagation();
+            if (_isFirstPlay()) { pE.stopImmediatePropagation(); return; }
+            var btnName:String = pE.currentTarget != null ? String(Object(pE.currentTarget).name) : "";
+            if (btnName == "btnEndurance" && _disableEndurance) { pE.stopImmediatePropagation(); return; }
+            if (btnName == "btnTrial"     && _disableTrial)     { pE.stopImmediatePropagation(); return; }
         }
 
         // -----------------------------------------------------------------------

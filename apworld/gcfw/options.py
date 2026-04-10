@@ -126,6 +126,51 @@ class DeathLinkCooldown(Range):
     default     = 20
 
 
+class StartingWizardLevel(Range):
+    """Wizard level the player starts at, before any XP tomes are collected.
+
+    Setting this above 1 grants bonus wizard levels at game start, giving extra
+    skill points to spend before the run is in full swing.  Useful for runs where
+    you want to skip early skill-grinding and get into the interesting decisions
+    faster.  Has no effect on tier logic or item placement.
+    """
+    display_name = "Starting Wizard Level"
+    range_start = 1
+    range_end   = 100
+    default     = 1
+
+
+class DisableEndurance(Toggle):
+    """When enabled, Endurance mode is permanently blocked on the stage settings screen.
+
+    Useful for players who want to restrict themselves to Journey mode only,
+    or for seeds where Endurance farming would trivialise progression.
+    """
+    display_name = "Disable Endurance Mode"
+    default = 0
+
+
+class DisableTrial(Toggle):
+    """When enabled, Wizard Trial mode is permanently blocked on the stage settings screen.
+
+    Trial mode has no Archipelago check locations, so it is disabled by default to
+    keep the focus on Journey mode progression.
+    """
+    display_name = "Disable Trial Mode"
+    default = 1
+
+
+class StartingOvercrowd(Toggle):
+    """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
+
+    Overcrowd makes more monsters arrive each wave, increasing the difficulty
+    of every stage from the very start of the run.  The trait is removed from the
+    randomised item pool — it will not appear as a collectable item for anyone.
+    """
+    display_name = "Starting Overcrowd"
+    default = 0
+
+
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
@@ -133,6 +178,10 @@ class GCFWOptions(PerGameCommonOptions):
     tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     enforce_logic:             EnforceLogic
+    disable_endurance:         DisableEndurance
+    disable_trial:             DisableTrial
+    starting_wizard_level:     StartingWizardLevel
+    starting_overcrowd:        StartingOvercrowd
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent

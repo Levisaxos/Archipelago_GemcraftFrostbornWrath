@@ -65,6 +65,10 @@ package ui {
             addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
             addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
             addRow("Enforce Logic",           cm.enforceLogic ? "Yes" : "No", vY);                  vY += ROW_HEIGHT;
+            addRow("Endurance Mode",          cm.disableEndurance ? "Disabled" : "Enabled", vY);    vY += ROW_HEIGHT;
+            addRow("Trial Mode",              cm.disableTrial     ? "Disabled" : "Enabled", vY);    vY += ROW_HEIGHT;
+            addRow("Starting Wizard Level",   cm.startingWizardLevel == 1 ? "Off" : "Level " + cm.startingWizardLevel, vY); vY += ROW_HEIGHT;
+            addRow("Starting Overcrowd",      cm.startingOvercrowd ? "Yes" : "No", vY);             vY += ROW_HEIGHT;
             addRow("XP Tomes  (T / W / A)",   cm.tatteredScrollLevels + " / "
                                              + cm.wornTomeLevels + " / "
                                              + cm.ancientGrimoireLevels + " levels", vY);           vY += ROW_HEIGHT;

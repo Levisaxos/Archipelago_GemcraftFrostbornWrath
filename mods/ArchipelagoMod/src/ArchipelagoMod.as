@@ -847,6 +847,7 @@ package {
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
+            _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
             }
 
             // Persist credentials before loadSlotData resets them via resetSettings().
@@ -869,7 +870,8 @@ package {
             _levelUnlocker.configure(
                 _connectionManager.tatteredScrollLevels,
                 _connectionManager.wornTomeLevels,
-                _connectionManager.ancientGrimoireLevels
+                _connectionManager.ancientGrimoireLevels,
+                _connectionManager.startingWizardLevel
             );
             _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
             _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);

@@ -27,6 +27,10 @@ package unlockers {
         private var _tatteredLevels:int = 1;
         private var _wornLevels:int     = 2;
         private var _ancientLevels:int  = 3;
+        // Flat level bonus granted at game start from the starting_wizard_level option.
+        // Treated identically to _bonusWizardLevel in applyBonusLevels() but is not
+        // persisted — it is re-applied from slot_data each time the player connects.
+        private var _startingLevelBonus:int = 0;
 
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
@@ -56,12 +60,14 @@ package unlockers {
          * Set per-tome level values from slot_data.
          * Call once in onApConnected before syncing items.
          */
-        public function configure(tattered:int, worn:int, ancient:int):void {
-            _tatteredLevels = Math.max(1, tattered);
-            _wornLevels     = Math.max(1, worn);
-            _ancientLevels  = Math.max(1, ancient);
+        public function configure(tattered:int, worn:int, ancient:int, startingWizardLevel:int = 1):void {
+            _tatteredLevels     = Math.max(1, tattered);
+            _wornLevels         = Math.max(1, worn);
+            _ancientLevels      = Math.max(1, ancient);
+            _startingLevelBonus = Math.max(0, startingWizardLevel - 1);
             _logger.log(_modName, "LevelUnlocker configured: tattered=" + _tatteredLevels
-                + " worn=" + _wornLevels + " ancient=" + _ancientLevels);
+                + " worn=" + _wornLevels + " ancient=" + _ancientLevels
+                + " startingLevelBonus=" + _startingLevelBonus);
         }
 
         /** Wizard-level value for an AP item ID, using the configured per-tome values. */
@@ -132,7 +138,8 @@ package unlockers {
          */
         public function applyBonusLevels():void {
             if (GV.ppd == null || GV.stageCollection == null) return;
-            if (_bonusWizardLevel <= 0) {
+            var totalBonus:int = _bonusWizardLevel + _startingLevelBonus;
+            if (totalBonus <= 0) {
                 // Clear any previously stored bonus.
                 var clearIdx:int = GV.getFieldId("A4");
                 if (clearIdx >= 0) GV.ppd.stageHighestXpsTrial[clearIdx].s(-1);
@@ -161,11 +168,12 @@ package unlockers {
 
             _naturalWizardLevel = currentWizardLevel(normalXp);
 
-            var bonusXp:Number = Math.max(0, apXpForWizLevel(_naturalWizardLevel + _bonusWizardLevel) - normalXp);
+            var bonusXp:Number = Math.max(0, apXpForWizLevel(_naturalWizardLevel + totalBonus) - normalXp);
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
-            _logger.log(_modName, "applyBonusLevels: targetLevel=" + _bonusWizardLevel
+            _logger.log(_modName, "applyBonusLevels: apBonus=" + _bonusWizardLevel
+                + " startingBonus=" + _startingLevelBonus
                 + " normalXp=" + normalXp
                 + " bonusXp=" + bonusXp);
         }

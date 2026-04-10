@@ -152,10 +152,15 @@ class GemcraftFrostbornWrathWorld(World):
             if name.endswith(" Skill"):
                 pool.append(self.create_item(name))
 
-        # Battle traits
+        # Battle traits — Overcrowd is precollected instead if starting_overcrowd is on.
+        # A Tattered Scroll is added to keep item count == location count.
         for name in item_table:
             if name.endswith(" Battle Trait"):
-                pool.append(self.create_item(name))
+                if name == "Overcrowd Battle Trait" and self.options.starting_overcrowd:
+                    self.multiworld.push_precollected(self.create_item(name))
+                    pool.append(self.create_item("Tattered Scroll"))
+                else:
+                    pool.append(self.create_item(name))
 
         # Location-specific talisman fragments (53) and shadow core stashes (17)
         for name in item_table:
@@ -425,6 +430,10 @@ class GemcraftFrostbornWrathWorld(World):
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
             "enforce_logic":           bool(self.options.enforce_logic.value),
+            "disable_endurance":       bool(self.options.disable_endurance.value),
+            "disable_trial":           bool(self.options.disable_trial.value),
+            "starting_wizard_level":   self.options.starting_wizard_level.value,
+            "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,
