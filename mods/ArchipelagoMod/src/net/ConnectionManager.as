@@ -60,6 +60,15 @@ package net {
         private var _fieldTokenPlacement:int   = 1;  // 0=own_world, 1=any_world, 2=different_world
         private var _tierRequirements:int      = 75; // percent
         private var _enforceLogic:Boolean      = false;
+        private var _disableEndurance:Boolean  = false;
+        private var _disableTrial:Boolean      = true;
+        private var _startingWizardLevel:int   = 1;
+        private var _startingOvercrowd:Boolean = false;
+        private var _enemyHpMultiplier:int          = 100;
+        private var _enemyArmorMultiplier:int       = 100;
+        private var _enemyShieldMultiplier:int      = 100;
+        private var _enemiesPerWaveMultiplier:int   = 100;
+        private var _extraWaveCount:int             = 0;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -139,7 +148,16 @@ package net {
         public function get freeStages():Array          { return _freeStages; }
         public function get fieldTokenPlacement():int  { return _fieldTokenPlacement; }
         public function get tierRequirements():int     { return _tierRequirements; }
-        public function get enforceLogic():Boolean     { return _enforceLogic; }
+        public function get enforceLogic():Boolean      { return _enforceLogic; }
+        public function get disableEndurance():Boolean  { return _disableEndurance; }
+        public function get disableTrial():Boolean      { return _disableTrial; }
+        public function get startingWizardLevel():int   { return _startingWizardLevel; }
+        public function get startingOvercrowd():Boolean { return _startingOvercrowd; }
+        public function get enemyHpMultiplier():int          { return _enemyHpMultiplier; }
+        public function get enemyArmorMultiplier():int       { return _enemyArmorMultiplier; }
+        public function get enemyShieldMultiplier():int      { return _enemyShieldMultiplier; }
+        public function get enemiesPerWaveMultiplier():int   { return _enemiesPerWaveMultiplier; }
+        public function get extraWaveCount():int             { return _extraWaveCount; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -371,6 +389,15 @@ package net {
                 if (p.slot_data.field_token_placement    !== undefined) _fieldTokenPlacement    = int(p.slot_data.field_token_placement);
                 if (p.slot_data.tier_requirements_percent !== undefined) _tierRequirements      = int(p.slot_data.tier_requirements_percent);
                 if (p.slot_data.enforce_logic             !== undefined) _enforceLogic           = Boolean(p.slot_data.enforce_logic);
+                if (p.slot_data.disable_endurance         !== undefined) _disableEndurance       = Boolean(p.slot_data.disable_endurance);
+                if (p.slot_data.disable_trial             !== undefined) _disableTrial           = Boolean(p.slot_data.disable_trial);
+                if (p.slot_data.starting_wizard_level     !== undefined) _startingWizardLevel    = int(p.slot_data.starting_wizard_level);
+                if (p.slot_data.starting_overcrowd        !== undefined) _startingOvercrowd      = Boolean(p.slot_data.starting_overcrowd);
+                if (p.slot_data.enemy_hp_multiplier          !== undefined) _enemyHpMultiplier        = int(p.slot_data.enemy_hp_multiplier);
+                if (p.slot_data.enemy_armor_multiplier       !== undefined) _enemyArmorMultiplier     = int(p.slot_data.enemy_armor_multiplier);
+                if (p.slot_data.enemy_shield_multiplier      !== undefined) _enemyShieldMultiplier    = int(p.slot_data.enemy_shield_multiplier);
+                if (p.slot_data.enemies_per_wave_multiplier  !== undefined) _enemiesPerWaveMultiplier = int(p.slot_data.enemies_per_wave_multiplier);
+                if (p.slot_data.extra_wave_count             !== undefined) _extraWaveCount           = int(p.slot_data.extra_wave_count);
             }
             _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 

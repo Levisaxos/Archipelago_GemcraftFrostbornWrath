@@ -126,6 +126,113 @@ class DeathLinkCooldown(Range):
     default     = 20
 
 
+class StartingWizardLevel(Range):
+    """Wizard level the player starts at, before any XP tomes are collected.
+
+    Setting this above 1 grants bonus wizard levels at game start, giving extra
+    skill points to spend before the run is in full swing.  Useful for runs where
+    you want to skip early skill-grinding and get into the interesting decisions
+    faster.  Has no effect on tier logic or item placement.
+    """
+    display_name = "Starting Wizard Level"
+    range_start = 1
+    range_end   = 100
+    default     = 1
+
+
+class DisableEndurance(Toggle):
+    """When enabled, Endurance mode is permanently blocked on the stage settings screen.
+
+    Useful for players who want to restrict themselves to Journey mode only,
+    or for seeds where Endurance farming would trivialise progression.
+    """
+    display_name = "Disable Endurance Mode"
+    default = 0
+
+
+class DisableTrial(Toggle):
+    """When enabled, Wizard Trial mode is permanently blocked on the stage settings screen.
+
+    Trial mode has no Archipelago check locations, so it is disabled by default to
+    keep the focus on Journey mode progression.
+    """
+    display_name = "Disable Trial Mode"
+    default = 1
+
+
+class EnemyHpMultiplier(Range):
+    """Percentage multiplier applied to every enemy's HP at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.  Applied once per monster when it first enters the
+    field — does not stack with DeathLink wave surges.
+    """
+    display_name = "Enemy HP Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemyArmorMultiplier(Range):
+    """Percentage multiplier applied to every enemy's armor level at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.
+    """
+    display_name = "Enemy Armor Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemyShieldMultiplier(Range):
+    """Percentage multiplier applied to every enemy's shield HP at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.
+    """
+    display_name = "Enemy Shield Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemiesPerWaveMultiplier(Range):
+    """Percentage multiplier applied to the number of monsters in every wave.
+
+    100 = no change.  150 = 50% more monsters per wave.  50 = half as many.
+    Applied to wave definitions before the first wave spawns, so the wave bar
+    tooltip reflects the real counts.
+    """
+    display_name = "Enemies Per Wave Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class ExtraWaveCount(Range):
+    """Number of additional waves appended to each stage beyond its normal count.
+
+    Extra waves continue the HP/armor scaling curve from the last natural wave.
+    Set to 0 to leave stage lengths unchanged.
+    """
+    display_name = "Extra Wave Count"
+    range_start = 0
+    range_end   = 20
+    default     = 0
+
+
+class StartingOvercrowd(Toggle):
+    """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
+
+    Overcrowd makes more monsters arrive each wave, increasing the difficulty
+    of every stage from the very start of the run.  The trait is removed from the
+    randomised item pool — it will not appear as a collectable item for anyone.
+    """
+    display_name = "Starting Overcrowd"
+    default = 0
+
+
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                      Goal
@@ -133,6 +240,15 @@ class GCFWOptions(PerGameCommonOptions):
     tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
     enforce_logic:             EnforceLogic
+    disable_endurance:         DisableEndurance
+    disable_trial:             DisableTrial
+    starting_wizard_level:     StartingWizardLevel
+    starting_overcrowd:        StartingOvercrowd
+    enemy_hp_multiplier:         EnemyHpMultiplier
+    enemy_armor_multiplier:      EnemyArmorMultiplier
+    enemy_shield_multiplier:     EnemyShieldMultiplier
+    enemies_per_wave_multiplier: EnemiesPerWaveMultiplier
+    extra_wave_count:            ExtraWaveCount
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent
