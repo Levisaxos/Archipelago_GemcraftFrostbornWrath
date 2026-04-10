@@ -39,7 +39,7 @@ class Goal(Choice):
     fields_percentage:  Complete a percentage of all Journey stages (set by Fields Required Percentage).
     """
     display_name = "Goal"
-    option_beat_game          = 0
+    option_kill_gatekeeper    = 0
     option_kill_swarm_queen   = 2
     option_fields_count       = 3
     option_fields_percentage  = 4
