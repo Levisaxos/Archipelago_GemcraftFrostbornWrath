@@ -32,14 +32,14 @@ package ui {
         public function get btnRetry():*                 { return _inner.btnRetry; }
         public function get btnMainMenu():*              { return _inner.btnMainMenu; }
 
-        // Layout — content area runs roughly x: 200–880, centred at 536
+        // Layout — full stage width, roughly x: 200–1720; HEADER_X is McOptTitle centre point
         private static const CONTENT_START_Y:Number = 140;
         private static const HEADER_HEIGHT:Number   = 55;  // matches McSlotSettings ROW_HEIGHT
         private static const LINE_HEIGHT:Number     = 28;  // per body-text line
         private static const RELEASE_GAP:Number     = 24;  // extra space between releases
         private static const HEADER_X:Number        = 536; // centred, same as McDebugOptions
-        private static const BODY_X:Number          = 180; // left edge of body text
-        private static const BODY_W:Number          = 740; // width of body text area
+        private static const BODY_X:Number          = 200; // left edge of body text
+        private static const BODY_W:Number          = 1520; // spans full stage width
 
         public function McChangelog(releases:Array) {
             super();
@@ -152,8 +152,8 @@ package ui {
             tf.defaultTextFormat = fmt;
             tf.selectable   = false;
             tf.mouseEnabled = false;
-            tf.multiline    = true;
-            tf.wordWrap     = true;
+            tf.multiline    = false;
+            tf.wordWrap     = false;
             tf.x            = BODY_X;
             tf.width        = BODY_W;
             tf.text         = text;
