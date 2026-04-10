@@ -186,6 +186,43 @@ package save {
         }
 
         /**
+         * Load the mod-level config from modconfig.json.
+         * Returns the parsed Object, or null if the file does not exist or cannot be read.
+         */
+        public function loadModConfig():Object {
+            var f:File = _configDir.resolvePath("modconfig.json");
+            if (!f.exists) return null;
+            try {
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                return JSON.parse(raw);
+            } catch (err:Error) {
+                _logger.log(_modName, "loadModConfig ERROR: " + err.message);
+            }
+            return null;
+        }
+
+        /**
+         * Save the mod-level config to modconfig.json.
+         * @param data  Object to serialize as JSON.
+         */
+        public function saveModConfig(data:Object):void {
+            if (_configDir == null) return;
+            try {
+                if (!_configDir.exists) _configDir.createDirectory();
+                var f:File = _configDir.resolvePath("modconfig.json");
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.WRITE);
+                stream.writeUTFBytes(JSON.stringify(data, null, 2));
+                stream.close();
+            } catch (err:Error) {
+                _logger.log(_modName, "saveModConfig ERROR: " + err.message);
+            }
+        }
+
+        /**
          * Delete the slot file for the given slot.
          */
         public function deleteSlot(slotId:int):void {

@@ -1,9 +1,14 @@
 package {
     import flash.display.MovieClip;
     import flash.display.Sprite;
+    import flash.display.Stage;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
+    import flash.text.TextField;
+    import flash.text.TextFieldAutoSize;
+    import flash.text.TextFormat;
+    import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -16,6 +21,8 @@ package {
     import goals.GoalManager;
 
     import ui.ArchipelagoButton
+    import ui.McChangelog
+    import ui.ScrChangelog
     import ui.FieldsInLogicButton
     import ui.ReportIssuesButton
     import ui.SlotSettingsButton
@@ -27,6 +34,8 @@ package {
     import ui.ScrDebugOptions
     import ui.ConnectionPanel
     import ui.DisconnectPanel
+
+    import update.UpdateChecker
     
     import deathlink.DeathLinkHandler
     import deathlink.EnragerOverride
@@ -77,9 +86,10 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String       { return "0.0.2"; }
-        public function get MOD_NAME():String      { return "ArchipelagoMod"; }
-        public function get BEZEL_VERSION():String { return "2.1.1"; }
+        public function get VERSION():String        { return "0.0.2"; }
+        public function get MOD_NAME():String       { return "ArchipelagoMod"; }
+        public function get BEZEL_VERSION():String  { return "2.1.1"; }
+        public function get APWORLD_VERSION():String { return "0.0.2"; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
@@ -135,6 +145,17 @@ package {
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
+
+        // Changelog / version / update-check state
+        private var _updateChecker:UpdateChecker;
+        private var _scrChangelog:ScrChangelog;
+        private var _versionLabel:TextField;            // "Archipelago Mod vX.X.X" on MAINMENU
+        private var _changelogBtn:Sprite;               // "Changelog" button on MAINMENU
+        private var _updateBadge:Sprite;                // hidden until a newer version is found
+        private var _mainMenuElementsOnStage:Boolean  = false;
+        private var _mainMenuFetchDone:Boolean        = false; // fetch once per session
+        private var _cachedReleases:Array             = null;
+        private var _shouldAutoShowChangelog:Boolean  = false;
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -211,6 +232,13 @@ package {
 
                 _goalManager = new GoalManager(_logger, MOD_NAME, _itemToast);
                 _goalManager.onGoalReached = onGoalReached;
+
+                // Changelog / update checker
+                _updateChecker = new UpdateChecker(_logger, MOD_NAME);
+                _updateChecker.onReleasesLoaded  = onReleasesLoaded;
+                _updateChecker.onUpdateAvailable = onUpdateAvailable;
+                _updateChecker.onFetchFailed     = onFetchFailed;
+                _scrChangelog = new ScrChangelog();
 
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
@@ -296,6 +324,9 @@ package {
                 _btn = null;
             }
             _buttonAdded = false;
+            removeMainMenuElements();
+            if (_updateChecker != null) { _updateChecker.dispose(); _updateChecker = null; }
+            if (_scrChangelog != null) { _scrChangelog.dismiss(); _scrChangelog = null; }
             _logger.log(MOD_NAME, "ArchipelagoMod unloaded");
         }
 
@@ -355,6 +386,14 @@ package {
                 positionItemToast();
             }
 
+            // Add MAINMENU version label and changelog button once stage is available.
+            if (!_mainMenuElementsOnStage
+                    && int(GV.main.currentScreen) == ScreenId.MAINMENU
+                    && this.stage != null) {
+                addMainMenuElements();
+                _mainMenuElementsOnStage = true;
+            }
+
             // Register the debug hotkey once the stage exists.
             if (!_keyListenerAdded && this.stage != null) {
                 this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
@@ -393,6 +432,7 @@ package {
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
+                    _mainMenuElementsOnStage = false; // triggers deferred addChild in frame loop
                 }
 
                 // Entering LOADGAME — always reset connection so leaving LOADGAME
@@ -433,6 +473,10 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                }
+                // Remove MAINMENU overlays when navigating away from the main menu.
+                if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
+                    removeMainMenuElements();
                 }
                 _lastScreen = screen;
             }
@@ -567,6 +611,9 @@ package {
             if (_slotSettings != null && _slotSettings.isOpen) {
                 _slotSettings.doEnterFrame();
             }
+            if (_scrChangelog != null && _scrChangelog.isShowing) {
+                _scrChangelog.doEnterFrame();
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -597,6 +644,224 @@ package {
                 _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
             }
             // SlotSettings panel is attached to GV.main, no resize handling needed.
+        }
+
+        // -----------------------------------------------------------------------
+        // MAINMENU version label + changelog button
+
+        /**
+         * Create and add the version label, changelog button, and update badge
+         * to the stage. Also triggers the auto-show changelog logic if the player
+         * has updated (or is running for the first time), and fires the GitHub
+         * release fetch if it has not been done this session.
+         */
+        private function addMainMenuElements():void {
+            var stg:Stage = this.stage;
+            if (stg == null) return;
+
+            // Read persisted config to decide if we should auto-show the changelog.
+            var config:Object = _fileHandler.loadModConfig();
+            var lastSeen:String = (config != null && config.lastSeenVersion != null)
+                ? String(config.lastSeenVersion) : null;
+            _shouldAutoShowChangelog = (lastSeen == null || lastSeen != VERSION);
+
+            // Load cached releases if available.
+            if (config != null && config.cachedReleasesJson != null) {
+                try {
+                    var cached:Array = JSON.parse(String(config.cachedReleasesJson)) as Array;
+                    if (cached != null && cached.length > 0) _cachedReleases = cached;
+                } catch (e:Error) {
+                    _logger.log(MOD_NAME, "addMainMenuElements: failed to parse cached releases — " + e.message);
+                }
+            }
+
+            // Version label — bottom-left corner.
+            var labelFmt:TextFormat = new TextFormat("_sans", 12, 0xBBAADD);
+            _versionLabel = new TextField();
+            _versionLabel.defaultTextFormat = labelFmt;
+            _versionLabel.selectable   = false;
+            _versionLabel.mouseEnabled = false;
+            _versionLabel.autoSize     = TextFieldAutoSize.LEFT;
+            _versionLabel.text         = "Mod v" + VERSION + "  |  apworld v" + APWORLD_VERSION;
+            _versionLabel.x = 10;
+            _versionLabel.y = stg.stageHeight - 48;
+            stg.addChild(_versionLabel);
+
+            // Changelog button — just below the version label.
+            _changelogBtn = _makeSmallButton("Changelog", 88, 20);
+            _changelogBtn.x = 10;
+            _changelogBtn.y = stg.stageHeight - 28;
+            _changelogBtn.addEventListener(MouseEvent.CLICK, onChangelogBtnClicked, false, 0, true);
+            stg.addChild(_changelogBtn);
+
+            // Update badge — to the right of the version label, hidden until needed.
+            _updateBadge = _makeUpdateBadge();
+            _updateBadge.x = 10 + _versionLabel.textWidth + 12;
+            _updateBadge.y = stg.stageHeight - 50;
+            _updateBadge.visible = false;
+            _updateBadge.addEventListener(MouseEvent.CLICK, onChangelogBtnClicked, false, 0, true);
+            stg.addChild(_updateBadge);
+
+            // Auto-show changelog when version has changed (first run or after update).
+            if (_shouldAutoShowChangelog) {
+                openChangelog();
+                updateLastSeenVersion();
+            }
+
+            // Fire one GitHub fetch per session.
+            if (!_mainMenuFetchDone && _updateChecker != null) {
+                _updateChecker.fetchReleases(VERSION);
+                _mainMenuFetchDone = true;
+            }
+        }
+
+        /**
+         * Remove all MAINMENU-only elements from the stage.
+         * Safe to call even if elements were never added.
+         */
+        private function removeMainMenuElements():void {
+            if (_versionLabel != null && _versionLabel.parent != null) {
+                _versionLabel.parent.removeChild(_versionLabel);
+            }
+            _versionLabel = null;
+
+            if (_changelogBtn != null) {
+                _changelogBtn.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
+                if (_changelogBtn.parent != null) _changelogBtn.parent.removeChild(_changelogBtn);
+            }
+            _changelogBtn = null;
+
+            if (_updateBadge != null) {
+                _updateBadge.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
+                if (_updateBadge.parent != null) _updateBadge.parent.removeChild(_updateBadge);
+            }
+            _updateBadge = null;
+
+            _mainMenuElementsOnStage = false;
+
+            if (_scrChangelog != null) _scrChangelog.dismiss();
+        }
+
+        /** Open (or refresh) the changelog panel. */
+        private function openChangelog():void {
+            if (_scrChangelog == null) _scrChangelog = new ScrChangelog();
+            var releases:Array = (_cachedReleases != null && _cachedReleases.length > 0)
+                ? _cachedReleases
+                : McChangelog.getFallbackReleases();
+            _scrChangelog.populate(releases);
+            _scrChangelog.show();
+        }
+
+        /** Persist the current VERSION as the last-seen version. */
+        private function updateLastSeenVersion():void {
+            var config:Object = _fileHandler.loadModConfig();
+            if (config == null) config = {};
+            config.lastSeenVersion = VERSION;
+            _fileHandler.saveModConfig(config);
+            _shouldAutoShowChangelog = false;
+        }
+
+        // Callbacks from UpdateChecker
+
+        private function onReleasesLoaded(releases:Array):void {
+            _cachedReleases = releases;
+            // Persist to cache so it is available without a network request next time.
+            var config:Object = _fileHandler.loadModConfig();
+            if (config == null) config = {};
+            config.cachedReleasesJson = JSON.stringify(releases);
+            _fileHandler.saveModConfig(config);
+            // If the changelog is open, refresh it with the freshly-loaded data.
+            if (_scrChangelog != null && _scrChangelog.isShowing) {
+                _scrChangelog.populate(releases);
+                _scrChangelog.show();
+            }
+        }
+
+        private function onUpdateAvailable(latestTag:String):void {
+            _logger.log(MOD_NAME, "Update available: " + latestTag);
+            if (_updateBadge != null) _updateBadge.visible = true;
+        }
+
+        private function onFetchFailed():void {
+            _logger.log(MOD_NAME, "GitHub release fetch failed — using cached/fallback data");
+        }
+
+        private function onChangelogBtnClicked(e:MouseEvent):void {
+            openChangelog();
+        }
+
+        // Helpers for building the MAINMENU UI elements
+
+        private function _makeSmallButton(label:String, w:Number, h:Number):Sprite {
+            var btn:Sprite = new Sprite();
+            _drawSmallBtnFace(btn, 0x3A1A6E, w, h, false);
+
+            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFFFFF, true);
+            fmt.align = TextFormatAlign.CENTER;
+            var tf:TextField = new TextField();
+            tf.defaultTextFormat = fmt;
+            tf.selectable   = false;
+            tf.mouseEnabled = false;
+            tf.width        = w;
+            tf.height       = h;
+            tf.text         = label;
+            btn.addChild(tf);
+
+            btn.buttonMode    = true;
+            btn.useHandCursor = true;
+            btn.addEventListener(MouseEvent.MOUSE_OVER,
+                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, true); },
+                false, 0, true);
+            btn.addEventListener(MouseEvent.MOUSE_OUT,
+                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, false); },
+                false, 0, true);
+            return btn;
+        }
+
+        private function _drawSmallBtnFace(btn:Sprite, bgColor:uint,
+                                           w:Number, h:Number, hover:Boolean):void {
+            var fill:uint = hover ? _brightenColor(bgColor, 0.35) : bgColor;
+            btn.graphics.clear();
+            btn.graphics.beginFill(fill);
+            btn.graphics.lineStyle(1, 0xAA77EE);
+            btn.graphics.drawRoundRect(0, 0, w, h, 6, 6);
+            btn.graphics.endFill();
+        }
+
+        private function _makeUpdateBadge():Sprite {
+            var badge:Sprite = new Sprite();
+            var label:String = "\u2191 Update available!";
+
+            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFEE66, true);
+            var tf:TextField = new TextField();
+            tf.defaultTextFormat = fmt;
+            tf.selectable   = false;
+            tf.mouseEnabled = false;
+            tf.autoSize     = TextFieldAutoSize.LEFT;
+            tf.text         = label;
+
+            var bw:Number = tf.textWidth + 16;
+            var bh:Number = 18;
+
+            badge.graphics.beginFill(0x2A1000, 0.9);
+            badge.graphics.lineStyle(1, 0xCC8800);
+            badge.graphics.drawRoundRect(0, 0, bw, bh, 5, 5);
+            badge.graphics.endFill();
+
+            tf.x = 8;
+            tf.y = 0;
+            badge.addChild(tf);
+
+            badge.buttonMode    = true;
+            badge.useHandCursor = true;
+            return badge;
+        }
+
+        private function _brightenColor(color:uint, amount:Number):uint {
+            var r:int = Math.min(255, int((color >> 16 & 0xFF) + 255 * amount));
+            var g:int = Math.min(255, int((color >> 8  & 0xFF) + 255 * amount));
+            var b:int = Math.min(255, int((color       & 0xFF) + 255 * amount));
+            return (r << 16) | (g << 8) | b;
         }
 
         // -----------------------------------------------------------------------
