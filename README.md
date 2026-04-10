@@ -55,6 +55,7 @@ Steam\steamapps\common\GemCraft Frostborn Wrath\
 #### Linux (Steam/Proton)
 
 With help from Xindage (as I dont own linux myself):
+
 BezelModLoader's installer is a Windows executable and needs Wine to run. The following steps were confirmed working:
 
 1. Make sure **Wine** is installed on your system
