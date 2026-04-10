@@ -2,6 +2,7 @@ package ui {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.McOptPanel;
     import com.giab.games.gcfw.mcDyn.McOptTitle;
+    import ui.McWizardLevelSlider;
     import flash.display.DisplayObjectContainer;
     import flash.display.MovieClip;
     import flash.geom.Rectangle;
@@ -28,6 +29,7 @@ package ui {
         public var traitPanels:Array;
         // stageStrId -> McOptPanel
         public var stageIdToPanel:Object;
+        public var wizardSlider:McWizardLevelSlider;
 
         // -- Inner McOptions instance (typed * because McOptions extends Sprite, not MovieClip) --
         private var _inner:*;
@@ -96,6 +98,13 @@ package ui {
             stageIdToPanel = {};
 
             var vY:Number = CONTENT_START_Y;
+
+            // -- Wizard Level --
+            _inner.arrCntContents.push(new McOptTitle("Wizard Level", TITLE_X, vY));
+            vY += ROW_HEIGHT;
+            wizardSlider = new McWizardLevelSlider(0, vY);
+            _inner.arrCntContents.push(wizardSlider);
+            vY += ROW_HEIGHT + SECTION_GAP;
 
             // -- Skills --
             _inner.arrCntContents.push(new McOptTitle("Skills", TITLE_X, vY));

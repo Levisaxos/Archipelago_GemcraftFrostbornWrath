@@ -51,12 +51,14 @@ package net {
         private var _playerNames:Object = {};   // slot (int) → alias (String)
         private var _playerGames:Object = {};   // slot (int) → game name (String)
         private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
-        private var _goal:int           = 0;    // 0 = beat_game, 1 = full_talisman
+        private var _goal:int           = 0;    // 0 = beat_game, 2 = kill_swarm_queen
         private var _talismanMinRarity:int = 1;
         private var _tatteredScrollLevels:int  = 1;
         private var _wornTomeLevels:int        = 2;
         private var _ancientGrimoireLevels:int = 3;
         private var _freeStages:Array          = null;
+        private var _fieldTokenPlacement:int   = 1;  // 0=own_world, 1=any_world, 2=different_world
+        private var _tierRequirements:int      = 75; // percent
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -134,6 +136,8 @@ package net {
         public function get wornTomeLevels():int        { return _wornTomeLevels; }
         public function get ancientGrimoireLevels():int { return _ancientGrimoireLevels; }
         public function get freeStages():Array          { return _freeStages; }
+        public function get fieldTokenPlacement():int  { return _fieldTokenPlacement; }
+        public function get tierRequirements():int     { return _tierRequirements; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -362,6 +366,8 @@ package net {
                 if (p.slot_data.tattered_scroll_levels  !== undefined) _tatteredScrollLevels  = int(p.slot_data.tattered_scroll_levels);
                 if (p.slot_data.worn_tome_levels         !== undefined) _wornTomeLevels         = int(p.slot_data.worn_tome_levels);
                 if (p.slot_data.ancient_grimoire_levels  !== undefined) _ancientGrimoireLevels  = int(p.slot_data.ancient_grimoire_levels);
+                if (p.slot_data.field_token_placement    !== undefined) _fieldTokenPlacement    = int(p.slot_data.field_token_placement);
+                if (p.slot_data.tier_requirements_percent !== undefined) _tierRequirements      = int(p.slot_data.tier_requirements_percent);
             }
             _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 

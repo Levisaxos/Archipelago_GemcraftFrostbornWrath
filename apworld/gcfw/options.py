@@ -20,10 +20,13 @@ class FieldTokenPlacement(Choice):
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
-    beat_game: Defeat the final boss (complete A4) with all 24 skills unlocked.
+    beat_game:        Defeat the final boss (complete A4) with all 24 skills unlocked.
+    kill_swarm_queen: Kill the Swarm Queen on K4. Requires all 24 skills (same as
+                     beat_game) but the final objective is K4 instead of A4.
     """
     display_name = "Goal"
     option_beat_game = 0
+    option_kill_swarm_queen = 2
     default = 0
 
 class XpTomeBonus(Range):
