@@ -59,6 +59,7 @@ package net {
         private var _freeStages:Array          = null;
         private var _fieldTokenPlacement:int   = 1;  // 0=own_world, 1=any_world, 2=different_world
         private var _tierRequirements:int      = 75; // percent
+        private var _enforceLogic:Boolean      = false;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -138,6 +139,7 @@ package net {
         public function get freeStages():Array          { return _freeStages; }
         public function get fieldTokenPlacement():int  { return _fieldTokenPlacement; }
         public function get tierRequirements():int     { return _tierRequirements; }
+        public function get enforceLogic():Boolean     { return _enforceLogic; }
 
         public function get apHost():String { return _apHost; }
         public function set apHost(v:String):void { _apHost = v; }
@@ -368,6 +370,7 @@ package net {
                 if (p.slot_data.ancient_grimoire_levels  !== undefined) _ancientGrimoireLevels  = int(p.slot_data.ancient_grimoire_levels);
                 if (p.slot_data.field_token_placement    !== undefined) _fieldTokenPlacement    = int(p.slot_data.field_token_placement);
                 if (p.slot_data.tier_requirements_percent !== undefined) _tierRequirements      = int(p.slot_data.tier_requirements_percent);
+                if (p.slot_data.enforce_logic             !== undefined) _enforceLogic           = Boolean(p.slot_data.enforce_logic);
             }
             _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
 
