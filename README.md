@@ -51,6 +51,17 @@ Steam\steamapps\common\GemCraft Frostborn Wrath\
 └── Mods\
 ```
 
+#### Linux (Steam/Proton)
+
+BezelModLoader's installer is a Windows executable and needs Wine to run. The following steps were confirmed working:
+
+1. Make sure **Wine** is installed on your system
+2. Download the BezelModLoader installer and place it in the same folder as the game executable (`GemCraft Frostborn Wrath.exe`)
+3. In **winecfg** (run `winecfg` in a terminal), go to the **Graphics** tab and enable **Emulate a virtual desktop** — this prevents the installer's window from behaving oddly
+4. Run the installer **manually through Wine** (do not use Proton): `wine BezelModLoader-installer.exe` (or right-click → Open With → Wine in your file manager)
+5. A command prompt window will open — confirm the prompts and wait for the patch to complete, then close it
+6. Continue with Step 2 below as normal — the `Mods` folder will now be present in the game directory
+
 ---
 
 ### Step 2 — Install the Archipelago mod

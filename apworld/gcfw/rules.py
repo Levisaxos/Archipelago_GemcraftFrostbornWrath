@@ -114,31 +114,18 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
 
-    # --- A4 locations + Victory: require all 24 skills ---
-    all_skill_names = [f"{skill['name']} Skill" for skill in GAME_DATA["skills"]]
-    all_skills_rule = lambda state: all(state.has(s, player) for s in all_skill_names)
+    # --- Victory location rules ---
 
-    for suffix in ("Journey", "Bonus"):
-        loc = multiworld.get_location(f"Complete A4 - {suffix}", player)
-        existing_rule = loc.access_rule
-        loc.access_rule = lambda state, er=existing_rule: er(state) and all_skills_rule(state)
+    # kill_gatekeeper (goal 0): no explicit rule needed — the Kill Gatekeeper Goal region
+    # connects from Menu with no rule, but reaching A4 in practice requires tier-12 access
+    # which already implies all 24 skills via _has_tier_tokens. Adding all_skills_rule here
+    # was redundant and caused FillErrors by over-constraining the last few placements.
+    #
+    # kill_swarm_queen (goal 2): K4 is only tier 4, which requires ~8 skills. Requiring all
+    # 24 skills for this victory made no game sense and caused the same FillError.
+    # The victory location has no explicit rule — reaching K4 is sufficient.
 
-    if world.options.goal.value == 0:
-        victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
-        victory_location.access_rule = all_skills_rule
-    elif world.options.goal.value == 2:
-        # kill_swarm_queen: K4 Journey/Bonus require all 24 skills, same as A4 does for beat_game.
-        # This ensures the fill algorithm sees all skills as critical-path items via regular AP
-        # locations (not just the event location). Without this, the fill may not propagate the
-        # skill requirement from the event and fails to place the last few skills (especially with
-        # accessibility=minimal or own_world field token placement).
-        for suffix in ("Journey", "Bonus"):
-            loc = multiworld.get_location(f"Complete K4 - {suffix}", player)
-            existing_rule = loc.access_rule
-            loc.access_rule = lambda state, er=existing_rule: er(state) and all_skills_rule(state)
-        victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)
-        victory_location.access_rule = all_skills_rule
-    elif world.options.goal.value == 3:
+    if world.options.goal.value == 3:
         required = world.options.fields_required.value
         journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
         victory_location = multiworld.get_location("Fields Count Victory", player)
