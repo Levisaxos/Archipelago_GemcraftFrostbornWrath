@@ -48,6 +48,7 @@ package {
     import patch.WizStashes
     import patch.FirstPlayBypass
     import patch.LogicEnforcer
+    import patch.WavePrePatcher
 
     import save.FileHandler
     import save.SaveManager
@@ -122,6 +123,7 @@ package {
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
+        private var _wavePrePatcher:WavePrePatcher;
         private var _collectedState:CollectedState;
         private var _logicEvaluator:LogicEvaluator;
         private var _stageTinter:StageTinter;
@@ -165,6 +167,7 @@ package {
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
+                _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting)
                 _collectedState  = new CollectedState(_logger, MOD_NAME);
@@ -423,6 +426,7 @@ package {
                     screen == ScreenId.INGAME) {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
+                    _wavePrePatcher.resetForNewStage();
                 }
                 // Reset first-play gem patch when leaving ingame so it re-runs on
                 // the next ingame entry for the same stage (after initializer resets
@@ -471,6 +475,7 @@ package {
             // Inject skill gems for first-play stages (every frame until done once).
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
+                _wavePrePatcher.applyIfReady();
             }
 
 
@@ -848,6 +853,13 @@ package {
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
             _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
+            _wavePrePatcher.configure(
+                _connectionManager.enemyHpMultiplier,
+                _connectionManager.enemyArmorMultiplier,
+                _connectionManager.enemyShieldMultiplier,
+                _connectionManager.enemiesPerWaveMultiplier,
+                _connectionManager.extraWaveCount
+            );
             }
 
             // Persist credentials before loadSlotData resets them via resetSettings().

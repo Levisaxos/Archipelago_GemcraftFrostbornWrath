@@ -22,6 +22,8 @@ from .options import (
     WaveSurgeGemLevel,
     DeathLinkGracePeriod,
     DeathLinkCooldown,
+    EnemiesPerWaveMultiplier,
+    ExtraWaveCount,
 )
 from .rules import set_rules
 from .rulesdata import (
@@ -434,6 +436,11 @@ class GemcraftFrostbornWrathWorld(World):
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
+            "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
+            "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
+            "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,
+            "enemies_per_wave_multiplier":  self.options.enemies_per_wave_multiplier.value,
+            "extra_wave_count":             self.options.extra_wave_count.value,
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

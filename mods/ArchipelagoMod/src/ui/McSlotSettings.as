@@ -72,6 +72,9 @@ package ui {
             addRow("XP Tomes  (T / W / A)",   cm.tatteredScrollLevels + " / "
                                              + cm.wornTomeLevels + " / "
                                              + cm.ancientGrimoireLevels + " levels", vY);           vY += ROW_HEIGHT;
+            addRow("Enemy HP",               cm.enemyHpMultiplier     + "%", vY);                  vY += ROW_HEIGHT;
+            addRow("Enemy Armor",            cm.enemyArmorMultiplier   + "%", vY);                  vY += ROW_HEIGHT;
+            addRow("Enemy Shield",           cm.enemyShieldMultiplier  + "%", vY);                  vY += ROW_HEIGHT;
 
             // ── DeathLink ────────────────────────────────────────────────────
             vY += SECTION_GAP;

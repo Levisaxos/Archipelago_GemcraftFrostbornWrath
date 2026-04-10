@@ -160,6 +160,68 @@ class DisableTrial(Toggle):
     default = 1
 
 
+class EnemyHpMultiplier(Range):
+    """Percentage multiplier applied to every enemy's HP at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.  Applied once per monster when it first enters the
+    field — does not stack with DeathLink wave surges.
+    """
+    display_name = "Enemy HP Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemyArmorMultiplier(Range):
+    """Percentage multiplier applied to every enemy's armor level at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.
+    """
+    display_name = "Enemy Armor Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemyShieldMultiplier(Range):
+    """Percentage multiplier applied to every enemy's shield HP at the start of each wave.
+
+    100 = no change.  Values below 100 make enemies weaker; values above 100
+    make enemies tougher.
+    """
+    display_name = "Enemy Shield Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class EnemiesPerWaveMultiplier(Range):
+    """Percentage multiplier applied to the number of monsters in every wave.
+
+    100 = no change.  150 = 50% more monsters per wave.  50 = half as many.
+    Applied to wave definitions before the first wave spawns, so the wave bar
+    tooltip reflects the real counts.
+    """
+    display_name = "Enemies Per Wave Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 100
+
+
+class ExtraWaveCount(Range):
+    """Number of additional waves appended to each stage beyond its normal count.
+
+    Extra waves continue the HP/armor scaling curve from the last natural wave.
+    Set to 0 to leave stage lengths unchanged.
+    """
+    display_name = "Extra Wave Count"
+    range_start = 0
+    range_end   = 20
+    default     = 0
+
+
 class StartingOvercrowd(Toggle):
     """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
 
@@ -182,6 +244,11 @@ class GCFWOptions(PerGameCommonOptions):
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
+    enemy_hp_multiplier:         EnemyHpMultiplier
+    enemy_armor_multiplier:      EnemyArmorMultiplier
+    enemy_shield_multiplier:     EnemyShieldMultiplier
+    enemies_per_wave_multiplier: EnemiesPerWaveMultiplier
+    extra_wave_count:            ExtraWaveCount
     death_link:                DeathLink
     death_link_punishment:     DeathLinkPunishment
     gem_loss_percent:          GemLossPercent
