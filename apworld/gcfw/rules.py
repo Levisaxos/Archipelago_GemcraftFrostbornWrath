@@ -5,6 +5,9 @@ from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
 from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
+from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements
+from .rulesdata_goals import goal_requirements
+from .options import AchievementProgression
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -41,6 +44,141 @@ def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     if prev == 0:
         return True
     return _has_tier_tokens(state, player, prev, token_percent)
+
+
+def _extract_skill_requirements(requirements: list) -> list:
+    """
+    Extract skill names from achievement requirements.
+    Returns list of skill item names like ["Critical Hit Skill", "Poison Skill"] or ["Ritual Battle Trait"].
+    Traits are formatted as "{trait_name} Battle Trait" while skills use "{skill_name} Skill".
+    """
+    skill_requirements = []
+
+    for req in requirements:
+        req = req.strip()
+
+        # Skip achievement requirements (handled separately)
+        if req.startswith("Achievement:"):
+            continue
+
+        is_trait = " trait" in req.lower()
+        is_skill = " skill" in req.lower()
+
+        # Skip non-skill/trait requirements
+        if not is_trait and not is_skill:
+            continue
+
+        # Extract skill/trait name (remove " skill", " Skill", " trait", or " Trait" suffix)
+        skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
+
+        # Check each skill category to verify it's a valid skill or trait
+        found = False
+        for category, category_data in game_skills_categories.items():
+            if skill_name in category_data.get("members", []):
+                # Format depends on category: Battle Traits use " Battle Trait", others use " Skill"
+                if category == "BattleTraits":
+                    skill_requirements.append(f"{skill_name} Battle Trait")
+                else:
+                    skill_requirements.append(f"{skill_name} Skill")
+                found = True
+                break
+
+    return skill_requirements
+
+
+def _extract_achievement_requirements(requirements: list, progressive_mode: bool) -> list:
+    """
+    Extract achievement requirements from the requirements list.
+    Only returns them if progressive mode is enabled.
+    Returns list of achievement item names like ["Achievement: Kill 10 Waves"]
+    """
+    if not progressive_mode:
+        return []  # Ignore achievement requirements if not in progressive mode
+
+    achievement_requirements = []
+    for req in requirements:
+        req = req.strip()
+        if req.startswith("Achievement:"):
+            achievement_requirements.append(req)
+
+    return achievement_requirements
+
+
+def _extract_element_requirements(requirements: list) -> list:
+    """
+    Extract element requirements (game_level_elements or non_monster_elements).
+    Returns which elements are required.
+    """
+    element_requirements = []
+
+    for req in requirements:
+        req = req.strip()
+
+        # Check if it's an element requirement (ends with " element")
+        if not req.endswith(" element"):
+            continue
+
+        # Extract element name (remove " element" suffix)
+        elem_name = req[:-8]  # Remove " element"
+
+        # Check if element has levels defined
+        if elem_name in game_level_elements:
+            if game_level_elements[elem_name].get("levels", []):
+                # Element has levels, can be gated
+                element_requirements.append(elem_name)
+        elif elem_name in non_monster_elements:
+            # Non-monster elements can be gated by their trait requirement
+            element_requirements.append(elem_name)
+
+    return element_requirements
+
+
+def _build_achievement_access_rule(requirements: list, player: int):
+    """
+    Build an access rule function for an achievement based on its requirements.
+    Checks if player has obtained all required skills and traits.
+
+    Returns a lambda that checks requirements, or None if no skill/trait requirements.
+    """
+    skill_requirements = []
+
+    for req in requirements:
+        req = req.strip()
+
+        is_trait = " trait" in req.lower()
+        is_skill = " skill" in req.lower()
+
+        # Skip non-skill/trait requirements (gemCount, minWave, element requirements, etc.)
+        if not is_trait and not is_skill:
+            continue
+
+        # Extract skill/trait name (remove " skill", " Skill", " trait", or " Trait" suffix)
+        skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
+
+        # Check each skill category to verify it's a valid skill or trait
+        found = False
+        for category, category_data in game_skills_categories.items():
+            if skill_name in category_data.get("members", []):
+                # Format depends on category: Battle Traits use " Battle Trait", others use " Skill"
+                if category == "BattleTraits":
+                    skill_requirements.append(f"{skill_name} Battle Trait")
+                else:
+                    skill_requirements.append(f"{skill_name} Skill")
+                found = True
+                break
+
+        # If not in our categories, skip it
+        if not found:
+            continue
+
+    if not skill_requirements:
+        return None
+
+    # Return a lambda that checks if all required skills/traits are obtained
+    def check_skills(state):
+        return all(state.has(skill, player) for skill in skill_requirements)
+
+    return check_skills
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -115,29 +253,187 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location.access_rule = make_rule(conditions)
 
     # --- Victory location rules ---
+    # References goal_requirements from rulesdata_goals.py for definitions
 
-    # kill_gatekeeper (goal 0): no explicit rule needed — the Kill Gatekeeper Goal region
-    # connects from Menu with no rule, but reaching A4 in practice requires tier-12 access
-    # which already implies all 24 skills via _has_tier_tokens. Adding all_skills_rule here
-    # was redundant and caused FillErrors by over-constraining the last few placements.
-    #
-    # kill_swarm_queen (goal 2): K4 is only tier 4, which requires ~8 skills. Requiring all
-    # 24 skills for this victory made no game sense and caused the same FillError.
-    # The victory location has no explicit rule — reaching K4 is sufficient.
+    goal_value = world.options.goal.value
 
-    if world.options.goal.value == 3:
+    if goal_value == 0:
+        # kill_gatekeeper: Requires completing A4 - Journey (tier 12)
+        req = goal_requirements["kill_gatekeeper"]
+        a4_journey_loc = "Complete A4 - Journey"
+        victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
+        victory_location.access_rule = lambda state, loc=a4_journey_loc: state.can_reach(loc, "Location", player)
+
+    elif goal_value == 1:
+        # full_talisman: No access rule — fragments drop from any battle, player chooses when to claim
+        pass
+
+    elif goal_value == 2:
+        # kill_swarm_queen: Requires completing K4 - Journey (tier 4)
+        req = goal_requirements["kill_swarm_queen"]
+        k4_journey_loc = "Complete K4 - Journey"
+        victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)
+        victory_location.access_rule = lambda state, loc=k4_journey_loc: state.can_reach(loc, "Location", player)
+
+    elif goal_value == 3:
+        # fields_count: Complete N specific stages (configurable)
+        req = goal_requirements["fields_count"]
         required = world.options.fields_required.value
         journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
         victory_location = multiworld.get_location("Fields Count Victory", player)
         victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
             sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
-    elif world.options.goal.value == 4:
+
+    elif goal_value == 4:
+        # fields_percentage: Complete X% of all stages (configurable)
         from math import floor
+        req = goal_requirements["fields_percentage"]
         required = floor(world.options.fields_required_percentage.value * len(stages) / 100)
         journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
         victory_location = multiworld.get_location("Fields Percentage Victory", player)
         victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
             sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
-    # full_talisman victory has no access rule — fragments drop from any battle
+
+    # --- Achievement location access rules ---
+    # Achievements require specific skills to be obtained first
+    try:
+        from .rulesdata_achievement_1 import achievement_requirements as ach1
+        from .rulesdata_achievement_2 import achievement_requirements as ach2
+        from .rulesdata_achievement_3 import achievement_requirements as ach3
+        from .rulesdata_achievement_4 import achievement_requirements as ach4
+        from .rulesdata_achievement_5 import achievement_requirements as ach5
+
+        achievement_tiers = [None, ach1, ach2, ach3, ach4, ach5]
+
+        # Simplify achievements: if they have trait requirements, remove element requirements
+        # This avoids circular dependencies where trait items might be in trait-locked locations
+        for tier in range(1, len(achievement_tiers)):
+            if achievement_tiers[tier]:
+                for ach_name, ach_data in achievement_tiers[tier].items():
+                    requirements = ach_data.get("requirements", [])
+                    if requirements:
+                        # Check if this achievement has a trait requirement
+                        has_trait = any("trait" in req.lower() for req in requirements)
+
+                        if has_trait:
+                            # Keep only trait and skill requirements, remove element and stat requirements
+                            simplified = []
+                            for req in requirements:
+                                req_lower = req.lower()
+                                # Keep traits and skills
+                                if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
+                                    simplified.append(req)
+                                # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
+
+                            ach_data["requirements"] = simplified
+
+        with_rules = 0
+        without_rules = 0
+        not_found = 0
+
+        is_progressive = world.options.achievement_progression.value == AchievementProgression.option_progressive
+        grindiness = world.options.achievement_grindiness.value
+
+        for tier in range(1, grindiness + 1):
+            if tier < len(achievement_tiers):
+                for ach_name, ach_data in achievement_tiers[tier].items():
+                    loc_name = f"Achievement: {ach_name}"
+                    try:
+                        location = multiworld.get_location(loc_name, player)
+                        requirements = ach_data.get("requirements", [])
+
+                        skill_requirements = _extract_skill_requirements(requirements)
+                        achievement_requirements = _extract_achievement_requirements(requirements, is_progressive)
+                        element_requirements = _extract_element_requirements(requirements)
+
+                        has_skills = len(skill_requirements) > 0
+                        has_achievements = len(achievement_requirements) > 0
+                        has_elements = len(element_requirements) > 0
+
+                        # Build all requirement lists for access rule
+                        all_requirements = []
+
+                        if has_achievements:
+                            all_requirements.append(("achievement", achievement_requirements))
+                        if has_skills:
+                            all_requirements.append(("skill", skill_requirements))
+                        if has_elements:
+                            # For elements, create requirements based on where they appear
+                            trait_requirements = []
+                            stage_requirements = []  # List of (element_name, stages) tuples
+
+                            for elem in element_requirements:
+                                # Check non-monster elements for trait requirements
+                                if elem in non_monster_elements:
+                                    trait = non_monster_elements[elem].get("requires_trait")
+                                    if trait:
+                                        trait_requirements.append(f"{trait} Battle Trait")
+                                    # Also check if it has stage mappings
+                                    stages = non_monster_elements[elem].get("levels", [])
+                                    if stages:
+                                        stage_requirements.append((elem, stages))
+
+                                # Check game-level elements for stage mappings
+                                elif elem in game_level_elements:
+                                    stages = game_level_elements[elem].get("levels", [])
+                                    if stages:
+                                        stage_requirements.append((elem, stages))
+
+                            # Add trait requirements
+                            if trait_requirements:
+                                all_requirements.append(("trait", trait_requirements))
+
+                            # Add stage requirements (OR logic: can reach ANY of the stages with this element)
+                            if stage_requirements:
+                                all_requirements.append(("stages", stage_requirements))
+
+                        if all_requirements:
+                            # Create unified access rule checking all requirement types
+                            def make_rule(req_list, ach_name_debug):
+                                def check_requirements(state):
+                                    for req_type, req_values in req_list:
+                                        if req_type == "skill" or req_type == "trait":
+                                            # Must have ALL items in this list
+                                            if not all(state.has(req, player) for req in req_values):
+                                                return False
+                                        elif req_type == "stages":
+                                            # For stages: must be able to reach ANY stage in ANY element's stage list
+                                            # req_values is list of (element_name, stages) tuples
+                                            can_reach_element = False
+                                            for elem_name, stages in req_values:
+                                                # Check if can reach ANY location in ANY of the stages
+                                                for stage in stages:
+                                                    # A stage has 3 locations: Journey, Bonus, Wizard stash
+                                                    for suffix in ("Journey", "Bonus", "Wizard stash"):
+                                                        loc_name = f"Complete {stage} - {suffix}"
+                                                        try:
+                                                            if state.can_reach(loc_name, "Location", player):
+                                                                can_reach_element = True
+                                                                break
+                                                        except KeyError:
+                                                            # Location doesn't exist, skip
+                                                            pass
+                                                    if can_reach_element:
+                                                        break
+                                                if can_reach_element:
+                                                    break
+                                            if not can_reach_element:
+                                                return False
+                                    return True
+                                return check_requirements
+
+                            location.access_rule = make_rule(all_requirements, ach_name)
+                            with_rules += 1
+
+                        else:
+                            without_rules += 1
+                    except Exception as e:
+                        # Location might not exist if achievement was filtered out
+                        not_found += 1
+
+    except Exception as e:
+        print(f"ERROR setting achievement access rules: {e}")
+        import traceback
+        traceback.print_exc()
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

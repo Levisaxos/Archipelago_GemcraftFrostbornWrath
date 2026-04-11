@@ -38,10 +38,10 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{skill['name']} Skill"
         table[name] = ItemData(skill["ap_id"], ItemClassification.progression)
 
-    # Battle traits
+    # Battle traits — classified as progression since achievements require them
     for trait in data["battle_traits"]:
         name = f"{trait['name']} Battle Trait"
-        table[name] = ItemData(trait["ap_id"], ItemClassification.useful)
+        table[name] = ItemData(trait["ap_id"], ItemClassification.progression)
 
     # XP tiers — 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls.
     # Per-tome level values are configured from slot_data (xp_tome_bonus option).
@@ -68,4 +68,35 @@ def _load_item_table() -> Dict[str, ItemData]:
     return table
 
 
+def _generate_achievement_items() -> Dict[str, ItemData]:
+    """Generate achievement items (IDs 1000-1635) from rulesdata."""
+    from .rulesdata_achievement_1 import achievement_requirements as ach1
+    from .rulesdata_achievement_2 import achievement_requirements as ach2
+    from .rulesdata_achievement_3 import achievement_requirements as ach3
+    from .rulesdata_achievement_4 import achievement_requirements as ach4
+    from .rulesdata_achievement_5 import achievement_requirements as ach5
+
+    achievements_by_tier = {
+        1: ach1,
+        2: ach2,
+        3: ach3,
+        4: ach4,
+        5: ach5,
+    }
+
+    table: Dict[str, ItemData] = {}
+    item_id = 1000
+
+    for tier in range(1, 6):
+        for ach_name in sorted(achievements_by_tier[tier].keys()):
+            table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
+            item_id += 1
+
+    return table
+
+
 item_table: Dict[str, ItemData] = _load_item_table()
+achievement_item_table: Dict[str, ItemData] = _generate_achievement_items()
+
+# Merge achievement items into main item table
+item_table.update(achievement_item_table)

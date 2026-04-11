@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemCraft Frostborn Wrath - Archipelago Logic Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .tab-button:hover {
+            background: #eee;
+            color: #667eea;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .file-upload {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            text-align: center;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            background: #f0f0ff;
+            border-color: #764ba2;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload p {
+            margin: 0;
+            color: #666;
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .achievement-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .achievement-card:hover {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .achievement-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .requirements {
+            margin-top: 10px;
+        }
+
+        .requirement-item {
+            display: inline-block;
+            margin: 5px 5px 5px 0;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            background: #e8f0ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        .requirement-item.trait {
+            background: #ffe8f0;
+            color: #764ba2;
+            border-color: #764ba2;
+        }
+
+        .requirement-item.skill {
+            background: #e8ffe8;
+            color: #2a7a2a;
+            border-color: #2a7a2a;
+        }
+
+        .requirement-item.element {
+            background: #fff8e8;
+            color: #d97706;
+            border-color: #d97706;
+        }
+
+        .requirement-item.stage {
+            background: #e8f5ff;
+            color: #0369a1;
+            border-color: #0369a1;
+        }
+
+        .achievement-description {
+            font-size: 0.95em;
+            color: #555;
+            margin: 10px 0;
+            font-style: italic;
+            padding: 10px;
+            background: #f5f5f5;
+            border-left: 3px solid #667eea;
+            border-radius: 3px;
+        }
+
+        .requirement-explanation {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            padding: 5px 0;
+            line-height: 1.4;
+        }
+
+        .requirement-wrapper {
+            margin: 5px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 3px;
+            border-left: 2px solid #ddd;
+        }
+
+        .requirement-wrapper.trait {
+            border-left-color: #764ba2;
+        }
+
+        .requirement-wrapper.skill {
+            border-left-color: #2a7a2a;
+        }
+
+        .requirement-wrapper.element {
+            border-left-color: #d97706;
+        }
+
+        .levels-list {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .levels-list strong {
+            color: #333;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-box h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-box p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .seed-data {
+            margin-top: 30px;
+        }
+
+        .item-placement {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .item-name {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .location-name {
+            color: #666;
+            margin-left: 20px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #fcc;
+        }
+
+        .success {
+            background: #efe;
+            color: #060;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #cfc;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 GemCraft Frostborn Wrath - Logic Viewer</h1>
+            <p>Visualize achievement requirements and validate seed logic</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab(0)">📋 Requirements Viewer</button>
+            <button class="tab-button" onclick="switchTab(1)">🎲 Seed Validator</button>
+        </div>
+
+        <!-- Tab 1: Requirements Viewer -->
+        <div class="tab-content active" id="tab-0">
+            <h2>Achievement Requirements Viewer</h2>
+            <p>Load a gcfw.apworld file to view achievement requirements visually</p>
+
+            <div class="file-upload" id="upload-apworld">
+                <input type="file" id="apworld-file" accept=".apworld,.zip" />
+                <p>📁 Click to select or drag & drop gcfw.apworld file</p>
+            </div>
+
+            <div id="apworld-content" style="display:none;">
+                <div class="stats" id="stats-container"></div>
+
+                <input type="text" class="search-box" id="search-achievements" placeholder="Search achievements...">
+
+                <div class="filter-buttons" id="filter-buttons"></div>
+
+                <div class="achievement-grid" id="achievements-grid"></div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Seed Validator -->
+        <div class="tab-content" id="tab-1">
+            <h2>Seed Validator</h2>
+            <p>Load a spoiler log ZIP file to validate the seed logic</p>
+
+            <div class="file-upload" id="upload-seed">
+                <input type="file" id="seed-file" accept=".zip" />
+                <p>📁 Click to select or drag & drop spoiler_*.zip file</p>
+            </div>
+
+            <div id="seed-content" style="display:none;">
+                <div class="stats" id="seed-stats"></div>
+                <div id="seed-analysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(index) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+
+            document.getElementById(`tab-${index}`).classList.add('active');
+            document.querySelectorAll('.tab-button')[index].classList.add('active');
+        }
+
+        // File upload handlers
+        document.getElementById('upload-apworld').addEventListener('click', () => {
+            document.getElementById('apworld-file').click();
+        });
+
+        document.getElementById('upload-seed').addEventListener('click', () => {
+            document.getElementById('seed-file').click();
+        });
+
+        document.getElementById('apworld-file').addEventListener('change', loadApworld);
+        document.getElementById('seed-file').addEventListener('change', loadSeedLog);
+
+        // Drag and drop
+        ['upload-apworld', 'upload-seed'].forEach(id => {
+            const element = document.getElementById(id);
+            element.addEventListener('dragover', e => {
+                e.preventDefault();
+                element.style.background = '#f0f0ff';
+            });
+            element.addEventListener('dragleave', () => {
+                element.style.background = '#f9f9f9';
+            });
+            element.addEventListener('drop', e => {
+                e.preventDefault();
+                element.style.background = '#f9f9f9';
+                if (id === 'upload-apworld') {
+                    document.getElementById('apworld-file').files = e.dataTransfer.files;
+                    loadApworld();
+                } else {
+                    document.getElementById('seed-file').files = e.dataTransfer.files;
+                    loadSeedLog();
+                }
+            });
+        });
+
+        // Load apworld file
+        async function loadApworld() {
+            const file = document.getElementById('apworld-file').files[0];
+            if (!file) return;
+
+            try {
+                const zip = new JSZip();
+                const zipData = await zip.loadAsync(file);
+
+                // Load element mappings
+                let elementMappings = {};
+                try {
+                    const settingsData = await zipData.file('gcfw/rulesdata_settings.py')?.async('text');
+                    if (settingsData) {
+                        elementMappings = parseElementMappings(settingsData);
+                    }
+                } catch (e) {
+                    console.log('Could not load element mappings');
+                }
+
+                // Load achievements data
+                const achievements = {};
+                let totalAchievements = 0;
+                let achievementsWithRequirements = 0;
+
+                for (let i = 1; i <= 5; i++) {
+                    try {
+                        const data = await zipData.file(`gcfw/rulesdata_achievement_${i}.py`)?.async('text');
+                        if (data) {
+                            const parsed = parseAchievementFile(data);
+                            Object.assign(achievements, parsed);
+                        }
+                    } catch (e) {
+                        console.log(`Tier ${i} not found or error parsing`);
+                    }
+                }
+
+                // Store element mappings globally for use in requirement explanation
+                window.elementMappings = elementMappings;
+
+                totalAchievements = Object.keys(achievements).length;
+                achievementsWithRequirements = Object.values(achievements).filter(a => a.requirements && a.requirements.length > 0).length;
+
+                // Display stats
+                const statsHtml = `
+                    <div class="stat-box">
+                        <h3>${totalAchievements}</h3>
+                        <p>Total Achievements</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>${achievementsWithRequirements}</h3>
+                        <p>With Requirements</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3>${totalAchievements - achievementsWithRequirements}</h3>
+                        <p>No Requirements</p>
+                    </div>
+                `;
+                document.getElementById('stats-container').innerHTML = statsHtml;
+
+                // Display achievements
+                displayAchievements(achievements);
+                document.getElementById('apworld-content').style.display = 'block';
+
+                // Setup search
+                document.getElementById('search-achievements').addEventListener('input', () => {
+                    filterAchievements(achievements);
+                });
+
+            } catch (error) {
+                alert('Error loading apworld file: ' + error.message);
+            }
+        }
+
+        function parseAchievementFile(content) {
+            const achievements = {};
+
+            // Simple Python dict parser for achievement_requirements
+            const regex = /["']([^"']+)["']\s*:\s*\{\s*"description"\s*:\s*["']([^"']+)["'][^}]*"requirements"\s*:\s*\[(.*?)\]/gs;
+            let match;
+
+            while ((match = regex.exec(content)) !== null) {
+                const name = match[1];
+                const description = match[2];
+                const reqsStr = match[3];
+
+                const requirements = [];
+                const reqRegex = /["']([^"']+)["']/g;
+                let reqMatch;
+                while ((reqMatch = reqRegex.exec(reqsStr)) !== null) {
+                    requirements.push(reqMatch[1]);
+                }
+
+                achievements[name] = { description, requirements };
+            }
+
+            return achievements;
+        }
+
+        function displayAchievements(achievements) {
+            const grid = document.getElementById('achievements-grid');
+            const filterButtons = document.getElementById('filter-buttons');
+
+            // Collect all requirement types
+            const reqTypes = new Set();
+            Object.values(achievements).forEach(ach => {
+                if (ach.requirements) {
+                    ach.requirements.forEach(req => {
+                        if (req.includes('trait')) reqTypes.add('trait');
+                        else if (req.includes('skill')) reqTypes.add('skill');
+                        else if (req.includes('element')) reqTypes.add('element');
+                        else reqTypes.add('other');
+                    });
+                }
+            });
+
+            // Create filter buttons
+            filterButtons.innerHTML = '<button class="filter-btn active" onclick="filterByType(null)">All</button>';
+            reqTypes.forEach(type => {
+                filterButtons.innerHTML += `<button class="filter-btn" onclick="filterByType('${type}')">${type.charAt(0).toUpperCase() + type.slice(1)}</button>`;
+            });
+
+            // Display achievements
+            grid.innerHTML = '';
+            Object.entries(achievements).forEach(([name, data]) => {
+                const card = createAchievementCard(name, data);
+                grid.appendChild(card);
+            });
+        }
+
+        function createAchievementCard(name, data) {
+            const card = document.createElement('div');
+            card.className = 'achievement-card';
+            card.dataset.name = name.toLowerCase();
+            card.dataset.requirements = JSON.stringify(data.requirements || []);
+
+            let descriptionHtml = '';
+            if (data.description) {
+                descriptionHtml = `<div class="achievement-description">${data.description}</div>`;
+            }
+
+            let requirementsHtml = '';
+            if (data.requirements && data.requirements.length > 0) {
+                requirementsHtml = '<div class="requirements">';
+                data.requirements.forEach(req => {
+                    const type = getRequirementType(req);
+                    const explanation = explainRequirement(req);
+                    requirementsHtml += `
+                        <div class="requirement-wrapper ${type}">
+                            <span class="requirement-item ${type}">${req}</span>
+                            <div class="requirement-explanation">${explanation}</div>
+                        </div>
+                    `;
+                });
+                requirementsHtml += '</div>';
+            } else {
+                requirementsHtml = '<div style="color:#999; font-style:italic;">No requirements (free achievement)</div>';
+            }
+
+            card.innerHTML = `
+                <div class="achievement-name">${name}</div>
+                ${descriptionHtml}
+                ${requirementsHtml}
+            `;
+
+            return card;
+        }
+
+        function parseElementMappings(content) {
+            const mappings = {};
+
+            // Parse game_level_elements
+            const gameElemRegex = /["']([^"']+)["']\s*:\s*\{\s*"levels"\s*:\s*\[(.*?)\]/g;
+            let match;
+            while ((match = gameElemRegex.exec(content)) !== null) {
+                const elemName = match[1];
+                const levelsStr = match[2];
+                const levels = levelsStr.match(/["']([^"']+)["']/g)?.map(l => l.replace(/"/g, '')) || [];
+                mappings[elemName] = { levels, type: 'game_level' };
+            }
+
+            // Parse non_monster_elements
+            const nonMonsterRegex = /["']([^"']+)["']\s*:\s*\{[^}]*"levels"\s*:\s*\[(.*?)\]/g;
+            while ((match = nonMonsterRegex.exec(content)) !== null) {
+                const elemName = match[1];
+                const levelsStr = match[2];
+                const levels = levelsStr.match(/["']([^"']+)["']/g)?.map(l => l.replace(/"/g, '')) || [];
+                if (mappings[elemName]) {
+                    mappings[elemName].levels = [...new Set([...mappings[elemName].levels, ...levels])];
+                }
+            }
+
+            return mappings;
+        }
+
+        function explainRequirement(req) {
+            const lower = req.toLowerCase();
+
+            // Handle OR logic (pipe-separated)
+            if (req.includes('|')) {
+                const options = req.split('|').map(r => r.trim());
+                const explanations = options.map(opt => explainSingleRequirement(opt));
+                return `<strong>Choose one:</strong><br>• ${explanations.join('<br>• ')}`;
+            }
+
+            return explainSingleRequirement(req);
+        }
+
+        function explainSingleRequirement(req) {
+            const lower = req.toLowerCase();
+
+            // Gem count requirements
+            if (req.includes('gemCount:')) {
+                const match = req.match(/gemCount:\s*(\d+)/);
+                if (match) {
+                    return `At least ${match[1]} different gem types in your setup`;
+                }
+            }
+
+            // Min wave requirements
+            if (req.includes('minWave:')) {
+                const match = req.match(/minWave:\s*(\d+)/);
+                if (match) {
+                    return `Reach at least wave ${match[1]} in a battle`;
+                }
+            }
+
+            // Min gem grade
+            if (req.includes('minGemGrade:')) {
+                const match = req.match(/minGemGrade:\s*(\d+)/);
+                if (match) {
+                    return `Have at least one gem with grade ${match[1]} or higher`;
+                }
+            }
+
+            // Skills
+            if (req.includes('skill')) {
+                const skillName = req.replace(/\s*skill\s*/i, '');
+                return `Unlock the ${skillName} skill in the tech tree`;
+            }
+
+            // Traits
+            if (req.includes('trait')) {
+                const traitName = req.replace(/\s*trait\s*/i, '');
+                return `Unlock the ${traitName} battle trait`;
+            }
+
+            // Elements
+            if (req.includes('element')) {
+                const elemName = req.replace(/\s*element\s*/i, '');
+                const mapping = window.elementMappings?.[elemName];
+                let explanation = `Encounter the ${elemName} element in a level`;
+                if (mapping && mapping.levels && mapping.levels.length > 0) {
+                    explanation += `<br><div class="levels-list"><strong>Found in:</strong> ${mapping.levels.join(', ')}</div>`;
+                }
+                return explanation;
+            }
+
+            // Field tokens
+            if (req.startsWith('Field')) {
+                return `Unlock and complete the ${req} field`;
+            }
+
+            // Game modes
+            if (req === 'Endurance' || req === 'Trial') {
+                return `Complete this achievement in ${req} mode`;
+            }
+
+            // Default
+            return `Requirement: ${req}`;
+        }
+
+        function getRequirementType(req) {
+            if (req.includes('trait')) return 'trait';
+            if (req.includes('skill')) return 'skill';
+            if (req.includes('element')) return 'element';
+            if (req.includes('Field') || req.includes('stage')) return 'stage';
+            return 'other';
+        }
+
+        function filterAchievements(achievements) {
+            const search = document.getElementById('search-achievements').value.toLowerCase();
+            document.querySelectorAll('.achievement-card').forEach(card => {
+                const name = card.dataset.name;
+                card.style.display = name.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        function filterByType(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.achievement-card').forEach(card => {
+                if (!type) {
+                    card.style.display = 'block';
+                } else {
+                    const requirements = JSON.parse(card.dataset.requirements);
+                    const hasType = requirements.some(req => getRequirementType(req) === type);
+                    card.style.display = hasType ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Load seed log
+        async function loadSeedLog() {
+            const file = document.getElementById('seed-file').files[0];
+            if (!file) return;
+
+            try {
+                const zip = new JSZip();
+                const zipData = await zip.loadAsync(file);
+
+                // Look for spoiler log files
+                const spoilerFiles = Object.keys(zipData.files).filter(f => f.includes('spoiler'));
+
+                if (spoilerFiles.length === 0) {
+                    document.getElementById('seed-analysis').innerHTML = '<div class="error">No spoiler log found in ZIP</div>';
+                    return;
+                }
+
+                // Parse spoiler log (simplified)
+                const spoilerContent = await zipData.file(spoilerFiles[0])?.async('text');
+
+                const analysis = `
+                    <div class="success">Seed loaded: ${file.name}</div>
+                    <p>Spoiler log parsing coming soon...</p>
+                    <p>This will display:</p>
+                    <ul>
+                        <li>Item placements for achievements</li>
+                        <li>Logic validation (requirements met)</li>
+                        <li>Potential issues or conflicts</li>
+                    </ul>
+                `;
+
+                document.getElementById('seed-analysis').innerHTML = analysis;
+                document.getElementById('seed-content').style.display = 'block';
+
+            } catch (error) {
+                document.getElementById('seed-analysis').innerHTML = `<div class="error">Error loading seed: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
