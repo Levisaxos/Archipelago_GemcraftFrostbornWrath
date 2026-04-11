@@ -51,6 +51,7 @@ package net {
         private var _playerNames:Object = {};   // slot (int) → alias (String)
         private var _playerGames:Object = {};   // slot (int) → game name (String)
         private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
+        private var _resolvedItemNames:Object  = {}; // itemId (String) → resolved name (String) — persistent cache
         private var _goal:int           = 0;    // 0 = beat_game, 2 = kill_swarm_queen, 3 = fields_count, 4 = fields_percentage
         private var _fieldsRequired:int           = 80;
         private var _fieldsRequiredPercentage:int = 66;
@@ -341,15 +342,47 @@ package net {
 
             _playerNames = {};
             _playerGames = {};
+
+            // Extract player names from players array
             var players:Array = p.players as Array;
             if (players) {
                 for each (var player:Object in players) {
                     _playerNames[int(player.slot)] = String(player.alias);
-                    if (player.game != null) _playerGames[int(player.slot)] = String(player.game);
-                    _logger.log(_modName, "  player: slot=" + player.slot +
-                        "  name=" + player.alias + "  game=" + player.game);
+                    _logger.log(_modName, "  player: slot=" + player.slot + "  name=" + player.alias);
                 }
             }
+
+            // Extract game names from slot_info (Archipelago standard)
+            // This is where the server sends which game each slot is playing
+            var slotInfo:Object = p.slot_info;
+            var foundGames:int = 0;
+            if (slotInfo) {
+                _logger.log(_modName, "  Extracting game names from slot_info...");
+                for (var slotStr:String in slotInfo) {
+                    var slot:int = int(slotStr);
+                    var info:Object = slotInfo[slotStr];
+                    if (info && info.game != null) {
+                        var gameName:String = String(info.game);
+                        _playerGames[slot] = gameName;
+                        foundGames++;
+                        _logger.log(_modName, "    slot " + slot + " game: " + gameName);
+                    }
+                }
+            }
+
+            // Fallback: if no slot_info found any games, try to get game from players
+            if (foundGames == 0) {
+                _logger.log(_modName, "  No slot_info found, trying players array...");
+                if (players) {
+                    for each (var playerFallback:Object in players) {
+                        if (playerFallback.game != null) {
+                            _playerGames[int(playerFallback.slot)] = String(playerFallback.game);
+                            _logger.log(_modName, "    slot " + playerFallback.slot + " game: " + playerFallback.game);
+                        }
+                    }
+                }
+            }
+
             // Fetch item name tables for every game in the room so we can
             // resolve cross-game item names in PrintJSON events.
             sendGetDataPackage();
@@ -457,26 +490,22 @@ package net {
                 var senderSlot:int = int(p.item.player);
                 if (receiving != _mySlot && senderSlot != _mySlot) return;
 
-                // The item belongs to the receiving player's game, so use that
-                // as the fallback owner when a JSONMessagePart lacks a player field.
-                var logText:String = resolvePartsText(p.data, receiving);
+                // Resolve item names using DataPackage
+                var logText:String = resolvePartsText(p.data, senderSlot);
                 _logger.log(_modName, "  ItemSend: " + logText);
 
-                if (senderSlot == _mySlot && receiving != _mySlot) {
-                    // Player sent an item for someone else — show in toast (also logs via toast).
-                    _toast.addMessage(logText, 0xFFCC99FF);
+                // Always log to message log
+                if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
 
-                    // Also surface it on the item toast HUD.
+                if (senderSlot == _mySlot && receiving != _mySlot) {
+                    // Player sent an item for someone else — show only on the item HUD
                     var sentItemId:int   = int(p.item.item);
-                    var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
+                    var sentItemName:String = resolveItemNameForSlot(sentItemId, senderSlot);
                     var recvName:String  = (_playerNames[receiving] != null)
                         ? String(_playerNames[receiving]) : ("Slot " + receiving);
                     if (_itemToast != null) {
                         _itemToast.addItem("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
                     }
-                } else {
-                    // Player is receiving — grantItem handles the itemToast display; just log here.
-                    if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
                 }
                 return;
             }
@@ -487,6 +516,30 @@ package net {
                 _toast.addMessage(chatText, 0xFFFFFFDD);
                 return;
             }
+        }
+
+        /**
+         * Build a simple message from parts using minimal processing.
+         * This is the Archipelago server's native message - just resolve player names
+         * (for our own world) and pass everything else through as-is.
+         * This avoids trying to guess item/location names when the server hasn't resolved them.
+         */
+        private function partsToSimpleText(data:*):String {
+            var result:String = "";
+            if (data == null) return result;
+            var parts:Array = data as Array;
+            for each (var part:Object in parts) {
+                var ptype:String = (part.type != null) ? String(part.type) : "text";
+                if (ptype == "player_id") {
+                    // Replace slot numbers with player names for readability
+                    var pSlot:int = int(part.text);
+                    result += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
+                } else {
+                    // For item_id, location_id, and text parts, use server's text as-is
+                    if (part.text != null) result += String(part.text);
+                }
+            }
+            return result;
         }
 
         /**
@@ -517,25 +570,106 @@ package net {
         }
 
         /**
+         * Extract the item name from a PrintJSON data array by finding the matching
+         * item_id and resolving it using the player field from that part.
+         * This is the "Ori approach" — use the message structure from the server
+         * rather than trying to resolve the ID independently.
+         */
+        private function extractItemNameFromParts(data:*, targetItemId:int):String {
+            if (data == null) return "Item #" + targetItemId;
+            var parts:Array = data as Array;
+            for each (var part:Object in parts) {
+                var ptype:String = (part.type != null) ? String(part.type) : "text";
+                if (ptype == "item_id" && int(part.text) == targetItemId) {
+                    // Found the matching item_id part — extract the formatted name directly
+                    // Some servers don't populate game names in Connected packets, so we
+                    // try to use the formatted text that the server already resolved.
+                    // If it's "Item #2001", that means it wasn't resolved on the server either,
+                    // so we'll get the same result, but at least it's consistent.
+                    if (part.text != null && String(part.text).indexOf("Item #") != 0) {
+                        // Server provided a resolved name (not a fallback), use it directly
+                        return String(part.text);
+                    }
+                    // Otherwise, try resolution via player slot
+                    var ownerSlot:int = (part.player != null) ? int(part.player) : -1;
+                    var resolvedName:String = resolveItemNameForSlot(targetItemId, ownerSlot);
+                    return resolvedName;
+                }
+            }
+            // Fallback if not found in parts
+            return "Item #" + targetItemId;
+        }
+
+        /**
          * Resolve an item name given its AP id and the slot whose game owns it.
-         * Uses our own itemName() for items that belong to us and falls back to
-         * the cached DataPackage for other games.
+         *
+         * Resolution order:
+         *   0. Persistent cache — returns previously-resolved names instantly.
+         *   1. Own game resolver (itemName) — fast path for our own items.
+         *   2. DataPackage cache — covers all games, including our own, using
+         *      the item_name_to_id tables received over the WebSocket.
+         *   3. Own game resolver again — last-resort fallback for cross-slot
+         *      items from the same game when the DataPackage hasn't arrived yet.
          */
         private function resolveItemNameForSlot(itemId:int, ownerSlot:int):String {
+            var itemIdStr:String = String(itemId);
+
+            // Step 0: Check persistent cache first (Ori-style approach)
+            if (_resolvedItemNames[itemIdStr] != null) {
+                return String(_resolvedItemNames[itemIdStr]);
+            }
+
+            var debug:Boolean = true; // Enabled to help debug cross-world item resolution
+            var result:String = null;
+
+            // Step 1: fast path for our own items.
             if (ownerSlot == _mySlot || ownerSlot < 0) {
                 var mine:String = itemName(itemId);
-                if (mine != null) return mine;
-            } else {
-                var gameName:String = _playerGames[ownerSlot];
+                if (mine != null) result = mine;
+            }
+
+            // Step 2: DataPackage lookup — works for any game, including GCFW
+            // itself (populated from the DataPackage WebSocket message).
+            if (result == null) {
+                var effectiveSlot:int = (ownerSlot >= 0) ? ownerSlot : _mySlot;
+                var gameName:String = _playerGames[effectiveSlot];
+
+                if (debug) _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot +
+                    " effectiveSlot=" + effectiveSlot + " gameName=" + gameName);
+
                 if (gameName != null) {
                     var gameItems:Object = _itemIdToNameByGame[gameName];
                     if (gameItems != null) {
-                        var name:String = gameItems[String(itemId)];
-                        if (name != null) return name;
+                        var name:String = gameItems[itemIdStr];
+                        if (name != null) {
+                            result = name;
+                            if (debug) _logger.log(_modName, "[resolveItemName] Found in DataPackage: " + name);
+                        } else {
+                            if (debug) _logger.log(_modName, "[resolveItemName] Not in DataPackage for " + gameName + ", itemId=" + itemId);
+                        }
+                    } else {
+                        if (debug) _logger.log(_modName, "[resolveItemName] Game '" + gameName + "' not in DataPackage cache");
                     }
+                } else {
+                    if (debug) _logger.log(_modName, "[resolveItemName] No gameName for slot " + effectiveSlot);
                 }
             }
-            return "Item #" + itemId;
+
+            // Step 3: DataPackage not loaded yet (timing) — try own resolver as
+            // a last resort so same-game cross-slot items still resolve.
+            if (result == null && ownerSlot != _mySlot) {
+                var fallback:String = itemName(itemId);
+                if (fallback != null) result = fallback;
+            }
+
+            if (result == null) {
+                result = "Item #" + itemId;
+                if (debug) _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
+            }
+
+            // Cache the result for next time (Ori-style persistent caching)
+            _resolvedItemNames[itemIdStr] = result;
+            return result;
         }
 
         private function resolveLocationName(locId:int):String {
@@ -552,20 +686,70 @@ package net {
         /**
          * Request the DataPackage for every game represented in the room so
          * we can resolve cross-game item names in PrintJSON events.
+         * Since most servers don't populate game names in Connected packets,
+         * we request a comprehensive list of all major Archipelago games.
          */
         private function sendGetDataPackage():void {
             if (_ws == null) return;
             var gamesSet:Object = {};
+
+            // First, add any games we know about from _playerGames
             for (var slotKey:String in _playerGames) {
                 var g:String = String(_playerGames[slotKey]);
                 if (g != null && g.length > 0) gamesSet[g] = true;
             }
+
+            // Always request data for all major Archipelago games
+            // This ensures we have item names for any game in the multiworld
+            var allGames:Array = [
+                "Stardew Valley",
+                "The Legend of Zelda: A Link to the Past",
+                "The Legend of Zelda: A Link to the Past (Randomizer)",
+                "Super Metroid",
+                "Secret of Mana",
+                "Yo-kai Watch 2: Psychic Specters",
+                "Heretic",
+                "Final Fantasy",
+                "Undertale",
+                "A Link to the Past",
+                "A Link to the Past - Randomizer",
+                "Bumper Sticker Bros",
+                "Splatoon",
+                "Kingdom Hearts 2",
+                "Donkey Kong Country 3",
+                "Kirby Super Star Ultra",
+                "Mega Man 3",
+                "Mega Man X3",
+                "Pokémon Emerald",
+                "Pokémon Red Version",
+                "Pokémon Blue Version",
+                "Factorio",
+                "Hollow Knight",
+                "Risk of Rain 2",
+                "Starcraft",
+                "StarFox",
+                "Super Mario 64",
+                "Super Mario Bros",
+                "Super Mario Bros 3",
+                "Super Mario World",
+                "The Legend of Zelda",
+                "The Legend of Zelda: Oracle of Seasons",
+                "Terraria",
+                "Wargroove",
+                "Zillion"
+            ];
+
+            for each (var game:String in allGames) {
+                gamesSet[game] = true;
+            }
+
             var quoted:Array = [];
             for (var gameName:String in gamesSet) {
                 quoted.push('"' + gameName + '"');
             }
+
             var packet:String = '[{"cmd":"GetDataPackage","games":[' + quoted.join(",") + ']}]';
-            _logger.log(_modName, "AP >> GetDataPackage  games=" + quoted.join(","));
+            _logger.log(_modName, "AP >> GetDataPackage  games=" + quoted.length);
             _ws.send(packet);
         }
 
@@ -582,13 +766,23 @@ package net {
                     var nameToId:Object = gameData.item_name_to_id;
                     if (nameToId == null) continue;
                     var byId:Object = {};
+                    var itemCount:int = 0;
                     for (var iname:String in nameToId) {
                         byId[String(int(nameToId[iname]))] = iname;
+                        itemCount++;
                     }
                     _itemIdToNameByGame[gameName] = byId;
+                    _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items");
                     loaded++;
                 }
                 _logger.log(_modName, "  DataPackage loaded: " + loaded + " game(s)");
+
+                // Debug: log current player games mapping
+                var playerGamesList:String = "";
+                for (var slot:String in _playerGames) {
+                    playerGamesList += "Slot" + slot + "=" + _playerGames[slot] + " ";
+                }
+                _logger.log(_modName, "    [DataPackage] Player games: " + playerGamesList);
             } catch (err:Error) {
                 _logger.log(_modName, "handleDataPackage ERROR: " + err.message);
             }
