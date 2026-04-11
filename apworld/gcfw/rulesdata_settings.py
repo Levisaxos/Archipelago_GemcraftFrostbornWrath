@@ -235,3 +235,25 @@ game_skills_categories = {
         ],
     },
 }
+
+# =====================================================================
+# SKILL GROUP COUNTERS — Requirement Type
+# =====================================================================
+# Used for achievements that need "any N skills from this group" instead of specific skills.
+# Format: "skillGroupName: N" where N is the count needed.
+# Example: "strikeSpells: 1" means "need any 1 strike spell"
+#
+skill_groups = {
+    "strikeSpells": {
+        "description": "Strike spells (Freeze, Whiteout, Ice Shards)",
+        "members": ["Freeze", "Whiteout", "Ice Shards"],
+    },
+    "enhancementSpells": {
+        "description": "Enhancement spells (Bolt, Beam, Barrage)",
+        "members": ["Bolt", "Beam", "Barrage"],
+    },
+    "gemTypes": {
+        "description": "Gem skill types (all gem types)",
+        "members": ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
+    },
+}

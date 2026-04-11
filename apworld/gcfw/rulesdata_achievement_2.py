@@ -499,7 +499,7 @@ achievement_requirements = {
     # ID 292: No Place to Hide
     "No Place to Hide": {
         "description": "Cast 25 strike spells.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -689,7 +689,7 @@ achievement_requirements = {
     # ID 435: Stormbringer
     "Stormbringer": {
         "description": "Reach 1.000 strike spells cast through all the battles.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -699,7 +699,7 @@ achievement_requirements = {
     # ID 439: Gemhancement
     "Gemhancement": {
         "description": "Reach 1.000 enhancement spells cast through all the battles.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -709,7 +709,7 @@ achievement_requirements = {
     # ID 443: Frozen Crowd
     "Frozen Crowd": {
         "description": "Reach 10.000 strike spell hits through all the battles.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,

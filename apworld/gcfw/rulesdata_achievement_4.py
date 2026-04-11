@@ -309,7 +309,7 @@ achievement_requirements = {
     # ID 286: Zap Away
     "Zap Away": {
         "description": "Cast 175 strike spells.",
-        "requirements": ["Ice Shards skill", "Whiteout skill", "Freeze skill"],
+        "requirements": ["Freeze skill|Whiteout skill|Ice Shards skill"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -599,7 +599,7 @@ achievement_requirements = {
     # ID 437: Frostborn
     "Frostborn": {
         "description": "Reach 5.000 strike spells cast through all the battles.",
-        "requirements": ["Whiteout skill", "Ice Shards skill", "Freeze skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -609,7 +609,7 @@ achievement_requirements = {
     # ID 441: Charge Fire Repeat
     "Charge Fire Repeat": {
         "description": "Reach 5.000 enhancement spells cast through all the battles.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -619,7 +619,7 @@ achievement_requirements = {
     # ID 445: Ice for Everyone
     "Ice for Everyone": {
         "description": "Reach 100.000 strike spell hits through all the battles.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,

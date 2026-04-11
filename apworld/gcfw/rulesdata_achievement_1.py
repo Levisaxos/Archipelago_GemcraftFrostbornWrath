@@ -59,7 +59,7 @@ achievement_requirements = {
     # ID 5: What Are You Waiting For?
     "What Are You Waiting For?": {
         "description": "Have all spells charged to 200%.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["spellSkills:3"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -1599,7 +1599,7 @@ achievement_requirements = {
     # ID 290: Strike Anywhere
     "Strike Anywhere": {
         "description": "Cast a strike spell.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells:1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -1609,7 +1609,7 @@ achievement_requirements = {
     # ID 291: Scare Tactics
     "Scare Tactics": {
         "description": "Cast 5 strike spells.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells:1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -1619,7 +1619,7 @@ achievement_requirements = {
     # ID 293: Fire Away
     "Fire Away": {
         "description": "Cast a gem enhancement spell.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 2"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2249,7 +2249,7 @@ achievement_requirements = {
     # ID 401: Second Thoughts
     "Second Thoughts": {
         "description": "Add a different enhancement on an enhanced gem.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 2"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2359,7 +2359,7 @@ achievement_requirements = {
     # ID 434: Icy Fingers
     "Icy Fingers": {
         "description": "Reach 500 strike spells cast through all the battles.",
-        "requirements": ["Whiteout skill", "Freeze skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells:1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2369,7 +2369,7 @@ achievement_requirements = {
     # ID 438: Adept Enhancer
     "Adept Enhancer": {
         "description": "Reach 500 enhancement spells cast through all the battles.",
-        "requirements": ["Beam skill", "Bolt skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 2"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2379,7 +2379,7 @@ achievement_requirements = {
     # ID 442: Multifreeze
     "Multifreeze": {
         "description": "Reach 5.000 strike spell hits through all the battles.",
-        "requirements": ["Ice Shards skill", "Whiteout skill", "Freeze skill"],
+        "requirements": ["strikeSpells:1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2469,7 +2469,7 @@ achievement_requirements = {
     # ID 463: Enhancement Storage
     "Enhancement Storage": {
         "description": "Enhance a gem in the inventory.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 3"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -2479,7 +2479,7 @@ achievement_requirements = {
     # ID 464: Why Not
     "Why Not": {
         "description": "Enhance a gem in the enraging socket.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 3"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -3469,7 +3469,8 @@ achievement_requirements = {
     # ID 618: Renzokuken
     "Renzokuken": {
         "description": "Break your frozen time gem bombing limits",
-        "requirements": ["Freeze skill"],
+        "notes":"Kill at least 99 monsters with gem bombs while the game is paused (in one pause)."
+        "requirements": [],
         "modes": {
             "journey": None,
             "endurance": None,

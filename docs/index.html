@@ -670,6 +670,26 @@
                 }
             }
 
+            // Skill group counters
+            if (req.includes('strikeSpells:')) {
+                const match = req.match(/strikeSpells:\s*(\d+)/);
+                if (match) {
+                    return `Unlock at least ${match[1]} strike spell${match[1] !== '1' ? 's' : ''} (Freeze, Whiteout, Ice Shards)`;
+                }
+            }
+            if (req.includes('enhancementSpells:')) {
+                const match = req.match(/enhancementSpells:\s*(\d+)/);
+                if (match) {
+                    return `Unlock at least ${match[1]} enhancement spell${match[1] !== '1' ? 's' : ''} (Bolt, Beam, Barrage)`;
+                }
+            }
+            if (req.includes('gemTypes:')) {
+                const match = req.match(/gemTypes:\s*(\d+)/);
+                if (match) {
+                    return `Unlock at least ${match[1]} gem skill type${match[1] !== '1' ? 's' : ''} (Critical Hit, Mana Leech, Bleeding, Armor Tearing, Poison, Slowing)`;
+                }
+            }
+
             // Skills
             if (req.includes('skill')) {
                 const skillName = req.replace(/\s*skill\s*/i, '');

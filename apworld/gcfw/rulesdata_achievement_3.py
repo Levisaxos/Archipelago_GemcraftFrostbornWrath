@@ -569,7 +569,7 @@ achievement_requirements = {
     # ID 410: At my Fingertips
     "At my Fingertips": {
         "description": "Cast 75 strike spells.",
-        "requirements": ["Ice Shards skill", "Whiteout skill", "Freeze skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -619,7 +619,7 @@ achievement_requirements = {
     # ID 436: Ice Mage
     "Ice Mage": {
         "description": "Reach 2.500 strike spells cast through all the battles.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -629,7 +629,7 @@ achievement_requirements = {
     # ID 440: Enhance Like No Tomorrow
     "Enhance Like No Tomorrow": {
         "description": "Reach 2.500 enhancement spells cast through all the battles.",
-        "requirements": ["Bolt skill", "Beam skill", "Barrage skill"],
+        "requirements": ["enhancementSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
@@ -639,7 +639,7 @@ achievement_requirements = {
     # ID 444: Drop the Ice
     "Drop the Ice": {
         "description": "Reach 50.000 strike spell hits through all the battles.",
-        "requirements": ["Freeze skill", "Whiteout skill", "Ice Shards skill"],
+        "requirements": ["strikeSpells: 1"],
         "modes": {
             "journey": None,
             "endurance": None,
