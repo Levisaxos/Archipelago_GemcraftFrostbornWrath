@@ -60,6 +60,7 @@ package {
     import patch.FirstPlayBypass;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
+    import patch.AchievementPanelPatcher;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -135,6 +136,7 @@ package {
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _achievementUnlocker:AchievementUnlocker;
         private var _achievementData:Object = {};         // achievement name -> apId, skillPoints, etc.
+        private var _elementStages:Object = {};           // element name -> Array of stage strIds
         private var _reportedAchievements:Object = {};    // achievement name -> true (already reported)
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
@@ -142,6 +144,8 @@ package {
         private var _collectedState:CollectedState;
         private var _logicEvaluator:LogicEvaluator;
         private var _stageTinter:StageTinter;
+        private var _achPanelPatcher:AchievementPanelPatcher;
+        private var _achPanelLogicDirty:Boolean = false; // set when logic changes, cleared after update
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -225,6 +229,8 @@ package {
 
                 // Load achievement map for achievement tracking
                 loadAchievementMap();
+
+                _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
 
@@ -629,6 +635,20 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
+
+                // Inject "In Logic" filter button and toggle button into the achievement panel.
+                // Refresh filter flags when logic changes and the panel is visible.
+                if (_achPanelPatcher != null && GV.selectorCore != null) {
+                    _achPanelPatcher.tryPatch();
+                    _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
+                    if (_achPanelLogicDirty) {
+                        var achStatus:int = int(GV.selectorCore.screenStatus);
+                        if (achStatus == 305 || achStatus == 306) {
+                            _achPanelPatcher.updateLogicFlags(_getInLogicAchApIds());
+                            _achPanelLogicDirty = false;
+                        }
+                    }
+                }
 
                 // In-logic button: update count label + drive hover panel.
                 if (_fieldsBtn != null) {
@@ -1035,27 +1055,16 @@ package {
         }
 
         /**
-         * Check if an achievement's requirements are met (battle traits, skills).
-         * Returns true if all requirements have been collected or no special requirements exist.
+         * Check if an achievement's requirements are met (skills, battle traits, stage elements).
+         * Returns true if all AP-gated requirements have been collected or no special requirements exist.
          */
         private function _checkAchievementAccessible(achName:String, achData:Object):Boolean {
-            // achData comes from achievement_map.json and includes requirements if present
             if (!achData || !achData.requirements) return true;
 
             var requirements:Array = achData.requirements as Array;
             if (!requirements || requirements.length == 0) return true;
 
-            // Skill names (must match SkillUnlocker.SKILL_NAMES order)
-            var SKILL_NAMES:Array = [
-                "Mana Stream", "True Colors", "Fusion", "Orb of Presence",
-                "Resonance", "Demolition", "Critical Hit", "Mana Leech",
-                "Bleeding", "Armor Tearing", "Poison", "Slowing",
-                "Freeze", "Whiteout", "Ice Shards", "Bolt",
-                "Beam", "Barrage", "Fury", "Amplifiers",
-                "Pylons", "Lanterns", "Traps", "Seeker Sense"
-            ];
-
-            // Battle trait names (must match TraitUnlocker.BATTLE_TRAIT_NAMES order)
+            // Battle trait names indexed by game_id (must match TraitUnlocker.BATTLE_TRAIT_NAMES order)
             var TRAIT_NAMES:Array = [
                 "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
                 "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
@@ -1063,48 +1072,99 @@ package {
                 "Giant Domination", "Strength in Numbers", "Ritual"
             ];
 
-            // Check each requirement
             for (var i:int = 0; i < requirements.length; i++) {
-                var req:String = String(requirements[i]);
+                // Trim whitespace and newlines from each requirement string
+                var req:String = _trimString(String(requirements[i]));
                 var reqLower:String = req.toLowerCase();
 
-                // Check for skill requirement: "Skill Name" format
-                if (reqLower.indexOf("skill") >= 0) {
-                    // Extract skill name (text before " skill")
+                // --- Skill requirement: "X skill" ---
+                if (reqLower.indexOf(" skill") >= 0) {
                     var skillEndIdx:int = reqLower.indexOf(" skill");
-                    var skillName:String = skillEndIdx > 0 ? _trimString(req.substring(0, skillEndIdx)) : req;
+                    var skillName:String = _trimString(req.substring(0, skillEndIdx));
+                    // Use _collectedState (always populated from AP items, not game save state)
+                    if (_collectedState && !_collectedState.skillsCollected[skillName]) {
+                        return false;
+                    }
+                }
 
-                    // Find skill ID by name
-                    var skillId:int = SKILL_NAMES.indexOf(skillName);
-                    if (skillId >= 0) {
-                        // Check if skill is unlocked in GV.ppd.gainedSkillTomes
-                        if (GV.ppd && GV.ppd.gainedSkillTomes && !GV.ppd.gainedSkillTomes[skillId]) {
-                            return false;  // Required skill not yet unlocked
+                // --- Element requirement: "X element" ---
+                // Check via _elementStages map: is any stage with this element currently in logic?
+                else if (reqLower.indexOf(" element") >= 0) {
+                    var elemEndIdx:int = reqLower.indexOf(" element");
+                    var elemName:String = _trimString(req.substring(0, elemEndIdx));
+                    if (_elementStages != null) {
+                        var stages:Array = _elementStages[elemName] as Array;
+                        if (stages != null && stages.length > 0) {
+                            var elemAccessible:Boolean = false;
+                            for (var s:int = 0; s < stages.length; s++) {
+                                if (_logicEvaluator != null && _logicEvaluator.isStageInLogic(stages[s])) {
+                                    elemAccessible = true;
+                                    break;
+                                }
+                            }
+                            if (!elemAccessible) return false;
+                        }
+                        // If no stage mapping for this element, assume accessible (don't block)
+                    }
+                }
+
+                // --- Trait requirement: "X trait" ---
+                // Format in logic_rules.json is "Ritual trait" (not "battle trait")
+                else if (reqLower.indexOf(" trait") >= 0) {
+                    var traitEndIdx:int = reqLower.indexOf(" trait");
+                    var traitName:String = _trimString(req.substring(0, traitEndIdx));
+
+                    if (traitName.toLowerCase() == "any battle") {
+                        // Special case: need at least one battle trait
+                        var hasTrait:Boolean = false;
+                        if (GV.ppd && GV.ppd.gainedBattleTraits) {
+                            for (var t:int = 0; t < 15; t++) {
+                                if (GV.ppd.gainedBattleTraits[t]) { hasTrait = true; break; }
+                            }
+                        }
+                        if (!hasTrait) return false;
+                    } else {
+                        var traitId:int = TRAIT_NAMES.indexOf(traitName);
+                        if (traitId >= 0) {
+                            if (GV.ppd && GV.ppd.gainedBattleTraits && !GV.ppd.gainedBattleTraits[traitId]) {
+                                return false;
+                            }
                         }
                     }
                 }
 
-                // Check for trait requirement: "[TRAIT NAME] Battle Trait element"
-                if (reqLower.indexOf("trait") >= 0) {
-                    // Extract trait name (text before " battle trait")
-                    var traitEndIdx:int = reqLower.indexOf(" battle trait");
-                    var traitName:String = traitEndIdx > 0 ? _trimString(req.substring(0, traitEndIdx)) : req;
-
-                    // Find trait ID by name
-                    var traitId:int = TRAIT_NAMES.indexOf(traitName);
-                    if (traitId >= 0) {
-                        // Check if trait is unlocked in GV.ppd.gainedBattleTraits
-                        if (GV.ppd && GV.ppd.gainedBattleTraits && !GV.ppd.gainedBattleTraits[traitId]) {
-                            return false;  // Required trait not yet unlocked
+                // --- Field requirement: "Field A4" or "Field N1, U1 or R5" (OR) ---
+                else if (reqLower.indexOf("field ") == 0) {
+                    var fieldPart:String = _trimString(req.substring(6));
+                    // Split on ", " or " or " to get individual stage strIds
+                    var stageTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
+                    var fieldAccessible:Boolean = false;
+                    for (var f:int = 0; f < stageTokens.length; f++) {
+                        var stageId:String = _trimString(String(stageTokens[f]));
+                        if (stageId.length > 0 && _logicEvaluator != null
+                                && _logicEvaluator.isStageInLogic(stageId)) {
+                            fieldAccessible = true;
+                            break;
                         }
                     }
+                    if (!fieldAccessible) return false;
                 }
 
-                // Element and stat requirements are game-level (not AP-locked), assume always available
-                // Achievement parent requirements are validated by Python, assume can be met
+                // --- Game mode requirements ---
+                else if (reqLower == "trial") {
+                    if (_connectionManager.disableTrial) return false;
+                }
+                else if (reqLower == "endurance") {
+                    if (_connectionManager.disableEndurance) return false;
+                }
+                else if (reqLower == "endurance and trial") {
+                    if (_connectionManager.disableEndurance || _connectionManager.disableTrial) return false;
+                }
+
+                // Stat, wave, and other in-game requirements are not AP-gated; skip them.
             }
 
-            return true;  // All requirements met
+            return true;
         }
 
         /** Trim whitespace from both ends of a string (ActionScript 3 doesn't have String.trim()). */
@@ -1402,6 +1462,14 @@ package {
                 if (_connectionPanel != null) _connectionPanel.dismiss();
                 hideDisconnectPanel();
                 _modeInterceptor.redispatchPendingClick();
+
+                // Seed the "In Logic" filter flags now that we have achievement data + logic.
+                _achPanelLogicDirty = true;
+                if (_achPanelPatcher != null) {
+                    _achPanelPatcher.updateLogicFlags(_getInLogicAchApIds());
+                    _achPanelLogicDirty = false;
+                    _achPanelPatcher.refreshIfActive();
+                }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "ERROR in onApConnected finish: " + err.message);
                 _logger.log(MOD_NAME, "  Stack: " + err.getStackTrace());
@@ -1464,6 +1532,7 @@ package {
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 if (_collectedState != null) _collectedState.onItem(apId);
                 if (_logicEvaluator != null) _logicEvaluator.markDirty();
+                _achPanelLogicDirty = true;
 
                 var strId:String = _connectionManager.tokenMap[String(apId)];
                 if (strId != null) {
@@ -1796,9 +1865,20 @@ package {
 
                 var jsonData:Object = JSON.parse(jsonString);
                 if (jsonData) {
-                    _achievementData = jsonData;
+                    // New format: { "achievements": {...}, "element_stages": {...} }
+                    // Old format (flat): { achievementName: {...}, ... }
+                    if (jsonData.achievements) {
+                        _achievementData = jsonData.achievements;
+                        _elementStages   = jsonData.element_stages || {};
+                        var elemCount:int = 0;
+                        for (var e:String in _elementStages) elemCount++;
+                        _logger.log(MOD_NAME, "Loaded element_stages: " + elemCount + " elements");
+                    } else {
+                        _achievementData = jsonData;
+                        _elementStages   = {};
+                    }
                     var count:int = 0;
-                    for (var k:String in jsonData) count++;
+                    for (var k:String in _achievementData) count++;
                     _logger.log(MOD_NAME, "Loaded achievement map: " + count + " achievements");
                 } else {
                     _logger.log(MOD_NAME, "Warning: JSON parsed but returned null/empty");
@@ -1811,6 +1891,22 @@ package {
 
         // -----------------------------------------------------------------------
         // Helpers
+
+        /**
+         * Build a set of AP location IDs for achievements that are currently in-logic.
+         * Delegates to _computeInLogicAchievements() and converts names -> AP IDs.
+         */
+        private function _getInLogicAchApIds():Object {
+            var result:Object = {};
+            var names:Array = _computeInLogicAchievements();
+            for (var i:int = 0; i < names.length; i++) {
+                var achData:Object = _achievementData[names[i]];
+                if (achData && achData.apId) {
+                    result[int(achData.apId)] = true;
+                }
+            }
+            return result;
+        }
 
         private function itemName(apId:int):String {
             var skillName:String = _skillUnlocker.getSkillName(apId);
