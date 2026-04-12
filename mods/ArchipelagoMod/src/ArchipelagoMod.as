@@ -20,46 +20,49 @@ package {
     
     import goals.GoalManager;
 
-    import ui.ArchipelagoButton
-    import ui.ScrChangelog
-    import ui.FieldsInLogicButton
-    import ui.ReportIssuesButton
-    import ui.SlotSettingsButton
-    import ui.ScrSlotSettings
-    import ui.ToastPanel
-    import ui.ItemToastPanel
-    import ui.MessageLog
-    import ui.MessageLogPanel
-    import ui.ScrDebugOptions
-    import ui.ConnectionPanel
-    import ui.DisconnectPanel
+    import ui.ArchipelagoButton;
+    import ui.ScrChangelog;
+    import ui.FieldsInLogicButton;
+    import ui.ReportIssuesButton;
+    import ui.SlotSettingsButton;
+    import ui.ScrSlotSettings;
+    import ui.ToastPanel;
+    import ui.ItemToastPanel;
+    import ui.MessageLog;
+    import ui.MessageLogPanel;
+    import ui.ScrDebugOptions;
+    import ui.ConnectionPanel;
+    import ui.DisconnectPanel;
 
-    import update.UpdateChecker
-    
-    import deathlink.DeathLinkHandler
-    import deathlink.EnragerOverride
+    import update.UpdateChecker;
 
-    import unlockers.NormalProgressionBlocker
-    import unlockers.SkillUnlocker
-    import unlockers.TraitUnlocker
-    import unlockers.LevelUnlocker
-    import unlockers.StageUnlocker
-    import unlockers.TalismanUnlocker
-    import unlockers.ShadowCoreUnlocker
+    import deathlink.DeathLinkHandler;
+    import deathlink.EnragerOverride;
 
-    import net.ConnectionManager
+    import unlockers.NormalProgressionBlocker;
+    import unlockers.SkillUnlocker;
+    import unlockers.TraitUnlocker;
+    import unlockers.LevelUnlocker;
+    import unlockers.StageUnlocker;
+    import unlockers.TalismanUnlocker;
+    import unlockers.ShadowCoreUnlocker;
+    import unlockers.AchievementUnlocker;
 
-    import tracker.CollectedState
-    import tracker.LogicEvaluator
-    import tracker.StageTinter
+    import net.ConnectionManager;
 
-    import patch.WizStashes
-    import patch.FirstPlayBypass
-    import patch.LogicEnforcer
-    import patch.WavePrePatcher
+    import AchievementMap;
 
-    import save.FileHandler
-    import save.SaveManager
+    import tracker.CollectedState;
+    import tracker.LogicEvaluator;
+    import tracker.StageTinter;
+
+    import patch.WizStashes;
+    import patch.FirstPlayBypass;
+    import patch.LogicEnforcer;
+    import patch.WavePrePatcher;
+
+    import save.FileHandler;
+    import save.SaveManager;
 
     
     
@@ -130,6 +133,9 @@ package {
         private var _levelUnlocker:LevelUnlocker;
         private var _talismanUnlocker:TalismanUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
+        private var _achievementUnlocker:AchievementUnlocker;
+        private var _achievementData:Object = {};         // achievement name -> apId, skillPoints, etc.
+        private var _reportedAchievements:Object = {};    // achievement name -> true (already reported)
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
@@ -186,9 +192,10 @@ package {
                 _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
                 _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
-                _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
+                // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
+                _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting)
                 _collectedState  = new CollectedState(_logger, MOD_NAME);
@@ -212,6 +219,12 @@ package {
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
+
+                // Initialize achievement unlocker
+                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _collectedState);
+
+                // Load achievement map for achievement tracking
+                loadAchievementMap();
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
 
@@ -360,6 +373,9 @@ package {
         // Frame loop
 
         private function onEnterFrame(e:Event):void {
+            // Early exit if game isn't initialized yet
+            if (GV.main == null) return;
+
             // Add toasts to stage once available.
             if (!_toastOnStage && _toast != null && this.stage != null) {
                 this.stage.addChild(_toast);
@@ -425,6 +441,11 @@ package {
             // on the next save event. No-ops once the goal has been sent.
             if (!_standalone && _goalManager != null) _goalManager.check();
 
+            // Detect and report achievements every 30 frames
+            if (!_standalone && _dbgFrameCounter % 30 == 0) {
+                detectAndReportAchievements();
+            }
+
             // Track screen transitions.
             var screen:int = int(GV.main.currentScreen);
             if (_lastScreen == -1) {
@@ -465,7 +486,7 @@ package {
 
                 if (_lastScreen == ScreenId.LOADGAME) {
                     _modeInterceptor.unhook();
-                    if (screen != ScreenId.MAINMENU) {
+                    if (screen != ScreenId.MAINMENU && GV.loaderSaver != null) {
                         _saveManager.currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
                         if (!_connectionManager.isConnected) {
                             _needsConnection = true;
@@ -494,6 +515,12 @@ package {
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
                     removeMainMenuElements();
                 }
+
+                // Reset FieldsInLogicButton state to fix hover panel persistence bug
+                if (_fieldsBtn != null) {
+                    _fieldsBtn.resetOnScreenChange();
+                }
+
                 _lastScreen = screen;
             }
 
@@ -566,6 +593,7 @@ package {
 
             // Gate: wait until the selector and its async tile generation are fully ready.
             if (GV.ppd == null
+                    || GV.selectorCore == null
                     || GV.selectorCore.renderer == null
                     || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
@@ -595,30 +623,37 @@ package {
                 _buttonAdded = true;
             }
 
-            _firstPlayBypass.onSelectorFrame(mc);
-            if (_logicEnforcer != null) _logicEnforcer.onSelectorFrame(mc);
+            try {
+                if (_firstPlayBypass != null) _firstPlayBypass.onSelectorFrame(mc);
+                if (_logicEnforcer != null) _logicEnforcer.onSelectorFrame(mc);
 
-            // In-game tracker: recolor stage lights based on logic state.
-            if (_stageTinter != null) _stageTinter.apply(mc);
+                // In-game tracker: recolor stage lights based on logic state.
+                if (_stageTinter != null) _stageTinter.apply(mc);
 
-            // Fields-in-logic button: update count label + drive hover panel.
-            if (_fieldsBtn != null) {
-                var inLogicList:Array = _computeInLogicStages();
-                _fieldsBtn.update(inLogicList.length, inLogicList);
-                _fieldsBtn.onFrame();
-            }
+                // In-logic button: update count label + drive hover panel.
+                if (_fieldsBtn != null) {
+                    var inLogicFields:Array = _computeInLogicStages();
+                    var inLogicAchs:Array = _computeInLogicAchievements();
+                    var totalCount:int = inLogicFields.length + inLogicAchs.length;
+                    _fieldsBtn.update(totalCount, inLogicFields, inLogicAchs);
+                    _fieldsBtn.onFrame();
+                }
 
-            if (_reportBtn != null) {
-                _reportBtn.x = mc.btnTutorial.x;
-            }
-            if (_settingsBtn != null) {
-                _settingsBtn.x = mc.btnTutorial.x;
-            }
-            if (_fieldsBtn != null) {
-                _fieldsBtn.x = mc.btnTutorial.x;
-            }
-            if (_btn != null) {
-                _btn.x = mc.btnTutorial.x;
+                if (_reportBtn != null && mc.btnTutorial != null) {
+                    _reportBtn.x = mc.btnTutorial.x;
+                }
+                if (_settingsBtn != null && mc.btnTutorial != null) {
+                    _settingsBtn.x = mc.btnTutorial.x;
+                }
+                if (_fieldsBtn != null && mc.btnTutorial != null) {
+                    _fieldsBtn.x = mc.btnTutorial.x;
+                }
+                if (_btn != null && mc.btnTutorial != null) {
+                    _btn.x = mc.btnTutorial.x;
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "ERROR in selector frame: " + err.message);
+                return;
             }
 
             if (_debugOptions != null && _debugOptions.isOpen) {
@@ -926,7 +961,7 @@ package {
          */
         private function _computeInLogicStages():Array {
             var result:Array = [];
-            if (!_connectionManager.isConnected || _logicEvaluator == null) return result;
+            if (!_connectionManager.isConnected || _logicEvaluator == null || GV.ppd == null) return result;
             var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
             if (metas == null) return result;
             var missing:Object = _connectionManager.missingLocations;
@@ -947,6 +982,134 @@ package {
             }
             result.sort(Array.CASEINSENSITIVE);
             return result;
+        }
+
+        /**
+         * Returns a sorted array of achievement names that haven't been collected yet
+         * (i.e., location checks still missing from AP server).
+         * Only shows achievements that are actually in the AP world (based on YAML config).
+         */
+        private function _computeInLogicAchievements():Array {
+            var result:Array = [];
+            if (!_connectionManager.isConnected || !_collectedState || !_achievementData) return result;
+            var missing:Object = _connectionManager.missingLocations;
+            var grindiness:int = _connectionManager.achievementGrindiness;
+
+            // Grindiness hierarchy for filtering
+            var grindinessHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
+            var maxGrindinessStr:String = grindiness > 0 && grindiness <= 4
+                ? grindinessHierarchy[grindiness - 1]
+                : "Trivial";
+
+            // Check each achievement in alphabetical order
+            var achNames:Array = [];
+            for (var name:String in _achievementData) {
+                achNames.push(name);
+            }
+            achNames.sort(Array.CASEINSENSITIVE);
+
+            for (var i:int = 0; i < achNames.length; i++) {
+                var achName:String = achNames[i];
+                var achData:Object = _achievementData[achName];
+                if (!achData || !achData.apId) continue;
+
+                var apId:int = int(achData.apId);
+
+                // Filter by grindiness level
+                var achGrindiness:String = achData.grindiness || "Trivial";
+                if (grindinessHierarchy.indexOf(achGrindiness) > grindinessHierarchy.indexOf(maxGrindinessStr)) {
+                    continue;
+                }
+
+                // Include if location check is still missing (AP server included it in world but not yet collected)
+                if (missing[apId] == true) {
+                    // Validate access requirements
+                    var achHasRequirements:Boolean = _checkAchievementAccessible(achName, achData);
+                    if (achHasRequirements) {
+                        result.push(achName);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        /**
+         * Check if an achievement's requirements are met (battle traits, skills).
+         * Returns true if all requirements have been collected or no special requirements exist.
+         */
+        private function _checkAchievementAccessible(achName:String, achData:Object):Boolean {
+            // achData comes from achievement_map.json and includes requirements if present
+            if (!achData || !achData.requirements) return true;
+
+            var requirements:Array = achData.requirements as Array;
+            if (!requirements || requirements.length == 0) return true;
+
+            // Skill names (must match SkillUnlocker.SKILL_NAMES order)
+            var SKILL_NAMES:Array = [
+                "Mana Stream", "True Colors", "Fusion", "Orb of Presence",
+                "Resonance", "Demolition", "Critical Hit", "Mana Leech",
+                "Bleeding", "Armor Tearing", "Poison", "Slowing",
+                "Freeze", "Whiteout", "Ice Shards", "Bolt",
+                "Beam", "Barrage", "Fury", "Amplifiers",
+                "Pylons", "Lanterns", "Traps", "Seeker Sense"
+            ];
+
+            // Battle trait names (must match TraitUnlocker.BATTLE_TRAIT_NAMES order)
+            var TRAIT_NAMES:Array = [
+                "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
+                "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
+                "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",
+                "Giant Domination", "Strength in Numbers", "Ritual"
+            ];
+
+            // Check each requirement
+            for (var i:int = 0; i < requirements.length; i++) {
+                var req:String = String(requirements[i]);
+                var reqLower:String = req.toLowerCase();
+
+                // Check for skill requirement: "Skill Name" format
+                if (reqLower.indexOf("skill") >= 0) {
+                    // Extract skill name (text before " skill")
+                    var skillEndIdx:int = reqLower.indexOf(" skill");
+                    var skillName:String = skillEndIdx > 0 ? _trimString(req.substring(0, skillEndIdx)) : req;
+
+                    // Find skill ID by name
+                    var skillId:int = SKILL_NAMES.indexOf(skillName);
+                    if (skillId >= 0) {
+                        // Check if skill is unlocked in GV.ppd.gainedSkillTomes
+                        if (GV.ppd && GV.ppd.gainedSkillTomes && !GV.ppd.gainedSkillTomes[skillId]) {
+                            return false;  // Required skill not yet unlocked
+                        }
+                    }
+                }
+
+                // Check for trait requirement: "[TRAIT NAME] Battle Trait element"
+                if (reqLower.indexOf("trait") >= 0) {
+                    // Extract trait name (text before " battle trait")
+                    var traitEndIdx:int = reqLower.indexOf(" battle trait");
+                    var traitName:String = traitEndIdx > 0 ? _trimString(req.substring(0, traitEndIdx)) : req;
+
+                    // Find trait ID by name
+                    var traitId:int = TRAIT_NAMES.indexOf(traitName);
+                    if (traitId >= 0) {
+                        // Check if trait is unlocked in GV.ppd.gainedBattleTraits
+                        if (GV.ppd && GV.ppd.gainedBattleTraits && !GV.ppd.gainedBattleTraits[traitId]) {
+                            return false;  // Required trait not yet unlocked
+                        }
+                    }
+                }
+
+                // Element and stat requirements are game-level (not AP-locked), assume always available
+                // Achievement parent requirements are validated by Python, assume can be met
+            }
+
+            return true;  // All requirements met
+        }
+
+        /** Trim whitespace from both ends of a string (ActionScript 3 doesn't have String.trim()). */
+        private function _trimString(str:String):String {
+            return str.replace(/^\s+|\s+$/g, "");
         }
 
         private function onKeyDown(e:KeyboardEvent):void {
@@ -991,6 +1154,7 @@ package {
 
         private function skipAllTutorials():void {
             try {
+                if (GV.ppd == null || GV.main == null) return;
                 var pages:Array = GV.ppd.gainedTutorialPages;
                 for (var i:int = 0; i < pages.length; i++) {
                     pages[i] = true;
@@ -1120,86 +1284,128 @@ package {
         // ConnectionManager callbacks
 
         private function onApConnected(p:Object):void {
-            _needsConnection = false;
+            try {
+                _needsConnection = false;
 
-            // Reset + configure the in-game tracker from slot_data.  Must happen
-            // BEFORE syncWithAP (which will populate collected state via onItem).
-            if (_collectedState != null) _collectedState.reset();
-            if (p.slot_data != null) {
-                _collectedState.configure(
-                    _connectionManager.tokenMap,
-                    p.slot_data.skill_categories
-                );
-                _logicEvaluator.configure(
-                    p.slot_data.stage_tier,
-                    p.slot_data.stage_skills,
-                    p.slot_data.cumulative_skill_reqs,
-                    p.slot_data.tier_stage_counts,
-                    int(p.slot_data.token_requirement_percent),
-                    p.slot_data.free_stages as Array
-                );
-                _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
-                    + p.slot_data.logic_rules_version);
-                _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
-            _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
-            _wavePrePatcher.configure(
-                _connectionManager.enemyHpMultiplier,
-                _connectionManager.enemyArmorMultiplier,
-                _connectionManager.enemyShieldMultiplier,
-                _connectionManager.enemiesPerWaveMultiplier,
-                _connectionManager.extraWaveCount
-            );
+                // Reset + configure the in-game tracker from slot_data.  Must happen
+                // BEFORE syncWithAP (which will populate collected state via onItem).
+                if (_collectedState != null) _collectedState.reset();
+
+                if (p.slot_data != null) {
+                    try {
+                        _collectedState.configure(
+                            _connectionManager.tokenMap,
+                            p.slot_data.skill_categories
+                        );
+                    } catch (e:Error) {
+                        _logger.log(MOD_NAME, "ERROR in collectedState.configure: " + e.message);
+                    }
+
+                    try {
+                        _logicEvaluator.configure(
+                            p.slot_data.stage_tier,
+                            p.slot_data.stage_skills,
+                            p.slot_data.cumulative_skill_reqs,
+                            p.slot_data.tier_stage_counts,
+                            int(p.slot_data.token_requirement_percent),
+                            p.slot_data.free_stages as Array
+                        );
+                        _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
+                            + p.slot_data.logic_rules_version);
+                    } catch (e:Error) {
+                        _logger.log(MOD_NAME, "ERROR in logicEvaluator.configure: " + e.message);
+                    }
+
+                    try {
+                        _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
+                    } catch (e:Error) {
+                        _logger.log(MOD_NAME, "ERROR in logicEnforcer.configure: " + e.message);
+                    }
+
+                    try {
+                        _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
+                    } catch (e:Error) {
+                        _logger.log(MOD_NAME, "ERROR in firstPlayBypass.configure: " + e.message);
+                    }
+
+                    try {
+                        _wavePrePatcher.configure(
+                            _connectionManager.enemyHpMultiplier,
+                            _connectionManager.enemyArmorMultiplier,
+                            _connectionManager.enemyShieldMultiplier,
+                            _connectionManager.enemiesPerWaveMultiplier,
+                            _connectionManager.extraWaveCount
+                        );
+                    } catch (e:Error) {
+                        _logger.log(MOD_NAME, "ERROR in wavePrePatcher.configure: " + e.message);
+                    }
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "ERROR in onApConnected early setup: " + err.message);
+                return;
             }
 
-            // Persist credentials before loadSlotData resets them via resetSettings().
-            // Without this, first-time connection data is never written to the slot file.
-            _saveManager.saveSlotData();
-            _saveManager.loadSlotData(_saveManager.currentSlot);
-            _levelUnlocker.applyBonusLevels();
+            try {
 
-            // DeathLink: for new slots use the YAML setting; existing slots keep the local override.
-            if (!_saveManager.deathLinkEnabledSet && p.slot_data) {
-                _saveManager.deathLinkEnabled = p.slot_data.death_link === true;
+                _logger.log(MOD_NAME, "onApConnected: saving and loading slot data");
+                // Persist credentials before loadSlotData resets them via resetSettings().
+                // Without this, first-time connection data is never written to the slot file.
                 _saveManager.saveSlotData();
-            }
-            _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
-            if (p.slot_data) _deathLinkHandler.configure(p.slot_data);
-            if (_saveManager.deathLinkEnabled) {
-                _connectionManager.sendConnectUpdate(["DeathLink"]);
-            }
+                _saveManager.loadSlotData(_saveManager.currentSlot);
+                _levelUnlocker.applyBonusLevels();
 
-            _levelUnlocker.configure(
-                _connectionManager.tatteredScrollLevels,
-                _connectionManager.wornTomeLevels,
-                _connectionManager.ancientGrimoireLevels,
-                _connectionManager.startingWizardLevel
-            );
-            _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
-            _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
-            _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
-            _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
-            if (_normalProgressionBlocker != null) {
-                _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
+                _logger.log(MOD_NAME, "onApConnected: configuring deathlink");
+                // DeathLink: for new slots use the YAML setting; existing slots keep the local override.
+                if (!_saveManager.deathLinkEnabledSet && p.slot_data) {
+                    _saveManager.deathLinkEnabled = p.slot_data.death_link === true;
+                    _saveManager.saveSlotData();
+                }
+                _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+                if (p.slot_data) _deathLinkHandler.configure(p.slot_data);
+                if (_saveManager.deathLinkEnabled) {
+                    _connectionManager.sendConnectUpdate(["DeathLink"]);
+                }
+
+                _logger.log(MOD_NAME, "onApConnected: configuring levelUnlocker and unlockers");
+                _levelUnlocker.configure(
+                    _connectionManager.tatteredScrollLevels,
+                    _connectionManager.wornTomeLevels,
+                    _connectionManager.ancientGrimoireLevels,
+                    _connectionManager.startingWizardLevel
+                );
+                _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
+                _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
+                _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
+                _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
+                if (_normalProgressionBlocker != null) {
+                    _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
+                }
+
+                _logger.log(MOD_NAME, "onApConnected: configuring goalManager");
+                _goalManager.configure(
+                    _connectionManager.goal,
+                    _connectionManager.talismanMinRarity,
+                    _connectionManager.fieldsRequired,
+                    _connectionManager.fieldsRequiredPercentage);
+
+                if (_saveManager.slotCompleted) {
+                    _goalManager.markAlreadyCompleted();
+                }
+                // Note: we do NOT call _goalManager.check() here because GV.ppd
+                // may still hold data from a previously loaded save slot.
+                // The onSaveSave hook will catch a legitimate victory.
+                _logger.log(MOD_NAME, "onApConnected: configuring UI");
+                if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
+                if (_settingsBtn != null) _settingsBtn.visible = true;
+
+                _logger.log(MOD_NAME, "onApConnected: finishing up");
+                if (_connectionPanel != null) _connectionPanel.dismiss();
+                hideDisconnectPanel();
+                _modeInterceptor.redispatchPendingClick();
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "ERROR in onApConnected finish: " + err.message);
+                _logger.log(MOD_NAME, "  Stack: " + err.getStackTrace());
             }
-
-            _goalManager.configure(
-                _connectionManager.goal,
-                _connectionManager.talismanMinRarity,
-                _connectionManager.fieldsRequired,
-                _connectionManager.fieldsRequiredPercentage);
-
-            if (_saveManager.slotCompleted) {
-                _goalManager.markAlreadyCompleted();
-            }
-            // Note: we do NOT call _goalManager.check() here because GV.ppd
-            // may still hold data from a previously loaded save slot.
-            // The onSaveSave hook will catch a legitimate victory.
-            if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
-            if (_settingsBtn != null) _settingsBtn.visible = true;
-
-            if (_connectionPanel != null) _connectionPanel.dismiss();
-            hideDisconnectPanel();
-            _modeInterceptor.redispatchPendingClick();
         }
 
         private function onSettingsClicked():void {
@@ -1252,34 +1458,65 @@ package {
         // Item handling
 
         private function grantItem(apId:int):void {
-            // Feed the in-game tracker (idempotent — safe to call before dispatch).
-            if (_collectedState != null) _collectedState.onItem(apId);
-            if (_logicEvaluator != null) _logicEvaluator.markDirty();
+            try {
+                _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
-            var strId:String = _connectionManager.tokenMap[String(apId)];
-            if (strId != null) {
-                _stageUnlocker.unlockStage(strId);
-                _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
-                return;
+                // Feed the in-game tracker (idempotent — safe to call before dispatch).
+                if (_collectedState != null) _collectedState.onItem(apId);
+                if (_logicEvaluator != null) _logicEvaluator.markDirty();
+
+                var strId:String = _connectionManager.tokenMap[String(apId)];
+                if (strId != null) {
+                    _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
+                    _stageUnlocker.unlockStage(strId);
+                    _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
+                    return;
+                }
+                if (apId >= 300 && apId <= 323) {
+                    _logger.log(MOD_NAME, "  → Skill apId: " + apId);
+                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 300);
+                    _skillUnlocker.unlockSkill(apId);
+                    return;
+                }
+                if (apId >= 400 && apId <= 414) {
+                    _logger.log(MOD_NAME, "  → Battle trait apId: " + apId);
+                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 400);
+                    _traitUnlocker.unlockBattleTrait(apId);
+                    return;
+                }
+                if (apId >= 500 && apId <= 502) {
+                    _logger.log(MOD_NAME, "  → XP bonus apId: " + apId);
+                    _levelUnlocker.grantXpBonus(apId);
+                    return;
+                }
+                if (apId >= 700 && apId <= 799) {
+                    _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
+                    _talismanUnlocker.grantFragment(apId);
+                    _saveManager.saveSlotData();
+                    return;
+                }
+                if (apId >= 800 && apId <= 868) {
+                    _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
+                    _shadowCoreUnlocker.grantShadowCores(apId);
+                    _saveManager.saveSlotData();
+                    return;
+                }
+                if (apId >= 1000 && apId <= 1635) {
+                    _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
+                    // Achievement reward from another player (only award skill points, don't mark as collected)
+                    var achName:String = _findAchievementNameByApId(apId);
+                    _logger.log(MOD_NAME, "     Found achievement name: " + achName);
+                    if (achName != null && _achievementUnlocker != null) {
+                        _achievementUnlocker.receiveAchievementReward(achName, apId, _achievementData);
+                        _itemToast.addItem("Achievement Reward: " + achName, 0xAA55FF);
+                    }
+                    return;
+                }
+                _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "ERROR in grantItem(" + apId + "): " + err.message);
+                _logger.log(MOD_NAME, "  Stack: " + err.getStackTrace());
             }
-            if (apId >= 300 && apId <= 323) {
-                if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 300);
-                _skillUnlocker.unlockSkill(apId);
-                return;
-            }
-            if (apId >= 400 && apId <= 414) {
-                if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 400);
-                _traitUnlocker.unlockBattleTrait(apId);
-                return;
-            }
-            if (apId >= 500 && apId <= 502) { _levelUnlocker.grantXpBonus(apId); return; }
-            if (apId >= 700 && apId <= 799) {
-                _talismanUnlocker.grantFragment(apId);
-                _saveManager.saveSlotData();
-                return;
-            }
-            if (apId >= 800 && apId <= 868) { _shadowCoreUnlocker.grantShadowCores(apId); _saveManager.saveSlotData(); return; }
-            _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
         }
 
         private function syncWithAP(items:Array):void {
@@ -1458,6 +1695,119 @@ package {
         }
 
         public function get deathLinkEnabled():Boolean { return _saveManager.deathLinkEnabled; }
+
+        // -----------------------------------------------------------------------
+        // Achievement Helpers
+
+        /**
+         * Reverse-lookup: find achievement name by AP ID.
+         * Returns null if not found.
+         */
+        private function _findAchievementNameByApId(apId:int):String {
+            for (var name:String in _achievementData) {
+                var data:Object = _achievementData[name];
+                if (data && data.apId == apId) {
+                    return name;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * Detect achievements collected in-game and submit them to AP.
+         * Called periodically from onEnterFrame.
+         */
+        private function detectAndReportAchievements():void {
+            if (!GV.achiCollection || !_connectionManager.isConnected || !_achievementUnlocker || !_achievementData) {
+                return;
+            }
+
+            try {
+                // Access achievements from the game's AchiCollection
+                var achisByOrder:Array = GV.achiCollection.achisByOrder;
+                if (!achisByOrder) {
+                    _logger.log(MOD_NAME, "detectAndReportAchievements: GV.achiCollection.achisByOrder not found");
+                    return;
+                }
+
+                // Iterate through all achievements
+                for (var i:int = 0; i < achisByOrder.length; i++) {
+                    var ach:* = achisByOrder[i];
+                    if (!ach) continue;
+
+                    // Check if achievement is collected (status 2 or 3)
+                    // 2 = UNLOCKED_BUT_HAVE_TO_WIN, 3 = WAS_ALREADY_UNLOCKED
+                    var status:int = int(ach.status);
+                    var isCollected:Boolean = (status == 2 || status == 3);
+                    if (!isCollected) {
+                        continue;
+                    }
+
+                    // Get the achievement's title to match against our JSON keys
+                    var achTitle:String = String(ach.title);
+                    if (!achTitle) {
+                        continue;
+                    }
+
+                    // Check if we've already reported this one
+                    if (_reportedAchievements[achTitle]) {
+                        continue; // Already reported
+                    }
+
+                    // Look up AP ID for this achievement by title
+                    var achData:Object = _achievementData[achTitle];
+                    if (!achData) {
+                        _logger.log(MOD_NAME, "  Achievement '" + achTitle + "' not found in achievement map");
+                        continue; // Not in our map
+                    }
+
+                    var apId:int = int(achData.apId);
+                    if (apId < 1000 || apId > 1635) {
+                        continue; // Invalid AP ID range
+                    }
+
+                    // Mark as reported and submit
+                    _reportedAchievements[achTitle] = true;
+                    _logger.log(MOD_NAME, "  Reporting achievement: " + achTitle + " (apId=" + apId + ")");
+                    _achievementUnlocker.unlockAchievement(achTitle, apId, _achievementData);
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "detectAndReportAchievements error: " + err.message);
+                return;
+            }
+        }
+
+        /**
+         * Load achievement map from embedded AchievementMap class.
+         * This contains achievement name → AP ID, skill points, grindiness, modes mapping.
+         */
+        private function loadAchievementMap():void {
+            try {
+                // Ensure _achievementData is initialized
+                if (!_achievementData) {
+                    _achievementData = {};
+                }
+
+                var jsonString:String = AchievementMap.getData();
+                if (!jsonString || jsonString.length == 0) {
+                    _logger.log(MOD_NAME, "Warning: achievement_map data is empty");
+                    return;
+                }
+
+                var jsonData:Object = JSON.parse(jsonString);
+                if (jsonData) {
+                    _achievementData = jsonData;
+                    var count:int = 0;
+                    for (var k:String in jsonData) count++;
+                    _logger.log(MOD_NAME, "Loaded achievement map: " + count + " achievements");
+                } else {
+                    _logger.log(MOD_NAME, "Warning: JSON parsed but returned null/empty");
+                }
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "Error loading achievement_map: " + e.message + " (will continue with empty map)");
+                _achievementData = {};
+            }
+        }
 
         // -----------------------------------------------------------------------
         // Helpers

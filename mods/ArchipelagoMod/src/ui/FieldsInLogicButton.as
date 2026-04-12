@@ -35,6 +35,7 @@ package ui {
         private var _template:*;
         private var _currentCount:int = -1;
         private var _inLogicStrIds:Array = [];
+        private var _inLogicAchievements:Array = [];
         private var _panelShown:Boolean = false;
 
         private var _cycleIndex:int = 0;
@@ -55,16 +56,21 @@ package ui {
 
         /**
          * Called every selector frame by ArchipelagoMod.
-         * Rebuilds the bitmap label only when count changes.
+         * Rebuilds the bitmap label only when total count changes.
          * Clamps the cycle index if the list shrank.
+         *
+         * @param totalCount Total checks in logic (fields + achievements)
+         * @param strIds Array of field string IDs that are in logic
+         * @param achievements Array of achievement names that are in logic
          */
-        public function update(count:int, strIds:Array):void {
+        public function update(totalCount:int, strIds:Array, achievements:Array = null):void {
             _inLogicStrIds = strIds;
+            _inLogicAchievements = achievements || [];
             if (_cycleIndex >= _inLogicStrIds.length) _cycleIndex = 0;
-            if (count == _currentCount) return;
-            _currentCount = count;
+            if (totalCount == _currentCount) return;
+            _currentCount = totalCount;
             while (numChildren > 0) removeChildAt(0);
-            _build(count);
+            _build(totalCount);
         }
 
         /**
@@ -140,7 +146,7 @@ package ui {
             var originalText:String   = null;
             if (nativeLabel != null) {
                 originalText     = nativeLabel.text;
-                nativeLabel.text = "Fields in logic: " + count;
+                nativeLabel.text = "in logic: " + count;
             }
 
             var bd:BitmapData = new BitmapData(bw, bh, true, 0x00000000);
@@ -155,11 +161,13 @@ package ui {
 
         private function _showPanel():void {
             _panelShown = true;
-            GV.mcInfoPanel.reset(300);
+            GV.mcInfoPanel.reset(400);
             GV.mcInfoPanel.addTextfield(COLOR_TITLE,
-                "Fields in logic (" + _currentCount + ")", false, 13);
+                "In Logic (" + _currentCount + " total)", false, 13);
             GV.mcInfoPanel.addExtraHeight(5);
             GV.mcInfoPanel.addSeparator(-2);
+
+            // Fields in logic
             if (_inLogicStrIds == null || _inLogicStrIds.length == 0) {
                 GV.mcInfoPanel.addTextfield(COLOR_NONE,
                     "No fields currently in logic", false, 11);
@@ -169,6 +177,32 @@ package ui {
                         String(_inLogicStrIds[i]), true, 11);
                 }
             }
+
+            // Achievements in logic section
+            if (_inLogicAchievements != null && _inLogicAchievements.length > 0) {
+                GV.mcInfoPanel.addExtraHeight(8);
+                GV.mcInfoPanel.addTextfield(COLOR_TITLE,
+                    "Achievements in logic", false, 13);
+                GV.mcInfoPanel.addExtraHeight(3);
+
+                var maxShow:int = 5;
+                var shown:int = Math.min(_inLogicAchievements.length, maxShow);
+                for (var j:int = 0; j < shown; j++) {
+                    GV.mcInfoPanel.addTextfield(COLOR_ITEM,
+                        String(_inLogicAchievements[j]), true, 11);
+                }
+
+                if (_inLogicAchievements.length > maxShow) {
+                    var moreCount:int = _inLogicAchievements.length - maxShow;
+                    GV.mcInfoPanel.addTextfield(COLOR_ITEM,
+                        "... and " + moreCount + " more", true, 11);
+                }
+
+                GV.mcInfoPanel.addExtraHeight(3);
+                GV.mcInfoPanel.addTextfield(COLOR_NONE,
+                    "See achievements for full info", false, 10);
+            }
+
             GV.main.cntInfoPanel.addChild(GV.mcInfoPanel);
             GV.mcInfoPanel.doEnterFrame();
         }
@@ -183,6 +217,17 @@ package ui {
                     GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel);
                 }
             } catch (err:Error) {}
+        }
+
+        /**
+         * Reset button state when transitioning screens.
+         * Fixes bug where hover panel persists across screen changes.
+         * Called by ArchipelagoMod when screen transitions.
+         */
+        public function resetOnScreenChange():void {
+            _panelShown = false;
+            _hidePanel();
+            _cycleIndex = 0;
         }
 
         private function onOver(e:MouseEvent):void {

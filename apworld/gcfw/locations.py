@@ -35,7 +35,7 @@ def _load_location_table() -> Dict[str, LocationData]:
 
 
 def _generate_achievement_locations() -> Dict[str, LocationData]:
-    """Generate achievement locations (IDs 2000-2635) from rulesdata packs."""
+    """Load achievement locations (IDs 1000-1635) from rulesdata packs with hardcoded ap_ids."""
     from .rulesdata_achievements_1 import achievement_requirements as pack1
     from .rulesdata_achievements_2 import achievement_requirements as pack2
     from .rulesdata_achievements_3 import achievement_requirements as pack3
@@ -46,17 +46,19 @@ def _generate_achievement_locations() -> Dict[str, LocationData]:
     achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
 
     table: Dict[str, LocationData] = {}
-    loc_id = 2000
 
-    # Merge all packs and sort by achievement name
+    # Merge all packs
     all_achievements = {}
     for pack in achievement_packs:
         all_achievements.update(pack)
 
+    # Use hardcoded ap_id from each achievement, sorted by name for consistency
     for ach_name in sorted(all_achievements.keys()):
-        # Achievements are not tied to a specific stage, use empty string
-        table[f"Achievement: {ach_name}"] = LocationData(loc_id, "")
-        loc_id += 1
+        ach_data = all_achievements[ach_name]
+        if "ap_id" in ach_data:
+            loc_id = ach_data["ap_id"]
+            # Achievements are not tied to a specific stage, use empty string
+            table[f"Achievement: {ach_name}"] = LocationData(loc_id, "")
 
     return table
 

@@ -69,6 +69,8 @@ package ui {
                 var count:int = int(Math.ceil(pct * 122.0 / 100.0));
                 addRow("Fields Required", count + " (" + pct + "%)", vY);                          vY += ROW_HEIGHT;
             }
+            addRow("Achievement Grindiness",  grindinessName(cm.achievementGrindiness), vY);       vY += ROW_HEIGHT;
+            addRow("Talisman Min Rarity",     cm.talismanMinRarity.toString(), vY);                vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
             addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
             addRow("Enforce Logic",           cm.enforceLogic ? "Yes" : "No", vY);                  vY += ROW_HEIGHT;
@@ -135,6 +137,17 @@ package ui {
                 case 3:  return "Fields Cleared (Count)";
                 case 4:  return "Fields Cleared (Percentage)";
                 default: return "Unknown (" + goal + ")";
+            }
+        }
+
+        private function grindinessName(grindiness:int):String {
+            switch (grindiness) {
+                case 0:  return "Off";
+                case 1:  return "Trivial";
+                case 2:  return "Minor";
+                case 3:  return "Major";
+                case 4:  return "Extreme";
+                default: return "Unknown (" + grindiness + ")";
             }
         }
 

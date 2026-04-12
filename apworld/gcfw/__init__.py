@@ -720,6 +720,28 @@ class GemcraftFrostbornWrathWorld(World):
             str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
         }
 
+        # Build achievement requirements map: achievement name → [requirements]
+        achievement_requirements_map: Dict[str, list] = {}
+        grindiness = self.options.achievement_grindiness.value
+        if grindiness > 0:
+            from .rulesdata_achievements_1 import achievement_requirements as pack1
+            from .rulesdata_achievements_2 import achievement_requirements as pack2
+            from .rulesdata_achievements_3 import achievement_requirements as pack3
+            from .rulesdata_achievements_4 import achievement_requirements as pack4
+            from .rulesdata_achievements_5 import achievement_requirements as pack5
+            from .rulesdata_achievements_6 import achievement_requirements as pack6
+
+            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
+            all_achievements = {}
+            for pack in achievement_packs:
+                all_achievements.update(pack)
+
+            # Extract requirements for each achievement
+            for ach_name, ach_data in all_achievements.items():
+                requirements = ach_data.get("requirements", [])
+                if requirements:
+                    achievement_requirements_map[ach_name] = requirements
+
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,
@@ -740,6 +762,7 @@ class GemcraftFrostbornWrathWorld(World):
             "wiz_stash_tal_data":    wiz_stash_tal_data,
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
+            "achievement_grindiness":  self.options.achievement_grindiness.value,
             "enforce_logic":           bool(self.options.enforce_logic.value),
             "disable_endurance":       bool(self.options.disable_endurance.value),
             "disable_trial":           bool(self.options.disable_trial.value),

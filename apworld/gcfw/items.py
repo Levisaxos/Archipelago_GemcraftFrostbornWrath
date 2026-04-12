@@ -69,7 +69,7 @@ def _load_item_table() -> Dict[str, ItemData]:
 
 
 def _generate_achievement_items() -> Dict[str, ItemData]:
-    """Generate achievement items (IDs 1000-1635) from rulesdata packs."""
+    """Load achievement items (IDs 1000-1635) from rulesdata packs with hardcoded ap_ids."""
     from .rulesdata_achievements_1 import achievement_requirements as pack1
     from .rulesdata_achievements_2 import achievement_requirements as pack2
     from .rulesdata_achievements_3 import achievement_requirements as pack3
@@ -80,16 +80,18 @@ def _generate_achievement_items() -> Dict[str, ItemData]:
     achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
 
     table: Dict[str, ItemData] = {}
-    item_id = 1000
 
-    # Merge all packs and sort by achievement name
+    # Merge all packs
     all_achievements = {}
     for pack in achievement_packs:
         all_achievements.update(pack)
 
+    # Use hardcoded ap_id from each achievement, sorted by name for consistency
     for ach_name in sorted(all_achievements.keys()):
-        table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
-        item_id += 1
+        ach_data = all_achievements[ach_name]
+        if "ap_id" in ach_data:
+            item_id = ach_data["ap_id"]
+            table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
 
     return table
 

@@ -30,6 +30,7 @@ package tracker {
         private var _tokensByStrId:Object = {};      // strId -> true
         private var _skillsCollected:Object = {};    // skill name -> true
         private var _skillCountByCategory:Object = {}; // category -> int
+        private var _achievementsCollected:Object = {}; // apId (int) -> true
 
         public function CollectedState(logger:Logger, modName:String) {
             _logger  = logger;
@@ -39,6 +40,7 @@ package tracker {
         public function get tokensByStrId():Object { return _tokensByStrId; }
         public function get skillsCollected():Object { return _skillsCollected; }
         public function get skillCountByCategory():Object { return _skillCountByCategory; }
+        public function get achievementsCollected():Object { return _achievementsCollected; }
 
         /**
          * Configure with slot_data.  Must be called before onItem().
@@ -65,6 +67,7 @@ package tracker {
             _tokensByStrId = {};
             _skillsCollected = {};
             _skillCountByCategory = {};
+            _achievementsCollected = {};
         }
 
         /** Classify an incoming AP item id and update counters.  Idempotent. */
@@ -94,7 +97,32 @@ package tracker {
                 }
                 return;
             }
+            // Achievement (AP ids 1000-1635)
+            if (apId >= 1000 && apId <= 1635) {
+                if (_achievementsCollected[apId] != true) {
+                    _achievementsCollected[apId] = true;
+                }
+                return;
+            }
             // Other item kinds are not tracker-relevant.
+        }
+
+        /**
+         * Mark an achievement as collected (called when receiving achievement from another player).
+         */
+        public function onAchievementCollected(apId:int):void {
+            if (apId >= 1000 && apId <= 1635) {
+                _achievementsCollected[apId] = true;
+            }
+        }
+
+        /**
+         * Check if an achievement has been collected.
+         * @param apId The Archipelago item ID (1000-1635)
+         * @return true if collected, false otherwise
+         */
+        public function isAchievementCollected(apId:int):Boolean {
+            return _achievementsCollected[apId] == true;
         }
 
         /** Number of distinct skill names collected (0..24). */
