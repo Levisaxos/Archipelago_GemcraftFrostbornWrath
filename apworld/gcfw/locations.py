@@ -35,29 +35,28 @@ def _load_location_table() -> Dict[str, LocationData]:
 
 
 def _generate_achievement_locations() -> Dict[str, LocationData]:
-    """Generate achievement locations (IDs 2000-2635) from rulesdata."""
-    from .rulesdata_achievement_1 import achievement_requirements as ach1
-    from .rulesdata_achievement_2 import achievement_requirements as ach2
-    from .rulesdata_achievement_3 import achievement_requirements as ach3
-    from .rulesdata_achievement_4 import achievement_requirements as ach4
-    from .rulesdata_achievement_5 import achievement_requirements as ach5
+    """Generate achievement locations (IDs 2000-2635) from rulesdata packs."""
+    from .rulesdata_achievements_1 import achievement_requirements as pack1
+    from .rulesdata_achievements_2 import achievement_requirements as pack2
+    from .rulesdata_achievements_3 import achievement_requirements as pack3
+    from .rulesdata_achievements_4 import achievement_requirements as pack4
+    from .rulesdata_achievements_5 import achievement_requirements as pack5
+    from .rulesdata_achievements_6 import achievement_requirements as pack6
 
-    achievements_by_tier = {
-        1: ach1,
-        2: ach2,
-        3: ach3,
-        4: ach4,
-        5: ach5,
-    }
+    achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
 
     table: Dict[str, LocationData] = {}
     loc_id = 2000
 
-    for tier in range(1, 6):
-        for ach_name in sorted(achievements_by_tier[tier].keys()):
-            # Achievements are not tied to a specific stage, use empty string
-            table[f"Achievement: {ach_name}"] = LocationData(loc_id, "")
-            loc_id += 1
+    # Merge all packs and sort by achievement name
+    all_achievements = {}
+    for pack in achievement_packs:
+        all_achievements.update(pack)
+
+    for ach_name in sorted(all_achievements.keys()):
+        # Achievements are not tied to a specific stage, use empty string
+        table[f"Achievement: {ach_name}"] = LocationData(loc_id, "")
+        loc_id += 1
 
     return table
 

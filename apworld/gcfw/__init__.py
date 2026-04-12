@@ -94,7 +94,7 @@ def _can_achievement_be_met(requirements: list) -> bool:
     return True
 
 
-def _detect_achievement_chains(achievement_tiers) -> dict:
+def _detect_achievement_chains(all_achievements) -> dict:
     """
     Auto-detect progressive achievement chains by analyzing achievement names.
 
@@ -109,13 +109,6 @@ def _detect_achievement_chains(achievement_tiers) -> dict:
     import re
 
     chains = {}
-    all_achievements = {}
-
-    # Collect all achievements with their names
-    for tier in range(1, 6):
-        if tier < len(achievement_tiers) and achievement_tiers[tier]:
-            for ach_name in achievement_tiers[tier].keys():
-                all_achievements[ach_name] = tier
 
     # Detect chains by looking for numerical patterns
     for ach_name in all_achievements.keys():
@@ -336,38 +329,42 @@ class GemcraftFrostbornWrathWorld(World):
         # Achievements — based on grindiness option
         grindiness = self.options.achievement_grindiness.value
         if grindiness > 0:
-            # Import achievement tiers
-            from .rulesdata_achievement_1 import achievement_requirements as ach1
-            from .rulesdata_achievement_2 import achievement_requirements as ach2
-            from .rulesdata_achievement_3 import achievement_requirements as ach3
-            from .rulesdata_achievement_4 import achievement_requirements as ach4
-            from .rulesdata_achievement_5 import achievement_requirements as ach5
+            # Import achievement packs
+            from .rulesdata_achievements_1 import achievement_requirements as pack1
+            from .rulesdata_achievements_2 import achievement_requirements as pack2
+            from .rulesdata_achievements_3 import achievement_requirements as pack3
+            from .rulesdata_achievements_4 import achievement_requirements as pack4
+            from .rulesdata_achievements_5 import achievement_requirements as pack5
+            from .rulesdata_achievements_6 import achievement_requirements as pack6
 
-            achievement_tiers = [None, ach1, ach2, ach3, ach4, ach5]
+            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
+
+            # Merge all packs into single dict
+            all_achievements = {}
+            for pack in achievement_packs:
+                all_achievements.update(pack)
 
             # Simplify achievements: if they have trait requirements, remove element requirements
             # This avoids circular dependencies where trait items might be in trait-locked locations
-            for tier in range(1, len(achievement_tiers)):
-                if achievement_tiers[tier]:
-                    for ach_name, ach_data in achievement_tiers[tier].items():
-                        requirements = ach_data.get("requirements", [])
-                        if requirements:
-                            # Check if this achievement has a trait requirement
-                            has_trait = any("trait" in req.lower() for req in requirements)
+            for ach_name, ach_data in all_achievements.items():
+                requirements = ach_data.get("requirements", [])
+                if requirements:
+                    # Check if this achievement has a trait requirement
+                    has_trait = any("trait" in req.lower() for req in requirements)
 
-                            if has_trait:
-                                # Keep only trait and skill requirements, remove element and stat requirements
-                                simplified = []
-                                for req in requirements:
-                                    req_lower = req.lower()
-                                    # Keep traits and skills
-                                    if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
-                                        simplified.append(req)
-                                    # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
+                    if has_trait:
+                        # Keep only trait and skill requirements, remove element and stat requirements
+                        simplified = []
+                        for req in requirements:
+                            req_lower = req.lower()
+                            # Keep traits and skills
+                            if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
+                                simplified.append(req)
+                            # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
 
-                                ach_data["requirements"] = simplified
+                        ach_data["requirements"] = simplified
 
-            # Add achievements from tier 1 through selected grindiness
+            # Add achievements filtered by grindiness level
             total_achievements = 0
             filtered_achievements = {}
             added_achievements = 0
@@ -376,28 +373,36 @@ class GemcraftFrostbornWrathWorld(World):
             # Detect achievement chains if progressive mode is enabled
             achievement_chains = {}
             if self.options.achievement_progression.value == 0:  # 0 = progressive
-                achievement_chains = _detect_achievement_chains(achievement_tiers)
+                achievement_chains = _detect_achievement_chains(all_achievements)
+
+            # Grindiness hierarchy for filtering
+            grindiness_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_grindiness_str = grindiness_hierarchy[min(grindiness - 1, len(grindiness_hierarchy) - 1)] if grindiness > 0 else "Trivial"
 
             # First pass: validate and add achievements
-            for tier in range(1, grindiness + 1):
-                if tier < len(achievement_tiers):
-                    for ach_name, ach_data in achievement_tiers[tier].items():
-                        total_achievements += 1
-                        # Validate that achievement requirements can be met
-                        requirements = ach_data.get("requirements", [])
-                        if not _can_achievement_be_met(requirements):
-                            # Log why achievement was filtered
-                            filter_reason = _get_filter_reason(requirements)
-                            if filter_reason not in filtered_achievements:
-                                filtered_achievements[filter_reason] = []
-                            filtered_achievements[filter_reason].append(ach_name)
-                            continue  # Skip achievements with unavailable requirements
+            for ach_name, ach_data in all_achievements.items():
+                # Filter by grindiness level
+                ach_grindiness = ach_data.get("grindiness", "Trivial")
+                if ach_grindiness in grindiness_hierarchy:
+                    if grindiness_hierarchy.index(ach_grindiness) > grindiness_hierarchy.index(max_grindiness_str):
+                        continue  # Skip achievements above selected grindiness
 
-                        item_name = f"Achievement: {ach_name}"
-                        if item_name in item_table:
-                            pool.append(self.create_item(item_name))
-                            added_achievements += 1
-                            added_achievement_names.add(ach_name)
+                total_achievements += 1
+                # Validate that achievement requirements can be met
+                requirements = ach_data.get("requirements", [])
+                if not _can_achievement_be_met(requirements):
+                    # Log why achievement was filtered
+                    filter_reason = _get_filter_reason(requirements)
+                    if filter_reason not in filtered_achievements:
+                        filtered_achievements[filter_reason] = []
+                    filtered_achievements[filter_reason].append(ach_name)
+                    continue  # Skip achievements with unavailable requirements
+
+                item_name = f"Achievement: {ach_name}"
+                if item_name in item_table:
+                    pool.append(self.create_item(item_name))
+                    added_achievements += 1
+                    added_achievement_names.add(ach_name)
 
             # Second pass: add parent achievement requirements (only for achievements that were added)
             if achievement_chains:
@@ -406,12 +411,10 @@ class GemcraftFrostbornWrathWorld(World):
                         parent_ach = achievement_chains[ach_name]
                         # Only add parent requirement if parent was also added
                         if parent_ach in added_achievement_names:
-                            # Find the achievement data and add the requirement
-                            for tier in range(1, grindiness + 1):
-                                if tier < len(achievement_tiers) and ach_name in achievement_tiers[tier]:
-                                    ach_data = achievement_tiers[tier][ach_name]
-                                    ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
-                                    break
+                            # Add parent requirement to the achievement
+                            if ach_name in all_achievements:
+                                ach_data = all_achievements[ach_name]
+                                ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
 
         self.multiworld.itempool += pool
@@ -444,29 +447,44 @@ class GemcraftFrostbornWrathWorld(World):
         # Create achievements region with locations based on grindiness
         grindiness = self.options.achievement_grindiness.value
         if grindiness > 0:
-            from .rulesdata_achievement_1 import achievement_requirements as ach1
-            from .rulesdata_achievement_2 import achievement_requirements as ach2
-            from .rulesdata_achievement_3 import achievement_requirements as ach3
-            from .rulesdata_achievement_4 import achievement_requirements as ach4
-            from .rulesdata_achievement_5 import achievement_requirements as ach5
+            from .rulesdata_achievements_1 import achievement_requirements as pack1
+            from .rulesdata_achievements_2 import achievement_requirements as pack2
+            from .rulesdata_achievements_3 import achievement_requirements as pack3
+            from .rulesdata_achievements_4 import achievement_requirements as pack4
+            from .rulesdata_achievements_5 import achievement_requirements as pack5
+            from .rulesdata_achievements_6 import achievement_requirements as pack6
 
-            achievement_tiers = [None, ach1, ach2, ach3, ach4, ach5]
+            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
+
+            # Merge all packs into single dict
+            all_achievements = {}
+            for pack in achievement_packs:
+                all_achievements.update(pack)
+
             achievements_region = Region("Achievements", self.player, self.multiworld)
 
-            # Add achievement locations from tier 1 through selected grindiness
-            for tier in range(1, grindiness + 1):
-                if tier < len(achievement_tiers):
-                    for ach_name, ach_data in achievement_tiers[tier].items():
-                        # Validate that achievement requirements can be met
-                        requirements = ach_data.get("requirements", [])
-                        if not _can_achievement_be_met(requirements):
-                            continue  # Skip achievements with unavailable requirements
+            # Grindiness hierarchy for filtering
+            grindiness_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_grindiness_str = grindiness_hierarchy[min(grindiness - 1, len(grindiness_hierarchy) - 1)] if grindiness > 0 else "Trivial"
 
-                        loc_name = f"Achievement: {ach_name}"
-                        if loc_name in location_table:
-                            loc_data = location_table[loc_name]
-                            loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
-                            achievements_region.locations.append(loc)
+            # Add achievement locations filtered by grindiness level
+            for ach_name, ach_data in all_achievements.items():
+                # Filter by grindiness level
+                ach_grindiness = ach_data.get("grindiness", "Trivial")
+                if ach_grindiness in grindiness_hierarchy:
+                    if grindiness_hierarchy.index(ach_grindiness) > grindiness_hierarchy.index(max_grindiness_str):
+                        continue  # Skip achievements above selected grindiness
+
+                # Validate that achievement requirements can be met
+                requirements = ach_data.get("requirements", [])
+                if not _can_achievement_be_met(requirements):
+                    continue  # Skip achievements with unavailable requirements
+
+                loc_name = f"Achievement: {ach_name}"
+                if loc_name in location_table:
+                    loc_data = location_table[loc_name]
+                    loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
+                    achievements_region.locations.append(loc)
 
             self.multiworld.regions.append(achievements_region)
             menu_region.connect(achievements_region, "Achievements")

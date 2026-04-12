@@ -69,28 +69,27 @@ def _load_item_table() -> Dict[str, ItemData]:
 
 
 def _generate_achievement_items() -> Dict[str, ItemData]:
-    """Generate achievement items (IDs 1000-1635) from rulesdata."""
-    from .rulesdata_achievement_1 import achievement_requirements as ach1
-    from .rulesdata_achievement_2 import achievement_requirements as ach2
-    from .rulesdata_achievement_3 import achievement_requirements as ach3
-    from .rulesdata_achievement_4 import achievement_requirements as ach4
-    from .rulesdata_achievement_5 import achievement_requirements as ach5
+    """Generate achievement items (IDs 1000-1635) from rulesdata packs."""
+    from .rulesdata_achievements_1 import achievement_requirements as pack1
+    from .rulesdata_achievements_2 import achievement_requirements as pack2
+    from .rulesdata_achievements_3 import achievement_requirements as pack3
+    from .rulesdata_achievements_4 import achievement_requirements as pack4
+    from .rulesdata_achievements_5 import achievement_requirements as pack5
+    from .rulesdata_achievements_6 import achievement_requirements as pack6
 
-    achievements_by_tier = {
-        1: ach1,
-        2: ach2,
-        3: ach3,
-        4: ach4,
-        5: ach5,
-    }
+    achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
 
     table: Dict[str, ItemData] = {}
     item_id = 1000
 
-    for tier in range(1, 6):
-        for ach_name in sorted(achievements_by_tier[tier].keys()):
-            table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
-            item_id += 1
+    # Merge all packs and sort by achievement name
+    all_achievements = {}
+    for pack in achievement_packs:
+        all_achievements.update(pack)
+
+    for ach_name in sorted(all_achievements.keys()):
+        table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
+        item_id += 1
 
     return table
 

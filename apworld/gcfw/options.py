@@ -265,11 +265,11 @@ class AchievementGrindiness(Choice):
     """Grindiness level of achievements to include in the randomizer.
 
     off:  No achievements included.
-    1:    Basic achievements only (362 achievements).
-    2:    Basic + Light (453 achievements).
-    3:    Basic + Light + Moderate (537 achievements).
-    4:    Basic + Light + Moderate + Heavy (620 achievements).
-    5:    All achievements (636 achievements).
+    1:    Trivial achievements only (~362 achievements).
+    2:    Trivial + Minor (~453 achievements).
+    3:    Trivial + Minor + Major (~537 achievements).
+    4:    Trivial + Minor + Major + Extreme (~620 achievements).
+    5:    All achievements (~636 achievements).
 
     Selecting level N includes all achievements from levels 1 through N.
     More achievements = more items to find, longer seed.
