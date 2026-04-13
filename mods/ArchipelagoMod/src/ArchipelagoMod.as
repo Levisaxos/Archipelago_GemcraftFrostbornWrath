@@ -339,20 +339,8 @@ package {
             }
             _disconnectPanel = null;
             _disconnectPanelOnStage = false;
-            if (_reportBtn != null && _reportBtn.parent != null) {
-                _reportBtn.parent.removeChild(_reportBtn);
-                _reportBtn = null;
-            }
-            if (_settingsBtn != null && _settingsBtn.parent != null) {
-                _settingsBtn.parent.removeChild(_settingsBtn);
-                _settingsBtn = null;
-            }
             if (_slotSettings != null) _slotSettings.close();
-            if (_btn != null && _btn.parent != null) {
-                _btn.parent.removeChild(_btn);
-                _btn = null;
-            }
-            _buttonAdded = false;
+            _destroyButtons();
             removeMainMenuElements();
             if (_updateChecker != null) { _updateChecker.dispose(); _updateChecker = null; }
             if (_scrChangelog != null) { _scrChangelog.dismiss(); _scrChangelog = null; }
@@ -479,9 +467,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
-                    if (_reportBtn != null) _reportBtn.visible = false;
-                    if (_settingsBtn != null) _settingsBtn.visible = false;
-                    if (_fieldsBtn != null) _fieldsBtn.visible = false;
+                    _destroyButtons();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
                     _goalManager.reset();
@@ -497,9 +483,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
-                    if (_reportBtn != null) _reportBtn.visible = false;
-                    if (_settingsBtn != null) _settingsBtn.visible = false;
-                    if (_fieldsBtn != null) _fieldsBtn.visible = false;
+                    _destroyButtons();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
                     _goalManager.reset();
@@ -973,6 +957,31 @@ package {
 
         // -----------------------------------------------------------------------
         // Archipelago button + debug hotkey
+
+        /**
+         * Removes all AP selector buttons from their parents, nulls the references,
+         * and resets _buttonAdded so they can be re-created on the next session.
+         * Called on MAINMENU/LOADGAME transitions and in unload().
+         */
+        private function _destroyButtons():void {
+            if (_reportBtn != null && _reportBtn.parent != null)
+                _reportBtn.parent.removeChild(_reportBtn);
+            _reportBtn = null;
+
+            if (_settingsBtn != null && _settingsBtn.parent != null)
+                _settingsBtn.parent.removeChild(_settingsBtn);
+            _settingsBtn = null;
+
+            if (_fieldsBtn != null && _fieldsBtn.parent != null)
+                _fieldsBtn.parent.removeChild(_fieldsBtn);
+            _fieldsBtn = null;
+
+            if (_btn != null && _btn.parent != null)
+                _btn.parent.removeChild(_btn);
+            _btn = null;
+
+            _buttonAdded = false;
+        }
 
         private function addArchipelagoButton(mc:*):void {
             var stepY:Number = mc.btnTalisman.y - mc.btnSkills.y;

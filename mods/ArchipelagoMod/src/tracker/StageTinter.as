@@ -61,9 +61,19 @@ package tracker {
         /** Called every selector frame with GV.selectorCore.mc. */
         public function apply(mc:*):void {
             if (!_enabled || mc == null || _cm == null || _evaluator == null) return;
-            if (!_cm.isConnected) return;
 
             var cnt:* = mc.cntFieldTokens;
+
+            if (!_cm.isConnected) {
+                // Reset any tints left from a previous AP session.
+                if (cnt != null) {
+                    for (var j:int = 0; j < cnt.numChildren; j++) {
+                        var tok2:* = cnt.getChildAt(j);
+                        if (tok2 != null) paint(tok2, STATE_NONE);
+                    }
+                }
+                return;
+            }
             if (cnt == null) return;
 
             try {
