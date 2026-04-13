@@ -37,6 +37,7 @@ package patch {
         private var _resetButtonPatched:Boolean = false;
         private var _ourFilterIndex:int = -1;
         private var _ourFilterButton:BtnAchiFilter;
+        private var _resetButtonHandler:Function;
 
         // achievement title (String) -> AP location ID (int), built from logic_rules.json
         private var _titleToApId:Object = {};
@@ -125,13 +126,16 @@ package patch {
             // Update text to show current state
             _updateResetButtonText(resetBtn);
 
-            // Add a capture-phase click handler that toggles our filter
-            resetBtn.addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent):void {
+            // Add a capture-phase click handler that toggles our filter.
+            // Stored in _resetButtonHandler to prevent the closure from being
+            // garbage collected (useWeakReference=true only holds a weak ref).
+            _resetButtonHandler = function(e:MouseEvent):void {
                 if (e.target.parent == resetBtn) {
                     _toggleInLogicFilter(panel);
                     e.stopImmediatePropagation();
                 }
-            }, true, 101, true);
+            };
+            resetBtn.addEventListener(MouseEvent.MOUSE_UP, _resetButtonHandler, true, 101, true);
 
             _resetButtonPatched = true;
             _logger.log(_modName, "AchievementPanelPatcher: reset button patched");
