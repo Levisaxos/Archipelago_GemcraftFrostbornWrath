@@ -246,7 +246,7 @@ class ExtraWaveCount(Range):
     """
     display_name = "Extra Wave Count"
     range_start = 0
-    range_end   = 20
+    range_end   = 24
     default     = 0
 
 
@@ -257,12 +257,12 @@ class StartingOvercrowd(Toggle):
     of every stage from the very start of the run.  The trait is removed from the
     randomised item pool — it will not appear as a collectable item for anyone.
     """
-    display_name = "Starting Overcrowd"
+    display_name = "Start with Overcrowd"
     default = 0
 
 
-class AchievementGrindiness(Choice):
-    """Grindiness level of achievements to include in the randomizer.
+class AchievementRequiredEffort(Choice):
+    """Required effort level of achievements to include in the randomizer.
 
     off:  No achievements included.
     1:    Trivial achievements only (~362 achievements).
@@ -274,7 +274,7 @@ class AchievementGrindiness(Choice):
     Selecting level N includes all achievements from levels 1 through N.
     More achievements = more items to find, longer seed.
     """
-    display_name = "Achievement Grindiness"
+    display_name = "Achievement Required Effort"
     option_off = 0
     option_1   = 1
     option_2   = 2
@@ -313,7 +313,7 @@ class GCFWOptions(PerGameCommonOptions):
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
-    achievement_grindiness:    AchievementGrindiness
+    achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier

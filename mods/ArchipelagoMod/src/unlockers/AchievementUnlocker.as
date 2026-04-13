@@ -111,10 +111,14 @@ package unlockers
 			}
 
 			var achInfo: Object = achievementData[achievementName];
-			if (achInfo && achInfo.skillPoints)
+			if (achInfo && achInfo.reward)
 			{
-				var skillPoints: int = int(achInfo.skillPoints);
-				awardSkillPoints(skillPoints);
+				var reward:String = String(achInfo.reward);
+				if (reward.indexOf("skillPoints:") == 0)
+				{
+					var skillPoints:int = int(reward.substring(12));
+					awardSkillPoints(skillPoints);
+				}
 			}
 		}
 

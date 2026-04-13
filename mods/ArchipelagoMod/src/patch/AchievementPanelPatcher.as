@@ -4,7 +4,7 @@ package patch {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.BtnAchiFilter;
     import com.giab.games.gcfw.selector.PnlAchievements;
-    import AchievementIdMap;
+    import AchievementMap;
 
     /**
      * Injects an "In Logic" filter button into the achievement panel so players
@@ -38,29 +38,40 @@ package patch {
         private var _ourFilterIndex:int = -1;
         private var _ourFilterButton:BtnAchiFilter;
 
-        // base-game achievement ID (String key) -> AP location ID (int)
-        private var _baseGameIdToApId:Object = {};
+        // achievement title (String) -> AP location ID (int), built from logic_rules.json
+        private var _titleToApId:Object = {};
 
         // -----------------------------------------------------------------------
 
         public function AchievementPanelPatcher(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
-            _loadIdMapping();
+            _loadTitleMapping();
         }
 
         // -----------------------------------------------------------------------
 
-        private function _loadIdMapping():void {
+        /** Build title -> apId map from logic_rules.json (via AchievementMap embed). */
+        private function _loadTitleMapping():void {
             try {
-                var json:String = AchievementIdMap.getData();
+                var json:String = AchievementMap.getData();
                 if (!json || json.length <= 2) return;
-                _baseGameIdToApId = JSON.parse(json);
+                var parsed:Object = JSON.parse(json);
+                var achs:Object = parsed.achievements;
+                if (achs == null) {
+                    _logger.log(_modName, "AchievementPanelPatcher: JSON missing 'achievements' key");
+                    return;
+                }
                 var count:int = 0;
-                for (var k:String in _baseGameIdToApId) count++;
-                _logger.log(_modName, "AchievementPanelPatcher: loaded " + count + " ID mappings");
+                for (var name:String in achs) {
+                    if (achs[name].apId != null) {
+                        _titleToApId[name] = int(achs[name].apId);
+                        count++;
+                    }
+                }
+                _logger.log(_modName, "AchievementPanelPatcher: loaded " + count + " title->apId mappings");
             } catch (e:Error) {
-                _logger.log(_modName, "AchievementPanelPatcher: error loading ID map: " + e.message);
+                _logger.log(_modName, "AchievementPanelPatcher: error loading title map: " + e.message);
             }
         }
 
@@ -150,34 +161,54 @@ package patch {
 
             if (_ourFilterButton.isSelected) {
                 // ON state: show all achievements (click to unfilter)
-                resetBtn.tf.text = "Show all\nachievements";
+                resetBtn.tf.text = "Show all achievements";
             } else {
                 // OFF state: show in logic only (click to filter)
-                resetBtn.tf.text = "Show in logic\nonly";
+                resetBtn.tf.text = "Show in logic only";
             }
         }
 
         /**
          * Update filterFlags on every achievement to reflect the current logic state.
-         * @param inLogicApIds  Object mapping AP location ID (int) -> true
-         *                      for every achievement that is currently in-logic.
          *
-         * filterFlags[index] = true means HIDE, false means SHOW.
-         * When the "In Logic" button is ON, we want to hide out-of-logic achievements.
+         * Looks up each achievement by ach.title in _titleToApId (from logic_rules.json),
+         * then checks if that AP ID is in the provided inLogicApIds set.
+         *
+         * IMPORTANT: The game's showAchiList() iterates filterFlags by index and
+         * looks up filterBtns[j] with that same index.  Every achievement must
+         * have filterFlags[_ourFilterIndex] set, otherwise the array is too short
+         * and showAchiList() crashes with #1010 when shownAchis becomes empty.
+         *
+         * @param inLogicApIds  Object mapping AP location ID (int) -> true
          */
         public function updateLogicFlags(inLogicApIds:Object):void {
             if (!_patched || _ourFilterIndex < 0) return;
             if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
+            if (inLogicApIds == null) return;
 
-            var achis:Array = GV.achiCollection.achisByOrder;
-            for (var i:int = 0; i < achis.length; i++) {
-                var ach:* = achis[i];
-                var apIdRaw:* = _baseGameIdToApId[String(ach.id)];
-                var isInLogic:Boolean = (apIdRaw !== undefined && apIdRaw !== null)
-                    && inLogicApIds[int(apIdRaw)] === true;
-                // filterFlags[index] = true hides; false shows.
-                // When button is ON, hide out-of-logic achievements (isInLogic = false → hide it).
-                ach.filterFlags[_ourFilterIndex] = !isInLogic;
+            try {
+                var achis:Array = GV.achiCollection.achisByOrder;
+                for (var i:int = 0; i < achis.length; i++) {
+                    var ach:* = achis[i];
+                    if (ach == null) continue;
+
+                    // Look up by title — the only reliable key between game and our data
+                    var apId:* = _titleToApId[ach.title];
+
+                    var isInLogic:Boolean = false;
+                    if (apId != null && apId !== undefined) {
+                        isInLogic = (inLogicApIds[int(apId)] === true);
+                    }
+
+                    // Ensure filterFlags is long enough for our index
+                    // (game starts it as [] and only populates built-in indices)
+                    while (ach.filterFlags.length <= _ourFilterIndex) {
+                        ach.filterFlags.push(false);
+                    }
+                    ach.filterFlags[_ourFilterIndex] = isInLogic;
+                }
+            } catch (e:Error) {
+                _logger.log(_modName, "ERROR in updateLogicFlags: " + e.message);
             }
         }
 

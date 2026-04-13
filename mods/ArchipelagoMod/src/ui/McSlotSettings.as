@@ -69,7 +69,7 @@ package ui {
                 var count:int = int(Math.ceil(pct * 122.0 / 100.0));
                 addRow("Fields Required", count + " (" + pct + "%)", vY);                          vY += ROW_HEIGHT;
             }
-            addRow("Achievement Grindiness",  grindinessName(cm.achievementGrindiness), vY);       vY += ROW_HEIGHT;
+            addRow("Achievement Required Effort", effortName(cm.achievementRequiredEffort), vY);     vY += ROW_HEIGHT;
             addRow("Talisman Min Rarity",     cm.talismanMinRarity.toString(), vY);                vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
             addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
@@ -140,14 +140,14 @@ package ui {
             }
         }
 
-        private function grindinessName(grindiness:int):String {
-            switch (grindiness) {
+        private function effortName(effort:int):String {
+            switch (effort) {
                 case 0:  return "Off";
                 case 1:  return "Trivial";
                 case 2:  return "Minor";
                 case 3:  return "Major";
                 case 4:  return "Extreme";
-                default: return "Unknown (" + grindiness + ")";
+                default: return "Unknown (" + effort + ")";
             }
         }
 

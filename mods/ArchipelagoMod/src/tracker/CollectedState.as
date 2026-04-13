@@ -27,10 +27,11 @@ package tracker {
         private var _tokenMap:Object;            // apId (string) -> stage strId
         private var _skillNameToCategory:Object; // skill name -> category (populated from slot_data)
 
-        private var _tokensByStrId:Object = {};      // strId -> true
-        private var _skillsCollected:Object = {};    // skill name -> true
-        private var _skillCountByCategory:Object = {}; // category -> int
-        private var _achievementsCollected:Object = {}; // apId (int) -> true
+        private var _receivedApIds:Object = {};          // apId (string) -> true — ALL received items
+        private var _tokensByStrId:Object = {};          // strId -> true
+        private var _skillsCollected:Object = {};        // skill name -> true
+        private var _skillCountByCategory:Object = {};   // category -> int
+        private var _achievementsCollected:Object = {};  // apId (int) -> true
 
         public function CollectedState(logger:Logger, modName:String) {
             _logger  = logger;
@@ -64,14 +65,26 @@ package tracker {
 
         /** Clear all tracked collection state.  Call on reconnect. */
         public function reset():void {
+            _receivedApIds = {};
             _tokensByStrId = {};
             _skillsCollected = {};
             _skillCountByCategory = {};
             _achievementsCollected = {};
         }
 
+        /**
+         * Returns true if the given AP item ID has been received from the server.
+         * Works for all item types: tokens, skills, traits, XP, talismans, shadow cores, achievements.
+         */
+        public function hasItem(apId:int):Boolean {
+            return _receivedApIds[String(apId)] == true;
+        }
+
         /** Classify an incoming AP item id and update counters.  Idempotent. */
         public function onItem(apId:int):void {
+            // Master registry — capture every received AP item regardless of type.
+            _receivedApIds[String(apId)] = true;
+
             // Field token -> stage
             if (_tokenMap != null) {
                 var strId:String = _tokenMap[String(apId)];
@@ -125,10 +138,12 @@ package tracker {
             return _achievementsCollected[apId] == true;
         }
 
-        /** Number of distinct skill names collected (0..24). */
+        /** Number of distinct skills collected (0..24), based on AP items received. */
         public function get totalSkillsCollected():int {
             var n:int = 0;
-            for (var k:String in _skillsCollected) n++;
+            for (var i:int = 0; i < 24; i++) {
+                if (hasItem(300 + i)) n++;
+            }
             return n;
         }
     }

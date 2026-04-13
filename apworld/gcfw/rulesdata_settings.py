@@ -142,23 +142,21 @@ tier_progression_requirements = {
 # Format: "ElementName": {"levels": ["stage1", "stage2", ...]}
 #
 game_level_elements = {
-    "Abandoned Dwelling": {"levels": ["J1", "G1", "V2", "J2", "S1", "X3"]},
-    "Barricade": {"levels": ["D2", "V2", "E3", "H1", "H2", "T1", "W3", "X2", "Z1"]},
-    "Beacon": {"levels": ["G1", "B4", "C2", "F1", "K2", "O1", "Q3", "U4", "Y2"]},
-    "Corrupted Mana Shard": {"levels": ["E4", "C2", "X3", "Z5"]},
-    "Drop Holder": {"levels": ["L5", "Q4", "B3", "F4", "M2", "P1", "U3"]},
-    "Gatekeeper": {"levels": ["D4", "G4", "J4", "M4", "P6", "S4", "V4", "Y4"]},
-    "Mana Shard": {"levels": ["C1", "A1", "D1", "F2", "H3", "K4", "R2", "W1"]},
-    "Marked Monster": {"levels": ["E4", "C4", "N4", "X3"]},
-    "Monster Nest": {"levels": ["S1", "G1", "G2", "P4", "B1", "F3", "L3", "U2", "Z4"]},
-    "Obelisk": {"levels": ["A4", "C4", "G3", "M1", "Y3"]},
-    "Possessed Monster": {"levels": ["A4", "C4", "G3", "M1", "Y3"]},
-    "Shrine": {"levels": ["C3", "F1", "J3", "N2", "R4", "W2", "Y1"]},
-    "Sleeping Hive": {"levels": ["E2", "S2", "W4", "O3"]},
-    "Swarm Queen": {"levels": ["E2", "S2", "W4"]},
-    "Tomb": {"levels": ["G1", "K3", "B5", "I4", "N3", "Q1", "T4"]},
-    "Twisted Monster": {"levels": ["P5", "X4", "Z5"]},
+    "Abandoned Dwelling": {"levels": ["F1", "I2", "J2", "M1", "M3", "O4", "Q4", "R4", "R6", "S2", "T4", "U4", "X2", "X3", "Z4"]},
+    "Barricade": {"levels": ["B1", "B3", "B4", "C1", "C3", "D1", "E1", "E3", "E5", "F3", "F4", "F5", "H3", "H5", "I1", "I3", "I4", "K2", "L3", "L4", "M3", "N2", "O2", "O4", "P4", "Q2", "Q4", "Q5", "R1", "R3", "W4", "X3", "Y2", "Y4"]},
+    "Beacon": {"levels": ["A3", "A4", "C1", "C4", "H2", "J4", "L1", "O2", "P2", "S2", "S4", "T1", "T3", "V2", "X4", "Z1"]},
+    "Corrupted Mana Shard": {"levels": ["C2", "E4"]},
+    "Drop Holder": {"levels": ["F1", "I2", "J2", "L2", "M3", "O2", "O4", "Q4", "S2", "X2", "Z4"]},
+    "Gatekeeper": {"levels": ["A4"]},
+    "Mana Shard": {"levels": ["C2", "J2", "J4", "K3", "L3", "M3", "N2", "N3", "U3", "U4", "X3", "X4", "Y2", "Y4", "Z3", "Z5"]},
+    "Monster Nest": {"levels": ["B1", "B2", "B5", "C1", "C3", "D2", "D4", "E2", "E3", "G2", "H1", "J1", "K3", "K5", "L1", "L5", "M1", "M2", "N3", "N4", "O3", "O4", "P2", "P4", "P5", "R6", "S1", "S3", "T1", "T3", "U4", "V3", "X1", "X3", "Z1", "Z2", "Z3", "Z4"]},
+    "Obelisk": {"levels": ["A4", "C4"]},
+    "Shrine": {"levels": ["B4", "H2", "J2", "J4", "L3", "M4", "N3", "R4", "U3", "V2"]},
+    "Sleeping Hive": {"levels": ["B4", "Y1"]},
+    "Swarm Queen": {"levels": ["K4"]},
+    "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
+    "Wizard Tower": {"levels": ["L5", "W1", "Y3"]},
 }
 
 # =====================================================================
@@ -171,11 +169,11 @@ game_level_elements = {
 # Format: "ElementName": {"requires_trait": "TraitName", "levels": [...]}
 #
 non_monster_elements = {
-    "Shadow": {"requires_trait": "Ritual", "levels": ["G3"]},
-    "Specter": {"requires_trait": "Ritual", "levels": []},
+    "Shadow": {"requires_trait": "Ritual", "levels": ["A4", "C5", "E4", "G3"]},
+    "Specter": {"requires_trait": "Ritual", "levels": ["E4", "Y4"]},
     "Spire": {"requires_trait": "Ritual", "levels": ["E2"]},
     "Wizard Hunter": {"requires_trait": "Ritual", "levels": ["L4"]},
-    "Wraith": {"requires_trait": "Ritual", "levels": []},
+    "Wraith": {"requires_trait": "Ritual", "levels": ["A4", "X4"]},
 }
 
 # =====================================================================

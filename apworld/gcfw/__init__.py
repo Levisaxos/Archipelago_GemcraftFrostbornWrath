@@ -26,7 +26,7 @@ from .options import (
     ExtraWaveCount,
     FieldsRequired,
     FieldsRequiredPercentage,
-    AchievementGrindiness,
+    AchievementRequiredEffort,
 )
 from .rules import set_rules
 from .rulesdata import (
@@ -197,7 +197,7 @@ class GemcraftFrostbornWrathWorld(World):
             Goal,
             FieldTokenPlacement,
             XpTomeBonus,
-            AchievementGrindiness,
+            AchievementRequiredEffort,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -326,23 +326,10 @@ class GemcraftFrostbornWrathWorld(World):
             for _ in range(count):
                 pool.append(self.create_item(name))
 
-        # Achievements — based on grindiness option
-        grindiness = self.options.achievement_grindiness.value
-        if grindiness > 0:
-            # Import achievement packs
-            from .rulesdata_achievements_1 import achievement_requirements as pack1
-            from .rulesdata_achievements_2 import achievement_requirements as pack2
-            from .rulesdata_achievements_3 import achievement_requirements as pack3
-            from .rulesdata_achievements_4 import achievement_requirements as pack4
-            from .rulesdata_achievements_5 import achievement_requirements as pack5
-            from .rulesdata_achievements_6 import achievement_requirements as pack6
-
-            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
-
-            # Merge all packs into single dict
-            all_achievements = {}
-            for pack in achievement_packs:
-                all_achievements.update(pack)
+        # Achievements — based on required_effort option
+        required_effort = self.options.achievement_required_effort.value
+        if required_effort > 0:
+            from .rulesdata_achievements import achievement_requirements as all_achievements
 
             # Simplify achievements: if they have trait requirements, remove element requirements
             # This avoids circular dependencies where trait items might be in trait-locked locations
@@ -364,7 +351,7 @@ class GemcraftFrostbornWrathWorld(World):
 
                         ach_data["requirements"] = simplified
 
-            # Add achievements filtered by grindiness level
+            # Add achievements filtered by required_effort level
             total_achievements = 0
             filtered_achievements = {}
             added_achievements = 0
@@ -375,17 +362,17 @@ class GemcraftFrostbornWrathWorld(World):
             if self.options.achievement_progression.value == 0:  # 0 = progressive
                 achievement_chains = _detect_achievement_chains(all_achievements)
 
-            # Grindiness hierarchy for filtering
-            grindiness_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
-            max_grindiness_str = grindiness_hierarchy[min(grindiness - 1, len(grindiness_hierarchy) - 1)] if grindiness > 0 else "Trivial"
+            # Effort hierarchy for filtering
+            effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_effort_str = effort_hierarchy[min(required_effort - 1, len(effort_hierarchy) - 1)] if required_effort > 0 else "Trivial"
 
             # First pass: validate and add achievements
             for ach_name, ach_data in all_achievements.items():
-                # Filter by grindiness level
-                ach_grindiness = ach_data.get("grindiness", "Trivial")
-                if ach_grindiness in grindiness_hierarchy:
-                    if grindiness_hierarchy.index(ach_grindiness) > grindiness_hierarchy.index(max_grindiness_str):
-                        continue  # Skip achievements above selected grindiness
+                # Filter by required_effort level
+                ach_effort = ach_data.get("required_effort", "Trivial")
+                if ach_effort in effort_hierarchy:
+                    if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
+                        continue  # Skip achievements above selected effort level
 
                 total_achievements += 1
                 # Validate that achievement requirements can be met
@@ -444,36 +431,24 @@ class GemcraftFrostbornWrathWorld(World):
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
-        # Create achievements region with locations based on grindiness
-        grindiness = self.options.achievement_grindiness.value
-        if grindiness > 0:
-            from .rulesdata_achievements_1 import achievement_requirements as pack1
-            from .rulesdata_achievements_2 import achievement_requirements as pack2
-            from .rulesdata_achievements_3 import achievement_requirements as pack3
-            from .rulesdata_achievements_4 import achievement_requirements as pack4
-            from .rulesdata_achievements_5 import achievement_requirements as pack5
-            from .rulesdata_achievements_6 import achievement_requirements as pack6
-
-            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
-
-            # Merge all packs into single dict
-            all_achievements = {}
-            for pack in achievement_packs:
-                all_achievements.update(pack)
+        # Create achievements region with locations based on required_effort
+        required_effort = self.options.achievement_required_effort.value
+        if required_effort > 0:
+            from .rulesdata_achievements import achievement_requirements as all_achievements
 
             achievements_region = Region("Achievements", self.player, self.multiworld)
 
-            # Grindiness hierarchy for filtering
-            grindiness_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
-            max_grindiness_str = grindiness_hierarchy[min(grindiness - 1, len(grindiness_hierarchy) - 1)] if grindiness > 0 else "Trivial"
+            # Effort hierarchy for filtering
+            effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_effort_str = effort_hierarchy[min(required_effort - 1, len(effort_hierarchy) - 1)] if required_effort > 0 else "Trivial"
 
-            # Add achievement locations filtered by grindiness level
+            # Add achievement locations filtered by required_effort level
             for ach_name, ach_data in all_achievements.items():
-                # Filter by grindiness level
-                ach_grindiness = ach_data.get("grindiness", "Trivial")
-                if ach_grindiness in grindiness_hierarchy:
-                    if grindiness_hierarchy.index(ach_grindiness) > grindiness_hierarchy.index(max_grindiness_str):
-                        continue  # Skip achievements above selected grindiness
+                # Filter by required_effort level
+                ach_effort = ach_data.get("required_effort", "Trivial")
+                if ach_effort in effort_hierarchy:
+                    if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
+                        continue  # Skip achievements above selected effort level
 
                 # Validate that achievement requirements can be met
                 requirements = ach_data.get("requirements", [])
@@ -722,19 +697,9 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Build achievement requirements map: achievement name → [requirements]
         achievement_requirements_map: Dict[str, list] = {}
-        grindiness = self.options.achievement_grindiness.value
-        if grindiness > 0:
-            from .rulesdata_achievements_1 import achievement_requirements as pack1
-            from .rulesdata_achievements_2 import achievement_requirements as pack2
-            from .rulesdata_achievements_3 import achievement_requirements as pack3
-            from .rulesdata_achievements_4 import achievement_requirements as pack4
-            from .rulesdata_achievements_5 import achievement_requirements as pack5
-            from .rulesdata_achievements_6 import achievement_requirements as pack6
-
-            achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
-            all_achievements = {}
-            for pack in achievement_packs:
-                all_achievements.update(pack)
+        required_effort = self.options.achievement_required_effort.value
+        if required_effort > 0:
+            from .rulesdata_achievements import achievement_requirements as all_achievements
 
             # Extract requirements for each achievement
             for ach_name, ach_data in all_achievements.items():
@@ -762,7 +727,7 @@ class GemcraftFrostbornWrathWorld(World):
             "wiz_stash_tal_data":    wiz_stash_tal_data,
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
-            "achievement_grindiness":  self.options.achievement_grindiness.value,
+            "achievement_required_effort": self.options.achievement_required_effort.value,
             "enforce_logic":           bool(self.options.enforce_logic.value),
             "disable_endurance":       bool(self.options.disable_endurance.value),
             "disable_trial":           bool(self.options.disable_trial.value),

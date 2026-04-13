@@ -357,19 +357,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # --- Achievement location access rules ---
     # Achievements require specific skills to be obtained first
     try:
-        from .rulesdata_achievements_1 import achievement_requirements as pack1
-        from .rulesdata_achievements_2 import achievement_requirements as pack2
-        from .rulesdata_achievements_3 import achievement_requirements as pack3
-        from .rulesdata_achievements_4 import achievement_requirements as pack4
-        from .rulesdata_achievements_5 import achievement_requirements as pack5
-        from .rulesdata_achievements_6 import achievement_requirements as pack6
-
-        achievement_packs = [pack1, pack2, pack3, pack4, pack5, pack6]
-
-        # Merge all achievement packs into single dict
-        all_achievements = {}
-        for pack in achievement_packs:
-            all_achievements.update(pack)
+        from .rulesdata_achievements import achievement_requirements as all_achievements
 
         # Simplify achievements: if they have trait requirements, remove element requirements
         # This avoids circular dependencies where trait items might be in trait-locked locations
@@ -397,31 +385,21 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         skipped_modes = 0
 
         is_progressive = world.options.achievement_progression.value == AchievementProgression.option_progressive
-        max_grindiness_level = world.options.achievement_grindiness.value
+        max_effort_level = world.options.achievement_required_effort.value
 
-        # Grindiness hierarchy: higher number = more grinding required
-        grindiness_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
-        max_grindiness_index = min(max_grindiness_level - 1, len(grindiness_hierarchy) - 1)
-        max_grindiness_str = grindiness_hierarchy[max_grindiness_index] if max_grindiness_level > 0 else None
-
-        # Get enabled modes (placeholder - TODO: add mode options to yaml if needed)
-        enabled_modes = {"journey"}  # Always include journey
-        # TODO: Add endurance_enabled and trial_enabled options if needed
+        # Effort hierarchy: higher number = more effort required
+        effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+        max_effort_index = min(max_effort_level - 1, len(effort_hierarchy) - 1)
+        max_effort_str = effort_hierarchy[max_effort_index] if max_effort_level > 0 else None
 
         for ach_name, ach_data in all_achievements.items():
-            # Skip if grindiness level exceeds selected max
-            ach_grindiness = ach_data.get("grindiness", "Trivial")
-            if max_grindiness_str:
-                grindiness_index = grindiness_hierarchy.index(ach_grindiness) if ach_grindiness in grindiness_hierarchy else 0
-                max_index = grindiness_hierarchy.index(max_grindiness_str) if max_grindiness_str in grindiness_hierarchy else 0
-                if grindiness_index > max_index:
+            # Skip if required_effort level exceeds selected max
+            ach_effort = ach_data.get("required_effort", "Trivial")
+            if max_effort_str:
+                effort_index = effort_hierarchy.index(ach_effort) if ach_effort in effort_hierarchy else 0
+                max_index = effort_hierarchy.index(max_effort_str) if max_effort_str in effort_hierarchy else 0
+                if effort_index > max_index:
                     continue
-
-            # Skip if achievement is only available in disabled modes
-            ach_modes = set(ach_data.get("modes", ["journey"]))
-            if not ach_modes.intersection(enabled_modes):
-                skipped_modes += 1
-                continue
 
             loc_name = f"Achievement: {ach_name}"
             try:

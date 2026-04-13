@@ -139,8 +139,13 @@ package ui {
         }
 
         private function _build(count:int):void {
+            if (_template == null || _template.parent == null) return;
+
             var bw:Number = _template.width;
             var bh:Number = _template.height;
+
+            // Safety check: only proceed if dimensions are valid
+            if (bw <= 0 || bh <= 0) return;
 
             var nativeLabel:TextField = _findTextField(_template);
             var originalText:String   = null;
@@ -149,7 +154,7 @@ package ui {
                 nativeLabel.text = "in logic: " + count;
             }
 
-            var bd:BitmapData = new BitmapData(bw, bh, true, 0x00000000);
+            var bd:BitmapData = new BitmapData(Math.ceil(bw), Math.ceil(bh), true, 0x00000000);
             var m:Matrix = new Matrix();
             m.tx = -_template.x;
             m.ty = -_template.y;

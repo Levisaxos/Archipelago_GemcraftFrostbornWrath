@@ -56,7 +56,7 @@ package net {
         private var _fieldsRequired:int           = 80;
         private var _fieldsRequiredPercentage:int = 66;
         private var _talismanMinRarity:int = 1;
-        private var _achievementGrindiness:int = 1;  // 0=off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
+        private var _achievementRequiredEffort:int = 1;  // 0=off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
         private var _tatteredScrollLevels:int  = 1;
         private var _wornTomeLevels:int        = 2;
         private var _ancientGrimoireLevels:int = 3;
@@ -146,7 +146,7 @@ package net {
         public function get missingLocations():Object { return _missingLocations; }
         public function get goal():int { return _goal; }
         public function get talismanMinRarity():int { return _talismanMinRarity; }
-        public function get achievementGrindiness():int { return _achievementGrindiness; }
+        public function get achievementRequiredEffort():int { return _achievementRequiredEffort; }
         public function get tatteredScrollLevels():int  { return _tatteredScrollLevels; }
         public function get wornTomeLevels():int        { return _wornTomeLevels; }
         public function get ancientGrimoireLevels():int { return _ancientGrimoireLevels; }
@@ -421,7 +421,7 @@ package net {
             }
             if (p.slot_data) {
                 _goal = int(p.slot_data.goal);
-                if (p.slot_data.achievement_grindiness !== undefined) _achievementGrindiness = int(p.slot_data.achievement_grindiness);
+                if (p.slot_data.achievement_required_effort !== undefined) _achievementRequiredEffort = int(p.slot_data.achievement_required_effort);
                 _talismanMinRarity = int(p.slot_data.talisman_min_rarity);
                 if (p.slot_data.tattered_scroll_levels  !== undefined) _tatteredScrollLevels  = int(p.slot_data.tattered_scroll_levels);
                 if (p.slot_data.worn_tome_levels         !== undefined) _wornTomeLevels         = int(p.slot_data.worn_tome_levels);

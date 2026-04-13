@@ -5,7 +5,8 @@ package {
      */
     public class AchievementMap {
         // Embed the logic_rules.json file (path is relative to src directory)
-        [Embed(source="../../../do not commit/logic_rules.json", mimeType="application/octet-stream")]
+        // File is in resources/ folder so it's available on other computers
+        [Embed(source="../resources/logic_rules.json", mimeType="application/octet-stream")]
         private static const ACHIEVEMENT_DATA:Class;
 
         /**
