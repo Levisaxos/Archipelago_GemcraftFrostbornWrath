@@ -45,23 +45,23 @@ def _load_item_table() -> Dict[str, ItemData]:
 
     # XP tiers — 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls.
     # Per-tome level values are configured from slot_data (xp_tome_bonus option).
-    table["Tattered Scroll"]  = ItemData(500, ItemClassification.useful)
-    table["Worn Tome"]        = ItemData(501, ItemClassification.useful)
-    table["Ancient Grimoire"] = ItemData(502, ItemClassification.useful)
+    table["Tattered Scroll"]  = ItemData(1100, ItemClassification.useful)
+    table["Worn Tome"]        = ItemData(1101, ItemClassification.useful)
+    table["Ancient Grimoire"] = ItemData(1102, ItemClassification.useful)
 
-    # Specific talisman fragments — named by original field (IDs 700–752).
+    # Specific talisman fragments — named by original field (IDs 900–952).
     for frag in data["talisman_fragments"]:
         table[f"{frag['str_id']} Talisman Fragment"] = ItemData(frag["item_ap_id"], ItemClassification.useful)
 
-    # Extra talisman fragments — named "Extra Talisman Fragment #N" (IDs 753–799).
+    # Extra talisman fragments — named "Extra Talisman Fragment #N" (IDs 1200–1299).
     for frag in data["extra_talisman_fragments"]:
         table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
 
-    # Specific shadow core stashes — named by original field (IDs 800–816).
+    # Specific shadow core stashes — named by original field (IDs 1000–1046).
     for sc in data["shadow_core_stashes"]:
         table[f"{sc['str_id']} Shadow Cores"] = ItemData(sc["item_ap_id"], ItemClassification.filler)
 
-    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 817–868).
+    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1399).
     for sc in data["extra_shadow_core_stashes"]:
         table[sc["name"]] = ItemData(sc["item_ap_id"], ItemClassification.filler)
 
@@ -69,7 +69,7 @@ def _load_item_table() -> Dict[str, ItemData]:
 
 
 def _generate_achievement_items() -> Dict[str, ItemData]:
-    """Load achievement items (IDs 1000-1635) from rulesdata packs with hardcoded ap_ids."""
+    """Load achievement items (IDs 2000-2636) from rulesdata packs with hardcoded ap_ids."""
     from .rulesdata_achievements import achievement_requirements as all_achievements
 
     table: Dict[str, ItemData] = {}

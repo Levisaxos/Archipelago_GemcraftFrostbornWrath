@@ -28,14 +28,14 @@ def _load_location_table() -> Dict[str, LocationData]:
         # no field token item but IS the starting location (accessible from Menu).
         str_id = stage["str_id"]
         table[f"Complete {str_id} - Journey"]      = LocationData(stage["loc_ap_id"],             str_id)
-        table[f"Complete {str_id} - Bonus"]        = LocationData(stage["loc_ap_id"] + 500,       str_id)
+        table[f"Complete {str_id} - Bonus"]        = LocationData(stage["loc_ap_id"] + 199,       str_id)
         table[f"Complete {str_id} - Wizard stash"] = LocationData(stage["wiz_stash_loc_ap_id"],   str_id)
 
     return table
 
 
 def _generate_achievement_locations() -> Dict[str, LocationData]:
-    """Load achievement locations (IDs 1000-1635) from rulesdata packs with hardcoded ap_ids."""
+    """Load achievement locations (IDs 2000-2636) from rulesdata packs with hardcoded ap_ids."""
     from .rulesdata_achievements import achievement_requirements as all_achievements
 
     table: Dict[str, LocationData] = {}

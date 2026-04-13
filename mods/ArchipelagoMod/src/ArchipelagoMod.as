@@ -467,6 +467,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
+                    _reportedAchievements = {};
                     _destroyButtons();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
@@ -483,6 +484,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
+                    _reportedAchievements = {};
                     _destroyButtons();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
@@ -1960,10 +1962,13 @@ package {
                     var ach:* = achisByOrder[i];
                     if (!ach) continue;
 
-                    // Check if achievement is collected (status 2 or 3)
-                    // 2 = UNLOCKED_BUT_HAVE_TO_WIN, 3 = WAS_ALREADY_UNLOCKED
+                    // Check if achievement is permanently earned (status 3 only).
+                    // Status 2 = UNLOCKED_BUT_HAVE_TO_WIN means the condition was
+                    // met during a live battle but the player hasn't won yet — we
+                    // must NOT report it until it becomes permanently unlocked (3),
+                    // otherwise losing/exiting the stage would cause a false check.
                     var status:int = int(ach.status);
-                    var isCollected:Boolean = (status == 2 || status == 3);
+                    var isCollected:Boolean = (status == 3);
                     if (!isCollected) {
                         continue;
                     }
