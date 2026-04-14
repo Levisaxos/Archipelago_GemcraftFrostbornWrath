@@ -8,7 +8,6 @@ package {
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
-    import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -20,11 +19,8 @@ package {
     
     import goals.GoalManager;
 
-    import ui.ArchipelagoButton
+    import ui.ModButtons
     import ui.ScrChangelog
-    import ui.FieldsInLogicButton
-    import ui.ReportIssuesButton
-    import ui.SlotSettingsButton
     import ui.ScrSlotSettings
     import ui.ToastPanel
     import ui.ItemToastPanel
@@ -96,12 +92,8 @@ package {
 
         private var _logger:Logger;
         private var _bezel:Bezel;
-        private var _btn:ArchipelagoButton;
-        private var _reportBtn:ReportIssuesButton;
-        private var _settingsBtn:SlotSettingsButton;
-        private var _fieldsBtn:FieldsInLogicButton;
+        private var _modButtons:ModButtons;
         private var _slotSettings:ScrSlotSettings;
-        private var _buttonAdded:Boolean = false;
 
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
@@ -149,7 +141,7 @@ package {
         private var _updateChecker:UpdateChecker;
         private var _scrChangelog:ScrChangelog;
         private var _versionLabel:TextField;            // "Archipelago Mod vX.X.X" on MAINMENU
-        private var _changelogBtn:Sprite;               // "Changelog" button on MAINMENU
+        // Changelog button is owned by _modButtons (ModButtons.showOnMainMenu)
         private var _updateBadge:Sprite;                // hidden until a newer version is found
         private var _mainMenuElementsOnStage:Boolean  = false;
         private var _mainMenuFetchDone:Boolean        = false; // fetch once per session
@@ -214,6 +206,12 @@ package {
                 _connectionManager.load();
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+
+                // Button factory — owns all mod buttons on selector + main menu
+                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                _modButtons.onSettingsClick  = onSettingsClicked;
+                _modButtons.onApDebugClick   = _toggleDebugOptions;
+                _modButtons.onChangelogClick = openChangelog;
 
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
@@ -310,20 +308,8 @@ package {
             }
             _disconnectPanel = null;
             _disconnectPanelOnStage = false;
-            if (_reportBtn != null && _reportBtn.parent != null) {
-                _reportBtn.parent.removeChild(_reportBtn);
-                _reportBtn = null;
-            }
-            if (_settingsBtn != null && _settingsBtn.parent != null) {
-                _settingsBtn.parent.removeChild(_settingsBtn);
-                _settingsBtn = null;
-            }
+            if (_modButtons != null) _modButtons.removeFromSelector();
             if (_slotSettings != null) _slotSettings.close();
-            if (_btn != null && _btn.parent != null) {
-                _btn.parent.removeChild(_btn);
-                _btn = null;
-            }
-            _buttonAdded = false;
             removeMainMenuElements();
             if (_updateChecker != null) { _updateChecker.dispose(); _updateChecker = null; }
             if (_scrChangelog != null) { _scrChangelog.dismiss(); _scrChangelog = null; }
@@ -395,6 +381,11 @@ package {
                 addMainMenuElements();
                 _mainMenuElementsOnStage = true;
             }
+            // Keep changelog button aligned between Start Game and Exit every frame.
+            if (_mainMenuElementsOnStage && _modButtons != null) {
+                _modButtons.onMainMenuFrame();
+            }
+
             // Remove them the moment we leave MAINMENU, regardless of transition path.
             if (_mainMenuElementsOnStage
                     && int(GV.main.currentScreen) != ScreenId.MAINMENU) {
@@ -589,10 +580,9 @@ package {
 
             if (mc.btnTutorial == null) return;
 
-            if (!_buttonAdded) {
+            if (!_modButtons.selectorAdded) {
                 if (mc.btnSkills == null || mc.btnTalisman == null) return;
-                addArchipelagoButton(mc);
-                _buttonAdded = true;
+                _modButtons.showOnSelector(mc);
             }
 
             _firstPlayBypass.onSelectorFrame(mc);
@@ -601,25 +591,8 @@ package {
             // In-game tracker: recolor stage lights based on logic state.
             if (_stageTinter != null) _stageTinter.apply(mc);
 
-            // Fields-in-logic button: update count label + drive hover panel.
-            if (_fieldsBtn != null) {
-                var inLogicList:Array = _computeInLogicStages();
-                _fieldsBtn.update(inLogicList.length, inLogicList);
-                _fieldsBtn.onFrame();
-            }
-
-            if (_reportBtn != null) {
-                _reportBtn.x = mc.btnTutorial.x;
-            }
-            if (_settingsBtn != null) {
-                _settingsBtn.x = mc.btnTutorial.x;
-            }
-            if (_fieldsBtn != null) {
-                _fieldsBtn.x = mc.btnTutorial.x;
-            }
-            if (_btn != null) {
-                _btn.x = mc.btnTutorial.x;
-            }
+            // Buttons: sync X positions, update fields-in-logic label + hover + pan.
+            _modButtons.onSelectorFrame(mc);
 
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
@@ -703,13 +676,6 @@ package {
             _versionLabel.y = stg.stageHeight - 48;
             stg.addChild(_versionLabel);
 
-            // Changelog button — just below the version label.
-            _changelogBtn = _makeSmallButton("Changelog", 88, 20);
-            _changelogBtn.x = 10;
-            _changelogBtn.y = stg.stageHeight - 28;
-            _changelogBtn.addEventListener(MouseEvent.CLICK, onChangelogBtnClicked, false, 0, true);
-            stg.addChild(_changelogBtn);
-
             // Update badge — to the right of the version label, hidden until needed.
             _updateBadge = _makeUpdateBadge();
             _updateBadge.x = 10 + _versionLabel.textWidth + 12;
@@ -743,11 +709,7 @@ package {
             }
             _versionLabel = null;
 
-            if (_changelogBtn != null) {
-                _changelogBtn.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
-                if (_changelogBtn.parent != null) _changelogBtn.parent.removeChild(_changelogBtn);
-            }
-            _changelogBtn = null;
+            if (_modButtons != null) _modButtons.removeFromMainMenu();
 
             if (_updateBadge != null) {
                 _updateBadge.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
@@ -811,44 +773,6 @@ package {
             openChangelog();
         }
 
-        // Helpers for building the MAINMENU UI elements
-
-        private function _makeSmallButton(label:String, w:Number, h:Number):Sprite {
-            var btn:Sprite = new Sprite();
-            _drawSmallBtnFace(btn, 0x3A1A6E, w, h, false);
-
-            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFFFFF, true);
-            fmt.align = TextFormatAlign.CENTER;
-            var tf:TextField = new TextField();
-            tf.defaultTextFormat = fmt;
-            tf.selectable   = false;
-            tf.mouseEnabled = false;
-            tf.width        = w;
-            tf.height       = h;
-            tf.text         = label;
-            btn.addChild(tf);
-
-            btn.buttonMode    = true;
-            btn.useHandCursor = true;
-            btn.addEventListener(MouseEvent.MOUSE_OVER,
-                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, true); },
-                false, 0, true);
-            btn.addEventListener(MouseEvent.MOUSE_OUT,
-                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, false); },
-                false, 0, true);
-            return btn;
-        }
-
-        private function _drawSmallBtnFace(btn:Sprite, bgColor:uint,
-                                           w:Number, h:Number, hover:Boolean):void {
-            var fill:uint = hover ? _brightenColor(bgColor, 0.35) : bgColor;
-            btn.graphics.clear();
-            btn.graphics.beginFill(fill);
-            btn.graphics.lineStyle(1, 0xAA77EE);
-            btn.graphics.drawRoundRect(0, 0, w, h, 6, 6);
-            btn.graphics.endFill();
-        }
-
         private function _makeUpdateBadge():Sprite {
             var badge:Sprite = new Sprite();
             var label:String = "\u2191 Update available!";
@@ -878,76 +802,9 @@ package {
             return badge;
         }
 
-        private function _brightenColor(color:uint, amount:Number):uint {
-            var r:int = Math.min(255, int((color >> 16 & 0xFF) + 255 * amount));
-            var g:int = Math.min(255, int((color >> 8  & 0xFF) + 255 * amount));
-            var b:int = Math.min(255, int((color       & 0xFF) + 255 * amount));
-            return (r << 16) | (g << 8) | b;
-        }
 
         // -----------------------------------------------------------------------
-        // Archipelago button + debug hotkey
-
-        private function addArchipelagoButton(mc:*):void {
-            var stepY:Number = mc.btnTalisman.y - mc.btnSkills.y;
-
-            _reportBtn = new ReportIssuesButton(mc.btnTutorial);
-            _reportBtn.x = mc.btnTutorial.x;
-            _reportBtn.y = mc.btnTutorial.y + stepY;
-            mc.addChild(_reportBtn);
-            _logger.log(MOD_NAME, "Report Issues button added at (" + _reportBtn.x + ", " + _reportBtn.y + ")");
-
-            _settingsBtn = new SlotSettingsButton(mc.btnTutorial);
-            _settingsBtn.x = mc.btnTutorial.x;
-            _settingsBtn.y = mc.btnTutorial.y + stepY * 2;
-            _settingsBtn.visible = false; // shown after AP connects
-            _settingsBtn.onClick = onSettingsClicked;
-            mc.addChild(_settingsBtn);
-            _logger.log(MOD_NAME, "AP Settings button added at (" + _settingsBtn.x + ", " + _settingsBtn.y + ") [hidden until connected]");
-
-            _fieldsBtn = new FieldsInLogicButton(mc.btnTutorial);
-            _fieldsBtn.x = mc.btnTutorial.x;
-            _fieldsBtn.y = mc.btnTutorial.y + stepY * 3;
-            mc.addChild(_fieldsBtn);
-            _logger.log(MOD_NAME, "Fields in Logic button added at (" + _fieldsBtn.x + ", " + _fieldsBtn.y + ")");
-
-            _btn = new ArchipelagoButton(mc.btnTutorial);
-            _btn.x = mc.btnTutorial.x;
-            _btn.y = mc.btnTutorial.y + stepY * 4;
-            _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
-            _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
-            mc.addChild(_btn);
-            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ") [hidden]");
-        }
-
-        /**
-         * Returns a sorted array of strIds for stages that currently have at
-         * least one AP location still missing and in logic.
-         */
-        private function _computeInLogicStages():Array {
-            var result:Array = [];
-            if (!_connectionManager.isConnected || _logicEvaluator == null) return result;
-            var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
-            if (metas == null) return result;
-            var missing:Object = _connectionManager.missingLocations;
-            var locIds:Object  = ConnectionManager.stageLocIds;
-            for (var i:int = 0; i < metas.length; i++) {
-                var meta:* = metas[i];
-                if (meta == null) continue;
-                var strId:String = String(meta.strId);
-                if (GV.ppd.stageHighestXpsJourney[meta.id].g() < 0) continue; // not unlocked
-                var base:int = int(locIds[strId]);
-                if (base <= 0) continue;
-                var jMiss:Boolean = missing[base]        == true;
-                var bMiss:Boolean = missing[base + 500]  == true;
-                var sMiss:Boolean = missing[base + 1000] == true;
-                if (_logicEvaluator.stageHasInLogicMissing(strId, jMiss, bMiss, sMiss)) {
-                    result.push(strId);
-                }
-            }
-            result.sort(Array.CASEINSENSITIVE);
-            return result;
-        }
+        // Debug hotkey
 
         private function onKeyDown(e:KeyboardEvent):void {
             // Backtick / tilde (keyCode 192) — toggle message log
@@ -963,14 +820,14 @@ package {
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
-                if (_btn != null) _btn.visible = _debugMode;
+                if (_modButtons != null) _modButtons.apDebugVisible = _debugMode;
                 if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
                     _debugOptions.close();
                 }
             }
         }
 
-        private function onArchipelagoClicked(e:MouseEvent):void {
+        private function _toggleDebugOptions():void {
             if (_debugOptions == null) return;
             if (_debugOptions.isOpen) {
                 _debugOptions.close();
@@ -1195,7 +1052,7 @@ package {
             // may still hold data from a previously loaded save slot.
             // The onSaveSave hook will catch a legitimate victory.
             if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
-            if (_settingsBtn != null) _settingsBtn.visible = true;
+            if (_modButtons != null) _modButtons.settingsVisible = true;
 
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
@@ -1224,7 +1081,7 @@ package {
         }
 
         private function onApUnexpectedlyDisconnected():void {
-            if (_settingsBtn != null) _settingsBtn.visible = false;
+            if (_modButtons != null) _modButtons.settingsVisible = false;
             if (_slotSettings != null) _slotSettings.close();
             if (_disconnectPanel == null || !_disconnectPanelOnStage) return;
             _disconnectPanel.resetState();
