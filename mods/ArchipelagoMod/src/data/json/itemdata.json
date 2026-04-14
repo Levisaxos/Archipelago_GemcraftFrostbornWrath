@@ -1,0 +1,2136 @@
+{
+  "skills": [
+    {
+      "game_id": 0,
+      "name": "Mana Stream",
+      "ap_id": 300
+    },
+    {
+      "game_id": 1,
+      "name": "True Colors",
+      "ap_id": 301
+    },
+    {
+      "game_id": 2,
+      "name": "Fusion",
+      "ap_id": 302,
+      "note": "Unlocked by default"
+    },
+    {
+      "game_id": 3,
+      "name": "Orb of Presence",
+      "ap_id": 303
+    },
+    {
+      "game_id": 4,
+      "name": "Resonance",
+      "ap_id": 304
+    },
+    {
+      "game_id": 5,
+      "name": "Demolition",
+      "ap_id": 305
+    },
+    {
+      "game_id": 6,
+      "name": "Critical Hit",
+      "ap_id": 306
+    },
+    {
+      "game_id": 7,
+      "name": "Mana Leech",
+      "ap_id": 307
+    },
+    {
+      "game_id": 8,
+      "name": "Bleeding",
+      "ap_id": 308
+    },
+    {
+      "game_id": 9,
+      "name": "Armor Tearing",
+      "ap_id": 309
+    },
+    {
+      "game_id": 10,
+      "name": "Poison",
+      "ap_id": 310
+    },
+    {
+      "game_id": 11,
+      "name": "Slowing",
+      "ap_id": 311
+    },
+    {
+      "game_id": 12,
+      "name": "Freeze",
+      "ap_id": 312,
+      "note": "Unlocked by default in some modes"
+    },
+    {
+      "game_id": 13,
+      "name": "Whiteout",
+      "ap_id": 313
+    },
+    {
+      "game_id": 14,
+      "name": "Ice Shards",
+      "ap_id": 314
+    },
+    {
+      "game_id": 15,
+      "name": "Bolt",
+      "ap_id": 315
+    },
+    {
+      "game_id": 16,
+      "name": "Beam",
+      "ap_id": 316,
+      "note": "Unlocked by default in some modes"
+    },
+    {
+      "game_id": 17,
+      "name": "Barrage",
+      "ap_id": 317
+    },
+    {
+      "game_id": 18,
+      "name": "Fury",
+      "ap_id": 318
+    },
+    {
+      "game_id": 19,
+      "name": "Amplifiers",
+      "ap_id": 319
+    },
+    {
+      "game_id": 20,
+      "name": "Pylons",
+      "ap_id": 320
+    },
+    {
+      "game_id": 21,
+      "name": "Lanterns",
+      "ap_id": 321
+    },
+    {
+      "game_id": 22,
+      "name": "Traps",
+      "ap_id": 322
+    },
+    {
+      "game_id": 23,
+      "name": "Seeker Sense",
+      "ap_id": 323
+    }
+  ],
+  "battleTraits": [
+    {
+      "game_id": 0,
+      "name": "Adaptive Carapace",
+      "ap_id": 400,
+      "description": "After each shot taken, monsters gain damage reduction stacking up to a cap"
+    },
+    {
+      "game_id": 1,
+      "name": "Dark Masonry",
+      "ap_id": 401,
+      "description": "Barricades, nests, beacons and watchtowers have more armor/HP; extra beacons spawn every 10 waves"
+    },
+    {
+      "game_id": 2,
+      "name": "Swarmling Domination",
+      "ap_id": 402,
+      "description": "Swarmlings have reduced debuff duration and more speed; some reaver waves turn into swarmlings"
+    },
+    {
+      "game_id": 3,
+      "name": "Overcrowd",
+      "ap_id": 403,
+      "description": "More monsters arrive each wave"
+    },
+    {
+      "game_id": 4,
+      "name": "Corrupted Banishment",
+      "ap_id": 404,
+      "description": "Banished monsters return with more HP, armor, and shield layers"
+    },
+    {
+      "game_id": 5,
+      "name": "Awakening",
+      "ap_id": 405,
+      "description": "Monster waves have increasing HP increment per wave"
+    },
+    {
+      "game_id": 6,
+      "name": "Insulation",
+      "ap_id": 406,
+      "description": "Every monster enters with extra shield layers"
+    },
+    {
+      "game_id": 7,
+      "name": "Hatred",
+      "ap_id": 407,
+      "description": "Monsters have more total HP"
+    },
+    {
+      "game_id": 8,
+      "name": "Swarmling Parasites",
+      "ap_id": 408,
+      "description": "Killed monsters spawn 2 swarmlings with a portion of the monster's max HP"
+    },
+    {
+      "game_id": 9,
+      "name": "Haste",
+      "ap_id": 409,
+      "description": "Wave stones move faster"
+    },
+    {
+      "game_id": 10,
+      "name": "Thick Air",
+      "ap_id": 410,
+      "description": "Damage to monsters is capped at a fraction of their total HP per hit"
+    },
+    {
+      "game_id": 11,
+      "name": "Vital Link",
+      "ap_id": 411,
+      "description": "Each monster waiting to enter gives bonus HP to monsters already on the battlefield"
+    },
+    {
+      "game_id": 12,
+      "name": "Giant Domination",
+      "ap_id": 412,
+      "description": "Giants have thicker armor and more HP; some reaver waves turn into giants"
+    },
+    {
+      "game_id": 13,
+      "name": "Strength in Numbers",
+      "ap_id": 413,
+      "description": "Each monster on the battlefield gives all others extra non-destructible armor"
+    },
+    {
+      "game_id": 14,
+      "name": "Ritual",
+      "ap_id": 414,
+      "description": "Powerful enemy creatures may be lured to the battle"
+    }
+  ],
+  "gemUnlocks": [
+    {
+      "game_id": 0,
+      "name": "Crit",
+      "color": "Yellow",
+      "ap_id": 600
+    },
+    {
+      "game_id": 1,
+      "name": "Leech",
+      "color": "Orange",
+      "ap_id": 601
+    },
+    {
+      "game_id": 2,
+      "name": "Bleed",
+      "color": "Red",
+      "ap_id": 602
+    },
+    {
+      "game_id": 3,
+      "name": "Armor Tear",
+      "color": "Purple",
+      "ap_id": 603
+    },
+    {
+      "game_id": 4,
+      "name": "Poison",
+      "color": "Green",
+      "ap_id": 604
+    },
+    {
+      "game_id": 5,
+      "name": "Slow",
+      "color": "Blue",
+      "ap_id": 605
+    }
+  ],
+  "mapTiles": [
+    {
+      "game_id": 0,
+      "ap_id": 200
+    },
+    {
+      "game_id": 1,
+      "ap_id": 201
+    },
+    {
+      "game_id": 2,
+      "ap_id": 202
+    },
+    {
+      "game_id": 3,
+      "ap_id": 203
+    },
+    {
+      "game_id": 4,
+      "ap_id": 204
+    },
+    {
+      "game_id": 5,
+      "ap_id": 205
+    },
+    {
+      "game_id": 6,
+      "ap_id": 206
+    },
+    {
+      "game_id": 7,
+      "ap_id": 207
+    },
+    {
+      "game_id": 8,
+      "ap_id": 208
+    },
+    {
+      "game_id": 9,
+      "ap_id": 209
+    },
+    {
+      "game_id": 10,
+      "ap_id": 210
+    },
+    {
+      "game_id": 11,
+      "ap_id": 211
+    },
+    {
+      "game_id": 12,
+      "ap_id": 212
+    },
+    {
+      "game_id": 13,
+      "ap_id": 213
+    },
+    {
+      "game_id": 14,
+      "ap_id": 214
+    },
+    {
+      "game_id": 15,
+      "ap_id": 215
+    },
+    {
+      "game_id": 16,
+      "ap_id": 216
+    },
+    {
+      "game_id": 17,
+      "ap_id": 217
+    },
+    {
+      "game_id": 18,
+      "ap_id": 218
+    },
+    {
+      "game_id": 19,
+      "ap_id": 219
+    },
+    {
+      "game_id": 20,
+      "ap_id": 220
+    },
+    {
+      "game_id": 21,
+      "ap_id": 221
+    },
+    {
+      "game_id": 22,
+      "ap_id": 222
+    },
+    {
+      "game_id": 23,
+      "ap_id": 223
+    },
+    {
+      "game_id": 24,
+      "ap_id": 224
+    },
+    {
+      "game_id": 25,
+      "ap_id": 225
+    }
+  ],
+  "stages": [
+    {
+      "strId": "W1",
+      "type": "NORMAL",
+      "itemApId": null,
+      "locApId": 1,
+      "wizStashLocApId": 1001
+    },
+    {
+      "strId": "W2",
+      "type": "NORMAL",
+      "itemApId": null,
+      "locApId": 2,
+      "wizStashLocApId": 1002
+    },
+    {
+      "strId": "W3",
+      "type": "STORY_RELATED",
+      "itemApId": null,
+      "locApId": 3,
+      "wizStashLocApId": 1003
+    },
+    {
+      "strId": "W4",
+      "type": "EPIC",
+      "itemApId": null,
+      "locApId": 4,
+      "wizStashLocApId": 1004
+    },
+    {
+      "strId": "S1",
+      "type": "NORMAL",
+      "itemApId": 4,
+      "locApId": 5,
+      "wizStashLocApId": 1005
+    },
+    {
+      "strId": "S2",
+      "type": "NORMAL",
+      "itemApId": 5,
+      "locApId": 6,
+      "wizStashLocApId": 1006
+    },
+    {
+      "strId": "S3",
+      "type": "NORMAL",
+      "itemApId": 6,
+      "locApId": 7,
+      "wizStashLocApId": 1007
+    },
+    {
+      "strId": "S4",
+      "type": "EPIC",
+      "itemApId": 7,
+      "locApId": 8,
+      "wizStashLocApId": 1008
+    },
+    {
+      "strId": "V1",
+      "type": "NORMAL",
+      "itemApId": 8,
+      "locApId": 9,
+      "wizStashLocApId": 1009
+    },
+    {
+      "strId": "V2",
+      "type": "NORMAL",
+      "itemApId": 9,
+      "locApId": 10,
+      "wizStashLocApId": 1010
+    },
+    {
+      "strId": "V3",
+      "type": "NORMAL",
+      "itemApId": 10,
+      "locApId": 11,
+      "wizStashLocApId": 1011
+    },
+    {
+      "strId": "V4",
+      "type": "EPIC",
+      "itemApId": 11,
+      "locApId": 12,
+      "wizStashLocApId": 1012
+    },
+    {
+      "strId": "R1",
+      "type": "NORMAL",
+      "itemApId": 12,
+      "locApId": 13,
+      "wizStashLocApId": 1013
+    },
+    {
+      "strId": "R2",
+      "type": "EPIC",
+      "itemApId": 13,
+      "locApId": 14,
+      "wizStashLocApId": 1014
+    },
+    {
+      "strId": "R3",
+      "type": "NORMAL",
+      "itemApId": 14,
+      "locApId": 15,
+      "wizStashLocApId": 1015
+    },
+    {
+      "strId": "R4",
+      "type": "NORMAL",
+      "itemApId": 15,
+      "locApId": 16,
+      "wizStashLocApId": 1016
+    },
+    {
+      "strId": "R5",
+      "type": "EPIC",
+      "itemApId": 16,
+      "locApId": 17,
+      "wizStashLocApId": 1017
+    },
+    {
+      "strId": "Q1",
+      "type": "NORMAL",
+      "itemApId": 17,
+      "locApId": 18,
+      "wizStashLocApId": 1018
+    },
+    {
+      "strId": "Q2",
+      "type": "NORMAL",
+      "itemApId": 18,
+      "locApId": 19,
+      "wizStashLocApId": 1019
+    },
+    {
+      "strId": "Q3",
+      "type": "NORMAL",
+      "itemApId": 19,
+      "locApId": 20,
+      "wizStashLocApId": 1020
+    },
+    {
+      "strId": "Q4",
+      "type": "EPIC",
+      "itemApId": 20,
+      "locApId": 21,
+      "wizStashLocApId": 1021
+    },
+    {
+      "strId": "Q5",
+      "type": "NORMAL",
+      "itemApId": 21,
+      "locApId": 22,
+      "wizStashLocApId": 1022
+    },
+    {
+      "strId": "T1",
+      "type": "NORMAL",
+      "itemApId": 22,
+      "locApId": 23,
+      "wizStashLocApId": 1023
+    },
+    {
+      "strId": "T2",
+      "type": "STORY_RELATED",
+      "itemApId": 23,
+      "locApId": 24,
+      "wizStashLocApId": 1024
+    },
+    {
+      "strId": "T3",
+      "type": "NORMAL",
+      "itemApId": 24,
+      "locApId": 25,
+      "wizStashLocApId": 1025
+    },
+    {
+      "strId": "T4",
+      "type": "EPIC",
+      "itemApId": 25,
+      "locApId": 26,
+      "wizStashLocApId": 1026
+    },
+    {
+      "strId": "U1",
+      "type": "NORMAL",
+      "itemApId": 26,
+      "locApId": 27,
+      "wizStashLocApId": 1027
+    },
+    {
+      "strId": "U2",
+      "type": "NORMAL",
+      "itemApId": 27,
+      "locApId": 28,
+      "wizStashLocApId": 1028
+    },
+    {
+      "strId": "U3",
+      "type": "NORMAL",
+      "itemApId": 28,
+      "locApId": 29,
+      "wizStashLocApId": 1029
+    },
+    {
+      "strId": "U4",
+      "type": "EPIC",
+      "itemApId": 29,
+      "locApId": 30,
+      "wizStashLocApId": 1030
+    },
+    {
+      "strId": "Y1",
+      "type": "NORMAL",
+      "itemApId": 30,
+      "locApId": 31,
+      "wizStashLocApId": 1031
+    },
+    {
+      "strId": "Y2",
+      "type": "NORMAL",
+      "itemApId": 31,
+      "locApId": 32,
+      "wizStashLocApId": 1032
+    },
+    {
+      "strId": "Y3",
+      "type": "STORY_RELATED",
+      "itemApId": 32,
+      "locApId": 33,
+      "wizStashLocApId": 1033
+    },
+    {
+      "strId": "Y4",
+      "type": "EPIC",
+      "itemApId": 33,
+      "locApId": 34,
+      "wizStashLocApId": 1034
+    },
+    {
+      "strId": "X1",
+      "type": "NORMAL",
+      "itemApId": 34,
+      "locApId": 35,
+      "wizStashLocApId": 1035
+    },
+    {
+      "strId": "X2",
+      "type": "NORMAL",
+      "itemApId": 35,
+      "locApId": 36,
+      "wizStashLocApId": 1036
+    },
+    {
+      "strId": "X3",
+      "type": "NORMAL",
+      "itemApId": 36,
+      "locApId": 37,
+      "wizStashLocApId": 1037
+    },
+    {
+      "strId": "X4",
+      "type": "EPIC",
+      "itemApId": 37,
+      "locApId": 38,
+      "wizStashLocApId": 1038
+    },
+    {
+      "strId": "Z1",
+      "type": "NORMAL",
+      "itemApId": 38,
+      "locApId": 39,
+      "wizStashLocApId": 1039
+    },
+    {
+      "strId": "Z2",
+      "type": "NORMAL",
+      "itemApId": 39,
+      "locApId": 40,
+      "wizStashLocApId": 1040
+    },
+    {
+      "strId": "Z3",
+      "type": "NORMAL",
+      "itemApId": 40,
+      "locApId": 41,
+      "wizStashLocApId": 1041
+    },
+    {
+      "strId": "Z4",
+      "type": "NORMAL",
+      "itemApId": 41,
+      "locApId": 42,
+      "wizStashLocApId": 1042
+    },
+    {
+      "strId": "O1",
+      "type": "NORMAL",
+      "itemApId": 42,
+      "locApId": 43,
+      "wizStashLocApId": 1043
+    },
+    {
+      "strId": "O2",
+      "type": "NORMAL",
+      "itemApId": 43,
+      "locApId": 44,
+      "wizStashLocApId": 1044
+    },
+    {
+      "strId": "O3",
+      "type": "NORMAL",
+      "itemApId": 44,
+      "locApId": 45,
+      "wizStashLocApId": 1045
+    },
+    {
+      "strId": "O4",
+      "type": "EPIC",
+      "itemApId": 45,
+      "locApId": 46,
+      "wizStashLocApId": 1046
+    },
+    {
+      "strId": "N1",
+      "type": "NORMAL",
+      "itemApId": 46,
+      "locApId": 47,
+      "wizStashLocApId": 1047
+    },
+    {
+      "strId": "N2",
+      "type": "NORMAL",
+      "itemApId": 47,
+      "locApId": 48,
+      "wizStashLocApId": 1048
+    },
+    {
+      "strId": "N3",
+      "type": "NORMAL",
+      "itemApId": 48,
+      "locApId": 49,
+      "wizStashLocApId": 1049
+    },
+    {
+      "strId": "N4",
+      "type": "NORMAL",
+      "itemApId": 49,
+      "locApId": 50,
+      "wizStashLocApId": 1050
+    },
+    {
+      "strId": "N5",
+      "type": "NORMAL",
+      "itemApId": 50,
+      "locApId": 51,
+      "wizStashLocApId": 1051
+    },
+    {
+      "strId": "P1",
+      "type": "NORMAL",
+      "itemApId": 51,
+      "locApId": 52,
+      "wizStashLocApId": 1052
+    },
+    {
+      "strId": "P2",
+      "type": "NORMAL",
+      "itemApId": 52,
+      "locApId": 53,
+      "wizStashLocApId": 1053
+    },
+    {
+      "strId": "P3",
+      "type": "NORMAL",
+      "itemApId": 53,
+      "locApId": 54,
+      "wizStashLocApId": 1054
+    },
+    {
+      "strId": "P4",
+      "type": "EPIC",
+      "itemApId": 54,
+      "locApId": 55,
+      "wizStashLocApId": 1055
+    },
+    {
+      "strId": "P5",
+      "type": "NORMAL",
+      "itemApId": 55,
+      "locApId": 56,
+      "wizStashLocApId": 1056
+    },
+    {
+      "strId": "L1",
+      "type": "NORMAL",
+      "itemApId": 56,
+      "locApId": 57,
+      "wizStashLocApId": 1057
+    },
+    {
+      "strId": "L2",
+      "type": "NORMAL",
+      "itemApId": 57,
+      "locApId": 58,
+      "wizStashLocApId": 1058
+    },
+    {
+      "strId": "L3",
+      "type": "NORMAL",
+      "itemApId": 58,
+      "locApId": 59,
+      "wizStashLocApId": 1059
+    },
+    {
+      "strId": "L4",
+      "type": "EPIC",
+      "itemApId": 59,
+      "locApId": 60,
+      "wizStashLocApId": 1060
+    },
+    {
+      "strId": "L5",
+      "type": "EPIC",
+      "itemApId": 60,
+      "locApId": 61,
+      "wizStashLocApId": 1061
+    },
+    {
+      "strId": "K1",
+      "type": "STORY_RELATED",
+      "itemApId": 61,
+      "locApId": 62,
+      "wizStashLocApId": 1062
+    },
+    {
+      "strId": "K2",
+      "type": "NORMAL",
+      "itemApId": 62,
+      "locApId": 63,
+      "wizStashLocApId": 1063
+    },
+    {
+      "strId": "K3",
+      "type": "NORMAL",
+      "itemApId": 63,
+      "locApId": 64,
+      "wizStashLocApId": 1064
+    },
+    {
+      "strId": "K4",
+      "type": "EPIC",
+      "itemApId": 64,
+      "locApId": 65,
+      "wizStashLocApId": 1065
+    },
+    {
+      "strId": "H1",
+      "type": "NORMAL",
+      "itemApId": 65,
+      "locApId": 66,
+      "wizStashLocApId": 1066
+    },
+    {
+      "strId": "H2",
+      "type": "NORMAL",
+      "itemApId": 66,
+      "locApId": 67,
+      "wizStashLocApId": 1067
+    },
+    {
+      "strId": "H3",
+      "type": "TILE_GIVING",
+      "itemApId": 67,
+      "locApId": 68,
+      "wizStashLocApId": 1068
+    },
+    {
+      "strId": "H4",
+      "type": "NORMAL",
+      "itemApId": 68,
+      "locApId": 69,
+      "wizStashLocApId": 1069
+    },
+    {
+      "strId": "G1",
+      "type": "NORMAL",
+      "itemApId": 69,
+      "locApId": 70,
+      "wizStashLocApId": 1070
+    },
+    {
+      "strId": "G2",
+      "type": "NORMAL",
+      "itemApId": 70,
+      "locApId": 71,
+      "wizStashLocApId": 1071
+    },
+    {
+      "strId": "G3",
+      "type": "EPIC",
+      "itemApId": 71,
+      "locApId": 72,
+      "wizStashLocApId": 1072
+    },
+    {
+      "strId": "G4",
+      "type": "TILE_GIVING",
+      "itemApId": 72,
+      "locApId": 73,
+      "wizStashLocApId": 1073
+    },
+    {
+      "strId": "J1",
+      "type": "NORMAL",
+      "itemApId": 73,
+      "locApId": 74,
+      "wizStashLocApId": 1074
+    },
+    {
+      "strId": "J2",
+      "type": "NORMAL",
+      "itemApId": 74,
+      "locApId": 75,
+      "wizStashLocApId": 1075
+    },
+    {
+      "strId": "J3",
+      "type": "NORMAL",
+      "itemApId": 75,
+      "locApId": 76,
+      "wizStashLocApId": 1076
+    },
+    {
+      "strId": "J4",
+      "type": "TILE_GIVING",
+      "itemApId": 76,
+      "locApId": 77,
+      "wizStashLocApId": 1077
+    },
+    {
+      "strId": "M1",
+      "type": "NORMAL",
+      "itemApId": 77,
+      "locApId": 78,
+      "wizStashLocApId": 1078
+    },
+    {
+      "strId": "M2",
+      "type": "NORMAL",
+      "itemApId": 78,
+      "locApId": 79,
+      "wizStashLocApId": 1079
+    },
+    {
+      "strId": "M3",
+      "type": "NORMAL",
+      "itemApId": 79,
+      "locApId": 80,
+      "wizStashLocApId": 1080
+    },
+    {
+      "strId": "M4",
+      "type": "NORMAL",
+      "itemApId": 80,
+      "locApId": 81,
+      "wizStashLocApId": 1081
+    },
+    {
+      "strId": "F1",
+      "type": "NORMAL",
+      "itemApId": 81,
+      "locApId": 82,
+      "wizStashLocApId": 1082
+    },
+    {
+      "strId": "F2",
+      "type": "NORMAL",
+      "itemApId": 82,
+      "locApId": 83,
+      "wizStashLocApId": 1083
+    },
+    {
+      "strId": "F3",
+      "type": "NORMAL",
+      "itemApId": 83,
+      "locApId": 84,
+      "wizStashLocApId": 1084
+    },
+    {
+      "strId": "F4",
+      "type": "NORMAL",
+      "itemApId": 84,
+      "locApId": 85,
+      "wizStashLocApId": 1085
+    },
+    {
+      "strId": "E1",
+      "type": "NORMAL",
+      "itemApId": 85,
+      "locApId": 86,
+      "wizStashLocApId": 1086
+    },
+    {
+      "strId": "E2",
+      "type": "NORMAL",
+      "itemApId": 86,
+      "locApId": 87,
+      "wizStashLocApId": 1087
+    },
+    {
+      "strId": "E3",
+      "type": "NORMAL",
+      "itemApId": 87,
+      "locApId": 88,
+      "wizStashLocApId": 1088
+    },
+    {
+      "strId": "E4",
+      "type": "EPIC",
+      "itemApId": 88,
+      "locApId": 89,
+      "wizStashLocApId": 1089
+    },
+    {
+      "strId": "D1",
+      "type": "NORMAL",
+      "itemApId": 89,
+      "locApId": 90,
+      "wizStashLocApId": 1090
+    },
+    {
+      "strId": "D2",
+      "type": "NORMAL",
+      "itemApId": 90,
+      "locApId": 91,
+      "wizStashLocApId": 1091
+    },
+    {
+      "strId": "D3",
+      "type": "EPIC",
+      "itemApId": 91,
+      "locApId": 92,
+      "wizStashLocApId": 1092
+    },
+    {
+      "strId": "D4",
+      "type": "NORMAL",
+      "itemApId": 92,
+      "locApId": 93,
+      "wizStashLocApId": 1093
+    },
+    {
+      "strId": "B1",
+      "type": "NORMAL",
+      "itemApId": 93,
+      "locApId": 94,
+      "wizStashLocApId": 1094
+    },
+    {
+      "strId": "B2",
+      "type": "NORMAL",
+      "itemApId": 94,
+      "locApId": 95,
+      "wizStashLocApId": 1095
+    },
+    {
+      "strId": "B3",
+      "type": "NORMAL",
+      "itemApId": 95,
+      "locApId": 96,
+      "wizStashLocApId": 1096
+    },
+    {
+      "strId": "B4",
+      "type": "NORMAL",
+      "itemApId": 96,
+      "locApId": 97,
+      "wizStashLocApId": 1097
+    },
+    {
+      "strId": "C1",
+      "type": "NORMAL",
+      "itemApId": 97,
+      "locApId": 98,
+      "wizStashLocApId": 1098
+    },
+    {
+      "strId": "C2",
+      "type": "NORMAL",
+      "itemApId": 98,
+      "locApId": 99,
+      "wizStashLocApId": 1099
+    },
+    {
+      "strId": "C3",
+      "type": "NORMAL",
+      "itemApId": 99,
+      "locApId": 100,
+      "wizStashLocApId": 1100
+    },
+    {
+      "strId": "C4",
+      "type": "TILE_GIVING",
+      "itemApId": 100,
+      "locApId": 101,
+      "wizStashLocApId": 1101
+    },
+    {
+      "strId": "C5",
+      "type": "EPIC",
+      "itemApId": 101,
+      "locApId": 102,
+      "wizStashLocApId": 1102
+    },
+    {
+      "strId": "A1",
+      "type": "NORMAL",
+      "itemApId": 102,
+      "locApId": 103,
+      "wizStashLocApId": 1103
+    },
+    {
+      "strId": "A2",
+      "type": "NORMAL",
+      "itemApId": 103,
+      "locApId": 104,
+      "wizStashLocApId": 1104
+    },
+    {
+      "strId": "A3",
+      "type": "NORMAL",
+      "itemApId": 104,
+      "locApId": 105,
+      "wizStashLocApId": 1105
+    },
+    {
+      "strId": "A4",
+      "type": "NORMAL",
+      "itemApId": 105,
+      "locApId": 106,
+      "wizStashLocApId": 1106
+    },
+    {
+      "strId": "I2",
+      "type": "NORMAL",
+      "itemApId": 106,
+      "locApId": 107,
+      "wizStashLocApId": 1107
+    },
+    {
+      "strId": "I3",
+      "type": "NORMAL",
+      "itemApId": 107,
+      "locApId": 108,
+      "wizStashLocApId": 1108
+    },
+    {
+      "strId": "I4",
+      "type": "NORMAL",
+      "itemApId": 108,
+      "locApId": 109,
+      "wizStashLocApId": 1109
+    },
+    {
+      "strId": "Z5",
+      "type": "SECRET",
+      "itemApId": 110,
+      "locApId": 111,
+      "wizStashLocApId": 1111
+    },
+    {
+      "strId": "T5",
+      "type": "SECRET",
+      "itemApId": 111,
+      "locApId": 112,
+      "wizStashLocApId": 1112
+    },
+    {
+      "strId": "R6",
+      "type": "SECRET",
+      "itemApId": 112,
+      "locApId": 113,
+      "wizStashLocApId": 1113
+    },
+    {
+      "strId": "P6",
+      "type": "SECRET",
+      "itemApId": 113,
+      "locApId": 114,
+      "wizStashLocApId": 1114
+    },
+    {
+      "strId": "K5",
+      "type": "SECRET",
+      "itemApId": 114,
+      "locApId": 115,
+      "wizStashLocApId": 1115
+    },
+    {
+      "strId": "H5",
+      "type": "SECRET",
+      "itemApId": 115,
+      "locApId": 116,
+      "wizStashLocApId": 1116
+    },
+    {
+      "strId": "F5",
+      "type": "SECRET",
+      "itemApId": 117,
+      "locApId": 118,
+      "wizStashLocApId": 1118
+    },
+    {
+      "strId": "E5",
+      "type": "SECRET",
+      "itemApId": 118,
+      "locApId": 119,
+      "wizStashLocApId": 1119
+    },
+    {
+      "strId": "B5",
+      "type": "SECRET",
+      "itemApId": 119,
+      "locApId": 120,
+      "wizStashLocApId": 1120
+    },
+    {
+      "strId": "A5",
+      "type": "NORMAL",
+      "itemApId": 120,
+      "locApId": 121,
+      "wizStashLocApId": 1121
+    },
+    {
+      "strId": "A6",
+      "type": "NORMAL",
+      "itemApId": 121,
+      "locApId": 122,
+      "wizStashLocApId": 1122
+    },
+    {
+      "strId": "I1",
+      "type": "NORMAL",
+      "itemApId": 122,
+      "locApId": 123,
+      "wizStashLocApId": 1123
+    },
+    {
+      "strId": "D5",
+      "type": "NORMAL",
+      "itemApId": 123,
+      "locApId": 124,
+      "wizStashLocApId": 1124
+    }
+  ],
+  "talismanFragments": [
+    {
+      "str_id": "Z3",
+      "tal_data": "5596544/26/2/0",
+      "item_ap_id": 700
+    },
+    {
+      "str_id": "Y2",
+      "tal_data": "2793153/22/2/0",
+      "item_ap_id": 701
+    },
+    {
+      "str_id": "X2",
+      "tal_data": "4060042/10/0/0",
+      "item_ap_id": 702
+    },
+    {
+      "str_id": "X3",
+      "tal_data": "1213731/18/0/0",
+      "item_ap_id": 703
+    },
+    {
+      "str_id": "W3",
+      "tal_data": "7645726/26/2/0",
+      "item_ap_id": 704
+    },
+    {
+      "str_id": "W4",
+      "tal_data": "3148296/27/2/0",
+      "item_ap_id": 705
+    },
+    {
+      "str_id": "V2",
+      "tal_data": "4506709/21/2/0",
+      "item_ap_id": 706
+    },
+    {
+      "str_id": "V3",
+      "tal_data": "7331006/21/2/0",
+      "item_ap_id": 707
+    },
+    {
+      "str_id": "U1",
+      "tal_data": "7753950/25/2/0",
+      "item_ap_id": 708
+    },
+    {
+      "str_id": "U2",
+      "tal_data": "1248263/40/2/0",
+      "item_ap_id": 709
+    },
+    {
+      "str_id": "T2",
+      "tal_data": "4195788/27/2/0",
+      "item_ap_id": 710
+    },
+    {
+      "str_id": "T5",
+      "tal_data": "5698871/20/2/0",
+      "item_ap_id": 711
+    },
+    {
+      "str_id": "S1",
+      "tal_data": "9198804/26/2/0",
+      "item_ap_id": 712
+    },
+    {
+      "str_id": "R2",
+      "tal_data": "3244225/29/2/0",
+      "item_ap_id": 713
+    },
+    {
+      "str_id": "R5",
+      "tal_data": "3791266/33/2/0",
+      "item_ap_id": 714
+    },
+    {
+      "str_id": "R6",
+      "tal_data": "6164496/41/2/0",
+      "item_ap_id": 715
+    },
+    {
+      "str_id": "Q3",
+      "tal_data": "7944004/24/2/0",
+      "item_ap_id": 716
+    },
+    {
+      "str_id": "Q4",
+      "tal_data": "4355351/25/2/0",
+      "item_ap_id": 717
+    },
+    {
+      "str_id": "Q5",
+      "tal_data": "9735136/20/2/0",
+      "item_ap_id": 718
+    },
+    {
+      "str_id": "P2",
+      "tal_data": "1874734/45/0/0",
+      "item_ap_id": 719
+    },
+    {
+      "str_id": "P6",
+      "tal_data": "8575503/54/2/0",
+      "item_ap_id": 720
+    },
+    {
+      "str_id": "O1",
+      "tal_data": "1839121/24/0/0",
+      "item_ap_id": 721
+    },
+    {
+      "str_id": "O3",
+      "tal_data": "5859868/29/2/0",
+      "item_ap_id": 722
+    },
+    {
+      "str_id": "O4",
+      "tal_data": "9854612/38/2/0",
+      "item_ap_id": 723
+    },
+    {
+      "str_id": "N2",
+      "tal_data": "4938632/48/2/0",
+      "item_ap_id": 724
+    },
+    {
+      "str_id": "N4",
+      "tal_data": "2470718/51/0/0",
+      "item_ap_id": 725
+    },
+    {
+      "str_id": "M2",
+      "tal_data": "2756634/66/0/0",
+      "item_ap_id": 726
+    },
+    {
+      "str_id": "M4",
+      "tal_data": "7892093/59/1/0",
+      "item_ap_id": 727
+    },
+    {
+      "str_id": "L1",
+      "tal_data": "7513618/42/2/0",
+      "item_ap_id": 728
+    },
+    {
+      "str_id": "L4",
+      "tal_data": "6704065/48/2/0",
+      "item_ap_id": 729
+    },
+    {
+      "str_id": "L5",
+      "tal_data": "5981897/71/0/0",
+      "item_ap_id": 730
+    },
+    {
+      "str_id": "K2",
+      "tal_data": "7713409/44/0/0",
+      "item_ap_id": 731
+    },
+    {
+      "str_id": "K3",
+      "tal_data": "2602399/39/1/0",
+      "item_ap_id": 732
+    },
+    {
+      "str_id": "K4",
+      "tal_data": "8848960/49/2/0",
+      "item_ap_id": 733
+    },
+    {
+      "str_id": "J2",
+      "tal_data": "4059357/69/0/0",
+      "item_ap_id": 734
+    },
+    {
+      "str_id": "J3",
+      "tal_data": "1074246/57/1/0",
+      "item_ap_id": 735
+    },
+    {
+      "str_id": "I1",
+      "tal_data": "6047887/79/0/0",
+      "item_ap_id": 736
+    },
+    {
+      "str_id": "H5",
+      "tal_data": "5860063/79/2/0",
+      "item_ap_id": 737
+    },
+    {
+      "str_id": "G1",
+      "tal_data": "4559977/49/2/0",
+      "item_ap_id": 738
+    },
+    {
+      "str_id": "G4",
+      "tal_data": "3492165/55/2/0",
+      "item_ap_id": 739
+    },
+    {
+      "str_id": "F1",
+      "tal_data": "3210578/58/0/0",
+      "item_ap_id": 740
+    },
+    {
+      "str_id": "F5",
+      "tal_data": "2720683/97/2/0",
+      "item_ap_id": 741
+    },
+    {
+      "str_id": "E1",
+      "tal_data": "1034270/73/0/0",
+      "item_ap_id": 742
+    },
+    {
+      "str_id": "E5",
+      "tal_data": "7958565/71/1/0",
+      "item_ap_id": 743
+    },
+    {
+      "str_id": "D2",
+      "tal_data": "3425853/82/0/0",
+      "item_ap_id": 744
+    },
+    {
+      "str_id": "D3",
+      "tal_data": "1258641/89/2/0",
+      "item_ap_id": 745
+    },
+    {
+      "str_id": "C2",
+      "tal_data": "4202319/85/1/0",
+      "item_ap_id": 746
+    },
+    {
+      "str_id": "C5",
+      "tal_data": "5697989/88/1/0",
+      "item_ap_id": 747
+    },
+    {
+      "str_id": "B1",
+      "tal_data": "5649923/74/2/0",
+      "item_ap_id": 748
+    },
+    {
+      "str_id": "B3",
+      "tal_data": "9397020/80/2/0",
+      "item_ap_id": 749
+    },
+    {
+      "str_id": "A1",
+      "tal_data": "6257243/88/2/0",
+      "item_ap_id": 750
+    },
+    {
+      "str_id": "A5",
+      "tal_data": "9737695/96/2/3",
+      "item_ap_id": 751
+    },
+    {
+      "str_id": "A6",
+      "tal_data": "1438882/100/2/3",
+      "item_ap_id": 752
+    }
+  ],
+  "extraTalismanFragments": [
+    {
+      "name": "Extra Talisman Fragment #1",
+      "seed": 900001,
+      "tal_data": "900001/2/0/0",
+      "item_ap_id": 753
+    },
+    {
+      "name": "Extra Talisman Fragment #2",
+      "seed": 900002,
+      "tal_data": "900002/4/1/0",
+      "item_ap_id": 754
+    },
+    {
+      "name": "Extra Talisman Fragment #3",
+      "seed": 900003,
+      "tal_data": "900003/6/2/0",
+      "item_ap_id": 755
+    },
+    {
+      "name": "Extra Talisman Fragment #4",
+      "seed": 900004,
+      "tal_data": "900004/8/0/0",
+      "item_ap_id": 756
+    },
+    {
+      "name": "Extra Talisman Fragment #5",
+      "seed": 900005,
+      "tal_data": "900005/10/1/0",
+      "item_ap_id": 757
+    },
+    {
+      "name": "Extra Talisman Fragment #6",
+      "seed": 900006,
+      "tal_data": "900006/12/2/0",
+      "item_ap_id": 758
+    },
+    {
+      "name": "Extra Talisman Fragment #7",
+      "seed": 900007,
+      "tal_data": "900007/14/0/0",
+      "item_ap_id": 759
+    },
+    {
+      "name": "Extra Talisman Fragment #8",
+      "seed": 900008,
+      "tal_data": "900008/16/1/0",
+      "item_ap_id": 760
+    },
+    {
+      "name": "Extra Talisman Fragment #9",
+      "seed": 900009,
+      "tal_data": "900009/18/2/0",
+      "item_ap_id": 761
+    },
+    {
+      "name": "Extra Talisman Fragment #10",
+      "seed": 900010,
+      "tal_data": "900010/20/0/0",
+      "item_ap_id": 762
+    },
+    {
+      "name": "Extra Talisman Fragment #11",
+      "seed": 900011,
+      "tal_data": "900011/22/1/0",
+      "item_ap_id": 763
+    },
+    {
+      "name": "Extra Talisman Fragment #12",
+      "seed": 900012,
+      "tal_data": "900012/24/2/0",
+      "item_ap_id": 764
+    },
+    {
+      "name": "Extra Talisman Fragment #13",
+      "seed": 900013,
+      "tal_data": "900013/26/0/0",
+      "item_ap_id": 765
+    },
+    {
+      "name": "Extra Talisman Fragment #14",
+      "seed": 900014,
+      "tal_data": "900014/28/1/0",
+      "item_ap_id": 766
+    },
+    {
+      "name": "Extra Talisman Fragment #15",
+      "seed": 900015,
+      "tal_data": "900015/30/2/0",
+      "item_ap_id": 767
+    },
+    {
+      "name": "Extra Talisman Fragment #16",
+      "seed": 900016,
+      "tal_data": "900016/32/0/0",
+      "item_ap_id": 768
+    },
+    {
+      "name": "Extra Talisman Fragment #17",
+      "seed": 900017,
+      "tal_data": "900017/34/1/0",
+      "item_ap_id": 769
+    },
+    {
+      "name": "Extra Talisman Fragment #18",
+      "seed": 900018,
+      "tal_data": "900018/36/2/0",
+      "item_ap_id": 770
+    },
+    {
+      "name": "Extra Talisman Fragment #19",
+      "seed": 900019,
+      "tal_data": "900019/38/0/0",
+      "item_ap_id": 771
+    },
+    {
+      "name": "Extra Talisman Fragment #20",
+      "seed": 900020,
+      "tal_data": "900020/40/1/0",
+      "item_ap_id": 772
+    },
+    {
+      "name": "Extra Talisman Fragment #21",
+      "seed": 900021,
+      "tal_data": "900021/42/2/0",
+      "item_ap_id": 773
+    },
+    {
+      "name": "Extra Talisman Fragment #22",
+      "seed": 900022,
+      "tal_data": "900022/44/0/0",
+      "item_ap_id": 774
+    },
+    {
+      "name": "Extra Talisman Fragment #23",
+      "seed": 900023,
+      "tal_data": "900023/46/1/0",
+      "item_ap_id": 775
+    },
+    {
+      "name": "Extra Talisman Fragment #24",
+      "seed": 900024,
+      "tal_data": "900024/48/2/0",
+      "item_ap_id": 776
+    },
+    {
+      "name": "Extra Talisman Fragment #25",
+      "seed": 900025,
+      "tal_data": "900025/50/0/0",
+      "item_ap_id": 777
+    },
+    {
+      "name": "Extra Talisman Fragment #26",
+      "seed": 900026,
+      "tal_data": "900026/52/1/0",
+      "item_ap_id": 778
+    },
+    {
+      "name": "Extra Talisman Fragment #27",
+      "seed": 900027,
+      "tal_data": "900027/54/2/0",
+      "item_ap_id": 779
+    },
+    {
+      "name": "Extra Talisman Fragment #28",
+      "seed": 900028,
+      "tal_data": "900028/56/0/0",
+      "item_ap_id": 780
+    },
+    {
+      "name": "Extra Talisman Fragment #29",
+      "seed": 900029,
+      "tal_data": "900029/58/1/0",
+      "item_ap_id": 781
+    },
+    {
+      "name": "Extra Talisman Fragment #30",
+      "seed": 900030,
+      "tal_data": "900030/60/2/0",
+      "item_ap_id": 782
+    },
+    {
+      "name": "Extra Talisman Fragment #31",
+      "seed": 900031,
+      "tal_data": "900031/62/0/0",
+      "item_ap_id": 783
+    },
+    {
+      "name": "Extra Talisman Fragment #32",
+      "seed": 900032,
+      "tal_data": "900032/64/1/0",
+      "item_ap_id": 784
+    },
+    {
+      "name": "Extra Talisman Fragment #33",
+      "seed": 900033,
+      "tal_data": "900033/66/2/0",
+      "item_ap_id": 785
+    },
+    {
+      "name": "Extra Talisman Fragment #34",
+      "seed": 900034,
+      "tal_data": "900034/68/0/0",
+      "item_ap_id": 786
+    },
+    {
+      "name": "Extra Talisman Fragment #35",
+      "seed": 900035,
+      "tal_data": "900035/70/1/0",
+      "item_ap_id": 787
+    },
+    {
+      "name": "Extra Talisman Fragment #36",
+      "seed": 900036,
+      "tal_data": "900036/72/2/0",
+      "item_ap_id": 788
+    },
+    {
+      "name": "Extra Talisman Fragment #37",
+      "seed": 900037,
+      "tal_data": "900037/74/0/0",
+      "item_ap_id": 789
+    },
+    {
+      "name": "Extra Talisman Fragment #38",
+      "seed": 900038,
+      "tal_data": "900038/76/1/0",
+      "item_ap_id": 790
+    },
+    {
+      "name": "Extra Talisman Fragment #39",
+      "seed": 900039,
+      "tal_data": "900039/78/2/0",
+      "item_ap_id": 791
+    },
+    {
+      "name": "Extra Talisman Fragment #40",
+      "seed": 900040,
+      "tal_data": "900040/80/0/0",
+      "item_ap_id": 792
+    },
+    {
+      "name": "Extra Talisman Fragment #41",
+      "seed": 900041,
+      "tal_data": "900041/82/1/0",
+      "item_ap_id": 793
+    },
+    {
+      "name": "Extra Talisman Fragment #42",
+      "seed": 900042,
+      "tal_data": "900042/84/2/0",
+      "item_ap_id": 794
+    },
+    {
+      "name": "Extra Talisman Fragment #43",
+      "seed": 900043,
+      "tal_data": "900043/86/0/0",
+      "item_ap_id": 795
+    },
+    {
+      "name": "Extra Talisman Fragment #44",
+      "seed": 900044,
+      "tal_data": "900044/88/1/0",
+      "item_ap_id": 796
+    },
+    {
+      "name": "Extra Talisman Fragment #45",
+      "seed": 900045,
+      "tal_data": "900045/90/2/0",
+      "item_ap_id": 797
+    },
+    {
+      "name": "Extra Talisman Fragment #46",
+      "seed": 900046,
+      "tal_data": "900046/92/0/0",
+      "item_ap_id": 798
+    },
+    {
+      "name": "Extra Talisman Fragment #47",
+      "seed": 900047,
+      "tal_data": "900047/94/1/0",
+      "item_ap_id": 799
+    }
+  ],
+  "shadowCoreStashes": [
+    {
+      "str_id": "Z2",
+      "amounts": [120, 60, 80, 100, 120],
+      "total": 480,
+      "item_ap_id": 800
+    },
+    {
+      "str_id": "X1",
+      "amounts": [30, 40, 50, 60, 70, 80],
+      "total": 330,
+      "item_ap_id": 801
+    },
+    {
+      "str_id": "W2",
+      "amounts": [30, 20, 40, 30],
+      "total": 120,
+      "item_ap_id": 802
+    },
+    {
+      "str_id": "U4",
+      "amounts": [80, 50, 90, 70],
+      "total": 290,
+      "item_ap_id": 803
+    },
+    {
+      "str_id": "S3",
+      "amounts": [40, 50, 60, 30],
+      "total": 180,
+      "item_ap_id": 804
+    },
+    {
+      "str_id": "R1",
+      "amounts": [50, 100, 50],
+      "total": 200,
+      "item_ap_id": 805
+    },
+    {
+      "str_id": "Q2",
+      "amounts": [100, 100, 100],
+      "total": 300,
+      "item_ap_id": 806
+    },
+    {
+      "str_id": "P3",
+      "amounts": [70, 70, 80, 90, 100, 70],
+      "total": 480,
+      "item_ap_id": 807
+    },
+    {
+      "str_id": "M1",
+      "amounts": [220, 110, 330],
+      "total": 660,
+      "item_ap_id": 808
+    },
+    {
+      "str_id": "L2",
+      "amounts": [200, 150, 100, 50, 100],
+      "total": 600,
+      "item_ap_id": 809
+    },
+    {
+      "str_id": "K5",
+      "amounts": [60, 90, 120, 150, 180, 120],
+      "total": 720,
+      "item_ap_id": 810
+    },
+    {
+      "str_id": "I3",
+      "amounts": [200, 240, 160, 240],
+      "total": 840,
+      "item_ap_id": 811
+    },
+    {
+      "str_id": "H1",
+      "amounts": [100, 200, 300, 200],
+      "total": 800,
+      "item_ap_id": 812
+    },
+    {
+      "str_id": "F3",
+      "amounts": [140, 360, 500],
+      "total": 1000,
+      "item_ap_id": 813
+    },
+    {
+      "str_id": "C1",
+      "amounts": [333, 334, 333],
+      "total": 1000,
+      "item_ap_id": 814
+    },
+    {
+      "str_id": "B4",
+      "amounts": [270, 70, 110, 170, 280],
+      "total": 900,
+      "item_ap_id": 815
+    },
+    {
+      "str_id": "A2",
+      "amounts": [200, 300, 400, 300],
+      "total": 1200,
+      "item_ap_id": 816
+    }
+  ],
+  "extraShadowCoreStashes": [
+    {
+      "name": "Extra Shadow Cores #1",
+      "amount": 60,
+      "item_ap_id": 817
+    },
+    {
+      "name": "Extra Shadow Cores #2",
+      "amount": 80,
+      "item_ap_id": 818
+    },
+    {
+      "name": "Extra Shadow Cores #3",
+      "amount": 100,
+      "item_ap_id": 819
+    },
+    {
+      "name": "Extra Shadow Cores #4",
+      "amount": 120,
+      "item_ap_id": 820
+    },
+    {
+      "name": "Extra Shadow Cores #5",
+      "amount": 140,
+      "item_ap_id": 821
+    },
+    {
+      "name": "Extra Shadow Cores #6",
+      "amount": 160,
+      "item_ap_id": 822
+    },
+    {
+      "name": "Extra Shadow Cores #7",
+      "amount": 180,
+      "item_ap_id": 823
+    },
+    {
+      "name": "Extra Shadow Cores #8",
+      "amount": 200,
+      "item_ap_id": 824
+    },
+    {
+      "name": "Extra Shadow Cores #9",
+      "amount": 220,
+      "item_ap_id": 825
+    },
+    {
+      "name": "Extra Shadow Cores #10",
+      "amount": 240,
+      "item_ap_id": 826
+    },
+    {
+      "name": "Extra Shadow Cores #11",
+      "amount": 260,
+      "item_ap_id": 827
+    },
+    {
+      "name": "Extra Shadow Cores #12",
+      "amount": 280,
+      "item_ap_id": 828
+    },
+    {
+      "name": "Extra Shadow Cores #13",
+      "amount": 300,
+      "item_ap_id": 829
+    },
+    {
+      "name": "Extra Shadow Cores #14",
+      "amount": 320,
+      "item_ap_id": 830
+    },
+    {
+      "name": "Extra Shadow Cores #15",
+      "amount": 340,
+      "item_ap_id": 831
+    },
+    {
+      "name": "Extra Shadow Cores #16",
+      "amount": 360,
+      "item_ap_id": 832
+    },
+    {
+      "name": "Extra Shadow Cores #17",
+      "amount": 380,
+      "item_ap_id": 833
+    },
+    {
+      "name": "Extra Shadow Cores #18",
+      "amount": 400,
+      "item_ap_id": 834
+    },
+    {
+      "name": "Extra Shadow Cores #19",
+      "amount": 420,
+      "item_ap_id": 835
+    },
+    {
+      "name": "Extra Shadow Cores #20",
+      "amount": 440,
+      "item_ap_id": 836
+    },
+    {
+      "name": "Extra Shadow Cores #21",
+      "amount": 460,
+      "item_ap_id": 837
+    },
+    {
+      "name": "Extra Shadow Cores #22",
+      "amount": 480,
+      "item_ap_id": 838
+    },
+    {
+      "name": "Extra Shadow Cores #23",
+      "amount": 500,
+      "item_ap_id": 839
+    },
+    {
+      "name": "Extra Shadow Cores #24",
+      "amount": 520,
+      "item_ap_id": 840
+    },
+    {
+      "name": "Extra Shadow Cores #25",
+      "amount": 540,
+      "item_ap_id": 841
+    },
+    {
+      "name": "Extra Shadow Cores #26",
+      "amount": 560,
+      "item_ap_id": 842
+    },
+    {
+      "name": "Extra Shadow Cores #27",
+      "amount": 580,
+      "item_ap_id": 843
+    },
+    {
+      "name": "Extra Shadow Cores #28",
+      "amount": 600,
+      "item_ap_id": 844
+    },
+    {
+      "name": "Extra Shadow Cores #29",
+      "amount": 620,
+      "item_ap_id": 845
+    },
+    {
+      "name": "Extra Shadow Cores #30",
+      "amount": 640,
+      "item_ap_id": 846
+    },
+    {
+      "name": "Extra Shadow Cores #31",
+      "amount": 660,
+      "item_ap_id": 847
+    },
+    {
+      "name": "Extra Shadow Cores #32",
+      "amount": 680,
+      "item_ap_id": 848
+    },
+    {
+      "name": "Extra Shadow Cores #33",
+      "amount": 700,
+      "item_ap_id": 849
+    },
+    {
+      "name": "Extra Shadow Cores #34",
+      "amount": 720,
+      "item_ap_id": 850
+    },
+    {
+      "name": "Extra Shadow Cores #35",
+      "amount": 740,
+      "item_ap_id": 851
+    },
+    {
+      "name": "Extra Shadow Cores #36",
+      "amount": 760,
+      "item_ap_id": 852
+    },
+    {
+      "name": "Extra Shadow Cores #37",
+      "amount": 780,
+      "item_ap_id": 853
+    },
+    {
+      "name": "Extra Shadow Cores #38",
+      "amount": 800,
+      "item_ap_id": 854
+    },
+    {
+      "name": "Extra Shadow Cores #39",
+      "amount": 820,
+      "item_ap_id": 855
+    },
+    {
+      "name": "Extra Shadow Cores #40",
+      "amount": 840,
+      "item_ap_id": 856
+    },
+    {
+      "name": "Extra Shadow Cores #41",
+      "amount": 860,
+      "item_ap_id": 857
+    },
+    {
+      "name": "Extra Shadow Cores #42",
+      "amount": 880,
+      "item_ap_id": 858
+    },
+    {
+      "name": "Extra Shadow Cores #43",
+      "amount": 900,
+      "item_ap_id": 859
+    },
+    {
+      "name": "Extra Shadow Cores #44",
+      "amount": 920,
+      "item_ap_id": 860
+    },
+    {
+      "name": "Extra Shadow Cores #45",
+      "amount": 940,
+      "item_ap_id": 861
+    },
+    {
+      "name": "Extra Shadow Cores #46",
+      "amount": 960,
+      "item_ap_id": 862
+    },
+    {
+      "name": "Extra Shadow Cores #47",
+      "amount": 980,
+      "item_ap_id": 863
+    },
+    {
+      "name": "Extra Shadow Cores #48",
+      "amount": 1000,
+      "item_ap_id": 864
+    },
+    {
+      "name": "Extra Shadow Cores #49",
+      "amount": 1020,
+      "item_ap_id": 865
+    },
+    {
+      "name": "Extra Shadow Cores #50",
+      "amount": 1040,
+      "item_ap_id": 866
+    },
+    {
+      "name": "Extra Shadow Cores #51",
+      "amount": 1060,
+      "item_ap_id": 867
+    },
+    {
+      "name": "Extra Shadow Cores #52",
+      "amount": 1080,
+      "item_ap_id": 868
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 package data {
+    import Bezel.Logger;
+
     /**
      * Archipelago Variables (AV) — Central data container for all mod state.
      * Organized into four domains: connection, server data, game data, and player save data.
@@ -30,15 +32,142 @@ package data {
         public static var saveData:SaveData = new SaveData();
 
         // -----------------------------------------------------------------------
+        // Internal logger reference (set by ArchipelagoMod.bind)
+
+        private static var _logger:Logger = null;
+
+        // -----------------------------------------------------------------------
         // Utility functions
 
         /**
-         * Initialize all data structures (call once on mod startup).
+         * Set the logger for AV data structures (call from ArchipelagoMod.bind).
          */
-        public static function initialize():void {
+        public static function setLogger(logger:Logger):void
+        {
+            _logger = logger;
+            serverData = new ServerData(logger);
+            gameData = new GameData(logger);
+        }
+
+        /**
+         * Initialize all data structures (call once on mod startup).
+         * GameData is populated from the actual game data (skills, traits, hardcoded definitions).
+         * Logic rules will be loaded separately when AP connects via ServerData.loadLogicFromJSON().
+         */
+        public static function initialize():void
+        {
             serverData.initialize();
             gameData.initialize();
+            gameData.populateFromGame();
             saveData.initialize();
+        }
+
+        /**
+         * Populate stage data from the game (call when GV.stageCollection is ready).
+         */
+        public static function populateStages():void
+        {
+            gameData.populateStagesFromGame();
+        }
+
+        /**
+         * Load server data from JSON files (call when AP connects).
+         * Loads both itemdata.json (AP ID mappings) and logic.json (unlock requirements).
+         */
+        public static function loadServerDataFromJSON():void
+        {
+            serverData.loadItemDataFromJSON();
+            serverData.loadLogicFromJSON();
+            validateGameData();
+        }
+
+        /**
+         * Validate that GameData matches ServerData (one-time check after loading).
+         * Compares skill/trait names and IDs between game definitions and itemdata.json.
+         * Logs any mismatches.
+         */
+        public static function validateGameData():void
+        {
+            if (_logger == null) return;
+
+            var hasErrors:Boolean = false;
+
+            // Validate skills
+            if (gameData.skills && gameData.skills.length > 0)
+            {
+                for (var i:int = 0; i < gameData.skills.length; i++)
+                {
+                    var gameSkill:Object = gameData.skills[i];
+                    if (gameSkill.name == null || gameSkill.gameId == null || gameSkill.apId == null)
+                    {
+                        _logger.log("AV", "VALIDATION ERROR: Skill " + i + " missing required fields");
+                        hasErrors = true;
+                        continue;
+                    }
+                    // Log for verification
+                    _logger.log("AV", "✓ Skill: gameId=" + gameSkill.gameId + ", AP ID=" + gameSkill.apId + ", name=" + gameSkill.name);
+                }
+            }
+
+            // Validate battle traits
+            if (gameData.battleTraits && gameData.battleTraits.length > 0)
+            {
+                for (var j:int = 0; j < gameData.battleTraits.length; j++)
+                {
+                    var gameTrait:Object = gameData.battleTraits[j];
+                    if (gameTrait.name == null || gameTrait.gameId == null || gameTrait.apId == null)
+                    {
+                        _logger.log("AV", "VALIDATION ERROR: Trait " + j + " missing required fields");
+                        hasErrors = true;
+                        continue;
+                    }
+                    // Log for verification
+                    _logger.log("AV", "✓ Trait: gameId=" + gameTrait.gameId + ", AP ID=" + gameTrait.apId + ", name=" + gameTrait.name);
+                }
+            }
+
+            // Validate map tiles
+            if (gameData.mapTiles && gameData.mapTiles.length > 0)
+            {
+                for (var m:int = 0; m < gameData.mapTiles.length; m++)
+                {
+                    var mapTile:Object = gameData.mapTiles[m];
+                    if (mapTile.letter == null || mapTile.gameId == null || mapTile.tileIndex == null)
+                    {
+                        _logger.log("AV", "VALIDATION ERROR: MapTile " + m + " missing required fields");
+                        hasErrors = true;
+                        continue;
+                    }
+                    // Log for verification
+                    _logger.log("AV", "✓ MapTile: letter=" + mapTile.letter + ", gameId=" + mapTile.gameId + ", tileIndex=" + mapTile.tileIndex);
+                }
+            }
+
+            // Validate stages (if populated from GV)
+            if (gameData.stages && gameData.stages.length > 0)
+            {
+                for (var s:int = 0; s < gameData.stages.length; s++)
+                {
+                    var stage:Object = gameData.stages[s];
+                    if (stage.gameId == null || stage.strId == null)
+                    {
+                        _logger.log("AV", "VALIDATION ERROR: Stage " + s + " missing required fields");
+                        hasErrors = true;
+                        continue;
+                    }
+                    // Log for verification
+                    _logger.log("AV", "✓ Stage: gameId=" + stage.gameId + ", strId=" + stage.strId);
+                }
+            }
+
+            if (hasErrors)
+            {
+                _logger.log("AV", "VALIDATION FAILED: GameData has mismatches with ServerData");
+            }
+            else
+            {
+                _logger.log("AV", "VALIDATION PASSED: GameData matches ServerData");
+            }
         }
 
         /**

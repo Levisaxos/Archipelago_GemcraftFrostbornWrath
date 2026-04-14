@@ -137,6 +137,7 @@ package {
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
+        private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
 
         // Changelog / version / update-check state
         private var _updateChecker:UpdateChecker;
@@ -162,9 +163,15 @@ package {
         // -----------------------------------------------------------------------
         // Lifecycle
 
-        public function bind(bezel:Bezel, gameObjects:Object):void {
-            try {
+        public function bind(bezel:Bezel, gameObjects:Object):void
+        {
+            try
+            {
                 _bezel = bezel;
+
+                // Initialize AV (Archipelago Variables) early so all subsystems have access
+                AV.setLogger(_logger);
+                AV.initialize();
 
                 // Create subsystems
                 _messageLog    = new MessageLog();
@@ -346,7 +353,16 @@ package {
         // -----------------------------------------------------------------------
         // Frame loop
 
-        private function onEnterFrame(e:Event):void {
+        private function onEnterFrame(e:Event):void
+        {
+            // Populate stage data from GV once stageCollection is ready (one-time init).
+            if (!_stagesPopulated && GV.stageCollection != null && GV.stageCollection.stageMetas != null)
+            {
+                AV.populateStages();
+                _stagesPopulated = true;
+                _logger.log(MOD_NAME, "Stage data populated into AV");
+            }
+
             // Add toasts to stage once available.
             if (!_toastOnStage && _toast != null && this.stage != null) {
                 this.stage.addChild(_toast);
@@ -978,8 +994,12 @@ package {
         // -----------------------------------------------------------------------
         // ConnectionManager callbacks
 
-        private function onApConnected(p:Object):void {
+        private function onApConnected(p:Object):void
+        {
             _needsConnection = false;
+
+            // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
+            AV.loadServerDataFromJSON();
 
             // Reset + configure the in-game tracker from slot_data.  Must happen
             // BEFORE syncWithAP (which will populate collected state via onItem).
