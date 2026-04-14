@@ -92,37 +92,65 @@ package data {
 
             var hasErrors:Boolean = false;
 
-            // Validate skills
+            // Validate skills: compare GameData names against ServerData names from itemdata.json
             if (gameData.skills && gameData.skills.length > 0)
             {
                 for (var i:int = 0; i < gameData.skills.length; i++)
                 {
                     var gameSkill:Object = gameData.skills[i];
-                    if (gameSkill.name == null || gameSkill.gameId == null || gameSkill.apId == null)
+                    var apSkillName:String = serverData.apIdToName[gameSkill.apId];
+                    var apSkillGameId:int  = serverData.apIdToGameId[gameSkill.apId];
+
+                    if (apSkillName == null)
                     {
-                        _logger.log("AV", "VALIDATION ERROR: Skill " + i + " missing required fields");
+                        _logger.log("AV", "VALIDATION ERROR: Skill AP ID=" + gameSkill.apId + " (" + gameSkill.name + ") not found in itemdata.json");
                         hasErrors = true;
-                        continue;
                     }
-                    // Log for verification
-                    _logger.log("AV", "✓ Skill: gameId=" + gameSkill.gameId + ", AP ID=" + gameSkill.apId + ", name=" + gameSkill.name);
+                    else if (apSkillName != gameSkill.name)
+                    {
+                        _logger.log("AV", "VALIDATION MISMATCH: Skill AP ID=" + gameSkill.apId + " game name='" + gameSkill.name + "' ap name='" + apSkillName + "'");
+                        hasErrors = true;
+                    }
+                    else if (apSkillGameId != gameSkill.gameId)
+                    {
+                        _logger.log("AV", "VALIDATION MISMATCH: Skill AP ID=" + gameSkill.apId + " game_id=" + gameSkill.gameId + " ap game_id=" + apSkillGameId);
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        _logger.log("AV", "OK Skill: gameId=" + gameSkill.gameId + ", AP ID=" + gameSkill.apId + ", name=" + gameSkill.name);
+                    }
                 }
             }
 
-            // Validate battle traits
+            // Validate battle traits: compare GameData names against ServerData names from itemdata.json
             if (gameData.battleTraits && gameData.battleTraits.length > 0)
             {
                 for (var j:int = 0; j < gameData.battleTraits.length; j++)
                 {
                     var gameTrait:Object = gameData.battleTraits[j];
-                    if (gameTrait.name == null || gameTrait.gameId == null || gameTrait.apId == null)
+                    var apTraitName:String = serverData.apIdToName[gameTrait.apId];
+                    var apTraitGameId:int  = serverData.apIdToGameId[gameTrait.apId];
+
+                    if (apTraitName == null)
                     {
-                        _logger.log("AV", "VALIDATION ERROR: Trait " + j + " missing required fields");
+                        _logger.log("AV", "VALIDATION ERROR: Trait AP ID=" + gameTrait.apId + " (" + gameTrait.name + ") not found in itemdata.json");
                         hasErrors = true;
-                        continue;
                     }
-                    // Log for verification
-                    _logger.log("AV", "✓ Trait: gameId=" + gameTrait.gameId + ", AP ID=" + gameTrait.apId + ", name=" + gameTrait.name);
+                    else if (apTraitName != gameTrait.name)
+                    {
+                        _logger.log("AV", "VALIDATION MISMATCH: Trait AP ID=" + gameTrait.apId + " game name='" + gameTrait.name + "' ap name='" + apTraitName + "'");
+                        hasErrors = true;
+                    }
+                    else if (apTraitGameId != gameTrait.gameId)
+                    {
+                        _logger.log("AV", "VALIDATION MISMATCH: Trait AP ID=" + gameTrait.apId + " game_id=" + gameTrait.gameId + " ap game_id=" + apTraitGameId);
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        _logger.log("AV", "OK Trait: gameId=" + gameTrait.gameId + ", AP ID=" + gameTrait.apId + ", name=" + gameTrait.name);
+                    }
                 }
             }
 
