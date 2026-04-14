@@ -72,7 +72,8 @@ package ui {
         }
 
         private function _onClickInternal(e:MouseEvent):void {
-            if (onClick != null) onClick();
+            if (onClick != null) 
+                onClick();
         }
 
         private function _brightnessFilter(scale:Number):ColorMatrixFilter {

@@ -749,7 +749,8 @@ package {
             _cachedReleases = releases;
             // Persist to cache so it is available without a network request next time.
             var config:Object = _fileHandler.loadModConfig();
-            if (config == null) config = {};
+            if (config == null)
+                config = {};
             config.cachedReleasesJson = JSON.stringify(releases);
             _fileHandler.saveModConfig(config);
             // If the changelog is open on the main menu, refresh it with the freshly-loaded data.
