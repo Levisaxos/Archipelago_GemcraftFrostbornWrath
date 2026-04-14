@@ -16,7 +16,8 @@ package {
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.ScreenId;
-    
+
+    import data.AV;
     import goals.GoalManager;
 
     import ui.ModButtons
@@ -998,14 +999,14 @@ package {
                 );
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
-                _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
-            _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
+                _logicEnforcer.configure(_logicEvaluator, AV.serverData.serverOptions.enforce_logic);
+            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
             _wavePrePatcher.configure(
-                _connectionManager.enemyHpMultiplier,
-                _connectionManager.enemyArmorMultiplier,
-                _connectionManager.enemyShieldMultiplier,
-                _connectionManager.enemiesPerWaveMultiplier,
-                _connectionManager.extraWaveCount
+                AV.serverData.serverOptions.enemyMultipliers.hp,
+                AV.serverData.serverOptions.enemyMultipliers.armor,
+                AV.serverData.serverOptions.enemyMultipliers.shield,
+                AV.serverData.serverOptions.enemyMultipliers.waves,
+                AV.serverData.serverOptions.enemyMultipliers.extraWaves
             );
             }
 
@@ -1027,24 +1028,24 @@ package {
             }
 
             _levelUnlocker.configure(
-                _connectionManager.tatteredScrollLevels,
-                _connectionManager.wornTomeLevels,
-                _connectionManager.ancientGrimoireLevels,
-                _connectionManager.startingWizardLevel
+                AV.serverData.serverOptions.tomeXpLevels.tattered,
+                AV.serverData.serverOptions.tomeXpLevels.worn,
+                AV.serverData.serverOptions.tomeXpLevels.ancient,
+                AV.serverData.serverOptions.startingWizardLevel
             );
-            _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
-            _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
-            _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
-            _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
+            _talismanUnlocker.setTalismanMap(AV.serverData.talismanMap);
+            _talismanUnlocker.setTalismanNameMap(AV.serverData.talismanNameMap);
+            _shadowCoreUnlocker.setShadowCoreMap(AV.serverData.shadowCoreMap);
+            _shadowCoreUnlocker.setShadowCoreNameMap(AV.serverData.shadowCoreNameMap);
             if (_normalProgressionBlocker != null) {
-                _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
+                _normalProgressionBlocker.setWizStashTalData(AV.serverData.wizStashTalData);
             }
 
             _goalManager.configure(
-                _connectionManager.goal,
-                _connectionManager.talismanMinRarity,
-                _connectionManager.fieldsRequired,
-                _connectionManager.fieldsRequiredPercentage);
+                AV.serverData.serverOptions.goal,
+                AV.serverData.serverOptions.talismanMinRarity,
+                AV.serverData.serverOptions.fieldsRequired,
+                AV.serverData.serverOptions.fieldsRequiredPercentage);
 
             if (_saveManager.slotCompleted) {
                 _goalManager.markAlreadyCompleted();

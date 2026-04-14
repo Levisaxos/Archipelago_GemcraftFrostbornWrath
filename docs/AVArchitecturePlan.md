@@ -96,10 +96,12 @@ AV.saveData.totalShadowCores:int
 AV.saveData.grantedApIds:Object            // apId → Boolean (deduplication for reconnects)
 ```
 
-**Missing Locations (what still needs checking):**
+**Location & Item Tracking:**
 ```actionscript
-AV.saveData.missingLocations:Object        // locId → Boolean (from AP server)
-AV.saveData.checkedLocations:Object        // locId → Boolean (inverse tracking)
+AV.saveData.receivedItems:Array            // Array of received item objects { apId, itemName, fromSlot, fromWorld }
+AV.saveData.receivedLocations:Object       // locId → Boolean (locations the player has found items at)
+AV.saveData.missingLocations:Object        // locId → Boolean (from AP server - what still needs checking)
+AV.saveData.checkedLocations:Object        // locId → Boolean (inverse tracking - locations already checked)
 ```
 
 **Player State:**
@@ -180,6 +182,7 @@ Create AV.LogicChecker and AV.ItemResolver to consolidate logic:
 4. **mods/ArchipelagoMod/src/SaveManager.as**
    - Load/save AV.saveData object instead of custom JSON
    - Serialize/deserialize the nested structure
+   - Persist: unlockedSkills, unlockedTraits, unlockedTokenStages, receivedTalismans, totalShadowCores, grantedApIds, receivedItems, receivedLocations, bonusWizardLevel, deathLinkEnabled, isStandalone, completed
 
 5. **mods/ArchipelagoMod/src/unlockers/\*.as** (all)
    - Read from AV.serverData instead of ConnectionManager
@@ -187,6 +190,26 @@ Create AV.LogicChecker and AV.ItemResolver to consolidate logic:
 
 6. **mods/ArchipelagoMod/src/tracker/LogicEvaluator.as**
    - Read rules from AV.serverData instead of storing copies
+
+---
+
+---
+
+## Item Receipt & Location Tracking Rationale
+
+By tracking **receivedItems**, **receivedLocations**, **missingLocations**, and **checkedLocations**, the mod maintains:
+
+1. **Complete history** — every item received from AP is recorded with source (apId, slot, world)
+2. **Location state** — know which locations have been checked vs still pending
+3. **Persistence** — all receipt data saved to file, survives reconnects
+4. **Deduplication** — combined with grantedApIds, prevents duplicate item grants on reconnect
+5. **Debugging/transparency** — can see full item history for player reference
+
+This comprehensive tracking enables:
+- Showing players what they've received (tracker UI)
+- Filtering by source world/player
+- Verifying no items were missed on reconnect
+- Sync validation before applying items
 
 ---
 
