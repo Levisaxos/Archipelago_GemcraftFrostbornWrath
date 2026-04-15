@@ -1,6 +1,7 @@
 package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import data.AV;
     import ui.ToastPanel;
     import ui.ItemToastPanel;
     import ui.MessageLog;
@@ -20,7 +21,7 @@ package net {
         private var _toast:ToastPanel;
         private var _itemToast:ItemToastPanel;
         private var _messageLog:MessageLog;
-        private var _ws:WebSocketClient;
+        private var _webSocketClient:WebSocketClient;
 
         // Connection state
         private var _isConnected:Boolean  = false;
@@ -28,13 +29,14 @@ package net {
         private var _reconnecting:Boolean = false;
 
         // Connection settings
-        private var _apHost:String     = "archipelago.gg";
-        private var _apPort:int        = 38281;
-        private var _apSlot:String     = "";
-        private var _apPassword:String = "";
+        private var _archipelagoHost:String     = "archipelago.gg";
+        private var _archipelagoPort:int        = 38281;
+        private var _archipelagoSlot:String     = "";
+        private var _archipelagoPassword:String = "";
         private var _saveSlot:int      = 0;
         // TLS is used only for archipelago.gg; local/IP servers use plain ws://
-        private static function isSecureHost(host:String):Boolean {
+        private static function isSecureHost(host:String):Boolean
+        {
             return host.toLowerCase() == "archipelago.gg";
         }
 
@@ -52,27 +54,6 @@ package net {
         private var _playerGames:Object = {};   // slot (int) → game name (String)
         private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
         private var _resolvedItemNames:Object  = {}; // itemId (String) → resolved name (String) — persistent cache
-        private var _goal:int           = 0;    // 0 = beat_game, 2 = kill_swarm_queen, 3 = fields_count, 4 = fields_percentage
-        private var _fieldsRequired:int           = 80;
-        private var _fieldsRequiredPercentage:int = 66;
-        private var _talismanMinRarity:int = 1;
-        private var _achievementRequiredEffort:int = 1;  // 0=off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
-        private var _tatteredScrollLevels:int  = 1;
-        private var _wornTomeLevels:int        = 2;
-        private var _ancientGrimoireLevels:int = 3;
-        private var _freeStages:Array          = null;
-        private var _fieldTokenPlacement:int   = 1;  // 0=own_world, 1=any_world, 2=different_world
-        private var _tierRequirements:int      = 75; // percent
-        private var _enforceLogic:Boolean      = false;
-        private var _disableEndurance:Boolean  = false;
-        private var _disableTrial:Boolean      = true;
-        private var _startingWizardLevel:int   = 1;
-        private var _startingOvercrowd:Boolean = false;
-        private var _enemyHpMultiplier:int          = 100;
-        private var _enemyArmorMultiplier:int       = 100;
-        private var _enemyShieldMultiplier:int      = 100;
-        private var _enemiesPerWaveMultiplier:int   = 100;
-        private var _extraWaveCount:int             = 0;
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -105,7 +86,10 @@ package net {
         };
 
         /** Public read-only view of the stage -> base-Journey AP location id map. */
-        public static function get stageLocIds():Object { return STAGE_LOC_AP_IDS; }
+        public static function get stageLocIds():Object
+        {
+            return STAGE_LOC_AP_IDS;
+        }
 
         // -----------------------------------------------------------------------
         // Callbacks — set by ArchipelagoMod
@@ -135,116 +119,186 @@ package net {
             _toast   = toast;
         }
 
-        public function get isConnected():Boolean { return _isConnected; }
-        public function get tokenMap():Object { return _tokenMap; }
-        public function get tokenStages():Object { return _tokenStages; }
-        public function get talismanMap():Object { return _talismanMap; }
-        public function get talismanNameMap():Object { return _talismanNameMap; }
-        public function get shadowCoreMap():Object { return _shadowCoreMap; }
-        public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
-        public function get wizStashTalData():Object { return _wizStashTalData; }
-        public function get missingLocations():Object { return _missingLocations; }
-        public function get goal():int { return _goal; }
-        public function get talismanMinRarity():int { return _talismanMinRarity; }
-        public function get achievementRequiredEffort():int { return _achievementRequiredEffort; }
-        public function get tatteredScrollLevels():int  { return _tatteredScrollLevels; }
-        public function get wornTomeLevels():int        { return _wornTomeLevels; }
-        public function get ancientGrimoireLevels():int { return _ancientGrimoireLevels; }
-        public function get freeStages():Array          { return _freeStages; }
-        public function get fieldTokenPlacement():int  { return _fieldTokenPlacement; }
-        public function get tierRequirements():int     { return _tierRequirements; }
-        public function get enforceLogic():Boolean      { return _enforceLogic; }
-        public function get disableEndurance():Boolean  { return _disableEndurance; }
-        public function get disableTrial():Boolean      { return _disableTrial; }
-        public function get startingWizardLevel():int   { return _startingWizardLevel; }
-        public function get startingOvercrowd():Boolean { return _startingOvercrowd; }
-        public function get enemyHpMultiplier():int          { return _enemyHpMultiplier; }
-        public function get enemyArmorMultiplier():int       { return _enemyArmorMultiplier; }
-        public function get enemyShieldMultiplier():int      { return _enemyShieldMultiplier; }
-        public function get enemiesPerWaveMultiplier():int   { return _enemiesPerWaveMultiplier; }
-        public function get extraWaveCount():int             { return _extraWaveCount; }
-        public function get fieldsRequired():int             { return _fieldsRequired; }
-        public function get fieldsRequiredPercentage():int   { return _fieldsRequiredPercentage; }
+        public function get isConnected():Boolean
+        {
+            return _isConnected;
+        }
 
-        public function get apHost():String { return _apHost; }
-        public function set apHost(v:String):void { _apHost = v; }
-        public function get apPort():int { return _apPort; }
-        public function set apPort(v:int):void { _apPort = v; }
-        public function get apSlot():String { return _apSlot; }
-        public function set apSlot(v:String):void { _apSlot = v; }
-        public function get apPassword():String { return _apPassword; }
-        public function set apPassword(v:String):void { _apPassword = v; }
-        public function get saveSlot():int { return _saveSlot; }
-        public function set saveSlot(v:int):void { _saveSlot = v; }
+        public function get tokenMap():Object
+        {
+            return _tokenMap;
+        }
+
+        public function get tokenStages():Object
+        {
+            return _tokenStages;
+        }
+
+        public function get talismanMap():Object
+        {
+            return _talismanMap;
+        }
+
+        public function get talismanNameMap():Object
+        {
+            return _talismanNameMap;
+        }
+
+        public function get shadowCoreMap():Object
+        {
+            return _shadowCoreMap;
+        }
+
+        public function get shadowCoreNameMap():Object
+        {
+            return _shadowCoreNameMap;
+        }
+
+        public function get wizStashTalData():Object
+        {
+            return _wizStashTalData;
+        }
+
+        public function get missingLocations():Object
+        {
+            return _missingLocations;
+        }
+
+        public function get apHost():String
+        {
+            return _archipelagoHost;
+        }
+
+        public function set apHost(value:String):void
+        {
+            _archipelagoHost = value;
+        }
+
+        public function get apPort():int
+        {
+            return _archipelagoPort;
+        }
+
+        public function set apPort(value:int):void
+        {
+            _archipelagoPort = value;
+        }
+
+        public function get apSlot():String
+        {
+            return _archipelagoSlot;
+        }
+
+        public function set apSlot(value:String):void
+        {
+            _archipelagoSlot = value;
+        }
+
+        public function get apPassword():String
+        {
+            return _archipelagoPassword;
+        }
+
+        public function set apPassword(value:String):void
+        {
+            _archipelagoPassword = value;
+        }
+
+        public function get saveSlot():int
+        {
+            return _saveSlot;
+        }
+
+        public function set saveSlot(value:int):void
+        {
+            _saveSlot = value;
+        }
 
         /** Provide the item-notification panel used for received/found/sent item toasts. */
-        public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
+        public function setItemToast(panel:ItemToastPanel):void
+        {
+            _itemToast = panel;
+        }
 
         /** Provide the message log so item send/receive events are recorded. */
-        public function setMessageLog(log:MessageLog):void { _messageLog = log; }
+        public function setMessageLog(log:MessageLog):void
+        {
+            _messageLog = log;
+        }
 
         // -----------------------------------------------------------------------
         // Lifecycle
 
-        public function load():void {
-            _ws = new WebSocketClient(_logger);
-            _ws.onOpen    = wsOnOpen;
-            _ws.onMessage = onApMessage;
-            _ws.onError   = wsOnError;
-            _ws.onClose   = wsOnClose;
+        public function load():void
+        {
+            _webSocketClient = new WebSocketClient(_logger);
+            _webSocketClient.onOpen    = wsOnOpen;
+            _webSocketClient.onMessage = onApMessage;
+            _webSocketClient.onError   = wsOnError;
+            _webSocketClient.onClose   = wsOnClose;
             _logger.log(_modName, "ConnectionManager loaded — waiting for slot selection");
         }
 
-        public function unload():void {
-            if (_ws != null) {
-                _ws.disconnect();
-                _ws = null;
+        public function unload():void
+        {
+            if (_webSocketClient != null)
+            {
+                _webSocketClient.disconnect();
+                _webSocketClient = null;
             }
         }
 
         // -----------------------------------------------------------------------
         // Connection control
 
-        public function connect(host:String, port:int, slot:String, password:String):void {
-            _apHost     = host;
-            _apPort     = port;
-            _apSlot     = slot;
-            _apPassword = password;
-            if (_ws != null && _isConnecting == false) {
+        public function connect(host:String, port:int, slot:String, password:String):void
+        {
+            _archipelagoHost     = host;
+            _archipelagoPort     = port;
+            _archipelagoSlot     = slot;
+            _archipelagoPassword = password;
+            if (_webSocketClient != null && _isConnecting == false)
+            {
                 _isConnecting = true;
                 _reconnecting = true;
-                _ws.disconnect();
+                _webSocketClient.disconnect();
                 _reconnecting = false;
-                _toast.addMessage("Connecting to " + _apHost + ":" + _apPort + " as " + _apSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
-                _ws.connect(_apHost, _apPort, isSecureHost(_apHost));
-                _logger.log(_modName, "Connecting to " + _apHost + ":" + _apPort + "  slot=" + _apSlot);
+                _toast.addMessage("Connecting to " + _archipelagoHost + ":" + _archipelagoPort + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
+                _webSocketClient.connect(_archipelagoHost, _archipelagoPort, isSecureHost(_archipelagoHost));
+                _logger.log(_modName, "Connecting to " + _archipelagoHost + ":" + _archipelagoPort + "  slot=" + _archipelagoSlot);
             }
         }
 
-        public function disconnect():void {
-            if (_ws != null) {
-                _ws.disconnect();                
+        public function disconnect():void
+        {
+            if (_webSocketClient != null)
+            {
+                _webSocketClient.disconnect();
             }
         }
 
-        public function disconnectAndReset():void {
-            if (_ws != null) {
+        public function disconnectAndReset():void
+        {
+            if (_webSocketClient != null)
+            {
                 _reconnecting = false;
-                _ws.disconnect();
+                _webSocketClient.disconnect();
             }
             _isConnected = false;
         }
 
         /** Reset connection settings to defaults. */
-        public function resetSettings():void {
-            _apHost     = "archipelago.gg";
-            _apPort     = 38281;
-            _apSlot     = "";
-            _apPassword = "";
+        public function resetSettings():void
+        {
+            _archipelagoHost     = "archipelago.gg";
+            _archipelagoPort     = 38281;
+            _archipelagoSlot     = "";
+            _archipelagoPassword = "";
         }
 
-        public function failConnection():void {
-            _isConnecting=false;
+        public function failConnection():void
+        {
+            _isConnecting = false;
         }
 
         // -----------------------------------------------------------------------
@@ -389,59 +443,123 @@ package net {
             // resolve cross-game item names in PrintJSON events.
             sendGetDataPackage();
 
-            if (p.slot_data && p.slot_data.token_map) {
+            if (p.slot_data && p.slot_data.token_map)
+            {
                 _tokenMap = p.slot_data.token_map;
                 _tokenStages = {};
                 var tokenCount:int = 0;
-                for (var apIdStr:String in _tokenMap) {
+                for (var apIdStr:String in _tokenMap)
+                {
                     _tokenStages[_tokenMap[apIdStr]] = true;
                     tokenCount++;
                 }
                 _logger.log(_modName, "  token_map loaded: " + tokenCount + " entries");
             }
-            if (p.slot_data && p.slot_data.talisman_map) {
+
+            if (p.slot_data && p.slot_data.talisman_map)
+            {
                 _talismanMap = p.slot_data.talisman_map;
                 _logger.log(_modName, "  talisman_map loaded");
             }
-            if (p.slot_data && p.slot_data.talisman_name_map) {
+
+            if (p.slot_data && p.slot_data.talisman_name_map)
+            {
                 _talismanNameMap = p.slot_data.talisman_name_map;
             }
-            if (p.slot_data && p.slot_data.shadow_core_map) {
+
+            if (p.slot_data && p.slot_data.shadow_core_map)
+            {
                 _shadowCoreMap = p.slot_data.shadow_core_map;
                 _logger.log(_modName, "  shadow_core_map loaded");
             }
-            if (p.slot_data && p.slot_data.shadow_core_name_map) {
+
+            if (p.slot_data && p.slot_data.shadow_core_name_map)
+            {
                 _shadowCoreNameMap = p.slot_data.shadow_core_name_map;
             }
-            if (p.slot_data && p.slot_data.wiz_stash_tal_data) {
+
+            if (p.slot_data && p.slot_data.wiz_stash_tal_data)
+            {
                 _wizStashTalData = p.slot_data.wiz_stash_tal_data;
             }
-            if (p.slot_data && p.slot_data.free_stages) {
-                _freeStages = p.slot_data.free_stages as Array;
+
+            if (p.slot_data && p.slot_data.free_stages)
+            {
+                AV.serverData.freeStages = p.slot_data.free_stages as Array;
             }
-            if (p.slot_data) {
-                _goal = int(p.slot_data.goal);
-                if (p.slot_data.achievement_required_effort !== undefined) _achievementRequiredEffort = int(p.slot_data.achievement_required_effort);
-                _talismanMinRarity = int(p.slot_data.talisman_min_rarity);
-                if (p.slot_data.tattered_scroll_levels  !== undefined) _tatteredScrollLevels  = int(p.slot_data.tattered_scroll_levels);
-                if (p.slot_data.worn_tome_levels         !== undefined) _wornTomeLevels         = int(p.slot_data.worn_tome_levels);
-                if (p.slot_data.ancient_grimoire_levels  !== undefined) _ancientGrimoireLevels  = int(p.slot_data.ancient_grimoire_levels);
-                if (p.slot_data.field_token_placement    !== undefined) _fieldTokenPlacement    = int(p.slot_data.field_token_placement);
-                if (p.slot_data.tier_requirements_percent !== undefined) _tierRequirements      = int(p.slot_data.tier_requirements_percent);
-                if (p.slot_data.enforce_logic             !== undefined) _enforceLogic           = Boolean(p.slot_data.enforce_logic);
-                if (p.slot_data.disable_endurance         !== undefined) _disableEndurance       = Boolean(p.slot_data.disable_endurance);
-                if (p.slot_data.disable_trial             !== undefined) _disableTrial           = Boolean(p.slot_data.disable_trial);
-                if (p.slot_data.starting_wizard_level     !== undefined) _startingWizardLevel    = int(p.slot_data.starting_wizard_level);
-                if (p.slot_data.starting_overcrowd        !== undefined) _startingOvercrowd      = Boolean(p.slot_data.starting_overcrowd);
-                if (p.slot_data.enemy_hp_multiplier          !== undefined) _enemyHpMultiplier        = int(p.slot_data.enemy_hp_multiplier);
-                if (p.slot_data.enemy_armor_multiplier       !== undefined) _enemyArmorMultiplier     = int(p.slot_data.enemy_armor_multiplier);
-                if (p.slot_data.enemy_shield_multiplier      !== undefined) _enemyShieldMultiplier    = int(p.slot_data.enemy_shield_multiplier);
-                if (p.slot_data.enemies_per_wave_multiplier  !== undefined) _enemiesPerWaveMultiplier = int(p.slot_data.enemies_per_wave_multiplier);
-                if (p.slot_data.extra_wave_count             !== undefined) _extraWaveCount              = int(p.slot_data.extra_wave_count);
-                if (p.slot_data.fields_required              !== undefined) _fieldsRequired              = int(p.slot_data.fields_required);
-                if (p.slot_data.fields_required_percentage   !== undefined) _fieldsRequiredPercentage    = int(p.slot_data.fields_required_percentage);
+
+            // Populate AV.serverData.serverOptions from slot_data
+            if (p.slot_data)
+            {
+                AV.serverData.serverOptions.goal = int(p.slot_data.goal);
+                AV.serverData.serverOptions.talismanMinRarity = int(p.slot_data.talisman_min_rarity);
+
+                if (p.slot_data.tattered_scroll_levels !== undefined)
+                {
+                    AV.serverData.serverOptions.tomeXpLevels.tattered = int(p.slot_data.tattered_scroll_levels);
+                }
+                if (p.slot_data.worn_tome_levels !== undefined)
+                {
+                    AV.serverData.serverOptions.tomeXpLevels.worn = int(p.slot_data.worn_tome_levels);
+                }
+                if (p.slot_data.ancient_grimoire_levels !== undefined)
+                {
+                    AV.serverData.serverOptions.tomeXpLevels.ancient = int(p.slot_data.ancient_grimoire_levels);
+                }
+                if (p.slot_data.field_token_placement !== undefined)
+                {
+                    AV.serverData.serverOptions.fieldTokenPlacement = int(p.slot_data.field_token_placement);
+                }
+                if (p.slot_data.enforce_logic !== undefined)
+                {
+                    AV.serverData.serverOptions.enforce_logic = Boolean(p.slot_data.enforce_logic);
+                }
+                if (p.slot_data.disable_endurance !== undefined)
+                {
+                    AV.serverData.serverOptions.disable_endurance = Boolean(p.slot_data.disable_endurance);
+                }
+                if (p.slot_data.disable_trial !== undefined)
+                {
+                    AV.serverData.serverOptions.disable_trial = Boolean(p.slot_data.disable_trial);
+                }
+                if (p.slot_data.starting_wizard_level !== undefined)
+                {
+                    AV.serverData.serverOptions.startingWizardLevel = int(p.slot_data.starting_wizard_level);
+                }
+                if (p.slot_data.starting_overcrowd !== undefined)
+                {
+                    AV.serverData.serverOptions.startingOvercrowd = Boolean(p.slot_data.starting_overcrowd);
+                }
+                if (p.slot_data.enemy_hp_multiplier !== undefined)
+                {
+                    AV.serverData.serverOptions.enemyMultipliers.hp = int(p.slot_data.enemy_hp_multiplier);
+                }
+                if (p.slot_data.enemy_armor_multiplier !== undefined)
+                {
+                    AV.serverData.serverOptions.enemyMultipliers.armor = int(p.slot_data.enemy_armor_multiplier);
+                }
+                if (p.slot_data.enemy_shield_multiplier !== undefined)
+                {
+                    AV.serverData.serverOptions.enemyMultipliers.shield = int(p.slot_data.enemy_shield_multiplier);
+                }
+                if (p.slot_data.enemies_per_wave_multiplier !== undefined)
+                {
+                    AV.serverData.serverOptions.enemyMultipliers.waves = int(p.slot_data.enemies_per_wave_multiplier);
+                }
+                if (p.slot_data.extra_wave_count !== undefined)
+                {
+                    AV.serverData.serverOptions.enemyMultipliers.extraWaves = int(p.slot_data.extra_wave_count);
+                }
+                if (p.slot_data.fields_required !== undefined)
+                {
+                    AV.serverData.serverOptions.fieldsRequired = int(p.slot_data.fields_required);
+                }
+                if (p.slot_data.fields_required_percentage !== undefined)
+                {
+                    AV.serverData.serverOptions.fieldsRequiredPercentage = int(p.slot_data.fields_required_percentage);
+                }
             }
-            _logger.log(_modName, "  goal=" + _goal + "  talisman_min_rarity=" + _talismanMinRarity);
+            _logger.log(_modName, "  goal=" + AV.serverData.serverOptions.goal + "  talisman_min_rarity=" + AV.serverData.serverOptions.talismanMinRarity);
 
             var missing:Array  = p.missing_locations as Array;
             var checked:Array  = p.checked_locations as Array;
@@ -449,16 +567,21 @@ package net {
                 "  checked_locations=" + (checked ? checked.length : "?"));
 
             _missingLocations = {};
-            if (missing != null) {
-                for each (var locId:int in missing) {
+            if (missing != null)
+            {
+                for each (var locId:int in missing)
+                {
                     _missingLocations[locId] = true;
                 }
             }
 
-            _toast.addMessage("Connected to " + _apHost + ":" + _apPort
-                + " as " + _apSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
+            _toast.addMessage("Connected to " + _archipelagoHost + ":" + _archipelagoPort
+                + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
 
-            if (onConnected != null) onConnected(p);
+            if (onConnected != null)
+            {
+                onConnected(p);
+            }
         }
 
         private function handleReceivedItems(p:Object):void {

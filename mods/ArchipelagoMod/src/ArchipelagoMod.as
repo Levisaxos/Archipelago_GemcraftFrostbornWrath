@@ -8,7 +8,6 @@ package {
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
-    import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -17,22 +16,20 @@ package {
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.ScreenId;
-    
+
+    import data.AV;
     import goals.GoalManager;
 
-    import ui.ArchipelagoButton;
-    import ui.ScrChangelog;
-    import ui.FieldsInLogicButton;
-    import ui.ReportIssuesButton;
-    import ui.SlotSettingsButton;
-    import ui.ScrSlotSettings;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
-    import ui.MessageLog;
-    import ui.MessageLogPanel;
-    import ui.ScrDebugOptions;
-    import ui.ConnectionPanel;
-    import ui.DisconnectPanel;
+    import ui.ModButtons
+    import ui.ScrChangelog
+    import ui.ScrSlotSettings
+    import ui.ToastPanel
+    import ui.ItemToastPanel
+    import ui.MessageLog
+    import ui.MessageLogPanel
+    import ui.ScrDebugOptions
+    import ui.ConnectionPanel
+    import ui.DisconnectPanel
 
     import update.UpdateChecker;
 
@@ -101,12 +98,8 @@ package {
 
         private var _logger:Logger;
         private var _bezel:Bezel;
-        private var _btn:ArchipelagoButton;
-        private var _reportBtn:ReportIssuesButton;
-        private var _settingsBtn:SlotSettingsButton;
-        private var _fieldsBtn:FieldsInLogicButton;
+        private var _modButtons:ModButtons;
         private var _slotSettings:ScrSlotSettings;
-        private var _buttonAdded:Boolean = false;
 
         private var _toast:ToastPanel;
         private var _toastOnStage:Boolean = false;
@@ -161,12 +154,13 @@ package {
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
+        private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
 
         // Changelog / version / update-check state
         private var _updateChecker:UpdateChecker;
         private var _scrChangelog:ScrChangelog;
         private var _versionLabel:TextField;            // "Archipelago Mod vX.X.X" on MAINMENU
-        private var _changelogBtn:Sprite;               // "Changelog" button on MAINMENU
+        // Changelog button is owned by _modButtons (ModButtons.showOnMainMenu)
         private var _updateBadge:Sprite;                // hidden until a newer version is found
         private var _mainMenuElementsOnStage:Boolean  = false;
         private var _mainMenuFetchDone:Boolean        = false; // fetch once per session
@@ -186,9 +180,15 @@ package {
         // -----------------------------------------------------------------------
         // Lifecycle
 
-        public function bind(bezel:Bezel, gameObjects:Object):void {
-            try {
+        public function bind(bezel:Bezel, gameObjects:Object):void
+        {
+            try
+            {
                 _bezel = bezel;
+
+                // Initialize AV (Archipelago Variables) early so all subsystems have access
+                AV.setLogger(_logger);
+                AV.initialize();
 
                 // Create subsystems
                 _messageLog    = new MessageLog();
@@ -243,6 +243,12 @@ package {
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+
+                // Button factory — owns all mod buttons on selector + main menu
+                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                _modButtons.onSettingsClick  = onSettingsClicked;
+                _modButtons.onApDebugClick   = _toggleDebugOptions;
+                _modButtons.onChangelogClick = openChangelog;
 
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
@@ -339,8 +345,8 @@ package {
             }
             _disconnectPanel = null;
             _disconnectPanelOnStage = false;
+            if (_modButtons != null) _modButtons.removeFromSelector();
             if (_slotSettings != null) _slotSettings.close();
-            _destroyButtons();
             removeMainMenuElements();
             if (_updateChecker != null) { _updateChecker.dispose(); _updateChecker = null; }
             if (_scrChangelog != null) { _scrChangelog.dismiss(); _scrChangelog = null; }
@@ -376,9 +382,15 @@ package {
         // -----------------------------------------------------------------------
         // Frame loop
 
-        private function onEnterFrame(e:Event):void {
-            // Early exit if game isn't initialized yet
-            if (GV.main == null) return;
+        private function onEnterFrame(e:Event):void
+        {
+            // Populate stage data from GV once stageCollection is ready (one-time init).
+            if (!_stagesPopulated && GV.stageCollection != null && GV.stageCollection.stageMetas != null)
+            {
+                AV.populateStages();
+                _stagesPopulated = true;
+                _logger.log(MOD_NAME, "Stage data populated into AV");
+            }
 
             // Add toasts to stage once available.
             if (!_toastOnStage && _toast != null && this.stage != null) {
@@ -415,6 +427,11 @@ package {
                 addMainMenuElements();
                 _mainMenuElementsOnStage = true;
             }
+            // Keep changelog button aligned between Start Game and Exit every frame.
+            if (_mainMenuElementsOnStage && _modButtons != null) {
+                _modButtons.onMainMenuFrame();
+            }
+
             // Remove them the moment we leave MAINMENU, regardless of transition path.
             if (_mainMenuElementsOnStage
                     && int(GV.main.currentScreen) != ScreenId.MAINMENU) {
@@ -627,10 +644,9 @@ package {
 
             if (mc.btnTutorial == null) return;
 
-            if (!_buttonAdded && !_standalone) {
+            if (!_modButtons.selectorAdded) {
                 if (mc.btnSkills == null || mc.btnTalisman == null) return;
-                addArchipelagoButton(mc);
-                _buttonAdded = true;
+                _modButtons.showOnSelector(mc);
             }
 
             try {
@@ -640,58 +656,8 @@ package {
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
 
-                // Inject "In Logic" filter button and toggle button into the achievement panel.
-                // Refresh filter flags when logic changes and the panel is visible.
-                if (_achPanelPatcher != null && GV.selectorCore != null) {
-                    _achPanelPatcher.tryPatch();
-                    _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
-                    var achStatus:int = int(GV.selectorCore.screenStatus);
-
-                    // Detect when achievement window is opened (status changed to 305/306)
-                    var achWindowJustOpened:Boolean = (achStatus == 305 || achStatus == 306) &&
-                                                      (_lastAchievementWindowStatus != 305 && _lastAchievementWindowStatus != 306);
-                    if (achWindowJustOpened) {
-                        _inLogicAchievementsDirty = true;  // Recompute when window opens
-                    }
-                    _lastAchievementWindowStatus = achStatus;
-
-                    if (_achPanelLogicDirty) {
-                        if (achStatus == 305 || achStatus == 306) {
-                            _achPanelPatcher.updateLogicFlags(_getInLogicAchApIds());
-                            _achPanelLogicDirty = false;
-                        }
-                    }
-                }
-
-                // In-logic button: update count label + drive hover panel.
-                if (_fieldsBtn != null) {
-                    var inLogicFields:Array = _computeInLogicStages();
-                    // Lazily recompute achievements only when logic changes (items received or windows open)
-                    if (_inLogicAchievementsDirty) {
-                        _inLogicAchievementsCache = _computeInLogicAchievements();
-                        _inLogicAchievementsDirty = false;
-                    }
-                    var totalCount:int = inLogicFields.length + _inLogicAchievementsCache.length;
-                    _fieldsBtn.update(totalCount, inLogicFields, _inLogicAchievementsCache);
-                    _fieldsBtn.onFrame();
-                }
-
-                if (_reportBtn != null && mc.btnTutorial != null) {
-                    _reportBtn.x = mc.btnTutorial.x;
-                }
-                if (_settingsBtn != null && mc.btnTutorial != null) {
-                    _settingsBtn.x = mc.btnTutorial.x;
-                }
-                if (_fieldsBtn != null && mc.btnTutorial != null) {
-                    _fieldsBtn.x = mc.btnTutorial.x;
-                }
-                if (_btn != null && mc.btnTutorial != null) {
-                    _btn.x = mc.btnTutorial.x;
-                }
-            } catch (err:Error) {
-                _logger.log(MOD_NAME, "ERROR in selector frame: " + err.message);
-                return;
-            }
+            // Buttons: sync X positions, update fields-in-logic label + hover + pan.
+            _modButtons.onSelectorFrame(mc);
 
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
@@ -775,13 +741,6 @@ package {
             _versionLabel.y = stg.stageHeight - 48;
             stg.addChild(_versionLabel);
 
-            // Changelog button — just below the version label.
-            _changelogBtn = _makeSmallButton("Changelog", 88, 20);
-            _changelogBtn.x = 10;
-            _changelogBtn.y = stg.stageHeight - 28;
-            _changelogBtn.addEventListener(MouseEvent.CLICK, onChangelogBtnClicked, false, 0, true);
-            stg.addChild(_changelogBtn);
-
             // Update badge — to the right of the version label, hidden until needed.
             _updateBadge = _makeUpdateBadge();
             _updateBadge.x = 10 + _versionLabel.textWidth + 12;
@@ -815,11 +774,7 @@ package {
             }
             _versionLabel = null;
 
-            if (_changelogBtn != null) {
-                _changelogBtn.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
-                if (_changelogBtn.parent != null) _changelogBtn.parent.removeChild(_changelogBtn);
-            }
-            _changelogBtn = null;
+            if (_modButtons != null) _modButtons.removeFromMainMenu();
 
             if (_updateBadge != null) {
                 _updateBadge.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
@@ -859,7 +814,8 @@ package {
             _cachedReleases = releases;
             // Persist to cache so it is available without a network request next time.
             var config:Object = _fileHandler.loadModConfig();
-            if (config == null) config = {};
+            if (config == null)
+                config = {};
             config.cachedReleasesJson = JSON.stringify(releases);
             _fileHandler.saveModConfig(config);
             // If the changelog is open on the main menu, refresh it with the freshly-loaded data.
@@ -881,44 +837,6 @@ package {
 
         private function onChangelogBtnClicked(e:MouseEvent):void {
             openChangelog();
-        }
-
-        // Helpers for building the MAINMENU UI elements
-
-        private function _makeSmallButton(label:String, w:Number, h:Number):Sprite {
-            var btn:Sprite = new Sprite();
-            _drawSmallBtnFace(btn, 0x3A1A6E, w, h, false);
-
-            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFFFFF, true);
-            fmt.align = TextFormatAlign.CENTER;
-            var tf:TextField = new TextField();
-            tf.defaultTextFormat = fmt;
-            tf.selectable   = false;
-            tf.mouseEnabled = false;
-            tf.width        = w;
-            tf.height       = h;
-            tf.text         = label;
-            btn.addChild(tf);
-
-            btn.buttonMode    = true;
-            btn.useHandCursor = true;
-            btn.addEventListener(MouseEvent.MOUSE_OVER,
-                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, true); },
-                false, 0, true);
-            btn.addEventListener(MouseEvent.MOUSE_OUT,
-                function(e:MouseEvent):void { _drawSmallBtnFace(e.currentTarget as Sprite, 0x3A1A6E, w, h, false); },
-                false, 0, true);
-            return btn;
-        }
-
-        private function _drawSmallBtnFace(btn:Sprite, bgColor:uint,
-                                           w:Number, h:Number, hover:Boolean):void {
-            var fill:uint = hover ? _brightenColor(bgColor, 0.35) : bgColor;
-            btn.graphics.clear();
-            btn.graphics.beginFill(fill);
-            btn.graphics.lineStyle(1, 0xAA77EE);
-            btn.graphics.drawRoundRect(0, 0, w, h, 6, 6);
-            btn.graphics.endFill();
         }
 
         private function _makeUpdateBadge():Sprite {
@@ -950,103 +868,9 @@ package {
             return badge;
         }
 
-        private function _brightenColor(color:uint, amount:Number):uint {
-            var r:int = Math.min(255, int((color >> 16 & 0xFF) + 255 * amount));
-            var g:int = Math.min(255, int((color >> 8  & 0xFF) + 255 * amount));
-            var b:int = Math.min(255, int((color       & 0xFF) + 255 * amount));
-            return (r << 16) | (g << 8) | b;
-        }
 
         // -----------------------------------------------------------------------
-        // Archipelago button + debug hotkey
-
-        /**
-         * Removes all AP selector buttons from their parents, nulls the references,
-         * and resets _buttonAdded so they can be re-created on the next session.
-         * Called on MAINMENU/LOADGAME transitions and in unload().
-         */
-        private function _destroyButtons():void {
-            if (_reportBtn != null && _reportBtn.parent != null)
-                _reportBtn.parent.removeChild(_reportBtn);
-            _reportBtn = null;
-
-            if (_settingsBtn != null && _settingsBtn.parent != null)
-                _settingsBtn.parent.removeChild(_settingsBtn);
-            _settingsBtn = null;
-
-            if (_fieldsBtn != null && _fieldsBtn.parent != null)
-                _fieldsBtn.parent.removeChild(_fieldsBtn);
-            _fieldsBtn = null;
-
-            if (_btn != null && _btn.parent != null)
-                _btn.parent.removeChild(_btn);
-            _btn = null;
-
-            _buttonAdded = false;
-        }
-
-        private function addArchipelagoButton(mc:*):void {
-            var stepY:Number = mc.btnTalisman.y - mc.btnSkills.y;
-
-            _reportBtn = new ReportIssuesButton(mc.btnTutorial);
-            _reportBtn.x = mc.btnTutorial.x;
-            _reportBtn.y = mc.btnTutorial.y + stepY;
-            _reportBtn.visible = false; // shown after AP connects
-            mc.addChild(_reportBtn);
-            _logger.log(MOD_NAME, "Report Issues button added at (" + _reportBtn.x + ", " + _reportBtn.y + ") [hidden until connected]");
-
-            _settingsBtn = new SlotSettingsButton(mc.btnTutorial);
-            _settingsBtn.x = mc.btnTutorial.x;
-            _settingsBtn.y = mc.btnTutorial.y + stepY * 2;
-            _settingsBtn.visible = false; // shown after AP connects
-            _settingsBtn.onClick = onSettingsClicked;
-            mc.addChild(_settingsBtn);
-            _logger.log(MOD_NAME, "AP Settings button added at (" + _settingsBtn.x + ", " + _settingsBtn.y + ") [hidden until connected]");
-
-            _fieldsBtn = new FieldsInLogicButton(mc.btnTutorial);
-            _fieldsBtn.x = mc.btnTutorial.x;
-            _fieldsBtn.y = mc.btnTutorial.y + stepY * 3;
-            _fieldsBtn.visible = false; // shown after AP connects
-            mc.addChild(_fieldsBtn);
-            _logger.log(MOD_NAME, "Fields in Logic button added at (" + _fieldsBtn.x + ", " + _fieldsBtn.y + ") [hidden until connected]");
-
-            _btn = new ArchipelagoButton(mc.btnTutorial);
-            _btn.x = mc.btnTutorial.x;
-            _btn.y = mc.btnTutorial.y + stepY * 4;
-            _btn.visible = false; // hidden until Ctrl+Alt+Shift+End
-            _btn.addEventListener(MouseEvent.CLICK, onArchipelagoClicked, false, 0, true);
-            mc.addChild(_btn);
-            _logger.log(MOD_NAME, "Archipelago button added at (" + _btn.x + ", " + _btn.y + ") [hidden]");
-        }
-
-        /**
-         * Returns a sorted array of strIds for stages that currently have at
-         * least one AP location still missing and in logic.
-         */
-        private function _computeInLogicStages():Array {
-            var result:Array = [];
-            if (!_connectionManager.isConnected || _logicEvaluator == null || GV.ppd == null) return result;
-            var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
-            if (metas == null) return result;
-            var missing:Object = _connectionManager.missingLocations;
-            var locIds:Object  = ConnectionManager.stageLocIds;
-            for (var i:int = 0; i < metas.length; i++) {
-                var meta:* = metas[i];
-                if (meta == null) continue;
-                var strId:String = String(meta.strId);
-                if (GV.ppd.stageHighestXpsJourney[meta.id].g() < 0) continue; // not unlocked
-                var base:int = int(locIds[strId]);
-                if (base <= 0) continue;
-                var jMiss:Boolean = missing[base]        == true;
-                var bMiss:Boolean = missing[base + 500]  == true;
-                var sMiss:Boolean = missing[base + 1000] == true;
-                if (_logicEvaluator.stageHasInLogicMissing(strId, jMiss, bMiss, sMiss)) {
-                    result.push(strId);
-                }
-            }
-            result.sort(Array.CASEINSENSITIVE);
-            return result;
-        }
+        // Debug hotkey
 
         /**
          * Returns a sorted array of achievement names that haven't been collected yet
@@ -1333,14 +1157,14 @@ package {
             if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
                 _debugMode = !_debugMode;
                 _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
-                if (_btn != null) _btn.visible = _debugMode;
+                if (_modButtons != null) _modButtons.apDebugVisible = _debugMode;
                 if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
                     _debugOptions.close();
                 }
             }
         }
 
-        private function onArchipelagoClicked(e:MouseEvent):void {
+        private function _toggleDebugOptions():void {
             if (_debugOptions == null) return;
             if (_debugOptions.isOpen) {
                 _debugOptions.close();
@@ -1492,66 +1316,40 @@ package {
         // -----------------------------------------------------------------------
         // ConnectionManager callbacks
 
-        private function onApConnected(p:Object):void {
-            try {
-                _needsConnection = false;
+        private function onApConnected(p:Object):void
+        {
+            _needsConnection = false;
 
-                // Reset + configure the in-game tracker from slot_data.  Must happen
-                // BEFORE syncWithAP (which will populate collected state via onItem).
-                if (_collectedState != null) _collectedState.reset();
+            // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
+            AV.loadServerDataFromJSON();
 
-                if (p.slot_data != null) {
-                    try {
-                        _collectedState.configure(
-                            _connectionManager.tokenMap,
-                            p.slot_data.skill_categories
-                        );
-                    } catch (e:Error) {
-                        _logger.log(MOD_NAME, "ERROR in collectedState.configure: " + e.message);
-                    }
-
-                    try {
-                        _logicEvaluator.configure(
-                            p.slot_data.stage_tier,
-                            p.slot_data.stage_skills,
-                            p.slot_data.cumulative_skill_reqs,
-                            p.slot_data.tier_stage_counts,
-                            int(p.slot_data.token_requirement_percent),
-                            p.slot_data.free_stages as Array
-                        );
-                        _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
-                            + p.slot_data.logic_rules_version);
-                    } catch (e:Error) {
-                        _logger.log(MOD_NAME, "ERROR in logicEvaluator.configure: " + e.message);
-                    }
-
-                    try {
-                        _logicEnforcer.configure(_logicEvaluator, _connectionManager.enforceLogic);
-                    } catch (e:Error) {
-                        _logger.log(MOD_NAME, "ERROR in logicEnforcer.configure: " + e.message);
-                    }
-
-                    try {
-                        _firstPlayBypass.configure(_connectionManager.disableEndurance, _connectionManager.disableTrial);
-                    } catch (e:Error) {
-                        _logger.log(MOD_NAME, "ERROR in firstPlayBypass.configure: " + e.message);
-                    }
-
-                    try {
-                        _wavePrePatcher.configure(
-                            _connectionManager.enemyHpMultiplier,
-                            _connectionManager.enemyArmorMultiplier,
-                            _connectionManager.enemyShieldMultiplier,
-                            _connectionManager.enemiesPerWaveMultiplier,
-                            _connectionManager.extraWaveCount
-                        );
-                    } catch (e:Error) {
-                        _logger.log(MOD_NAME, "ERROR in wavePrePatcher.configure: " + e.message);
-                    }
-                }
-            } catch (err:Error) {
-                _logger.log(MOD_NAME, "ERROR in onApConnected early setup: " + err.message);
-                return;
+            // Reset + configure the in-game tracker from slot_data.  Must happen
+            // BEFORE syncWithAP (which will populate collected state via onItem).
+            if (_collectedState != null) _collectedState.reset();
+            if (p.slot_data != null) {
+                _collectedState.configure(
+                    _connectionManager.tokenMap,
+                    p.slot_data.skill_categories
+                );
+                _logicEvaluator.configure(
+                    p.slot_data.stage_tier,
+                    p.slot_data.stage_skills,
+                    p.slot_data.cumulative_skill_reqs,
+                    p.slot_data.tier_stage_counts,
+                    int(p.slot_data.token_requirement_percent),
+                    p.slot_data.free_stages as Array
+                );
+                _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
+                    + p.slot_data.logic_rules_version);
+                _logicEnforcer.configure(_logicEvaluator, AV.serverData.serverOptions.enforce_logic);
+            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
+            _wavePrePatcher.configure(
+                AV.serverData.serverOptions.enemyMultipliers.hp,
+                AV.serverData.serverOptions.enemyMultipliers.armor,
+                AV.serverData.serverOptions.enemyMultipliers.shield,
+                AV.serverData.serverOptions.enemyMultipliers.waves,
+                AV.serverData.serverOptions.enemyMultipliers.extraWaves
+            );
             }
 
             try {
@@ -1563,72 +1361,38 @@ package {
                 _saveManager.loadSlotData(_saveManager.currentSlot);
                 _levelUnlocker.applyBonusLevels();
 
-                _logger.log(MOD_NAME, "onApConnected: configuring deathlink");
-                // DeathLink: for new slots use the YAML setting; existing slots keep the local override.
-                if (!_saveManager.deathLinkEnabledSet && p.slot_data) {
-                    _saveManager.deathLinkEnabled = p.slot_data.death_link === true;
-                    _saveManager.saveSlotData();
-                }
-                _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
-                if (p.slot_data) _deathLinkHandler.configure(p.slot_data);
-                if (_saveManager.deathLinkEnabled) {
-                    _connectionManager.sendConnectUpdate(["DeathLink"]);
-                }
-
-                _logger.log(MOD_NAME, "onApConnected: configuring levelUnlocker and unlockers");
-                _levelUnlocker.configure(
-                    _connectionManager.tatteredScrollLevels,
-                    _connectionManager.wornTomeLevels,
-                    _connectionManager.ancientGrimoireLevels,
-                    _connectionManager.startingWizardLevel
-                );
-                _talismanUnlocker.setTalismanMap(_connectionManager.talismanMap);
-                _talismanUnlocker.setTalismanNameMap(_connectionManager.talismanNameMap);
-                _shadowCoreUnlocker.setShadowCoreMap(_connectionManager.shadowCoreMap);
-                _shadowCoreUnlocker.setShadowCoreNameMap(_connectionManager.shadowCoreNameMap);
-                if (_normalProgressionBlocker != null) {
-                    _normalProgressionBlocker.setWizStashTalData(_connectionManager.wizStashTalData);
-                }
-
-                _logger.log(MOD_NAME, "onApConnected: configuring goalManager");
-                _goalManager.configure(
-                    _connectionManager.goal,
-                    _connectionManager.talismanMinRarity,
-                    _connectionManager.fieldsRequired,
-                    _connectionManager.fieldsRequiredPercentage);
-
-                if (_saveManager.slotCompleted) {
-                    _goalManager.markAlreadyCompleted();
-                }
-                // Note: we do NOT call _goalManager.check() here because GV.ppd
-                // may still hold data from a previously loaded save slot.
-                // The onSaveSave hook will catch a legitimate victory.
-                _logger.log(MOD_NAME, "onApConnected: configuring UI");
-                if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
-                if (_settingsBtn != null) _settingsBtn.visible = true;
-                if (_reportBtn != null) _reportBtn.visible = true;
-                if (_fieldsBtn != null) _fieldsBtn.visible = true;
-
-                _logger.log(MOD_NAME, "onApConnected: finishing up");
-                if (_connectionPanel != null) _connectionPanel.dismiss();
-                hideDisconnectPanel();
-                _modeInterceptor.redispatchPendingClick();
-
-                // Seed the "In Logic" filter flags now that we have achievement data + logic.
-                _achPanelLogicDirty = true;
-                _inLogicAchievementsDirty = true;  // Compute and cache achievements on connect
-                if (_achPanelPatcher != null) {
-                    _achPanelPatcher.updateLogicFlags(_getInLogicAchApIds());
-                    _achPanelLogicDirty = false;
-                    _achPanelPatcher.refreshIfActive();
-                }
-                // Pre-populate the cache
-                _inLogicAchievementsCache = _computeInLogicAchievements();
-                _inLogicAchievementsDirty = false;
-            } catch (err:Error) {
-                _logger.log(MOD_NAME, "ERROR in onApConnected finish: " + err.message);
-                _logger.log(MOD_NAME, "  Stack: " + err.getStackTrace());
+            _levelUnlocker.configure(
+                AV.serverData.serverOptions.tomeXpLevels.tattered,
+                AV.serverData.serverOptions.tomeXpLevels.worn,
+                AV.serverData.serverOptions.tomeXpLevels.ancient,
+                AV.serverData.serverOptions.startingWizardLevel
+            );
+            _talismanUnlocker.setTalismanMap(AV.serverData.talismanMap);
+            _talismanUnlocker.setTalismanNameMap(AV.serverData.talismanNameMap);
+            _shadowCoreUnlocker.setShadowCoreMap(AV.serverData.shadowCoreMap);
+            _shadowCoreUnlocker.setShadowCoreNameMap(AV.serverData.shadowCoreNameMap);
+            if (_normalProgressionBlocker != null) {
+                _normalProgressionBlocker.setWizStashTalData(AV.serverData.wizStashTalData);
             }
+
+            _goalManager.configure(
+                AV.serverData.serverOptions.goal,
+                AV.serverData.serverOptions.talismanMinRarity,
+                AV.serverData.serverOptions.fieldsRequired,
+                AV.serverData.serverOptions.fieldsRequiredPercentage);
+
+            if (_saveManager.slotCompleted) {
+                _goalManager.markAlreadyCompleted();
+            }
+            // Note: we do NOT call _goalManager.check() here because GV.ppd
+            // may still hold data from a previously loaded save slot.
+            // The onSaveSave hook will catch a legitimate victory.
+            if (_slotSettings != null) _slotSettings.configure(_connectionManager, _deathLinkHandler);
+            if (_modButtons != null) _modButtons.settingsVisible = true;
+
+            if (_connectionPanel != null) _connectionPanel.dismiss();
+            hideDisconnectPanel();
+            _modeInterceptor.redispatchPendingClick();
         }
 
         private function onSettingsClicked():void {
@@ -1653,9 +1417,7 @@ package {
         }
 
         private function onApUnexpectedlyDisconnected():void {
-            if (_settingsBtn != null) _settingsBtn.visible = false;
-            if (_reportBtn != null) _reportBtn.visible = false;
-            if (_fieldsBtn != null) _fieldsBtn.visible = false;
+            if (_modButtons != null) _modButtons.settingsVisible = false;
             if (_slotSettings != null) _slotSettings.close();
             if (_disconnectPanel == null || !_disconnectPanelOnStage) return;
             _disconnectPanel.resetState();
