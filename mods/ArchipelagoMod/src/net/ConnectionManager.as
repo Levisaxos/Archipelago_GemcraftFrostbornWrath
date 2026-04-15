@@ -49,6 +49,8 @@ package net {
         private var _shadowCoreNameMap:Object = {}; // item AP ID (string) → str_id (e.g. "Z2")
         private var _wizStashTalData:Object = {};   // str_id → "seed/rarity/type/upgradeLevel"
         private var _missingLocations:Object = {};
+        private var _lastCheckedLocations:Array = [];  // [{strId, locType}] — populated by checkCompletedLocations()
+        private var _itemsSentThisLevel:Object = {};   // [locationId → {itemId, itemName, receivingSlot, receivingName}] — populated by handlePrintJSON()
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
         private var _playerGames:Object = {};   // slot (int) → game name (String)
@@ -90,6 +92,15 @@ package net {
         {
             return STAGE_LOC_AP_IDS;
         }
+
+        /** Locations checked during the most recent battle victory. Read by NormalProgressionBlocker. */
+        public function get lastCheckedLocations():Array { return _lastCheckedLocations; }
+
+        /** Items sent out for checked locations (locationId → {itemId, itemName, receivingSlot, receivingName}). */
+        public function get itemsSentThisLevel():Object { return _itemsSentThisLevel; }
+
+        /** Server data (tokenMap, etc.) for item icon resolution. */
+        public function get serverData():Object { return AV.serverData; }
 
         // -----------------------------------------------------------------------
         // Callbacks — set by ArchipelagoMod
@@ -627,13 +638,24 @@ package net {
                 // Always log to message log
                 if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
 
-                if (senderSlot == _mySlot && receiving != _mySlot) {
-                    // Player sent an item for someone else — show only on the item HUD
+                if (senderSlot == _mySlot) {
+                    // We sent an item (to ourselves or another player) — track it for ending-screen display
                     var sentItemId:int   = int(p.item.item);
+                    var sentLocId:int    = int(p.item.location);
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, senderSlot);
                     var recvName:String  = (_playerNames[receiving] != null)
                         ? String(_playerNames[receiving]) : ("Slot " + receiving);
-                    if (_itemToast != null) {
+
+                    // Store for ending-screen icon display
+                    _itemsSentThisLevel[sentLocId] = {
+                        itemId: sentItemId,
+                        itemName: sentItemName,
+                        receivingSlot: receiving,
+                        receivingName: recvName
+                    };
+
+                    // Show on toast if sent to another player
+                    if (receiving != _mySlot && _itemToast != null) {
                         _itemToast.addItem("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
                     }
                 }
@@ -996,6 +1018,8 @@ package net {
                 _logger.log(_modName, "  metas.length=" + metas.length);
 
                 var toSend:Array = [];
+                _lastCheckedLocations = [];
+                _itemsSentThisLevel = {};  // Clear items sent from previous battle
                 for (var i:int = 0; i < metas.length; i++) {
                     var meta:* = metas[i];
                     if (meta == null) continue;
@@ -1014,10 +1038,12 @@ package net {
                     if (locId <= 0) continue;
                     if (journeyNew) {
                         toSend.push(locId);
+                        _lastCheckedLocations.push({strId: meta.strId, locType: "journey"});
                         _logger.log(_modName, "Pending: " + meta.strId + " (field journey)  locId=" + locId);
                     }
                     if (bonusNew) {
                         toSend.push(bonusLocId);
+                        _lastCheckedLocations.push({strId: meta.strId, locType: "bonus"});
                         _logger.log(_modName, "Pending: " + meta.strId + " (field bonus)  locId=" + bonusLocId);
                     }
 
@@ -1026,6 +1052,7 @@ package net {
                         var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
                         if (stashStatus == 1 || stashStatus == 2) {
                             toSend.push(wizStashLocId);
+                            _lastCheckedLocations.push({strId: meta.strId, locType: "stash"});
                             _logger.log(_modName, "Pending: " + meta.strId + " (field stash)  locId=" + wizStashLocId);
                         }
                     }

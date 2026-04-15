@@ -217,7 +217,10 @@ package {
                 _slotSettings  = new ScrSlotSettings();
 
                 _normalProgressionBlocker = new NormalProgressionBlocker(_logger, MOD_NAME);
-                _normalProgressionBlocker.enable(_bezel);
+                // enable() is called after our own SAVE_SAVE registration (below) so that
+                // NormalProgressionBlocker's handler fires AFTER ArchipelagoMod.onSaveSave(),
+                // which means checkCompletedLocations() has already populated lastCheckedLocations
+                // before buildLevelEndIcons() reads it.
 
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
@@ -295,6 +298,11 @@ package {
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
+
+                // Register NormalProgressionBlocker AFTER our own handler so its SAVE_SAVE fires second
+                _normalProgressionBlocker.setConnectionManager(_connectionManager);
+                _normalProgressionBlocker.enable(_bezel);
+
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
                 patchWizStashModes();
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");

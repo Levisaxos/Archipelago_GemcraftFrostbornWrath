@@ -8,6 +8,7 @@ package unlockers {
     import com.giab.games.gcfw.entity.TalismanFragment;
     import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
     import flash.events.MouseEvent;
+    import data.AV;
 
     /**
      * Intercepts the SAVE_SAVE event and reverts any automatic field-token,
@@ -57,6 +58,9 @@ package unlockers {
         private var _traitUnlocker:*;
         private var _talismanUnlocker:*;
         private var _shadowCoreUnlocker:*;
+
+        // Reference to ConnectionManager for reading lastCheckedLocations
+        private var _connectionManager:*;
 
         // Track items received during this level (to display on ending screen)
         private var _itemsReceivedThisLevel:Array = [];  // Array of {apId, itemName, sentTo, isForUs}
@@ -169,6 +173,10 @@ package unlockers {
             _traitUnlocker = traitUnlocker;
             _talismanUnlocker = talismanUnlocker;
             _shadowCoreUnlocker = shadowCoreUnlocker;
+        }
+
+        public function setConnectionManager(cm:*):void {
+            _connectionManager = cm;
         }
 
         // -----------------------------------------------------------------------
@@ -315,11 +323,11 @@ package unlockers {
                     }
                 }
 
-                // --- TEST: inject hardcoded icons into the ending screen drop area ---
+                // Build level-end drop icons from actual checked locations and achievement drops
                 if (GV.ingameController != null && GV.ingameController.core != null) {
                     var endingForIcons:* = GV.ingameController.core.ending;
                     if (endingForIcons != null && endingForIcons.isBattleWon)
-                        injectTestIcons(endingForIcons);
+                        buildLevelEndIcons(endingForIcons);
                 }
 
                 if (reverted > 0) {
@@ -458,39 +466,72 @@ package unlockers {
         // Helpers
 
         // -----------------------------------------------------------------------
-        // TEST: hardcoded ending-screen icon injection
-        // TODO: replace with real AP icon rendering once the approach is proven.
+        // Level-end drop icon construction
 
         /**
-         * Inject four hardcoded test icons into the ending-screen drop area.
-         * Icons are added to both ending.dropIcons and mcOutcomePanel so the game's
-         * animation loop reveals them one-by-one (visible = false initially).
-         * The animation loop is indifferent to ApItemIcon (type won't match any DropType,
-         * no sound plays), and cleanups happen automatically when mcOutcomePanel is
-         * removed from the display tree on return to the map.
+         * Build the ending-screen drop icons from items SENT OUT when we checked locations.
+         *
+         * Flow:
+         * 1. checkCompletedLocations() sends location checks to AP, stores them in lastCheckedLocations
+         * 2. AP server responds with ItemSend PrintJSON (what item was at each location, who it goes to)
+         * 3. ConnectionManager.handlePrintJSON() tracks these in itemsSentThisLevel[locationId]
+         * 4. buildLevelEndIcons() matches checked locations with sent items, builds icons
+         *
+         * Must run AFTER both:
+         * - checkCompletedLocations() populates lastCheckedLocations
+         * - ItemSend PrintJSON messages arrive and populate itemsSentThisLevel
          */
-        private function injectTestIcons(ending:*):void {
+        private function buildLevelEndIcons(ending:*):void {
             try {
-                // Clean up any existing game icons (reverts FIELD_TOKEN/MAP_TILE from saves,
-                // removes sprites from display, disposes bitmapdata)
-                ending.removeAllDropIcons();
-
-                // Field-token icons for three hardcoded stages
-                var testStages:Array = ["D4", "A4", "O4"];
-                var icons:Array = [];
-
-                for (var s:int = 0; s < testStages.length; s++) {
-                    var idx:int = findStageIndex(String(testStages[s]));
-                    if (idx >= 0)
-                        icons.push(new McDropIconOutcome(DropType.FIELD_TOKEN, idx));
-                    else
-                        _logger.log(_modName, "injectTestIcons: stage not found: " + testStages[s]);
+                // Harvest queued achievement drops (skill points from OUR achievements)
+                var achDrops:Array = [];
+                if (ending.dropIcons != null) {
+                    for (var d:int = 0; d < ending.dropIcons.length; d++) {
+                        var drop:* = ending.dropIcons[d];
+                        if (drop != null && drop.type == AP_ACHIEVEMENT_SKILL)
+                            achDrops.push(drop);
+                    }
                 }
 
-                // Custom AP icon with a tooltip
-                icons.push(new ApItemIcon("Sent Skill Tome to Player2"));
+                // Clear all existing game icons (field-token / map-tile sprites)
+                ending.removeAllDropIcons();
 
-                // Position: same centering formula as prepareDropIcons
+                var icons:Array = [];
+
+                // Icons for items we sent out (checked locations → AP items)
+                if (_connectionManager != null) {
+                    var checked:Array = _connectionManager.lastCheckedLocations;
+                    var sentItems:Object = _connectionManager.itemsSentThisLevel;
+
+                    for (var c:int = 0; c < checked.length; c++) {
+                        var loc:Object = checked[c];
+                        var locId:int = getLocationIdFromStrIdAndType(String(loc.strId), String(loc.locType));
+
+                        // Look up what item was sent for this location
+                        if (sentItems != null && sentItems[locId] != null) {
+                            var sent:Object = sentItems[locId];
+                            var itemIcon:* = buildIconForSentItem(sent);
+                            if (itemIcon != null)
+                                icons.push(itemIcon);
+                        } else {
+                            _logger.log(_modName, "buildLevelEndIcons: no item data for locId " + locId + " (not yet received from AP)");
+                        }
+                    }
+                }
+
+                // Skill-point icons from achievements we collected this battle
+                for (var a:int = 0; a < achDrops.length; a++) {
+                    var achDrop:Object = achDrops[a];
+                    var achName:String = (achDrop.meta != null && achDrop.meta.achievementName != null)
+                        ? String(achDrop.meta.achievementName) : "Achievement";
+                    var sp:int = parseAchievementSkillPoints(achDrop.meta);
+                    var spLabel:String = sp + " Skill Point" + (sp != 1 ? "s" : "");
+                    icons.push(new ApItemIcon("+" + spLabel + " \u2192 You\nFrom: " + achName));
+                }
+
+                if (icons.length == 0) return;
+
+                // Position icons using the same centering formula as prepareDropIcons
                 var n:int = icons.length;
                 var xOffset:Number = n < 13 ? 70 * (13 - n) : 0;
 
@@ -498,9 +539,9 @@ package unlockers {
                     var icon:* = icons[i];
                     icon.x = 48 + i * 140 + xOffset;
                     icon.y = 789;
-                    icon.visible = false;  // Let the animation loop make icons visible one-by-one
+                    icon.visible = false;
                     ending.cnt.mcOutcomePanel.addChild(icon);
-                    ending.dropIcons.push(icon);  // Add to dropIcons so animation loop picks them up
+                    ending.dropIcons.push(icon);
 
                     if (icon is McDropIconOutcome) {
                         icon.addEventListener(MouseEvent.MOUSE_OVER, onGameIconOver, false, 0, true);
@@ -510,10 +551,57 @@ package unlockers {
                         icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
                     }
                 }
-                _logger.log(_modName, "injectTestIcons: added " + n + " icons");
+                _logger.log(_modName, "buildLevelEndIcons: added " + n + " icons");
             } catch (err:Error) {
-                _logger.log(_modName, "injectTestIcons ERROR: " + err.message + "\n" + err.getStackTrace());
+                _logger.log(_modName, "buildLevelEndIcons ERROR: " + err.message + "\n" + err.getStackTrace());
             }
+        }
+
+        /** Convert strId + locType back to the AP location ID. */
+        private function getLocationIdFromStrIdAndType(strId:String, locType:String):int {
+            var baseId:int = int(ConnectionManager.stageLocIds[strId]);
+            if (locType == "journey") return baseId;
+            if (locType == "bonus") return baseId + 199;
+            if (locType == "stash") return baseId + 399;
+            return -1;
+        }
+
+        /** Build an icon for a sent item, with recipient info in tooltip. */
+        private function buildIconForSentItem(sentData:Object):* {
+            var itemId:int = int(sentData.itemId || 0);
+            var itemName:String = String(sentData.itemName || "Item");
+            var receivingName:String = String(sentData.receivingName || "?");
+
+            // Field tokens: show field token icon for the receiving stage (if known)
+            if (itemId >= 1 && itemId <= 122) {
+                var strId:String = _connectionManager != null && _connectionManager.serverData != null
+                    ? String(_connectionManager.serverData.tokenMap[String(itemId)])
+                    : null;
+                if (strId != null && strId != "null") {
+                    var stageIdx:int = findStageIndex(strId);
+                    if (stageIdx >= 0) {
+                        var icon:McDropIconOutcome = new McDropIconOutcome(DropType.FIELD_TOKEN, stageIdx);
+                        // Store tooltip on the icon for hover display
+                        icon.tooltipText = itemName + " \u2192 " + receivingName;
+                        return icon;
+                    }
+                }
+            }
+
+            // All other items: AP icon with item name and recipient
+            return new ApItemIcon(itemName + " \u2192 " + receivingName);
+        }
+
+        /** Extract the skill-point count from an AP_ACHIEVEMENT_SKILL drop's meta object. */
+        private function parseAchievementSkillPoints(meta:Object):int {
+            if (meta == null || meta.achievementData == null || meta.achievementName == null)
+                return 1;
+            var achInfo:Object = meta.achievementData[meta.achievementName];
+            if (achInfo == null || achInfo.reward == null) return 1;
+            var reward:String = String(achInfo.reward);
+            if (reward.indexOf("skillPoints:") == 0)
+                return int(reward.substring(12));
+            return 1;
         }
 
         /** Find the integer index of a stage in stageMetas by strId. Returns -1 if not found. */
