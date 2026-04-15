@@ -6,6 +6,8 @@ package unlockers {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
     import com.giab.games.gcfw.entity.TalismanFragment;
+    import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
+    import flash.events.MouseEvent;
 
     /**
      * Intercepts the SAVE_SAVE event and reverts any automatic field-token,
@@ -313,43 +315,11 @@ package unlockers {
                     }
                 }
 
-                // --- Populate dropIcons with items received from AP ---
+                // --- TEST: inject hardcoded icons into the ending screen drop area ---
                 if (GV.ingameController != null && GV.ingameController.core != null) {
-                    var endingForProcessor:* = GV.ingameController.core.ending;
-                    if (endingForProcessor != null && endingForProcessor.dropIcons != null) {
-                        _logger.log(_modName, "Items tracked this level: " + _itemsReceivedThisLevel.length);
-
-                        // Add tracked AP items to dropIcons so the ending screen displays them
-                        for (var r:int = 0; r < _itemsReceivedThisLevel.length; r++) {
-                            var item:Object = _itemsReceivedThisLevel[r];
-                            if (item != null) {
-                                var dropType:String = item.isForUs ? AP_ITEM_FOR_US : AP_ITEM_FOR_OTHER;
-                                addApDropToIcons(endingForProcessor, dropType, item.apId, {
-                                    itemName: item.itemName,
-                                    sentTo: item.sentTo
-                                });
-                                _logger.log(_modName, "Added drop to icons: " + item.itemName);
-                            }
-                        }
-
-                        _logger.log(_modName, "Total drops in dropIcons before processor: " + endingForProcessor.dropIcons.length);
-
-                        // Process all AP drops (including newly added items)
-                        if (endingForProcessor.dropIcons.length > 0) {
-                            processApDropIcons(endingForProcessor, {
-                                achievementUnlocker: _achievementUnlocker,
-                                skillUnlocker: _skillUnlocker,
-                                traitUnlocker: _traitUnlocker,
-                                talismanUnlocker: _talismanUnlocker,
-                                shadowCoreUnlocker: _shadowCoreUnlocker
-                            });
-                        }
-
-                        _logger.log(_modName, "Total drops in dropIcons after processor: " + endingForProcessor.dropIcons.length);
-
-                        // NOTE: Don't clear tracked items here - they may arrive after onSaveSave().
-                        // Items will be cleared when the next level starts or after they're displayed.
-                    }
+                    var endingForIcons:* = GV.ingameController.core.ending;
+                    if (endingForIcons != null && endingForIcons.isBattleWon)
+                        injectTestIcons(endingForIcons);
                 }
 
                 if (reverted > 0) {
@@ -486,6 +456,114 @@ package unlockers {
 
         // -----------------------------------------------------------------------
         // Helpers
+
+        // -----------------------------------------------------------------------
+        // TEST: hardcoded ending-screen icon injection
+        // TODO: replace with real AP icon rendering once the approach is proven.
+
+        /**
+         * Inject four hardcoded test icons into the ending-screen drop area.
+         * Icons are added to both ending.dropIcons and mcOutcomePanel so the game's
+         * animation loop reveals them one-by-one (visible = false initially).
+         * The animation loop is indifferent to ApItemIcon (type won't match any DropType,
+         * no sound plays), and cleanups happen automatically when mcOutcomePanel is
+         * removed from the display tree on return to the map.
+         */
+        private function injectTestIcons(ending:*):void {
+            try {
+                // Clean up any existing game icons (reverts FIELD_TOKEN/MAP_TILE from saves,
+                // removes sprites from display, disposes bitmapdata)
+                ending.removeAllDropIcons();
+
+                // Field-token icons for three hardcoded stages
+                var testStages:Array = ["D4", "A4", "O4"];
+                var icons:Array = [];
+
+                for (var s:int = 0; s < testStages.length; s++) {
+                    var idx:int = findStageIndex(String(testStages[s]));
+                    if (idx >= 0)
+                        icons.push(new McDropIconOutcome(DropType.FIELD_TOKEN, idx));
+                    else
+                        _logger.log(_modName, "injectTestIcons: stage not found: " + testStages[s]);
+                }
+
+                // Custom AP icon with a tooltip
+                icons.push(new ApItemIcon("Sent Skill Tome to Player2"));
+
+                // Position: same centering formula as prepareDropIcons
+                var n:int = icons.length;
+                var xOffset:Number = n < 13 ? 70 * (13 - n) : 0;
+
+                for (var i:int = 0; i < n; i++) {
+                    var icon:* = icons[i];
+                    icon.x = 48 + i * 140 + xOffset;
+                    icon.y = 789;
+                    icon.visible = false;  // Let the animation loop make icons visible one-by-one
+                    ending.cnt.mcOutcomePanel.addChild(icon);
+                    ending.dropIcons.push(icon);  // Add to dropIcons so animation loop picks them up
+
+                    if (icon is McDropIconOutcome) {
+                        icon.addEventListener(MouseEvent.MOUSE_OVER, onGameIconOver, false, 0, true);
+                        icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
+                    } else {
+                        icon.addEventListener(MouseEvent.MOUSE_OVER, onApIconOver, false, 0, true);
+                        icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
+                    }
+                }
+                _logger.log(_modName, "injectTestIcons: added " + n + " icons");
+            } catch (err:Error) {
+                _logger.log(_modName, "injectTestIcons ERROR: " + err.message + "\n" + err.getStackTrace());
+            }
+        }
+
+        /** Find the integer index of a stage in stageMetas by strId. Returns -1 if not found. */
+        private function findStageIndex(strId:String):int {
+            if (GV.stageCollection == null) return -1;
+            var metas:Array = GV.stageCollection.stageMetas;
+            if (metas == null) return -1;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta != null && String(meta.strId) == strId)
+                    return i;
+            }
+            return -1;
+        }
+
+        /** MOUSE_OVER for McDropIconOutcome icons — uses the game's info-panel renderer. */
+        private function onGameIconOver(e:MouseEvent):void {
+            try {
+                var icon:McDropIconOutcome = e.currentTarget as McDropIconOutcome;
+                if (icon != null)
+                    GV.ingameController.core.infoPanelRenderer2.renderDropIconInfoPanel(icon);
+            } catch (err:Error) {
+                _logger.log(_modName, "onGameIconOver ERROR: " + err.message);
+            }
+        }
+
+        /** MOUSE_OVER for ApItemIcon — shows tooltipText in McInfoPanel. */
+        private function onApIconOver(e:MouseEvent):void {
+            try {
+                var icon:ApItemIcon = e.currentTarget as ApItemIcon;
+                if (icon == null) return;
+                var vIp:* = GV.mcInfoPanel;
+                vIp.reset(260);
+                vIp.addTextfield(0xFFD700, icon.tooltipText, false, 12);
+                GV.main.cntInfoPanel.addChild(vIp);
+                vIp.doEnterFrame();
+            } catch (err:Error) {
+                _logger.log(_modName, "onApIconOver ERROR: " + err.message);
+            }
+        }
+
+        /** MOUSE_OUT for all test icons — hides McInfoPanel. */
+        private function onIconOut(e:MouseEvent):void {
+            try {
+                GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel);
+            } catch (err:Error) {}
+        }
+
+        // -----------------------------------------------------------------------
+        // Helpers (non-test)
 
         /**
          * Remove a plus-node indicator from the selector mc, if it is currently displayed.
