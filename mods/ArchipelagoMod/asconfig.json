@@ -15,5 +15,9 @@
             "${BEZEL_LIBS}/ANEBytecodeEditor.swc"
         ]
     },
-    "mainClass": "ArchipelagoMod"
+    "mainClass": "ArchipelagoMod",
+    "resources": [
+        { "path": "src/data/json/itemdata.json" },
+        { "path": "src/data/json/logic.json" }
+    ]
 }

@@ -132,6 +132,7 @@ package {
         private var _achievementData:Object = {};         // achievement name -> apId, reward, required_effort, etc.
         private var _elementStages:Object = {};           // element name -> Array of stage strIds
         private var _reportedAchievements:Object = {};    // achievement name -> true (already reported)
+        private var _pendingAchievements:Object  = {};    // achievement name -> true (status=2 already logged)
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
@@ -233,6 +234,15 @@ package {
 
                 // Initialize achievement unlocker
                 _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _collectedState);
+
+                // Set unlocker references in NormalProgressionBlocker for dropIcons processor
+                _normalProgressionBlocker.setUnlockers(
+                    _achievementUnlocker,
+                    _skillUnlocker,
+                    _traitUnlocker,
+                    _talismanUnlocker,
+                    _shadowCoreUnlocker
+                );
 
                 // Initialize logic helper (for achievement and field access checks)
                 _logicHelper = new LogicHelper(_logger, MOD_NAME, _collectedState, _logicEvaluator, _connectionManager);
@@ -485,6 +495,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
+                    _pendingAchievements  = {};
                     if (_modButtons != null) _modButtons.removeFromMainMenu();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
@@ -502,6 +513,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
+                    _pendingAchievements  = {};
                     if (_modButtons != null) _modButtons.removeFromSelector();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
@@ -974,8 +986,8 @@ package {
                             if (optLower.indexOf(" skill") >= 0) {
                                 var optSkillName:String = _trimString(skillOpt.substring(0, optLower.indexOf(" skill")));
                                 var optSkillIdx:int = CollectedState.SKILL_NAMES.indexOf(optSkillName);
-                                if (isDebugAch) _logger.log(MOD_NAME, "    Option: '" + optSkillName + "' (idx=" + optSkillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(300 + optSkillIdx)) + ")");
-                                if (optSkillIdx >= 0 && _collectedState && _collectedState.hasItem(300 + optSkillIdx)) {
+                                if (isDebugAch) _logger.log(MOD_NAME, "    Option: '" + optSkillName + "' (idx=" + optSkillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(700 + optSkillIdx)) + ")");
+                                if (optSkillIdx >= 0 && _collectedState && _collectedState.hasItem(700 + optSkillIdx)) {
                                     anySkillFound = true;
                                     break;
                                 }
@@ -990,7 +1002,7 @@ package {
                         var skillEndIdx:int = reqLower.indexOf(" skill");
                         var skillName:String = _trimString(req.substring(0, skillEndIdx));
                         var skillIdx:int = CollectedState.SKILL_NAMES.indexOf(skillName);
-                        if (isDebugAch) _logger.log(MOD_NAME, "    Skill: '" + skillName + "' (idx=" + skillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(300 + skillIdx)) + ")");
+                        if (isDebugAch) _logger.log(MOD_NAME, "    Skill: '" + skillName + "' (idx=" + skillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(700 + skillIdx)) + ")");
                         // If skill not found or not collected, block the achievement
                         if (skillIdx < 0) {
                             // Unknown skill name — log and block
@@ -998,7 +1010,7 @@ package {
                             if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: unknown skill");
                             return false;
                         }
-                        if (!_collectedState || !_collectedState.hasItem(300 + skillIdx)) {
+                        if (!_collectedState || !_collectedState.hasItem(700 + skillIdx)) {
                             if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: skill not collected");
                             return false;
                         }
@@ -1449,6 +1461,13 @@ package {
             try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
+                // Track item for ending screen display, and push it live if ending is still active
+                if (_normalProgressionBlocker != null) {
+                    var itemDisplayName:String = itemName(apId);
+                    _normalProgressionBlocker.trackReceivedItem(apId, itemDisplayName);
+                    _normalProgressionBlocker.addItemToActiveEndingScreen(apId, itemDisplayName);
+                }
+
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 if (_collectedState != null) _collectedState.onItem(apId);
                 if (_logicEvaluator != null) _logicEvaluator.markDirty();
@@ -1462,15 +1481,15 @@ package {
                     _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
                     return;
                 }
-                if (apId >= 300 && apId <= 323) {
+                if (apId >= 700 && apId <= 723) {
                     _logger.log(MOD_NAME, "  → Skill apId: " + apId);
-                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 300);
+                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 700);
                     _skillUnlocker.unlockSkill(apId);
                     return;
                 }
-                if (apId >= 400 && apId <= 414) {
+                if (apId >= 800 && apId <= 814) {
                     _logger.log(MOD_NAME, "  → Battle trait apId: " + apId);
-                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 400);
+                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 800);
                     _traitUnlocker.unlockBattleTrait(apId);
                     return;
                 }
@@ -1479,19 +1498,34 @@ package {
                     _levelUnlocker.grantXpBonus(apId);
                     return;
                 }
-                if (apId >= 700 && apId <= 799) {
+                if (apId >= 1100 && apId <= 1199) {
+                    _logger.log(MOD_NAME, "  → XP tome apId: " + apId);
+                    _levelUnlocker.grantXpFromApId(apId, itemDisplayName);
+                    return;
+                }
+                if (apId >= 600 && apId <= 625) {
+                    _logger.log(MOD_NAME, "  → Map tile apId: " + apId);
+                    var tileGameId:int = int(AV.serverData.apIdToGameId[apId]);
+                    if (GV.ppd != null && tileGameId >= 0 && tileGameId < GV.ppd.gainedMapTiles.length) {
+                        GV.ppd.gainedMapTiles[tileGameId] = true;
+                        _mapTilesUnlocked = false;
+                        _logger.log(MOD_NAME, "  Map tile gameId=" + tileGameId + " unlocked");
+                    }
+                    return;
+                }
+                if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
                     _talismanUnlocker.grantFragment(apId);
                     _saveManager.saveSlotData();
                     return;
                 }
-                if (apId >= 800 && apId <= 868) {
+                if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
                     _saveManager.saveSlotData();
                     return;
                 }
-                if (apId >= 1000 && apId <= 1635) {
+                if (apId >= 2000 && apId <= 2636) {
                     _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
                     // Achievement reward from another player (only award skill points, don't mark as collected)
                     var achName:String = _findAchievementNameByApId(apId);
@@ -1534,17 +1568,24 @@ package {
             for each (var item:Object in items) {
                 var apId:int = item.item;
                 if (_collectedState != null) _collectedState.onItem(apId);
-                if (apId >= 300 && apId <= 323) {
-                    apSkills[apId - 300] = true;
-                } else if (apId >= 400 && apId <= 414) {
-                    apTraits[apId - 400] = true;
+
+                // Track item for ending screen display
+                if (_normalProgressionBlocker != null) {
+                    var itemDisplayName:String = itemName(apId);
+                    _normalProgressionBlocker.trackReceivedItem(apId, itemDisplayName);
+                }
+
+                if (apId >= 700 && apId <= 723) {
+                    apSkills[apId - 700] = true;
+                } else if (apId >= 800 && apId <= 814) {
+                    apTraits[apId - 800] = true;
                 } else if (tokenMap[String(apId)] != null) {
                     apTokens[tokenMap[String(apId)]] = true;
-                } else if (apId >= 500 && apId <= 502) {
+                } else if (apId >= 1100 && apId <= 1199) {
                     apXpTotal += _levelUnlocker.levelsForApId(apId);
-                } else if (apId >= 700 && apId <= 799) {
+                } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     apTalismans.push(apId);
-                } else if (apId >= 800 && apId <= 868) {
+                } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     apShadowCores.push(apId);
                 }
             }
@@ -1709,6 +1750,13 @@ package {
          */
         private function detectAndReportAchievements():void {
             if (!GV.achiCollection || !_connectionManager.isConnected || !_achievementUnlocker || !_achievementData) {
+                if (_dbgFrameCounter % 600 == 0) {
+                    _logger.log(MOD_NAME, "detectAndReportAchievements: guard blocked"
+                        + "  achiCollection=" + (GV.achiCollection != null)
+                        + "  connected=" + _connectionManager.isConnected
+                        + "  unlocker=" + (_achievementUnlocker != null)
+                        + "  data=" + (_achievementData != null));
+                }
                 return;
             }
 
@@ -1731,13 +1779,17 @@ package {
                     // must NOT report it until it becomes permanently unlocked (3),
                     // otherwise losing/exiting the stage would cause a false check.
                     var status:int = int(ach.status);
+                    var achTitle:String = String(ach.title);
+                    if (status == 2 && !_pendingAchievements[achTitle]) {
+                        _pendingAchievements[achTitle] = true;
+                        _logger.log(MOD_NAME, "Pending: " + achTitle + " (achievement, awaiting win)");
+                    }
                     var isCollected:Boolean = (status == 3);
                     if (!isCollected) {
                         continue;
                     }
 
-                    // Get the achievement's title to match against our JSON keys
-                    var achTitle:String = String(ach.title);
+                    // achTitle already set above when checking status
                     if (!achTitle) {
                         continue;
                     }
@@ -1755,13 +1807,14 @@ package {
                     }
 
                     var apId:int = int(achData.apId);
-                    if (apId < 1000 || apId > 1635) {
-                        continue; // Invalid AP ID range
+                    if (apId < 2000 || apId > 2636) {
+                        _logger.log(MOD_NAME, "  Achievement '" + achTitle + "' has invalid apId=" + apId + " (expected 2000-2636), skipping");
+                        continue;
                     }
 
                     // Mark as reported and submit
                     _reportedAchievements[achTitle] = true;
-                    _logger.log(MOD_NAME, "  Reporting achievement: " + achTitle + " (apId=" + apId + ")");
+                    _logger.log(MOD_NAME, "Pending: " + achTitle + " (achievement)  apId=" + apId);
                     _achievementUnlocker.unlockAchievement(achTitle, apId, _achievementData);
                 }
             } catch (err:Error) {

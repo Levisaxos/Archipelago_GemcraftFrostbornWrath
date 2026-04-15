@@ -1,12 +1,12 @@
 package {
     /**
-     * Provides access to the embedded logic_rules.json resource.
+     * Provides access to the embedded logic.json resource.
      * The JSON file is embedded at compile time as a ByteArray resource.
      */
     public class AchievementMap {
-        // Embed the logic_rules.json file (path is relative to src directory)
-        // File is in resources/ folder so it's available on other computers
-        [Embed(source="../resources/logic_rules.json", mimeType="application/octet-stream")]
+        // Embed the logic.json file (path is relative to src directory)
+        // File is in data/json/ folder with other game data
+        [Embed(source="../data/json/logic.json", mimeType="application/octet-stream")]
         private static const ACHIEVEMENT_DATA:Class;
 
         /**

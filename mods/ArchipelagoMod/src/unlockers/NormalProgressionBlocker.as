@@ -13,21 +13,24 @@ package unlockers {
      * unlocks that the game wrote to PlayerProgressData.  The save file is
      * immediately overwritten so the reverted state is persisted.
      *
-     * Archipelago will later send the correct items; this class just ensures the
-     * game cannot hand them out on its own.
-     *
-     * The class tracks which skills and traits AP has actually granted via
-     * markSkillGranted / markTraitGranted.  On every save (including wizard-stash
-     * clears that happen outside of battle) it enforces AP authority: any
-     * skill tome or battle trait that is set in the save data but was NOT granted
-     * by AP is immediately reverted.
-     *
-     * For wizard stashes specifically, shadow cores and talisman fragments in
-     * stashDrops are also blocked: when a stash is detected as newly cleared
-     * (OPEN or DESTROYED), its SC{n} shadow-core grant is subtracted and the
-     * talisman fragment with the matching seed is removed from the inventory.
+     * Instead of immediately calling unlockers, queues AP rewards to dropIcons
+     * via custom drop types (AP_ACHIEVEMENT_*, AP_STASH_*). These are processed
+     * together at level end via processApDropIcons().
      */
     public class NormalProgressionBlocker {
+
+        // Custom drop types for AP rewards (to be processed at level end)
+        public static const AP_ACHIEVEMENT_COLLECTED:String = "AP_ACHIEVEMENT_COLLECTED";
+        public static const AP_ACHIEVEMENT_SKILL:String = "AP_ACHIEVEMENT_SKILL";
+        public static const AP_ACHIEVEMENT_TRAIT:String = "AP_ACHIEVEMENT_TRAIT";
+        public static const AP_ACHIEVEMENT_TALISMAN:String = "AP_ACHIEVEMENT_TALISMAN";
+        public static const AP_ACHIEVEMENT_SHADOWCORE:String = "AP_ACHIEVEMENT_SHADOWCORE";
+        public static const AP_STASH_TALISMAN:String = "AP_STASH_TALISMAN";
+        public static const AP_STASH_SHADOWCORE:String = "AP_STASH_SHADOWCORE";
+
+        // Items received from AP (to display on ending screen)
+        public static const AP_ITEM_FOR_US:String = "AP_ITEM_FOR_US";           // Item sent to us
+        public static const AP_ITEM_FOR_OTHER:String = "AP_ITEM_FOR_OTHER";     // Item sent to another player
 
         private var _logger:Logger;
         private var _modName:String;
@@ -45,6 +48,16 @@ package unlockers {
         // Tracks which stage IDs have had their stash rewards blocked already
         // so we don't double-subtract on subsequent saves.
         private var _stashBlockedIds:Object = {}; // stageId (int key) → true
+
+        // References to unlockers for dropIcons processor
+        private var _achievementUnlocker:*;
+        private var _skillUnlocker:*;
+        private var _traitUnlocker:*;
+        private var _talismanUnlocker:*;
+        private var _shadowCoreUnlocker:*;
+
+        // Track items received during this level (to display on ending screen)
+        private var _itemsReceivedThisLevel:Array = [];  // Array of {apId, itemName, sentTo, isForUs}
 
         public function NormalProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
@@ -81,6 +94,43 @@ package unlockers {
             for (var j:int = 0; j < 15; j++) _apGrantedTraits[j] = false;
         }
 
+        /** Clear the items received in this level (call at level start). */
+        public function clearReceivedItems():void {
+            _itemsReceivedThisLevel = [];
+        }
+
+        /**
+         * Add an AP item directly to the ending screen's dropIcons if it is still active.
+         * Call from grantItem() for items that arrive after onSaveSave() has already run —
+         * the Flash ending object stays live until dismissed, so adding here still renders.
+         */
+        public function addItemToActiveEndingScreen(apId:int, itemName:String, isForUs:Boolean = true):void {
+            try {
+                if (GV.ingameController == null || GV.ingameController.core == null) return;
+                var ending:* = GV.ingameController.core.ending;
+                if (ending == null || ending.dropIcons == null || !ending.isBattleWon) return;
+                var dropType:String = isForUs ? AP_ITEM_FOR_US : AP_ITEM_FOR_OTHER;
+                addApDropToIcons(ending, dropType, apId, {itemName: itemName, sentTo: "You"});
+                _logger.log(_modName, "addItemToActiveEndingScreen: " + itemName + " (AP ID " + apId + ")");
+            } catch (err:Error) {
+                _logger.log(_modName, "addItemToActiveEndingScreen ERROR: " + err.message);
+            }
+        }
+
+        /** Track an item received from AP (to display on ending screen). */
+        public function trackReceivedItem(apId:int, itemName:String = "", sentToPlayer:String = "You", isForUs:Boolean = true):void {
+            if (itemName == "") {
+                itemName = "Item " + apId;  // Fallback name
+            }
+            _itemsReceivedThisLevel.push({
+                apId: apId,
+                itemName: itemName,
+                sentTo: sentToPlayer,
+                isForUs: isForUs
+            });
+            _logger.log(_modName, "TRACKED ITEM: " + itemName + " (AP ID " + apId + ")");
+        }
+
         /** Mark a skill as AP-granted so it will not be reverted on saves. */
         public function markSkillGranted(gameId:int):void {
             if (gameId >= 0 && gameId < 24) _apGrantedSkills[gameId] = true;
@@ -99,6 +149,41 @@ package unlockers {
         public function setWizStashTalData(map:Object):void {
             _wizStashTalData = map;
             _stashBlockedIds = {};
+        }
+
+        /**
+         * Set references to the unlockers for dropIcons processor.
+         * Called from ArchipelagoMod after all unlockers are initialized.
+         */
+        public function setUnlockers(
+            achievementUnlocker:*,
+            skillUnlocker:*,
+            traitUnlocker:*,
+            talismanUnlocker:*,
+            shadowCoreUnlocker:*
+        ):void {
+            _achievementUnlocker = achievementUnlocker;
+            _skillUnlocker = skillUnlocker;
+            _traitUnlocker = traitUnlocker;
+            _talismanUnlocker = talismanUnlocker;
+            _shadowCoreUnlocker = shadowCoreUnlocker;
+        }
+
+        // -----------------------------------------------------------------------
+        // dropIcons helpers
+
+        /**
+         * Add an AP reward drop to the dropIcons array for later processing.
+         * Creates a custom drop object with type, data (apId), and metadata.
+         */
+        public static function addApDropToIcons(ending:Object, dropType:String, apId:int, meta:Object = null):void {
+            if (ending == null || ending.dropIcons == null) return;
+            var drop:Object = {
+                type: dropType,
+                data: apId,
+                meta: meta || {}
+            };
+            ending.dropIcons.push(drop);
         }
 
         // -----------------------------------------------------------------------
@@ -228,6 +313,45 @@ package unlockers {
                     }
                 }
 
+                // --- Populate dropIcons with items received from AP ---
+                if (GV.ingameController != null && GV.ingameController.core != null) {
+                    var endingForProcessor:* = GV.ingameController.core.ending;
+                    if (endingForProcessor != null && endingForProcessor.dropIcons != null) {
+                        _logger.log(_modName, "Items tracked this level: " + _itemsReceivedThisLevel.length);
+
+                        // Add tracked AP items to dropIcons so the ending screen displays them
+                        for (var r:int = 0; r < _itemsReceivedThisLevel.length; r++) {
+                            var item:Object = _itemsReceivedThisLevel[r];
+                            if (item != null) {
+                                var dropType:String = item.isForUs ? AP_ITEM_FOR_US : AP_ITEM_FOR_OTHER;
+                                addApDropToIcons(endingForProcessor, dropType, item.apId, {
+                                    itemName: item.itemName,
+                                    sentTo: item.sentTo
+                                });
+                                _logger.log(_modName, "Added drop to icons: " + item.itemName);
+                            }
+                        }
+
+                        _logger.log(_modName, "Total drops in dropIcons before processor: " + endingForProcessor.dropIcons.length);
+
+                        // Process all AP drops (including newly added items)
+                        if (endingForProcessor.dropIcons.length > 0) {
+                            processApDropIcons(endingForProcessor, {
+                                achievementUnlocker: _achievementUnlocker,
+                                skillUnlocker: _skillUnlocker,
+                                traitUnlocker: _traitUnlocker,
+                                talismanUnlocker: _talismanUnlocker,
+                                shadowCoreUnlocker: _shadowCoreUnlocker
+                            });
+                        }
+
+                        _logger.log(_modName, "Total drops in dropIcons after processor: " + endingForProcessor.dropIcons.length);
+
+                        // NOTE: Don't clear tracked items here - they may arrive after onSaveSave().
+                        // Items will be cleared when the next level starts or after they're displayed.
+                    }
+                }
+
                 if (reverted > 0) {
                     _isSaving = true;
                     GV.loaderSaver.saveGameData();
@@ -238,6 +362,126 @@ package unlockers {
                 _isSaving = false;
                 _logger.log(_modName, "NormalProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
             }
+        }
+
+        // -----------------------------------------------------------------------
+        // dropIcons processor
+
+        /**
+         * Process all AP reward drops from ending.dropIcons and call the appropriate unlocker.
+         * Removes all non-AP drops from dropIcons to prevent them from being saved.
+         * Called at the end of onSaveSave() after reverting non-AP drops.
+         *
+         * Expects unlockerRefs object with:
+         *   - achievementUnlocker: AchievementUnlocker
+         *   - skillUnlocker: SkillUnlocker
+         *   - traitUnlocker: TraitUnlocker
+         *   - talismanUnlocker: TalismanUnlocker
+         *   - shadowCoreUnlocker: ShadowCoreUnlocker
+         */
+        public static function processApDropIcons(ending:Object, unlockerRefs:Object):void {
+            if (ending == null || ending.dropIcons == null) return;
+
+            var drops:Array = ending.dropIcons;
+            var apDropsToKeep:Array = []; // Only keep AP drops
+
+            for (var i:int = 0; i < drops.length; i++) {
+                var drop:Object = drops[i];
+                if (drop == null) continue;
+
+                var isApDrop:Boolean = false;
+
+                try {
+                    switch (drop.type) {
+                        case AP_ACHIEVEMENT_COLLECTED:
+                            // Mark achievement collected and send location check
+                            if (unlockerRefs.achievementUnlocker != null) {
+                                unlockerRefs.achievementUnlocker.markCollectedAndSendCheck(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_ACHIEVEMENT_SKILL:
+                            // Award skill points and unlock skill
+                            if (unlockerRefs.achievementUnlocker != null && unlockerRefs.skillUnlocker != null) {
+                                var achName:String = drop.meta.achievementName || "";
+                                unlockerRefs.achievementUnlocker.awardSkillPointsPublic(achName, drop.meta.achievementData);
+                                unlockerRefs.skillUnlocker.unlockSkill(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_ACHIEVEMENT_TRAIT:
+                            // Award skill points and unlock trait
+                            if (unlockerRefs.achievementUnlocker != null && unlockerRefs.traitUnlocker != null) {
+                                unlockerRefs.achievementUnlocker.awardSkillPointsPublic(drop.meta.achievementName || "", drop.meta.achievementData);
+                                unlockerRefs.traitUnlocker.unlockBattleTrait(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_ACHIEVEMENT_TALISMAN:
+                            // Award skill points and grant talisman
+                            if (unlockerRefs.achievementUnlocker != null && unlockerRefs.talismanUnlocker != null) {
+                                unlockerRefs.achievementUnlocker.awardSkillPointsPublic(drop.meta.achievementName || "", drop.meta.achievementData);
+                                unlockerRefs.talismanUnlocker.grantFragment(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_ACHIEVEMENT_SHADOWCORE:
+                            // Award skill points and grant shadow cores
+                            if (unlockerRefs.achievementUnlocker != null && unlockerRefs.shadowCoreUnlocker != null) {
+                                unlockerRefs.achievementUnlocker.awardSkillPointsPublic(drop.meta.achievementName || "", drop.meta.achievementData);
+                                unlockerRefs.shadowCoreUnlocker.grantShadowCores(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_STASH_TALISMAN:
+                            // Grant talisman from stash
+                            if (unlockerRefs.talismanUnlocker != null) {
+                                unlockerRefs.talismanUnlocker.grantFragment(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_STASH_SHADOWCORE:
+                            // Grant shadow cores from stash
+                            if (unlockerRefs.shadowCoreUnlocker != null) {
+                                unlockerRefs.shadowCoreUnlocker.grantShadowCores(drop.data);
+                            }
+                            isApDrop = true;
+                            break;
+
+                        case AP_ITEM_FOR_US:
+                            // Item received for us - keep it for display on ending screen
+                            isApDrop = true;
+                            break;
+
+                        case AP_ITEM_FOR_OTHER:
+                            // Item received but sent to another player - keep it for display on ending screen
+                            isApDrop = true;
+                            break;
+
+                        default:
+                            // Game drop (skill tome, trait, field token, map tile, etc.) - don't keep it
+                            isApDrop = false;
+                            break;
+                    }
+                } catch (err:Error) {
+                    // Error processing drop - treat as non-AP drop
+                    isApDrop = false;
+                }
+
+                // Only keep AP drops in the array (game drops will be discarded)
+                if (isApDrop) {
+                    apDropsToKeep.push(drop);
+                }
+            }
+
+            // Replace dropIcons array with only AP drops (effectively removing game drops)
+            ending.dropIcons = apDropsToKeep;
         }
 
         // -----------------------------------------------------------------------

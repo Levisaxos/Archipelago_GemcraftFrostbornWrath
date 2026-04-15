@@ -8,9 +8,11 @@ package unlockers
 	/**
 	 * Handles achievement unlocks and skill point distribution.
 	 *
-	 * Two flows:
-	 * 1. When player collects achievement in-game: mark as collected + send check + award points
-	 * 2. When receiving achievement from another player: only award points
+	 * New flow: achievements queue to dropIcons and are processed at level end.
+	 *
+	 * Two cases:
+	 * 1. When player collects achievement in-game: queue (mark + send check + points) to dropIcons
+	 * 2. When receiving achievement from another player: queue (points) to dropIcons
 	 */
 	public class AchievementUnlocker
 	{
@@ -33,13 +35,14 @@ package unlockers
 		}
 
 		/**
-		 * Unlock an achievement (when player collects it in-game).
-		 * 1. Mark as collected locally
-		 * 2. Submit location check to AP server
-		 * 3. Award skill points
+		 * Queue an achievement unlock (when player collects it in-game).
+		 * Queues TWO drops:
+		 * 1. AP_ACHIEVEMENT_COLLECTED - marks it collected + sends check
+		 * 2. AP_ACHIEVEMENT_SKILL - awards skill points
+		 * Both are processed at level end.
 		 *
 		 * @param achievementName The game's achievement name (e.g., "First Blood")
-		 * @param apId The Archipelago location ID for this achievement (1000-1635)
+		 * @param apId The Archipelago location ID for this achievement (2000-2636)
 		 * @param achievementData Achievement metadata (from achievement_map.json)
 		 */
 		public function unlockAchievement(
@@ -48,32 +51,47 @@ package unlockers
 			achievementData: Object
 		): void
 		{
-			if (!achievementName || apId < 1000 || apId > 1635)
+			if (!achievementName || apId < 2000 || apId > 2636)
 			{
 				return;
 			}
 
-			// 1. Mark as collected for logic evaluation
-			_collectedState.onAchievementCollected(apId);
+			// Get the ending object
+			var ending:Object = GV.ingameController != null && GV.ingameController.core != null
+				? GV.ingameController.core.ending
+				: null;
 
-			// 2. Submit location check to AP server if connected
-			if (_connectionManager.isConnected)
-			{
-				_connectionManager.sendLocationChecks([apId]);
+			if (ending == null) {
+				// Mid-battle: ending screen not active yet — send check immediately.
+				_collectedState.onAchievementCollected(apId);
+				if (_connectionManager.isConnected) {
+					_connectionManager.sendLocationChecks([apId]);
+				}
+				// Skill points are awarded via the normal skill point flow (no dropIcons needed).
+				awardSkillPointsForAchievement(achievementName, achievementData);
+				_logger.log(_modName, "Pending: " + achievementName + " (achievement, sent mid-battle)  apId=" + apId);
+				return;
 			}
 
-			// 3. Award skill points to this player
-			awardSkillPointsForAchievement(achievementName, achievementData);
+			var meta:Object = {
+				achievementName: achievementName,
+				achievementData: achievementData
+			};
 
-			_logger.log(_modName, "Achievement unlocked: " + achievementName + " (AP ID " + apId + ")");
+			// Level won and ending screen active — queue to dropIcons for visual display.
+			NormalProgressionBlocker.addApDropToIcons(ending, NormalProgressionBlocker.AP_ACHIEVEMENT_COLLECTED, apId, meta);
+			NormalProgressionBlocker.addApDropToIcons(ending, NormalProgressionBlocker.AP_ACHIEVEMENT_SKILL, apId, meta);
+
+			_logger.log(_modName, "Pending: " + achievementName + " (achievement, queued level end)  apId=" + apId);
 		}
 
 		/**
 		 * Receive an achievement reward (when another player sends it to us).
-		 * This ONLY awards skill points, does NOT mark as collected or send check.
+		 * If in-game (ending exists): queues to dropIcons for processing at level end
+		 * If not in-game (ending null): calls unlocker directly (e.g., during sync)
 		 *
 		 * @param achievementName The game's achievement name
-		 * @param apId The Archipelago item ID (1000-1635)
+		 * @param apId The Archipelago item ID (2000-2636)
 		 * @param achievementData Achievement metadata (from achievement_map.json)
 		 */
 		public function receiveAchievementReward(
@@ -82,15 +100,31 @@ package unlockers
 			achievementData: Object
 		): void
 		{
-			if (!achievementName || apId < 1000 || apId > 1635)
+			if (!achievementName || apId < 2000 || apId > 2636)
 			{
 				return;
 			}
 
-			// Only award skill points, DO NOT mark as collected or send check
-			awardSkillPointsForAchievement(achievementName, achievementData);
+			// Get the ending object (only exists during gameplay)
+			var ending:Object = GV.ingameController != null && GV.ingameController.core != null
+				? GV.ingameController.core.ending
+				: null;
 
-			_logger.log(_modName, "Received achievement reward: " + achievementName + " (AP ID " + apId + ")");
+			if (ending != null) {
+				// In-game: queue to dropIcons for level-end processing
+				var rewardType:String = _parseAchievementRewardType(achievementName, achievementData);
+				var meta:Object = {
+					achievementName: achievementName,
+					achievementData: achievementData
+				};
+
+				NormalProgressionBlocker.addApDropToIcons(ending, rewardType, apId, meta);
+				_logger.log(_modName, "Queued achievement reward: " + achievementName + " (AP ID " + apId + ", type: " + rewardType + ")");
+			} else {
+				// Not in-game (e.g., full sync): award points immediately
+				awardSkillPointsForAchievement(achievementName, achievementData);
+				_logger.log(_modName, "Received achievement reward (offline): " + achievementName + " (AP ID " + apId + ")");
+			}
 		}
 
 		/**
@@ -144,6 +178,58 @@ package unlockers
 			} catch (err:Error) {
 				_logger.log(_modName, "Error awarding skill points: " + err.message);
 			}
+		}
+
+		// -----------------------------------------------------------------------
+		// Public methods for dropIcons processor
+
+		/**
+		 * Mark achievement as collected and send location check to AP.
+		 * Called by dropIcons processor when processing AP_ACHIEVEMENT_COLLECTED drops.
+		 *
+		 * @param apId The achievement AP ID (2000-2636)
+		 */
+		public function markCollectedAndSendCheck(apId: int): void
+		{
+			if (apId < 2000 || apId > 2636) return;
+
+			// Mark as collected for logic evaluation
+			_collectedState.onAchievementCollected(apId);
+
+			// Send location check to AP server if connected
+			if (_connectionManager.isConnected)
+			{
+				_connectionManager.sendLocationChecks([apId]);
+			}
+
+			_logger.log(_modName, "Sent: achievement check  apId=" + apId);
+		}
+
+		/**
+		 * Public wrapper for awardSkillPointsForAchievement (called by dropIcons processor).
+		 * Called when processing achievement reward drops.
+		 *
+		 * @param achievementName The game's achievement name
+		 * @param achievementData Achievement metadata
+		 */
+		public function awardSkillPointsPublic(achievementName: String, achievementData: Object): void
+		{
+			awardSkillPointsForAchievement(achievementName, achievementData);
+		}
+
+		/**
+		 * Parse the reward type from achievement metadata.
+		 * Returns the appropriate AP_ACHIEVEMENT_* drop type.
+		 *
+		 * @param achievementName The game's achievement name
+		 * @param achievementData Achievement metadata
+		 * @return Drop type constant (e.g., AP_ACHIEVEMENT_SKILL)
+		 */
+		private function _parseAchievementRewardType(achievementName: String, achievementData: Object): String
+		{
+			// Default to skill reward (most common)
+			// In the future, this could parse different reward types from metadata
+			return NormalProgressionBlocker.AP_ACHIEVEMENT_SKILL;
 		}
 	}
 }

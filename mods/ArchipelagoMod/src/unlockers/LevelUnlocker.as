@@ -75,6 +75,11 @@ package unlockers {
             if (apId == 500) return _tatteredLevels;
             if (apId == 501) return _wornLevels;
             if (apId == 502) return _ancientLevels;
+            // XP tomes: 1100-1131 Tattered, 1132-1137 Worn, 1138-1139 Ancient, 1140-1199 filler (tattered-equivalent)
+            if (apId >= 1100 && apId <= 1131) return _tatteredLevels;
+            if (apId >= 1132 && apId <= 1137) return _wornLevels;
+            if (apId >= 1138 && apId <= 1139) return _ancientLevels;
+            if (apId >= 1140 && apId <= 1199) return _tatteredLevels;
             return 0;
         }
 
@@ -116,6 +121,33 @@ package unlockers {
             if (GV.ppd != null) {
                 var newXp:Number = GV.ppd.getXp();
                 if (pushSelectorEvent(4, [oldXp, newXp])) { // 4 = XP_INCREASING
+                    _xpBarDirty = false;
+                }
+            }
+
+            _logger.log(_modName, label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
+            _itemToast.addItem("Found " + label, 0x88CCFF);
+        }
+
+        /**
+         * Grant AP wizard levels from a received XP Tome item (AP IDs 1100-1199).
+         * Uses levelsForApId() to determine the level value.
+         */
+        public function grantXpFromApId(apId:int, label:String = ""):void {
+            var levels:int = levelsForApId(apId);
+            if (levels <= 0) return;
+
+            if (label == "") label = "XP Tome";
+
+            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
+
+            _bonusWizardLevel += levels;
+            if (onDataChanged != null) onDataChanged();
+            applyBonusLevels();
+
+            if (GV.ppd != null) {
+                var newXp:Number = GV.ppd.getXp();
+                if (pushSelectorEvent(4, [oldXp, newXp])) {
                     _xpBarDirty = false;
                 }
             }

@@ -110,8 +110,8 @@ package tracker {
                 }
                 return;
             }
-            // Achievement (AP ids 1000-1635)
-            if (apId >= 1000 && apId <= 1635) {
+            // Achievement (AP ids 2000-2636)
+            if (apId >= 2000 && apId <= 2636) {
                 if (_achievementsCollected[apId] != true) {
                     _achievementsCollected[apId] = true;
                 }
@@ -124,14 +124,14 @@ package tracker {
          * Mark an achievement as collected (called when receiving achievement from another player).
          */
         public function onAchievementCollected(apId:int):void {
-            if (apId >= 1000 && apId <= 1635) {
+            if (apId >= 2000 && apId <= 2636) {
                 _achievementsCollected[apId] = true;
             }
         }
 
         /**
          * Check if an achievement has been collected.
-         * @param apId The Archipelago item ID (1000-1635)
+         * @param apId The Archipelago item ID (2000-2636)
          * @return true if collected, false otherwise
          */
         public function isAchievementCollected(apId:int):Boolean {

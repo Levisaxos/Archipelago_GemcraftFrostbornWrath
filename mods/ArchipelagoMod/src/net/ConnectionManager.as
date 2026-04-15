@@ -29,9 +29,9 @@ package net {
         private var _reconnecting:Boolean = false;
 
         // Connection settings
-        private var _archipelagoHost:String     = "archipelago.gg";
+        private var _archipelagoHost:String     = "localhost";
         private var _archipelagoPort:int        = 38281;
-        private var _archipelagoSlot:String     = "";
+        private var _archipelagoSlot:String     = "Levisaxos";
         private var _archipelagoPassword:String = "";
         private var _saveSlot:int      = 0;
         // TLS is used only for archipelago.gg; local/IP servers use plain ws://
@@ -60,29 +60,29 @@ package net {
             "W1":1,  "W2":2,  "W3":3,  "W4":4,
             "S1":5,  "S2":6,  "S3":7,  "S4":8,
             "V1":9,  "V2":10, "V3":11, "V4":12,
-            "R1":13, "R2":14, "R3":15, "R4":16, "R5":17, "R6":113,
+            "R1":13, "R2":14, "R3":15, "R4":16, "R5":17, "R6":112,
             "Q1":18, "Q2":19, "Q3":20, "Q4":21, "Q5":22,
-            "T1":23, "T2":24, "T3":25, "T4":26, "T5":112,
+            "T1":23, "T2":24, "T3":25, "T4":26, "T5":111,
             "U1":27, "U2":28, "U3":29, "U4":30,
             "Y1":31, "Y2":32, "Y3":33, "Y4":34,
             "X1":35, "X2":36, "X3":37, "X4":38,
-            "Z1":39, "Z2":40, "Z3":41, "Z4":42, "Z5":111,
+            "Z1":39, "Z2":40, "Z3":41, "Z4":42, "Z5":110,
             "O1":43, "O2":44, "O3":45, "O4":46,
             "N1":47, "N2":48, "N3":49, "N4":50, "N5":51,
-            "P1":52, "P2":53, "P3":54, "P4":55, "P5":56, "P6":114,
+            "P1":52, "P2":53, "P3":54, "P4":55, "P5":56, "P6":113,
             "L1":57, "L2":58, "L3":59, "L4":60, "L5":61,
-            "K1":62, "K2":63, "K3":64, "K4":65, "K5":115,
-            "H1":66, "H2":67, "H3":68, "H4":69, "H5":116,
+            "K1":62, "K2":63, "K3":64, "K4":65, "K5":114,
+            "H1":66, "H2":67, "H3":68, "H4":69, "H5":115,
             "G1":70, "G2":71, "G3":72, "G4":73,
             "J1":74, "J2":75, "J3":76, "J4":77,
             "M1":78, "M2":79, "M3":80, "M4":81,
-            "F1":82, "F2":83, "F3":84, "F4":85, "F5":118,
-            "E1":86, "E2":87, "E3":88, "E4":89, "E5":119,
-            "D1":90, "D2":91, "D3":92, "D4":93, "D5":124,
-            "B1":94, "B2":95, "B3":96, "B4":97, "B5":120,
+            "F1":82, "F2":83, "F3":84, "F4":85, "F5":116,
+            "E1":86, "E2":87, "E3":88, "E4":89, "E5":117,
+            "D1":90, "D2":91, "D3":92, "D4":93, "D5":122,
+            "B1":94, "B2":95, "B3":96, "B4":97, "B5":118,
             "C1":98, "C2":99, "C3":100,"C4":101,"C5":102,
-            "A1":103,"A2":104,"A3":105,"A4":106,"A5":121,"A6":122,
-            "I1":123,"I2":107,"I3":108,"I4":109
+            "A1":103,"A2":104,"A3":105,"A4":106,"A5":119,"A6":120,
+            "I1":121,"I2":107,"I3":108,"I4":109
         };
 
         /** Public read-only view of the stage -> base-Journey AP location id map. */
@@ -290,9 +290,9 @@ package net {
         /** Reset connection settings to defaults. */
         public function resetSettings():void
         {
-            _archipelagoHost     = "archipelago.gg";
+            _archipelagoHost     = "localhost";
             _archipelagoPort     = 38281;
-            _archipelagoSlot     = "";
+            _archipelagoSlot     = "Levisaxos";
             _archipelagoPassword = "";
         }
 
@@ -1002,23 +1002,31 @@ package net {
                     var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
                     if (xp <= 0) continue;
                     var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
+                    var bonusLocId:int  = locId + 199;
+                    var wizStashLocId:int = locId + 399;
                     var journeyNew:Boolean = _missingLocations[locId] == true;
-                    var bonusNew:Boolean   = _missingLocations[locId + 500] == true;
+                    var bonusNew:Boolean   = _missingLocations[bonusLocId] == true;
                     _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
                         + "  xp=" + xp + "  locId=" + locId
-                        + "  journeyNew=" + journeyNew + "  bonusNew=" + bonusNew);
+                        + "  bonusLocId=" + bonusLocId + "  wizStashLocId=" + wizStashLocId
+                        + "  journeyNew=" + journeyNew + "  bonusNew=" + bonusNew
+                        + "  stashNew=" + (_missingLocations[wizStashLocId] == true));
                     if (locId <= 0) continue;
-                    if (journeyNew) toSend.push(locId);
-                    if (bonusNew)   toSend.push(locId + 500);
+                    if (journeyNew) {
+                        toSend.push(locId);
+                        _logger.log(_modName, "Pending: " + meta.strId + " (field journey)  locId=" + locId);
+                    }
+                    if (bonusNew) {
+                        toSend.push(bonusLocId);
+                        _logger.log(_modName, "Pending: " + meta.strId + " (field bonus)  locId=" + bonusLocId);
+                    }
 
                     // Wiz stash check: OPEN (1) or DESTROYED (2) = stash was cleared.
-                    var wizStashLocId:int = locId + 1000;
                     if (_missingLocations[wizStashLocId] == true) {
                         var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
                         if (stashStatus == 1 || stashStatus == 2) {
                             toSend.push(wizStashLocId);
-                            _logger.log(_modName, "  WIZ_STASH_CLEARED stage=" + meta.strId
-                                + "  status=" + stashStatus + "  wizStashLocId=" + wizStashLocId);
+                            _logger.log(_modName, "Pending: " + meta.strId + " (field stash)  locId=" + wizStashLocId);
                         }
                     }
                 }

@@ -1,7 +1,7 @@
 package {
     /**
      * Provides access to the embedded achievement_id_map.json resource.
-     * Maps base game achievement IDs (0-635) to Archipelago location IDs (1000-1635).
+     * Maps base game achievement IDs (0-635) to Archipelago location IDs (2000-2636).
      * The JSON file is embedded at compile time as a ByteArray resource.
      */
     public class AchievementIdMap {

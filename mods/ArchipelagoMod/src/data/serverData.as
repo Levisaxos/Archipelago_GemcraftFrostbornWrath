@@ -69,31 +69,15 @@ package data {
         }
 
         /**
-         * Load item data from itemdata.json.
+         * Load item data from embedded itemdata.json (compiled into SWF).
          * Populates AP ID to game name mappings (skills, traits, stages, talismans, etc.).
          */
         public function loadItemDataFromJSON():void
         {
-            var jsonPath:File = File.applicationDirectory.resolvePath(
-                "../../src/data/json/itemdata.json"
-            );
-
-            if (!jsonPath.exists)
-            {
-                if (_logger)
-                {
-                    _logger.log("ServerData", "itemdata.json not found at " + jsonPath.nativePath + " — using empty defaults");
-                }
-                return;
-            }
-
             try
             {
-                var stream:FileStream = new FileStream();
-                stream.open(jsonPath, FileMode.READ);
-                var rawData:String = stream.readUTFBytes(stream.bytesAvailable);
-                stream.close();
-
+                // Load from embedded data (compiled into SWF, not external file)
+                var rawData:String = EmbeddedData.getItemDataJSON();
                 var itemData:Object = JSON.parse(rawData);
 
                 // Skills: AP ID 300-323 → game ID 0-23
@@ -232,31 +216,15 @@ package data {
         }
 
         /**
-         * Load logic rules from logic.json.
+         * Load logic rules from embedded logic.json (compiled into SWF).
          * Populates stage requirements, tier information, and skill requirements.
          */
         public function loadLogicFromJSON():void
         {
-            var jsonPath:File = File.applicationDirectory.resolvePath(
-                "../../src/data/json/logic.json"
-            );
-
-            if (!jsonPath.exists)
-            {
-                if (_logger)
-                {
-                    _logger.log("ServerData", "logic.json not found at " + jsonPath.nativePath + " — using empty defaults");
-                }
-                return;
-            }
-
             try
             {
-                var stream:FileStream = new FileStream();
-                stream.open(jsonPath, FileMode.READ);
-                var rawData:String = stream.readUTFBytes(stream.bytesAvailable);
-                stream.close();
-
+                // Load from embedded data (compiled into SWF, not external file)
+                var rawData:String = EmbeddedData.getLogicDataJSON();
                 var logicData:Object = JSON.parse(rawData);
 
                 // Load stage logic from the JSON
