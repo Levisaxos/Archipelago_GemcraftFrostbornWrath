@@ -9,7 +9,7 @@ package ui {
     import flash.text.TextFormat;
     import flash.utils.getDefinitionByName;
 
-    import net.ConnectionManager;
+    import data.AV;
     import deathlink.DeathLinkHandler;
 
     /**
@@ -44,7 +44,7 @@ package ui {
         private static const VALUE_X:Number          = 800;
         private static const HEADER_X:Number         = 536; // centred, same as McDebugOptions TITLE_X
 
-        public function McSlotSettings(cm:ConnectionManager, dl:DeathLinkHandler) {
+        public function McSlotSettings(dl:DeathLinkHandler) {
             super();
 
             var McOptionsClass:Class =
@@ -57,39 +57,40 @@ package ui {
             while (_inner.cnt.numChildren > 0) _inner.cnt.removeChildAt(0);
             _inner.arrCntContents = new Array();
 
+            var opts:* = AV.serverData.serverOptions;
             var vY:Number = CONTENT_START_Y;
 
             // ── General settings ─────────────────────────────────────────────
             addSectionHeader("General", vY); vY += ROW_HEIGHT;
-            addRow("Goal",                    goalName(cm.goal), vY);                               vY += ROW_HEIGHT;
-            if (cm.goal == 3)
-                { addRow("Fields Required",   cm.fieldsRequired + " fields", vY);                  vY += ROW_HEIGHT; }
-            if (cm.goal == 4) {
-                var pct:int = cm.fieldsRequiredPercentage;
+            addRow("Goal",                    goalName(opts.goal), vY);                                        vY += ROW_HEIGHT;
+            if (opts.goal == 3)
+                { addRow("Fields Required",   opts.fieldsRequired + " fields", vY);                           vY += ROW_HEIGHT; }
+            if (opts.goal == 4) {
+                var pct:int = opts.fieldsRequiredPercentage;
                 var count:int = int(Math.ceil(pct * 122.0 / 100.0));
-                addRow("Fields Required", count + " (" + pct + "%)", vY);                          vY += ROW_HEIGHT;
+                addRow("Fields Required", count + " (" + pct + "%)", vY);                                     vY += ROW_HEIGHT;
             }
-            addRow("Achievement Required Effort", effortName(cm.achievementRequiredEffort), vY);     vY += ROW_HEIGHT;
-            addRow("Talisman Min Rarity",     cm.talismanMinRarity.toString(), vY);                vY += ROW_HEIGHT;
-            addRow("Field Token Placement",   ftpName(cm.fieldTokenPlacement), vY);                 vY += ROW_HEIGHT;
-            addRow("Tier Requirement",        cm.tierRequirements + "%", vY);                       vY += ROW_HEIGHT;
-            addRow("Enforce Logic",           cm.enforceLogic ? "Yes" : "No", vY);                  vY += ROW_HEIGHT;
-            addRow("Endurance Mode",          cm.disableEndurance ? "Disabled" : "Enabled", vY);    vY += ROW_HEIGHT;
-            addRow("Trial Mode",              cm.disableTrial     ? "Disabled" : "Enabled", vY);    vY += ROW_HEIGHT;
-            addRow("Starting Wizard Level",   cm.startingWizardLevel == 1 ? "Off" : "Level " + cm.startingWizardLevel, vY); vY += ROW_HEIGHT;
-            addRow("Starting Overcrowd",      cm.startingOvercrowd ? "Yes" : "No", vY);             vY += ROW_HEIGHT;
-            addRow("Tattered Scroll",         cm.tatteredScrollLevels + " levels", vY);              vY += ROW_HEIGHT;
-            addRow("Worn Tome",               cm.wornTomeLevels       + " levels", vY);              vY += ROW_HEIGHT;
-            addRow("Ancient Grimoire",        cm.ancientGrimoireLevels + " levels", vY);             vY += ROW_HEIGHT;
+            addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
+            addRow("Talisman Min Rarity",     opts.talismanMinRarity.toString(), vY);                         vY += ROW_HEIGHT;
+            addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
+            addRow("Tier Requirement",        AV.serverData.tokenRequirementPercent + "%", vY);               vY += ROW_HEIGHT;
+            addRow("Enforce Logic",           opts.enforce_logic    ? "Yes" : "No", vY);                      vY += ROW_HEIGHT;
+            addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
+            addRow("Trial Mode",              opts.disable_trial     ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
+            addRow("Starting Wizard Level",   opts.startingWizardLevel == 1 ? "Off" : "Level " + opts.startingWizardLevel, vY); vY += ROW_HEIGHT;
+            addRow("Starting Overcrowd",      opts.startingOvercrowd ? "Yes" : "No", vY);                    vY += ROW_HEIGHT;
+            addRow("Tattered Scroll",         opts.tomeXpLevels.tattered + " levels", vY);                   vY += ROW_HEIGHT;
+            addRow("Worn Tome",               opts.tomeXpLevels.worn       + " levels", vY);                  vY += ROW_HEIGHT;
+            addRow("Ancient Grimoire",        opts.tomeXpLevels.ancient    + " levels", vY);                  vY += ROW_HEIGHT;
 
             // ── Difficulty Modifiers ─────────────────────────────────────────
             vY += SECTION_GAP;
             addSectionHeader("Difficulty Modifiers", vY); vY += ROW_HEIGHT;
-            addRow("Enemy HP",               cm.enemyHpMultiplier          + "%", vY);               vY += ROW_HEIGHT;
-            addRow("Enemy Armor",            cm.enemyArmorMultiplier        + "%", vY);              vY += ROW_HEIGHT;
-            addRow("Enemy Shield",           cm.enemyShieldMultiplier       + "%", vY);              vY += ROW_HEIGHT;
-            addRow("Enemies Per Wave",       cm.enemiesPerWaveMultiplier    + "%", vY);              vY += ROW_HEIGHT;
-            addRow("Extra Waves",            cm.extraWaveCount == 0 ? "Off" : "+" + cm.extraWaveCount, vY); vY += ROW_HEIGHT;
+            addRow("Enemy HP",               opts.enemyMultipliers.hp     + "%", vY);                         vY += ROW_HEIGHT;
+            addRow("Enemy Armor",            opts.enemyMultipliers.armor  + "%", vY);                         vY += ROW_HEIGHT;
+            addRow("Enemy Shield",           opts.enemyMultipliers.shield + "%", vY);                         vY += ROW_HEIGHT;
+            addRow("Enemies Per Wave",       opts.enemyMultipliers.waves  + "%", vY);                         vY += ROW_HEIGHT;
+            addRow("Extra Waves",            opts.enemyMultipliers.extraWaves == 0 ? "Off" : "+" + opts.enemyMultipliers.extraWaves, vY); vY += ROW_HEIGHT;
 
             // ── DeathLink ────────────────────────────────────────────────────
             vY += SECTION_GAP;

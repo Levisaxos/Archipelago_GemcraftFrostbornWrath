@@ -61,7 +61,7 @@ package ui {
         public function configure(cm:ConnectionManager, dl:DeathLinkHandler):void {
             if (_mc != null && _mc.parent != null) _mc.parent.removeChild(_mc);
             _isOpen = false;
-            _mc = new McSlotSettings(cm, dl);
+            _mc = new McSlotSettings(dl);
 
             // Compute scroll range from the tallest content item.
             _vpYMin = 0;

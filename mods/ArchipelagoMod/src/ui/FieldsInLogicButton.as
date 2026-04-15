@@ -25,9 +25,10 @@ package ui {
         // Stop animating when this close to the target (map units).
         private static const PAN_SNAP:Number = 0.5;
 
-        private var _currentCount:int  = -1;
-        private var _inLogicStrIds:Array = [];
-        private var _panelShown:Boolean  = false;
+        private var _currentCount:int         = -1;
+        private var _inLogicStrIds:Array       = [];
+        private var _inLogicAchievements:Array = [];
+        private var _panelShown:Boolean        = false;
 
         private var _cycleIndex:int    = 0;
         private var _panTargetX:Number = 0;
@@ -54,9 +55,9 @@ package ui {
             _inLogicStrIds = strIds;
             _inLogicAchievements = achievements || [];
             if (_cycleIndex >= _inLogicStrIds.length) _cycleIndex = 0;
-            if (count == _currentCount) return;
-            _currentCount = count;
-            _rebuild("Fields in logic: " + count);
+            if (totalCount == _currentCount) return;
+            _currentCount = totalCount;
+            _rebuild("Fields in logic: " + totalCount);
         }
 
         /**

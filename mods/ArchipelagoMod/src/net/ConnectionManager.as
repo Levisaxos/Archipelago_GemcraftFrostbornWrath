@@ -313,8 +313,8 @@ package net {
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
-            var failMsg:String = "Failed to connect to " + _apHost + ":" + _apPort
-                + " with name " + _apSlot;
+            var failMsg:String = "Failed to connect to " + _archipelagoHost + ":" + _archipelagoPort
+                + " with name " + _archipelagoSlot;
             if (onError != null) onError(failMsg);
             _toast.addMessage(failMsg, 0xFFFF6666);            
         }
@@ -557,6 +557,10 @@ package net {
                 if (p.slot_data.fields_required_percentage !== undefined)
                 {
                     AV.serverData.serverOptions.fieldsRequiredPercentage = int(p.slot_data.fields_required_percentage);
+                }
+                if (p.slot_data.achievement_required_effort !== undefined)
+                {
+                    AV.serverData.serverOptions.achievementRequiredEffort = int(p.slot_data.achievement_required_effort);
                 }
             }
             _logger.log(_modName, "  goal=" + AV.serverData.serverOptions.goal + "  talisman_min_rarity=" + AV.serverData.serverOptions.talismanMinRarity);
@@ -816,7 +820,7 @@ package net {
          * we request a comprehensive list of all major Archipelago games.
          */
         private function sendGetDataPackage():void {
-            if (_ws == null) return;
+            if (_webSocketClient == null) return;
             var gamesSet:Object = {};
 
             // First, add any games we know about from _playerGames
@@ -876,14 +880,14 @@ package net {
 
             var packet:String = '[{"cmd":"GetDataPackage","games":[' + quoted.join(",") + ']}]';
             _logger.log(_modName, "AP >> GetDataPackage  games=" + quoted.length);
-            _ws.send(packet);
+            _webSocketClient.send(packet);
         }
 
         private function handleDataPackage(p:Object):void {
             try {
-                var data:Object = p.data;
-                if (data == null) return;
-                var games:Object = data.games;
+                var pkgData:Object = p.data;
+                if (pkgData == null) return;
+                var games:Object = pkgData.games;
                 if (games == null) return;
                 var loaded:int = 0;
                 for (var gameName:String in games) {
@@ -917,32 +921,32 @@ package net {
         private function sendConnect():void {
             var packet:String = '[{"cmd":"Connect",' +
                 '"game":"GemCraft: Frostborn Wrath",' +
-                '"name":"' + _apSlot + '",' +
-                '"password":"' + _apPassword + '",' +
+                '"name":"' + _archipelagoSlot + '",' +
+                '"password":"' + _archipelagoPassword + '",' +
                 '"version":{"major":0,"minor":6,"build":6,"class":"Version"},' +
                 '"items_handling":7,' +
                 '"tags":[],' +
                 '"uuid":"gcfw-mod"}]';
-            _logger.log(_modName, "AP >> Connect  slot=" + _apSlot);
-            _ws.send(packet);
+            _logger.log(_modName, "AP >> Connect  slot=" + _archipelagoSlot);
+            _webSocketClient.send(packet);
         }
 
         // -----------------------------------------------------------------------
         // Location checks
 
         public function sendLocationChecks(locationIds:Array):void {
-            if (_ws == null || locationIds.length == 0) return;
+            if (_webSocketClient == null || locationIds.length == 0) return;
             var packet:String = '[{"cmd":"LocationChecks","locations":[' + locationIds.join(",") + ']}]';
             _logger.log(_modName, "AP >> LocationChecks  ids=" + locationIds.join(","));
-            _ws.send(packet);
+            _webSocketClient.send(packet);
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
         public function sendDeathLink(source:String):void {
-            if (_ws == null || !_isConnected) return;
+            if (_webSocketClient == null || !_isConnected) return;
             var packet:String = '[{"cmd":"Bounce","tags":["DeathLink"],"data":{"time":0,"cause":"died","source":"' + source + '"}}]';
             _logger.log(_modName, "AP >> Bounce (DeathLink) source=" + source);
-            _ws.send(packet);
+            _webSocketClient.send(packet);
         }
 
         /**
@@ -950,20 +954,20 @@ package net {
          * @param tags  Array of tag strings, e.g. ["DeathLink"] or [].
          */
         public function sendConnectUpdate(tags:Array):void {
-            if (_ws == null || !_isConnected) return;
+            if (_webSocketClient == null || !_isConnected) return;
             var tagJson:String = '["' + tags.join('","') + '"]';
             if (tags.length == 0) tagJson = "[]";
             var packet:String = '[{"cmd":"ConnectUpdate","tags":' + tagJson + '}]';
             _logger.log(_modName, "AP >> ConnectUpdate tags=" + tagJson);
-            _ws.send(packet);
+            _webSocketClient.send(packet);
         }
 
         /** Send the goal-complete status to the AP server (status 30 = CLIENT_GOAL). */
         public function sendGoalComplete():void {
-            if (_ws == null || !_isConnected) return;
+            if (_webSocketClient == null || !_isConnected) return;
             var packet:String = '[{"cmd":"StatusUpdate","status":30}]';
             _logger.log(_modName, "AP >> StatusUpdate (Goal complete)");
-            _ws.send(packet);
+            _webSocketClient.send(packet);
         }
 
         /**

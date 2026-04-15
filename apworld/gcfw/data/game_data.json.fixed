@@ -1,7 +1,7 @@
 {
   "_notes": {
     "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP: 500-599 | Talisman Fragments (specific): 700-752 | Talisman Fragments (extra): 753-799 | Shadow Core Stashes (specific): 800-816 | Shadow Core Stashes (extra): 817-868",
-    "location_id_buckets": "Stages (Journey): 1-122 | Stages (Bonus): 200-321 | Map Tiles: 600-625 | Wiz Stash: 400-521",
+    "location_id_buckets": "Stages (Journey): 1-124 | Stages (Bonus): 200-322 | Map Tiles: 600-626 | Wiz Stash: loc_ap_id+399 (400-522)",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
     "scope_note": "All 122 stages are in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 do not exist in the game and have been removed. W1-W4 are all free (no field token item). W2-W4 changed from pre-collected to always-free like W1."
   },
@@ -47,323 +47,323 @@
     {
       "game_id": 0,
       "name": "Mana Stream",
-      "ap_id": 700
+      "ap_id": 300
     },
     {
       "game_id": 1,
       "name": "True Colors",
-      "ap_id": 701
+      "ap_id": 301
     },
     {
       "game_id": 2,
       "name": "Fusion",
-      "ap_id": 702,
+      "ap_id": 302,
       "note": "Unlocked by default"
     },
     {
       "game_id": 3,
       "name": "Orb of Presence",
-      "ap_id": 703
+      "ap_id": 303
     },
     {
       "game_id": 4,
       "name": "Resonance",
-      "ap_id": 704
+      "ap_id": 304
     },
     {
       "game_id": 5,
       "name": "Demolition",
-      "ap_id": 705
+      "ap_id": 305
     },
     {
       "game_id": 6,
       "name": "Critical Hit",
-      "ap_id": 706
+      "ap_id": 306
     },
     {
       "game_id": 7,
       "name": "Mana Leech",
-      "ap_id": 707
+      "ap_id": 307
     },
     {
       "game_id": 8,
       "name": "Bleeding",
-      "ap_id": 708
+      "ap_id": 308
     },
     {
       "game_id": 9,
       "name": "Armor Tearing",
-      "ap_id": 709
+      "ap_id": 309
     },
     {
       "game_id": 10,
       "name": "Poison",
-      "ap_id": 710
+      "ap_id": 310
     },
     {
       "game_id": 11,
       "name": "Slowing",
-      "ap_id": 711
+      "ap_id": 311
     },
     {
       "game_id": 12,
       "name": "Freeze",
-      "ap_id": 712,
+      "ap_id": 312,
       "note": "Unlocked by default in some modes"
     },
     {
       "game_id": 13,
       "name": "Whiteout",
-      "ap_id": 713
+      "ap_id": 313
     },
     {
       "game_id": 14,
       "name": "Ice Shards",
-      "ap_id": 714
+      "ap_id": 314
     },
     {
       "game_id": 15,
       "name": "Bolt",
-      "ap_id": 715
+      "ap_id": 315
     },
     {
       "game_id": 16,
       "name": "Beam",
-      "ap_id": 716,
+      "ap_id": 316,
       "note": "Unlocked by default in some modes"
     },
     {
       "game_id": 17,
       "name": "Barrage",
-      "ap_id": 717
+      "ap_id": 317
     },
     {
       "game_id": 18,
       "name": "Fury",
-      "ap_id": 718
+      "ap_id": 318
     },
     {
       "game_id": 19,
       "name": "Amplifiers",
-      "ap_id": 719
+      "ap_id": 319
     },
     {
       "game_id": 20,
       "name": "Pylons",
-      "ap_id": 720
+      "ap_id": 320
     },
     {
       "game_id": 21,
       "name": "Lanterns",
-      "ap_id": 721
+      "ap_id": 321
     },
     {
       "game_id": 22,
       "name": "Traps",
-      "ap_id": 722
+      "ap_id": 322
     },
     {
       "game_id": 23,
       "name": "Seeker Sense",
-      "ap_id": 723
+      "ap_id": 323
     }
   ],
   "battle_traits": [
     {
       "game_id": 0,
       "name": "Adaptive Carapace",
-      "ap_id": 800,
+      "ap_id": 400,
       "description": "After each shot taken, monsters gain damage reduction stacking up to a cap"
     },
     {
       "game_id": 1,
       "name": "Dark Masonry",
-      "ap_id": 801,
+      "ap_id": 401,
       "description": "Barricades, nests, beacons and watchtowers have more armor/HP; extra beacons spawn every 10 waves"
     },
     {
       "game_id": 2,
       "name": "Swarmling Domination",
-      "ap_id": 802,
+      "ap_id": 402,
       "description": "Swarmlings have reduced debuff duration and more speed; some reaver waves turn into swarmlings"
     },
     {
       "game_id": 3,
       "name": "Overcrowd",
-      "ap_id": 803,
+      "ap_id": 403,
       "description": "More monsters arrive each wave"
     },
     {
       "game_id": 4,
       "name": "Corrupted Banishment",
-      "ap_id": 804,
+      "ap_id": 404,
       "description": "Banished monsters return with more HP, armor, and shield layers"
     },
     {
       "game_id": 5,
       "name": "Awakening",
-      "ap_id": 805,
+      "ap_id": 405,
       "description": "Monster waves have increasing HP increment per wave"
     },
     {
       "game_id": 6,
       "name": "Insulation",
-      "ap_id": 806,
+      "ap_id": 406,
       "description": "Every monster enters with extra shield layers"
     },
     {
       "game_id": 7,
       "name": "Hatred",
-      "ap_id": 807,
+      "ap_id": 407,
       "description": "Monsters have more total HP"
     },
     {
       "game_id": 8,
       "name": "Swarmling Parasites",
-      "ap_id": 808,
+      "ap_id": 408,
       "description": "Killed monsters spawn 2 swarmlings with a portion of the monster's max HP"
     },
     {
       "game_id": 9,
       "name": "Haste",
-      "ap_id": 809,
+      "ap_id": 409,
       "description": "Wave stones move faster"
     },
     {
       "game_id": 10,
       "name": "Thick Air",
-      "ap_id": 810,
+      "ap_id": 410,
       "description": "Damage to monsters is capped at a fraction of their total HP per hit"
     },
     {
       "game_id": 11,
       "name": "Vital Link",
-      "ap_id": 811,
+      "ap_id": 411,
       "description": "Each monster waiting to enter gives bonus HP to monsters already on the battlefield"
     },
     {
       "game_id": 12,
       "name": "Giant Domination",
-      "ap_id": 812,
+      "ap_id": 412,
       "description": "Giants have thicker armor and more HP; some reaver waves turn into giants"
     },
     {
       "game_id": 13,
       "name": "Strength in Numbers",
-      "ap_id": 813,
+      "ap_id": 413,
       "description": "Each monster on the battlefield gives all others extra non-destructible armor"
     },
     {
       "game_id": 14,
       "name": "Ritual",
-      "ap_id": 814,
+      "ap_id": 414,
       "description": "Powerful enemy creatures may be lured to the battle"
     }
   ],
   "map_tiles": [
     {
       "game_id": 0,
-      "ap_id": 600
+      "ap_id": 200
     },
     {
       "game_id": 1,
-      "ap_id": 601
+      "ap_id": 201
     },
     {
       "game_id": 2,
-      "ap_id": 602
+      "ap_id": 202
     },
     {
       "game_id": 3,
-      "ap_id": 603
+      "ap_id": 203
     },
     {
       "game_id": 4,
-      "ap_id": 604
+      "ap_id": 204
     },
     {
       "game_id": 5,
-      "ap_id": 605
+      "ap_id": 205
     },
     {
       "game_id": 6,
-      "ap_id": 606
+      "ap_id": 206
     },
     {
       "game_id": 7,
-      "ap_id": 607
+      "ap_id": 207
     },
     {
       "game_id": 8,
-      "ap_id": 608
+      "ap_id": 208
     },
     {
       "game_id": 9,
-      "ap_id": 609
+      "ap_id": 209
     },
     {
       "game_id": 10,
-      "ap_id": 610
+      "ap_id": 210
     },
     {
       "game_id": 11,
-      "ap_id": 611
+      "ap_id": 211
     },
     {
       "game_id": 12,
-      "ap_id": 612
+      "ap_id": 212
     },
     {
       "game_id": 13,
-      "ap_id": 613
+      "ap_id": 213
     },
     {
       "game_id": 14,
-      "ap_id": 614
+      "ap_id": 214
     },
     {
       "game_id": 15,
-      "ap_id": 615
+      "ap_id": 215
     },
     {
       "game_id": 16,
-      "ap_id": 616
+      "ap_id": 216
     },
     {
       "game_id": 17,
-      "ap_id": 617
+      "ap_id": 217
     },
     {
       "game_id": 18,
-      "ap_id": 618
+      "ap_id": 218
     },
     {
       "game_id": 19,
-      "ap_id": 619
+      "ap_id": 219
     },
     {
       "game_id": 20,
-      "ap_id": 620
+      "ap_id": 220
     },
     {
       "game_id": 21,
-      "ap_id": 621
+      "ap_id": 221
     },
     {
       "game_id": 22,
-      "ap_id": 622
+      "ap_id": 222
     },
     {
       "game_id": 23,
-      "ap_id": 623
+      "ap_id": 223
     },
     {
       "game_id": 24,
-      "ap_id": 624
+      "ap_id": 224
     },
     {
       "game_id": 25,
-      "ap_id": 625
+      "ap_id": 225
     }
   ],
   "stages": [

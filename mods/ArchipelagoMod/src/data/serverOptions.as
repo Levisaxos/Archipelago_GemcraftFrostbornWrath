@@ -25,6 +25,7 @@ package data {
         // Goal-Specific Settings
         public var fieldsRequired:int;           // for fields_count goal
         public var fieldsRequiredPercentage:int; // for fields_percentage goal
+        public var achievementRequiredEffort:int; // 0=Off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
 
         // Death Link Settings
         public var deathLinkEnabled:Boolean;
@@ -59,6 +60,7 @@ package data {
 
             fieldsRequired = 0;
             fieldsRequiredPercentage = 0;
+            achievementRequiredEffort = 0;
 
             deathLinkEnabled = false;
             deathLinkRound = false;

@@ -216,10 +216,10 @@ package data {
                 if (_logger)
                 {
                     _logger.log("ServerData", "Loaded itemdata.json — "
-                        + Object.keys(apIdToGameId).length + " ID mappings, "
-                        + Object.keys(stagesByStrId).length + " stages, "
-                        + Object.keys(talismansByApId).length + " talismans, "
-                        + Object.keys(shadowCoresByApId).length + " shadow core stashes");
+                        + _countKeys(apIdToGameId) + " ID mappings, "
+                        + _countKeys(stagesByStrId) + " stages, "
+                        + _countKeys(talismansByApId) + " talismans, "
+                        + _countKeys(shadowCoresByApId) + " shadow core stashes");
                 }
             }
             catch (e:Error)
@@ -294,6 +294,12 @@ package data {
         public function clear():void
         {
             initialize();
+        }
+
+        private static function _countKeys(obj:Object):int {
+            var n:int = 0;
+            for (var k:String in obj) n++;
+            return n;
         }
     }
 }

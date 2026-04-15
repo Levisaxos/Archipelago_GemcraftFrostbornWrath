@@ -20,16 +20,16 @@ package {
     import data.AV;
     import goals.GoalManager;
 
-    import ui.ModButtons
-    import ui.ScrChangelog
-    import ui.ScrSlotSettings
-    import ui.ToastPanel
-    import ui.ItemToastPanel
-    import ui.MessageLog
-    import ui.MessageLogPanel
-    import ui.ScrDebugOptions
-    import ui.ConnectionPanel
-    import ui.DisconnectPanel
+    import ui.ModButtons;
+    import ui.ScrChangelog;
+    import ui.ScrSlotSettings;
+    import ui.ToastPanel;
+    import ui.ItemToastPanel;
+    import ui.MessageLog;
+    import ui.MessageLogPanel;
+    import ui.ScrDebugOptions;
+    import ui.ConnectionPanel;
+    import ui.DisconnectPanel;
 
     import update.UpdateChecker;
 
@@ -485,7 +485,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
-                    _destroyButtons();
+                    if (_modButtons != null) _modButtons.removeFromMainMenu();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
                     _goalManager.reset();
@@ -502,7 +502,7 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
-                    _destroyButtons();
+                    if (_modButtons != null) _modButtons.removeFromSelector();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
                     _goalManager.reset();
@@ -539,11 +539,6 @@ package {
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
                     removeMainMenuElements();
-                }
-
-                // Reset FieldsInLogicButton state to fix hover panel persistence bug
-                if (_fieldsBtn != null) {
-                    _fieldsBtn.resetOnScreenChange();
                 }
 
                 _lastScreen = screen;
@@ -605,7 +600,7 @@ package {
                     && GV.stageCollection != null
                     && GV.ppd !== _lastPpd) {
                 _lastPpd = GV.ppd;
-                var freeStages:Array = _connectionManager.freeStages;
+                var freeStages:Array = AV.serverData.freeStages;
                 if (freeStages != null) {
                     for each (var freeStrId:String in freeStages) {
                         if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
@@ -655,6 +650,9 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
+            }
 
             // Buttons: sync X positions, update fields-in-logic label + hover + pan.
             _modButtons.onSelectorFrame(mc);
@@ -882,8 +880,8 @@ package {
             if (!_connectionManager.isConnected || !_collectedState || !_achievementData) {
                 return result;
             }
-            var missing:Object = _connectionManager.missingLocations;
-            var requiredEffort:int = _connectionManager.achievementRequiredEffort;
+            var missing:Object = AV.saveData.missingLocations;
+            var requiredEffort:int = AV.serverData.serverOptions.achievementRequiredEffort;
 
             // Effort hierarchy for filtering
             var effortHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
@@ -1328,7 +1326,7 @@ package {
             if (_collectedState != null) _collectedState.reset();
             if (p.slot_data != null) {
                 _collectedState.configure(
-                    _connectionManager.tokenMap,
+                    AV.serverData.tokenMap,
                     p.slot_data.skill_categories
                 );
                 _logicEvaluator.configure(
@@ -1342,6 +1340,7 @@ package {
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_logicEvaluator, AV.serverData.serverOptions.enforce_logic);
+            }
             _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
             _wavePrePatcher.configure(
                 AV.serverData.serverOptions.enemyMultipliers.hp,
@@ -1350,7 +1349,6 @@ package {
                 AV.serverData.serverOptions.enemyMultipliers.waves,
                 AV.serverData.serverOptions.enemyMultipliers.extraWaves
             );
-            }
 
             try {
 
@@ -1360,6 +1358,9 @@ package {
                 _saveManager.saveSlotData();
                 _saveManager.loadSlotData(_saveManager.currentSlot);
                 _levelUnlocker.applyBonusLevels();
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "ERROR in loadSlotData: " + e.message);
+            }
 
             _levelUnlocker.configure(
                 AV.serverData.serverOptions.tomeXpLevels.tattered,
@@ -1454,7 +1455,7 @@ package {
                 _achPanelLogicDirty = true;
                 _inLogicAchievementsDirty = true;  // Recompute achievements cache when items arrive
 
-                var strId:String = _connectionManager.tokenMap[String(apId)];
+                var strId:String = AV.serverData.tokenMap[String(apId)];
                 if (strId != null) {
                     _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
                     _stageUnlocker.unlockStage(strId);
@@ -1524,8 +1525,8 @@ package {
             var apXpTotal:int   = 0;
             var apTalismans:Array  = [];
             var apShadowCores:Array = [];
-            var tokenMap:Object    = _connectionManager.tokenMap;
-            var tokenStages:Object = _connectionManager.tokenStages;
+            var tokenMap:Object    = AV.serverData.tokenMap;
+            var tokenStages:Object = AV.serverData.tokenStages;
 
             // Rebuild tracker state from the full item list.
             if (_collectedState != null) _collectedState.reset();
@@ -1618,7 +1619,7 @@ package {
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
             // --- Free stages (W1, W2, W3, W4) — always unlock on sync ---
-            var freeStages:Array = _connectionManager.freeStages;
+            var freeStages:Array = AV.serverData.freeStages;
             if (freeStages != null) {
                 for each (var freeStrId:String in freeStages) {
                     if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
@@ -1694,8 +1695,8 @@ package {
          */
         private function _findAchievementNameByApId(apId:int):String {
             for (var name:String in _achievementData) {
-                var data:Object = _achievementData[name];
-                if (data && data.apId == apId) {
+                var achEntry:Object = _achievementData[name];
+                if (achEntry && achEntry.apId == apId) {
                     return name;
                 }
             }
@@ -1836,14 +1837,14 @@ package {
             if (skillName != null) return skillName + " Skill";
             var traitName:String = _traitUnlocker.getTraitName(apId);
             if (traitName != null) return traitName + " Battle Trait";
-            var strId:String = _connectionManager.tokenMap[String(apId)];
+            var strId:String = AV.serverData.tokenMap[String(apId)];
             if (strId != null) return strId + " Field Token";
             if (apId >= 700 && apId <= 799) {
-                var talName:String = _connectionManager.talismanNameMap[String(apId)];
+                var talName:String = AV.serverData.talismanNameMap[String(apId)];
                 return talName != null ? talName : ("Talisman Fragment #" + apId);
             }
             if (apId >= 800 && apId <= 868) {
-                var scName:String = _connectionManager.shadowCoreNameMap[String(apId)];
+                var scName:String = AV.serverData.shadowCoreNameMap[String(apId)];
                 return scName != null ? scName : ("Shadow Cores #" + apId);
             }
             return null; // let ConnectionManager handle the rest

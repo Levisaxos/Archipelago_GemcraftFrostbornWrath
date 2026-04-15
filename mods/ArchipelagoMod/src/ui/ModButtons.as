@@ -5,6 +5,7 @@ package ui {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
 
+    import data.AV;
     import net.ConnectionManager;
     import tracker.LogicEvaluator;
 
@@ -238,7 +239,7 @@ package ui {
             if (!_connectionManager.isConnected || _logicEvaluator == null) return result;
             var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
             if (metas == null) return result;
-            var missing:Object = _connectionManager.missingLocations;
+            var missing:Object = AV.saveData.missingLocations;
             var locIds:Object  = ConnectionManager.stageLocIds;
             for (var i:int = 0; i < metas.length; i++) {
                 var meta:* = metas[i];

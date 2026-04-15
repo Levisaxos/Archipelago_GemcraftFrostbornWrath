@@ -3,6 +3,8 @@ package tracker {
     import com.giab.games.gcfw.GV;
     import flash.display.MovieClip;
     import flash.geom.ColorTransform;
+
+    import data.AV;
     import net.ConnectionManager;
 
     /**
@@ -81,7 +83,7 @@ package tracker {
                     ? GV.stageCollection.stageMetas : null;
                 if (metas == null) return;
 
-                var missing:Object = _cm.missingLocations;
+                var missing:Object = AV.saveData.missingLocations;
                 var locIds:Object  = ConnectionManager.stageLocIds;
 
                 for (var i:int = 0; i < cnt.numChildren; i++) {

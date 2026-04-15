@@ -33,21 +33,42 @@ def _load_item_table() -> Dict[str, ItemData]:
 
     # Skills — all progression: each is locked to a zone and all are required for A4
     # Note: gem types (Crit, Leech, Bleed, Armor Tear, Poison, Slow) are skills 7–12
-    # (AP IDs 306–311) and do not need separate gem unlock items.
+    # (AP IDs 706–711 after ID restructuring) and do not need separate gem unlock items.
     for skill in data["skills"]:
         name = f"{skill['name']} Skill"
         table[name] = ItemData(skill["ap_id"], ItemClassification.progression)
+
+    # Map tiles (AP IDs 600–625) — progression items that unlock map regions
+    for tile in data["map_tiles"]:
+        name = f"Map Tile {tile['game_id']}"
+        table[name] = ItemData(tile["ap_id"], ItemClassification.progression)
 
     # Battle traits — classified as progression since achievements require them
     for trait in data["battle_traits"]:
         name = f"{trait['name']} Battle Trait"
         table[name] = ItemData(trait["ap_id"], ItemClassification.progression)
 
-    # XP tiers — 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls.
+    # XP tiers — allocated to 1100–1199 (100 items):
+    # Base: 32 Tattered Scrolls + 6 Worn Tomes + 2 Ancient Grimoires = 40 items
+    # Extra: 60 additional XP filler items for future expansion
     # Per-tome level values are configured from slot_data (xp_tome_bonus option).
-    table["Tattered Scroll"]  = ItemData(1100, ItemClassification.useful)
-    table["Worn Tome"]        = ItemData(1101, ItemClassification.useful)
-    table["Ancient Grimoire"] = ItemData(1102, ItemClassification.useful)
+    xp_id = 1100
+    # 32 Tattered Scrolls (1100–1131)
+    for i in range(32):
+        table[f"Tattered Scroll #{i+1}"] = ItemData(xp_id, ItemClassification.useful)
+        xp_id += 1
+    # 6 Worn Tomes (1132–1137)
+    for i in range(6):
+        table[f"Worn Tome #{i+1}"] = ItemData(xp_id, ItemClassification.useful)
+        xp_id += 1
+    # 2 Ancient Grimoires (1138–1139)
+    for i in range(2):
+        table[f"Ancient Grimoire #{i+1}"] = ItemData(xp_id, ItemClassification.useful)
+        xp_id += 1
+    # 60 Extra XP filler items (1140–1199)
+    for i in range(60):
+        table[f"Extra XP Item #{i+1}"] = ItemData(xp_id, ItemClassification.useful)
+        xp_id += 1
 
     # Specific talisman fragments — named by original field (IDs 900–952).
     for frag in data["talisman_fragments"]:
