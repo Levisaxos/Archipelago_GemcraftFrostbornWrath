@@ -56,33 +56,12 @@ package unlockers
 				return;
 			}
 
-			// Get the ending object
-			var ending:Object = GV.ingameController != null && GV.ingameController.core != null
-				? GV.ingameController.core.ending
-				: null;
-
-			if (ending == null) {
-				// Mid-battle: ending screen not active yet — send check immediately.
-				_collectedState.onAchievementCollected(apId);
-				if (_connectionManager.isConnected) {
-					_connectionManager.sendLocationChecks([apId]);
-				}
-				// Skill points are awarded via the normal skill point flow (no dropIcons needed).
-				awardSkillPointsForAchievement(achievementName, achievementData);
-				_logger.log(_modName, "Pending: " + achievementName + " (achievement, sent mid-battle)  apId=" + apId);
-				return;
+			_collectedState.onAchievementCollected(apId);
+			if (_connectionManager.isConnected) {
+				_connectionManager.sendLocationChecks([apId]);
 			}
-
-			var meta:Object = {
-				achievementName: achievementName,
-				achievementData: achievementData
-			};
-
-			// Level won and ending screen active — queue to dropIcons for visual display.
-			NormalProgressionBlocker.addApDropToIcons(ending, NormalProgressionBlocker.AP_ACHIEVEMENT_COLLECTED, apId, meta);
-			NormalProgressionBlocker.addApDropToIcons(ending, NormalProgressionBlocker.AP_ACHIEVEMENT_SKILL, apId, meta);
-
-			_logger.log(_modName, "Pending: " + achievementName + " (achievement, queued level end)  apId=" + apId);
+			awardSkillPointsForAchievement(achievementName, achievementData);
+			_logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId);
 		}
 
 		/**

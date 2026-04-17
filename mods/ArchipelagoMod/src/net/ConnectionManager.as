@@ -654,6 +654,10 @@ package net {
                         receivingName: recvName
                     };
 
+                    var recipientLabel:String = (_playerNames[receiving] != null)
+                        ? String(_playerNames[receiving]) : "Archipelago";
+                    _logger.log(_modName, "Sent: " + sentItemName + " \u2192 " + recipientLabel);
+
                     // Show on toast if sent to another player
                     if (receiving != _mySlot && _itemToast != null) {
                         _itemToast.addItem("Sent " + sentItemName + " to " + recvName, 0xCC99FF);

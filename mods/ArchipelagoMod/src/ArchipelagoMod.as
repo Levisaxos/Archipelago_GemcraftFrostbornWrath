@@ -131,8 +131,7 @@ package {
         private var _achievementUnlocker:AchievementUnlocker;
         private var _achievementData:Object = {};         // achievement name -> apId, reward, required_effort, etc.
         private var _elementStages:Object = {};           // element name -> Array of stage strIds
-        private var _reportedAchievements:Object = {};    // achievement name -> true (already reported)
-        private var _pendingAchievements:Object  = {};    // achievement name -> true (status=2 already logged)
+        private var _reportedAchievements:Object = {};    // achievement name -> true (already reported this session)
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
@@ -503,7 +502,6 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
-                    _pendingAchievements  = {};
                     if (_modButtons != null) _modButtons.removeFromMainMenu();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
@@ -521,7 +519,6 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _reportedAchievements = {};
-                    _pendingAchievements  = {};
                     if (_modButtons != null) _modButtons.removeFromSelector();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
@@ -1694,7 +1691,6 @@ package {
             if (_standalone) return;
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
-            detectAndReportAchievements();
             _goalManager.check();
         }
 
@@ -1782,19 +1778,13 @@ package {
                     var ach:* = achisByOrder[i];
                     if (!ach) continue;
 
-                    // Check if achievement is permanently earned (status 3 only).
-                    // Status 2 = UNLOCKED_BUT_HAVE_TO_WIN means the condition was
-                    // met during a live battle but the player hasn't won yet — we
-                    // must NOT report it until it becomes permanently unlocked (3),
-                    // otherwise losing/exiting the stage would cause a false check.
+                    // Send as soon as the game marks the achievement earned (status 2+).
+                    // Status 2 = condition met in a live battle; status 3 = permanently saved.
+                    // We intentionally send at status 2 so the check goes out immediately
+                    // without requiring a win.
                     var status:int = int(ach.status);
                     var achTitle:String = String(ach.title);
-                    if (status == 2 && !_pendingAchievements[achTitle]) {
-                        _pendingAchievements[achTitle] = true;
-                        _logger.log(MOD_NAME, "Pending: " + achTitle + " (achievement, awaiting win)");
-                    }
-                    var isCollected:Boolean = (status == 3);
-                    if (!isCollected) {
+                    if (status < 2) {
                         continue;
                     }
 
@@ -1823,7 +1813,7 @@ package {
 
                     // Mark as reported and submit
                     _reportedAchievements[achTitle] = true;
-                    _logger.log(MOD_NAME, "Pending: " + achTitle + " (achievement)  apId=" + apId);
+                    _logger.log(MOD_NAME, "Sending achievement: " + achTitle + "  apId=" + apId);
                     _achievementUnlocker.unlockAchievement(achTitle, apId, _achievementData);
                 }
             } catch (err:Error) {
