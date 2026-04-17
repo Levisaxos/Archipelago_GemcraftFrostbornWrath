@@ -118,14 +118,20 @@ package unlockers {
 
                 var tooltip:String = isForUs ? (itemName + " to You") : (itemName + " to Other");
                 var icon:ApItemIcon = new ApItemIcon(tooltip);
-                var existingCount:int = ending.dropIcons.length;
-                icon.x = 48 + existingCount * 140;
                 icon.y = 789;
                 icon.visible = false;
                 ending.cnt.mcOutcomePanel.addChild(icon);
                 ending.dropIcons.push(icon);
                 icon.addEventListener(MouseEvent.MOUSE_OVER, onApIconOver, false, 0, true);
                 icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
+
+                // Reposition ALL icons so centering stays correct for the new total count
+                var n:int = ending.dropIcons.length;
+                var xOff:Number = n < 13 ? 70 * (13 - n) : 0;
+                for (var i:int = 0; i < n; i++) {
+                    ending.dropIcons[i].x = 48 + i * 140 + xOff;
+                }
+
                 _logger.log(_modName, "addItemToActiveEndingScreen: " + itemName + " (AP ID " + apId + ")");
             } catch (err:Error) {
                 _logger.log(_modName, "addItemToActiveEndingScreen ERROR: " + err.message);
@@ -522,11 +528,14 @@ package unlockers {
                     for (var a:int = 0; a < pendingAchievements.length; a++) {
                         var achEntry:Object = pendingAchievements[a];
                         var achLocId:int = int(achEntry.apId);
+                        var achIcon:ApItemIcon;
                         if (sentItems != null && sentItems[achLocId] != null) {
-                            icons.push(buildIconForSentItem(sentItems[achLocId]));
+                            achIcon = buildIconForSentItem(sentItems[achLocId]);
                         } else {
-                            icons.push(new ApItemIcon("Achievement: " + String(achEntry.achievementName) + " to someone"));
+                            achIcon = new ApItemIcon("Sent: " + String(achEntry.achievementName) + " \u2192 ?");
                         }
+                        achIcon.locationId = achLocId;
+                        icons.push(achIcon);
                     }
                     _achievementUnlocker.clearPendingLevelAchievements();
                 }
@@ -611,11 +620,23 @@ package unlockers {
             }
         }
 
-        /** MOUSE_OVER for ApItemIcon — shows tooltipText in McInfoPanel. */
+        /** MOUSE_OVER for ApItemIcon — shows tooltipText in McInfoPanel, with lazy sent-item lookup. */
         private function onApIconOver(e:MouseEvent):void {
             try {
                 var icon:ApItemIcon = e.currentTarget as ApItemIcon;
                 if (icon == null) return;
+
+                // For achievement icons: check if the AP server has since responded with who got what
+                if (icon.locationId > 0 && _connectionManager != null) {
+                    var sentItems:Object = _connectionManager.itemsSentThisLevel;
+                    if (sentItems != null && sentItems[icon.locationId] != null) {
+                        var sentData:Object = sentItems[icon.locationId];
+                        var itemName:String = String(sentData.itemName || "Item");
+                        var receivingName:String = String(sentData.receivingName || "?");
+                        icon.tooltipText = itemName + " \u2192 " + receivingName;
+                    }
+                }
+
                 var vIp:* = GV.mcInfoPanel;
                 vIp.reset(260);
                 vIp.addTextfield(0xFFD700, icon.tooltipText, false, 12);

@@ -1899,6 +1899,10 @@ package {
                 var scName:String = AV.serverData.shadowCoreNameMap[String(apId)];
                 return scName != null ? scName : ("Shadow Cores #" + apId);
             }
+            if (apId >= 2000 && apId <= 2636) {
+                var achName:String = _findAchievementNameByApId(apId);
+                return achName != null ? achName : ("Achievement #" + apId);
+            }
             return null; // let ConnectionManager handle the rest
         }
     }

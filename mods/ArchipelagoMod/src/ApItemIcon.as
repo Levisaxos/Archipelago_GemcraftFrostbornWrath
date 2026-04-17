@@ -29,6 +29,9 @@ package {
         /** Tooltip text shown on MOUSE_OVER. */
         public var tooltipText:String;
 
+        /** AP location ID (2000-2636 for achievements); used to look up sent-item data on hover. */
+        public var locationId:int = 0;
+
         /** Properties required by IngameEnding.removeAllDropIcons() for cleanup. */
         public var data:Object;
         public var cntInner:Sprite;

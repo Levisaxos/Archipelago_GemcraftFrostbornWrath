@@ -778,11 +778,12 @@ package net {
             var debug:Boolean = true; // Enabled to help debug cross-world item resolution
             var result:String = null;
 
-            // Step 1: fast path for our own items.
-            if (ownerSlot == _mySlot || ownerSlot < 0) {
-                var mine:String = itemName(itemId);
-                if (mine != null) result = mine;
-            }
+            // Step 1: Try our own resolver for all items — it returns non-null only for
+            // items it recognises (GCFW items), so this is a safe first pass regardless
+            // of which slot the item belongs to.  This gives friendly names ("A1 Field Token",
+            // achievement titles, etc.) even when the item is going to another player.
+            var mine:String = itemName(itemId);
+            if (mine != null) result = mine;
 
             // Step 2: DataPackage lookup — works for any game, including GCFW
             // itself (populated from the DataPackage WebSocket message).
@@ -809,13 +810,6 @@ package net {
                 } else {
                     if (debug) _logger.log(_modName, "[resolveItemName] No gameName for slot " + effectiveSlot);
                 }
-            }
-
-            // Step 3: DataPackage not loaded yet (timing) — try own resolver as
-            // a last resort so same-game cross-slot items still resolve.
-            if (result == null && ownerSlot != _mySlot) {
-                var fallback:String = itemName(itemId);
-                if (fallback != null) result = fallback;
             }
 
             if (result == null) {
@@ -1023,7 +1017,14 @@ package net {
 
                 var toSend:Array = [];
                 _lastCheckedLocations = [];
-                _itemsSentThisLevel = {};  // Clear items sent from previous battle
+                // Clear stage-location data but preserve achievement entries (2000-2636)
+                // so that hover lookups on achievement icons still work after this call.
+                var preservedSent:Object = {};
+                for (var achKey:String in _itemsSentThisLevel) {
+                    var achId:int = int(achKey);
+                    if (achId >= 2000 && achId <= 2636) preservedSent[achKey] = _itemsSentThisLevel[achKey];
+                }
+                _itemsSentThisLevel = preservedSent;
                 for (var i:int = 0; i < metas.length; i++) {
                     var meta:* = metas[i];
                     if (meta == null) continue;
