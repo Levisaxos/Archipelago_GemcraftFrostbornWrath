@@ -231,8 +231,7 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
-                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;
-                _connectionManager.setItemNameResolver(itemName);
+                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;                
                 _connectionManager.load();
 
                 // Initialize achievement unlocker

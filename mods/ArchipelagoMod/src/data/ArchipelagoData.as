@@ -12,14 +12,22 @@ package data {
         
         public var games:Dictionary = new Dictionary();
         public var players:Dictionary = new Dictionary(); // Stores id, name of player, game and list of items. Needs to get filled by resolveItemNameForSlot.
-        public var checks:Object = {};  // locationId(int) → {id:int, name:String, game:String}
+        public var checks:Object = {};  // locationId(int) → {id:int, name:String, game:String, playerName:String}
         
         public function logPlayers(logger:Logger, modName:String)
         {
-            logger.log(modName, "I'm posting all players now");
-                for each (var player:PlayerData in players){
-                    logger.log(modName, player.id + ": " + player.name + " playing " + player.game);
-                }
+            for each (var player:PlayerData in players){
+                logger.log(modName, player.id + ": " + player.name + " playing " + player.game);
+            }
+        }
+
+        public function getCheckName(apId:Number, gameName:String):String
+        {
+            var check:Object = checks[int(apId)];
+            if (check == null) return null;
+            var name:String = (check.name != null) ? check.name : ("Item from " + (check.game || gameName || "?"));
+            var player:String = check.playerName || "?";
+            return "Found" + name + " for " + player;
         }
     }    
 }

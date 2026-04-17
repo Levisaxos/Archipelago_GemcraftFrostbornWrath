@@ -55,11 +55,7 @@ package net {
         private var _lastCheckedLocations:Array = [];  // [{strId, locType}] — populated by checkCompletedLocations()
         private var _itemsSentThisLevel:Object = {};   // [locationId → {itemId, itemName, receivingSlot, receivingName}] — populated by handlePrintJSON()
         private var _mySlot:int         = 0;
-        private var _playerNames:Object = {};   // slot (int) → alias (String)
-        private var _playerGames:Object = {};   // slot (int) → game name (String)        
-        private var _resolvedItemNames:Object  = {}; // itemId (String) → resolved name (String) — persistent cache
         private var _requestedGames:Object     = {}; // gameName → true, tracks in-flight/completed DataPackage requests
-        private var _scoutedLocations:Object   = {}; // locationId (String) → {itemId:int, ownerSlot:int}
         private var _pendingChecks:Object      = {}; // locationId(int) → {id:int, player:int, item:int}
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
@@ -418,10 +414,7 @@ package net {
             _mySlot = int(p.slot);
             _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
 
-            _playerNames       = {};
-            _playerGames       = {};
-            _requestedGames    = {};            
-            _resolvedItemNames  = {};
+            _requestedGames    = {};
 
             // Extract player names from players array
             var players:Array = p.players as Array;
@@ -434,7 +427,7 @@ package net {
                     AV.archipelagoData.players[int(player.slot)] = achPlayer;
                 }
             }       
-            AV.archipelagoData.logPlayers(_logger, _modName);
+            
             if (p.slot_data && p.slot_data.token_map)
             {
                 _tokenMap = p.slot_data.token_map;
@@ -620,8 +613,8 @@ package net {
                     var sentItemId:int   = int(p.item.item);
                     var sentLocId:int    = int(p.item.location);
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
-                    var recvName:String  = (_playerNames[receiving] != null)
-                        ? String(_playerNames[receiving]) : ("Slot " + receiving);
+                    var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
+                    var recvName:String  = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
 
                     // Store for ending-screen icon display
                     _itemsSentThisLevel[sentLocId] = {
@@ -634,8 +627,7 @@ package net {
                     // Notify ending screen to add icon now that we have the real name from AP
                     if (onItemSentFromLocation != null) onItemSentFromLocation(sentLocId, sentItemName, recvName);
 
-                    var recipientLabel:String = (_playerNames[receiving] != null)
-                        ? String(_playerNames[receiving]) : "Archipelago";
+                    var recipientLabel:String = (recvPlayer != null) ? recvPlayer.name : "Archipelago";
                     _logger.log(_modName, "Sent: " + sentItemName + " \u2192 " + recipientLabel);
 
                     // Show on toast if sent to another player
@@ -660,24 +652,6 @@ package net {
          * (for our own world) and pass everything else through as-is.
          * This avoids trying to guess item/location names when the server hasn't resolved them.
          */
-        private function partsToSimpleText(data:*):String {
-            var result:String = "";
-            if (data == null) return result;
-            var parts:Array = data as Array;
-            for each (var part:Object in parts) {
-                var ptype:String = (part.type != null) ? String(part.type) : "text";
-                if (ptype == "player_id") {
-                    // Replace slot numbers with player names for readability
-                    var pSlot:int = int(part.text);
-                    result += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
-                } else {
-                    // For item_id, location_id, and text parts, use server's text as-is
-                    if (part.text != null) result += String(part.text);
-                }
-            }
-            return result;
-        }
-
         /**
          * Resolve a PrintJSON data array to a human-readable string.
          * defaultItemOwner is the slot to assume owns any item_id part that
@@ -692,7 +666,8 @@ package net {
                 var ptype:String = (part.type != null) ? String(part.type) : "text";
                 if (ptype == "player_id") {
                     var pSlot:int = int(part.text);
-                    result += (_playerNames[pSlot] != null) ? String(_playerNames[pSlot]) : ("Slot " + pSlot);
+                    var pData:PlayerData = AV.archipelagoData.players[pSlot] as PlayerData;
+                    result += (pData != null) ? pData.name : ("Slot " + pSlot);
                 } else if (ptype == "item_id") {
                     var ownerSlot:int = (part.player != null) ? int(part.player) : defaultItemOwner;
                     result += resolveItemNameForSlot(int(part.text), ownerSlot);
@@ -703,37 +678,6 @@ package net {
                 }
             }
             return result;
-        }
-
-        /**
-         * Extract the item name from a PrintJSON data array by finding the matching
-         * item_id and resolving it using the player field from that part.
-         * This is the "Ori approach" — use the message structure from the server
-         * rather than trying to resolve the ID independently.
-         */
-        private function extractItemNameFromParts(data:*, targetItemId:int):String {
-            if (data == null) return "Item #" + targetItemId;
-            var parts:Array = data as Array;
-            for each (var part:Object in parts) {
-                var ptype:String = (part.type != null) ? String(part.type) : "text";
-                if (ptype == "item_id" && int(part.text) == targetItemId) {
-                    // Found the matching item_id part — extract the formatted name directly
-                    // Some servers don't populate game names in Connected packets, so we
-                    // try to use the formatted text that the server already resolved.
-                    // If it's "Item #2001", that means it wasn't resolved on the server either,
-                    // so we'll get the same result, but at least it's consistent.
-                    if (part.text != null && String(part.text).indexOf("Item #") != 0) {
-                        // Server provided a resolved name (not a fallback), use it directly
-                        return String(part.text);
-                    }
-                    // Otherwise, try resolution via player slot
-                    var ownerSlot:int = (part.player != null) ? int(part.player) : -1;
-                    var resolvedName:String = resolveItemNameForSlot(targetItemId, ownerSlot);
-                    return resolvedName;
-                }
-            }
-            // Fallback if not found in parts
-            return "Item #" + targetItemId;
         }
 
         /**
@@ -756,11 +700,8 @@ package net {
                 return AV.archipelagoData.players[ownerSlot].items[itemId].name
 
             var result:String = null;
-                        
-            //todo: Check in serverdata.players.items if item exists. If not, go to step2.
-            // Step 2: DataPackage lookup — works for any game, including GCFW itself (populated from the DataPackage WebSocket message).
-            //todo: Use serverdata.players for playername, ownerslot and such
-            if (result == null) {                
+
+            if (result == null) {
                 var gameName:String =  AV.archipelagoData.players[ownerSlot].game;
                 _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
                 if (gameName != null) {
@@ -783,11 +724,9 @@ package net {
 
             if (result == null) {
                 _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
-                return "Item #" + itemId;  // Don't cache — DataPackage may resolve it later
+                return "Item #" + itemId;
             }
 
-            // Cache resolved names so cross-slot lookups stay fast
-            _resolvedItemNames[itemIdStr] = result;
             return result;
         }
 
@@ -850,13 +789,6 @@ package net {
                     loaded++;
                 }
                 _logger.log(_modName, "  DataPackage loaded: " + loaded + " game(s)");
-
-                // Debug: log current player games mapping
-                var playerGamesList:String = "";
-                for (var slot:String in _playerGames) {
-                    playerGamesList += "Slot" + slot + "=" + _playerGames[slot] + " ";
-                }
-                _logger.log(_modName, "    [DataPackage] Player games: " + playerGamesList);
             } catch (err:Error) {
                 _logger.log(_modName, "handleDataPackage ERROR: " + err.message);
             }
@@ -911,7 +843,8 @@ package net {
 
                 var playerData:PlayerData = AV.archipelagoData.players[ownerSlot] as PlayerData;
                 var game:String = (playerData != null) ? playerData.game : null;
-                AV.archipelagoData.checks[locId] = {id: locId, name: null, game: game};
+                var playerName:String = (playerData != null) ? playerData.name : ("Slot " + ownerSlot);
+                AV.archipelagoData.checks[locId] = {id: locId, name: null, game: game, playerName: playerName};
 
                 if (game != null) uniqueGames[game] = true;
                 _logger.log(_modName, "  loc=" + locId + " item=" + itemId + " player=" + ownerSlot + " game=" + game);
@@ -1042,105 +975,5 @@ package net {
             }
         }
 
-        // -----------------------------------------------------------------------
-        // Helpers
-
-
-        /** Set an external name resolver. Signature: (apId:int):String — return null if unknown. */
-        public function setItemNameResolver(resolver:Function):void {
-            _itemNameResolver = resolver;
-        }
-
-        private var _itemNameResolver:Function;
-
-        private var _apIdToName:Object = {};
-        private var _itemDataLoaded:Boolean = false;
-
-        private function ensureItemData():void {
-            if (_itemDataLoaded) return;
-            _itemDataLoaded = true;
-            try {
-                var json:Object = JSON.parse(EmbeddedData.getItemDataJSON());
-                var i:int;
-                var entry:Object;
-
-                var stages:Array = json.stages as Array;
-                if (stages) {
-                    for (i = 0; i < stages.length; i++) {
-                        entry = stages[i];
-                        _apIdToName[String(int(entry.itemApId))] = String(entry.strId) + " Field Token";
-                    }
-                }
-
-                var skills:Array = json.skills as Array;
-                if (skills) {
-                    for (i = 0; i < skills.length; i++) {
-                        entry = skills[i];
-                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Skill";
-                    }
-                }
-
-                var traits:Array = json.battleTraits as Array;
-                if (traits) {
-                    for (i = 0; i < traits.length; i++) {
-                        entry = traits[i];
-                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Battle Trait";
-                    }
-                }
-
-                var gems:Array = json.gemUnlocks as Array;
-                if (gems) {
-                    for (i = 0; i < gems.length; i++) {
-                        entry = gems[i];
-                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Gem Unlock";
-                    }
-                }
-
-                var tiles:Array = json.mapTiles as Array;
-                if (tiles) {
-                    for (i = 0; i < tiles.length; i++) {
-                        entry = tiles[i];
-                        var tileKey:String = String(int(entry.ap_id));
-                        if (_apIdToName[tileKey] == null) {
-                            _apIdToName[tileKey] = "Map Tile #" + entry.ap_id;
-                        }
-                    }
-                }
-
-                var talFrags:Array = json.talismanFragments as Array;
-                if (talFrags) {
-                    for (i = 0; i < talFrags.length; i++) {
-                        entry = talFrags[i];
-                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.str_id) + " Talisman Fragment";
-                    }
-                }
-
-                var extraTals:Array = json.extraTalismanFragments as Array;
-                if (extraTals) {
-                    for (i = 0; i < extraTals.length; i++) {
-                        entry = extraTals[i];
-                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.name);
-                    }
-                }
-
-                var scStashes:Array = json.shadowCoreStashes as Array;
-                if (scStashes) {
-                    for (i = 0; i < scStashes.length; i++) {
-                        entry = scStashes[i];
-                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.str_id) + " Shadow Cores";
-                    }
-                }
-
-                var extraSc:Array = json.extraShadowCoreStashes as Array;
-                if (extraSc) {
-                    for (i = 0; i < extraSc.length; i++) {
-                        entry = extraSc[i];
-                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.name);
-                    }
-                }
-            } catch (err:Error) {
-                _logger.log(_modName, "ensureItemData ERROR: " + err.message);
-            }
-        }
     }
 }

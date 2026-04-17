@@ -637,21 +637,15 @@ package unlockers {
             }
         }
 
-        /** MOUSE_OVER for ApItemIcon — shows tooltipText in McInfoPanel, with lazy sent-item lookup. */
+        /** MOUSE_OVER for ApItemIcon — shows tooltipText in McInfoPanel, resolved from ArchipelagoData.checks. */
         private function onApIconOver(e:MouseEvent):void {
             try {
                 var icon:ApItemIcon = e.currentTarget as ApItemIcon;
                 if (icon == null) return;
 
-                // For achievement icons: check if the AP server has since responded with who got what
-                if (icon.locationId > 0 && _connectionManager != null) {
-                    var sentItems:Object = _connectionManager.itemsSentThisLevel;
-                    if (sentItems != null && sentItems[icon.locationId] != null) {
-                        var sentData:Object = sentItems[icon.locationId];
-                        var itemName:String = String(sentData.itemName || "Item");
-                        var receivingName:String = String(sentData.receivingName || "?");
-                        icon.tooltipText = itemName + " \u2192 " + receivingName;
-                    }
+                if (icon.locationId > 0) {
+                    var checkName:String = AV.archipelagoData.getCheckName(icon.locationId, null);
+                    if (checkName != null) icon.tooltipText = checkName;
                 }
 
                 var vIp:* = GV.mcInfoPanel;
