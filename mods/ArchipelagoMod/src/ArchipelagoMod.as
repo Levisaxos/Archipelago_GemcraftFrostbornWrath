@@ -1498,11 +1498,6 @@ package {
                     _traitUnlocker.unlockBattleTrait(apId);
                     return;
                 }
-                if (apId >= 500 && apId <= 502) {
-                    _logger.log(MOD_NAME, "  → XP bonus apId: " + apId);
-                    _levelUnlocker.grantXpBonus(apId);
-                    return;
-                }
                 if (apId >= 1100 && apId <= 1199) {
                     _logger.log(MOD_NAME, "  → XP tome apId: " + apId);
                     _levelUnlocker.grantXpFromApId(apId, itemDisplayName);
@@ -1891,11 +1886,11 @@ package {
             if (traitName != null) return traitName + " Battle Trait";
             var strId:String = AV.serverData.tokenMap[String(apId)];
             if (strId != null) return strId + " Field Token";
-            if (apId >= 700 && apId <= 799) {
+            if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                 var talName:String = AV.serverData.talismanNameMap[String(apId)];
                 return talName != null ? talName : ("Talisman Fragment #" + apId);
             }
-            if (apId >= 800 && apId <= 868) {
+            if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                 var scName:String = AV.serverData.shadowCoreNameMap[String(apId)];
                 return scName != null ? scName : ("Shadow Cores #" + apId);
             }
