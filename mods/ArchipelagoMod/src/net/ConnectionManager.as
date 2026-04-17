@@ -6,6 +6,8 @@ package net {
     import ui.ToastPanel;
     import ui.ItemToastPanel;
     import ui.MessageLog;
+    import data.ArchipelagoData
+    import data.PlayerData
 
     /**
      * Manages the Archipelago server connection lifecycle and protocol.
@@ -54,9 +56,10 @@ package net {
         private var _itemsSentThisLevel:Object = {};   // [locationId → {itemId, itemName, receivingSlot, receivingName}] — populated by handlePrintJSON()
         private var _mySlot:int         = 0;
         private var _playerNames:Object = {};   // slot (int) → alias (String)
-        private var _playerGames:Object = {};   // slot (int) → game name (String)
-        private var _itemIdToNameByGame:Object = {}; // gameName → { itemIdStr → itemName }
+        private var _playerGames:Object = {};   // slot (int) → game name (String)        
         private var _resolvedItemNames:Object  = {}; // itemId (String) → resolved name (String) — persistent cache
+        private var _requestedGames:Object     = {}; // gameName → true, tracks in-flight/completed DataPackage requests
+        private var _scoutedLocations:Object   = {}; // locationId (String) → {itemId:int, ownerSlot:int}
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -396,6 +399,10 @@ package net {
                     handleDataPackage(p);
                     break;
 
+                case "LocationInfo":
+                    handleLocationInfo(p);
+                    break;
+
                 case "Bounced":
                     handleBounced(p);
                     break;
@@ -410,53 +417,24 @@ package net {
             _mySlot = int(p.slot);
             _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
 
-            _playerNames = {};
-            _playerGames = {};
+            _playerNames       = {};
+            _playerGames       = {};
+            _requestedGames    = {};            
+            _resolvedItemNames  = {};
 
             // Extract player names from players array
             var players:Array = p.players as Array;
             if (players) {
                 for each (var player:Object in players) {
-                    _playerNames[int(player.slot)] = String(player.alias);
-                    _logger.log(_modName, "  player: slot=" + player.slot + "  name=" + player.alias);
+                    var achPlayer:PlayerData = new PlayerData();
+                    achPlayer.id = player.slot;
+                    achPlayer.name = player.alias;
+                    achPlayer.game = p.slot_info[player.slot].game;                    
+                    AV.archipelagoData.players[int(player.slot)] = achPlayer;
+                    getGameDataPackage(achPlayer.game);
                 }
-            }
-
-            // Extract game names from slot_info (Archipelago standard)
-            // This is where the server sends which game each slot is playing
-            var slotInfo:Object = p.slot_info;
-            var foundGames:int = 0;
-            if (slotInfo) {
-                _logger.log(_modName, "  Extracting game names from slot_info...");
-                for (var slotStr:String in slotInfo) {
-                    var slot:int = int(slotStr);
-                    var info:Object = slotInfo[slotStr];
-                    if (info && info.game != null) {
-                        var gameName:String = String(info.game);
-                        _playerGames[slot] = gameName;
-                        foundGames++;
-                        _logger.log(_modName, "    slot " + slot + " game: " + gameName);
-                    }
-                }
-            }
-
-            // Fallback: if no slot_info found any games, try to get game from players
-            if (foundGames == 0) {
-                _logger.log(_modName, "  No slot_info found, trying players array...");
-                if (players) {
-                    for each (var playerFallback:Object in players) {
-                        if (playerFallback.game != null) {
-                            _playerGames[int(playerFallback.slot)] = String(playerFallback.game);
-                            _logger.log(_modName, "    slot " + playerFallback.slot + " game: " + playerFallback.game);
-                        }
-                    }
-                }
-            }
-
-            // Fetch item name tables for every game in the room so we can
-            // resolve cross-game item names in PrintJSON events.
-            sendGetDataPackage();
-
+            }       
+            AV.archipelagoData.logPlayers(_logger, _modName);
             if (p.slot_data && p.slot_data.token_map)
             {
                 _tokenMap = p.slot_data.token_map;
@@ -467,13 +445,11 @@ package net {
                     _tokenStages[_tokenMap[apIdStr]] = true;
                     tokenCount++;
                 }
-                _logger.log(_modName, "  token_map loaded: " + tokenCount + " entries");
             }
 
             if (p.slot_data && p.slot_data.talisman_map)
             {
                 _talismanMap = p.slot_data.talisman_map;
-                _logger.log(_modName, "  talisman_map loaded");
             }
 
             if (p.slot_data && p.slot_data.talisman_name_map)
@@ -484,7 +460,6 @@ package net {
             if (p.slot_data && p.slot_data.shadow_core_map)
             {
                 _shadowCoreMap = p.slot_data.shadow_core_map;
-                _logger.log(_modName, "  shadow_core_map loaded");
             }
 
             if (p.slot_data && p.slot_data.shadow_core_name_map)
@@ -577,12 +552,10 @@ package net {
                     AV.serverData.serverOptions.achievementRequiredEffort = int(p.slot_data.achievement_required_effort);
                 }
             }
-            _logger.log(_modName, "  goal=" + AV.serverData.serverOptions.goal + "  talisman_min_rarity=" + AV.serverData.serverOptions.talismanMinRarity);
 
             var missing:Array  = p.missing_locations as Array;
             var checked:Array  = p.checked_locations as Array;
-            _logger.log(_modName, "  missing_locations=" + (missing ? missing.length : "?") +
-                "  checked_locations=" + (checked ? checked.length : "?"));
+            _logger.log(_modName, " - missing_locations=" + (missing ? missing.length : "?") + "  checked_locations=" + (checked ? checked.length : "?"));
 
             _missingLocations = {};
             if (missing != null)
@@ -593,8 +566,9 @@ package net {
                 }
             }
 
-            _toast.addMessage("Connected to " + _archipelagoHost + ":" + _archipelagoPort
-                + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
+            sendLocationScouts();
+
+            _toast.addMessage("Connected to " + _archipelagoHost + ":" + _archipelagoPort + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
 
             if (onConnected != null)
             {
@@ -611,8 +585,7 @@ package net {
                 if (onFullSync != null) onFullSync(items);
             } else {
                 for each (var networkItem:Object in items) {
-                    var apId:int = networkItem.item;
-                    _logger.log(_modName, "  + item=" + apId + " (" + itemName(apId) + ")");
+                    var apId:int = networkItem.item;                    
                     if (onItemReceived != null) onItemReceived(apId);
                 }
             }
@@ -643,9 +616,10 @@ package net {
 
                 if (senderSlot == _mySlot) {
                     // We sent an item (to ourselves or another player) — track it for ending-screen display
+                    _logger.log(_modName, "Attempting to get <" +sentItemId + "> from " +receiving);
                     var sentItemId:int   = int(p.item.item);
                     var sentLocId:int    = int(p.item.location);
-                    var sentItemName:String = resolveItemNameForSlot(sentItemId, senderSlot);
+                    var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
                     var recvName:String  = (_playerNames[receiving] != null)
                         ? String(_playerNames[receiving]) : ("Slot " + receiving);
 
@@ -776,50 +750,40 @@ package net {
         private function resolveItemNameForSlot(itemId:int, ownerSlot:int):String {
             var itemIdStr:String = String(itemId);
 
+            _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
             // Step 0: Check persistent cache first (Ori-style approach)
-            if (_resolvedItemNames[itemIdStr] != null) {
-                return String(_resolvedItemNames[itemIdStr]);
-            }
+            if (AV.archipelagoData.players[ownerSlot].items != null && AV.archipelagoData.players[ownerSlot].items[itemId] != null)
+                return AV.archipelagoData.players[ownerSlot].items[itemId].name
 
-            var debug:Boolean = true; // Enabled to help debug cross-world item resolution
             var result:String = null;
-
-            // Step 1: Try our own resolver for all items — it returns non-null only for
-            // items it recognises (GCFW items), so this is a safe first pass regardless
-            // of which slot the item belongs to.  This gives friendly names ("A1 Field Token",
-            // achievement titles, etc.) even when the item is going to another player.
-            var mine:String = itemName(itemId);
-            if (mine != null) result = mine;
-
-            // Step 2: DataPackage lookup — works for any game, including GCFW
-            // itself (populated from the DataPackage WebSocket message).
-            if (result == null) {
-                var effectiveSlot:int = (ownerSlot >= 0) ? ownerSlot : _mySlot;
-                var gameName:String = _playerGames[effectiveSlot];
-
-                if (debug) _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot +
-                    " effectiveSlot=" + effectiveSlot + " gameName=" + gameName);
-
+                        
+            //todo: Check in serverdata.players.items if item exists. If not, go to step2.
+            // Step 2: DataPackage lookup — works for any game, including GCFW itself (populated from the DataPackage WebSocket message).
+            //todo: Use serverdata.players for playername, ownerslot and such
+            if (result == null) {                
+                var gameName:String =  AV.archipelagoData.players[ownerSlot].game;
+                _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
                 if (gameName != null) {
-                    var gameItems:Object = _itemIdToNameByGame[gameName];
+                    _ensureDataPackageForGame(gameName); // no-op if already loaded/requested
+                    var gameItems:Object = AV.archipelagoData.games[gameName];
                     if (gameItems != null) {
                         var name:String = gameItems[itemIdStr];
                         if (name != null) {
                             result = name;
-                            if (debug) _logger.log(_modName, "[resolveItemName] Found in DataPackage: " + name);
+                            _logger.log(_modName, "[resolveItemName] Found in DataPackage: " + name);
                         } else {
-                            if (debug) _logger.log(_modName, "[resolveItemName] Not in DataPackage for " + gameName + ", itemId=" + itemId);
+                             _logger.log(_modName, "[resolveItemName] Not in DataPackage for " + gameName + ", itemId=" + itemId);
                         }
                     } else {
-                        if (debug) _logger.log(_modName, "[resolveItemName] Game '" + gameName + "' not in DataPackage cache");
+                         _logger.log(_modName, "[resolveItemName] Game '" + gameName + "' not in DataPackage cache");
                     }
                 } else {
-                    if (debug) _logger.log(_modName, "[resolveItemName] No gameName for slot " + effectiveSlot);
+                    _logger.log(_modName, "[resolveItemName] No gameName for slot " + ownerSlot);
                 }
             }
 
             if (result == null) {
-                if (debug) _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
+                _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
                 return "Item #" + itemId;  // Don't cache — DataPackage may resolve it later
             }
 
@@ -838,74 +802,15 @@ package net {
             }
             return "Location #" + locId;
         }
-
-        /**
-         * Request the DataPackage for every game represented in the room so
-         * we can resolve cross-game item names in PrintJSON events.
-         * Since most servers don't populate game names in Connected packets,
-         * we request a comprehensive list of all major Archipelago games.
-         */
-        private function sendGetDataPackage():void {
-            if (_webSocketClient == null) return;
-            var gamesSet:Object = {};
-
-            // First, add any games we know about from _playerGames
-            for (var slotKey:String in _playerGames) {
-                var g:String = String(_playerGames[slotKey]);
-                if (g != null && g.length > 0) gamesSet[g] = true;
-            }
-
-            // Always request data for all major Archipelago games
-            // This ensures we have item names for any game in the multiworld
-            var allGames:Array = [
-                "Stardew Valley",
-                "The Legend of Zelda: A Link to the Past",
-                "The Legend of Zelda: A Link to the Past (Randomizer)",
-                "Super Metroid",
-                "Secret of Mana",
-                "Yo-kai Watch 2: Psychic Specters",
-                "Heretic",
-                "Final Fantasy",
-                "Undertale",
-                "A Link to the Past",
-                "A Link to the Past - Randomizer",
-                "Bumper Sticker Bros",
-                "Splatoon",
-                "Kingdom Hearts 2",
-                "Donkey Kong Country 3",
-                "Kirby Super Star Ultra",
-                "Mega Man 3",
-                "Mega Man X3",
-                "Pokémon Emerald",
-                "Pokémon Red Version",
-                "Pokémon Blue Version",
-                "Factorio",
-                "Hollow Knight",
-                "Risk of Rain 2",
-                "Starcraft",
-                "StarFox",
-                "Super Mario 64",
-                "Super Mario Bros",
-                "Super Mario Bros 3",
-                "Super Mario World",
-                "The Legend of Zelda",
-                "The Legend of Zelda: Oracle of Seasons",
-                "Terraria",
-                "Wargroove",
-                "Zillion"
-            ];
-
-            for each (var game:String in allGames) {
-                gamesSet[game] = true;
-            }
-
-            var quoted:Array = [];
-            for (var gameName:String in gamesSet) {
-                quoted.push('"' + gameName + '"');
-            }
-
-            var packet:String = '[{"cmd":"GetDataPackage","games":[' + quoted.join(",") + ']}]';
-            _logger.log(_modName, "AP >> GetDataPackage  games=" + quoted.length);
+                
+        private function getGameDataPackage(gameName:String):void {
+            if (_webSocketClient == null || gameName == null || gameName.length == 0) return;
+            if (_requestedGames[gameName] || AV.archipelagoData.games[gameName] != null) return;
+            _requestedGames[gameName] = true;
+            var safe:String = gameName.split('"').join('\\"');
+            var packet:String = '[{"cmd":"GetDataPackage","games":["' + safe + '"]}]';
+            _logger.log(_modName, "AP >> GetDataPackage (lazy)  game=" + gameName);
+            _logger.log(_modName, packet);
             _webSocketClient.send(packet);
         }
 
@@ -927,7 +832,7 @@ package net {
                         byId[String(int(nameToId[iname]))] = iname;
                         itemCount++;
                     }
-                    _itemIdToNameByGame[gameName] = byId;
+                    AV.archipelagoData.games[gameName] = byId;                    
                     _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items");
                     loaded++;
                 }
@@ -965,6 +870,28 @@ package net {
             var packet:String = '[{"cmd":"LocationChecks","locations":[' + locationIds.join(",") + ']}]';
             _logger.log(_modName, "AP >> LocationChecks  ids=" + locationIds.join(","));
             _webSocketClient.send(packet);
+        }
+
+        private function sendLocationScouts():void {
+            if (_webSocketClient == null) return;
+            var ids:Array = [];
+            for (var locId:String in _missingLocations)
+                ids.push(int(locId));
+            if (ids.length == 0) return;
+            var packet:String = '[{"cmd":"LocationScouts","locations":[' + ids.join(",") + '],"create_as_hint":0}]';
+            _logger.log(_modName, "AP >> LocationScouts  count=" + ids.length + " " + packet);
+            var data = _webSocketClient.send(packet);            
+        }
+
+        private function handleLocationInfo(p:Object):void {
+            _logger.log(_modName,"----- Handle locaiton info -----");
+            var locations:Array = p.locations as Array;
+            if (locations == null) return;
+            for each (var item:Object in locations) {                
+                var itemName:String = resolveItemNameForSlot(item.item, item.player);
+                _logger.log(_modName, "Found item: " + itemName + "(#" + item.item + ") for " + AV.archipelagoData.players[item.player].name);
+            }
+            _logger.log(_modName, "LocationInfo: scouted " + locations.length + " locations.");
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
@@ -1083,22 +1010,6 @@ package net {
         // -----------------------------------------------------------------------
         // Helpers
 
-        /**
-         * Resolve a human-readable name for an AP item ID.
-         * If an external resolver was set, tries it first.
-         */
-        public function itemName(apId:int):String {
-            if (_itemNameResolver != null) {
-                var name:String = _itemNameResolver(apId);
-                if (name != null) return name;
-            }
-            ensureItemData();
-            var fromTable:String = _apIdToName[String(apId)];
-            if (fromTable != null) return fromTable;
-            if (apId >= 1100 && apId <= 1139) return "XP Scroll #" + (apId - 1099);
-            if (apId >= 1140 && apId <= 1199) return "Extra XP Scroll #" + (apId - 1139);
-            return "Item #" + apId;
-        }
 
         /** Set an external name resolver. Signature: (apId:int):String — return null if unknown. */
         public function setItemNameResolver(resolver:Function):void {
