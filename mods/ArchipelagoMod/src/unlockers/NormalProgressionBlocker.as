@@ -115,8 +115,17 @@ package unlockers {
                 if (GV.ingameController == null || GV.ingameController.core == null) return;
                 var ending:* = GV.ingameController.core.ending;
                 if (ending == null || ending.dropIcons == null || !ending.isBattleWon) return;
-                var dropType:String = isForUs ? AP_ITEM_FOR_US : AP_ITEM_FOR_OTHER;
-                addApDropToIcons(ending, dropType, apId, {itemName: itemName, sentTo: "You"});
+
+                var tooltip:String = isForUs ? (itemName + " to You") : (itemName + " to Other");
+                var icon:ApItemIcon = new ApItemIcon(tooltip);
+                var existingCount:int = ending.dropIcons.length;
+                icon.x = 48 + existingCount * 140;
+                icon.y = 789;
+                icon.visible = false;
+                ending.cnt.mcOutcomePanel.addChild(icon);
+                ending.dropIcons.push(icon);
+                icon.addEventListener(MouseEvent.MOUSE_OVER, onApIconOver, false, 0, true);
+                icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
                 _logger.log(_modName, "addItemToActiveEndingScreen: " + itemName + " (AP ID " + apId + ")");
             } catch (err:Error) {
                 _logger.log(_modName, "addItemToActiveEndingScreen ERROR: " + err.message);
@@ -483,34 +492,22 @@ package unlockers {
          */
         private function buildLevelEndIcons(ending:*):void {
             try {
-                // Harvest queued achievement drops (skill points from OUR achievements)
-                var achDrops:Array = [];
-                if (ending.dropIcons != null) {
-                    for (var d:int = 0; d < ending.dropIcons.length; d++) {
-                        var drop:* = ending.dropIcons[d];
-                        if (drop != null && drop.type == AP_ACHIEVEMENT_SKILL)
-                            achDrops.push(drop);
-                    }
-                }
-
                 // Clear all existing game icons (field-token / map-tile sprites)
                 ending.removeAllDropIcons();
 
                 var icons:Array = [];
+                var sentItems:Object = _connectionManager != null ? _connectionManager.itemsSentThisLevel : null;
 
-                // Icons for items we sent out (checked locations → AP items)
+                // Icons for stage locations we checked this level
                 if (_connectionManager != null) {
                     var checked:Array = _connectionManager.lastCheckedLocations;
-                    var sentItems:Object = _connectionManager.itemsSentThisLevel;
 
                     for (var c:int = 0; c < checked.length; c++) {
                         var loc:Object = checked[c];
                         var locId:int = getLocationIdFromStrIdAndType(String(loc.strId), String(loc.locType));
 
-                        // Look up what item was sent for this location
                         if (sentItems != null && sentItems[locId] != null) {
-                            var sent:Object = sentItems[locId];
-                            var itemIcon:* = buildIconForSentItem(sent);
+                            var itemIcon:* = buildIconForSentItem(sentItems[locId]);
                             if (itemIcon != null)
                                 icons.push(itemIcon);
                         } else {
@@ -519,14 +516,19 @@ package unlockers {
                     }
                 }
 
-                // Skill-point icons from achievements we collected this battle
-                for (var a:int = 0; a < achDrops.length; a++) {
-                    var achDrop:Object = achDrops[a];
-                    var achName:String = (achDrop.meta != null && achDrop.meta.achievementName != null)
-                        ? String(achDrop.meta.achievementName) : "Achievement";
-                    var sp:int = parseAchievementSkillPoints(achDrop.meta);
-                    var spLabel:String = sp + " Skill Point" + (sp != 1 ? "s" : "");
-                    icons.push(new ApItemIcon("+" + spLabel + " \u2192 You\nFrom: " + achName));
+                // Icons for achievements checked this level
+                if (_achievementUnlocker != null) {
+                    var pendingAchievements:Array = _achievementUnlocker.pendingLevelAchievements;
+                    for (var a:int = 0; a < pendingAchievements.length; a++) {
+                        var achEntry:Object = pendingAchievements[a];
+                        var achLocId:int = int(achEntry.apId);
+                        if (sentItems != null && sentItems[achLocId] != null) {
+                            icons.push(buildIconForSentItem(sentItems[achLocId]));
+                        } else {
+                            icons.push(new ApItemIcon("Achievement: " + String(achEntry.achievementName) + " to someone"));
+                        }
+                    }
+                    _achievementUnlocker.clearPendingLevelAchievements();
                 }
 
                 if (icons.length == 0) return;

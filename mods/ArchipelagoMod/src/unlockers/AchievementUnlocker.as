@@ -20,6 +20,11 @@ package unlockers
 		private var _modName: String;
 		private var _connectionManager: ConnectionManager;
 		private var _collectedState: CollectedState;
+		private var _pendingLevelAchievements:Array = [];   // { apId, achievementName } — cleared after buildLevelEndIcons
+
+		public function get pendingLevelAchievements():Array { return _pendingLevelAchievements; }
+
+		public function clearPendingLevelAchievements():void { _pendingLevelAchievements = []; }
 
 		public function AchievementUnlocker(
 			logger: Logger,
@@ -61,6 +66,7 @@ package unlockers
 				_connectionManager.sendLocationChecks([apId]);
 			}
 			awardSkillPointsForAchievement(achievementName, achievementData);
+			_pendingLevelAchievements.push({ apId: apId, achievementName: achievementName });
 			_logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId);
 		}
 
@@ -89,21 +95,8 @@ package unlockers
 				? GV.ingameController.core.ending
 				: null;
 
-			if (ending != null) {
-				// In-game: queue to dropIcons for level-end processing
-				var rewardType:String = _parseAchievementRewardType(achievementName, achievementData);
-				var meta:Object = {
-					achievementName: achievementName,
-					achievementData: achievementData
-				};
-
-				NormalProgressionBlocker.addApDropToIcons(ending, rewardType, apId, meta);
-				_logger.log(_modName, "Queued achievement reward: " + achievementName + " (AP ID " + apId + ", type: " + rewardType + ")");
-			} else {
-				// Not in-game (e.g., full sync): award points immediately
-				awardSkillPointsForAchievement(achievementName, achievementData);
-				_logger.log(_modName, "Received achievement reward (offline): " + achievementName + " (AP ID " + apId + ")");
-			}
+			awardSkillPointsForAchievement(achievementName, achievementData);
+			_logger.log(_modName, "Received achievement reward: " + achievementName + " (AP ID " + apId + ")");
 		}
 
 		/**
