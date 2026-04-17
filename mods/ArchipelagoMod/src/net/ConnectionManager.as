@@ -819,11 +819,11 @@ package net {
             }
 
             if (result == null) {
-                result = "Item #" + itemId;
                 if (debug) _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
+                return "Item #" + itemId;  // Don't cache — DataPackage may resolve it later
             }
 
-            // Cache the result for next time (Ori-style persistent caching)
+            // Cache resolved names so cross-slot lookups stay fast
             _resolvedItemNames[itemIdStr] = result;
             return result;
         }

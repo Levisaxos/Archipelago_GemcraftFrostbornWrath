@@ -1467,11 +1467,12 @@ package {
             try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
-                // Track item for ending screen display, and push it live if ending is still active
+                // Track item for ending screen display
                 if (_normalProgressionBlocker != null) {
                     var itemDisplayName:String = itemName(apId);
                     _normalProgressionBlocker.trackReceivedItem(apId, itemDisplayName);
-                    _normalProgressionBlocker.addItemToActiveEndingScreen(apId, itemDisplayName);
+                    // Sent-item icons on the ending screen come from addSentItemToEndingScreen
+                    // (triggered by handlePrintJSON) so we don't add received items here.
                 }
 
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
@@ -1893,12 +1894,10 @@ package {
             var strId:String = AV.serverData.tokenMap[String(apId)];
             if (strId != null) return strId + " Field Token";
             if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
-                var talName:String = AV.serverData.talismanNameMap[String(apId)];
-                return talName != null ? talName : ("Talisman Fragment #" + apId);
+                return AV.serverData.talismanNameMap[String(apId)];
             }
             if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
-                var scName:String = AV.serverData.shadowCoreNameMap[String(apId)];
-                return scName != null ? scName : ("Shadow Cores #" + apId);
+                return AV.serverData.shadowCoreNameMap[String(apId)];
             }
             if (apId >= 2000 && apId <= 2636) {
                 var achName:String = _findAchievementNameByApId(apId);
