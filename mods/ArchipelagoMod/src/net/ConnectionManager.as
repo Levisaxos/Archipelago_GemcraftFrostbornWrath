@@ -632,11 +632,12 @@ package net {
                     if (onItemSentFromLocation != null) onItemSentFromLocation(sentLocId, sentItemName, recvName);
 
                     var recipientLabel:String = (recvPlayer != null) ? recvPlayer.name : "Archipelago";
-                    _logger.log(_modName, "Sent: " + sentItemName + " \u2192 " + recipientLabel);
-
-                    // Show on toast if sent to another player
-                    if (receiving != _mySlot && _itemToast != null) {
-                        _itemToast.addItem("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
+                    if (_itemToast != null) {
+                        var toastMessage:String = AV.archipelagoData.getCheckName(sentLocId, null);
+                        if (toastMessage != null) 
+                            _itemToast.addItem(toastMessage, 0xCC99FF);
+                        else 
+                            _itemToast.addItem("Unknown item", 0xCC99FF);
                     }
                 }
                 return;
