@@ -160,14 +160,22 @@ package data {
                 for (var m:int = 0; m < gameData.mapTiles.length; m++)
                 {
                     var mapTile:Object = gameData.mapTiles[m];
-                    if (mapTile.letter == null || mapTile.gameId == null || mapTile.tileIndex == null)
+                    if (mapTile.letter == null || mapTile.gameId == null || mapTile.tileIndex == null || mapTile.apId == null)
                     {
                         _logger.log("AV", "VALIDATION ERROR: MapTile " + m + " missing required fields");
                         hasErrors = true;
                         continue;
                     }
-                    // Log for verification
-                    _logger.log("AV", "✓ MapTile: letter=" + mapTile.letter + ", gameId=" + mapTile.gameId + ", tileIndex=" + mapTile.tileIndex);
+                    var apTileGameId:int = serverData.apIdToGameId[mapTile.apId];
+                    if (apTileGameId != mapTile.gameId)
+                    {
+                        _logger.log("AV", "VALIDATION MISMATCH: MapTile AP ID=" + mapTile.apId + " letter=" + mapTile.letter + " game_id=" + mapTile.gameId + " ap game_id=" + apTileGameId);
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        _logger.log("AV", "OK MapTile: letter=" + mapTile.letter + ", gameId=" + mapTile.gameId + ", apId=" + mapTile.apId);
+                    }
                 }
             }
 
@@ -183,8 +191,16 @@ package data {
                         hasErrors = true;
                         continue;
                     }
-                    // Log for verification
-                    _logger.log("AV", "✓ Stage: gameId=" + stage.gameId + ", strId=" + stage.strId);
+                    var apStage:Object = serverData.stagesByStrId[stage.strId];
+                    if (apStage == null)
+                    {
+                        _logger.log("AV", "VALIDATION ERROR: Stage strId=" + stage.strId + " (gameId=" + stage.gameId + ") not found in serverData.stagesByStrId");
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        _logger.log("AV", "OK Stage: gameId=" + stage.gameId + ", strId=" + stage.strId);
+                    }
                 }
             }
 

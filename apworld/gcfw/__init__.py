@@ -323,8 +323,8 @@ class GemcraftFrostbornWrathWorld(World):
         # XP tomes — fixed counts scaled so option=50→50 levels, option=300→300 levels.
         # 32 Tattered + 6 Worn + 2 Ancient = 40 tomes; at multiplier 1 (option=50): 32+12+6=50.
         for name, count in (("Ancient Grimoire", 2), ("Worn Tome", 6), ("Tattered Scroll", 32)):
-            for _ in range(count):
-                pool.append(self.create_item(name))
+            for i in range(count):
+                pool.append(self.create_item(f"{name} #{i+1}"))
 
         # Achievements — based on required_effort option
         required_effort = self.options.achievement_required_effort.value

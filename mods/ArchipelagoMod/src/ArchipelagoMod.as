@@ -1694,6 +1694,7 @@ package {
             if (_standalone) return;
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
+            detectAndReportAchievements();
             _goalManager.check();
         }
 

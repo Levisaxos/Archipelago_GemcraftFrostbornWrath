@@ -8,6 +8,7 @@ package data {
         // Collected Items
         public var unlockedSkills:Object;        // gameId → Boolean
         public var unlockedTraits:Object;        // gameId → Boolean
+        public var unlockedGems:Object;          // gameId → Boolean (AP IDs 600-605)
         public var unlockedTokenStages:Object;   // stage str_id → Boolean
         public var receivedTalismans:Array;      // Array<TalismanFragment>
         public var totalShadowCores:int;
@@ -22,6 +23,7 @@ package data {
         // Player State
         public var bonusWizardLevel:int;
         public var deathLinkEnabled:Boolean;
+        public var deathLinkEnabledSet:Boolean;
         public var isStandalone:Boolean;
         public var completed:Boolean;
 
@@ -32,6 +34,7 @@ package data {
         public function initialize():void {
             unlockedSkills = {};
             unlockedTraits = {};
+            unlockedGems = {};
             unlockedTokenStages = {};
             receivedTalismans = [];
             totalShadowCores = 0;
@@ -44,6 +47,7 @@ package data {
 
             bonusWizardLevel = 0;
             deathLinkEnabled = false;
+            deathLinkEnabledSet = false;
             isStandalone = false;
             completed = false;
         }

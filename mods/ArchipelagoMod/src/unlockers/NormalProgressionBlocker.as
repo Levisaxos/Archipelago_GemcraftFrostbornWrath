@@ -559,7 +559,7 @@ package unlockers {
 
         /** Convert strId + locType back to the AP location ID. */
         private function getLocationIdFromStrIdAndType(strId:String, locType:String):int {
-            var baseId:int = int(ConnectionManager.stageLocIds[strId]);
+            var baseId:int = int(AV.gameData.stageLocIds[strId]);
             if (locType == "journey") return baseId;
             if (locType == "bonus") return baseId + 199;
             if (locType == "stash") return baseId + 399;
@@ -568,27 +568,8 @@ package unlockers {
 
         /** Build an icon for a sent item, with recipient info in tooltip. */
         private function buildIconForSentItem(sentData:Object):* {
-            var itemId:int = int(sentData.itemId || 0);
             var itemName:String = String(sentData.itemName || "Item");
             var receivingName:String = String(sentData.receivingName || "?");
-
-            // Field tokens: show field token icon for the receiving stage (if known)
-            if (itemId >= 1 && itemId <= 122) {
-                var strId:String = _connectionManager != null && _connectionManager.serverData != null
-                    ? String(_connectionManager.serverData.tokenMap[String(itemId)])
-                    : null;
-                if (strId != null && strId != "null") {
-                    var stageIdx:int = findStageIndex(strId);
-                    if (stageIdx >= 0) {
-                        var icon:McDropIconOutcome = new McDropIconOutcome(DropType.FIELD_TOKEN, stageIdx);
-                        // Store tooltip on the icon for hover display
-                        icon.tooltipText = itemName + " \u2192 " + receivingName;
-                        return icon;
-                    }
-                }
-            }
-
-            // All other items: AP icon with item name and recipient
             return new ApItemIcon(itemName + " \u2192 " + receivingName);
         }
 
