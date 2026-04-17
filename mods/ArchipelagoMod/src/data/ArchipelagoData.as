@@ -27,7 +27,8 @@ package data {
             if (check == null) return null;
             var name:String = (check.name != null) ? check.name : ("Item from " + (check.game || gameName || "?"));
             var player:String = check.playerName || "?";
-            return "Found" + name + " for " + player;
+            if (player == AV.currentSlot) return "Found " + name;
+            return "Sent " + name + " to " + player;
         }
     }    
 }

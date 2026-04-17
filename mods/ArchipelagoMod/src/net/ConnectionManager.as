@@ -423,11 +423,15 @@ package net {
                     var achPlayer:PlayerData = new PlayerData();
                     achPlayer.id = player.slot;
                     achPlayer.name = player.alias;
-                    achPlayer.game = p.slot_info[player.slot].game;                    
+                    achPlayer.game = p.slot_info[player.slot].game;
                     AV.archipelagoData.players[int(player.slot)] = achPlayer;
                 }
-            }       
-            
+            }
+            var myPlayer:PlayerData = AV.archipelagoData.players[_mySlot] as PlayerData;
+            AV.currentSlot = (myPlayer != null) ? myPlayer.name : "";
+            _logger.log(_modName, "  currentSlot=" + AV.currentSlot);
+
+
             if (p.slot_data && p.slot_data.token_map)
             {
                 _tokenMap = p.slot_data.token_map;
