@@ -106,6 +106,37 @@ package unlockers {
         }
 
         /**
+         * Add a sent-item icon to the ending screen when AP responds with who received the item.
+         * Called from ConnectionManager.handlePrintJSON via ArchipelagoMod.onItemSentFromLocation.
+         * The name and recipient come directly from the AP server's PrintJSON / DataPackage.
+         */
+        public function addSentItemToEndingScreen(locId:int, itemName:String, receivingName:String):void {
+            try {
+                if (GV.ingameController == null || GV.ingameController.core == null) return;
+                var ending:* = GV.ingameController.core.ending;
+                if (ending == null || ending.dropIcons == null || !ending.isBattleWon) return;
+
+                var icon:ApItemIcon = new ApItemIcon(itemName + " \u2192 " + receivingName);
+                icon.locationId = locId;
+                icon.y = 789;
+                icon.visible = false;
+                ending.cnt.mcOutcomePanel.addChild(icon);
+                ending.dropIcons.push(icon);
+                icon.addEventListener(MouseEvent.MOUSE_OVER, onApIconOver, false, 0, true);
+                icon.addEventListener(MouseEvent.MOUSE_OUT, onIconOut, false, 0, true);
+
+                var n:int = ending.dropIcons.length;
+                var xOff:Number = n < 13 ? 70 * (13 - n) : 0;
+                for (var i:int = 0; i < n; i++) {
+                    ending.dropIcons[i].x = 48 + i * 140 + xOff;
+                }
+                _logger.log(_modName, "addSentItemToEndingScreen: " + itemName + " \u2192 " + receivingName + " (locId=" + locId + ")");
+            } catch (err:Error) {
+                _logger.log(_modName, "addSentItemToEndingScreen ERROR: " + err.message);
+            }
+        }
+
+        /**
          * Add an AP item directly to the ending screen's dropIcons if it is still active.
          * Call from grantItem() for items that arrive after onSaveSave() has already run —
          * the Flash ending object stays live until dismissed, so adding here still renders.
@@ -504,23 +535,9 @@ package unlockers {
                 var icons:Array = [];
                 var sentItems:Object = _connectionManager != null ? _connectionManager.itemsSentThisLevel : null;
 
-                // Icons for stage locations we checked this level
-                if (_connectionManager != null) {
-                    var checked:Array = _connectionManager.lastCheckedLocations;
-
-                    for (var c:int = 0; c < checked.length; c++) {
-                        var loc:Object = checked[c];
-                        var locId:int = getLocationIdFromStrIdAndType(String(loc.strId), String(loc.locType));
-
-                        if (sentItems != null && sentItems[locId] != null) {
-                            var itemIcon:* = buildIconForSentItem(sentItems[locId]);
-                            if (itemIcon != null)
-                                icons.push(itemIcon);
-                        } else {
-                            _logger.log(_modName, "buildLevelEndIcons: no item data for locId " + locId + " (not yet received from AP)");
-                        }
-                    }
-                }
+                // Stage location icons (journey/bonus/stash) are NOT built here.
+                // They are added live by addSentItemToEndingScreen() as AP responds to
+                // LocationChecks with PrintJSON — that way names come from the AP server.
 
                 // Icons for achievements checked this level
                 if (_achievementUnlocker != null) {
@@ -578,7 +595,7 @@ package unlockers {
         }
 
         /** Build an icon for a sent item, with recipient info in tooltip. */
-        private function buildIconForSentItem(sentData:Object):* {
+        private function buildIconForSentItem(sentData:Object):ApItemIcon {
             var itemName:String = String(sentData.itemName || "Item");
             var receivingName:String = String(sentData.receivingName || "?");
             return new ApItemIcon(itemName + " \u2192 " + receivingName);

@@ -231,6 +231,7 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
+                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;
                 _connectionManager.setItemNameResolver(itemName);
                 _connectionManager.load();
 
@@ -1687,6 +1688,11 @@ package {
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
             _goalManager.check();
+        }
+
+        private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
+            if (_normalProgressionBlocker != null)
+                _normalProgressionBlocker.addSentItemToEndingScreen(locId, sentItemName, recvName);
         }
 
         private function onGoalReached():void {

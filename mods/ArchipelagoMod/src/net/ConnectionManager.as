@@ -2,6 +2,7 @@ package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import data.AV;
+    import data.EmbeddedData;
     import ui.ToastPanel;
     import ui.ItemToastPanel;
     import ui.MessageLog;
@@ -119,6 +120,8 @@ package net {
         public var onDeathLinkReceived:Function;
         /** Called for each PrintJSON ItemSend event involving us. Signature: (msg:String, color:uint):void */
         public var onItemSend:Function;
+        /** Called when we send an item from a location (senderSlot==us). Signature: (locId:int, itemName:String, receivingName:String):void */
+        public var onItemSentFromLocation:Function;
         /** Called when the connection drops unexpectedly (was connected, not a deliberate disconnect). Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
@@ -654,6 +657,9 @@ package net {
                         receivingName: recvName
                     };
 
+                    // Notify ending screen to add icon now that we have the real name from AP
+                    if (onItemSentFromLocation != null) onItemSentFromLocation(sentLocId, sentItemName, recvName);
+
                     var recipientLabel:String = (_playerNames[receiving] != null)
                         ? String(_playerNames[receiving]) : "Archipelago";
                     _logger.log(_modName, "Sent: " + sentItemName + " \u2192 " + recipientLabel);
@@ -1086,10 +1092,11 @@ package net {
                 var name:String = _itemNameResolver(apId);
                 if (name != null) return name;
             }
-            if (apId >= 1   && apId <= 199) return "Field Token (id=" + apId + ")";
-            if (apId == 500) return "Tattered Scroll";
-            if (apId == 501) return "Worn Tome";
-            if (apId == 502) return "Ancient Grimoire";
+            ensureItemData();
+            var fromTable:String = _apIdToName[String(apId)];
+            if (fromTable != null) return fromTable;
+            if (apId >= 1100 && apId <= 1139) return "XP Scroll #" + (apId - 1099);
+            if (apId >= 1140 && apId <= 1199) return "Extra XP Scroll #" + (apId - 1139);
             return "Item #" + apId;
         }
 
@@ -1099,5 +1106,95 @@ package net {
         }
 
         private var _itemNameResolver:Function;
+
+        private var _apIdToName:Object = {};
+        private var _itemDataLoaded:Boolean = false;
+
+        private function ensureItemData():void {
+            if (_itemDataLoaded) return;
+            _itemDataLoaded = true;
+            try {
+                var json:Object = JSON.parse(EmbeddedData.getItemDataJSON());
+                var i:int;
+                var entry:Object;
+
+                var stages:Array = json.stages as Array;
+                if (stages) {
+                    for (i = 0; i < stages.length; i++) {
+                        entry = stages[i];
+                        _apIdToName[String(int(entry.itemApId))] = String(entry.strId) + " Field Token";
+                    }
+                }
+
+                var skills:Array = json.skills as Array;
+                if (skills) {
+                    for (i = 0; i < skills.length; i++) {
+                        entry = skills[i];
+                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Skill";
+                    }
+                }
+
+                var traits:Array = json.battleTraits as Array;
+                if (traits) {
+                    for (i = 0; i < traits.length; i++) {
+                        entry = traits[i];
+                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Battle Trait";
+                    }
+                }
+
+                var gems:Array = json.gemUnlocks as Array;
+                if (gems) {
+                    for (i = 0; i < gems.length; i++) {
+                        entry = gems[i];
+                        _apIdToName[String(int(entry.ap_id))] = String(entry.name) + " Gem Unlock";
+                    }
+                }
+
+                var tiles:Array = json.mapTiles as Array;
+                if (tiles) {
+                    for (i = 0; i < tiles.length; i++) {
+                        entry = tiles[i];
+                        var tileKey:String = String(int(entry.ap_id));
+                        if (_apIdToName[tileKey] == null) {
+                            _apIdToName[tileKey] = "Map Tile #" + entry.ap_id;
+                        }
+                    }
+                }
+
+                var talFrags:Array = json.talismanFragments as Array;
+                if (talFrags) {
+                    for (i = 0; i < talFrags.length; i++) {
+                        entry = talFrags[i];
+                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.str_id) + " Talisman Fragment";
+                    }
+                }
+
+                var extraTals:Array = json.extraTalismanFragments as Array;
+                if (extraTals) {
+                    for (i = 0; i < extraTals.length; i++) {
+                        entry = extraTals[i];
+                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.name);
+                    }
+                }
+
+                var scStashes:Array = json.shadowCoreStashes as Array;
+                if (scStashes) {
+                    for (i = 0; i < scStashes.length; i++) {
+                        entry = scStashes[i];
+                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.str_id) + " Shadow Cores";
+                    }
+                }
+
+                var extraSc:Array = json.extraShadowCoreStashes as Array;
+                if (extraSc) {
+                    for (i = 0; i < extraSc.length; i++) {
+                        entry = extraSc[i];
+                        _apIdToName[String(int(entry.item_ap_id))] = String(entry.name);
+                    }
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "ensureItemData ERROR: " + err.message);
+            }
+        }
     }
 }
