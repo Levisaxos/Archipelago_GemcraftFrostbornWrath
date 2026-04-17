@@ -31,6 +31,10 @@ package data {
 
         public static var saveData:SaveData = new SaveData();
 
+
+        // -----------------------------------------------------------------------
+        public static var archipelagoData:ArchipelagoData = new ArchipelagoData();
+
         // -----------------------------------------------------------------------
         // Internal logger reference (set by ArchipelagoMod.bind)
 

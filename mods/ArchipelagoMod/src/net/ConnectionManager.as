@@ -60,6 +60,7 @@ package net {
         private var _resolvedItemNames:Object  = {}; // itemId (String) → resolved name (String) — persistent cache
         private var _requestedGames:Object     = {}; // gameName → true, tracks in-flight/completed DataPackage requests
         private var _scoutedLocations:Object   = {}; // locationId (String) → {itemId:int, ownerSlot:int}
+        private var _pendingChecks:Object      = {}; // locationId(int) → {id:int, player:int, item:int}
 
         // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
         private static const STAGE_LOC_AP_IDS:Object = {
@@ -431,7 +432,6 @@ package net {
                     achPlayer.name = player.alias;
                     achPlayer.game = p.slot_info[player.slot].game;                    
                     AV.archipelagoData.players[int(player.slot)] = achPlayer;
-                    getGameDataPackage(achPlayer.game);
                 }
             }       
             AV.archipelagoData.logPlayers(_logger, _modName);
@@ -764,7 +764,6 @@ package net {
                 var gameName:String =  AV.archipelagoData.players[ownerSlot].game;
                 _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
                 if (gameName != null) {
-                    _ensureDataPackageForGame(gameName); // no-op if already loaded/requested
                     var gameItems:Object = AV.archipelagoData.games[gameName];
                     if (gameItems != null) {
                         var name:String = gameItems[itemIdStr];
@@ -832,8 +831,22 @@ package net {
                         byId[String(int(nameToId[iname]))] = iname;
                         itemCount++;
                     }
-                    AV.archipelagoData.games[gameName] = byId;                    
+                    AV.archipelagoData.games[gameName] = byId;
                     _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items");
+
+                    // Back-fill names for checks that were waiting on this DataPackage
+                    var filled:int = 0;
+                    for (var locIdStr:String in AV.archipelagoData.checks) {
+                        var check:Object = AV.archipelagoData.checks[locIdStr];
+                        if (check.name != null || check.game != gameName) continue;
+                        var pending:Object = _pendingChecks[int(locIdStr)];
+                        if (pending == null) continue;
+                        var resolvedName:String = byId[String(int(pending.item))];
+                        check.name = (resolvedName != null) ? resolvedName : ("Item #" + pending.item);
+                        filled++;
+                        _logger.log(_modName, "    [DataPackage] " + check.id + " = " + check.name);
+                    }
+                    if (filled > 0) _logger.log(_modName, "    [DataPackage] Filled " + filled + " check name(s) for '" + gameName + "'");
                     loaded++;
                 }
                 _logger.log(_modName, "  DataPackage loaded: " + loaded + " game(s)");
@@ -884,14 +897,36 @@ package net {
         }
 
         private function handleLocationInfo(p:Object):void {
-            _logger.log(_modName,"----- Handle locaiton info -----");
+            _logger.log(_modName, "----- Handle location info -----");
             var locations:Array = p.locations as Array;
             if (locations == null) return;
-            for each (var item:Object in locations) {                
-                var itemName:String = resolveItemNameForSlot(item.item, item.player);
-                _logger.log(_modName, "Found item: " + itemName + "(#" + item.item + ") for " + AV.archipelagoData.players[item.player].name);
+
+            var uniqueGames:Object = {};
+            for each (var loc:Object in locations) {
+                var locId:int = int(loc.location);
+                var ownerSlot:int = int(loc.player);
+                var itemId:int = int(loc.item);
+
+                _pendingChecks[locId] = {id: locId, player: ownerSlot, item: itemId};
+
+                var playerData:PlayerData = AV.archipelagoData.players[ownerSlot] as PlayerData;
+                var game:String = (playerData != null) ? playerData.game : null;
+                AV.archipelagoData.checks[locId] = {id: locId, name: null, game: game};
+
+                if (game != null) uniqueGames[game] = true;
+                _logger.log(_modName, "  loc=" + locId + " item=" + itemId + " player=" + ownerSlot + " game=" + game);
             }
-            _logger.log(_modName, "LocationInfo: scouted " + locations.length + " locations.");
+
+            for (var gameName:String in uniqueGames) {
+                getGameDataPackage(gameName);
+            }
+            _logger.log(_modName, "LocationInfo: scouted " + locations.length + " locations, requested " + _countKeys(uniqueGames) + " DataPackage(s).");
+        }
+
+        private function _countKeys(obj:Object):int {
+            var n:int = 0;
+            for (var k:String in obj) n++;
+            return n;
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
