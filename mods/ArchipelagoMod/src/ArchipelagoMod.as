@@ -1,13 +1,8 @@
 package {
     import flash.display.MovieClip;
-    import flash.display.Sprite;
     import flash.display.Stage;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
-    import flash.events.MouseEvent;
-    import flash.text.TextField;
-    import flash.text.TextFieldAutoSize;
-    import flash.text.TextFormat;
     import flash.ui.Keyboard;
 
     import Bezel.Bezel;
@@ -21,7 +16,6 @@ package {
     import goals.GoalManager;
 
     import ui.ModButtons;
-    import ui.ScrChangelog;
     import ui.ScrSlotSettings;
     import ui.ToastPanel;
     import ui.ItemToastPanel;
@@ -31,10 +25,9 @@ package {
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
 
-    import update.UpdateChecker;
+    import ui.MainMenuUI;
 
     import deathlink.DeathLinkHandler;
-    import deathlink.EnragerOverride;
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
@@ -149,17 +142,8 @@ package {
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
         private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
 
-        // Changelog / version / update-check state
-        private var _updateChecker:UpdateChecker;
-        private var _scrChangelog:ScrChangelog;
-        private var _versionLabel:TextField;            // "Archipelago Mod vX.X.X" on MAINMENU
-        // Changelog button is owned by _modButtons (ModButtons.showOnMainMenu)
-        private var _updateBadge:Sprite;                // hidden until a newer version is found
-        private var _mainMenuElementsOnStage:Boolean  = false;
-        private var _mainMenuFetchDone:Boolean        = false; // fetch once per session
-        private var _dbgFrameCounter:int             = 0;     // for throttled screen logging
-        private var _cachedReleases:Array             = null;
-        private var _shouldAutoShowChangelog:Boolean  = false;
+        private var _mainMenuUI:MainMenuUI;
+        private var _dbgFrameCounter:int = 0; // for throttled screen logging
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -270,12 +254,8 @@ package {
                 _goalManager = new GoalManager(_logger, MOD_NAME, _itemToast);
                 _goalManager.onGoalReached = onGoalReached;
 
-                // Changelog / update checker
-                _updateChecker = new UpdateChecker(_logger, MOD_NAME);
-                _updateChecker.onReleasesLoaded  = onReleasesLoaded;
-                _updateChecker.onUpdateAvailable = onUpdateAvailable;
-                _updateChecker.onFetchFailed     = onFetchFailed;
-                _scrChangelog = new ScrChangelog();
+                // Main menu UI — version label, update badge, changelog
+                _mainMenuUI = new MainMenuUI(_logger, MOD_NAME, _fileHandler, _modButtons);
 
                 // Connection panel (lazy — created on first use)
                 _connectionPanel = null;
@@ -356,9 +336,7 @@ package {
             _disconnectPanelOnStage = false;
             if (_modButtons != null) _modButtons.removeFromSelector();
             if (_slotSettings != null) _slotSettings.close();
-            removeMainMenuElements();
-            if (_updateChecker != null) { _updateChecker.dispose(); _updateChecker = null; }
-            if (_scrChangelog != null) { _scrChangelog.dismiss(); _scrChangelog = null; }
+            if (_mainMenuUI != null) { _mainMenuUI.dispose(); _mainMenuUI = null; }
             _logger.log(MOD_NAME, "ArchipelagoMod unloaded");
         }
 
@@ -427,33 +405,23 @@ package {
                 positionItemToast();
             }
 
-            // Add MAINMENU version label and changelog button once stage is available.
-            if (!_mainMenuElementsOnStage
-                    && int(GV.main.currentScreen) == ScreenId.MAINMENU
-                    && this.stage != null) {
-                _logger.log(MOD_NAME, "[MainMenuUI] Adding — screen=" + int(GV.main.currentScreen)
-                    + " MAINMENU=" + ScreenId.MAINMENU);
-                addMainMenuElements();
-                _mainMenuElementsOnStage = true;
+            // Main menu overlay — show/tick/hide driven by screen state.
+            var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
+            if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
+                _logger.log(MOD_NAME, "[MainMenuUI] Adding — screen=" + int(GV.main.currentScreen));
+                _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
             }
-            // Keep changelog button aligned between Start Game and Exit every frame.
-            if (_mainMenuElementsOnStage && _modButtons != null) {
-                _modButtons.onMainMenuFrame();
+            if (_mainMenuUI.isShowing) {
+                _mainMenuUI.onFrame();
+                if (!onMainMenu) {
+                    _logger.log(MOD_NAME, "[MainMenuUI] Removing — screen=" + int(GV.main.currentScreen));
+                    _mainMenuUI.hide();
+                }
             }
-
-            // Remove them the moment we leave MAINMENU, regardless of transition path.
-            if (_mainMenuElementsOnStage
-                    && int(GV.main.currentScreen) != ScreenId.MAINMENU) {
-                _logger.log(MOD_NAME, "[MainMenuUI] Removing — screen=" + int(GV.main.currentScreen)
-                    + " MAINMENU=" + ScreenId.MAINMENU);
-                removeMainMenuElements();
-            }
-            // Throttled log: every 120 frames, report screen + flag so we can see if
-            // elements persist on a screen they shouldn't.
+            // Throttled log: every 120 frames while showing, confirm screen is still MAINMENU.
             _dbgFrameCounter++;
-            if (_dbgFrameCounter % 120 == 0 && _mainMenuElementsOnStage) {
-                _logger.log(MOD_NAME, "[MainMenuUI] Still on stage — screen="
-                    + int(GV.main.currentScreen) + " MAINMENU=" + ScreenId.MAINMENU);
+            if (_dbgFrameCounter % 120 == 0 && _mainMenuUI.isShowing) {
+                _logger.log(MOD_NAME, "[MainMenuUI] Still on stage — screen=" + int(GV.main.currentScreen));
             }
 
             // Register the debug hotkey once the stage exists.
@@ -494,14 +462,13 @@ package {
                     _needsConnection = false;
                     _standalone      = false;
                     _achievementUnlocker.resetReportedAchievements();
-                    if (_modButtons != null) _modButtons.removeFromMainMenu();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
                     _goalManager.reset();
                     if (_toast != null) _toast.clear();
                     if (_itemToast != null) _itemToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
-                    removeMainMenuElements(); // remove any existing set before re-adding next frame
+                    _mainMenuUI.hide(); // remove any existing set before re-adding next frame
                 }
 
                 // Entering LOADGAME — always reset connection so leaving LOADGAME
@@ -547,7 +514,7 @@ package {
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
-                    removeMainMenuElements();
+                    _mainMenuUI.hide();
                 }
 
                 _lastScreen = screen;
@@ -670,9 +637,6 @@ package {
             if (_slotSettings != null && _slotSettings.isOpen) {
                 _slotSettings.doEnterFrame();
             }
-            if (_scrChangelog != null && _scrChangelog.isShowing) {
-                _scrChangelog.doEnterFrame();
-            }
         }
 
         // -----------------------------------------------------------------------
@@ -705,172 +669,10 @@ package {
             // SlotSettings panel is attached to GV.main, no resize handling needed.
         }
 
-        // -----------------------------------------------------------------------
-        // MAINMENU version label + changelog button
-
-        /**
-         * Create and add the version label, changelog button, and update badge
-         * to the stage. Also triggers the auto-show changelog logic if the player
-         * has updated (or is running for the first time), and fires the GitHub
-         * release fetch if it has not been done this session.
-         */
-        private function addMainMenuElements():void {
-            var stg:Stage = this.stage;
-            if (stg == null) return;
-
-            // Read persisted config to decide if we should auto-show the changelog.
-            var config:Object = _fileHandler.loadModConfig();
-            var lastSeen:String = (config != null && config.lastSeenVersion != null)
-                ? String(config.lastSeenVersion) : null;
-            _shouldAutoShowChangelog = (lastSeen == null || lastSeen != VERSION);
-
-            // Load cached releases if available.
-            if (config != null && config.cachedReleasesJson != null) {
-                try {
-                    var cached:Array = JSON.parse(String(config.cachedReleasesJson)) as Array;
-                    if (cached != null && cached.length > 0) _cachedReleases = cached;
-                } catch (e:Error) {
-                    _logger.log(MOD_NAME, "addMainMenuElements: failed to parse cached releases — " + e.message);
-                }
-            }
-
-            // Version label — bottom-left corner.
-            var labelFmt:TextFormat = new TextFormat("_sans", 12, 0xBBAADD);
-            _versionLabel = new TextField();
-            _versionLabel.defaultTextFormat = labelFmt;
-            _versionLabel.selectable   = false;
-            _versionLabel.mouseEnabled = false;
-            _versionLabel.autoSize     = TextFieldAutoSize.LEFT;
-            _versionLabel.text         = "Mod v" + VERSION + "  |  apworld v" + APWORLD_VERSION;
-            _versionLabel.x = 10;
-            _versionLabel.y = stg.stageHeight - 48;
-            stg.addChild(_versionLabel);
-
-            // Update badge — to the right of the version label, hidden until needed.
-            _updateBadge = _makeUpdateBadge();
-            _updateBadge.x = 10 + _versionLabel.textWidth + 12;
-            _updateBadge.y = stg.stageHeight - 50;
-            _updateBadge.visible = false;
-            _updateBadge.addEventListener(MouseEvent.CLICK, onChangelogBtnClicked, false, 0, true);
-            stg.addChild(_updateBadge);
-
-            // Auto-show changelog when version has changed (first run or after update).
-            if (_shouldAutoShowChangelog) {
-                openChangelog();
-                updateLastSeenVersion();
-            }
-
-            // Fire one GitHub fetch per session.
-            if (!_mainMenuFetchDone && _updateChecker != null) {
-                _updateChecker.fetchReleases(VERSION);
-                _mainMenuFetchDone = true;
-            }
-        }
-
-        /**
-         * Remove all MAINMENU-only elements from the stage.
-         * Safe to call even if elements were never added.
-         */
-        private function removeMainMenuElements():void {
-            _logger.log(MOD_NAME, "[MainMenuUI] removeMainMenuElements called — screen="
-                + int(GV.main.currentScreen));
-            if (_versionLabel != null && _versionLabel.parent != null) {
-                _versionLabel.parent.removeChild(_versionLabel);
-            }
-            _versionLabel = null;
-
-            if (_modButtons != null) _modButtons.removeFromMainMenu();
-
-            if (_updateBadge != null) {
-                _updateBadge.removeEventListener(MouseEvent.CLICK, onChangelogBtnClicked);
-                if (_updateBadge.parent != null) _updateBadge.parent.removeChild(_updateBadge);
-            }
-            _updateBadge = null;
-
-            _mainMenuElementsOnStage = false;
-
-            if (_scrChangelog != null) _scrChangelog.dismiss();
-        }
-
         /** Open (or refresh) the changelog panel. Only valid on the main menu. */
         private function openChangelog():void {
             if (int(GV.main.currentScreen) != ScreenId.MAINMENU) return;
-            if (_scrChangelog == null) _scrChangelog = new ScrChangelog();
-            var releases:Array = (_cachedReleases != null && _cachedReleases.length > 0)
-                ? _cachedReleases
-                : [{ tag: "", name: "Could not reach GitHub", date: "",
-                     body: "Release notes are unavailable.\nPlease check your internet connection." }];
-            _scrChangelog.populate(releases);
-            _scrChangelog.show();
-        }
-
-        /** Persist the current VERSION as the last-seen version. */
-        private function updateLastSeenVersion():void {
-            var config:Object = _fileHandler.loadModConfig();
-            if (config == null) config = {};
-            config.lastSeenVersion = VERSION;
-            _fileHandler.saveModConfig(config);
-            _shouldAutoShowChangelog = false;
-        }
-
-        // Callbacks from UpdateChecker
-
-        private function onReleasesLoaded(releases:Array):void {
-            _cachedReleases = releases;
-            // Persist to cache so it is available without a network request next time.
-            var config:Object = _fileHandler.loadModConfig();
-            if (config == null)
-                config = {};
-            config.cachedReleasesJson = JSON.stringify(releases);
-            _fileHandler.saveModConfig(config);
-            // If the changelog is open on the main menu, refresh it with the freshly-loaded data.
-            if (_scrChangelog != null && _scrChangelog.isShowing
-                    && int(GV.main.currentScreen) == ScreenId.MAINMENU) {
-                _scrChangelog.populate(releases);
-                _scrChangelog.show();
-            }
-        }
-
-        private function onUpdateAvailable(latestTag:String):void {
-            _logger.log(MOD_NAME, "Update available: " + latestTag);
-            if (_updateBadge != null) _updateBadge.visible = true;
-        }
-
-        private function onFetchFailed():void {
-            _logger.log(MOD_NAME, "GitHub release fetch failed — using cached/fallback data");
-        }
-
-        private function onChangelogBtnClicked(e:MouseEvent):void {
-            openChangelog();
-        }
-
-        private function _makeUpdateBadge():Sprite {
-            var badge:Sprite = new Sprite();
-            var label:String = "\u2191 Update available!";
-
-            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFEE66, true);
-            var tf:TextField = new TextField();
-            tf.defaultTextFormat = fmt;
-            tf.selectable   = false;
-            tf.mouseEnabled = false;
-            tf.autoSize     = TextFieldAutoSize.LEFT;
-            tf.text         = label;
-
-            var bw:Number = tf.textWidth + 16;
-            var bh:Number = 18;
-
-            badge.graphics.beginFill(0x2A1000, 0.9);
-            badge.graphics.lineStyle(1, 0xCC8800);
-            badge.graphics.drawRoundRect(0, 0, bw, bh, 5, 5);
-            badge.graphics.endFill();
-
-            tf.x = 8;
-            tf.y = 0;
-            badge.addChild(tf);
-
-            badge.buttonMode    = true;
-            badge.useHandCursor = true;
-            return badge;
+            _mainMenuUI.openChangelog();
         }
 
 

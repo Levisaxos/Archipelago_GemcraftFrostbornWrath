@@ -172,7 +172,7 @@ package ui {
                 GV.ppd.setSkillLevel(gameId, -1);
             } else {
                 // Unlock via the existing mod function.
-                _mod.unlockSkill(300 + gameId);
+                _mod.unlockSkill(700 + gameId);
             }
             renderDebugOptions();
         }
@@ -184,7 +184,7 @@ package ui {
                 GV.ppd.gainedBattleTraits[gameId] = false;
             } else {
                 // Unlock via the existing mod function.
-                _mod.unlockBattleTrait(400 + gameId);
+                _mod.unlockBattleTrait(800 + gameId);
             }
             renderDebugOptions();
         }
