@@ -10,7 +10,7 @@ package tracker {
      */
     public class CollectedState {
 
-        // Skill names indexed by game_id (apId - 300).  Must match
+        // Skill names indexed by game_id (apId - 700).  Must match
         // unlockers.SkillUnlocker.SKILL_NAMES exactly.
         public static const SKILL_NAMES:Array = [
             "Mana Stream", "True Colors", "Fusion", "Orb of Presence",
@@ -95,9 +95,9 @@ package tracker {
                     return;
                 }
             }
-            // Skill (AP ids 300-323)
-            if (apId >= 300 && apId <= 323) {
-                var gameId:int = apId - 300;
+            // Skill (AP ids 700-723)
+            if (apId >= 700 && apId <= 723) {
+                var gameId:int = apId - 700;
                 if (gameId < 0 || gameId >= SKILL_NAMES.length) return;
                 var name:String = SKILL_NAMES[gameId];
                 if (_skillsCollected[name] == true) return;

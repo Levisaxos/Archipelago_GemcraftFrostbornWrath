@@ -38,18 +38,18 @@ package tracker {
          */
         public function HasBattleTrait(traitId:int):Boolean {
             if (traitId < 0 || traitId >= 15) return false;
-            return _collectedState != null && _collectedState.hasItem(400 + traitId);
+            return _collectedState != null && _collectedState.hasItem(800 + traitId);
         }
 
         /**
          * Check if player has received a specific skill.
-         * @param skillId Game index 0–23, maps to AP IDs 300–323.
+         * @param skillId Game index 0–23, maps to AP IDs 700–723.
          *                Corresponds to CollectedState.SKILL_NAMES order.
          * @return true if the skill AP item has been received.
          */
         public function HasSkill(skillId:int):Boolean {
             if (skillId < 0 || skillId >= 24) return false;
-            return _collectedState != null && _collectedState.hasItem(300 + skillId);
+            return _collectedState != null && _collectedState.hasItem(700 + skillId);
         }
 
         /**
@@ -95,7 +95,7 @@ package tracker {
          */
         public function hasStrikeSpells(count:int):Boolean {
             var have:int = 0;
-            for (var i:int = 312; i <= 314; i++) {
+            for (var i:int = 712; i <= 714; i++) {
                 if (_collectedState && _collectedState.hasItem(i)) have++;
             }
             return have >= count;
@@ -103,14 +103,14 @@ package tracker {
 
         /**
          * Check if player has at least the specified number of enhancement spells.
-         * Enhancement spells: Bolt, Beam, Barrage (AP IDs 315–317).
+         * Enhancement spells: Bolt, Beam, Barrage (AP IDs 715–717).
          *
          * @param count Minimum number of enhancement spells required.
          * @return true if player has at least count enhancement spells.
          */
         public function hasEnhancementSpells(count:int):Boolean {
             var have:int = 0;
-            for (var i:int = 315; i <= 317; i++) {
+            for (var i:int = 715; i <= 717; i++) {
                 if (_collectedState && _collectedState.hasItem(i)) have++;
             }
             return have >= count;
@@ -118,14 +118,14 @@ package tracker {
 
         /**
          * Check if player has at least the specified number of gem skills.
-         * Gem skills: Critical Hit, Mana Leech, Bleeding, Armor Tearing, Poison, Slowing (AP IDs 306–311).
+         * Gem skills: Critical Hit, Mana Leech, Bleeding, Armor Tearing, Poison, Slowing (AP IDs 706–711).
          *
          * @param count Minimum number of gem skills required.
          * @return true if player has at least count gem skills.
          */
         public function hasGemSkills(count:int):Boolean {
             var have:int = 0;
-            for (var i:int = 306; i <= 311; i++) {
+            for (var i:int = 706; i <= 711; i++) {
                 if (_collectedState && _collectedState.hasItem(i)) have++;
             }
             return have >= count;

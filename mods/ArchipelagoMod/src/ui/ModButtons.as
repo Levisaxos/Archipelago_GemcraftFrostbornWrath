@@ -241,8 +241,8 @@ package ui {
                 var base:int = int(locIds[strId]);
                 if (base <= 0) continue;
                 var jMiss:Boolean = missing[base]        == true;
-                var bMiss:Boolean = missing[base + 500]  == true;
-                var sMiss:Boolean = missing[base + 1000] == true;
+                var bMiss:Boolean = missing[base + 199]  == true;
+                var sMiss:Boolean = missing[base + 399]  == true;
                 if (_logicEvaluator.stageHasInLogicMissing(strId, jMiss, bMiss, sMiss)) {
                     result.push(strId);
                 }

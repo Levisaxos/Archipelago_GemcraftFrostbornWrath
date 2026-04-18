@@ -44,9 +44,9 @@ package unlockers {
             showPlusNodeOnSelector("mcPlusNodeSkills");
         }
 
-        /** Returns the human-readable skill name for an AP ID (300-323), or null if out of range. */
+        /** Returns the human-readable skill name for an AP ID (700-723), or null if out of range. */
         public function getSkillName(apId:int):String {
-            var gameId:int = apId - 300;
+            var gameId:int = apId - 700;
             if (gameId < 0 || gameId >= SKILL_NAMES.length) return null;
             return SKILL_NAMES[gameId];
         }

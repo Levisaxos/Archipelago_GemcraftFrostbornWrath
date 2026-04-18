@@ -55,12 +55,12 @@ package unlockers {
 
         /**
          * Ensure all talisman fragments in the received AP item list are in inventory.
-         * Deduplicates by seed — every ID 900–999 has a unique seed so this is always safe.
+         * Deduplicates by seed — every ID 900–952 and 1200–1246 has a unique seed so this is always safe.
          * Call after resetGrants().
          */
         public function syncTalismans(apIds:Array):void {
             for each (var apId:int in apIds) {
-                if (apId < 900 || apId > 999) continue;
+                if (!((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246))) continue;
                 if (_grantedApIds[String(apId)] == true) continue; // already granted; persisted check
                 var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
                 if (talData == null) continue;

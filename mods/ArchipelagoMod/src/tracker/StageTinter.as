@@ -99,8 +99,8 @@ package tracker {
                     if (base <= 0) continue;
 
                     var journeyMissing:Boolean = missing[base] == true;
-                    var bonusMissing:Boolean   = missing[base + 500] == true;
-                    var stashMissing:Boolean   = missing[base + 1000] == true;
+                    var bonusMissing:Boolean   = missing[base + 199] == true;
+                    var stashMissing:Boolean   = missing[base + 399] == true;
                     var missingCount:int = 0;
                     if (journeyMissing) missingCount++;
                     if (bonusMissing)   missingCount++;
