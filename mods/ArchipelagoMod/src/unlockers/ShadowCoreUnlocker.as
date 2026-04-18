@@ -3,12 +3,13 @@ package unlockers {
     import com.giab.games.gcfw.GV;
     import flash.utils.getDefinitionByName;
     import ui.ItemToastPanel;
+    import utils.ApIdMapper;
 
     /**
      * Grants Archipelago shadow core items to the player.
      *
-     * AP item IDs 754–770: location-specific shadow core drops, each named "{str_id} Shadow Cores".
-     * AP item ID 503:      generic "Shadow Core" (fixed amount, used as filler).
+     * AP item IDs 1000–1016: location-specific shadow core drops, each named "{str_id} Shadow Cores".
+     * AP item ID 503:        generic "Shadow Core" (fixed amount, used as filler).
      *
      * The shadow_core_map (AP ID string → amount) is loaded from slot_data on connect.
      * Shadow cores accumulate additively.  To avoid double-granting on reconnect/full-sync,
@@ -18,19 +19,15 @@ package unlockers {
      * not yet blocked by NormalProgressionBlocker).  This means the player will receive
      * shadow cores twice — once from the stash and once from AP — until blocking is added.
      */
-    public class ShadowCoreUnlocker {
+    public class ShadowCoreUnlocker extends BaseUnlocker {
 
-        private var _logger:Logger;
-        private var _modName:String;
-        private var _itemToast:ItemToastPanel;
-        private var _shadowCoreMap:Object;     // AP ID string → int amount
-        private var _shadowCoreNameMap:Object; // AP ID string → display name
-        private var _totalGranted:int = 0;     // total AP-granted shadow cores; persisted via SaveManager
+        private var _shadowCoreMapper:ApIdMapper;  // AP ID → int amount
+        private var _shadowCoreNameMap:Object;     // AP ID string → display name
+        private var _totalGranted:int = 0;         // total AP-granted shadow cores; persisted via SaveManager
 
         public function ShadowCoreUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
-            _logger    = logger;
-            _modName   = modName;
-            _itemToast = itemToast;
+            super(logger, modName, itemToast);
+            _shadowCoreMapper = null;
         }
 
         /** Called by SaveManager on load to restore persisted total. */
@@ -38,7 +35,7 @@ package unlockers {
         public function set totalGranted(v:int):void { _totalGranted = v; }
 
         /** Called with slot_data.shadow_core_map on AP connect. */
-        public function setShadowCoreMap(map:Object):void { _shadowCoreMap = map; }
+        public function setShadowCoreMap(map:Object):void { _shadowCoreMapper = new ApIdMapper(map); }
 
         /** Called with slot_data.shadow_core_name_map on AP connect. */
         public function setShadowCoreNameMap(map:Object):void { _shadowCoreNameMap = map; }
@@ -51,10 +48,9 @@ package unlockers {
          * Adds the mapped amount to GV.ppd.shadowCoreAmount and updates totalGranted.
          */
         public function grantShadowCores(apId:int):void {
-            var amount:int = amountForApId(apId);
+            var amount:int = _shadowCoreMapper != null ? int(_shadowCoreMapper.getValue(apId, 0)) : 0;
             if (amount <= 0) return;
-            if (GV.ppd == null) {
-                _logger.log(_modName, "grantShadowCores: GV.ppd null, cannot grant apId=" + apId);
+            if (!ensurePpdExists("grantShadowCores")) {
                 return;
             }
             var oldAmount:Number = GV.ppd.shadowCoreAmount.g();
@@ -63,8 +59,8 @@ package unlockers {
             var label:String = (_shadowCoreNameMap != null && _shadowCoreNameMap[String(apId)] != null)
                 ? String(_shadowCoreNameMap[String(apId)])
                 : "Shadow Cores";
-            _itemToast.addItem("Found " + label + " (+" + amount + ")", 0x88AAFF);
-            _logger.log(_modName, "Granted shadow cores apId=" + apId
+            showToast("Found " + label + " (+" + amount + ")", 0x88AAFF);
+            logAction("Granted shadow cores apId=" + apId
                 + " amount=" + amount + " totalGranted=" + _totalGranted);
             pushSelectorEvent(5, [oldAmount, oldAmount + amount]); // 5 = SC_INCREASING
         }
@@ -80,14 +76,14 @@ package unlockers {
         public function syncShadowCores(apIds:Array):void {
             var newTotal:int = 0;
             for each (var apId:int in apIds) {
-                newTotal += amountForApId(apId);
+                newTotal += _shadowCoreMapper != null ? int(_shadowCoreMapper.getValue(apId, 0)) : 0;
             }
             var delta:int = newTotal - _totalGranted;
             if (delta > 0) {
                 if (GV.ppd != null) {
                     GV.ppd.shadowCoreAmount.s(GV.ppd.shadowCoreAmount.g() + delta);
                 }
-                _logger.log(_modName, "syncShadowCores: delta=" + delta
+                logAction("syncShadowCores: delta=" + delta
                     + " newTotal=" + newTotal + " prevGranted=" + _totalGranted);
             }
             _totalGranted = newTotal;
@@ -95,14 +91,6 @@ package unlockers {
 
         // -----------------------------------------------------------------------
         // Helpers
-
-        private function amountForApId(apId:int):int {
-            if (_shadowCoreMap != null) {
-                var mapped:* = _shadowCoreMap[String(apId)];
-                if (mapped != null) return int(mapped);
-            }
-            return 0;
-        }
 
         /**
          * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
