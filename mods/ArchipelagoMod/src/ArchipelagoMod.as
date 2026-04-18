@@ -858,6 +858,9 @@ package {
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
 
+            // Populate tokenMap from the Connected packet (loadServerDataFromJSON resets it to {}).
+            AV.serverData.tokenMap = _connectionManager.tokenMap;
+
             // Reset + configure the in-game tracker from slot_data.  Must happen
             // BEFORE syncWithAP (which will populate session data via onItem).
             AV.sessionData.reset();

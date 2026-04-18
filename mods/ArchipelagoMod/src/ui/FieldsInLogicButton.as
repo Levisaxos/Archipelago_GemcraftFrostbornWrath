@@ -25,7 +25,8 @@ package ui {
         // Stop animating when this close to the target (map units).
         private static const PAN_SNAP:Number = 0.5;
 
-        private var _currentCount:int         = -1;
+        private var _currentFieldCount:int     = -1;
+        private var _currentAchCount:int       = -1;
         private var _inLogicStrIds:Array       = [];
         private var _inLogicAchievements:Array = [];
         private var _panelShown:Boolean        = false;
@@ -36,7 +37,7 @@ package ui {
         private var _isPanning:Boolean = false;
 
         public function FieldsInLogicButton(btnTemplate:*) {
-            super(btnTemplate, "Fields in logic: 0");
+            super(btnTemplate, "In Logic F:0 A:0");
             onClick = _cycleAndPan;
         }
 
@@ -44,20 +45,22 @@ package ui {
         // Public API called by ModButtons every selector frame
 
         /**
-         * Rebuild the label only when count changes.
-         * Clamps the cycle index if the list shrank.
+         * Rebuild the label only when counts change.
+         * Clamps the cycle index if the field list shrank.
          *
-         * @param totalCount Total checks in logic (fields + achievements)
-         * @param strIds Array of field string IDs that are in logic
-         * @param achievements Array of achievement names that are in logic
+         * @param strIds       Field string IDs currently in logic
+         * @param achievements Achievement names currently in logic (sorted)
          */
-        public function update(totalCount:int, strIds:Array, achievements:Array = null):void {
-            _inLogicStrIds = strIds;
+        public function update(strIds:Array, achievements:Array):void {
+            _inLogicStrIds       = strIds       || [];
             _inLogicAchievements = achievements || [];
             if (_cycleIndex >= _inLogicStrIds.length) _cycleIndex = 0;
-            if (totalCount == _currentCount) return;
-            _currentCount = totalCount;
-            _rebuild("Fields in logic: " + totalCount);
+            var fc:int = _inLogicStrIds.length;
+            var ac:int = _inLogicAchievements.length;
+            if (fc == _currentFieldCount && ac == _currentAchCount) return;
+            _currentFieldCount = fc;
+            _currentAchCount   = ac;
+            _rebuild("In Logic F:" + fc + " A:" + ac);
         }
 
         /**
@@ -125,45 +128,47 @@ package ui {
         private function _showPanel():void {
             _panelShown = true;
             GV.mcInfoPanel.reset(400);
-            GV.mcInfoPanel.addTextfield(COLOR_TITLE,
-                "In Logic (" + _currentCount + " total)", false, 13);
+            GV.mcInfoPanel.addTextfield(COLOR_TITLE, "In Logic", false, 13);
             GV.mcInfoPanel.addExtraHeight(5);
             GV.mcInfoPanel.addSeparator(-2);
 
-            // Fields in logic
+            // Fields section
+            GV.mcInfoPanel.addTextfield(COLOR_TITLE, "Fields", false, 12);
+            GV.mcInfoPanel.addExtraHeight(2);
             if (_inLogicStrIds == null || _inLogicStrIds.length == 0) {
                 GV.mcInfoPanel.addTextfield(COLOR_NONE,
                     "No fields currently in logic", false, 11);
             } else {
-                for (var i:int = 0; i < _inLogicStrIds.length; i++) {
+                var maxFields:int  = 5;
+                var shownF:int     = Math.min(_inLogicStrIds.length, maxFields);
+                for (var i:int = 0; i < shownF; i++) {
                     GV.mcInfoPanel.addTextfield(COLOR_ITEM,
                         String(_inLogicStrIds[i]), true, 11);
                 }
+                if (_inLogicStrIds.length > maxFields) {
+                    GV.mcInfoPanel.addTextfield(COLOR_NONE,
+                        "... and " + (_inLogicStrIds.length - maxFields) + " more", false, 11);
+                }
             }
 
-            // Achievements in logic section
-            if (_inLogicAchievements != null && _inLogicAchievements.length > 0) {
-                GV.mcInfoPanel.addExtraHeight(8);
-                GV.mcInfoPanel.addTextfield(COLOR_TITLE,
-                    "Achievements in logic", false, 13);
-                GV.mcInfoPanel.addExtraHeight(3);
-
-                var maxShow:int = 5;
-                var shown:int = Math.min(_inLogicAchievements.length, maxShow);
-                for (var j:int = 0; j < shown; j++) {
+            // Achievements section
+            GV.mcInfoPanel.addExtraHeight(8);
+            GV.mcInfoPanel.addTextfield(COLOR_TITLE, "Achievements", false, 12);
+            GV.mcInfoPanel.addExtraHeight(2);
+            if (_inLogicAchievements == null || _inLogicAchievements.length == 0) {
+                GV.mcInfoPanel.addTextfield(COLOR_NONE,
+                    "No achievements currently in logic", false, 11);
+            } else {
+                var maxAchs:int = 5;
+                var shownA:int  = Math.min(_inLogicAchievements.length, maxAchs);
+                for (var j:int = 0; j < shownA; j++) {
                     GV.mcInfoPanel.addTextfield(COLOR_ITEM,
                         String(_inLogicAchievements[j]), true, 11);
                 }
-
-                if (_inLogicAchievements.length > maxShow) {
-                    var moreCount:int = _inLogicAchievements.length - maxShow;
-                    GV.mcInfoPanel.addTextfield(COLOR_ITEM,
-                        "... and " + moreCount + " more", true, 11);
+                if (_inLogicAchievements.length > maxAchs) {
+                    GV.mcInfoPanel.addTextfield(COLOR_NONE,
+                        "... and " + (_inLogicAchievements.length - maxAchs) + " more", false, 11);
                 }
-
-                GV.mcInfoPanel.addExtraHeight(3);
-                GV.mcInfoPanel.addTextfield(COLOR_NONE,
-                    "See achievements for full info", false, 10);
             }
 
             GV.main.cntInfoPanel.addChild(GV.mcInfoPanel);

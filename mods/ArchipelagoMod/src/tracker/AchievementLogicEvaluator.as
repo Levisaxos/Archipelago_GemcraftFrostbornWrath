@@ -99,9 +99,11 @@ package tracker {
 
         private function _recompute():void {
             var result:Object = {};
+            var names:Array   = [];
 
             if (_logicEvaluator == null || _achievementData == null) {
-                AV.sessionData.achievementsInLogic = result;
+                AV.sessionData.achievementsInLogic     = result;
+                AV.sessionData.achievementNamesInLogic = names;
                 _dirty = false;
                 return;
             }
@@ -129,10 +131,13 @@ package tracker {
 
                 if (missing[apId] == true && isAchievementInLogic(achName, achData)) {
                     result[apId] = true;
+                    names.push(achName);
                 }
             }
 
-            AV.sessionData.achievementsInLogic = result;
+            names.sort(Array.CASEINSENSITIVE);
+            AV.sessionData.achievementsInLogic     = result;
+            AV.sessionData.achievementNamesInLogic = names;
             _dirty = false;
         }
     }

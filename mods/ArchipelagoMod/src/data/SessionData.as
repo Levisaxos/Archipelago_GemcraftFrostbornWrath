@@ -37,8 +37,9 @@ package data {
         public var skillCountByCategory:Object = {};
 
         // Cached logic results — written by evaluators, read by UI
-        public var fieldsInLogic:Object = {};          // strId -> true
-        public var achievementsInLogic:Object = {};    // apId (int) -> true
+        public var fieldsInLogic:Object = {};              // strId -> true
+        public var achievementsInLogic:Object = {};        // apId (int) -> true
+        public var achievementNamesInLogic:Array = [];     // sorted achievement names
 
         // -----------------------------------------------------------------------
         // Setup
@@ -74,8 +75,9 @@ package data {
             collectedAchievements = {};
             tokensByStrId         = {};
             skillCountByCategory  = {};
-            fieldsInLogic         = {};
-            achievementsInLogic   = {};
+            fieldsInLogic            = {};
+            achievementsInLogic      = {};
+            achievementNamesInLogic  = [];
         }
 
         // -----------------------------------------------------------------------

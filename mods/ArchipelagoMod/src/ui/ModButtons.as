@@ -145,7 +145,8 @@ package ui {
 
             if (_fieldsBtn != null) {
                 var inLogicList:Array = _computeInLogicStages();
-                _fieldsBtn.update(inLogicList.length, inLogicList);
+                var inLogicAchs:Array = AV.sessionData.achievementNamesInLogic;
+                _fieldsBtn.update(inLogicList, inLogicAchs);
                 _fieldsBtn.onFrame();
             }
         }
