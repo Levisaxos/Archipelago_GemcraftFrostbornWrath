@@ -16,7 +16,7 @@ package unlockers {
      * the total already granted is tracked in totalGranted (persisted via SaveManager).
      *
      * NOTE: Wizard stashes currently still grant their shadow core rewards normally (they are
-     * not yet blocked by NormalProgressionBlocker).  This means the player will receive
+     * not yet blocked by ProgressionBlocker).  This means the player will receive
      * shadow cores twice — once from the stash and once from AP — until blocking is added.
      */
     public class ShadowCoreUnlocker extends BaseUnlocker {

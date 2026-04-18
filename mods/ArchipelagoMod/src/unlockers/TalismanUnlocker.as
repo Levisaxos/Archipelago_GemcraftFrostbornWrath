@@ -17,7 +17,7 @@ package unlockers {
      * genericTalismansGranted (persisted in the slot file via SaveManager).
      *
      * NOTE: Wizard stashes currently still grant their talisman rewards normally (they are
-     * not yet blocked by NormalProgressionBlocker).  This means the player will receive
+     * not yet blocked by ProgressionBlocker).  This means the player will receive
      * the fragment twice — once from the stash and once from AP — until blocking is added.
      */
     public class TalismanUnlocker extends BaseUnlocker {

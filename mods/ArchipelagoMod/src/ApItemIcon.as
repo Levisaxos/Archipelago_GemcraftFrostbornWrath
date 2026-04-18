@@ -12,7 +12,7 @@ package {
      *
      * Displays the mod's IconColorSmall.png image scaled to fit inside the
      * standard 140×140 icon area.  The tooltipText property is read by the
-     * MOUSE_OVER handler in NormalProgressionBlocker to populate McInfoPanel.
+     * MOUSE_OVER handler in LevelEndScreenBuilder to populate McInfoPanel.
      *
      * The type property (set to 999) allows this icon to coexist in ending.dropIcons
      * with McDropIconOutcome objects; the game's animation loop will read .type

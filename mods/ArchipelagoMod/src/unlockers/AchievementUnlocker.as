@@ -2,6 +2,7 @@ package unlockers
 {
 	import Bezel.Logger;
 	import net.ConnectionManager;
+	import patch.ProgressionBlocker;
 	import tracker.CollectedState;
 	import com.giab.games.gcfw.GV;
 
@@ -201,7 +202,7 @@ package unlockers
 		{
 			// Default to skill reward (most common)
 			// In the future, this could parse different reward types from metadata
-			return NormalProgressionBlocker.AP_ACHIEVEMENT_SKILL;
+			return ProgressionBlocker.AP_ACHIEVEMENT_SKILL;
 		}
 	}
 }

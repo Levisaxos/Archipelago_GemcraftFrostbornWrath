@@ -94,7 +94,7 @@ package net {
             return STAGE_LOC_AP_IDS;
         }
 
-        /** Locations checked during the most recent battle victory. Read by NormalProgressionBlocker. */
+        /** Locations checked during the most recent battle victory. Read by LevelEndScreenBuilder. */
         public function get lastCheckedLocations():Array { return _lastCheckedLocations; }
 
         /** Items sent out for checked locations (locationId → {itemId, itemName, receivingSlot, receivingName}). */

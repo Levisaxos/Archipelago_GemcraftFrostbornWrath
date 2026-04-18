@@ -37,7 +37,8 @@ package {
     import deathlink.DeathLinkHandler;
     import deathlink.EnragerOverride;
 
-    import unlockers.NormalProgressionBlocker;
+    import patch.ProgressionBlocker;
+    import ui.LevelEndScreenBuilder;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -72,7 +73,8 @@ package {
      *   ConnectionManager        — AP protocol, WebSocket lifecycle, toasts
      *   ConnectionPanel          — Connection UI overlay (self-managing)
      *   ModeSelectorInterceptor  — Mode button / delete button hooks
-     *   NormalProgressionBlocker — Reverts auto-unlocks after battles
+     *   ProgressionBlocker       — Reverts auto-unlocks after battles
+     *   LevelEndScreenBuilder    — Builds AP drop icons on the ending screen
      *   SkillUnlocker            — Skill unlock logic
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
@@ -111,7 +113,8 @@ package {
         private var _messageLogOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
-        private var _normalProgressionBlocker:NormalProgressionBlocker;
+        private var _progressionBlocker:ProgressionBlocker;
+        private var _levelEndScreenBuilder:LevelEndScreenBuilder;
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
@@ -214,11 +217,9 @@ package {
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
 
-                _normalProgressionBlocker = new NormalProgressionBlocker(_logger, MOD_NAME);
-                // enable() is called after our own SAVE_SAVE registration (below) so that
-                // NormalProgressionBlocker's handler fires AFTER ArchipelagoMod.onSaveSave(),
-                // which means checkCompletedLocations() has already populated lastCheckedLocations
-                // before buildLevelEndIcons() reads it.
+                // Level-end screen builder — constructed early; configured once
+                // _achievementUnlocker and _connectionManager are both available (below).
+                _levelEndScreenBuilder = new LevelEndScreenBuilder(_logger, MOD_NAME);
 
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
@@ -230,20 +231,18 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
-                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;                
+                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;
                 _connectionManager.load();
 
                 // Initialize achievement unlocker
                 _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _collectedState);
 
-                // Set unlocker references in NormalProgressionBlocker for dropIcons processor
-                _normalProgressionBlocker.setUnlockers(
-                    _achievementUnlocker,
-                    _skillUnlocker,
-                    _traitUnlocker,
-                    _talismanUnlocker,
-                    _shadowCoreUnlocker
-                );
+                // Wire level-end builder now that both dependencies are available
+                _levelEndScreenBuilder.configure(_achievementUnlocker, _connectionManager);
+
+                // ProgressionBlocker: intercepts SAVE_SAVE and reverts game auto-unlocks.
+                // Delegates icon construction to LevelEndScreenBuilder.
+                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME, _levelEndScreenBuilder);
 
                 // Initialize logic helper (for achievement and field access checks)
                 _logicHelper = new LogicHelper(_logger, MOD_NAME, _collectedState, _logicEvaluator, _connectionManager);
@@ -297,9 +296,10 @@ package {
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
 
-                // Register NormalProgressionBlocker AFTER our own handler so its SAVE_SAVE fires second
-                _normalProgressionBlocker.setConnectionManager(_connectionManager);
-                _normalProgressionBlocker.enable(_bezel);
+                // Register ProgressionBlocker AFTER our own handler so its SAVE_SAVE fires second.
+                // This guarantees checkCompletedLocations() has already run before buildIcons() reads
+                // itemsSentThisLevel from ConnectionManager.
+                _progressionBlocker.enable(_bezel);
 
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
                 patchWizStashModes();
@@ -316,10 +316,11 @@ package {
                 _connectionManager.unload();
                 _connectionManager = null;
             }
-            if (_normalProgressionBlocker != null) {
-                _normalProgressionBlocker.disable();
-                _normalProgressionBlocker = null;
+            if (_progressionBlocker != null) {
+                _progressionBlocker.disable();
+                _progressionBlocker = null;
             }
+            _levelEndScreenBuilder = null;
             if (_modeInterceptor != null) {
                 _modeInterceptor.unhook();
                 _modeInterceptor = null;
@@ -1258,7 +1259,7 @@ package {
             if (_saveManager.standaloneSet && _saveManager.standalone) {
                 _standalone = true;
                 if (_collectedState != null) _collectedState.reset();
-                _normalProgressionBlocker.disable();
+                _progressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
                 _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
@@ -1319,7 +1320,7 @@ package {
             _saveManager.saveSlotData();
             _standalone = true;
             if (_collectedState != null) _collectedState.reset();
-            _normalProgressionBlocker.disable();
+            _progressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
@@ -1388,8 +1389,8 @@ package {
             _talismanUnlocker.setTalismanNameMap(AV.serverData.talismanNameMap);
             _shadowCoreUnlocker.setShadowCoreMap(AV.serverData.shadowCoreMap);
             _shadowCoreUnlocker.setShadowCoreNameMap(AV.serverData.shadowCoreNameMap);
-            if (_normalProgressionBlocker != null) {
-                _normalProgressionBlocker.setWizStashTalData(AV.serverData.wizStashTalData);
+            if (_progressionBlocker != null) {
+                _progressionBlocker.setWizStashTalData(AV.serverData.wizStashTalData);
             }
 
             _goalManager.configure(
@@ -1466,9 +1467,9 @@ package {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
                 // Track item for ending screen display
-                if (_normalProgressionBlocker != null) {
+                if (_progressionBlocker != null) {
                     var itemDisplayName:String = itemName(apId);
-                    _normalProgressionBlocker.trackReceivedItem(apId, itemDisplayName);
+                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
                     // Sent-item icons on the ending screen come from addSentItemToEndingScreen
                     // (triggered by handlePrintJSON) so we don't add received items here.
                 }
@@ -1488,13 +1489,13 @@ package {
                 }
                 if (apId >= 700 && apId <= 723) {
                     _logger.log(MOD_NAME, "  → Skill apId: " + apId);
-                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markSkillGranted(apId - 700);
+                    if (_progressionBlocker != null) _progressionBlocker.markSkillGranted(apId - 700);
                     _skillUnlocker.unlockSkill(apId);
                     return;
                 }
                 if (apId >= 800 && apId <= 814) {
                     _logger.log(MOD_NAME, "  → Battle trait apId: " + apId);
-                    if (_normalProgressionBlocker != null) _normalProgressionBlocker.markTraitGranted(apId - 800);
+                    if (_progressionBlocker != null) _progressionBlocker.markTraitGranted(apId - 800);
                     _traitUnlocker.unlockBattleTrait(apId);
                     return;
                 }
@@ -1551,7 +1552,7 @@ package {
             }
             _pendingSyncItems = null;
 
-            if (_normalProgressionBlocker != null) _normalProgressionBlocker.resetGrants();
+            if (_progressionBlocker != null) _progressionBlocker.resetGrants();
 
             var apSkills:Object = {};
             var apTraits:Object = {};
@@ -1570,9 +1571,9 @@ package {
                 if (_collectedState != null) _collectedState.onItem(apId);
 
                 // Track item for ending screen display
-                if (_normalProgressionBlocker != null) {
+                if (_progressionBlocker != null) {
                     var itemDisplayName:String = itemName(apId);
-                    _normalProgressionBlocker.trackReceivedItem(apId, itemDisplayName);
+                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
                 }
 
                 if (apId >= 700 && apId <= 723) {
@@ -1594,8 +1595,8 @@ package {
             var skillChanges:int = 0;
             for (var i:int = 0; i < 24; i++) {
                 var shouldHaveSkill:Boolean = apSkills[i] == true;
-                if (shouldHaveSkill && _normalProgressionBlocker != null)
-                    _normalProgressionBlocker.markSkillGranted(i);
+                if (shouldHaveSkill && _progressionBlocker != null)
+                    _progressionBlocker.markSkillGranted(i);
                 if (GV.ppd.gainedSkillTomes[i] != shouldHaveSkill) {
                     GV.ppd.gainedSkillTomes[i] = shouldHaveSkill;
                     if (shouldHaveSkill) {
@@ -1611,8 +1612,8 @@ package {
             var traitChanges:int = 0;
             for (var j:int = 0; j < 15; j++) {
                 var shouldHaveTrait:Boolean = apTraits[j] == true;
-                if (shouldHaveTrait && _normalProgressionBlocker != null)
-                    _normalProgressionBlocker.markTraitGranted(j);
+                if (shouldHaveTrait && _progressionBlocker != null)
+                    _progressionBlocker.markTraitGranted(j);
                 if (GV.ppd.gainedBattleTraits[j] != shouldHaveTrait) {
                     GV.ppd.gainedBattleTraits[j] = shouldHaveTrait;
                     if (shouldHaveTrait) {
@@ -1690,8 +1691,8 @@ package {
         }
 
         private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
-            if (_normalProgressionBlocker != null)
-                _normalProgressionBlocker.addSentItemToEndingScreen(locId, sentItemName, recvName);
+            if (_progressionBlocker != null)
+                _levelEndScreenBuilder.addSentItemToEndingScreen(locId, sentItemName, recvName);
         }
 
         private function onGoalReached():void {
