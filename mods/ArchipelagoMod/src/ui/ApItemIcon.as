@@ -38,31 +38,36 @@ package ui {
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
 
-        public function ApItemIcon(tooltip:String) {
+        public function ApItemIcon(tooltip:String, customBitmapData:BitmapData = null) {
             super();
             this.tooltipText = tooltip;
             this.data = {};
 
-            // Create the inner container and icon bitmap (matching McDropIconOutcome structure)
             this.cntInner = new Sprite();
             addChild(this.cntInner);
 
             this.bmpdIcon = new BitmapData(140, 140, true, 0);
 
-            // Scale the embedded image to fit within 100×100, centred in 140×140
-            var src:Bitmap = new IconAsset() as Bitmap;
-            var srcBmpd:BitmapData = src.bitmapData;
-            var scale:Number = Math.min(100.0 / srcBmpd.width, 100.0 / srcBmpd.height);
-            var m:Matrix = new Matrix();
-            m.scale(scale, scale);
-            m.translate(
-                (140 - srcBmpd.width * scale) * 0.5,
-                (140 - srcBmpd.height * scale) * 0.5
-            );
-            this.bmpdIcon.draw(srcBmpd, m, null, null, null, true);
+            if (customBitmapData != null) {
+                this.bmpdIcon.copyPixels(customBitmapData,
+                    new Rectangle(0, 0, customBitmapData.width, customBitmapData.height),
+                    new Point(0, 0));
+            } else {
+                // Scale the embedded image to fit within 100×100, centred in 140×140
+                var src:Bitmap = new IconAsset() as Bitmap;
+                var srcBmpd:BitmapData = src.bitmapData;
+                var scale:Number = Math.min(100.0 / srcBmpd.width, 100.0 / srcBmpd.height);
+                var m:Matrix = new Matrix();
+                m.scale(scale, scale);
+                m.translate(
+                    (140 - srcBmpd.width * scale) * 0.5,
+                    (140 - srcBmpd.height * scale) * 0.5
+                );
+                this.bmpdIcon.draw(srcBmpd, m, null, null, null, true);
 
-            var dsf:DropShadowFilter = new DropShadowFilter(0, 45, 0, 1, 14, 14, 2, 3);
-            this.bmpdIcon.applyFilter(this.bmpdIcon, new Rectangle(0, 0, 140, 140), new Point(0, 0), dsf);
+                var dsf:DropShadowFilter = new DropShadowFilter(0, 45, 0, 1, 14, 14, 2, 3);
+                this.bmpdIcon.applyFilter(this.bmpdIcon, new Rectangle(0, 0, 140, 140), new Point(0, 0), dsf);
+            }
 
             this.bmpIcon = new Bitmap(this.bmpdIcon);
             this.cntInner.addChild(this.bmpIcon);

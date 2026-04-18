@@ -585,6 +585,13 @@ package {
                 return;
             }
 
+            // Pre-populate the drop-icon bitmap cache once per session.
+            if (!AV.sessionData.iconsCached) {
+                LevelEndScreenBuilder.preCacheIcons();
+                AV.sessionData.iconsCached = true;
+                _logger.log(MOD_NAME, "Drop icon bitmap cache populated");
+            }
+
             _levelUnlocker.renderXpBarIfDirty();
 
             var mc:* = GV.selectorCore.mc;

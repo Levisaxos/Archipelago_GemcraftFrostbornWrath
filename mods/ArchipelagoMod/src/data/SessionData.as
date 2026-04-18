@@ -25,6 +25,9 @@ package data {
             "Pylons", "Lanterns", "Traps", "Seeker Sense"
         ];
 
+        // True after LevelEndScreenBuilder.preCacheIcons() has run this session.
+        public var iconsCached:Boolean = false;
+
         // apId (String) -> true — all received AP items, single source of truth
         public var collectedItems:Object = {};
         // sub-sets by type (convenience)
@@ -69,6 +72,7 @@ package data {
 
         /** Clear all tracked state.  Call on disconnect or before full sync. */
         public function reset():void {
+            iconsCached           = false;
             collectedItems        = {};
             collectedSkills       = {};
             collectedTraits       = {};
