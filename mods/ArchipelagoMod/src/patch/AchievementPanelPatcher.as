@@ -85,6 +85,8 @@ package patch {
          * "Locked achievements" / "Unlocked achievements" buttons.
          * @return true once successfully patched.
          */
+        public function get patched():Boolean { return _patched; }
+
         public function tryPatch():Boolean {
             if (_patched) return true;
             if (GV.selectorCore == null) return false;

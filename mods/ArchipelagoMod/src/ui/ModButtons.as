@@ -7,7 +7,7 @@ package ui {
 
     import data.AV;
     import net.ConnectionManager;
-    import tracker.LogicEvaluator;
+    import tracker.FieldLogicEvaluator;
 
     /**
      * Creates and manages all mod buttons across the selector screen and the
@@ -32,7 +32,7 @@ package ui {
         private var _logger:Logger;
         private var _modName:String;
         private var _connectionManager:ConnectionManager;
-        private var _logicEvaluator:LogicEvaluator;
+        private var _logicEvaluator:FieldLogicEvaluator;
 
         // Selector-screen buttons
         private var _reportBtn:CustomButton;
@@ -51,7 +51,7 @@ package ui {
 
         public function ModButtons(logger:Logger, modName:String,
                                    connectionManager:ConnectionManager,
-                                   logicEvaluator:LogicEvaluator) {
+                                   logicEvaluator:FieldLogicEvaluator) {
             _logger            = logger;
             _modName           = modName;
             _connectionManager = connectionManager;

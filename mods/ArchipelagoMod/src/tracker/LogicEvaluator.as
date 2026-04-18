@@ -1,259 +1,172 @@
 package tracker {
     import Bezel.Logger;
+    import data.AV;
+    import data.SessionData;
+    import unlockers.TraitUnlocker;
 
     /**
-     * Mirrors apworld/gcfw/rules.py to determine which stages are currently
-     * in logic based on collected items.  Ships with slot_data-provided
-     * rule tables so apworld stays the single source of truth.
+     * Generic AP requirement evaluator used by AchievementLogicEvaluator.
      *
-     * Algorithm (matches rules._has_tier_tokens + set_rules):
-     *   reachableTier = highest tier T such that for every 0 < t <= T:
-     *     - previous tier has >= floor(len(TIERS[t-1]) * pct / 100) collected tokens
-     *     - per category, cumulativeSkillReqs[t][cat] <= skillCountByCategory[cat]
-     *   Stage is in logic if:
-     *     - stage is a free stage, OR
-     *     - stageTier[strId] <= reachableTier
-     *   Per-location WIZLOCK (stage_skills) is handled at location level, not here.
+     * Reads item state directly from AV.sessionData and delegates field-in-logic
+     * queries to the FieldLogicEvaluator (via AV.sessionData.fieldsInLogic for
+     * simple lookups, or directly for wave-count checks).
+     *
+     * Handles all 14 requirement string patterns found in achievement_logic.json:
+     *   "X skill"               — hasItem(700 + SKILL_NAMES.indexOf(X))
+     *   "X skill | Y skill"     — pipe-separated OR
+     *   "X element"             — any stage in elementStages[X] is in fieldsInLogic
+     *   "X Battle trait"        — hasItem(800 + TRAIT_NAMES.indexOf(X))
+     *   "Any Battle trait"      — any item 800-814
+     *   "Field A4"              — fieldsInLogic["A4"]
+     *   "Field N1, U1 or R5"   — comma/or-separated OR
+     *   "trial"                 — always false (journey-only mod)
+     *   "endurance"             — always false
+     *   "endurance and trial"   — always false
+     *   "strikeSpells: N"       — count(712-714) >= N
+     *   "enhancementSpells: N"  — count(715-717) >= N
+     *   "gemSkills: N"          — count(706-711) >= N
+     *   "minWave: N"            — FieldLogicEvaluator.hasInLogicFieldWithMinWaves(N)
+     *   "fieldToken: N"         — count(1-122) >= N
      */
     public class LogicEvaluator {
 
-        // Stages whose Journey/Bonus locations require ALL 24 skills.
-        // Matches rules.py "A4 locations + Victory" block.
-        public static const ALL_SKILLS_STAGES:Object = { "A4": true };
-
         private var _logger:Logger;
         private var _modName:String;
-        private var _state:CollectedState;
+        private var _fieldEvaluator:FieldLogicEvaluator;
+        private var _elementStages:Object; // element name -> Array<String> of stage strIds
 
-        // slot_data rule tables
-        private var _stageTier:Object;        // strId -> tier (int)
-        private var _stageSkills:Object;      // strId -> Array<String>
-        private var _cumulativeSkillReqs:Object; // "t" -> { category: count }
-        private var _tierStageCounts:Object;  // "t" -> int
-        private var _tokenPct:int = 100;
-        private var _freeStages:Object = {};  // strId -> true
-
-        private var _dirty:Boolean = true;
-        private var _reachableTier:int = -1;
-        private var _inLogicByStrId:Object = {};
-
-        public function LogicEvaluator(logger:Logger, modName:String, state:CollectedState) {
+        public function LogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
-            _state   = state;
         }
 
         /**
-         * Feed slot_data rule tables.  Call once after Connected packet.
-         * All arguments may be null if the apworld didn't ship them (older
-         * versions) — in that case every stage will be reported in-logic.
+         * Wire dependencies.  Call on AP connect (once elementStages are loaded
+         * from achievement_logic.json).
          */
-        public function configure(stageTier:Object,
-                                  stageSkills:Object,
-                                  cumulativeSkillReqs:Object,
-                                  tierStageCounts:Object,
-                                  tokenPct:int,
-                                  freeStages:Array):void {
-            _stageTier = stageTier;
-            _stageSkills = stageSkills;
-            _cumulativeSkillReqs = cumulativeSkillReqs;
-            _tierStageCounts = tierStageCounts;
-            _tokenPct = tokenPct > 0 ? tokenPct : 100;
-            _freeStages = {};
-            if (freeStages != null) {
-                for each (var sid:String in freeStages) {
-                    _freeStages[sid] = true;
-                }
+        public function configure(fieldEvaluator:FieldLogicEvaluator,
+                                  elementStages:Object):void {
+            _fieldEvaluator = fieldEvaluator;
+            _elementStages  = elementStages;
+        }
+
+        // -----------------------------------------------------------------------
+
+        /** Returns true iff every requirement in the array passes. */
+        public function evaluateRequirements(requirements:Array):Boolean {
+            if (requirements == null || requirements.length == 0) return true;
+            for each (var req:* in requirements) {
+                if (!evaluateRequirement(_trim(String(req)))) return false;
             }
-            _dirty = true;
+            return true;
         }
 
-        public function markDirty():void { _dirty = true; }
+        /** Evaluate a single requirement string.  Unknown patterns return true. */
+        public function evaluateRequirement(req:String):Boolean {
+            var lower:String = req.toLowerCase();
 
-        public function get hasRules():Boolean { return _stageTier != null; }
-
-        /** True iff at least one missing location on this stage is currently in logic. */
-        public function isStageInLogic(strId:String):Boolean {
-            // Defensive: if rules haven't been configured yet (e.g. a paint
-            // pass races ahead of onApConnected), report everything as in
-            // logic rather than as out of logic. Better to over-show green
-            // briefly than to flash every stage red.
-            if (_stageTier == null) return true;
-            if (_dirty) recompute();
-            return _inLogicByStrId[strId] == true;
-        }
-
-        /**
-         * Per-location reachability: does this stage have at least one missing
-         * location that is in logic?  The caller provides the three booleans
-         * indicating which of the stage's 3 locations are still missing.
-         */
-        public function stageHasInLogicMissing(strId:String,
-                                               journeyMissing:Boolean,
-                                               bonusMissing:Boolean,
-                                               stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || bonusMissing || stashMissing)) return false;
-            // Defensive: see isStageInLogic — fall back to "in logic" when
-            // rules aren't configured yet.
-            if (_stageTier == null) return true;
-            if (_dirty) recompute();
-
-            // Stash has no skill gate at location level — only the tier gate
-            // (which is the same as "stage in logic" for reachability purposes).
-            var stageReachable:Boolean = _inLogicByStrId[strId] == true;
-            if (!stageReachable) return false;
-
-            if (stashMissing) return true;
-
-            // Journey / Bonus are gated by stage_skills (WIZLOCK) and, for A4,
-            // by the full 24-skill requirement.
-            if (journeyMissing || bonusMissing) {
-                var skillsOk:Boolean = skillGateMet(strId);
-                if (!skillsOk) return false;
-                if (ALL_SKILLS_STAGES[strId] == true && _state.totalSkillsCollected < 24) {
+            // "X skill" or "X skill | Y skill" (pipe = OR)
+            if (lower.indexOf(" skill") >= 0) {
+                if (req.indexOf("|") >= 0) {
+                    var opts:Array = req.split("|");
+                    for each (var opt:String in opts) {
+                        opt = _trim(opt);
+                        var ol:String = opt.toLowerCase();
+                        if (ol.indexOf(" skill") >= 0) {
+                            var sn:String = _trim(opt.substring(0, ol.indexOf(" skill")));
+                            var si:int    = SessionData.SKILL_NAMES.indexOf(sn);
+                            if (si >= 0 && AV.sessionData.hasItem(700 + si)) return true;
+                        }
+                    }
                     return false;
                 }
-                return true;
+                var sEnd:int      = lower.indexOf(" skill");
+                var skillName:String = _trim(req.substring(0, sEnd));
+                var skillIdx:int  = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (skillIdx < 0) return false; // unknown skill name = not obtainable
+                return AV.sessionData.hasItem(700 + skillIdx);
             }
-            return false;
-        }
 
-        private function skillGateMet(strId:String):Boolean {
-            if (_stageSkills == null) return true;
-            var required:Array = _stageSkills[strId] as Array;
-            if (required == null || required.length == 0) return true;
-            for each (var skillName:String in required) {
-                var idx:int = CollectedState.SKILL_NAMES.indexOf(skillName);
-                if (idx < 0) continue; // unknown name — don't block
-                if (!_state.hasItem(300 + idx)) return false;
+            // "X element"
+            if (lower.indexOf(" element") >= 0) {
+                var eEnd:int     = lower.indexOf(" element");
+                var elemName:String = _trim(req.substring(0, eEnd));
+                if (_elementStages != null) {
+                    var stages:Array = _elementStages[elemName] as Array;
+                    if (stages != null) {
+                        for each (var stId:String in stages) {
+                            if (AV.sessionData.fieldsInLogic[stId] == true) return true;
+                        }
+                        return false;
+                    }
+                }
+                return true; // no mapping = don't block
             }
+
+            // "X trait" — includes "Any Battle trait"
+            if (lower.indexOf(" trait") >= 0) {
+                var tEnd:int      = lower.indexOf(" trait");
+                var traitName:String = _trim(req.substring(0, tEnd));
+                if (traitName.toLowerCase() == "any battle") {
+                    for (var t:int = 0; t < 15; t++) {
+                        if (AV.sessionData.hasItem(800 + t)) return true;
+                    }
+                    return false;
+                }
+                var traitIdx:int = TraitUnlocker.BATTLE_TRAIT_NAMES.indexOf(traitName);
+                if (traitIdx < 0) return true; // unknown trait = don't block
+                return AV.sessionData.hasItem(800 + traitIdx);
+            }
+
+            // "Field A4" or "Field N1, U1 or R5" (comma/or = OR)
+            if (lower.indexOf("field ") == 0) {
+                var fieldPart:String = _trim(req.substring(6));
+                var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
+                for each (var fid:String in fieldTokens) {
+                    fid = _trim(fid);
+                    if (fid.length > 0 && AV.sessionData.fieldsInLogic[fid] == true) return true;
+                }
+                return false;
+            }
+
+            // Mode gates — mod is journey-only
+            if (lower == "trial" || lower == "endurance" || lower == "endurance and trial") {
+                return false;
+            }
+
+            // Spell / skill group counters
+            if (lower.indexOf("strikespells") == 0) {
+                var sNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.countItemsInRange(712, 714) >= sNeed;
+            }
+            if (lower.indexOf("enhancementspells") == 0) {
+                var eNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
+            }
+            if (lower.indexOf("gemskills") == 0) {
+                var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
+            }
+
+            // "minWave: N"
+            if (lower.indexOf("minwave") == 0) {
+                var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMinWaves(wNeed);
+            }
+
+            // "fieldToken: N"
+            if (lower.indexOf("fieldtoken") == 0) {
+                var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
+            }
+
+            // Unknown requirement — don't block
             return true;
         }
 
-        private function recompute():void {
-            _inLogicByStrId = {};
-            _reachableTier = -1;
-
-            if (_stageTier == null) {
-                // No rules -> can't evaluate; fall back to "everything in logic"
-                _reachableTier = 999;
-                _dirty = false;
-                return;
-            }
-
-            // Determine highest contiguously-reachable tier.
-            var t:int = 0;
-            while (true) {
-                var ok:Boolean = true;
-                if (t > 0) {
-                    ok = tierTokensMet(t) && tierSkillsMet(t);
-                }
-                if (!ok) break;
-                _reachableTier = t;
-                t++;
-                if (t > 50) break; // safety
-                if (_tierStageCounts[String(t)] == undefined
-                    && _cumulativeSkillReqs[String(t)] == undefined) {
-                    // Beyond the defined tiers — stop.
-                    break;
-                }
-            }
-
-            // Mark each stage.
-            for (var strId:String in _stageTier) {
-                var tier:int = int(_stageTier[strId]);
-                var inLogic:Boolean = _freeStages[strId] == true || tier <= _reachableTier;
-                _inLogicByStrId[strId] = inLogic;
-            }
-            // Free stages (W1-W4) are not in _stageTier because they have no
-            // token items, but they are always reachable from W1.
-            for (var freeSid:String in _freeStages) {
-                _inLogicByStrId[freeSid] = true;
-            }
-            _dirty = false;
-        }
-
-        /** Floor-division match of rules.py _has_tier_tokens. */
-        private function tierTokensMet(tier:int):Boolean {
-            var prev:int = tier - 1;
-            var prevCount:int = int(_tierStageCounts[String(prev)]);
-            if (prevCount <= 0) return true;
-            var needed:int = int((prevCount * _tokenPct) / 100); // floor
-            if (needed <= 0) return true;
-
-            // Count collected tokens whose stage tier == prev.
-            var have:int = 0;
-            var tokens:Object = _state.tokensByStrId;
-            for (var sid:String in tokens) {
-                if (int(_stageTier[sid]) == prev) {
-                    have++;
-                    if (have >= needed) return true;
-                }
-            }
-            return have >= needed;
-        }
-
-        private function tierSkillsMet(tier:int):Boolean {
-            if (_cumulativeSkillReqs == null) return true;
-            var reqs:Object = _cumulativeSkillReqs[String(tier)];
-            if (reqs == null) return true;
-            var counts:Object = _state.skillCountByCategory;
-            for (var cat:String in reqs) {
-                if (int(counts[cat]) < int(reqs[cat])) return false;
-            }
-            return true;
-        }
-
-        public function get reachableTier():int { return _reachableTier; }
-
-        /**
-         * Check if any in-logic stage has at least the given minimum wave count.
-         * Wave count is determined by the stage's tier using WAVE_TIERS mapping.
-         *
-         * @param minWaveCount Minimum waves required (e.g., 22 for tier 1, 100 for endurance)
-         * @return true if at least one in-logic stage has >= minWaveCount waves
-         */
-        public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
-            // Wave tier thresholds (matching rulesdata_settings.py WAVE_TIERS)
-            var waveTiers:Array = [14, 22, 28, 33, 40, 48, 54, 60, 70, 72, 78, 84, 96];
-
-            // For waves beyond tier 12 (>96), check endurance/trial flags
-            if (minWaveCount > 96) {
-                // These fields are only accessible in endurance or trial mode
-                // Both modes must NOT be disabled
-                return false; // Endurance/trial access is checked elsewhere
-            }
-
-            // Find minimum tier needed for this wave count
-            var requiredTier:int = -1;
-            for (var i:int = 0; i < waveTiers.length; i++) {
-                if (int(waveTiers[i]) >= minWaveCount) {
-                    requiredTier = i;
-                    break;
-                }
-            }
-
-            // Check if any in-logic stage has a tier >= requiredTier
-            if (_stageTier == null) return true; // No rules = assume accessible
-            if (_dirty) return false; // Not yet computed
-
-            for (var strId:String in _stageTier) {
-                var stageTier:int = int(_stageTier[strId]);
-                if (stageTier >= requiredTier && _inLogicByStrId[strId] == true) {
-                    return true;
-                }
-            }
-
-            // Also check free stages (W1-W4, etc) which are always in logic
-            for (var freeSid:String in _freeStages) {
-                if (_inLogicByStrId[freeSid] == true) {
-                    // Free stages are tier-less, so check if they could have the waves
-                    // For now, assume free stages (Wizard/campaign) don't count toward wave requirements
-                    // (they're unlocked early and have fixed wave counts)
-                }
-            }
-
-            return false;
+        private function _trim(s:String):String {
+            return s.replace(/^\s+|\s+$/g, "");
         }
     }
 }

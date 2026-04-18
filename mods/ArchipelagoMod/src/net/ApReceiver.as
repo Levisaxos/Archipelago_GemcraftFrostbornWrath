@@ -200,6 +200,9 @@ package net {
                 for each (var locId:int in missing)
                     _missingLocations[locId] = true;
             }
+            // Mirror into AV so StageTinter, ModButtons, and AchievementLogicEvaluator
+            // all read from a single shared reference without needing ConnectionManager.
+            AV.saveData.missingLocations = _missingLocations;
 
             _sender.sendLocationScouts(_missingLocations);
 

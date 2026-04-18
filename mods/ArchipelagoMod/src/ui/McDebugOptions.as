@@ -10,7 +10,7 @@ package ui {
     import flash.text.TextField;
     import flash.text.TextFormat;
     import flash.utils.getDefinitionByName;
-    import tracker.CollectedState;
+    import data.SessionData;
     import unlockers.TraitUnlocker;
 
     /**
@@ -58,8 +58,8 @@ package ui {
         private static const COL_LEFT_X:Number       = 250;
         private static const COL_RIGHT_X:Number      = 1067;
 
-        // Canonical name lists live in CollectedState and TraitUnlocker — reference them directly.
-        private static function get SKILL_NAMES():Array        { return CollectedState.SKILL_NAMES; }
+        // Canonical name lists — reference shared constants.
+        private static function get SKILL_NAMES():Array        { return SessionData.SKILL_NAMES; }
         private static function get BATTLE_TRAIT_NAMES():Array { return TraitUnlocker.BATTLE_TRAIT_NAMES; }
 
         private static const TILE_LETTERS:Array = [

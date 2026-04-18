@@ -276,11 +276,13 @@ class GemcraftFrostbornWrathWorld(World):
         pool: List[GCFWItem] = []
 
         # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
-        # W2/W3/W4 are always accessible (free stages); the mod unlocks them on connect.
+        # All four are free stages; the mod unlocks them on connect.
+        # W1 Field Token is intentionally absent; Extra XP Item #1 fills its slot.
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue
             pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+        pool.append(self.create_item("Extra XP Item #1"))  # W1 token removed; keep item count balanced
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -616,7 +618,7 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Free stages: all stages with item_ap_id=None (W1, W2, W3, W4).
+        # Free stages: W1/W2/W3/W4 all have item_ap_id=None → mod unlocks them on connect.
         free_stages = [s["str_id"] for s in stages if s["item_ap_id"] is None]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)

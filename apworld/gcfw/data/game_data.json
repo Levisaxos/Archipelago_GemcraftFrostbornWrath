@@ -370,7 +370,7 @@
     {
       "str_id": "W1",
       "type": "NORMAL",
-      "item_ap_id": 1,
+      "item_ap_id": null,
       "loc_ap_id": 1,
       "note": "Starting stage \u00e2\u20ac\u201d no field token needed",
       "unlocks": [

@@ -42,8 +42,9 @@ package {
 
     import net.ConnectionManager;
 
-    import tracker.CollectedState;
+    import tracker.FieldLogicEvaluator;
     import tracker.LogicEvaluator;
+    import tracker.AchievementLogicEvaluator;
     import tracker.StageTinter;
     import tracker.LogicHelper;
 
@@ -127,8 +128,9 @@ package {
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
-        private var _collectedState:CollectedState;
+        private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
+        private var _achievementLogicEvaluator:AchievementLogicEvaluator;
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
@@ -185,9 +187,10 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
-                // In-game tracker (stage light tinting)
-                _collectedState  = new CollectedState(_logger, MOD_NAME);
-                _logicEvaluator  = new LogicEvaluator(_logger, MOD_NAME, _collectedState);
+                // In-game tracker (stage light tinting + logic evaluation)
+                _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
+                _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
+                _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
 
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
@@ -210,7 +213,9 @@ package {
                 _connectionManager.load();
 
                 // Initialize achievement unlocker
-                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _collectedState);
+                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager);
+                _achievementUnlocker.loadData();
+                _achievementLogicEvaluator.loadData();
 
                 // Wire level-end builder now that both dependencies are available
                 _levelEndScreenBuilder.configure(_achievementUnlocker, _connectionManager);
@@ -219,19 +224,15 @@ package {
                 // Delegates icon construction to LevelEndScreenBuilder.
                 _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME, _levelEndScreenBuilder);
 
-                // Initialize logic helper (for achievement and field access checks)
-                _logicHelper = new LogicHelper(_logger, MOD_NAME, _collectedState, _logicEvaluator, _connectionManager);
-
-                // Wire achievement unlocker with logic subsystems and load data
-                _achievementUnlocker.configure(_logicEvaluator, _logicHelper);
-                _achievementUnlocker.loadData();
+                // Logic helper (thin wrapper for external callers e.g. debug UI)
+                _logicHelper = new LogicHelper(_logger, MOD_NAME, _fieldLogicEvaluator);
 
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
 
-                _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
 
                 // Button factory — owns all mod buttons on selector + main menu
-                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _modButtons.onSettingsClick  = onSettingsClicked;
                 _modButtons.onApDebugClick   = _toggleDebugOptions;
                 _modButtons.onChangelogClick = openChangelog;
@@ -613,7 +614,12 @@ package {
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
+                    var wasPatched:Boolean = _achPanelPatcher.patched;
                     _achPanelPatcher.tryPatch();
+                    if (!wasPatched && _achPanelPatcher.patched && _achievementLogicEvaluator != null) {
+                        // First successful patch: populate filterFlags before the panel opens.
+                        _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                    }
                     if (GV.selectorCore != null)
                         _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
                 }
@@ -772,7 +778,7 @@ package {
             // Slot file exists and player previously chose standalone — skip popup entirely.
             if (_saveManager.standaloneSet && _saveManager.standalone) {
                 _standalone = true;
-                if (_collectedState != null) _collectedState.reset();
+                AV.sessionData.reset();
                 _progressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
                 _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
@@ -833,7 +839,7 @@ package {
             _saveManager.standalone = true;
             _saveManager.saveSlotData();
             _standalone = true;
-            if (_collectedState != null) _collectedState.reset();
+            AV.sessionData.reset();
             _progressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
@@ -853,14 +859,14 @@ package {
             AV.loadServerDataFromJSON();
 
             // Reset + configure the in-game tracker from slot_data.  Must happen
-            // BEFORE syncWithAP (which will populate collected state via onItem).
-            if (_collectedState != null) _collectedState.reset();
+            // BEFORE syncWithAP (which will populate session data via onItem).
+            AV.sessionData.reset();
             if (p.slot_data != null) {
-                _collectedState.configure(
+                AV.sessionData.configure(
                     AV.serverData.tokenMap,
                     p.slot_data.skill_categories
                 );
-                _logicEvaluator.configure(
+                _fieldLogicEvaluator.configure(
                     p.slot_data.stage_tier,
                     p.slot_data.stage_skills,
                     p.slot_data.cumulative_skill_reqs,
@@ -868,9 +874,10 @@ package {
                     int(p.slot_data.token_requirement_percent),
                     p.slot_data.free_stages as Array
                 );
+                _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
-                _logicEnforcer.configure(_logicEvaluator, AV.serverData.serverOptions.enforce_logic);
+                _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
             }
             _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
             _wavePrePatcher.configure(
@@ -926,8 +933,8 @@ package {
             hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
 
-            if (_achPanelPatcher != null && _achievementUnlocker != null) {
-                _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+            if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                 _achPanelPatcher.refreshIfActive();
             }
         }
@@ -994,10 +1001,11 @@ package {
                 }
 
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
-                if (_collectedState != null) _collectedState.onItem(apId);
-                if (_logicEvaluator != null) _logicEvaluator.markDirty();
-                if (_achPanelPatcher != null && _achievementUnlocker != null) {
-                    _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+                AV.sessionData.onItem(apId);
+                if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+                if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+                if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                    _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                     _achPanelPatcher.refreshIfActive();
                 }
 
@@ -1085,11 +1093,11 @@ package {
             var tokenStages:Object = AV.serverData.tokenStages;
 
             // Rebuild tracker state from the full item list.
-            if (_collectedState != null) _collectedState.reset();
+            AV.sessionData.reset();
 
             for each (var item:Object in items) {
                 var apId:int = item.item;
-                if (_collectedState != null) _collectedState.onItem(apId);
+                AV.sessionData.onItem(apId);
 
                 // Track item for ending screen display
                 if (_progressionBlocker != null) {
@@ -1194,7 +1202,8 @@ package {
 
             _saveManager.saveSlotData();
 
-            if (_logicEvaluator != null) _logicEvaluator.markDirty();
+            if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+            if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
