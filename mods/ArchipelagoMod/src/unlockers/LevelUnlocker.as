@@ -14,11 +14,7 @@ package unlockers {
      * A4 trial is used because it is the final stage and unlikely to be played
      * in a randomizer context.
      */
-    public class LevelUnlocker {
-
-        private var _logger:Logger;
-        private var _modName:String;
-        private var _itemToast:ItemToastPanel;
+    public class LevelUnlocker extends BaseUnlocker {
         private var _bonusWizardLevel:int = 0;
         private var _naturalWizardLevel:int = 1;
         private var _xpBarDirty:Boolean = false;
@@ -36,9 +32,7 @@ package unlockers {
         public var onDataChanged:Function; // ():void
 
         public function LevelUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
-            _logger    = logger;
-            _modName   = modName;
-            _itemToast = itemToast;
+            super(logger, modName, itemToast);
         }
 
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
@@ -65,7 +59,7 @@ package unlockers {
             _wornLevels         = Math.max(1, worn);
             _ancientLevels      = Math.max(1, ancient);
             _startingLevelBonus = Math.max(0, startingWizardLevel - 1);
-            _logger.log(_modName, "LevelUnlocker configured: tattered=" + _tatteredLevels
+            logAction("LevelUnlocker configured: tattered=" + _tatteredLevels
                 + " worn=" + _wornLevels + " ancient=" + _ancientLevels
                 + " startingLevelBonus=" + _startingLevelBonus);
         }
@@ -75,6 +69,11 @@ package unlockers {
             if (apId == 500) return _tatteredLevels;
             if (apId == 501) return _wornLevels;
             if (apId == 502) return _ancientLevels;
+            // XP tomes: 1100-1131 Tattered, 1132-1137 Worn, 1138-1139 Ancient, 1140-1199 filler (tattered-equivalent)
+            if (apId >= 1100 && apId <= 1131) return _tatteredLevels;
+            if (apId >= 1132 && apId <= 1137) return _wornLevels;
+            if (apId >= 1138 && apId <= 1139) return _ancientLevels;
+            if (apId >= 1140 && apId <= 1199) return _tatteredLevels;
             return 0;
         }
 
@@ -120,8 +119,35 @@ package unlockers {
                 }
             }
 
-            _logger.log(_modName, label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            _itemToast.addItem("Found " + label, 0x88CCFF);
+            logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
+            showToast("Found " + label, 0x88CCFF);
+        }
+
+        /**
+         * Grant AP wizard levels from a received XP Tome item (AP IDs 1100-1199).
+         * Uses levelsForApId() to determine the level value.
+         */
+        public function grantXpFromApId(apId:int, label:String = ""):void {
+            var levels:int = levelsForApId(apId);
+            if (levels <= 0) return;
+
+            if (label == "") label = "XP Tome";
+
+            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
+
+            _bonusWizardLevel += levels;
+            if (onDataChanged != null) onDataChanged();
+            applyBonusLevels();
+
+            if (GV.ppd != null) {
+                var newXp:Number = GV.ppd.getXp();
+                if (pushSelectorEvent(4, [oldXp, newXp])) {
+                    _xpBarDirty = false;
+                }
+            }
+
+            logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
+            showToast("Found " + label, 0x88CCFF);
         }
 
         /**
@@ -149,7 +175,7 @@ package unlockers {
 
             var a4Idx:int = GV.getFieldId("A4");
             if (a4Idx < 0) {
-                _logger.log(_modName, "applyBonusLevels: A4 field id not found");
+                logAction("applyBonusLevels: A4 field id not found");
                 return;
             }
 
@@ -172,7 +198,7 @@ package unlockers {
 
             GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
             _xpBarDirty = true;
-            _logger.log(_modName, "applyBonusLevels: apBonus=" + _bonusWizardLevel
+            logAction("applyBonusLevels: apBonus=" + _bonusWizardLevel
                 + " startingBonus=" + _startingLevelBonus
                 + " normalXp=" + normalXp
                 + " bonusXp=" + bonusXp);
@@ -213,7 +239,7 @@ package unlockers {
                 if (core.screenStatus == 4) core.screenStatus = 3; // STAGES_IDLE → UPDATING_STAGES
                 return true;
             } catch (err:Error) {
-                _logger.log(_modName, "pushSelectorEvent error: " + err.message);
+                logAction("pushSelectorEvent error: " + err.message);
                 return false;
             }
         }

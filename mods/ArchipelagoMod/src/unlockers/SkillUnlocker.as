@@ -5,13 +5,9 @@ package unlockers {
 
     /**
      * Handles unlocking skills by Archipelago item ID.
-     * Skill AP IDs range from 300 to 323.
+     * Skill AP IDs range from 700 to 723 (after refactoring).
      */
-    public class SkillUnlocker {
-
-        private var _logger:Logger;
-        private var _modName:String;
-        private var _itemToast:ItemToastPanel;
+    public class SkillUnlocker extends BaseUnlocker {
 
         // Skill names indexed by game_id (matches SkillId constants).
         private static const SKILL_NAMES:Array = [
@@ -24,30 +20,27 @@ package unlockers {
         ];
 
         public function SkillUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
-            _logger    = logger;
-            _modName   = modName;
-            _itemToast = itemToast;
+            super(logger, modName, itemToast);
         }
 
         /**
-         * Unlock a skill by its Archipelago item ID (300-323).
+         * Unlock a skill by its Archipelago item ID (700-723).
          * Sets the skill tome flag and initialises the level to 0 if not yet available.
          */
         public function unlockSkill(apId:int):void {
-            var gameId:int = apId - 300;
+            var gameId:int = apId - 700;
             if (gameId < 0 || gameId > 23) {
-                _logger.log(_modName, "unlockSkill: invalid AP ID " + apId);
+                logAction("unlockSkill: invalid AP ID " + apId);
                 return;
             }
-            if (GV.ppd == null) {
-                _logger.log(_modName, "unlockSkill: GV.ppd is null, cannot unlock skill " + apId);
+            if (!ensurePpdExists("unlockSkill")) {
                 return;
             }
             GV.ppd.gainedSkillTomes[gameId] = true;
             GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
             var skillName:String = SKILL_NAMES[gameId];
-            _logger.log(_modName, "Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
-            _itemToast.addItem("Skill Unlocked: " + skillName, 0xDDA0FF);
+            logAction("Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
+            showToast("Skill Unlocked: " + skillName, 0xDDA0FF);
             showPlusNodeOnSelector("mcPlusNodeSkills");
         }
 
@@ -58,15 +51,5 @@ package unlockers {
             return SKILL_NAMES[gameId];
         }
 
-        private function showPlusNodeOnSelector(nodeName:String):void {
-            try {
-                var mc:* = GV.selectorCore != null ? GV.selectorCore.mc : null;
-                if (mc == null) return;
-                var node:* = mc[nodeName];
-                if (node != null) mc.addChild(node);
-            } catch (err:Error) {
-                _logger.log(_modName, "showPlusNodeOnSelector " + nodeName + " error: " + err.message);
-            }
-        }
     }
 }

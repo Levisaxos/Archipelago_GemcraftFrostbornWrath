@@ -1,7 +1,7 @@
 {
   "_notes": {
     "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP: 500-599 | Talisman Fragments (specific): 700-752 | Talisman Fragments (extra): 753-799 | Shadow Core Stashes (specific): 800-816 | Shadow Core Stashes (extra): 817-868",
-    "location_id_buckets": "Stages (Journey): 1-124 | Stages (Bonus): 501-624 | Map Tiles: 200-299 | Wiz Stash: loc_ap_id+1000 (1001-1124)",
+    "location_id_buckets": "Stages (Journey): 1-122 | Stages (Bonus): 200-321 | Map Tiles: 600-625 | Wiz Stash: 400-521",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
     "scope_note": "All 122 stages are in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 do not exist in the game and have been removed. W1-W4 are all free (no field token item). W2-W4 changed from pre-collected to always-free like W1."
   },
@@ -47,330 +47,330 @@
     {
       "game_id": 0,
       "name": "Mana Stream",
-      "ap_id": 300
+      "ap_id": 700
     },
     {
       "game_id": 1,
       "name": "True Colors",
-      "ap_id": 301
+      "ap_id": 701
     },
     {
       "game_id": 2,
       "name": "Fusion",
-      "ap_id": 302,
+      "ap_id": 702,
       "note": "Unlocked by default"
     },
     {
       "game_id": 3,
       "name": "Orb of Presence",
-      "ap_id": 303
+      "ap_id": 703
     },
     {
       "game_id": 4,
       "name": "Resonance",
-      "ap_id": 304
+      "ap_id": 704
     },
     {
       "game_id": 5,
       "name": "Demolition",
-      "ap_id": 305
+      "ap_id": 705
     },
     {
       "game_id": 6,
       "name": "Critical Hit",
-      "ap_id": 306
+      "ap_id": 706
     },
     {
       "game_id": 7,
       "name": "Mana Leech",
-      "ap_id": 307
+      "ap_id": 707
     },
     {
       "game_id": 8,
       "name": "Bleeding",
-      "ap_id": 308
+      "ap_id": 708
     },
     {
       "game_id": 9,
       "name": "Armor Tearing",
-      "ap_id": 309
+      "ap_id": 709
     },
     {
       "game_id": 10,
       "name": "Poison",
-      "ap_id": 310
+      "ap_id": 710
     },
     {
       "game_id": 11,
       "name": "Slowing",
-      "ap_id": 311
+      "ap_id": 711
     },
     {
       "game_id": 12,
       "name": "Freeze",
-      "ap_id": 312,
+      "ap_id": 712,
       "note": "Unlocked by default in some modes"
     },
     {
       "game_id": 13,
       "name": "Whiteout",
-      "ap_id": 313
+      "ap_id": 713
     },
     {
       "game_id": 14,
       "name": "Ice Shards",
-      "ap_id": 314
+      "ap_id": 714
     },
     {
       "game_id": 15,
       "name": "Bolt",
-      "ap_id": 315
+      "ap_id": 715
     },
     {
       "game_id": 16,
       "name": "Beam",
-      "ap_id": 316,
+      "ap_id": 716,
       "note": "Unlocked by default in some modes"
     },
     {
       "game_id": 17,
       "name": "Barrage",
-      "ap_id": 317
+      "ap_id": 717
     },
     {
       "game_id": 18,
       "name": "Fury",
-      "ap_id": 318
+      "ap_id": 718
     },
     {
       "game_id": 19,
       "name": "Amplifiers",
-      "ap_id": 319
+      "ap_id": 719
     },
     {
       "game_id": 20,
       "name": "Pylons",
-      "ap_id": 320
+      "ap_id": 720
     },
     {
       "game_id": 21,
       "name": "Lanterns",
-      "ap_id": 321
+      "ap_id": 721
     },
     {
       "game_id": 22,
       "name": "Traps",
-      "ap_id": 322
+      "ap_id": 722
     },
     {
       "game_id": 23,
       "name": "Seeker Sense",
-      "ap_id": 323
+      "ap_id": 723
     }
   ],
   "battle_traits": [
     {
       "game_id": 0,
       "name": "Adaptive Carapace",
-      "ap_id": 400,
+      "ap_id": 800,
       "description": "After each shot taken, monsters gain damage reduction stacking up to a cap"
     },
     {
       "game_id": 1,
       "name": "Dark Masonry",
-      "ap_id": 401,
+      "ap_id": 801,
       "description": "Barricades, nests, beacons and watchtowers have more armor/HP; extra beacons spawn every 10 waves"
     },
     {
       "game_id": 2,
       "name": "Swarmling Domination",
-      "ap_id": 402,
+      "ap_id": 802,
       "description": "Swarmlings have reduced debuff duration and more speed; some reaver waves turn into swarmlings"
     },
     {
       "game_id": 3,
       "name": "Overcrowd",
-      "ap_id": 403,
+      "ap_id": 803,
       "description": "More monsters arrive each wave"
     },
     {
       "game_id": 4,
       "name": "Corrupted Banishment",
-      "ap_id": 404,
+      "ap_id": 804,
       "description": "Banished monsters return with more HP, armor, and shield layers"
     },
     {
       "game_id": 5,
       "name": "Awakening",
-      "ap_id": 405,
+      "ap_id": 805,
       "description": "Monster waves have increasing HP increment per wave"
     },
     {
       "game_id": 6,
       "name": "Insulation",
-      "ap_id": 406,
+      "ap_id": 806,
       "description": "Every monster enters with extra shield layers"
     },
     {
       "game_id": 7,
       "name": "Hatred",
-      "ap_id": 407,
+      "ap_id": 807,
       "description": "Monsters have more total HP"
     },
     {
       "game_id": 8,
       "name": "Swarmling Parasites",
-      "ap_id": 408,
+      "ap_id": 808,
       "description": "Killed monsters spawn 2 swarmlings with a portion of the monster's max HP"
     },
     {
       "game_id": 9,
       "name": "Haste",
-      "ap_id": 409,
+      "ap_id": 809,
       "description": "Wave stones move faster"
     },
     {
       "game_id": 10,
       "name": "Thick Air",
-      "ap_id": 410,
+      "ap_id": 810,
       "description": "Damage to monsters is capped at a fraction of their total HP per hit"
     },
     {
       "game_id": 11,
       "name": "Vital Link",
-      "ap_id": 411,
+      "ap_id": 811,
       "description": "Each monster waiting to enter gives bonus HP to monsters already on the battlefield"
     },
     {
       "game_id": 12,
       "name": "Giant Domination",
-      "ap_id": 412,
+      "ap_id": 812,
       "description": "Giants have thicker armor and more HP; some reaver waves turn into giants"
     },
     {
       "game_id": 13,
       "name": "Strength in Numbers",
-      "ap_id": 413,
+      "ap_id": 813,
       "description": "Each monster on the battlefield gives all others extra non-destructible armor"
     },
     {
       "game_id": 14,
       "name": "Ritual",
-      "ap_id": 414,
+      "ap_id": 814,
       "description": "Powerful enemy creatures may be lured to the battle"
     }
   ],
   "map_tiles": [
     {
       "game_id": 0,
-      "ap_id": 200
+      "ap_id": 600
     },
     {
       "game_id": 1,
-      "ap_id": 201
+      "ap_id": 601
     },
     {
       "game_id": 2,
-      "ap_id": 202
+      "ap_id": 602
     },
     {
       "game_id": 3,
-      "ap_id": 203
+      "ap_id": 603
     },
     {
       "game_id": 4,
-      "ap_id": 204
+      "ap_id": 604
     },
     {
       "game_id": 5,
-      "ap_id": 205
+      "ap_id": 605
     },
     {
       "game_id": 6,
-      "ap_id": 206
+      "ap_id": 606
     },
     {
       "game_id": 7,
-      "ap_id": 207
+      "ap_id": 607
     },
     {
       "game_id": 8,
-      "ap_id": 208
+      "ap_id": 608
     },
     {
       "game_id": 9,
-      "ap_id": 209
+      "ap_id": 609
     },
     {
       "game_id": 10,
-      "ap_id": 210
+      "ap_id": 610
     },
     {
       "game_id": 11,
-      "ap_id": 211
+      "ap_id": 611
     },
     {
       "game_id": 12,
-      "ap_id": 212
+      "ap_id": 612
     },
     {
       "game_id": 13,
-      "ap_id": 213
+      "ap_id": 613
     },
     {
       "game_id": 14,
-      "ap_id": 214
+      "ap_id": 614
     },
     {
       "game_id": 15,
-      "ap_id": 215
+      "ap_id": 615
     },
     {
       "game_id": 16,
-      "ap_id": 216
+      "ap_id": 616
     },
     {
       "game_id": 17,
-      "ap_id": 217
+      "ap_id": 617
     },
     {
       "game_id": 18,
-      "ap_id": 218
+      "ap_id": 618
     },
     {
       "game_id": 19,
-      "ap_id": 219
+      "ap_id": 619
     },
     {
       "game_id": 20,
-      "ap_id": 220
+      "ap_id": 620
     },
     {
       "game_id": 21,
-      "ap_id": 221
+      "ap_id": 621
     },
     {
       "game_id": 22,
-      "ap_id": 222
+      "ap_id": 622
     },
     {
       "game_id": 23,
-      "ap_id": 223
+      "ap_id": 623
     },
     {
       "game_id": 24,
-      "ap_id": 224
+      "ap_id": 624
     },
     {
       "game_id": 25,
-      "ap_id": 225
+      "ap_id": 625
     }
   ],
   "stages": [
     {
       "str_id": "W1",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 1,
       "loc_ap_id": 1,
       "note": "Starting stage \u00e2\u20ac\u201d no field token needed",
       "unlocks": [
@@ -382,12 +382,12 @@
       ],
       "required_skills": [],
       "wave_count": 6,
-      "wiz_stash_loc_ap_id": 1001
+      "wiz_stash_loc_ap_id": 400
     },
     {
       "str_id": "W2",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 2,
       "loc_ap_id": 2,
       "unlocks": [
         "W3"
@@ -398,12 +398,12 @@
       ],
       "required_skills": [],
       "wave_count": 8,
-      "wiz_stash_loc_ap_id": 1002
+      "wiz_stash_loc_ap_id": 401
     },
     {
       "str_id": "W3",
       "type": "STORY_RELATED",
-      "item_ap_id": null,
+      "item_ap_id": 3,
       "loc_ap_id": 3,
       "unlocks": [
         "W4"
@@ -414,12 +414,12 @@
       ],
       "required_skills": [],
       "wave_count": 12,
-      "wiz_stash_loc_ap_id": 1003
+      "wiz_stash_loc_ap_id": 402
     },
     {
       "str_id": "W4",
       "type": "EPIC",
-      "item_ap_id": null,
+      "item_ap_id": 4,
       "loc_ap_id": 4,
       "unlocks": [
         "S1"
@@ -429,12 +429,12 @@
       ],
       "required_skills": [],
       "wave_count": 14,
-      "wiz_stash_loc_ap_id": 1004
+      "wiz_stash_loc_ap_id": 403
     },
     {
       "str_id": "S1",
       "type": "NORMAL",
-      "item_ap_id": 4,
+      "item_ap_id": 5,
       "loc_ap_id": 5,
       "unlocks": [
         "S2",
@@ -446,12 +446,12 @@
       ],
       "required_skills": [],
       "wave_count": 14,
-      "wiz_stash_loc_ap_id": 1005
+      "wiz_stash_loc_ap_id": 404
     },
     {
       "str_id": "S2",
       "type": "NORMAL",
-      "item_ap_id": 5,
+      "item_ap_id": 6,
       "loc_ap_id": 6,
       "unlocks": [],
       "available_gems": [
@@ -461,12 +461,12 @@
       ],
       "required_skills": [],
       "wave_count": 16,
-      "wiz_stash_loc_ap_id": 1006
+      "wiz_stash_loc_ap_id": 405
     },
     {
       "str_id": "S3",
       "type": "NORMAL",
-      "item_ap_id": 6,
+      "item_ap_id": 7,
       "loc_ap_id": 7,
       "unlocks": [
         "S4"
@@ -477,12 +477,12 @@
       ],
       "required_skills": [],
       "wave_count": 14,
-      "wiz_stash_loc_ap_id": 1007
+      "wiz_stash_loc_ap_id": 406
     },
     {
       "str_id": "S4",
       "type": "EPIC",
-      "item_ap_id": 7,
+      "item_ap_id": 8,
       "loc_ap_id": 8,
       "unlocks": [
         "V1"
@@ -494,12 +494,12 @@
       ],
       "required_skills": [],
       "wave_count": 20,
-      "wiz_stash_loc_ap_id": 1008
+      "wiz_stash_loc_ap_id": 407
     },
     {
       "str_id": "V1",
       "type": "NORMAL",
-      "item_ap_id": 8,
+      "item_ap_id": 9,
       "loc_ap_id": 9,
       "unlocks": [
         "V2"
@@ -510,12 +510,12 @@
       ],
       "required_skills": [],
       "wave_count": 20,
-      "wiz_stash_loc_ap_id": 1009
+      "wiz_stash_loc_ap_id": 408
     },
     {
       "str_id": "V2",
       "type": "NORMAL",
-      "item_ap_id": 9,
+      "item_ap_id": 10,
       "loc_ap_id": 10,
       "unlocks": [
         "V3",
@@ -527,12 +527,12 @@
       ],
       "required_skills": [],
       "wave_count": 22,
-      "wiz_stash_loc_ap_id": 1010
+      "wiz_stash_loc_ap_id": 409
     },
     {
       "str_id": "V3",
       "type": "NORMAL",
-      "item_ap_id": 10,
+      "item_ap_id": 11,
       "loc_ap_id": 11,
       "unlocks": [],
       "available_gems": [
@@ -541,12 +541,12 @@
       ],
       "required_skills": [],
       "wave_count": 24,
-      "wiz_stash_loc_ap_id": 1011
+      "wiz_stash_loc_ap_id": 410
     },
     {
       "str_id": "V4",
       "type": "EPIC",
-      "item_ap_id": 11,
+      "item_ap_id": 12,
       "loc_ap_id": 12,
       "unlocks": [
         "R1"
@@ -558,12 +558,12 @@
       ],
       "required_skills": [],
       "wave_count": 24,
-      "wiz_stash_loc_ap_id": 1012
+      "wiz_stash_loc_ap_id": 411
     },
     {
       "str_id": "R1",
       "type": "NORMAL",
-      "item_ap_id": 12,
+      "item_ap_id": 13,
       "loc_ap_id": 13,
       "unlocks": [
         "R2"
@@ -574,12 +574,12 @@
       ],
       "required_skills": [],
       "wave_count": 22,
-      "wiz_stash_loc_ap_id": 1013
+      "wiz_stash_loc_ap_id": 412
     },
     {
       "str_id": "R2",
       "type": "EPIC",
-      "item_ap_id": 13,
+      "item_ap_id": 14,
       "loc_ap_id": 14,
       "unlocks": [
         "Q1"
@@ -590,12 +590,12 @@
       ],
       "required_skills": [],
       "wave_count": 22,
-      "wiz_stash_loc_ap_id": 1014
+      "wiz_stash_loc_ap_id": 413
     },
     {
       "str_id": "R3",
       "type": "NORMAL",
-      "item_ap_id": 14,
+      "item_ap_id": 15,
       "loc_ap_id": 15,
       "unlocks": [
         "R4"
@@ -606,12 +606,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1015
+      "wiz_stash_loc_ap_id": 414
     },
     {
       "str_id": "R4",
       "type": "NORMAL",
-      "item_ap_id": 15,
+      "item_ap_id": 16,
       "loc_ap_id": 16,
       "unlocks": [
         "R5"
@@ -622,12 +622,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1016
+      "wiz_stash_loc_ap_id": 415
     },
     {
       "str_id": "R5",
       "type": "EPIC",
-      "item_ap_id": 16,
+      "item_ap_id": 17,
       "loc_ap_id": 17,
       "unlocks": [
         "O1",
@@ -639,12 +639,12 @@
       ],
       "required_skills": [],
       "wave_count": 32,
-      "wiz_stash_loc_ap_id": 1017
+      "wiz_stash_loc_ap_id": 416
     },
     {
       "str_id": "Q1",
       "type": "NORMAL",
-      "item_ap_id": 17,
+      "item_ap_id": 18,
       "loc_ap_id": 18,
       "unlocks": [
         "Q2"
@@ -655,12 +655,12 @@
       ],
       "required_skills": [],
       "wave_count": 24,
-      "wiz_stash_loc_ap_id": 1018
+      "wiz_stash_loc_ap_id": 417
     },
     {
       "str_id": "Q2",
       "type": "NORMAL",
-      "item_ap_id": 18,
+      "item_ap_id": 19,
       "loc_ap_id": 19,
       "unlocks": [
         "Q3"
@@ -671,12 +671,12 @@
       ],
       "required_skills": [],
       "wave_count": 22,
-      "wiz_stash_loc_ap_id": 1019
+      "wiz_stash_loc_ap_id": 418
     },
     {
       "str_id": "Q3",
       "type": "NORMAL",
-      "item_ap_id": 19,
+      "item_ap_id": 20,
       "loc_ap_id": 20,
       "unlocks": [
         "Q4",
@@ -688,12 +688,12 @@
       ],
       "required_skills": [],
       "wave_count": 24,
-      "wiz_stash_loc_ap_id": 1020
+      "wiz_stash_loc_ap_id": 419
     },
     {
       "str_id": "Q4",
       "type": "EPIC",
-      "item_ap_id": 20,
+      "item_ap_id": 21,
       "loc_ap_id": 21,
       "unlocks": [
         "T1"
@@ -704,12 +704,12 @@
       ],
       "required_skills": [],
       "wave_count": 26,
-      "wiz_stash_loc_ap_id": 1021
+      "wiz_stash_loc_ap_id": 420
     },
     {
       "str_id": "Q5",
       "type": "NORMAL",
-      "item_ap_id": 21,
+      "item_ap_id": 22,
       "loc_ap_id": 22,
       "unlocks": [
         "R3"
@@ -721,12 +721,12 @@
       ],
       "required_skills": [],
       "wave_count": 26,
-      "wiz_stash_loc_ap_id": 1022
+      "wiz_stash_loc_ap_id": 421
     },
     {
       "str_id": "T1",
       "type": "NORMAL",
-      "item_ap_id": 22,
+      "item_ap_id": 23,
       "loc_ap_id": 23,
       "unlocks": [
         "T2"
@@ -737,12 +737,12 @@
       ],
       "required_skills": [],
       "wave_count": 26,
-      "wiz_stash_loc_ap_id": 1023
+      "wiz_stash_loc_ap_id": 422
     },
     {
       "str_id": "T2",
       "type": "STORY_RELATED",
-      "item_ap_id": 23,
+      "item_ap_id": 24,
       "loc_ap_id": 24,
       "unlocks": [
         "T3"
@@ -753,12 +753,12 @@
       ],
       "required_skills": [],
       "wave_count": 28,
-      "wiz_stash_loc_ap_id": 1024
+      "wiz_stash_loc_ap_id": 423
     },
     {
       "str_id": "T3",
       "type": "NORMAL",
-      "item_ap_id": 24,
+      "item_ap_id": 25,
       "loc_ap_id": 25,
       "unlocks": [
         "T4"
@@ -769,12 +769,12 @@
       ],
       "required_skills": [],
       "wave_count": 28,
-      "wiz_stash_loc_ap_id": 1025
+      "wiz_stash_loc_ap_id": 424
     },
     {
       "str_id": "T4",
       "type": "EPIC",
-      "item_ap_id": 25,
+      "item_ap_id": 26,
       "loc_ap_id": 26,
       "unlocks": [
         "U1"
@@ -786,12 +786,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1026
+      "wiz_stash_loc_ap_id": 425
     },
     {
       "str_id": "U1",
       "type": "NORMAL",
-      "item_ap_id": 26,
+      "item_ap_id": 27,
       "loc_ap_id": 27,
       "unlocks": [
         "U2",
@@ -803,12 +803,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1027
+      "wiz_stash_loc_ap_id": 426
     },
     {
       "str_id": "U2",
       "type": "NORMAL",
-      "item_ap_id": 27,
+      "item_ap_id": 28,
       "loc_ap_id": 28,
       "unlocks": [
         "U4"
@@ -819,12 +819,12 @@
       ],
       "required_skills": [],
       "wave_count": 32,
-      "wiz_stash_loc_ap_id": 1028
+      "wiz_stash_loc_ap_id": 427
     },
     {
       "str_id": "U3",
       "type": "NORMAL",
-      "item_ap_id": 28,
+      "item_ap_id": 29,
       "loc_ap_id": 29,
       "unlocks": [],
       "available_gems": [
@@ -833,12 +833,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1029
+      "wiz_stash_loc_ap_id": 428
     },
     {
       "str_id": "U4",
       "type": "EPIC",
-      "item_ap_id": 29,
+      "item_ap_id": 30,
       "loc_ap_id": 30,
       "unlocks": [
         "Y1"
@@ -850,12 +850,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1030
+      "wiz_stash_loc_ap_id": 429
     },
     {
       "str_id": "Y1",
       "type": "NORMAL",
-      "item_ap_id": 30,
+      "item_ap_id": 31,
       "loc_ap_id": 31,
       "unlocks": [
         "Y2"
@@ -866,12 +866,12 @@
       ],
       "required_skills": [],
       "wave_count": 32,
-      "wiz_stash_loc_ap_id": 1031
+      "wiz_stash_loc_ap_id": 430
     },
     {
       "str_id": "Y2",
       "type": "NORMAL",
-      "item_ap_id": 31,
+      "item_ap_id": 32,
       "loc_ap_id": 32,
       "unlocks": [
         "Y3"
@@ -882,12 +882,12 @@
       ],
       "required_skills": [],
       "wave_count": 35,
-      "wiz_stash_loc_ap_id": 1032
+      "wiz_stash_loc_ap_id": 431
     },
     {
       "str_id": "Y3",
       "type": "STORY_RELATED",
-      "item_ap_id": 32,
+      "item_ap_id": 33,
       "loc_ap_id": 33,
       "unlocks": [
         "Y4"
@@ -899,12 +899,12 @@
       ],
       "required_skills": [],
       "wave_count": 30,
-      "wiz_stash_loc_ap_id": 1033
+      "wiz_stash_loc_ap_id": 432
     },
     {
       "str_id": "Y4",
       "type": "EPIC",
-      "item_ap_id": 33,
+      "item_ap_id": 34,
       "loc_ap_id": 34,
       "unlocks": [
         "X1"
@@ -917,12 +917,12 @@
       ],
       "required_skills": [],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1034
+      "wiz_stash_loc_ap_id": 433
     },
     {
       "str_id": "X1",
       "type": "NORMAL",
-      "item_ap_id": 34,
+      "item_ap_id": 35,
       "loc_ap_id": 35,
       "unlocks": [
         "X2",
@@ -934,12 +934,12 @@
       ],
       "required_skills": [],
       "wave_count": 42,
-      "wiz_stash_loc_ap_id": 1035
+      "wiz_stash_loc_ap_id": 434
     },
     {
       "str_id": "X2",
       "type": "NORMAL",
-      "item_ap_id": 35,
+      "item_ap_id": 36,
       "loc_ap_id": 36,
       "unlocks": [],
       "available_gems": [
@@ -949,12 +949,12 @@
       ],
       "required_skills": [],
       "wave_count": 48,
-      "wiz_stash_loc_ap_id": 1036
+      "wiz_stash_loc_ap_id": 435
     },
     {
       "str_id": "X3",
       "type": "NORMAL",
-      "item_ap_id": 36,
+      "item_ap_id": 37,
       "loc_ap_id": 37,
       "unlocks": [
         "X4"
@@ -965,12 +965,12 @@
       ],
       "required_skills": [],
       "wave_count": 44,
-      "wiz_stash_loc_ap_id": 1037
+      "wiz_stash_loc_ap_id": 436
     },
     {
       "str_id": "X4",
       "type": "EPIC",
-      "item_ap_id": 37,
+      "item_ap_id": 38,
       "loc_ap_id": 38,
       "unlocks": [],
       "available_gems": [
@@ -981,12 +981,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1038
+      "wiz_stash_loc_ap_id": 437
     },
     {
       "str_id": "Z1",
       "type": "NORMAL",
-      "item_ap_id": 38,
+      "item_ap_id": 39,
       "loc_ap_id": 39,
       "unlocks": [
         "Z2",
@@ -1000,12 +1000,12 @@
       ],
       "required_skills": [],
       "wave_count": 44,
-      "wiz_stash_loc_ap_id": 1039
+      "wiz_stash_loc_ap_id": 438
     },
     {
       "str_id": "Z2",
       "type": "NORMAL",
-      "item_ap_id": 39,
+      "item_ap_id": 40,
       "loc_ap_id": 40,
       "unlocks": [],
       "available_gems": [
@@ -1015,12 +1015,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1040
+      "wiz_stash_loc_ap_id": 439
     },
     {
       "str_id": "Z3",
       "type": "NORMAL",
-      "item_ap_id": 40,
+      "item_ap_id": 41,
       "loc_ap_id": 41,
       "unlocks": [],
       "available_gems": [
@@ -1030,12 +1030,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1041
+      "wiz_stash_loc_ap_id": 440
     },
     {
       "str_id": "Z4",
       "type": "NORMAL",
-      "item_ap_id": 41,
+      "item_ap_id": 42,
       "loc_ap_id": 42,
       "unlocks": [],
       "available_gems": [
@@ -1044,12 +1044,12 @@
       ],
       "required_skills": [],
       "wave_count": 48,
-      "wiz_stash_loc_ap_id": 1042
+      "wiz_stash_loc_ap_id": 441
     },
     {
       "str_id": "O1",
       "type": "NORMAL",
-      "item_ap_id": 42,
+      "item_ap_id": 43,
       "loc_ap_id": 43,
       "unlocks": [
         "O2",
@@ -1061,12 +1061,12 @@
       ],
       "required_skills": [],
       "wave_count": 34,
-      "wiz_stash_loc_ap_id": 1043
+      "wiz_stash_loc_ap_id": 442
     },
     {
       "str_id": "O2",
       "type": "NORMAL",
-      "item_ap_id": 43,
+      "item_ap_id": 44,
       "loc_ap_id": 44,
       "unlocks": [],
       "available_gems": [
@@ -1075,12 +1075,12 @@
       ],
       "required_skills": [],
       "wave_count": 35,
-      "wiz_stash_loc_ap_id": 1044
+      "wiz_stash_loc_ap_id": 443
     },
     {
       "str_id": "O3",
       "type": "NORMAL",
-      "item_ap_id": 44,
+      "item_ap_id": 45,
       "loc_ap_id": 45,
       "unlocks": [
         "O4"
@@ -1091,12 +1091,12 @@
       ],
       "required_skills": [],
       "wave_count": 32,
-      "wiz_stash_loc_ap_id": 1045
+      "wiz_stash_loc_ap_id": 444
     },
     {
       "str_id": "O4",
       "type": "EPIC",
-      "item_ap_id": 45,
+      "item_ap_id": 46,
       "loc_ap_id": 46,
       "unlocks": [
         "P1"
@@ -1109,12 +1109,12 @@
       ],
       "required_skills": [],
       "wave_count": 33,
-      "wiz_stash_loc_ap_id": 1046
+      "wiz_stash_loc_ap_id": 445
     },
     {
       "str_id": "N1",
       "type": "NORMAL",
-      "item_ap_id": 46,
+      "item_ap_id": 47,
       "loc_ap_id": 47,
       "unlocks": [
         "N2",
@@ -1126,12 +1126,12 @@
       ],
       "required_skills": [],
       "wave_count": 35,
-      "wiz_stash_loc_ap_id": 1047
+      "wiz_stash_loc_ap_id": 446
     },
     {
       "str_id": "N2",
       "type": "NORMAL",
-      "item_ap_id": 47,
+      "item_ap_id": 48,
       "loc_ap_id": 48,
       "unlocks": [],
       "available_gems": [
@@ -1140,12 +1140,12 @@
       ],
       "required_skills": [],
       "wave_count": 36,
-      "wiz_stash_loc_ap_id": 1048
+      "wiz_stash_loc_ap_id": 447
     },
     {
       "str_id": "N3",
       "type": "NORMAL",
-      "item_ap_id": 48,
+      "item_ap_id": 49,
       "loc_ap_id": 49,
       "unlocks": [],
       "available_gems": [
@@ -1154,12 +1154,12 @@
       ],
       "required_skills": [],
       "wave_count": 38,
-      "wiz_stash_loc_ap_id": 1049
+      "wiz_stash_loc_ap_id": 448
     },
     {
       "str_id": "N4",
       "type": "NORMAL",
-      "item_ap_id": 49,
+      "item_ap_id": 50,
       "loc_ap_id": 50,
       "unlocks": [],
       "available_gems": [
@@ -1169,12 +1169,12 @@
       ],
       "required_skills": [],
       "wave_count": 70,
-      "wiz_stash_loc_ap_id": 1050
+      "wiz_stash_loc_ap_id": 449
     },
     {
       "str_id": "N5",
       "type": "NORMAL",
-      "item_ap_id": 50,
+      "item_ap_id": 51,
       "loc_ap_id": 51,
       "unlocks": [],
       "available_gems": [
@@ -1184,12 +1184,12 @@
       ],
       "required_skills": [],
       "wave_count": 68,
-      "wiz_stash_loc_ap_id": 1051
+      "wiz_stash_loc_ap_id": 450
     },
     {
       "str_id": "P1",
       "type": "NORMAL",
-      "item_ap_id": 51,
+      "item_ap_id": 52,
       "loc_ap_id": 52,
       "unlocks": [
         "P2",
@@ -1201,12 +1201,12 @@
       ],
       "required_skills": [],
       "wave_count": 38,
-      "wiz_stash_loc_ap_id": 1052
+      "wiz_stash_loc_ap_id": 451
     },
     {
       "str_id": "P2",
       "type": "NORMAL",
-      "item_ap_id": 52,
+      "item_ap_id": 53,
       "loc_ap_id": 53,
       "unlocks": [],
       "available_gems": [
@@ -1215,12 +1215,12 @@
       ],
       "required_skills": [],
       "wave_count": 42,
-      "wiz_stash_loc_ap_id": 1053
+      "wiz_stash_loc_ap_id": 452
     },
     {
       "str_id": "P3",
       "type": "NORMAL",
-      "item_ap_id": 53,
+      "item_ap_id": 54,
       "loc_ap_id": 54,
       "unlocks": [
         "P4",
@@ -1232,12 +1232,12 @@
       ],
       "required_skills": [],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1054
+      "wiz_stash_loc_ap_id": 453
     },
     {
       "str_id": "P4",
       "type": "EPIC",
-      "item_ap_id": 54,
+      "item_ap_id": 55,
       "loc_ap_id": 55,
       "unlocks": [
         "L1"
@@ -1250,12 +1250,12 @@
       ],
       "required_skills": [],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1055
+      "wiz_stash_loc_ap_id": 454
     },
     {
       "str_id": "P5",
       "type": "NORMAL",
-      "item_ap_id": 55,
+      "item_ap_id": 56,
       "loc_ap_id": 56,
       "unlocks": [],
       "available_gems": [
@@ -1263,14 +1263,16 @@
         "Poison"
       ],
       "note": "towers can't be placed, therefore,",
-      "required_skills": ["Traps"],
+      "required_skills": [
+        "Traps"
+      ],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1056
+      "wiz_stash_loc_ap_id": 455
     },
     {
       "str_id": "L1",
       "type": "NORMAL",
-      "item_ap_id": 56,
+      "item_ap_id": 57,
       "loc_ap_id": 57,
       "unlocks": [
         "L2"
@@ -1281,12 +1283,12 @@
       ],
       "required_skills": [],
       "wave_count": 44,
-      "wiz_stash_loc_ap_id": 1057
+      "wiz_stash_loc_ap_id": 456
     },
     {
       "str_id": "L2",
       "type": "NORMAL",
-      "item_ap_id": 57,
+      "item_ap_id": 58,
       "loc_ap_id": 58,
       "unlocks": [
         "L3"
@@ -1297,12 +1299,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1058
+      "wiz_stash_loc_ap_id": 457
     },
     {
       "str_id": "L3",
       "type": "NORMAL",
-      "item_ap_id": 58,
+      "item_ap_id": 59,
       "loc_ap_id": 59,
       "unlocks": [
         "L4",
@@ -1314,12 +1316,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1059
+      "wiz_stash_loc_ap_id": 458
     },
     {
       "str_id": "L4",
       "type": "EPIC",
-      "item_ap_id": 59,
+      "item_ap_id": 60,
       "loc_ap_id": 60,
       "unlocks": [
         "K1"
@@ -1332,12 +1334,12 @@
       ],
       "required_skills": [],
       "wave_count": 50,
-      "wiz_stash_loc_ap_id": 1060
+      "wiz_stash_loc_ap_id": 459
     },
     {
       "str_id": "L5",
       "type": "EPIC",
-      "item_ap_id": 60,
+      "item_ap_id": 61,
       "loc_ap_id": 61,
       "unlocks": [
         "H1"
@@ -1355,12 +1357,12 @@
         "Barrage"
       ],
       "wave_count": 64,
-      "wiz_stash_loc_ap_id": 1061
+      "wiz_stash_loc_ap_id": 460
     },
     {
       "str_id": "K1",
       "type": "STORY_RELATED",
-      "item_ap_id": 61,
+      "item_ap_id": 62,
       "loc_ap_id": 62,
       "unlocks": [
         "K2"
@@ -1372,12 +1374,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1062
+      "wiz_stash_loc_ap_id": 461
     },
     {
       "str_id": "K2",
       "type": "NORMAL",
-      "item_ap_id": 62,
+      "item_ap_id": 63,
       "loc_ap_id": 63,
       "unlocks": [
         "K3"
@@ -1388,12 +1390,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1063
+      "wiz_stash_loc_ap_id": 462
     },
     {
       "str_id": "K3",
       "type": "NORMAL",
-      "item_ap_id": 63,
+      "item_ap_id": 64,
       "loc_ap_id": 64,
       "unlocks": [
         "K4"
@@ -1404,12 +1406,12 @@
       ],
       "required_skills": [],
       "wave_count": 50,
-      "wiz_stash_loc_ap_id": 1064
+      "wiz_stash_loc_ap_id": 463
     },
     {
       "str_id": "K4",
       "type": "EPIC",
-      "item_ap_id": 64,
+      "item_ap_id": 65,
       "loc_ap_id": 65,
       "unlocks": [
         "G1"
@@ -1422,12 +1424,12 @@
       ],
       "required_skills": [],
       "wave_count": 46,
-      "wiz_stash_loc_ap_id": 1065
+      "wiz_stash_loc_ap_id": 464
     },
     {
       "str_id": "H1",
       "type": "NORMAL",
-      "item_ap_id": 65,
+      "item_ap_id": 66,
       "loc_ap_id": 66,
       "unlocks": [
         "H2"
@@ -1439,12 +1441,12 @@
       ],
       "required_skills": [],
       "wave_count": 64,
-      "wiz_stash_loc_ap_id": 1066
+      "wiz_stash_loc_ap_id": 465
     },
     {
       "str_id": "H2",
       "type": "NORMAL",
-      "item_ap_id": 66,
+      "item_ap_id": 67,
       "loc_ap_id": 67,
       "unlocks": [
         "H3"
@@ -1456,12 +1458,12 @@
       ],
       "required_skills": [],
       "wave_count": 66,
-      "wiz_stash_loc_ap_id": 1067
+      "wiz_stash_loc_ap_id": 466
     },
     {
       "str_id": "H3",
       "type": "TILE_GIVING",
-      "item_ap_id": 67,
+      "item_ap_id": 68,
       "loc_ap_id": 68,
       "unlocks": [
         "H4"
@@ -1472,12 +1474,12 @@
       ],
       "required_skills": [],
       "wave_count": 64,
-      "wiz_stash_loc_ap_id": 1068
+      "wiz_stash_loc_ap_id": 467
     },
     {
       "str_id": "H4",
       "type": "NORMAL",
-      "item_ap_id": 68,
+      "item_ap_id": 69,
       "loc_ap_id": 69,
       "unlocks": [
         "E1"
@@ -1490,12 +1492,12 @@
       ],
       "required_skills": [],
       "wave_count": 70,
-      "wiz_stash_loc_ap_id": 1069
+      "wiz_stash_loc_ap_id": 468
     },
     {
       "str_id": "G1",
       "type": "NORMAL",
-      "item_ap_id": 69,
+      "item_ap_id": 70,
       "loc_ap_id": 70,
       "unlocks": [
         "G2",
@@ -1509,12 +1511,12 @@
       ],
       "required_skills": [],
       "wave_count": 50,
-      "wiz_stash_loc_ap_id": 1070
+      "wiz_stash_loc_ap_id": 469
     },
     {
       "str_id": "G2",
       "type": "NORMAL",
-      "item_ap_id": 70,
+      "item_ap_id": 71,
       "loc_ap_id": 71,
       "unlocks": [],
       "available_gems": [
@@ -1524,12 +1526,12 @@
       ],
       "required_skills": [],
       "wave_count": 52,
-      "wiz_stash_loc_ap_id": 1071
+      "wiz_stash_loc_ap_id": 470
     },
     {
       "str_id": "G3",
       "type": "EPIC",
-      "item_ap_id": 71,
+      "item_ap_id": 72,
       "loc_ap_id": 72,
       "unlocks": [
         "M1",
@@ -1543,12 +1545,12 @@
       ],
       "required_skills": [],
       "wave_count": 55,
-      "wiz_stash_loc_ap_id": 1072
+      "wiz_stash_loc_ap_id": 471
     },
     {
       "str_id": "G4",
       "type": "TILE_GIVING",
-      "item_ap_id": 72,
+      "item_ap_id": 73,
       "loc_ap_id": 73,
       "unlocks": [
         "F1"
@@ -1559,12 +1561,12 @@
       ],
       "required_skills": [],
       "wave_count": 56,
-      "wiz_stash_loc_ap_id": 1073
+      "wiz_stash_loc_ap_id": 472
     },
     {
       "str_id": "J1",
       "type": "NORMAL",
-      "item_ap_id": 73,
+      "item_ap_id": 74,
       "loc_ap_id": 74,
       "unlocks": [
         "J2",
@@ -1577,12 +1579,12 @@
       ],
       "required_skills": [],
       "wave_count": 55,
-      "wiz_stash_loc_ap_id": 1074
+      "wiz_stash_loc_ap_id": 473
     },
     {
       "str_id": "J2",
       "type": "NORMAL",
-      "item_ap_id": 74,
+      "item_ap_id": 75,
       "loc_ap_id": 75,
       "unlocks": [],
       "available_gems": [
@@ -1591,12 +1593,12 @@
       ],
       "required_skills": [],
       "wave_count": 54,
-      "wiz_stash_loc_ap_id": 1075
+      "wiz_stash_loc_ap_id": 474
     },
     {
       "str_id": "J3",
       "type": "NORMAL",
-      "item_ap_id": 75,
+      "item_ap_id": 76,
       "loc_ap_id": 76,
       "unlocks": [
         "J4"
@@ -1608,12 +1610,12 @@
       ],
       "required_skills": [],
       "wave_count": 56,
-      "wiz_stash_loc_ap_id": 1076
+      "wiz_stash_loc_ap_id": 475
     },
     {
       "str_id": "J4",
       "type": "TILE_GIVING",
-      "item_ap_id": 76,
+      "item_ap_id": 77,
       "loc_ap_id": 77,
       "unlocks": [],
       "available_gems": [
@@ -1623,12 +1625,12 @@
       ],
       "required_skills": [],
       "wave_count": 58,
-      "wiz_stash_loc_ap_id": 1077
+      "wiz_stash_loc_ap_id": 476
     },
     {
       "str_id": "M1",
       "type": "NORMAL",
-      "item_ap_id": 77,
+      "item_ap_id": 78,
       "loc_ap_id": 78,
       "unlocks": [
         "M2"
@@ -1640,12 +1642,12 @@
       ],
       "required_skills": [],
       "wave_count": 60,
-      "wiz_stash_loc_ap_id": 1078
+      "wiz_stash_loc_ap_id": 477
     },
     {
       "str_id": "M2",
       "type": "NORMAL",
-      "item_ap_id": 78,
+      "item_ap_id": 79,
       "loc_ap_id": 79,
       "unlocks": [
         "M3"
@@ -1657,12 +1659,12 @@
       ],
       "required_skills": [],
       "wave_count": 62,
-      "wiz_stash_loc_ap_id": 1079
+      "wiz_stash_loc_ap_id": 478
     },
     {
       "str_id": "M3",
       "type": "NORMAL",
-      "item_ap_id": 79,
+      "item_ap_id": 80,
       "loc_ap_id": 80,
       "unlocks": [
         "M4",
@@ -1675,12 +1677,12 @@
       ],
       "required_skills": [],
       "wave_count": 64,
-      "wiz_stash_loc_ap_id": 1080
+      "wiz_stash_loc_ap_id": 479
     },
     {
       "str_id": "M4",
       "type": "NORMAL",
-      "item_ap_id": 80,
+      "item_ap_id": 81,
       "loc_ap_id": 81,
       "unlocks": [
         "N4"
@@ -1692,12 +1694,12 @@
       ],
       "required_skills": [],
       "wave_count": 66,
-      "wiz_stash_loc_ap_id": 1081
+      "wiz_stash_loc_ap_id": 480
     },
     {
       "str_id": "F1",
       "type": "NORMAL",
-      "item_ap_id": 81,
+      "item_ap_id": 82,
       "loc_ap_id": 82,
       "unlocks": [
         "F2"
@@ -1709,12 +1711,12 @@
       ],
       "required_skills": [],
       "wave_count": 60,
-      "wiz_stash_loc_ap_id": 1082
+      "wiz_stash_loc_ap_id": 481
     },
     {
       "str_id": "F2",
       "type": "NORMAL",
-      "item_ap_id": 82,
+      "item_ap_id": 83,
       "loc_ap_id": 83,
       "unlocks": [],
       "available_gems": [
@@ -1724,12 +1726,12 @@
       ],
       "required_skills": [],
       "wave_count": 64,
-      "wiz_stash_loc_ap_id": 1083
+      "wiz_stash_loc_ap_id": 482
     },
     {
       "str_id": "F3",
       "type": "NORMAL",
-      "item_ap_id": 83,
+      "item_ap_id": 84,
       "loc_ap_id": 84,
       "unlocks": [
         "F4"
@@ -1741,12 +1743,12 @@
       ],
       "required_skills": [],
       "wave_count": 85,
-      "wiz_stash_loc_ap_id": 1084
+      "wiz_stash_loc_ap_id": 483
     },
     {
       "str_id": "F4",
       "type": "NORMAL",
-      "item_ap_id": 84,
+      "item_ap_id": 85,
       "loc_ap_id": 85,
       "unlocks": [],
       "available_gems": [
@@ -1756,12 +1758,12 @@
       ],
       "required_skills": [],
       "wave_count": 88,
-      "wiz_stash_loc_ap_id": 1085
+      "wiz_stash_loc_ap_id": 484
     },
     {
       "str_id": "E1",
       "type": "NORMAL",
-      "item_ap_id": 85,
+      "item_ap_id": 86,
       "loc_ap_id": 86,
       "unlocks": [
         "E2"
@@ -1773,12 +1775,12 @@
       ],
       "required_skills": [],
       "wave_count": 70,
-      "wiz_stash_loc_ap_id": 1086
+      "wiz_stash_loc_ap_id": 485
     },
     {
       "str_id": "E2",
       "type": "NORMAL",
-      "item_ap_id": 86,
+      "item_ap_id": 87,
       "loc_ap_id": 87,
       "unlocks": [
         "E3"
@@ -1790,12 +1792,12 @@
       ],
       "required_skills": [],
       "wave_count": 62,
-      "wiz_stash_loc_ap_id": 1087
+      "wiz_stash_loc_ap_id": 486
     },
     {
       "str_id": "E3",
       "type": "NORMAL",
-      "item_ap_id": 87,
+      "item_ap_id": 88,
       "loc_ap_id": 88,
       "unlocks": [
         "E4"
@@ -1807,12 +1809,12 @@
       ],
       "required_skills": [],
       "wave_count": 74,
-      "wiz_stash_loc_ap_id": 1088
+      "wiz_stash_loc_ap_id": 487
     },
     {
       "str_id": "E4",
       "type": "EPIC",
-      "item_ap_id": 88,
+      "item_ap_id": 89,
       "loc_ap_id": 89,
       "unlocks": [
         "D1",
@@ -1826,12 +1828,12 @@
       ],
       "required_skills": [],
       "wave_count": 74,
-      "wiz_stash_loc_ap_id": 1089
+      "wiz_stash_loc_ap_id": 488
     },
     {
       "str_id": "D1",
       "type": "NORMAL",
-      "item_ap_id": 89,
+      "item_ap_id": 90,
       "loc_ap_id": 90,
       "unlocks": [
         "D2"
@@ -1843,12 +1845,12 @@
       ],
       "required_skills": [],
       "wave_count": 72,
-      "wiz_stash_loc_ap_id": 1090
+      "wiz_stash_loc_ap_id": 489
     },
     {
       "str_id": "D2",
       "type": "NORMAL",
-      "item_ap_id": 90,
+      "item_ap_id": 91,
       "loc_ap_id": 91,
       "unlocks": [
         "D3",
@@ -1861,12 +1863,12 @@
       ],
       "required_skills": [],
       "wave_count": 75,
-      "wiz_stash_loc_ap_id": 1091
+      "wiz_stash_loc_ap_id": 490
     },
     {
       "str_id": "D3",
       "type": "EPIC",
-      "item_ap_id": 91,
+      "item_ap_id": 92,
       "loc_ap_id": 92,
       "unlocks": [
         "C1"
@@ -1879,12 +1881,12 @@
       ],
       "required_skills": [],
       "wave_count": 77,
-      "wiz_stash_loc_ap_id": 1092
+      "wiz_stash_loc_ap_id": 491
     },
     {
       "str_id": "D4",
       "type": "NORMAL",
-      "item_ap_id": 92,
+      "item_ap_id": 93,
       "loc_ap_id": 93,
       "unlocks": [],
       "available_gems": [
@@ -1894,12 +1896,12 @@
       ],
       "required_skills": [],
       "wave_count": 70,
-      "wiz_stash_loc_ap_id": 1093
+      "wiz_stash_loc_ap_id": 492
     },
     {
       "str_id": "B1",
       "type": "NORMAL",
-      "item_ap_id": 93,
+      "item_ap_id": 94,
       "loc_ap_id": 94,
       "unlocks": [
         "B2"
@@ -1911,12 +1913,12 @@
       ],
       "required_skills": [],
       "wave_count": 76,
-      "wiz_stash_loc_ap_id": 1094
+      "wiz_stash_loc_ap_id": 493
     },
     {
       "str_id": "B2",
       "type": "NORMAL",
-      "item_ap_id": 94,
+      "item_ap_id": 95,
       "loc_ap_id": 95,
       "unlocks": [
         "B3",
@@ -1931,12 +1933,12 @@
       ],
       "required_skills": [],
       "wave_count": 80,
-      "wiz_stash_loc_ap_id": 1095
+      "wiz_stash_loc_ap_id": 494
     },
     {
       "str_id": "B3",
       "type": "NORMAL",
-      "item_ap_id": 95,
+      "item_ap_id": 96,
       "loc_ap_id": 96,
       "unlocks": [],
       "available_gems": [
@@ -1946,12 +1948,12 @@
       ],
       "required_skills": [],
       "wave_count": 86,
-      "wiz_stash_loc_ap_id": 1096
+      "wiz_stash_loc_ap_id": 495
     },
     {
       "str_id": "B4",
       "type": "NORMAL",
-      "item_ap_id": 96,
+      "item_ap_id": 97,
       "loc_ap_id": 97,
       "unlocks": [],
       "available_gems": [
@@ -1961,12 +1963,12 @@
       ],
       "required_skills": [],
       "wave_count": 80,
-      "wiz_stash_loc_ap_id": 1097
+      "wiz_stash_loc_ap_id": 496
     },
     {
       "str_id": "C1",
       "type": "NORMAL",
-      "item_ap_id": 97,
+      "item_ap_id": 98,
       "loc_ap_id": 98,
       "unlocks": [
         "C2",
@@ -1979,12 +1981,12 @@
       ],
       "required_skills": [],
       "wave_count": 82,
-      "wiz_stash_loc_ap_id": 1098
+      "wiz_stash_loc_ap_id": 497
     },
     {
       "str_id": "C2",
       "type": "NORMAL",
-      "item_ap_id": 98,
+      "item_ap_id": 99,
       "loc_ap_id": 99,
       "unlocks": [],
       "available_gems": [
@@ -1994,12 +1996,12 @@
       ],
       "required_skills": [],
       "wave_count": 80,
-      "wiz_stash_loc_ap_id": 1099
+      "wiz_stash_loc_ap_id": 498
     },
     {
       "str_id": "C3",
       "type": "NORMAL",
-      "item_ap_id": 99,
+      "item_ap_id": 100,
       "loc_ap_id": 100,
       "unlocks": [
         "C4"
@@ -2011,12 +2013,12 @@
       ],
       "required_skills": [],
       "wave_count": 84,
-      "wiz_stash_loc_ap_id": 1100
+      "wiz_stash_loc_ap_id": 499
     },
     {
       "str_id": "C4",
       "type": "TILE_GIVING",
-      "item_ap_id": 100,
+      "item_ap_id": 101,
       "loc_ap_id": 101,
       "unlocks": [
         "C5"
@@ -2028,12 +2030,12 @@
       ],
       "required_skills": [],
       "wave_count": 87,
-      "wiz_stash_loc_ap_id": 1101
+      "wiz_stash_loc_ap_id": 500
     },
     {
       "str_id": "C5",
       "type": "EPIC",
-      "item_ap_id": 101,
+      "item_ap_id": 102,
       "loc_ap_id": 102,
       "unlocks": [
         "A1"
@@ -2046,12 +2048,12 @@
       ],
       "required_skills": [],
       "wave_count": 90,
-      "wiz_stash_loc_ap_id": 1102
+      "wiz_stash_loc_ap_id": 501
     },
     {
       "str_id": "A1",
       "type": "NORMAL",
-      "item_ap_id": 102,
+      "item_ap_id": 103,
       "loc_ap_id": 103,
       "unlocks": [
         "A2"
@@ -2065,12 +2067,12 @@
       ],
       "required_skills": [],
       "wave_count": 90,
-      "wiz_stash_loc_ap_id": 1103
+      "wiz_stash_loc_ap_id": 502
     },
     {
       "str_id": "A2",
       "type": "NORMAL",
-      "item_ap_id": 103,
+      "item_ap_id": 104,
       "loc_ap_id": 104,
       "unlocks": [
         "A3"
@@ -2084,12 +2086,12 @@
       ],
       "required_skills": [],
       "wave_count": 90,
-      "wiz_stash_loc_ap_id": 1104
+      "wiz_stash_loc_ap_id": 503
     },
     {
       "str_id": "A3",
       "type": "NORMAL",
-      "item_ap_id": 104,
+      "item_ap_id": 105,
       "loc_ap_id": 105,
       "unlocks": [
         "A4"
@@ -2103,12 +2105,12 @@
       ],
       "required_skills": [],
       "wave_count": 90,
-      "wiz_stash_loc_ap_id": 1105
+      "wiz_stash_loc_ap_id": 504
     },
     {
       "str_id": "A4",
       "type": "NORMAL",
-      "item_ap_id": 105,
+      "item_ap_id": 106,
       "loc_ap_id": 106,
       "unlocks": [],
       "available_gems": [
@@ -2121,12 +2123,12 @@
       ],
       "required_skills": [],
       "wave_count": 100,
-      "wiz_stash_loc_ap_id": 1106
+      "wiz_stash_loc_ap_id": 505
     },
     {
       "str_id": "I2",
       "type": "NORMAL",
-      "item_ap_id": 106,
+      "item_ap_id": 107,
       "loc_ap_id": 107,
       "unlocks": [
         "I3"
@@ -2138,12 +2140,12 @@
       ],
       "required_skills": [],
       "wave_count": 78,
-      "wiz_stash_loc_ap_id": 1107
+      "wiz_stash_loc_ap_id": 506
     },
     {
       "str_id": "I3",
       "type": "NORMAL",
-      "item_ap_id": 107,
+      "item_ap_id": 108,
       "loc_ap_id": 108,
       "unlocks": [
         "I4"
@@ -2155,12 +2157,12 @@
       ],
       "required_skills": [],
       "wave_count": 80,
-      "wiz_stash_loc_ap_id": 1108
+      "wiz_stash_loc_ap_id": 507
     },
     {
       "str_id": "I4",
       "type": "NORMAL",
-      "item_ap_id": 108,
+      "item_ap_id": 109,
       "loc_ap_id": 109,
       "unlocks": [],
       "available_gems": [
@@ -2168,26 +2170,26 @@
       ],
       "required_skills": [],
       "wave_count": 82,
-      "wiz_stash_loc_ap_id": 1109
+      "wiz_stash_loc_ap_id": 508
     },
     {
       "str_id": "Z5",
       "type": "SECRET",
       "item_ap_id": 110,
-      "loc_ap_id": 111,
+      "loc_ap_id": 110,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDZ5 in Z4 trial drop)",
       "available_gems": [
         "Leech"
       ],
       "required_skills": [],
       "wave_count": 50,
-      "wiz_stash_loc_ap_id": 1111
+      "wiz_stash_loc_ap_id": 509
     },
     {
       "str_id": "T5",
       "type": "SECRET",
       "item_ap_id": 111,
-      "loc_ap_id": 112,
+      "loc_ap_id": 111,
       "note": "Secret \u00e2\u20ac\u201d trial-locked",
       "available_gems": [
         "Armor Tear",
@@ -2196,13 +2198,13 @@
       ],
       "required_skills": [],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1112
+      "wiz_stash_loc_ap_id": 510
     },
     {
       "str_id": "R6",
       "type": "SECRET",
       "item_ap_id": 112,
-      "loc_ap_id": 113,
+      "loc_ap_id": 112,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDR6 in N1 trial drop)",
       "available_gems": [
         "Crit",
@@ -2211,13 +2213,13 @@
       ],
       "required_skills": [],
       "wave_count": 36,
-      "wiz_stash_loc_ap_id": 1113
+      "wiz_stash_loc_ap_id": 511
     },
     {
       "str_id": "P6",
       "type": "SECRET",
       "item_ap_id": 113,
-      "loc_ap_id": 114,
+      "loc_ap_id": 113,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDP6 in P5 trial drop)",
       "available_gems": [
         "Crit",
@@ -2229,13 +2231,13 @@
       ],
       "required_skills": [],
       "wave_count": 40,
-      "wiz_stash_loc_ap_id": 1114
+      "wiz_stash_loc_ap_id": 512
     },
     {
       "str_id": "K5",
       "type": "SECRET",
       "item_ap_id": 114,
-      "loc_ap_id": 115,
+      "loc_ap_id": 114,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDK5 in G2 trial drop)",
       "available_gems": [
         "Crit",
@@ -2243,13 +2245,13 @@
       ],
       "required_skills": [],
       "wave_count": 54,
-      "wiz_stash_loc_ap_id": 1115
+      "wiz_stash_loc_ap_id": 513
     },
     {
       "str_id": "H5",
       "type": "SECRET",
       "item_ap_id": 115,
-      "loc_ap_id": 116,
+      "loc_ap_id": 115,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDH5 in H2 trial drop)",
       "available_gems": [
         "Crit",
@@ -2261,13 +2263,13 @@
       ],
       "required_skills": [],
       "wave_count": 68,
-      "wiz_stash_loc_ap_id": 1116
+      "wiz_stash_loc_ap_id": 514
     },
     {
       "str_id": "F5",
       "type": "SECRET",
-      "item_ap_id": 117,
-      "loc_ap_id": 118,
+      "item_ap_id": 116,
+      "loc_ap_id": 116,
       "note": "Secret \u00e2\u20ac\u201d trial-locked",
       "available_gems": [
         "Crit",
@@ -2279,13 +2281,13 @@
       ],
       "required_skills": [],
       "wave_count": 90,
-      "wiz_stash_loc_ap_id": 1118
+      "wiz_stash_loc_ap_id": 515
     },
     {
       "str_id": "E5",
       "type": "SECRET",
-      "item_ap_id": 118,
-      "loc_ap_id": 119,
+      "item_ap_id": 117,
+      "loc_ap_id": 117,
       "note": "Secret \u00e2\u20ac\u201d trial-locked",
       "available_gems": [
         "Crit",
@@ -2293,13 +2295,13 @@
       ],
       "required_skills": [],
       "wave_count": 78,
-      "wiz_stash_loc_ap_id": 1119
+      "wiz_stash_loc_ap_id": 516
     },
     {
       "str_id": "B5",
       "type": "SECRET",
-      "item_ap_id": 119,
-      "loc_ap_id": 120,
+      "item_ap_id": 118,
+      "loc_ap_id": 118,
       "note": "Secret \u00e2\u20ac\u201d trial-locked (FLDB5 in B2 trial drop)",
       "available_gems": [
         "Crit",
@@ -2311,13 +2313,13 @@
       ],
       "required_skills": [],
       "wave_count": 84,
-      "wiz_stash_loc_ap_id": 1120
+      "wiz_stash_loc_ap_id": 517
     },
     {
       "str_id": "A5",
       "type": "NORMAL",
-      "item_ap_id": 120,
-      "loc_ap_id": 121,
+      "item_ap_id": 119,
+      "loc_ap_id": 119,
       "note": "Trial-locked (FLDA5 in A3 trial drop)",
       "available_gems": [
         "Armor Tear",
@@ -2326,13 +2328,13 @@
       ],
       "required_skills": [],
       "wave_count": 96,
-      "wiz_stash_loc_ap_id": 1121
+      "wiz_stash_loc_ap_id": 518
     },
     {
       "str_id": "A6",
       "type": "NORMAL",
-      "item_ap_id": 121,
-      "loc_ap_id": 122,
+      "item_ap_id": 120,
+      "loc_ap_id": 120,
       "note": "Trial-locked (FLDA6 in A4 trial drop)",
       "available_gems": [
         "Crit",
@@ -2341,13 +2343,13 @@
       ],
       "required_skills": [],
       "wave_count": 99,
-      "wiz_stash_loc_ap_id": 1122
+      "wiz_stash_loc_ap_id": 519
     },
     {
       "str_id": "I1",
       "type": "NORMAL",
-      "item_ap_id": 122,
-      "loc_ap_id": 123,
+      "item_ap_id": 121,
+      "loc_ap_id": 121,
       "note": "Trial-locked (FLDI1); accessible via AP token",
       "unlocks": [
         "I2"
@@ -2359,13 +2361,13 @@
       ],
       "required_skills": [],
       "wave_count": 76,
-      "wiz_stash_loc_ap_id": 1123
+      "wiz_stash_loc_ap_id": 520
     },
     {
       "str_id": "D5",
       "type": "NORMAL",
-      "item_ap_id": 123,
-      "loc_ap_id": 124,
+      "item_ap_id": 122,
+      "loc_ap_id": 122,
       "note": "Trial-locked (FLDD5); accessible via AP token",
       "unlocks": [],
       "available_gems": [
@@ -2375,274 +2377,274 @@
       ],
       "required_skills": [],
       "wave_count": 78,
-      "wiz_stash_loc_ap_id": 1124
+      "wiz_stash_loc_ap_id": 521
     }
   ],
   "talisman_fragments": [
     {
       "str_id": "Z3",
       "tal_data": "5596544/26/2/0",
-      "item_ap_id": 700
+      "item_ap_id": 900
     },
     {
       "str_id": "Y2",
       "tal_data": "2793153/22/2/0",
-      "item_ap_id": 701
+      "item_ap_id": 901
     },
     {
       "str_id": "X2",
       "tal_data": "4060042/10/0/0",
-      "item_ap_id": 702
+      "item_ap_id": 902
     },
     {
       "str_id": "X3",
       "tal_data": "1213731/18/0/0",
-      "item_ap_id": 703
+      "item_ap_id": 903
     },
     {
       "str_id": "W3",
       "tal_data": "7645726/26/2/0",
-      "item_ap_id": 704
+      "item_ap_id": 904
     },
     {
       "str_id": "W4",
       "tal_data": "3148296/27/2/0",
-      "item_ap_id": 705
+      "item_ap_id": 905
     },
     {
       "str_id": "V2",
       "tal_data": "4506709/21/2/0",
-      "item_ap_id": 706
+      "item_ap_id": 906
     },
     {
       "str_id": "V3",
       "tal_data": "7331006/21/2/0",
-      "item_ap_id": 707
+      "item_ap_id": 907
     },
     {
       "str_id": "U1",
       "tal_data": "7753950/25/2/0",
-      "item_ap_id": 708
+      "item_ap_id": 908
     },
     {
       "str_id": "U2",
       "tal_data": "1248263/40/2/0",
-      "item_ap_id": 709
+      "item_ap_id": 909
     },
     {
       "str_id": "T2",
       "tal_data": "4195788/27/2/0",
-      "item_ap_id": 710
+      "item_ap_id": 910
     },
     {
       "str_id": "T5",
       "tal_data": "5698871/20/2/0",
-      "item_ap_id": 711
+      "item_ap_id": 911
     },
     {
       "str_id": "S1",
       "tal_data": "9198804/26/2/0",
-      "item_ap_id": 712
+      "item_ap_id": 912
     },
     {
       "str_id": "R2",
       "tal_data": "3244225/29/2/0",
-      "item_ap_id": 713
+      "item_ap_id": 913
     },
     {
       "str_id": "R5",
       "tal_data": "3791266/33/2/0",
-      "item_ap_id": 714
+      "item_ap_id": 914
     },
     {
       "str_id": "R6",
       "tal_data": "6164496/41/2/0",
-      "item_ap_id": 715
+      "item_ap_id": 915
     },
     {
       "str_id": "Q3",
       "tal_data": "7944004/24/2/0",
-      "item_ap_id": 716
+      "item_ap_id": 916
     },
     {
       "str_id": "Q4",
       "tal_data": "4355351/25/2/0",
-      "item_ap_id": 717
+      "item_ap_id": 917
     },
     {
       "str_id": "Q5",
       "tal_data": "9735136/20/2/0",
-      "item_ap_id": 718
+      "item_ap_id": 918
     },
     {
       "str_id": "P2",
       "tal_data": "1874734/45/0/0",
-      "item_ap_id": 719
+      "item_ap_id": 919
     },
     {
       "str_id": "P6",
       "tal_data": "8575503/54/2/0",
-      "item_ap_id": 720
+      "item_ap_id": 920
     },
     {
       "str_id": "O1",
       "tal_data": "1839121/24/0/0",
-      "item_ap_id": 721
+      "item_ap_id": 921
     },
     {
       "str_id": "O3",
       "tal_data": "5859868/29/2/0",
-      "item_ap_id": 722
+      "item_ap_id": 922
     },
     {
       "str_id": "O4",
       "tal_data": "9854612/38/2/0",
-      "item_ap_id": 723
+      "item_ap_id": 923
     },
     {
       "str_id": "N2",
       "tal_data": "4938632/48/2/0",
-      "item_ap_id": 724
+      "item_ap_id": 924
     },
     {
       "str_id": "N4",
       "tal_data": "2470718/51/0/0",
-      "item_ap_id": 725
+      "item_ap_id": 925
     },
     {
       "str_id": "M2",
       "tal_data": "2756634/66/0/0",
-      "item_ap_id": 726
+      "item_ap_id": 926
     },
     {
       "str_id": "M4",
       "tal_data": "7892093/59/1/0",
-      "item_ap_id": 727
+      "item_ap_id": 927
     },
     {
       "str_id": "L1",
       "tal_data": "7513618/42/2/0",
-      "item_ap_id": 728
+      "item_ap_id": 928
     },
     {
       "str_id": "L4",
       "tal_data": "6704065/48/2/0",
-      "item_ap_id": 729
+      "item_ap_id": 929
     },
     {
       "str_id": "L5",
       "tal_data": "5981897/71/0/0",
-      "item_ap_id": 730
+      "item_ap_id": 930
     },
     {
       "str_id": "K2",
       "tal_data": "7713409/44/0/0",
-      "item_ap_id": 731
+      "item_ap_id": 931
     },
     {
       "str_id": "K3",
       "tal_data": "2602399/39/1/0",
-      "item_ap_id": 732
+      "item_ap_id": 932
     },
     {
       "str_id": "K4",
       "tal_data": "8848960/49/2/0",
-      "item_ap_id": 733
+      "item_ap_id": 933
     },
     {
       "str_id": "J2",
       "tal_data": "4059357/69/0/0",
-      "item_ap_id": 734
+      "item_ap_id": 934
     },
     {
       "str_id": "J3",
       "tal_data": "1074246/57/1/0",
-      "item_ap_id": 735
+      "item_ap_id": 935
     },
     {
       "str_id": "I1",
       "tal_data": "6047887/79/0/0",
-      "item_ap_id": 736
+      "item_ap_id": 936
     },
     {
       "str_id": "H5",
       "tal_data": "5860063/79/2/0",
-      "item_ap_id": 737
+      "item_ap_id": 937
     },
     {
       "str_id": "G1",
       "tal_data": "4559977/49/2/0",
-      "item_ap_id": 738
+      "item_ap_id": 938
     },
     {
       "str_id": "G4",
       "tal_data": "3492165/55/2/0",
-      "item_ap_id": 739
+      "item_ap_id": 939
     },
     {
       "str_id": "F1",
       "tal_data": "3210578/58/0/0",
-      "item_ap_id": 740
+      "item_ap_id": 940
     },
     {
       "str_id": "F5",
       "tal_data": "2720683/97/2/0",
-      "item_ap_id": 741
+      "item_ap_id": 941
     },
     {
       "str_id": "E1",
       "tal_data": "1034270/73/0/0",
-      "item_ap_id": 742
+      "item_ap_id": 942
     },
     {
       "str_id": "E5",
       "tal_data": "7958565/71/1/0",
-      "item_ap_id": 743
+      "item_ap_id": 943
     },
     {
       "str_id": "D2",
       "tal_data": "3425853/82/0/0",
-      "item_ap_id": 744
+      "item_ap_id": 944
     },
     {
       "str_id": "D3",
       "tal_data": "1258641/89/2/0",
-      "item_ap_id": 745
+      "item_ap_id": 945
     },
     {
       "str_id": "C2",
       "tal_data": "4202319/85/1/0",
-      "item_ap_id": 746
+      "item_ap_id": 946
     },
     {
       "str_id": "C5",
       "tal_data": "5697989/88/1/0",
-      "item_ap_id": 747
+      "item_ap_id": 947
     },
     {
       "str_id": "B1",
       "tal_data": "5649923/74/2/0",
-      "item_ap_id": 748
+      "item_ap_id": 948
     },
     {
       "str_id": "B3",
       "tal_data": "9397020/80/2/0",
-      "item_ap_id": 749
+      "item_ap_id": 949
     },
     {
       "str_id": "A1",
       "tal_data": "6257243/88/2/0",
-      "item_ap_id": 750
+      "item_ap_id": 950
     },
     {
       "str_id": "A5",
       "tal_data": "9737695/96/2/3",
-      "item_ap_id": 751
+      "item_ap_id": 951
     },
     {
       "str_id": "A6",
       "tal_data": "1438882/100/2/3",
-      "item_ap_id": 752
+      "item_ap_id": 952
     }
   ],
   "shadow_core_stashes": [
@@ -2656,7 +2658,7 @@
         120
       ],
       "total": 480,
-      "item_ap_id": 800
+      "item_ap_id": 1000
     },
     {
       "str_id": "X1",
@@ -2669,7 +2671,7 @@
         80
       ],
       "total": 330,
-      "item_ap_id": 801
+      "item_ap_id": 1001
     },
     {
       "str_id": "W2",
@@ -2680,7 +2682,7 @@
         30
       ],
       "total": 120,
-      "item_ap_id": 802
+      "item_ap_id": 1002
     },
     {
       "str_id": "U4",
@@ -2691,7 +2693,7 @@
         70
       ],
       "total": 290,
-      "item_ap_id": 803
+      "item_ap_id": 1003
     },
     {
       "str_id": "S3",
@@ -2702,7 +2704,7 @@
         30
       ],
       "total": 180,
-      "item_ap_id": 804
+      "item_ap_id": 1004
     },
     {
       "str_id": "R1",
@@ -2712,7 +2714,7 @@
         50
       ],
       "total": 200,
-      "item_ap_id": 805
+      "item_ap_id": 1005
     },
     {
       "str_id": "Q2",
@@ -2722,7 +2724,7 @@
         100
       ],
       "total": 300,
-      "item_ap_id": 806
+      "item_ap_id": 1006
     },
     {
       "str_id": "P3",
@@ -2735,7 +2737,7 @@
         70
       ],
       "total": 480,
-      "item_ap_id": 807
+      "item_ap_id": 1007
     },
     {
       "str_id": "M1",
@@ -2745,7 +2747,7 @@
         330
       ],
       "total": 660,
-      "item_ap_id": 808
+      "item_ap_id": 1008
     },
     {
       "str_id": "L2",
@@ -2757,7 +2759,7 @@
         100
       ],
       "total": 600,
-      "item_ap_id": 809
+      "item_ap_id": 1009
     },
     {
       "str_id": "K5",
@@ -2770,7 +2772,7 @@
         120
       ],
       "total": 720,
-      "item_ap_id": 810
+      "item_ap_id": 1010
     },
     {
       "str_id": "I3",
@@ -2781,7 +2783,7 @@
         240
       ],
       "total": 840,
-      "item_ap_id": 811
+      "item_ap_id": 1011
     },
     {
       "str_id": "H1",
@@ -2792,7 +2794,7 @@
         200
       ],
       "total": 800,
-      "item_ap_id": 812
+      "item_ap_id": 1012
     },
     {
       "str_id": "F3",
@@ -2802,7 +2804,7 @@
         500
       ],
       "total": 1000,
-      "item_ap_id": 813
+      "item_ap_id": 1013
     },
     {
       "str_id": "C1",
@@ -2812,7 +2814,7 @@
         333
       ],
       "total": 1000,
-      "item_ap_id": 814
+      "item_ap_id": 1014
     },
     {
       "str_id": "B4",
@@ -2824,7 +2826,7 @@
         280
       ],
       "total": 900,
-      "item_ap_id": 815
+      "item_ap_id": 1015
     },
     {
       "str_id": "A2",
@@ -2835,7 +2837,7 @@
         300
       ],
       "total": 1200,
-      "item_ap_id": 816
+      "item_ap_id": 1016
     }
   ],
   "extra_talisman_fragments": [
@@ -2843,545 +2845,545 @@
       "name": "Extra Talisman Fragment #1",
       "seed": 900001,
       "tal_data": "900001/2/0/0",
-      "item_ap_id": 753
+      "item_ap_id": 1200
     },
     {
       "name": "Extra Talisman Fragment #2",
       "seed": 900002,
       "tal_data": "900002/4/1/0",
-      "item_ap_id": 754
+      "item_ap_id": 1201
     },
     {
       "name": "Extra Talisman Fragment #3",
       "seed": 900003,
       "tal_data": "900003/6/2/0",
-      "item_ap_id": 755
+      "item_ap_id": 1202
     },
     {
       "name": "Extra Talisman Fragment #4",
       "seed": 900004,
       "tal_data": "900004/8/0/0",
-      "item_ap_id": 756
+      "item_ap_id": 1203
     },
     {
       "name": "Extra Talisman Fragment #5",
       "seed": 900005,
       "tal_data": "900005/10/1/0",
-      "item_ap_id": 757
+      "item_ap_id": 1204
     },
     {
       "name": "Extra Talisman Fragment #6",
       "seed": 900006,
       "tal_data": "900006/12/2/0",
-      "item_ap_id": 758
+      "item_ap_id": 1205
     },
     {
       "name": "Extra Talisman Fragment #7",
       "seed": 900007,
       "tal_data": "900007/14/0/0",
-      "item_ap_id": 759
+      "item_ap_id": 1206
     },
     {
       "name": "Extra Talisman Fragment #8",
       "seed": 900008,
       "tal_data": "900008/16/1/0",
-      "item_ap_id": 760
+      "item_ap_id": 1207
     },
     {
       "name": "Extra Talisman Fragment #9",
       "seed": 900009,
       "tal_data": "900009/18/2/0",
-      "item_ap_id": 761
+      "item_ap_id": 1208
     },
     {
       "name": "Extra Talisman Fragment #10",
       "seed": 900010,
       "tal_data": "900010/20/0/0",
-      "item_ap_id": 762
+      "item_ap_id": 1209
     },
     {
       "name": "Extra Talisman Fragment #11",
       "seed": 900011,
       "tal_data": "900011/22/1/0",
-      "item_ap_id": 763
+      "item_ap_id": 1210
     },
     {
       "name": "Extra Talisman Fragment #12",
       "seed": 900012,
       "tal_data": "900012/24/2/0",
-      "item_ap_id": 764
+      "item_ap_id": 1211
     },
     {
       "name": "Extra Talisman Fragment #13",
       "seed": 900013,
       "tal_data": "900013/26/0/0",
-      "item_ap_id": 765
+      "item_ap_id": 1212
     },
     {
       "name": "Extra Talisman Fragment #14",
       "seed": 900014,
       "tal_data": "900014/28/1/0",
-      "item_ap_id": 766
+      "item_ap_id": 1213
     },
     {
       "name": "Extra Talisman Fragment #15",
       "seed": 900015,
       "tal_data": "900015/30/2/0",
-      "item_ap_id": 767
+      "item_ap_id": 1214
     },
     {
       "name": "Extra Talisman Fragment #16",
       "seed": 900016,
       "tal_data": "900016/32/0/0",
-      "item_ap_id": 768
+      "item_ap_id": 1215
     },
     {
       "name": "Extra Talisman Fragment #17",
       "seed": 900017,
       "tal_data": "900017/34/1/0",
-      "item_ap_id": 769
+      "item_ap_id": 1216
     },
     {
       "name": "Extra Talisman Fragment #18",
       "seed": 900018,
       "tal_data": "900018/36/2/0",
-      "item_ap_id": 770
+      "item_ap_id": 1217
     },
     {
       "name": "Extra Talisman Fragment #19",
       "seed": 900019,
       "tal_data": "900019/38/0/0",
-      "item_ap_id": 771
+      "item_ap_id": 1218
     },
     {
       "name": "Extra Talisman Fragment #20",
       "seed": 900020,
       "tal_data": "900020/40/1/0",
-      "item_ap_id": 772
+      "item_ap_id": 1219
     },
     {
       "name": "Extra Talisman Fragment #21",
       "seed": 900021,
       "tal_data": "900021/42/2/0",
-      "item_ap_id": 773
+      "item_ap_id": 1220
     },
     {
       "name": "Extra Talisman Fragment #22",
       "seed": 900022,
       "tal_data": "900022/44/0/0",
-      "item_ap_id": 774
+      "item_ap_id": 1221
     },
     {
       "name": "Extra Talisman Fragment #23",
       "seed": 900023,
       "tal_data": "900023/46/1/0",
-      "item_ap_id": 775
+      "item_ap_id": 1222
     },
     {
       "name": "Extra Talisman Fragment #24",
       "seed": 900024,
       "tal_data": "900024/48/2/0",
-      "item_ap_id": 776
+      "item_ap_id": 1223
     },
     {
       "name": "Extra Talisman Fragment #25",
       "seed": 900025,
       "tal_data": "900025/50/0/0",
-      "item_ap_id": 777
+      "item_ap_id": 1224
     },
     {
       "name": "Extra Talisman Fragment #26",
       "seed": 900026,
       "tal_data": "900026/52/1/0",
-      "item_ap_id": 778
+      "item_ap_id": 1225
     },
     {
       "name": "Extra Talisman Fragment #27",
       "seed": 900027,
       "tal_data": "900027/54/2/0",
-      "item_ap_id": 779
+      "item_ap_id": 1226
     },
     {
       "name": "Extra Talisman Fragment #28",
       "seed": 900028,
       "tal_data": "900028/56/0/0",
-      "item_ap_id": 780
+      "item_ap_id": 1227
     },
     {
       "name": "Extra Talisman Fragment #29",
       "seed": 900029,
       "tal_data": "900029/58/1/0",
-      "item_ap_id": 781
+      "item_ap_id": 1228
     },
     {
       "name": "Extra Talisman Fragment #30",
       "seed": 900030,
       "tal_data": "900030/60/2/0",
-      "item_ap_id": 782
+      "item_ap_id": 1229
     },
     {
       "name": "Extra Talisman Fragment #31",
       "seed": 900031,
       "tal_data": "900031/62/0/0",
-      "item_ap_id": 783
+      "item_ap_id": 1230
     },
     {
       "name": "Extra Talisman Fragment #32",
       "seed": 900032,
       "tal_data": "900032/64/1/0",
-      "item_ap_id": 784
+      "item_ap_id": 1231
     },
     {
       "name": "Extra Talisman Fragment #33",
       "seed": 900033,
       "tal_data": "900033/66/2/0",
-      "item_ap_id": 785
+      "item_ap_id": 1232
     },
     {
       "name": "Extra Talisman Fragment #34",
       "seed": 900034,
       "tal_data": "900034/68/0/0",
-      "item_ap_id": 786
+      "item_ap_id": 1233
     },
     {
       "name": "Extra Talisman Fragment #35",
       "seed": 900035,
       "tal_data": "900035/70/1/0",
-      "item_ap_id": 787
+      "item_ap_id": 1234
     },
     {
       "name": "Extra Talisman Fragment #36",
       "seed": 900036,
       "tal_data": "900036/72/2/0",
-      "item_ap_id": 788
+      "item_ap_id": 1235
     },
     {
       "name": "Extra Talisman Fragment #37",
       "seed": 900037,
       "tal_data": "900037/74/0/0",
-      "item_ap_id": 789
+      "item_ap_id": 1236
     },
     {
       "name": "Extra Talisman Fragment #38",
       "seed": 900038,
       "tal_data": "900038/76/1/0",
-      "item_ap_id": 790
+      "item_ap_id": 1237
     },
     {
       "name": "Extra Talisman Fragment #39",
       "seed": 900039,
       "tal_data": "900039/78/2/0",
-      "item_ap_id": 791
+      "item_ap_id": 1238
     },
     {
       "name": "Extra Talisman Fragment #40",
       "seed": 900040,
       "tal_data": "900040/80/0/0",
-      "item_ap_id": 792
+      "item_ap_id": 1239
     },
     {
       "name": "Extra Talisman Fragment #41",
       "seed": 900041,
       "tal_data": "900041/82/1/0",
-      "item_ap_id": 793
+      "item_ap_id": 1240
     },
     {
       "name": "Extra Talisman Fragment #42",
       "seed": 900042,
       "tal_data": "900042/84/2/0",
-      "item_ap_id": 794
+      "item_ap_id": 1241
     },
     {
       "name": "Extra Talisman Fragment #43",
       "seed": 900043,
       "tal_data": "900043/86/0/0",
-      "item_ap_id": 795
+      "item_ap_id": 1242
     },
     {
       "name": "Extra Talisman Fragment #44",
       "seed": 900044,
       "tal_data": "900044/88/1/0",
-      "item_ap_id": 796
+      "item_ap_id": 1243
     },
     {
       "name": "Extra Talisman Fragment #45",
       "seed": 900045,
       "tal_data": "900045/90/2/0",
-      "item_ap_id": 797
+      "item_ap_id": 1244
     },
     {
       "name": "Extra Talisman Fragment #46",
       "seed": 900046,
       "tal_data": "900046/92/0/0",
-      "item_ap_id": 798
+      "item_ap_id": 1245
     },
     {
       "name": "Extra Talisman Fragment #47",
       "seed": 900047,
       "tal_data": "900047/94/1/0",
-      "item_ap_id": 799
+      "item_ap_id": 1246
     }
   ],
   "extra_shadow_core_stashes": [
     {
       "name": "Extra Shadow Cores #1",
       "amount": 60,
-      "item_ap_id": 817
+      "item_ap_id": 1300
     },
     {
       "name": "Extra Shadow Cores #2",
       "amount": 80,
-      "item_ap_id": 818
+      "item_ap_id": 1301
     },
     {
       "name": "Extra Shadow Cores #3",
       "amount": 100,
-      "item_ap_id": 819
+      "item_ap_id": 1302
     },
     {
       "name": "Extra Shadow Cores #4",
       "amount": 120,
-      "item_ap_id": 820
+      "item_ap_id": 1303
     },
     {
       "name": "Extra Shadow Cores #5",
       "amount": 140,
-      "item_ap_id": 821
+      "item_ap_id": 1304
     },
     {
       "name": "Extra Shadow Cores #6",
       "amount": 160,
-      "item_ap_id": 822
+      "item_ap_id": 1305
     },
     {
       "name": "Extra Shadow Cores #7",
       "amount": 180,
-      "item_ap_id": 823
+      "item_ap_id": 1306
     },
     {
       "name": "Extra Shadow Cores #8",
       "amount": 200,
-      "item_ap_id": 824
+      "item_ap_id": 1307
     },
     {
       "name": "Extra Shadow Cores #9",
       "amount": 220,
-      "item_ap_id": 825
+      "item_ap_id": 1308
     },
     {
       "name": "Extra Shadow Cores #10",
       "amount": 240,
-      "item_ap_id": 826
+      "item_ap_id": 1309
     },
     {
       "name": "Extra Shadow Cores #11",
       "amount": 260,
-      "item_ap_id": 827
+      "item_ap_id": 1310
     },
     {
       "name": "Extra Shadow Cores #12",
       "amount": 280,
-      "item_ap_id": 828
+      "item_ap_id": 1311
     },
     {
       "name": "Extra Shadow Cores #13",
       "amount": 300,
-      "item_ap_id": 829
+      "item_ap_id": 1312
     },
     {
       "name": "Extra Shadow Cores #14",
       "amount": 320,
-      "item_ap_id": 830
+      "item_ap_id": 1313
     },
     {
       "name": "Extra Shadow Cores #15",
       "amount": 340,
-      "item_ap_id": 831
+      "item_ap_id": 1314
     },
     {
       "name": "Extra Shadow Cores #16",
       "amount": 360,
-      "item_ap_id": 832
+      "item_ap_id": 1315
     },
     {
       "name": "Extra Shadow Cores #17",
       "amount": 380,
-      "item_ap_id": 833
+      "item_ap_id": 1316
     },
     {
       "name": "Extra Shadow Cores #18",
       "amount": 400,
-      "item_ap_id": 834
+      "item_ap_id": 1317
     },
     {
       "name": "Extra Shadow Cores #19",
       "amount": 420,
-      "item_ap_id": 835
+      "item_ap_id": 1318
     },
     {
       "name": "Extra Shadow Cores #20",
       "amount": 440,
-      "item_ap_id": 836
+      "item_ap_id": 1319
     },
     {
       "name": "Extra Shadow Cores #21",
       "amount": 460,
-      "item_ap_id": 837
+      "item_ap_id": 1320
     },
     {
       "name": "Extra Shadow Cores #22",
       "amount": 480,
-      "item_ap_id": 838
+      "item_ap_id": 1321
     },
     {
       "name": "Extra Shadow Cores #23",
       "amount": 500,
-      "item_ap_id": 839
+      "item_ap_id": 1322
     },
     {
       "name": "Extra Shadow Cores #24",
       "amount": 520,
-      "item_ap_id": 840
+      "item_ap_id": 1323
     },
     {
       "name": "Extra Shadow Cores #25",
       "amount": 540,
-      "item_ap_id": 841
+      "item_ap_id": 1324
     },
     {
       "name": "Extra Shadow Cores #26",
       "amount": 560,
-      "item_ap_id": 842
+      "item_ap_id": 1325
     },
     {
       "name": "Extra Shadow Cores #27",
       "amount": 580,
-      "item_ap_id": 843
+      "item_ap_id": 1326
     },
     {
       "name": "Extra Shadow Cores #28",
       "amount": 600,
-      "item_ap_id": 844
+      "item_ap_id": 1327
     },
     {
       "name": "Extra Shadow Cores #29",
       "amount": 620,
-      "item_ap_id": 845
+      "item_ap_id": 1328
     },
     {
       "name": "Extra Shadow Cores #30",
       "amount": 640,
-      "item_ap_id": 846
+      "item_ap_id": 1329
     },
     {
       "name": "Extra Shadow Cores #31",
       "amount": 660,
-      "item_ap_id": 847
+      "item_ap_id": 1330
     },
     {
       "name": "Extra Shadow Cores #32",
       "amount": 680,
-      "item_ap_id": 848
+      "item_ap_id": 1331
     },
     {
       "name": "Extra Shadow Cores #33",
       "amount": 700,
-      "item_ap_id": 849
+      "item_ap_id": 1332
     },
     {
       "name": "Extra Shadow Cores #34",
       "amount": 720,
-      "item_ap_id": 850
+      "item_ap_id": 1333
     },
     {
       "name": "Extra Shadow Cores #35",
       "amount": 740,
-      "item_ap_id": 851
+      "item_ap_id": 1334
     },
     {
       "name": "Extra Shadow Cores #36",
       "amount": 760,
-      "item_ap_id": 852
+      "item_ap_id": 1335
     },
     {
       "name": "Extra Shadow Cores #37",
       "amount": 780,
-      "item_ap_id": 853
+      "item_ap_id": 1336
     },
     {
       "name": "Extra Shadow Cores #38",
       "amount": 800,
-      "item_ap_id": 854
+      "item_ap_id": 1337
     },
     {
       "name": "Extra Shadow Cores #39",
       "amount": 820,
-      "item_ap_id": 855
+      "item_ap_id": 1338
     },
     {
       "name": "Extra Shadow Cores #40",
       "amount": 840,
-      "item_ap_id": 856
+      "item_ap_id": 1339
     },
     {
       "name": "Extra Shadow Cores #41",
       "amount": 860,
-      "item_ap_id": 857
+      "item_ap_id": 1340
     },
     {
       "name": "Extra Shadow Cores #42",
       "amount": 880,
-      "item_ap_id": 858
+      "item_ap_id": 1341
     },
     {
       "name": "Extra Shadow Cores #43",
       "amount": 900,
-      "item_ap_id": 859
+      "item_ap_id": 1342
     },
     {
       "name": "Extra Shadow Cores #44",
       "amount": 920,
-      "item_ap_id": 860
+      "item_ap_id": 1343
     },
     {
       "name": "Extra Shadow Cores #45",
       "amount": 940,
-      "item_ap_id": 861
+      "item_ap_id": 1344
     },
     {
       "name": "Extra Shadow Cores #46",
       "amount": 960,
-      "item_ap_id": 862
+      "item_ap_id": 1345
     },
     {
       "name": "Extra Shadow Cores #47",
       "amount": 980,
-      "item_ap_id": 863
+      "item_ap_id": 1346
     },
     {
       "name": "Extra Shadow Cores #48",
       "amount": 1000,
-      "item_ap_id": 864
+      "item_ap_id": 1347
     },
     {
       "name": "Extra Shadow Cores #49",
       "amount": 1020,
-      "item_ap_id": 865
+      "item_ap_id": 1348
     },
     {
       "name": "Extra Shadow Cores #50",
       "amount": 1040,
-      "item_ap_id": 866
+      "item_ap_id": 1349
     },
     {
       "name": "Extra Shadow Cores #51",
       "amount": 1060,
-      "item_ap_id": 867
+      "item_ap_id": 1350
     },
     {
       "name": "Extra Shadow Cores #52",
       "amount": 1080,
-      "item_ap_id": 868
+      "item_ap_id": 1351
     }
   ]
 }

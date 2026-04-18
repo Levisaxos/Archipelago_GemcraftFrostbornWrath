@@ -28,10 +28,31 @@ def _load_location_table() -> Dict[str, LocationData]:
         # no field token item but IS the starting location (accessible from Menu).
         str_id = stage["str_id"]
         table[f"Complete {str_id} - Journey"]      = LocationData(stage["loc_ap_id"],             str_id)
-        table[f"Complete {str_id} - Bonus"]        = LocationData(stage["loc_ap_id"] + 500,       str_id)
+        table[f"Complete {str_id} - Bonus"]        = LocationData(stage["loc_ap_id"] + 199,       str_id)
         table[f"Complete {str_id} - Wizard stash"] = LocationData(stage["wiz_stash_loc_ap_id"],   str_id)
 
     return table
 
 
+def _generate_achievement_locations() -> Dict[str, LocationData]:
+    """Load achievement locations (IDs 2000-2636) from rulesdata packs with hardcoded ap_ids."""
+    from .rulesdata_achievements import achievement_requirements as all_achievements
+
+    table: Dict[str, LocationData] = {}
+
+    # Use hardcoded ap_id from each achievement, sorted by name for consistency
+    for ach_name in sorted(all_achievements.keys()):
+        ach_data = all_achievements[ach_name]
+        if "ap_id" in ach_data:
+            loc_id = ach_data["ap_id"]
+            # Achievements are not tied to a specific stage, use empty string
+            table[f"Achievement: {ach_name}"] = LocationData(loc_id, "")
+
+    return table
+
+
 location_table: Dict[str, LocationData] = _load_location_table()
+achievement_location_table: Dict[str, LocationData] = _generate_achievement_locations()
+
+# Merge achievement locations into main location table
+location_table.update(achievement_location_table)

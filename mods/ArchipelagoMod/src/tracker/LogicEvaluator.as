@@ -122,9 +122,10 @@ package tracker {
             if (_stageSkills == null) return true;
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return true;
-            var have:Object = _state.skillsCollected;
             for each (var skillName:String in required) {
-                if (have[skillName] != true) return false;
+                var idx:int = CollectedState.SKILL_NAMES.indexOf(skillName);
+                if (idx < 0) continue; // unknown name — don't block
+                if (!_state.hasItem(300 + idx)) return false;
             }
             return true;
         }
@@ -204,5 +205,55 @@ package tracker {
         }
 
         public function get reachableTier():int { return _reachableTier; }
+
+        /**
+         * Check if any in-logic stage has at least the given minimum wave count.
+         * Wave count is determined by the stage's tier using WAVE_TIERS mapping.
+         *
+         * @param minWaveCount Minimum waves required (e.g., 22 for tier 1, 100 for endurance)
+         * @return true if at least one in-logic stage has >= minWaveCount waves
+         */
+        public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
+            // Wave tier thresholds (matching rulesdata_settings.py WAVE_TIERS)
+            var waveTiers:Array = [14, 22, 28, 33, 40, 48, 54, 60, 70, 72, 78, 84, 96];
+
+            // For waves beyond tier 12 (>96), check endurance/trial flags
+            if (minWaveCount > 96) {
+                // These fields are only accessible in endurance or trial mode
+                // Both modes must NOT be disabled
+                return false; // Endurance/trial access is checked elsewhere
+            }
+
+            // Find minimum tier needed for this wave count
+            var requiredTier:int = -1;
+            for (var i:int = 0; i < waveTiers.length; i++) {
+                if (int(waveTiers[i]) >= minWaveCount) {
+                    requiredTier = i;
+                    break;
+                }
+            }
+
+            // Check if any in-logic stage has a tier >= requiredTier
+            if (_stageTier == null) return true; // No rules = assume accessible
+            if (_dirty) return false; // Not yet computed
+
+            for (var strId:String in _stageTier) {
+                var stageTier:int = int(_stageTier[strId]);
+                if (stageTier >= requiredTier && _inLogicByStrId[strId] == true) {
+                    return true;
+                }
+            }
+
+            // Also check free stages (W1-W4, etc) which are always in logic
+            for (var freeSid:String in _freeStages) {
+                if (_inLogicByStrId[freeSid] == true) {
+                    // Free stages are tier-less, so check if they could have the waves
+                    // For now, assume free stages (Wizard/campaign) don't count toward wave requirements
+                    // (they're unlocked early and have fixed wave counts)
+                }
+            }
+
+            return false;
+        }
     }
 }

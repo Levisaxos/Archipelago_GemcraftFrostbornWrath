@@ -1,4 +1,4 @@
-package unlockers {
+package patch {
     import Bezel.Bezel;
     import Bezel.Logger;
     import Bezel.GCFW.Events.EventTypes;
@@ -7,27 +7,29 @@ package unlockers {
     import com.giab.games.gcfw.constants.DropType;
     import com.giab.games.gcfw.entity.TalismanFragment;
 
+    import ui.LevelEndScreenBuilder;
+
     /**
-     * Intercepts the SAVE_SAVE event and reverts any automatic field-token,
-     * map-tile, skill-tome, battle-trait, shadow-core, and talisman-fragment
-     * unlocks that the game wrote to PlayerProgressData.  The save file is
-     * immediately overwritten so the reverted state is persisted.
+     * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
+     * skill-tome, battle-trait, shadow-core, and talisman-fragment unlocks
+     * that the game wrote to PlayerProgressData. The save file is immediately
+     * overwritten so the reverted state is persisted.
      *
-     * Archipelago will later send the correct items; this class just ensures the
-     * game cannot hand them out on its own.
-     *
-     * The class tracks which skills and traits AP has actually granted via
-     * markSkillGranted / markTraitGranted.  On every save (including wizard-stash
-     * clears that happen outside of battle) it enforces AP authority: any
-     * skill tome or battle trait that is set in the save data but was NOT granted
-     * by AP is immediately reverted.
-     *
-     * For wizard stashes specifically, shadow cores and talisman fragments in
-     * stashDrops are also blocked: when a stash is detected as newly cleared
-     * (OPEN or DESTROYED), its SC{n} shadow-core grant is subtracted and the
-     * talisman fragment with the matching seed is removed from the inventory.
+     * After reverting, delegates level-end icon construction to LevelEndScreenBuilder.
      */
-    public class NormalProgressionBlocker {
+    public class ProgressionBlocker {
+
+        // Drop-type constants used to identify AP rewards queued during a battle.
+        // Referenced externally by AchievementUnlocker.
+        public static const AP_ACHIEVEMENT_COLLECTED:String  = "AP_ACHIEVEMENT_COLLECTED";
+        public static const AP_ACHIEVEMENT_SKILL:String      = "AP_ACHIEVEMENT_SKILL";
+        public static const AP_ACHIEVEMENT_TRAIT:String      = "AP_ACHIEVEMENT_TRAIT";
+        public static const AP_ACHIEVEMENT_TALISMAN:String   = "AP_ACHIEVEMENT_TALISMAN";
+        public static const AP_ACHIEVEMENT_SHADOWCORE:String = "AP_ACHIEVEMENT_SHADOWCORE";
+        public static const AP_STASH_TALISMAN:String         = "AP_STASH_TALISMAN";
+        public static const AP_STASH_SHADOWCORE:String       = "AP_STASH_SHADOWCORE";
+        public static const AP_ITEM_FOR_US:String            = "AP_ITEM_FOR_US";
+        public static const AP_ITEM_FOR_OTHER:String         = "AP_ITEM_FOR_OTHER";
 
         private var _logger:Logger;
         private var _modName:String;
@@ -44,11 +46,14 @@ package unlockers {
 
         // Tracks which stage IDs have had their stash rewards blocked already
         // so we don't double-subtract on subsequent saves.
-        private var _stashBlockedIds:Object = {}; // stageId (int key) → true
+        private var _stashBlockedIds:Object = {};
 
-        public function NormalProgressionBlocker(logger:Logger, modName:String) {
+        private var _levelEndScreenBuilder:LevelEndScreenBuilder;
+
+        public function ProgressionBlocker(logger:Logger, modName:String, levelEndScreenBuilder:LevelEndScreenBuilder) {
             _logger  = logger;
             _modName = modName;
+            _levelEndScreenBuilder = levelEndScreenBuilder;
             _apGrantedSkills = new Array(24);
             _apGrantedTraits = new Array(15);
             for (var i:int = 0; i < 24; i++) _apGrantedSkills[i] = false;
@@ -109,7 +114,7 @@ package unlockers {
             try {
                 var reverted:int = 0;
 
-                // --- Battle-victory drops (field tokens, map tiles, in-battle tomes) ---
+                // --- Battle-victory drops (field tokens, map tiles) ---
                 if (GV.ingameController != null && GV.ingameController.core != null) {
                     var ending:* = GV.ingameController.core.ending;
                     if (ending != null && ending.isBattleWon) {
@@ -167,7 +172,6 @@ package unlockers {
                         }
                     }
                 }
-                // If any skill tomes were reverted, suppress the '+' indicator on btnSkills.
                 if (skillReverted) removePlusNodeFromSelector("mcPlusNodeSkills");
 
                 // --- Block shadow cores and talisman fragments from wizard stashes ---
@@ -176,21 +180,19 @@ package unlockers {
                     for (var m:int = 0; m < metas.length; m++) {
                         var meta:* = metas[m];
                         if (meta == null) continue;
-                        var stageId:int    = int(meta.id);
+                        var stageId:int     = int(meta.id);
                         var stashStatus:int = int(GV.ppd.stageWizStashStauses[stageId]);
-                        // Only process newly-cleared stashes (OPEN=1 or DESTROYED=2).
                         if (stashStatus == 0) continue;
                         if (_stashBlockedIds[stageId]) continue;
 
-                        var strId:String   = String(meta.strId);
+                        var strId:String      = String(meta.strId);
                         var stashDrops:String = String(meta.stashDrops);
-                        var parts:Array    = stashDrops.split("+");
+                        var parts:Array       = stashDrops.split("+");
                         var stashReverted:int = 0;
 
                         for (var p:int = 0; p < parts.length; p++) {
                             var drop:String = String(parts[p]);
 
-                            // Shadow cores: "SC{amount}"
                             if (drop.indexOf("SC") == 0) {
                                 var scAmount:int = int(drop.substring(2));
                                 if (scAmount > 0) {
@@ -203,7 +205,6 @@ package unlockers {
                                 }
                             }
 
-                            // Talisman fragment: "TAL" (actual seed from wizStashTalData)
                             if (drop == "TAL") {
                                 var talData:* = _wizStashTalData[strId];
                                 if (talData != null) {
@@ -228,6 +229,15 @@ package unlockers {
                     }
                 }
 
+                // Delegate level-end icon construction to LevelEndScreenBuilder.
+                if (_levelEndScreenBuilder != null
+                        && GV.ingameController != null
+                        && GV.ingameController.core != null) {
+                    var endingForIcons:* = GV.ingameController.core.ending;
+                    if (endingForIcons != null && endingForIcons.isBattleWon)
+                        _levelEndScreenBuilder.buildIcons(endingForIcons);
+                }
+
                 if (reverted > 0) {
                     _isSaving = true;
                     GV.loaderSaver.saveGameData();
@@ -236,17 +246,13 @@ package unlockers {
                 }
             } catch (err:Error) {
                 _isSaving = false;
-                _logger.log(_modName, "NormalProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
+                _logger.log(_modName, "ProgressionBlocker.onSaveSave ERROR: " + err.message + "\n" + err.getStackTrace());
             }
         }
 
         // -----------------------------------------------------------------------
-        // Helpers
+        // Private helpers
 
-        /**
-         * Remove a plus-node indicator from the selector mc, if it is currently displayed.
-         * nodeName is "mcPlusNodeSkills" or "mcPlusNodeTalisman".
-         */
         private function removePlusNodeFromSelector(nodeName:String):void {
             try {
                 var mc:* = GV.selectorCore != null ? GV.selectorCore.mc : null;
@@ -261,10 +267,6 @@ package unlockers {
             }
         }
 
-        /**
-         * Remove the first talisman fragment with the given seed from the inventory.
-         * Returns true if a fragment was found and removed.
-         */
         private function removeTalismanBySeed(seed:int):Boolean {
             if (GV.ppd == null) return false;
             var inv:Array = GV.ppd.talismanInventory;

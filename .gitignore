@@ -23,3 +23,4 @@ mods/ArchipelagoMod/asconfig.resolved.json
 
 # my pycharm folder lol -snekk
 apworld/gcfw/.idea/
+/apworld/gcfw/__pycache__

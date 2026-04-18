@@ -10,6 +10,8 @@ package ui {
     import flash.text.TextField;
     import flash.text.TextFormat;
     import flash.utils.getDefinitionByName;
+    import tracker.CollectedState;
+    import unlockers.TraitUnlocker;
 
     /**
      * Debug options panel.
@@ -56,21 +58,9 @@ package ui {
         private static const COL_LEFT_X:Number       = 250;
         private static const COL_RIGHT_X:Number      = 1067;
 
-        private static const SKILL_NAMES:Array = [
-            "Mana Stream", "True Colors", "Fusion", "Orb of Presence",
-            "Resonance", "Demolition", "Critical Hit", "Mana Leech",
-            "Bleeding", "Armor Tearing", "Poison", "Slowing",
-            "Freeze", "Whiteout", "Ice Shards", "Bolt",
-            "Beam", "Barrage", "Fury", "Amplifiers",
-            "Pylons", "Lanterns", "Traps", "Seeker Sense"
-        ];
-
-        private static const BATTLE_TRAIT_NAMES:Array = [
-            "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
-            "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
-            "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",
-            "Giant Domination", "Strength in Numbers", "Ritual"
-        ];
+        // Canonical name lists live in CollectedState and TraitUnlocker — reference them directly.
+        private static function get SKILL_NAMES():Array        { return CollectedState.SKILL_NAMES; }
+        private static function get BATTLE_TRAIT_NAMES():Array { return TraitUnlocker.BATTLE_TRAIT_NAMES; }
 
         private static const TILE_LETTERS:Array = [
             "A","B","C","D","E","F","G","H","I","J","K","L","M",

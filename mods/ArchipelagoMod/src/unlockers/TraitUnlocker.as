@@ -5,16 +5,12 @@ package unlockers {
 
     /**
      * Handles unlocking battle traits by Archipelago item ID.
-     * Battle trait AP IDs range from 400 to 414.
+     * Battle trait AP IDs range from 800 to 814 (after refactoring).
      */
-    public class TraitUnlocker {
-
-        private var _logger:Logger;
-        private var _modName:String;
-        private var _itemToast:ItemToastPanel;
+    public class TraitUnlocker extends BaseUnlocker {
 
         // Battle trait names indexed by game_id (matches BattleTraitId constants).
-        private static const BATTLE_TRAIT_NAMES:Array = [
+        public static const BATTLE_TRAIT_NAMES:Array = [
             "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
             "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
             "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",
@@ -22,35 +18,32 @@ package unlockers {
         ];
 
         public function TraitUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
-            _logger    = logger;
-            _modName   = modName;
-            _itemToast = itemToast;
+            super(logger, modName, itemToast);
         }
 
         /**
-         * Unlock a battle trait by its Archipelago item ID (400-414).
+         * Unlock a battle trait by its Archipelago item ID (800-814).
          * Sets the gained flag and initialises the selected level to 0.
          */
         public function unlockBattleTrait(apId:int):void {
-            var gameId:int = apId - 400;
+            var gameId:int = apId - 800;
             if (gameId < 0 || gameId > 14) {
-                _logger.log(_modName, "unlockBattleTrait: invalid AP ID " + apId);
+                logAction("unlockBattleTrait: invalid AP ID " + apId);
                 return;
             }
-            if (GV.ppd == null) {
-                _logger.log(_modName, "unlockBattleTrait: GV.ppd is null, cannot unlock trait " + apId);
+            if (!ensurePpdExists("unlockBattleTrait")) {
                 return;
             }
             GV.ppd.gainedBattleTraits[gameId] = true;
             GV.ppd.selectedBattleTraitLevels[gameId].s(Math.max(GV.ppd.selectedBattleTraitLevels[gameId].g(), 0));
             var traitName:String = BATTLE_TRAIT_NAMES[gameId];
-            _logger.log(_modName, "Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
-            _itemToast.addItem("Trait Unlocked: " + traitName, 0xFFAA44);
+            logAction("Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
+            showToast("Trait Unlocked: " + traitName, 0xFFAA44);
         }
 
-        /** Returns the human-readable trait name for an AP ID (400-414), or null if out of range. */
+        /** Returns the human-readable trait name for an AP ID (800-814), or null if out of range. */
         public function getTraitName(apId:int):String {
-            var gameId:int = apId - 400;
+            var gameId:int = apId - 800;
             if (gameId < 0 || gameId >= BATTLE_TRAIT_NAMES.length) return null;
             return BATTLE_TRAIT_NAMES[gameId];
         }

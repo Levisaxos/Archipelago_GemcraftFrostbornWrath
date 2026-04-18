@@ -246,7 +246,7 @@ class ExtraWaveCount(Range):
     """
     display_name = "Extra Wave Count"
     range_start = 0
-    range_end   = 20
+    range_end   = 24
     default     = 0
 
 
@@ -257,7 +257,46 @@ class StartingOvercrowd(Toggle):
     of every stage from the very start of the run.  The trait is removed from the
     randomised item pool — it will not appear as a collectable item for anyone.
     """
-    display_name = "Starting Overcrowd"
+    display_name = "Start with Overcrowd"
+    default = 0
+
+
+class AchievementRequiredEffort(Choice):
+    """Required effort level of achievements to include in the randomizer.
+
+    off:  No achievements included.
+    1:    Trivial achievements only (~362 achievements).
+    2:    Trivial + Minor (~453 achievements).
+    3:    Trivial + Minor + Major (~537 achievements).
+    4:    Trivial + Minor + Major + Extreme (~620 achievements).
+    5:    All achievements (~636 achievements).
+
+    Selecting level N includes all achievements from levels 1 through N.
+    More achievements = more items to find, longer seed.
+    """
+    display_name = "Achievement Required Effort"
+    option_off = 0
+    option_1   = 1
+    option_2   = 2
+    option_3   = 3
+    option_4   = 4
+    option_5   = 5
+    default = 1
+
+
+class AchievementProgression(Choice):
+    """How progressive achievements are handled.
+
+    progressive: Achievement chains are linked. For example, "Kill 10 Waves" must be obtained
+                 before "Kill 20 Waves" can be collected. This spreads achievements across
+                 spheres naturally and matches how Terraria does it in Archipelago.
+
+    single:      All achievements are independent with no chaining. "Kill 10 Waves", "Kill 20 Waves",
+                 etc. are all treated as separate items with no dependencies.
+    """
+    display_name = "Achievement Progression"
+    option_progressive = 0
+    option_single      = 1
     default = 0
 
 
@@ -274,6 +313,8 @@ class GCFWOptions(PerGameCommonOptions):
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
+    achievement_required_effort: AchievementRequiredEffort
+    achievement_progression:   AchievementProgression
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier
     enemy_shield_multiplier:     EnemyShieldMultiplier

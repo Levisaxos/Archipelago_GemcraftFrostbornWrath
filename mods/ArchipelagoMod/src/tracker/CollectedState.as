@@ -27,9 +27,11 @@ package tracker {
         private var _tokenMap:Object;            // apId (string) -> stage strId
         private var _skillNameToCategory:Object; // skill name -> category (populated from slot_data)
 
-        private var _tokensByStrId:Object = {};      // strId -> true
-        private var _skillsCollected:Object = {};    // skill name -> true
-        private var _skillCountByCategory:Object = {}; // category -> int
+        private var _receivedApIds:Object = {};          // apId (string) -> true — ALL received items
+        private var _tokensByStrId:Object = {};          // strId -> true
+        private var _skillsCollected:Object = {};        // skill name -> true
+        private var _skillCountByCategory:Object = {};   // category -> int
+        private var _achievementsCollected:Object = {};  // apId (int) -> true
 
         public function CollectedState(logger:Logger, modName:String) {
             _logger  = logger;
@@ -39,6 +41,7 @@ package tracker {
         public function get tokensByStrId():Object { return _tokensByStrId; }
         public function get skillsCollected():Object { return _skillsCollected; }
         public function get skillCountByCategory():Object { return _skillCountByCategory; }
+        public function get achievementsCollected():Object { return _achievementsCollected; }
 
         /**
          * Configure with slot_data.  Must be called before onItem().
@@ -62,13 +65,26 @@ package tracker {
 
         /** Clear all tracked collection state.  Call on reconnect. */
         public function reset():void {
+            _receivedApIds = {};
             _tokensByStrId = {};
             _skillsCollected = {};
             _skillCountByCategory = {};
+            _achievementsCollected = {};
+        }
+
+        /**
+         * Returns true if the given AP item ID has been received from the server.
+         * Works for all item types: tokens, skills, traits, XP, talismans, shadow cores, achievements.
+         */
+        public function hasItem(apId:int):Boolean {
+            return _receivedApIds[String(apId)] == true;
         }
 
         /** Classify an incoming AP item id and update counters.  Idempotent. */
         public function onItem(apId:int):void {
+            // Master registry — capture every received AP item regardless of type.
+            _receivedApIds[String(apId)] = true;
+
             // Field token -> stage
             if (_tokenMap != null) {
                 var strId:String = _tokenMap[String(apId)];
@@ -94,13 +110,40 @@ package tracker {
                 }
                 return;
             }
+            // Achievement (AP ids 2000-2636)
+            if (apId >= 2000 && apId <= 2636) {
+                if (_achievementsCollected[apId] != true) {
+                    _achievementsCollected[apId] = true;
+                }
+                return;
+            }
             // Other item kinds are not tracker-relevant.
         }
 
-        /** Number of distinct skill names collected (0..24). */
+        /**
+         * Mark an achievement as collected (called when receiving achievement from another player).
+         */
+        public function onAchievementCollected(apId:int):void {
+            if (apId >= 2000 && apId <= 2636) {
+                _achievementsCollected[apId] = true;
+            }
+        }
+
+        /**
+         * Check if an achievement has been collected.
+         * @param apId The Archipelago item ID (2000-2636)
+         * @return true if collected, false otherwise
+         */
+        public function isAchievementCollected(apId:int):Boolean {
+            return _achievementsCollected[apId] == true;
+        }
+
+        /** Number of distinct skills collected (0..24), based on AP items received. */
         public function get totalSkillsCollected():int {
             var n:int = 0;
-            for (var k:String in _skillsCollected) n++;
+            for (var i:int = 0; i < 24; i++) {
+                if (hasItem(300 + i)) n++;
+            }
             return n;
         }
     }

@@ -1,0 +1,5731 @@
+{
+  "achievements": {
+    "A Bright Start": {
+      "apId": 2000,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 30 fields lit in Journey mode.",
+      "requirements": [
+        "fieldToken: 30"
+      ]
+    },
+    "A Shrubbery!": {
+      "apId": 2001,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Place a shrub wall.",
+      "requirements": [
+        "Wall element"
+      ]
+    },
+    "Ablatio Retinae": {
+      "apId": 2002,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Whiteout 111 whited out monsters.",
+      "requirements": [
+        "Whiteout skill"
+      ]
+    },
+    "Absolute Zero": {
+      "apId": 2003,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 273 frozen monsters.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Acid Rain": {
+      "apId": 2004,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 85 poisoned monsters while it's raining.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Added Protection": {
+      "apId": 2005,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Strengthen your orb with a gem in an amplifier.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Addicted": {
+      "apId": 2006,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Activate shrines a total of 12 times.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Adept": {
+      "apId": 2007,
+      "required_effort": "Minor",
+      "reward": "skillPoints:3",
+      "description": "Have 30 fields lit in Trial mode.",
+      "requirements": [
+        "Trial",
+        "fieldToken: 30"
+      ]
+    },
+    "Adept Enhancer": {
+      "apId": 2008,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 enhancement spells cast through all the ...",
+      "requirements": [
+        "Beam skill",
+        "Bolt skill",
+        "Barrage skill"
+      ]
+    },
+    "Adept Grade": {
+      "apId": 2009,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Create a grade 8 gem.",
+      "requirements": [
+        "minGemGrade: 8"
+      ]
+    },
+    "Adventurer": {
+      "apId": 2010,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 600 xp from drops.",
+      "requirements": [
+        "Apparition element",
+        "Corrupted Mana Shard element",
+        "Drop Holder element",
+        "Mana Shard element"
+      ]
+    },
+    "Ages Old Memories": {
+      "apId": 2011,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Unlock a wizard tower.",
+      "requirements": [
+        "Wizard Tower element"
+      ]
+    },
+    "Agitated": {
+      "apId": 2012,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Call 70 waves early.",
+      "requirements": [
+        "minWave: 70"
+      ]
+    },
+    "All Your Mana Belongs to Us": {
+      "apId": 2013,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only mana leeching gems.",
+      "requirements": [
+        "Mana Leech skill",
+        "minWave: 90"
+      ]
+    },
+    "Almost": {
+      "apId": 2014,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster with shots blinking to the monster ...",
+      "requirements": [
+        "Watchtower element",
+        "Wizard Hunter element"
+      ]
+    },
+    "Almost Like Hacked": {
+      "apId": 2015,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have at least 20 different talisman properties."
+    },
+    "Almost Ruined": {
+      "apId": 2016,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leave a monster nest at 1 hit point at the end of ...",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Am I a Joke to You?": {
+      "apId": 2017,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Start an enraged wave early while there is a wizar...",
+      "requirements": [
+        "Wizard Hunter element"
+      ]
+    },
+    "Ambitious Builder": {
+      "apId": 2018,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 structures built through all the battles..."
+    },
+    "Amplification": {
+      "apId": 2019,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Spend 18.000 mana on amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Amplifinity": {
+      "apId": 2020,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Build 45 amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Amulet": {
+      "apId": 2021,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Fill all the sockets in your talisman.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "And Don't Come Back": {
+      "apId": 2022,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 460 banished monsters with shrines.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Angry Wasps": {
+      "apId": 2023,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 gem wasp kills through all the battles..."
+    },
+    "Antitheft": {
+      "apId": 2024,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 90 monsters with orblet explosions.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Armored Orb": {
+      "apId": 2025,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Strengthen your orb by dropping a gem on it."
+    },
+    "Army Glue": {
+      "apId": 2026,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure slowing gem with 4.000 hits.",
+      "requirements": [
+        "Slowing skill"
+      ]
+    },
+    "At my Fingertips": {
+      "apId": 2027,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Cast 75 strike spells.",
+      "requirements": [
+        "Ice Shards skill",
+        "Whiteout skill",
+        "Freeze skill"
+      ]
+    },
+    "Avenged": {
+      "apId": 2028,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 15 monsters carrying orblets.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Awakening": {
+      "apId": 2029,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate a shrine.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Bang": {
+      "apId": 2030,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Throw 30 gem bombs."
+    },
+    "Barbed Sphere": {
+      "apId": 2031,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Deliver 1.200 banishments with your orb."
+    },
+    "Barrage Battery": {
+      "apId": 2032,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have a Maximum Charge of 300% for the Barrage Spel...",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "Basic Gem Tactics": {
+      "apId": 2033,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Beat 120 waves and don't use any gem enhancement s...",
+      "requirements": [
+        "minWave: 120"
+      ]
+    },
+    "Bastion": {
+      "apId": 2034,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Build 90 towers.",
+      "requirements": [
+        "Tower element"
+      ]
+    },
+    "Bath Bomb": {
+      "apId": 2035,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 30 monsters with orblet explosions.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Battle Heat": {
+      "apId": 2036,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 200 xp with kill chains."
+    },
+    "Bazaar": {
+      "apId": 2037,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Have 30 gems on the battlefield."
+    },
+    "Be Gone For Good": {
+      "apId": 2038,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 790 banished monsters."
+    },
+    "Beacon Hunt": {
+      "apId": 2039,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Destroy 55 beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Beacons Be Gone": {
+      "apId": 2040,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 beacons destroyed through all the battle...",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Beastmaster": {
+      "apId": 2041,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster having at least 100.000 hit points ...",
+      "requirements": [
+        "A monster with atleast 100.000hp and 1000 amror"
+      ]
+    },
+    "Behold Aurora": {
+      "apId": 2042,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Go Igniculus and Light Ray (All)+++!"
+    },
+    "Biohazard": {
+      "apId": 2043,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Create a grade 12 pure poison gem.",
+      "requirements": [
+        "Poison skill",
+        "minGemGrade: 12"
+      ]
+    },
+    "Black Blood": {
+      "apId": 2044,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Deal 5.000 poison damage to a shadow.",
+      "requirements": [
+        "Poison skill",
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Black Wand": {
+      "apId": 2045,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Reach wizard level 1.000."
+    },
+    "Blackout": {
+      "apId": 2046,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a beacon.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Blastwave": {
+      "apId": 2047,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 shrine kills through all the battles.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Bleed Out": {
+      "apId": 2048,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 480 bleeding monsters.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Bleeding For Everyone": {
+      "apId": 2049,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a pure bleeding gem having random priority...",
+      "requirements": [
+        "Beam skill",
+        "Bleeding skill"
+      ]
+    },
+    "Blind Hit": {
+      "apId": 2050,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 30 whited out monsters with beam.",
+      "requirements": [
+        "Beam skill",
+        "Whiteout skill"
+      ]
+    },
+    "Blood Censorship": {
+      "apId": 2051,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 2.100 green blooded monsters.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Blood Clot": {
+      "apId": 2052,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only bleeding gems.",
+      "requirements": [
+        "Bleeding skill",
+        "minWave: 90"
+      ]
+    },
+    "Blood Magic": {
+      "apId": 2053,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only bleeding gems.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Blood on my Hands": {
+      "apId": 2054,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 20.000 monsters killed through all the battl..."
+    },
+    "Bloodmaster": {
+      "apId": 2055,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Gain 1.200 xp with kill chains."
+    },
+    "Bloodrush": {
+      "apId": 2056,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Call an enraged wave early."
+    },
+    "Bloodstream": {
+      "apId": 2057,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 4.000 monsters."
+    },
+    "Blue Wand": {
+      "apId": 2058,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach wizard level 100."
+    },
+    "Boatload of Cores": {
+      "apId": 2059,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Find 540 shadow cores.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Boiling Red": {
+      "apId": 2060,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Reach a kill chain of 2400."
+    },
+    "Bone Shredder": {
+      "apId": 2061,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Kill 600 monsters before wave 12 starts.",
+      "requirements": [
+        "Atleast 600 monsters before wave 10"
+      ]
+    },
+    "Boom": {
+      "apId": 2062,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Throw a gem bomb."
+    },
+    "Bouncy Zap": {
+      "apId": 2063,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.000 pylon kills through all the battles.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Breath of Cold": {
+      "apId": 2064,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 90 monsters frozen at the same time.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Brickery": {
+      "apId": 2065,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 structures built through all the battl..."
+    },
+    "Bright Weakening": {
+      "apId": 2066,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Gain 1.200 xp with Whiteout spell crowd hits.",
+      "requirements": [
+        "Whiteout skill"
+      ]
+    },
+    "Broken Seal": {
+      "apId": 2067,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Free a sealed gem."
+    },
+    "Broken Siege": {
+      "apId": 2068,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Destroy 8 beacons before wave 8.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Brought Some Mana": {
+      "apId": 2069,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 5.000 initial mana."
+    },
+    "Brown Wand": {
+      "apId": 2070,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Reach wizard level 300."
+    },
+    "Build Along": {
+      "apId": 2071,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 structures built through all the battles..."
+    },
+    "Busted": {
+      "apId": 2072,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a full health possession obelisk with one ...",
+      "requirements": [
+        "Obelisk element"
+      ]
+    },
+    "Buzz Feed": {
+      "apId": 2073,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 99 gem wasps on the battlefield."
+    },
+    "By Three They Go": {
+      "apId": 2074,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 3 of your gems destroyed or stolen.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element",
+        "Watchtower element"
+      ]
+    },
+    "Bye Bye Hideous": {
+      "apId": 2075,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a spire.",
+      "requirements": [
+        "Ritual trait",
+        "Spire element"
+      ]
+    },
+    "Call in the Wave!": {
+      "apId": 2076,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Call a wave early."
+    },
+    "Can't Crawl Away": {
+      "apId": 2077,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 30 whited out monsters with barrage.",
+      "requirements": [
+        "Barrage skill",
+        "Whiteout skill"
+      ]
+    },
+    "Can't Stop": {
+      "apId": 2078,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach a kill chain of 900."
+    },
+    "Can't Take Any Risks": {
+      "apId": 2079,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a bleeding giant with poison.",
+      "requirements": [
+        "Bleeding skill",
+        "Poison skill"
+      ]
+    },
+    "Care to Die Already?": {
+      "apId": 2080,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Cast 8 ice shards on the same monster.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Carnage": {
+      "apId": 2081,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach a kill chain of 600."
+    },
+    "Cartographer": {
+      "apId": 2082,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 90 fields lit in Journey mode.",
+      "requirements": [
+        "fieldToken: 90"
+      ]
+    },
+    "Catalyst": {
+      "apId": 2083,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Give a Gem 200 Poison Damage by Amplification.",
+      "requirements": [
+        "Amplifiers skill",
+        "Poison skill"
+      ]
+    },
+    "Catch and Release": {
+      "apId": 2084,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a jar of wasps, but don't have any wasp ki...",
+      "requirements": [
+        "Field X2"
+      ]
+    },
+    "Century Egg": {
+      "apId": 2085,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 100 monster eggs cracked through all the bat...",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Chainsaw": {
+      "apId": 2086,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Gain 3.200 xp with kill chains."
+    },
+    "Charge Fire Repeat": {
+      "apId": 2087,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 enhancement spells cast through all th...",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Charged for the Kill": {
+      "apId": 2088,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 pylon kills through all the battles.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Charm": {
+      "apId": 2089,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Fill all the sockets in your talisman with fragmen...",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Chilling Edges": {
+      "apId": 2090,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 140 xp with Ice Shards spell crowd hits.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Chlorophyll": {
+      "apId": 2091,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 4.500 green blooded monsters.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Clean Orb": {
+      "apId": 2092,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle without any monster getting to your o..."
+    },
+    "Cleansing the Wilderness": {
+      "apId": 2093,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 50.000 monsters with special properties kill...",
+      "requirements": [
+        "Endurance",
+        "Possessed Monster element",
+        "Twisted Monster element",
+        "Marked Monster element",
+        "minWave: 70"
+      ]
+    },
+    "Clear Sky": {
+      "apId": 2094,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Beat 120 waves and don't use any strike spells.",
+      "requirements": [
+        "minWave: 120"
+      ]
+    },
+    "Close Quarter": {
+      "apId": 2095,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach -12% decreased banishment cost with your orb...",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Cold Wisdom": {
+      "apId": 2096,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Gain 700 xp with Freeze spell crowd hits.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Come Again": {
+      "apId": 2097,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 190 banished monsters."
+    },
+    "Come Out": {
+      "apId": 2098,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Lure 20 swarmlings out of a sleeping hive.",
+      "requirements": [
+        "Sleeping Hive element"
+      ]
+    },
+    "Come Out, Come Out": {
+      "apId": 2099,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Lure 100 swarmlings out of a sleeping hive.",
+      "requirements": [
+        "Sleeping Hive element"
+      ]
+    },
+    "Confusion Junction": {
+      "apId": 2100,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Build 30 walls.",
+      "requirements": [
+        "Wall element"
+      ]
+    },
+    "Connected": {
+      "apId": 2101,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build an amplifier.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Connecting the Dots": {
+      "apId": 2102,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 50 fields lit in Journey mode.",
+      "requirements": [
+        "fieldToken: 50"
+      ]
+    },
+    "Core Haul": {
+      "apId": 2103,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Find 180 shadow cores.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Core Pack": {
+      "apId": 2104,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Find 20 shadow cores.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Core Pile": {
+      "apId": 2105,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Find 60 shadow cores.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Core Pouch": {
+      "apId": 2106,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 100 shadow cores at the start of the battle.",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Corrosive Stings": {
+      "apId": 2107,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Tear a total of 5.000 armor with wasp stings.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Couldn't Decide": {
+      "apId": 2108,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 400 monsters with prismatic gem wasps.",
+      "requirements": [
+        "gemSkills: 6"
+      ]
+    },
+    "Crimson Journal": {
+      "apId": 2109,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 100.000 monsters killed through all the batt..."
+    },
+    "Crowd Control": {
+      "apId": 2110,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Overcrowd trait set to level 6 or higher ...",
+      "requirements": [
+        "Overcrowd trait"
+      ]
+    },
+    "Crowded Queue": {
+      "apId": 2111,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 600 monsters on the battlefield at the same t..."
+    },
+    "Crunchy Bites": {
+      "apId": 2112,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 160 frozen swarmlings.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Damage Support": {
+      "apId": 2113,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure bleeding gem with 2.500 hits.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Darkness Walk With Me": {
+      "apId": 2114,
+      "required_effort": "Minor",
+      "reward": "skillPoints:3",
+      "description": "Kill 3 shadows.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Deadly Curse": {
+      "apId": 2115,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 poison kills through all the battles.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Deal Some Damage Too": {
+      "apId": 2116,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 5 traps with bolt enhanced gems in them.",
+      "requirements": [
+        "Bolt skill",
+        "Traps skill"
+      ]
+    },
+    "Deathball": {
+      "apId": 2117,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 pylon kills through all the battles.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Deckard Would Be Proud": {
+      "apId": 2118,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "All I could get for a prismatic amulet"
+    },
+    "Deluminati": {
+      "apId": 2119,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Dark Masonry trait set to level 6 or high...",
+      "requirements": [
+        "Dark Masonry trait"
+      ]
+    },
+    "Denested": {
+      "apId": 2120,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Destroy 5 monster nests.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Derangement": {
+      "apId": 2121,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Decrease the range of a gem."
+    },
+    "Desperate Clash": {
+      "apId": 2122,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach -16% decreased banishment cost with your orb...",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Diabolic Trophy": {
+      "apId": 2123,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 666 swarmlings."
+    },
+    "Dichromatic": {
+      "apId": 2124,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Combine two gems of different colors.",
+      "requirements": [
+        "gemSkills: 2"
+      ]
+    },
+    "Disciple": {
+      "apId": 2125,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Have 10 fields lit in Trial mode.",
+      "requirements": [
+        "Trial",
+        "fieldToken: 10"
+      ]
+    },
+    "Disco Ball": {
+      "apId": 2126,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a gem of 6 components in a lantern.",
+      "requirements": [
+        "Lanterns skill",
+        "gemSkills: 6"
+      ]
+    },
+    "Don't Break it!": {
+      "apId": 2127,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Spend 90.000 mana on banishment."
+    },
+    "Don't Look at the Light": {
+      "apId": 2128,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 10.000 shrine kills through all the battles.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Don't Touch it!": {
+      "apId": 2129,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a specter.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "Doom Drop": {
+      "apId": 2130,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a possessed giant with barrage.",
+      "requirements": [
+        "Barrage skill",
+        "Possessed Monster element"
+      ]
+    },
+    "Double Punch": {
+      "apId": 2131,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 2 bolt enhanced gems at the same time.",
+      "requirements": [
+        "Bolt skill"
+      ]
+    },
+    "Double Sharded": {
+      "apId": 2132,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Cast 2 ice shards on the same monster.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Double Splash": {
+      "apId": 2133,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill two non-monster creatures with one gem bomb.",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Double Strike": {
+      "apId": 2134,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate the same shrine 2 times.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Drone Warfare": {
+      "apId": 2135,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 20.000 gem wasp kills through all the battle..."
+    },
+    "Drop the Ice": {
+      "apId": 2136,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 50.000 strike spell hits through all the bat...",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Drumroll": {
+      "apId": 2137,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Deal 200 gem wasp stings to buildings."
+    },
+    "Dry Puddle": {
+      "apId": 2138,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Harvest all mana from a mana shard.",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Dual Downfall": {
+      "apId": 2139,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Kill 2 spires.",
+      "requirements": [
+        "Ritual trait",
+        "Spire element"
+      ]
+    },
+    "Dual Pulse": {
+      "apId": 2140,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 2 beam enhanced gems at the same time.",
+      "requirements": [
+        "Beam skill"
+      ]
+    },
+    "Eagle Eye": {
+      "apId": 2141,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach an amplified gem range of 18.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Early Bird": {
+      "apId": 2142,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 waves started early through all the batt...",
+      "requirements": [
+        "minWave: 500",
+        "Endurance"
+      ]
+    },
+    "Early Harvest": {
+      "apId": 2143,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Harvest 2.500 mana from shards before wave 3 start...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Earthquake": {
+      "apId": 2144,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate shrines a total of 4 times.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Easy Kill": {
+      "apId": 2145,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 120 bleeding monsters.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Eat my Light": {
+      "apId": 2146,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a wraith with a shrine strike.",
+      "requirements": [
+        "Ritual trait",
+        "Shrine element",
+        "Wraith element"
+      ]
+    },
+    "Eggcracker": {
+      "apId": 2147,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Don't let any egg laid by a swarm queen to hatch o...",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Eggnog": {
+      "apId": 2148,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Crack a monster egg open while time is frozen.",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Eggs Royale": {
+      "apId": 2149,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 monster eggs cracked through all the b...",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Elementary": {
+      "apId": 2150,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Beat 30 waves using at most grade 2 gems.",
+      "requirements": [
+        "minWave: 30"
+      ]
+    },
+    "End of the Tunnel": {
+      "apId": 2151,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill an apparition with a shrine strike.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element",
+        "Shrine element"
+      ]
+    },
+    "Endgame Balance": {
+      "apId": 2152,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Have 25.000 shadow cores at the start of the battl...",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Endured a Lot": {
+      "apId": 2153,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 80 fields lit in Endurance mode.",
+      "requirements": [
+        "Endurance",
+        "fieldToken: 80"
+      ]
+    },
+    "Enhance Like No Tomorrow": {
+      "apId": 2154,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.500 enhancement spells cast through all th...",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Enhancement Storage": {
+      "apId": 2155,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a gem in the inventory.",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Enhancing Challenge": {
+      "apId": 2156,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Beat 200 waves on max Swarmling and Giant dominati...",
+      "requirements": [
+        "Swarmling Domination trait",
+        "Giant Domination trait",
+        "minWave: 200",
+        "Endurance"
+      ]
+    },
+    "Enough Frozen Time Trickery": {
+      "apId": 2157,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a shadow while time is frozen.",
+      "requirements": [
+        "Shadow element"
+      ]
+    },
+    "Enough is Enough": {
+      "apId": 2158,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 24 of your gems destroyed or stolen.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element",
+        "Watchtower element"
+      ]
+    },
+    "Enraged is the New Norm": {
+      "apId": 2159,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Enrage 240 waves.",
+      "requirements": [
+        "minWave: 240",
+        "Endurance"
+      ]
+    },
+    "Ensnared": {
+      "apId": 2160,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 12 monsters with gems in traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Enter The Gate": {
+      "apId": 2161,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill the gatekeeper.",
+      "requirements": [
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Entrenched": {
+      "apId": 2162,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Build 20 traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Epidemic Gem": {
+      "apId": 2163,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure poison gem with 3.500 hits.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Even if You Thaw": {
+      "apId": 2164,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Whiteout 120 frozen monsters.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill"
+      ]
+    },
+    "Every Hit Counts": {
+      "apId": 2165,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Deliver 3750 one hit kills."
+    },
+    "Exorcism": {
+      "apId": 2166,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 199 possessed monsters.",
+      "requirements": [
+        "Possessed Monster element"
+      ]
+    },
+    "Expert": {
+      "apId": 2167,
+      "required_effort": "Major",
+      "reward": "skillPoints:3",
+      "description": "Have 50 fields lit in Trial mode.",
+      "requirements": [
+        "Trial",
+        "fieldToken: 50"
+      ]
+    },
+    "Extorted": {
+      "apId": 2168,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Harvest all mana from 3 mana shards.",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Face the Phobia": {
+      "apId": 2169,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Swarmling Parasites trait set to level 6 ...",
+      "requirements": [
+        "Swarmling Parasites trait"
+      ]
+    },
+    "Family Friendlier": {
+      "apId": 2170,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 900 green blooded monsters.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Farewell": {
+      "apId": 2171,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill an apparition with one hit.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "Feels Like Endurance": {
+      "apId": 2172,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Beat 120 waves.",
+      "requirements": [
+        "minWave: 120"
+      ]
+    },
+    "Fierce Encounter": {
+      "apId": 2173,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach -8% decreased banishment cost with your orb."
+    },
+    "Fifth Grader": {
+      "apId": 2174,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Create a grade 5 gem.",
+      "requirements": [
+        "minGemGrade: 5"
+      ]
+    },
+    "Filled 5 Times": {
+      "apId": 2175,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach mana pool level 5."
+    },
+    "Final Cut": {
+      "apId": 2176,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 960 bleeding monsters.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Final Touch": {
+      "apId": 2177,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a spire with a gem wasp.",
+      "requirements": [
+        "Ritual trait",
+        "Spire element"
+      ]
+    },
+    "Finders": {
+      "apId": 2178,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 200 mana from drops.",
+      "requirements": [
+        "Mana Shard element",
+        "Corrupted Mana Shard element",
+        "Drop Holder element",
+        "Apparition element"
+      ]
+    },
+    "Fire Away": {
+      "apId": 2179,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Cast a gem enhancement spell.",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Fire in the Hole": {
+      "apId": 2180,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a monster nest.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Firefall": {
+      "apId": 2181,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 16 barrage enhanced gems at the same time.",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "First Blood": {
+      "apId": 2182,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster."
+    },
+    "First Puzzle Piece": {
+      "apId": 2183,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Find a talisman fragment."
+    },
+    "Flip Flop": {
+      "apId": 2184,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Win a flipped field battle.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Flows Through my Veins": {
+      "apId": 2185,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach mana pool level 10."
+    },
+    "Flying Multikill": {
+      "apId": 2186,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Destroy 1 apparition, 1 specter, 1 wraith and 1 sh...",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element",
+        "Shadow element",
+        "Specter element",
+        "Wraith element"
+      ]
+    },
+    "Fool Me Once": {
+      "apId": 2187,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 390 banished monsters."
+    },
+    "Forces Within my Comprehension": {
+      "apId": 2188,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Ritual trait set to level 6 or higher and...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Forged in Battle": {
+      "apId": 2189,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 battles won."
+    },
+    "Fortress": {
+      "apId": 2190,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Build 30 towers.",
+      "requirements": [
+        "Tower element"
+      ]
+    },
+    "Fortunate": {
+      "apId": 2191,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Find 2 talisman fragments."
+    },
+    "Frag Rain": {
+      "apId": 2192,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Find 5 talisman fragments."
+    },
+    "Freezing Wounds": {
+      "apId": 2193,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Freeze a monster 3 times.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Friday Night": {
+      "apId": 2194,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 4 beam enhanced gems at the same time.",
+      "requirements": [
+        "Beam skill"
+      ]
+    },
+    "Frittata": {
+      "apId": 2195,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 monster eggs cracked through all the bat...",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "From Above": {
+      "apId": 2196,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 40 monsters with gem bombs and wasps."
+    },
+    "Frostborn": {
+      "apId": 2197,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 strike spells cast through all the bat...",
+      "requirements": [
+        "Whiteout skill",
+        "Ice Shards skill",
+        "Freeze skill"
+      ]
+    },
+    "Frosting": {
+      "apId": 2198,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Freeze a specter while it's snowing.",
+      "requirements": [
+        "Freeze skill",
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "Frozen Crowd": {
+      "apId": 2199,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 10.000 strike spell hits through all the bat...",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Frozen Grave": {
+      "apId": 2200,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 220 monsters while it's snowing."
+    },
+    "Frozen Over": {
+      "apId": 2201,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Gain 4.500 xp with Freeze spell crowd hits.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Ful Ir": {
+      "apId": 2202,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Blast like a fireball",
+      "requirements": [
+        "Kill 15 monsters simultaneously with 1 gem bomb"
+      ]
+    },
+    "Fully Lit": {
+      "apId": 2203,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have a field beaten in all three battle modes.",
+      "requirements": [
+        "Endurance and trial"
+      ]
+    },
+    "Fully Shining": {
+      "apId": 2204,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Have 60 gems on the battlefield."
+    },
+    "Fusion Core": {
+      "apId": 2205,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 16 beam enhanced gems at the same time.",
+      "requirements": [
+        "Beam skill"
+      ]
+    },
+    "Gearing Up": {
+      "apId": 2206,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 5 fragments socketed in your talisman."
+    },
+    "Gem Lust": {
+      "apId": 2207,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 2 specters.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "Gemhancement": {
+      "apId": 2208,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 enhancement spells cast through all th...",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Get Them": {
+      "apId": 2209,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a watchtower kill 39 monsters.",
+      "requirements": [
+        "Watchtower element"
+      ]
+    },
+    "Get This Done Quick": {
+      "apId": 2210,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Win a Trial battle with at least 3 waves started e...",
+      "requirements": [
+        "minWave: 3",
+        "Trial"
+      ]
+    },
+    "Getting My Feet Wet": {
+      "apId": 2211,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 20 fields lit in Endurance mode.",
+      "requirements": [
+        "Endurance",
+        "fieldToken: 20"
+      ]
+    },
+    "Getting Rid of Them": {
+      "apId": 2212,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Drop 48 gem bombs on beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Getting Serious": {
+      "apId": 2213,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 1 gem with 1.500 hits.",
+      "requirements": [
+        "minGemGrade: 1"
+      ]
+    },
+    "Getting Waves Done": {
+      "apId": 2214,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.000 waves started early through all the ba..."
+    },
+    "Getting Wet": {
+      "apId": 2215,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Beat 30 waves.",
+      "requirements": [
+        "minWave: 30"
+      ]
+    },
+    "Glitter Cloud": {
+      "apId": 2216,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill an apparition with a gem bomb.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "Glowing Armada": {
+      "apId": 2217,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 240 gem wasps on the battlefield when the bat..."
+    },
+    "Going Deviant": {
+      "apId": 2218,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Rook to a9",
+      "requirements": [
+        "Scroll to edge of the world map"
+      ]
+    },
+    "Going for the Weak": {
+      "apId": 2219,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a watchtower kill a poisoned monster.",
+      "requirements": [
+        "Poison skill",
+        "Watchtower element"
+      ]
+    },
+    "Got the Price Back": {
+      "apId": 2220,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure mana leeching gem with 4.500 hits.",
+      "requirements": [
+        "Mana Leech skill"
+      ]
+    },
+    "Great Survivor": {
+      "apId": 2221,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster from wave 1 when wave 20 has alread..."
+    },
+    "Green Eyed Ninja": {
+      "apId": 2222,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Entering: The Wilderness",
+      "requirements": [
+        "Field N1, U1 or R5"
+      ]
+    },
+    "Green Path": {
+      "apId": 2223,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 9.900 green blooded monsters.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Green Vial": {
+      "apId": 2224,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have more than 75% of the monster kills caused by ...",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Green Wand": {
+      "apId": 2225,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach wizard level 60."
+    },
+    "Ground Luck": {
+      "apId": 2226,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Find 3 talisman fragments."
+    },
+    "Groundfill": {
+      "apId": 2227,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Demolish a trap.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Guarding the Fallen Gate": {
+      "apId": 2228,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Corrupted Banishment trait set to level 6...",
+      "requirements": [
+        "Corrupted Banishment trait"
+      ]
+    },
+    "Hacked Gem": {
+      "apId": 2229,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 3 gem with 1.200 effective max damage...",
+      "requirements": [
+        "minGemGrade: 3"
+      ]
+    },
+    "Half Full": {
+      "apId": 2230,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Add 32 talisman fragments to your shape collection..."
+    },
+    "Handle With Care": {
+      "apId": 2231,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 300 monsters with orblet explosions.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Hard Reset": {
+      "apId": 2232,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 shrine kills through all the battles.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Has Stood Long Enough": {
+      "apId": 2233,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a monster nest after the last wave has sta...",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Hateful": {
+      "apId": 2234,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Have the Hatred trait set to level 6 or higher and...",
+      "requirements": [
+        "Hatred trait"
+      ]
+    },
+    "Hazardous Materials": {
+      "apId": 2235,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Put your HEV on first",
+      "requirements": [
+        "Poison skill",
+        "Have atleast 1.000 enemies poisoned and alive on a field"
+      ]
+    },
+    "Healing Denied": {
+      "apId": 2236,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 3 healing beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Heavily Modified": {
+      "apId": 2237,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate all mods.",
+      "requirements": [
+        "Requires \"hidden codes\""
+      ]
+    },
+    "Heavy Hitting": {
+      "apId": 2238,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 4 bolt enhanced gems at the same time.",
+      "requirements": [
+        "Bolt skill"
+      ]
+    },
+    "Heavy Support": {
+      "apId": 2239,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 20 beacons on the field at the same time.",
+      "requirements": [
+        "Dark Masonry trait",
+        "Beacon element"
+      ]
+    },
+    "Hedgehog": {
+      "apId": 2240,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a swarmling having at least 100 armor.",
+      "requirements": [
+        "a swarmling with atleast 100 armor"
+      ]
+    },
+    "Helping Hand": {
+      "apId": 2241,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a watchtower kill a possessed monster.",
+      "requirements": [
+        "Possessed Monster element",
+        "Watchtower element"
+      ]
+    },
+    "Hiding Spot": {
+      "apId": 2242,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Open 3 drop holders before wave 3.",
+      "requirements": [
+        "Drop Holder element"
+      ]
+    },
+    "High Stakes": {
+      "apId": 2243,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Set a battle trait to level 12."
+    },
+    "High Targets": {
+      "apId": 2244,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 100 non-monsters killed through all the batt...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Hint of Darkness": {
+      "apId": 2245,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 189 twisted monsters.",
+      "requirements": [
+        "Twisted Monster element"
+      ]
+    },
+    "Hold Still": {
+      "apId": 2246,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Freeze 130 whited out monsters.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill"
+      ]
+    },
+    "Hope has fallen": {
+      "apId": 2247,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Dismantled bunkhouses",
+      "requirements": [
+        "Field E3"
+      ]
+    },
+    "How About Some Skill Points": {
+      "apId": 2248,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 5.000 shadow cores at the start of the battle...",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Hungry Little Gem": {
+      "apId": 2249,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Leech 3.600 mana with a grade 1 gem.",
+      "requirements": [
+        "Mana Leech skill",
+        "minGemGrade: 1"
+      ]
+    },
+    "Hunt For Hard Targets": {
+      "apId": 2250,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 680 monsters while there are at least 2 wrait...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Hurtified": {
+      "apId": 2251,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 240 bleeding monsters.",
+      "requirements": [
+        "Bleeding skill"
+      ]
+    },
+    "Hyper Gem": {
+      "apId": 2252,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 3 gem with 600 effective max damage.",
+      "requirements": [
+        "minGemGrade: 3"
+      ]
+    },
+    "I Have Experience": {
+      "apId": 2253,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 50 battles won."
+    },
+    "I Never Asked For This": {
+      "apId": 2254,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "All my aug points spent"
+    },
+    "I Saw Something": {
+      "apId": 2255,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill an apparition.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "I Warned You...": {
+      "apId": 2256,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a specter while it carries a gem.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "I am Tougher": {
+      "apId": 2257,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 1.360 monsters while there are at least 2 wra...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Ice Cube": {
+      "apId": 2258,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have a Maximum Charge of 300% for the Freeze Spell...",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Ice Mage": {
+      "apId": 2259,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.500 strike spells cast through all the bat...",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Ice Snap": {
+      "apId": 2260,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 90 xp with Freeze spell crowd hits.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Ice Stand": {
+      "apId": 2261,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 5 frozen monsters carrying orblets.",
+      "requirements": [
+        "Freeze skill",
+        "Orb of Presence skill"
+      ]
+    },
+    "Ice for Everyone": {
+      "apId": 2262,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 100.000 strike spell hits through all the ba...",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Icecracker": {
+      "apId": 2263,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 90 frozen monsters with barrage.",
+      "requirements": [
+        "Barrage skill",
+        "Freeze skill"
+      ]
+    },
+    "Icepicked": {
+      "apId": 2264,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Gain 3.200 xp with Ice Shards spell crowd hits.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Icy Fingers": {
+      "apId": 2265,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 strike spells cast through all the battl...",
+      "requirements": [
+        "Whiteout skill",
+        "Freeze skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Impaling Charges": {
+      "apId": 2266,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Deliver 250 one hit kills."
+    },
+    "Impenetrable": {
+      "apId": 2267,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 8 bolt enhanced gems at the same time.",
+      "requirements": [
+        "Bolt skill"
+      ]
+    },
+    "Implosion": {
+      "apId": 2268,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a gatekeeper fang with a gem bomb.",
+      "requirements": [
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Impressive": {
+      "apId": 2269,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Win a Trial battle without any monster reaching yo...",
+      "requirements": [
+        "Trial"
+      ]
+    },
+    "Impudence": {
+      "apId": 2270,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 6 of your gems destroyed or stolen.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element",
+        "Watchtower element"
+      ]
+    },
+    "In Flames": {
+      "apId": 2271,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 400 spawnlings."
+    },
+    "In Focus": {
+      "apId": 2272,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Amplify a gem with 8 other gems.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "In a Blink of an Eye": {
+      "apId": 2273,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 100 monsters while time is frozen."
+    },
+    "In for a Trait": {
+      "apId": 2274,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate a battle trait."
+    },
+    "Inedible": {
+      "apId": 2275,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Poison 111 frozen monsters.",
+      "requirements": [
+        "Freeze skill",
+        "Poison skill"
+      ]
+    },
+    "Insane Investment": {
+      "apId": 2276,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach -20% decreased banishment cost with your orb...",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Instant Spawn": {
+      "apId": 2277,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a shadow spawn a monster while time is frozen...",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Ionized Air": {
+      "apId": 2278,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Insulation trait set to level 6 or higher...",
+      "requirements": [
+        "Insulation trait"
+      ]
+    },
+    "Is Anyone in There?": {
+      "apId": 2279,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Break a tomb open.",
+      "requirements": [
+        "Tomb element"
+      ]
+    },
+    "Is This a Match-3 or What?": {
+      "apId": 2280,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Have 90 gems on the battlefield."
+    },
+    "It Has to Do": {
+      "apId": 2281,
+      "required_effort": "Major",
+      "reward": "skillPoints:3",
+      "description": "Beat 50 waves using at most grade 2 gems.",
+      "requirements": [
+        "minWave: 50"
+      ]
+    },
+    "It Hurts!": {
+      "apId": 2282,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Spend 9.000 mana on banishment."
+    },
+    "It was Abandoned Anyway": {
+      "apId": 2283,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a dwelling.",
+      "requirements": [
+        "Abandoned Dwelling element"
+      ]
+    },
+    "It's Lagging Alright": {
+      "apId": 2284,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 1.200 monsters on the battlefield at the same..."
+    },
+    "It's a Trap": {
+      "apId": 2285,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Don't let any monster touch your orb for 120 beate...",
+      "requirements": [
+        "minWave: 120"
+      ]
+    },
+    "Itchy Sphere": {
+      "apId": 2286,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Deliver 3.600 banishments with your orb."
+    },
+    "Jewel Box": {
+      "apId": 2287,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Fill all inventory slots with gems."
+    },
+    "Jinx Blast": {
+      "apId": 2288,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 30 whited out monsters with bolt.",
+      "requirements": [
+        "Bolt skill",
+        "Whiteout skill"
+      ]
+    },
+    "Juggler": {
+      "apId": 2289,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Use demolition 7 times.",
+      "requirements": [
+        "Demolition skill"
+      ]
+    },
+    "Just Breathe In": {
+      "apId": 2290,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a pure poison gem having random priority w...",
+      "requirements": [
+        "Beam skill",
+        "Poison skill"
+      ]
+    },
+    "Just Fire More at Them": {
+      "apId": 2291,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Thick Air trait set to level 6 or higher ...",
+      "requirements": [
+        "Thick Air trait"
+      ]
+    },
+    "Just Give Me That Mana": {
+      "apId": 2292,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Leech 7.200 mana from whited out monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Whiteout skill"
+      ]
+    },
+    "Just Started": {
+      "apId": 2293,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 10 battles won."
+    },
+    "Just Take My Mana!": {
+      "apId": 2294,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Spend 900.000 mana on banishment."
+    },
+    "Keep Losing Keep Harvesting": {
+      "apId": 2295,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deplete a mana shard while there is a shadow on th...",
+      "requirements": [
+        "Ritual trait",
+        "Mana Shard element",
+        "Shadow element"
+      ]
+    },
+    "Keepers": {
+      "apId": 2296,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Gain 800 mana from drops.",
+      "requirements": [
+        "Apparition element",
+        "Corrupted Mana Shard element",
+        "Mana Shard element",
+        "Drop Holder element"
+      ]
+    },
+    "Keeping Low": {
+      "apId": 2297,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Beat 40 waves using at most grade 2 gems.",
+      "requirements": [
+        "minWave: 40"
+      ]
+    },
+    "Killed So Many": {
+      "apId": 2298,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Gain 7.200 xp with kill chains."
+    },
+    "Knowledge Seeker": {
+      "apId": 2299,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Open a wizard stash.",
+      "requirements": [
+        "Wizard Stash element"
+      ]
+    },
+    "Lagging Already?": {
+      "apId": 2300,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Have 900 monsters on the battlefield at the same t..."
+    },
+    "Landing Spot": {
+      "apId": 2301,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Demolish 20 or more walls with falling spires.",
+      "requirements": [
+        "Ritual trait",
+        "Spire element",
+        "Wall element"
+      ]
+    },
+    "Laser Slicer": {
+      "apId": 2302,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 8 beam enhanced gems at the same time.",
+      "requirements": [
+        "Beam skill"
+      ]
+    },
+    "Last Minute Mana": {
+      "apId": 2303,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leech 500 mana from poisoned monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Poison skill"
+      ]
+    },
+    "Legendary": {
+      "apId": 2304,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Create a gem with a raw minimum damage of 30.000 o...",
+      "requirements": [
+        "gemSkills: 1"
+      ]
+    },
+    "Let Them Hatch": {
+      "apId": 2305,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Don't crack any egg laid by a swarm queen.",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Let it Go": {
+      "apId": 2306,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leave an apparition alive.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "Let's Have a Look": {
+      "apId": 2307,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Open a drop holder.",
+      "requirements": [
+        "Drop Holder element"
+      ]
+    },
+    "Light My Path": {
+      "apId": 2308,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 70 fields lit in Journey mode.",
+      "requirements": [
+        "fieldToken: 70"
+      ]
+    },
+    "Like a Necro": {
+      "apId": 2309,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 25 monsters with frozen corpse explosion.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Limited Vision": {
+      "apId": 2310,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Gain 100 xp with Whiteout spell crowd hits.",
+      "requirements": [
+        "Whiteout skill"
+      ]
+    },
+    "Liquid Explosive": {
+      "apId": 2311,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 180 monsters with orblet explosions.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Locked and Loaded": {
+      "apId": 2312,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 3 pylons charged up to 3 shots each.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Long Crawl": {
+      "apId": 2313,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only slowing gems.",
+      "requirements": [
+        "Slowing skill"
+      ]
+    },
+    "Long Lasting": {
+      "apId": 2314,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 poison kills through all the battles.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Long Run": {
+      "apId": 2315,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Beat 360 waves.",
+      "requirements": [
+        "minWave: 360",
+        "Endurance"
+      ]
+    },
+    "Longrunner": {
+      "apId": 2316,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 60 fields lit in Endurance mode.",
+      "requirements": [
+        "Endurance",
+        "fieldToken: 60"
+      ]
+    },
+    "Lost Signal": {
+      "apId": 2317,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Destroy 35 beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Lots of Crit Hits": {
+      "apId": 2318,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure critical hit gem with 2.000 hits.",
+      "requirements": [
+        "Critical Hit skill"
+      ]
+    },
+    "Lots of Scratches": {
+      "apId": 2319,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach a kill chain of 300."
+    },
+    "Major Shutdown": {
+      "apId": 2320,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Destroy 3 monster nests.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Mana Blinded": {
+      "apId": 2321,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leech 900 mana from whited out monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Whiteout skill"
+      ]
+    },
+    "Mana Cult": {
+      "apId": 2322,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Leech 6.500 mana from bleeding monsters.",
+      "requirements": [
+        "Bleeding skill",
+        "Mana Leech skill"
+      ]
+    },
+    "Mana First": {
+      "apId": 2323,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deplete a shard when there are more than 300 swarm...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Mana Greedy": {
+      "apId": 2324,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Leech 1.800 mana with a grade 1 gem.",
+      "requirements": [
+        "Mana Leech skill",
+        "minGemGrade: 1"
+      ]
+    },
+    "Mana Hack": {
+      "apId": 2325,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Have 80.000 initial mana."
+    },
+    "Mana Magnet": {
+      "apId": 2326,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only mana leeching gems.",
+      "requirements": [
+        "Mana Leech skill"
+      ]
+    },
+    "Mana Salvation": {
+      "apId": 2327,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Salvage mana by destroying a gem."
+    },
+    "Mana Singularity": {
+      "apId": 2328,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Reach mana pool level 20."
+    },
+    "Mana Tap": {
+      "apId": 2329,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 10.000 mana harvested from shards through al...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Mana Trader": {
+      "apId": 2330,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Salvage 8.000 mana from gems."
+    },
+    "Mana in a Bottle": {
+      "apId": 2331,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Have 40.000 initial mana."
+    },
+    "Mana is All I Need": {
+      "apId": 2332,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Win a battle with no skill point spent and a battl...",
+      "requirements": [
+        "Any battle trait"
+      ]
+    },
+    "Mana of the Dying": {
+      "apId": 2333,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Leech 2.300 mana from poisoned monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Poison skill"
+      ]
+    },
+    "Marked Targets": {
+      "apId": 2334,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 10.000 monsters with special properties kill...",
+      "requirements": [
+        "Endurance",
+        "Possessed Monster element",
+        "Twisted Monster element",
+        "Marked Monster element",
+        "minWave: 70"
+      ]
+    },
+    "Marmalade": {
+      "apId": 2335,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Don't destroy any of the jars of wasps.",
+      "requirements": [
+        "Field X2"
+      ]
+    },
+    "Mass Awakening": {
+      "apId": 2336,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Lure 2.500 swarmlings out of a sleeping hive.",
+      "requirements": [
+        "Sleeping Hive element"
+      ]
+    },
+    "Mastery": {
+      "apId": 2337,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Raise a skill to level 70."
+    },
+    "Max Trap Max leech": {
+      "apId": 2338,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Leech 6.300 mana with a grade 1 gem.",
+      "requirements": [
+        "Mana Leech skill",
+        "minGemGrade: 1"
+      ]
+    },
+    "Meet the Spartans": {
+      "apId": 2339,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 300 monsters on the battlefield at the same t..."
+    },
+    "Megalithic": {
+      "apId": 2340,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.000 structures built through all the battl..."
+    },
+    "Melting Armor": {
+      "apId": 2341,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Tear a total of 10.000 armor with wasp stings.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Melting Pulse": {
+      "apId": 2342,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Hit 75 frozen monsters with shrines.",
+      "requirements": [
+        "Freeze skill",
+        "Shrine element"
+      ]
+    },
+    "Might Need it Later": {
+      "apId": 2343,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a gem in an amplifier.",
+      "requirements": [
+        "Amplifiers skill",
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Mighty": {
+      "apId": 2344,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Create a gem with a raw minimum damage of 3.000 or...",
+      "requirements": [
+        "gemSkills: 1"
+      ]
+    },
+    "Minefield": {
+      "apId": 2345,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 300 monsters with gems in traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Miniblasts": {
+      "apId": 2346,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Tear a total of 1.250 armor with wasp stings.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Minor Detour": {
+      "apId": 2347,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build 15 walls.",
+      "requirements": [
+        "Wall element"
+      ]
+    },
+    "Mixing Up": {
+      "apId": 2348,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Beat 50 waves on max Swarmling and Giant dominatio...",
+      "requirements": [
+        "Swarmling Domination trait",
+        "Giant Domination trait",
+        "minWave: 50"
+      ]
+    },
+    "More Than Enough": {
+      "apId": 2349,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Summon 1.000 monsters by enraging waves."
+    },
+    "More Wounds": {
+      "apId": 2350,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 125 bleeding monsters with barrage.",
+      "requirements": [
+        "Barrage skill",
+        "Bleeding skill"
+      ]
+    },
+    "Morning March": {
+      "apId": 2351,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Lure 500 swarmlings out of a sleeping hive.",
+      "requirements": [
+        "Sleeping Hive element"
+      ]
+    },
+    "Multifreeze": {
+      "apId": 2352,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 strike spell hits through all the batt...",
+      "requirements": [
+        "Ice Shards skill",
+        "Whiteout skill",
+        "Freeze skill"
+      ]
+    },
+    "Multiline": {
+      "apId": 2353,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have at least 5 different talisman properties."
+    },
+    "Multinerf": {
+      "apId": 2354,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 1.600 monsters with prismatic gem wasps.",
+      "requirements": [
+        "gemSkills: 6"
+      ]
+    },
+    "Mythic Ancient Legendary": {
+      "apId": 2355,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Create a gem with a raw minimum damage of 300.000 ...",
+      "requirements": [
+        "gemSkills: 1"
+      ]
+    },
+    "Nature Takes Over": {
+      "apId": 2356,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have no own buildings on the field at the end of t..."
+    },
+    "Near Death": {
+      "apId": 2357,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Suffer mana loss from a shadow projectile when und...",
+      "requirements": [
+        "Shadow element"
+      ]
+    },
+    "Necrotrophic": {
+      "apId": 2358,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 poison kills through all the battles.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Need Lots of Them": {
+      "apId": 2359,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Beat 60 waves using at most grade 2 gems.",
+      "requirements": [
+        "minWave: 60"
+      ]
+    },
+    "Need More Rage": {
+      "apId": 2360,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Upgrade a gem in the enraging socket."
+    },
+    "Needle Storm": {
+      "apId": 2361,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Deal 350 gem wasp stings to creatures."
+    },
+    "Nest Blaster": {
+      "apId": 2362,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Destroy 2 monster nests before wave 12.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Nest Buster": {
+      "apId": 2363,
+      "required_effort": "Minor",
+      "reward": "skillPoints:3",
+      "description": "Destroy 3 monster nests before wave 6.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "No Armor Area": {
+      "apId": 2364,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only armor tearing gems.",
+      "requirements": [
+        "Armor Tearing skill",
+        "minWave: 90"
+      ]
+    },
+    "No Beacon Zone": {
+      "apId": 2365,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 beacons destroyed through all the battle...",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "No Honor Among Thieves": {
+      "apId": 2366,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a watchtower kill a specter.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element",
+        "Watchtower element"
+      ]
+    },
+    "No Land for Swarmlings": {
+      "apId": 2367,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Kill 3.333 swarmlings."
+    },
+    "No More Rounds": {
+      "apId": 2368,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 60 banished monsters with shrines.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "No Need to Aim": {
+      "apId": 2369,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 4 barrage enhanced gems at the same time.",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "No Place to Hide": {
+      "apId": 2370,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Cast 25 strike spells.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "No Stone Unturned": {
+      "apId": 2371,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Open 5 drop holders.",
+      "requirements": [
+        "Drop Holder element"
+      ]
+    },
+    "No Time to Rest": {
+      "apId": 2372,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Haste trait set to level 6 or higher and ...",
+      "requirements": [
+        "Haste trait"
+      ]
+    },
+    "No Time to Waste": {
+      "apId": 2373,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 waves started early through all the ba..."
+    },
+    "No Use of Vitality": {
+      "apId": 2374,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster having at least 20.000 hit points.",
+      "requirements": [
+        "A monster with atleast 20.000hp"
+      ]
+    },
+    "No You Won't!": {
+      "apId": 2375,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a watchtower before it could fire.",
+      "requirements": [
+        "Bolt skill",
+        "Watchtower element"
+      ]
+    },
+    "Not Chasing Shadows Anymore": {
+      "apId": 2376,
+      "required_effort": "Major",
+      "reward": "skillPoints:3",
+      "description": "Kill 4 shadows.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Not So Fast": {
+      "apId": 2377,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Freeze a specter.",
+      "requirements": [
+        "Freeze skill",
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "Not So Omni Anymore": {
+      "apId": 2378,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 10 omnibeacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Not Worth It": {
+      "apId": 2379,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Harvest 9.000 mana from a corrupted mana shard.",
+      "requirements": [
+        "Corrupted Mana Shard element"
+      ]
+    },
+    "Nothing Prevails": {
+      "apId": 2380,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 25.000 poison kills through all the battles.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Nox Mist": {
+      "apId": 2381,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only poison gems.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Oh Ven": {
+      "apId": 2382,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Spread the poison",
+      "requirements": [
+        "Poison skill",
+        "90 monsters poisoned at the same time"
+      ]
+    },
+    "Ok Flier": {
+      "apId": 2383,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 340 monsters while there are at least 2 wrait...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Omelette": {
+      "apId": 2384,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 monster eggs cracked through all the bat...",
+      "requirements": [
+        "Swarm Queen element"
+      ]
+    },
+    "Omnibomb": {
+      "apId": 2385,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a building and a non-monster creature with...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "On the Shoulders of Giants": {
+      "apId": 2386,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Giant Domination trait set to level 6 or ...",
+      "requirements": [
+        "Giant Domination trait"
+      ]
+    },
+    "One Hit is All it Takes": {
+      "apId": 2387,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a wraith with one hit.",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "One Less Problem": {
+      "apId": 2388,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a monster nest while there is a wraith on ...",
+      "requirements": [
+        "Ritual trait",
+        "Monster Nest element",
+        "Wraith element"
+      ]
+    },
+    "One by One": {
+      "apId": 2389,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Deliver 750 one hit kills."
+    },
+    "Orange Wand": {
+      "apId": 2390,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach wizard level 40."
+    },
+    "Ouch!": {
+      "apId": 2391,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Spend 900 mana on banishment."
+    },
+    "Out of Misery": {
+      "apId": 2392,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster that is whited out, poisoned, froze...",
+      "requirements": [
+        "Freeze skill",
+        "Poison skill",
+        "Slowing skill",
+        "Whiteout skill"
+      ]
+    },
+    "Out of Nowhere": {
+      "apId": 2393,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a whited out possessed monster with bolt.",
+      "requirements": [
+        "Bolt skill",
+        "Whiteout skill",
+        "Possessed Monster element"
+      ]
+    },
+    "Outwhited": {
+      "apId": 2394,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Gain 4.700 xp with Whiteout spell crowd hits.",
+      "requirements": [
+        "Whiteout skill"
+      ]
+    },
+    "Overheated": {
+      "apId": 2395,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a giant with beam shot.",
+      "requirements": [
+        "Beam skill"
+      ]
+    },
+    "Overpecked": {
+      "apId": 2396,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deal 100 gem wasp stings to the same monster."
+    },
+    "Painful Leech": {
+      "apId": 2397,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Leech 3.200 mana from bleeding monsters.",
+      "requirements": [
+        "Bleeding skill",
+        "Mana Leech skill"
+      ]
+    },
+    "Paranormal Paragon": {
+      "apId": 2398,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 non-monsters killed through all the batt...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Pat on the Back": {
+      "apId": 2399,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Amplify a gem.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Path of Splats": {
+      "apId": 2400,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 400 monsters."
+    },
+    "Peek Into The Abyss": {
+      "apId": 2401,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster with all battle traits set to the h...",
+      "requirements": [
+        "Adaptive Carapace trait",
+        "Dark Masonry trait",
+        "Swarmling Domination trait",
+        "Overcrowd trait",
+        "Corrupted Banishment trait",
+        "Awakening trait",
+        "Insulation trait",
+        "Hatred trait",
+        "Swarmling Parasites trait",
+        "Haste trait",
+        "Thick Air trait",
+        "Vital Link trait",
+        "Giant Domination trait",
+        "Strength in Numbers trait",
+        "Ritual trait"
+      ]
+    },
+    "Pest Control": {
+      "apId": 2402,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 333 swarmlings."
+    },
+    "Plentiful": {
+      "apId": 2403,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 1.000 shadow cores at the start of the battle...",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Pointed Pain": {
+      "apId": 2404,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deal 50 gem wasp stings to creatures."
+    },
+    "Popped": {
+      "apId": 2405,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill at least 30 gatekeeper fangs.",
+      "requirements": [
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Popped Eggs": {
+      "apId": 2406,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a swarm queen with a bolt.",
+      "requirements": [
+        "Bolt skill",
+        "Swarm Queen element"
+      ]
+    },
+    "Popping Lights": {
+      "apId": 2407,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 5 beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Power Exchange": {
+      "apId": 2408,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Build 25 amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Power Flow": {
+      "apId": 2409,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Build 15 amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Power Node": {
+      "apId": 2410,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Activate the same shrine 5 times.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Power Overwhelming": {
+      "apId": 2411,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Reach mana pool level 15."
+    },
+    "Power Sharing": {
+      "apId": 2412,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build 5 amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Powerful": {
+      "apId": 2413,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Create a gem with a raw minimum damage of 300 or h...",
+      "requirements": [
+        "gemSkills: 1"
+      ]
+    },
+    "Precious": {
+      "apId": 2414,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Get a gem from a drop holder.",
+      "requirements": [
+        "Drop Holder element"
+      ]
+    },
+    "Prismatic": {
+      "apId": 2415,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Create a gem of 6 components.",
+      "requirements": [
+        "gemSkills: 6"
+      ]
+    },
+    "Prismatic Takeaway": {
+      "apId": 2416,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a specter steal a gem of 6 components.",
+      "requirements": [
+        "Specter element",
+        "gemSkills: 6"
+      ]
+    },
+    "Punching Deep": {
+      "apId": 2417,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Tear a total of 2.500 armor with wasp stings.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Puncture Therapy": {
+      "apId": 2418,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Deal 950 gem wasp stings to creatures."
+    },
+    "Punctured Texture": {
+      "apId": 2419,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Deal 5.000 gem wasp stings to buildings."
+    },
+    "Puncturing Shots": {
+      "apId": 2420,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deliver 75 one hit kills."
+    },
+    "Purged": {
+      "apId": 2421,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 179 marked monsters.",
+      "requirements": [
+        "Marked Monster element",
+        "minWave: 70"
+      ]
+    },
+    "Purist": {
+      "apId": 2422,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Beat 120 waves and don't use any strike or gem enh...",
+      "requirements": [
+        "minWave: 120"
+      ]
+    },
+    "Purple Wand": {
+      "apId": 2423,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Reach wizard level 200."
+    },
+    "Put Those Down Now!": {
+      "apId": 2424,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 10 orblets carried by monsters at the same ti...",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Puzzling Bunch": {
+      "apId": 2425,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Add 16 talisman fragments to your shape collection..."
+    },
+    "Pylons of Destruction": {
+      "apId": 2426,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 pylon kills through all the battles.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Quadpierced": {
+      "apId": 2427,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Cast 4 ice shards on the same monster.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Quick Circle": {
+      "apId": 2428,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Create a grade 12 gem before wave 12.",
+      "requirements": [
+        "minGemGrade: 12"
+      ]
+    },
+    "Quicksave": {
+      "apId": 2429,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Instantly drop a gem to your inventory."
+    },
+    "Quite a List": {
+      "apId": 2430,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have at least 15 different talisman properties."
+    },
+    "Rage Control": {
+      "apId": 2431,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 400 enraged swarmlings with barrage.",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "Rageout": {
+      "apId": 2432,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Enrage 30 waves.",
+      "requirements": [
+        "minWave: 30"
+      ]
+    },
+    "Rageroom": {
+      "apId": 2433,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build 100 walls and start 100 enraged waves.",
+      "requirements": [
+        "Wall element",
+        "minWave: 100"
+      ]
+    },
+    "Raging Habit": {
+      "apId": 2434,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Enrage 80 waves.",
+      "requirements": [
+        "minWave: 80"
+      ]
+    },
+    "Rainbow Strike": {
+      "apId": 2435,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 900 monsters with prismatic gem wasps.",
+      "requirements": [
+        "gemSkills: 6"
+      ]
+    },
+    "Raindrop": {
+      "apId": 2436,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Drop 18 gem bombs while it's raining."
+    },
+    "Razor Path": {
+      "apId": 2437,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Build 60 traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Red Orange": {
+      "apId": 2438,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leech 700 mana from bleeding monsters.",
+      "requirements": [
+        "Bleeding skill",
+        "Mana Leech skill"
+      ]
+    },
+    "Red Wand": {
+      "apId": 2439,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Reach wizard level 500."
+    },
+    "Refrost": {
+      "apId": 2440,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Freeze 111 frozen monsters.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Regaining Knowledge": {
+      "apId": 2441,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Acquire 5 skills."
+    },
+    "Renzokuken": {
+      "apId": 2442,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Break your frozen time gem bombing limits",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Resourceful": {
+      "apId": 2443,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 mana harvested from shards through all...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Restless": {
+      "apId": 2444,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Call 35 waves early.",
+      "requirements": [
+        "minWave: 35"
+      ]
+    },
+    "Return of Investment": {
+      "apId": 2445,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leech 900 mana with a grade 1 gem.",
+      "requirements": [
+        "Mana Leech skill",
+        "minGemGrade: 1"
+      ]
+    },
+    "Riding the Waves": {
+      "apId": 2446,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 waves beaten through all the battles."
+    },
+    "Rising Tide": {
+      "apId": 2447,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Banish 150 monsters while there are 2 or more wrai...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Roof Knocking": {
+      "apId": 2448,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deal 20 gem wasp stings to buildings."
+    },
+    "Root Canal": {
+      "apId": 2449,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 2 monster nests.",
+      "requirements": [
+        "Monster Nest element"
+      ]
+    },
+    "Rooting From Afar": {
+      "apId": 2450,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a gatekeeper fang with a barrage shell.",
+      "requirements": [
+        "Barrage skill",
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Rotten Aura": {
+      "apId": 2451,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Leech 1.100 mana from poisoned monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Poison skill"
+      ]
+    },
+    "Rough Path": {
+      "apId": 2452,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 60 monsters with gems in traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Round Cut": {
+      "apId": 2453,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Create a grade 12 gem.",
+      "requirements": [
+        "minGemGrade: 12"
+      ]
+    },
+    "Round Cut Plus": {
+      "apId": 2454,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Create a grade 16 gem.",
+      "requirements": [
+        "minGemGrade: 16"
+      ]
+    },
+    "Route Planning": {
+      "apId": 2455,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 5 barricades.",
+      "requirements": [
+        "Barricade element"
+      ]
+    },
+    "Rugged Defense": {
+      "apId": 2456,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have 16 bolt enhanced gems at the same time.",
+      "requirements": [
+        "Bolt skill"
+      ]
+    },
+    "Ruined Ghost Town": {
+      "apId": 2457,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 5 dwellings.",
+      "requirements": [
+        "Abandoned Dwelling element"
+      ]
+    },
+    "Safe and Secure": {
+      "apId": 2458,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Strengthen your orb with 7 gems in amplifiers.",
+      "requirements": [
+        "Amplifiers skill"
+      ]
+    },
+    "Salvation": {
+      "apId": 2459,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Hit 150 whited out monsters with shrines.",
+      "requirements": [
+        "Whiteout skill",
+        "Shrine element"
+      ]
+    },
+    "Scare Tactics": {
+      "apId": 2460,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Cast 5 strike spells.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Scour You All": {
+      "apId": 2461,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 660 banished monsters with shrines.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Second Thoughts": {
+      "apId": 2462,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Add a different enhancement on an enhanced gem.",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Seen Battle": {
+      "apId": 2463,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 1 gem with 500 hits.",
+      "requirements": [
+        "minGemGrade: 1"
+      ]
+    },
+    "Settlement": {
+      "apId": 2464,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Build 15 towers.",
+      "requirements": [
+        "Tower element"
+      ]
+    },
+    "Shaken Ice": {
+      "apId": 2465,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Hit 475 frozen monsters with shrines.",
+      "requirements": [
+        "Freeze skill",
+        "Shrine element"
+      ]
+    },
+    "Shapeshifter": {
+      "apId": 2466,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Complete your talisman fragment shape collection."
+    },
+    "Shard Siphon": {
+      "apId": 2467,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 20.000 mana harvested from shards through al...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "Shardalot": {
+      "apId": 2468,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Cast 6 ice shards on the same monster.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Sharp Shot": {
+      "apId": 2469,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a shadow with a shot fired by a gem having at...",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Sharpened": {
+      "apId": 2470,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a gem in a trap.",
+      "requirements": [
+        "Traps skill",
+        "Beam skill",
+        "Bolt skill",
+        "Barrage skill"
+      ]
+    },
+    "Shatter Them All": {
+      "apId": 2471,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 beacons destroyed through all the batt...",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Shattered Orb": {
+      "apId": 2472,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Lose a battle."
+    },
+    "Shattered Waves": {
+      "apId": 2473,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Hit 225 frozen monsters with shrines.",
+      "requirements": [
+        "Freeze skill",
+        "Shrine element"
+      ]
+    },
+    "Shattering": {
+      "apId": 2474,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 90 frozen monsters with bolt.",
+      "requirements": [
+        "Bolt skill",
+        "Freeze skill"
+      ]
+    },
+    "Shavings All Around": {
+      "apId": 2475,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only armor tearing gems.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Shell Shock": {
+      "apId": 2476,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 8 barrage enhanced gems at the same time.",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "Shieldbreaker": {
+      "apId": 2477,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy 3 shield beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Shooting Where it Hurts": {
+      "apId": 2478,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only critical hit gems.",
+      "requirements": [
+        "Critical Hit skill",
+        "minWave: 90"
+      ]
+    },
+    "Short Tempered": {
+      "apId": 2479,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Call 5 waves early.",
+      "requirements": [
+        "minWave: 5"
+      ]
+    },
+    "Shovel Swing": {
+      "apId": 2480,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Hit 15 frozen monsters with shrines.",
+      "requirements": [
+        "Freeze skill",
+        "Shrine element"
+      ]
+    },
+    "Shred Some Armor": {
+      "apId": 2481,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a pure armor tearing gem with 3.000 hits.",
+      "requirements": [
+        "Armor Tearing skill"
+      ]
+    },
+    "Shrinemaster": {
+      "apId": 2482,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 20.000 shrine kills through all the battles.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Sigil": {
+      "apId": 2483,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Fill all the sockets in your talisman with fragmen...",
+      "requirements": [
+        "Shadow Core element"
+      ]
+    },
+    "Size Matters": {
+      "apId": 2484,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Beat 100 waves on max Swarmling and Giant dominati...",
+      "requirements": [
+        "Swarmling Domination trait",
+        "Giant Domination trait",
+        "minWave: 100"
+      ]
+    },
+    "Skillful": {
+      "apId": 2485,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Acquire and raise all skills to level 5 or above."
+    },
+    "Skylark": {
+      "apId": 2486,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Call every wave early in a battle."
+    },
+    "Sliced Ice": {
+      "apId": 2487,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Gain 1.800 xp with Ice Shards spell crowd hits.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "Slime Block": {
+      "apId": 2488,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Nine slimeballs is all it takes",
+      "requirements": [
+        "A monster with atleast 20.000hp"
+      ]
+    },
+    "Slow Creep": {
+      "apId": 2489,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Poison 130 whited out monsters.",
+      "requirements": [
+        "Poison skill",
+        "Whiteout skill"
+      ]
+    },
+    "Slow Drain": {
+      "apId": 2490,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Deal 10.000 poison damage to a monster.",
+      "requirements": [
+        "Poison skill"
+      ]
+    },
+    "Slow Motion": {
+      "apId": 2491,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a pure slowing gem having random priority ...",
+      "requirements": [
+        "Beam skill",
+        "Slowing skill"
+      ]
+    },
+    "Slowly but Surely": {
+      "apId": 2492,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only slowing gems.",
+      "requirements": [
+        "Slowing skill",
+        "minWave: 90"
+      ]
+    },
+    "Smoke in the Sky": {
+      "apId": 2493,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 20 non-monsters killed through all the battl...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Snatchers": {
+      "apId": 2494,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Gain 3.200 mana from drops."
+    },
+    "Snow Blower": {
+      "apId": 2495,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 20 frozen monsters with barrage.",
+      "requirements": [
+        "Barrage skill",
+        "Freeze skill"
+      ]
+    },
+    "Snow Dust": {
+      "apId": 2496,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 95 frozen monsters while it's snowing.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Snowball": {
+      "apId": 2497,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Drop 27 gem bombs while it's snowing."
+    },
+    "Snowdust Blindness": {
+      "apId": 2498,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Gain 2.300 xp with Whiteout spell crowd hits.",
+      "requirements": [
+        "Whiteout skill"
+      ]
+    },
+    "So Attached": {
+      "apId": 2499,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a Trial battle without losing any orblets.",
+      "requirements": [
+        "Trial"
+      ]
+    },
+    "So Early": {
+      "apId": 2500,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 waves started early through all the ba..."
+    },
+    "So Enduring": {
+      "apId": 2501,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Adaptive Carapace trait set to level 6 or...",
+      "requirements": [
+        "Adaptive Carapace trait"
+      ]
+    },
+    "Socketed Rage": {
+      "apId": 2502,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enrage a wave."
+    },
+    "Something Special": {
+      "apId": 2503,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.000 monsters with special properties kille...",
+      "requirements": [
+        "Endurance",
+        "Possessed Monster element",
+        "Twisted Monster element",
+        "Marked Monster element",
+        "minWave: 70"
+      ]
+    },
+    "Sparse Snares": {
+      "apId": 2504,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build 10 traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Special Purpose": {
+      "apId": 2505,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Change the target priority of a gem."
+    },
+    "Spectrin Tetramer": {
+      "apId": 2506,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Vital Link trait set to level 6 or higher...",
+      "requirements": [
+        "Vital Link trait"
+      ]
+    },
+    "Spitting Darkness": {
+      "apId": 2507,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leave a gatekeeper fang alive until it can launch ...",
+      "requirements": [
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Splash Swim Splash": {
+      "apId": 2508,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Full of oxygen",
+      "requirements": [
+        "Click on water in a field\nRequires a field with water"
+      ]
+    },
+    "Starter Pack": {
+      "apId": 2509,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Add 8 talisman fragments to your shape collection."
+    },
+    "Stash No More": {
+      "apId": 2510,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a previously opened wizard stash.",
+      "requirements": [
+        "Wizard Stash element"
+      ]
+    },
+    "Stay Some More": {
+      "apId": 2511,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Cast freeze on an apparition 3 times.",
+      "requirements": [
+        "Freeze skill",
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "Still Alive": {
+      "apId": 2512,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Beat 60 waves.",
+      "requirements": [
+        "minWave: 60"
+      ]
+    },
+    "Still Chill": {
+      "apId": 2513,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Gain 1.500 xp with Freeze spell crowd hits.",
+      "requirements": [
+        "Freeze skill"
+      ]
+    },
+    "Still Lit": {
+      "apId": 2514,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 15 or more beacons standing at the end of the...",
+      "requirements": [
+        "Dark Masonry trait",
+        "Beacon element"
+      ]
+    },
+    "Still No Match": {
+      "apId": 2515,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy an omnibeacon.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Sting Stack": {
+      "apId": 2516,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Deal 1.000 gem wasp stings to buildings."
+    },
+    "Stinging Sphere": {
+      "apId": 2517,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deliver 100 banishments with your orb."
+    },
+    "Stingy Cloud": {
+      "apId": 2518,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 5.000 gem wasp kills through all the battles..."
+    },
+    "Stingy Downfall": {
+      "apId": 2519,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deal 400 wasp stings to a spire.",
+      "requirements": [
+        "Ritual trait",
+        "Spire element"
+      ]
+    },
+    "Stirring Up the Nest": {
+      "apId": 2520,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Deliver gem bomb and wasp kills only."
+    },
+    "Stockpile": {
+      "apId": 2521,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 30 fragments in your talisman inventory."
+    },
+    "Stolen Shine": {
+      "apId": 2522,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Leech 2.700 mana from whited out monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Whiteout skill"
+      ]
+    },
+    "Stone Monument": {
+      "apId": 2523,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Build 240 walls.",
+      "requirements": [
+        "Wall element"
+      ]
+    },
+    "Stones to Dust": {
+      "apId": 2524,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Demolish one of your structures."
+    },
+    "Stormbringer": {
+      "apId": 2525,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000 strike spells cast through all the bat...",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Stormed Beacons": {
+      "apId": 2526,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Destroy 15 beacons.",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Strike Anywhere": {
+      "apId": 2527,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Cast a strike spell.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "Stronger Than Before": {
+      "apId": 2528,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Set corrupted banishment to level 12 and banish a ...",
+      "requirements": [
+        "Corrupted Banishment trait"
+      ]
+    },
+    "Stumbling": {
+      "apId": 2529,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Hit the same monster with traps 100 times.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Super Gem": {
+      "apId": 2530,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Create a grade 3 gem with 300 effective max damage...",
+      "requirements": [
+        "minGemGrade: 3"
+      ]
+    },
+    "Supply Line Cut": {
+      "apId": 2531,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a swarm queen with a barrage shell.",
+      "requirements": [
+        "Barrage skill",
+        "Swarm Queen element"
+      ]
+    },
+    "Swarmling Season": {
+      "apId": 2532,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 999 swarmlings."
+    },
+    "Swift Death": {
+      "apId": 2533,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill the gatekeeper with a bolt.",
+      "requirements": [
+        "Bolt skill",
+        "Gatekeeper element",
+        "Field A4"
+      ]
+    },
+    "Swift Deployment": {
+      "apId": 2534,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have 20 gems on the battlefield before wave 5."
+    },
+    "Take Them I Have More": {
+      "apId": 2535,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Have 12 of your gems destroyed or stolen.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element",
+        "Watchtower element"
+      ]
+    },
+    "Takers": {
+      "apId": 2536,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Gain 1.600 mana from drops.",
+      "requirements": [
+        "Apparition element",
+        "Corrupted Mana Shard element",
+        "Drop Holder element",
+        "Mana Shard element"
+      ]
+    },
+    "Tapped Essence": {
+      "apId": 2537,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Leech 1.500 mana from bleeding monsters.",
+      "requirements": [
+        "Bleeding skill",
+        "Mana Leech skill"
+      ]
+    },
+    "Targeting Weak Points": {
+      "apId": 2538,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle using only critical hit gems.",
+      "requirements": [
+        "Critical Hit skill"
+      ]
+    },
+    "Taste All The Affixes": {
+      "apId": 2539,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 2.500 monsters with prismatic gem wasps.",
+      "requirements": [
+        "gemSkills: 6"
+      ]
+    },
+    "Tasting the Darkness": {
+      "apId": 2540,
+      "required_effort": "Minor",
+      "reward": "skillPoints:3",
+      "description": "Break 3 tombs open.",
+      "requirements": [
+        "Tomb element"
+      ]
+    },
+    "Teleport Lag": {
+      "apId": 2541,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Banish a monster at least 5 times."
+    },
+    "Ten Angry Waves": {
+      "apId": 2542,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enrage 10 waves.",
+      "requirements": [
+        "minWave: 10"
+      ]
+    },
+    "That Was Rude": {
+      "apId": 2543,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Lose a gem with more than 1.000 hits to a watchtow...",
+      "requirements": [
+        "Watchtower element"
+      ]
+    },
+    "That Was Your Last Move": {
+      "apId": 2544,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a wizard hunter while it's attacking one of y...",
+      "requirements": [
+        "Wizard Hunter element"
+      ]
+    },
+    "That one!": {
+      "apId": 2545,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Select a monster."
+    },
+    "The Gathering": {
+      "apId": 2546,
+      "required_effort": "Major",
+      "reward": "skillPoints:3",
+      "description": "Summon 500 monsters by enraging waves."
+    },
+    "The Horror": {
+      "apId": 2547,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Lose 3.333 mana to shadows.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "The Killing Will Never Stop": {
+      "apId": 2548,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 200.000 monsters killed through all the batt..."
+    },
+    "The Mana Reaper": {
+      "apId": 2549,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 100.000 mana harvested from shards through a...",
+      "requirements": [
+        "Mana Shard element"
+      ]
+    },
+    "The Messenger Must Die": {
+      "apId": 2550,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a shadow.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "The Peeler": {
+      "apId": 2551,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Create a grade 12 pure armor tearing gem.",
+      "requirements": [
+        "Armor Tearing skill",
+        "minGemGrade: 12"
+      ]
+    },
+    "The Price of Obsession": {
+      "apId": 2552,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 590 banished monsters."
+    },
+    "There it is!": {
+      "apId": 2553,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Select a building."
+    },
+    "There's No Time": {
+      "apId": 2554,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Call 140 waves early.",
+      "requirements": [
+        "minWave: 140",
+        "Endurance"
+      ]
+    },
+    "They Are Millions": {
+      "apId": 2555,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 1.000.000 monsters killed through all the ba..."
+    },
+    "They Are Still Here": {
+      "apId": 2556,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 2 apparitions.",
+      "requirements": [
+        "Ritual trait",
+        "Apparition element"
+      ]
+    },
+    "They Keep Coming": {
+      "apId": 2557,
+      "required_effort": "Major",
+      "reward": "skillPoints:2",
+      "description": "Kill 12.000 monsters."
+    },
+    "Thin Ice": {
+      "apId": 2558,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 20 frozen monsters with gems in traps.",
+      "requirements": [
+        "Freeze skill",
+        "Traps skill"
+      ]
+    },
+    "Thin Them Out": {
+      "apId": 2559,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Strength in Numbers trait set to level 6 ...",
+      "requirements": [
+        "Strength in Numbers trait"
+      ]
+    },
+    "Third Grade": {
+      "apId": 2560,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Create a grade 3 gem.",
+      "requirements": [
+        "minGemGrade: 3"
+      ]
+    },
+    "Thorned Sphere": {
+      "apId": 2561,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Deliver 400 banishments with your orb."
+    },
+    "Through All Layers": {
+      "apId": 2562,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a monster having at least 200 armor.",
+      "requirements": [
+        "A monster with atleast 200 armor"
+      ]
+    },
+    "Thunderstruck": {
+      "apId": 2563,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 120 monsters with gem bombs and wasps."
+    },
+    "Tightly Secured": {
+      "apId": 2564,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Don't let any monster touch your orb for 60 beaten...",
+      "requirements": [
+        "minWave: 60"
+      ]
+    },
+    "Time Bent": {
+      "apId": 2565,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 90 monsters slowed at the same time.",
+      "requirements": [
+        "Slowing skill"
+      ]
+    },
+    "Time to Rise": {
+      "apId": 2566,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Awakening trait set to level 6 or higher ...",
+      "requirements": [
+        "Awakening trait"
+      ]
+    },
+    "Time to Upgrade": {
+      "apId": 2567,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 1 gem with 4.500 hits.",
+      "requirements": [
+        "minGemGrade: 1"
+      ]
+    },
+    "Tiny but Deadly": {
+      "apId": 2568,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 50.000 gem wasp kills through all the battle..."
+    },
+    "To the Last Drop": {
+      "apId": 2569,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Leech 4.700 mana from poisoned monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Poison skill"
+      ]
+    },
+    "Tomb No Matter What": {
+      "apId": 2570,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Open a tomb while there is a spire on the battlefi...",
+      "requirements": [
+        "Ritual trait",
+        "Spire element",
+        "Tomb element"
+      ]
+    },
+    "Tomb Raiding": {
+      "apId": 2571,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Break a tomb open before wave 15.",
+      "requirements": [
+        "Tomb element"
+      ]
+    },
+    "Tomb Stomping": {
+      "apId": 2572,
+      "required_effort": "Major",
+      "reward": "skillPoints:3",
+      "description": "Break 4 tombs open.",
+      "requirements": [
+        "Tomb element"
+      ]
+    },
+    "Too Curious": {
+      "apId": 2573,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Break 2 tombs open.",
+      "requirements": [
+        "Tomb element"
+      ]
+    },
+    "Too Easy": {
+      "apId": 2574,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:3",
+      "description": "Win a Trial battle with at least 3 waves enraged.",
+      "requirements": [
+        "minWave: 3",
+        "Trial"
+      ]
+    },
+    "Too Long to Hold Your Breath": {
+      "apId": 2575,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Beat 90 waves using only poison gems.",
+      "requirements": [
+        "Poison skill",
+        "minWave: 90"
+      ]
+    },
+    "Towerful": {
+      "apId": 2576,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Build 5 towers.",
+      "requirements": [
+        "Tower element"
+      ]
+    },
+    "Trapland": {
+      "apId": 2577,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "And it's bloody too",
+      "requirements": [
+        "Traps skill",
+        "Complete a level using only traps and no poison gems"
+      ]
+    },
+    "Trembling": {
+      "apId": 2578,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Kill 1.500 monsters with gems in traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Tricolor": {
+      "apId": 2579,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Create a gem of 3 components.",
+      "requirements": [
+        "gemSkills: 3"
+      ]
+    },
+    "Troll's Eye": {
+      "apId": 2580,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a giant with one shot.",
+      "requirements": [
+        "Bolt skill"
+      ]
+    },
+    "Tumbling Billows": {
+      "apId": 2581,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Have the Swarmling Domination trait set to level 6...",
+      "requirements": [
+        "Swarmling Domination trait"
+      ]
+    },
+    "Twice the Blast": {
+      "apId": 2582,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 2 barrage enhanced gems at the same time.",
+      "requirements": [
+        "Barrage skill"
+      ]
+    },
+    "Twice the Shock": {
+      "apId": 2583,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Hit the same monster 2 times with shrines.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Twice the Steepness": {
+      "apId": 2584,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 170 monsters while there are at least 2 wrait...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Twice the Terror": {
+      "apId": 2585,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:2",
+      "description": "Kill 2 shadows.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Unarmed": {
+      "apId": 2586,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have no gems when wave 20 starts.",
+      "requirements": [
+        "minWave: 20"
+      ]
+    },
+    "Under Pressure": {
+      "apId": 2587,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Shoot down 340 shadow projectiles.",
+      "requirements": [
+        "Ritual trait",
+        "Shadow element"
+      ]
+    },
+    "Unending Flow": {
+      "apId": 2588,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Kill 24.000 monsters."
+    },
+    "Unholy Stack": {
+      "apId": 2589,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 20.000 monsters with special properties kill...",
+      "requirements": [
+        "Endurance",
+        "Possessed Monster element",
+        "Twisted Monster element",
+        "Marked Monster element",
+        "minWave: 70"
+      ]
+    },
+    "Uninvited": {
+      "apId": 2590,
+      "required_effort": "Minor",
+      "reward": "skillPoints:2",
+      "description": "Summon 100 monsters by enraging waves."
+    },
+    "Unsupportive": {
+      "apId": 2591,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 100 beacons destroyed through all the battle...",
+      "requirements": [
+        "Beacon element"
+      ]
+    },
+    "Uraj and Khalis": {
+      "apId": 2592,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate the lanterns",
+      "requirements": [
+        "Lanterns skill",
+        "Field H3"
+      ]
+    },
+    "Urban Warfare": {
+      "apId": 2593,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Destroy a dwelling and kill a monster with one gem...",
+      "requirements": [
+        "Abandoned Dwelling element"
+      ]
+    },
+    "Vantage Point Down": {
+      "apId": 2594,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Demolish a pylon.",
+      "requirements": [
+        "Pylons skill"
+      ]
+    },
+    "Versatile Charm": {
+      "apId": 2595,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have at least 10 different talisman properties."
+    },
+    "Violet Ray": {
+      "apId": 2596,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 20 frozen monsters with beam.",
+      "requirements": [
+        "Beam skill",
+        "Freeze skill"
+      ]
+    },
+    "Warming Up": {
+      "apId": 2597,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 1 gem with 100 hits.",
+      "requirements": [
+        "minGemGrade: 1"
+      ]
+    },
+    "Wash Away": {
+      "apId": 2598,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill 110 monsters while it's raining."
+    },
+    "Wasp Defense": {
+      "apId": 2599,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Smash 3 jars of wasps before wave 3.",
+      "requirements": [
+        "Field X2"
+      ]
+    },
+    "Wasp Storm": {
+      "apId": 2600,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Kill 360 monsters with gem bombs and wasps."
+    },
+    "Waspocalypse": {
+      "apId": 2601,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Kill 1.080 monsters with gem bombs and wasps."
+    },
+    "Watch Your Step": {
+      "apId": 2602,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Build 40 traps.",
+      "requirements": [
+        "Traps skill"
+      ]
+    },
+    "Wave Pecking": {
+      "apId": 2603,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Summon 20 monsters by enraging waves."
+    },
+    "Wave Smasher": {
+      "apId": 2604,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 10.000 waves beaten through all the battles."
+    },
+    "Waves for Breakfast": {
+      "apId": 2605,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 2.000 waves beaten through all the battles."
+    },
+    "Wavy": {
+      "apId": 2606,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 waves beaten through all the battles.",
+      "requirements": [
+        "minWave: 500",
+        "Endurance"
+      ]
+    },
+    "We Just Wanna Be Free": {
+      "apId": 2607,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "More than blue triangles"
+    },
+    "Weakened Wallet": {
+      "apId": 2608,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Leech 5.400 mana from whited out monsters.",
+      "requirements": [
+        "Mana Leech skill",
+        "Whiteout skill"
+      ]
+    },
+    "Weather Tower": {
+      "apId": 2609,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Activate a shrine while raining.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "Weather of Wasps": {
+      "apId": 2610,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Deal 3950 gem wasp stings to creatures."
+    },
+    "Well Defended": {
+      "apId": 2611,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Don't let any monster touch your orb for 20 beaten..."
+    },
+    "Well Earned": {
+      "apId": 2612,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Reach 500 battles won."
+    },
+    "Well Laid": {
+      "apId": 2613,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have 10 gems on the battlefield."
+    },
+    "Well Prepared": {
+      "apId": 2614,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 20.000 initial mana."
+    },
+    "Well Trained for This": {
+      "apId": 2615,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a wraith with a shot fired by a gem having at...",
+      "requirements": [
+        "Ritual trait",
+        "Wraith element"
+      ]
+    },
+    "Whacked": {
+      "apId": 2616,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Kill a specter with one hit.",
+      "requirements": [
+        "Ritual trait",
+        "Specter element"
+      ]
+    },
+    "What Are You Waiting For?": {
+      "apId": 2617,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have all spells charged to 200%.",
+      "requirements": [
+        "Freeze skill",
+        "Whiteout skill",
+        "Ice Shards skill"
+      ]
+    },
+    "White Ray": {
+      "apId": 2618,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 90 frozen monsters with beam.",
+      "requirements": [
+        "Beam skill",
+        "Freeze skill"
+      ]
+    },
+    "White Ring of Death": {
+      "apId": 2619,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Gain 4.900 xp with Ice Shards spell crowd hits.",
+      "requirements": [
+        "Ice Shards skill"
+      ]
+    },
+    "White Wand": {
+      "apId": 2620,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Reach wizard level 10."
+    },
+    "Why Not": {
+      "apId": 2621,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Enhance a gem in the enraging socket.",
+      "requirements": [
+        "Bolt skill",
+        "Beam skill",
+        "Barrage skill"
+      ]
+    },
+    "Wicked Gem": {
+      "apId": 2622,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:1",
+      "description": "Have a grade 3 gem with 900 effective max damage.",
+      "requirements": [
+        "minGemGrade: 3"
+      ]
+    },
+    "Wings and Tentacles": {
+      "apId": 2623,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Reach 200 non-monsters killed through all the batt...",
+      "requirements": [
+        "Ritual trait"
+      ]
+    },
+    "Worst of Both Sizes": {
+      "apId": 2624,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Beat 300 waves on max Swarmling and Giant dominati...",
+      "requirements": [
+        "Swarmling Domination trait",
+        "Giant Domination trait",
+        "minWave: 300",
+        "Endurance"
+      ]
+    },
+    "Worthy": {
+      "apId": 2625,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Have 70 fields lit in Trial mode.",
+      "requirements": [
+        "Trial",
+        "fieldToken: 70"
+      ]
+    },
+    "Xp Harvest": {
+      "apId": 2626,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Have 40 fields lit in Endurance mode.",
+      "requirements": [
+        "Endurance",
+        "fieldToken: 40"
+      ]
+    },
+    "Yellow Wand": {
+      "apId": 2627,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Reach wizard level 20."
+    },
+    "You Could Be my Apprentice": {
+      "apId": 2628,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Have a watchtower kill a wizard hunter.",
+      "requirements": [
+        "Watchtower element",
+        "Wizard Hunter element"
+      ]
+    },
+    "You Had Your Chance": {
+      "apId": 2629,
+      "required_effort": "Minor",
+      "reward": "skillPoints:1",
+      "description": "Kill 260 banished monsters with shrines.",
+      "requirements": [
+        "Shrine element"
+      ]
+    },
+    "You Shall Not Pass": {
+      "apId": 2630,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:3",
+      "description": "Don't let any monster touch your orb for 240 beate...",
+      "requirements": [
+        "minWave: 240",
+        "Endurance"
+      ]
+    },
+    "You're Safe With Me": {
+      "apId": 2631,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Win a battle with at least 10 orblets remaining.",
+      "requirements": [
+        "Orb of Presence skill"
+      ]
+    },
+    "Your Mana is Mine": {
+      "apId": 2632,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Leech 10.000 mana with gems.",
+      "requirements": [
+        "Mana Leech skill"
+      ]
+    },
+    "Zap Away": {
+      "apId": 2633,
+      "required_effort": "Extreme",
+      "reward": "skillPoints:2",
+      "description": "Cast 175 strike spells.",
+      "requirements": [
+        "Ice Shards skill",
+        "Whiteout skill",
+        "Freeze skill"
+      ]
+    },
+    "Zapped": {
+      "apId": 2634,
+      "required_effort": "Trivial",
+      "reward": "skillPoints:1",
+      "description": "Get your Orb destroyed by a wizard tower.",
+      "requirements": [
+        "Wizard Tower element"
+      ]
+    },
+    "Zigzag Corridor": {
+      "apId": 2635,
+      "required_effort": "Major",
+      "reward": "skillPoints:1",
+      "description": "Build 60 walls.",
+      "requirements": [
+        "Wall element"
+      ]
+    }
+  },
+  "element_stages": {
+    "Abandoned Dwelling": [
+      "F1",
+      "I2",
+      "J2",
+      "M1",
+      "M3",
+      "O4",
+      "Q4",
+      "R4",
+      "R6",
+      "S2",
+      "T4",
+      "U4",
+      "X2",
+      "X3",
+      "Z4"
+    ],
+    "Barricade": [
+      "B1",
+      "B3",
+      "B4",
+      "C1",
+      "C3",
+      "D1",
+      "E1",
+      "E3",
+      "E5",
+      "F3",
+      "F4",
+      "F5",
+      "H3",
+      "H5",
+      "I1",
+      "I3",
+      "I4",
+      "K2",
+      "L3",
+      "L4",
+      "M3",
+      "N2",
+      "O2",
+      "O4",
+      "P4",
+      "Q2",
+      "Q4",
+      "Q5",
+      "R1",
+      "R3",
+      "W4",
+      "X3",
+      "Y2",
+      "Y4"
+    ],
+    "Beacon": [
+      "A3",
+      "A4",
+      "C1",
+      "C4",
+      "H2",
+      "J4",
+      "L1",
+      "O2",
+      "P2",
+      "S2",
+      "S4",
+      "T1",
+      "T3",
+      "V2",
+      "X4",
+      "Z1"
+    ],
+    "Corrupted Mana Shard": [
+      "C2",
+      "E4"
+    ],
+    "Drop Holder": [
+      "F1",
+      "I2",
+      "J2",
+      "L2",
+      "M3",
+      "O2",
+      "O4",
+      "Q4",
+      "S2",
+      "X2",
+      "Z4"
+    ],
+    "Gatekeeper": [
+      "A4"
+    ],
+    "Mana Shard": [
+      "C2",
+      "J2",
+      "J4",
+      "K3",
+      "L3",
+      "M3",
+      "N2",
+      "N3",
+      "U3",
+      "U4",
+      "X3",
+      "X4",
+      "Y2",
+      "Y4",
+      "Z3",
+      "Z5"
+    ],
+    "Monster Nest": [
+      "B1",
+      "B2",
+      "B5",
+      "C1",
+      "C3",
+      "D2",
+      "D4",
+      "E2",
+      "E3",
+      "G2",
+      "H1",
+      "J1",
+      "K3",
+      "K5",
+      "L1",
+      "L5",
+      "M1",
+      "M2",
+      "N3",
+      "N4",
+      "O3",
+      "O4",
+      "P2",
+      "P4",
+      "P5",
+      "R6",
+      "S1",
+      "S3",
+      "T1",
+      "T3",
+      "U4",
+      "V3",
+      "X1",
+      "X3",
+      "Z1",
+      "Z2",
+      "Z3",
+      "Z4"
+    ],
+    "Obelisk": [
+      "A4",
+      "C4"
+    ],
+    "Shrine": [
+      "B4",
+      "H2",
+      "J2",
+      "J4",
+      "L3",
+      "M4",
+      "N3",
+      "R4",
+      "U3",
+      "V2"
+    ],
+    "Sleeping Hive": [
+      "B4",
+      "Y1"
+    ],
+    "Swarm Queen": [
+      "K4"
+    ],
+    "Tomb": [
+      "B1",
+      "E5",
+      "F3",
+      "I2",
+      "J3",
+      "M3"
+    ],
+    "Watchtower": [
+      "K1"
+    ],
+    "Wizard Tower": [
+      "L5",
+      "W1",
+      "Y3"
+    ],
+    "Shadow": [
+      "A4",
+      "C5",
+      "E4",
+      "G3"
+    ],
+    "Specter": [
+      "E4",
+      "Y4"
+    ],
+    "Spire": [
+      "E2"
+    ],
+    "Wizard Hunter": [
+      "L4"
+    ],
+    "Wraith": [
+      "A4",
+      "X4"
+    ]
+  }
+}
