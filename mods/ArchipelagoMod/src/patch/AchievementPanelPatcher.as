@@ -4,7 +4,7 @@ package patch {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.BtnAchiFilter;
     import com.giab.games.gcfw.selector.PnlAchievements;
-    import AchievementMap;
+    import data.EmbeddedData;
 
     /**
      * Injects an "In Logic" filter button into the achievement panel so players
@@ -52,10 +52,10 @@ package patch {
 
         // -----------------------------------------------------------------------
 
-        /** Build title -> apId map from logic_rules.json (via AchievementMap embed). */
+        /** Build title -> apId map from logic_rules.json (via EmbeddedData). */
         private function _loadTitleMapping():void {
             try {
-                var json:String = AchievementMap.getData();
+                var json:String = EmbeddedData.getAchievementLogicJSON();
                 if (!json || json.length <= 2) return;
                 var parsed:Object = JSON.parse(json);
                 var achs:Object = parsed.achievements;

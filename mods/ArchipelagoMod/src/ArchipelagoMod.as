@@ -18,6 +18,7 @@ package {
     import com.giab.games.gcfw.constants.ScreenId;
 
     import data.AV;
+    import data.EmbeddedData;
     import goals.GoalManager;
 
     import ui.ModButtons;
@@ -46,8 +47,6 @@ package {
     import unlockers.AchievementUnlocker;
 
     import net.ConnectionManager;
-
-    import AchievementMap;
 
     import tracker.CollectedState;
     import tracker.LogicEvaluator;
@@ -1824,7 +1823,7 @@ package {
         }
 
         /**
-         * Load achievement map from embedded AchievementMap class.
+         * Load achievement map from embedded logic.json (via EmbeddedData).
          * This contains achievement name → AP ID, reward, required effort, and requirements.
          */
         private function loadAchievementMap():void {
@@ -1834,7 +1833,7 @@ package {
                     _achievementData = {};
                 }
 
-                var jsonString:String = AchievementMap.getData();
+                var jsonString:String = EmbeddedData.getAchievementLogicJSON();
                 if (!jsonString || jsonString.length == 0) {
                     _logger.log(MOD_NAME, "Warning: achievement_map data is empty");
                     return;
