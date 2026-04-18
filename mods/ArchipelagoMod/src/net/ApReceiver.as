@@ -245,8 +245,8 @@ package net {
                 if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
 
                 if (senderSlot == _mySlot) {
-                    _logger.log(_modName, "Attempting to get <" + sentItemId + "> from " + receiving);
                     var sentItemId:int      = int(p.item.item);
+                    _logger.log(_modName, "Attempting to get <" + sentItemId + "> from " + receiving);
                     var sentLocId:int       = int(p.item.location);
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;

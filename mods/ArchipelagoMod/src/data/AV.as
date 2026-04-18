@@ -10,11 +10,7 @@ package data {
         // Top-level generic mod data
 
         public static var version:String = "1.0.0";
-        public static var isConnected:Boolean = false;
         public static var currentSlot:String = "";
-        public static var currentWorld:String = "";
-        public static var playerNames:Object = {};      // slot → alias (from AP)
-        public static var playerGames:Object = {};      // slot → game name (from AP)
 
         // -----------------------------------------------------------------------
         // Archipelago server data (immutable after connection)
@@ -218,30 +214,5 @@ package data {
             }
         }
 
-        /**
-         * Clear all Archipelago data (call on disconnect / exit to main menu).
-         * Resets connection state, server data, and player progress.
-         * Does NOT clear gameData (static game knowledge that never changes).
-         *
-         * After calling this, standalone games will run normally without any AP data.
-         */
-        public static function clear():void
-        {
-            // Clear connection state
-            isConnected = false;
-            currentSlot = "";
-            currentWorld = "";
-            playerNames = {};
-            playerGames = {};
-
-            // Clear server-specific data (from AP)
-            serverData.clear();
-
-            // Clear all player progress and collected items
-            saveData.initialize();
-
-            // Note: gameData is NOT cleared because it's static game knowledge
-            // that never changes per connection
-        }
     }
 }

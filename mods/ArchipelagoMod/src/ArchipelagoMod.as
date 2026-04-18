@@ -624,6 +624,13 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
+
+                // Achievement panel patcher — idempotent once patched.
+                if (_achPanelPatcher != null) {
+                    _achPanelPatcher.tryPatch();
+                    if (GV.selectorCore != null)
+                        _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
+                }
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
             }
@@ -932,6 +939,11 @@ package {
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
+
+            if (_achPanelPatcher != null && _achievementUnlocker != null) {
+                _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+                _achPanelPatcher.refreshIfActive();
+            }
         }
 
         private function onSettingsClicked():void {
@@ -988,8 +1000,8 @@ package {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
                 // Track item for ending screen display
+                var itemDisplayName:String = itemName(apId);
                 if (_progressionBlocker != null) {
-                    var itemDisplayName:String = itemName(apId);
                     _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
                     // Sent-item icons on the ending screen come from addSentItemToEndingScreen
                     // (triggered by handlePrintJSON) so we don't add received items here.
@@ -998,6 +1010,10 @@ package {
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 if (_collectedState != null) _collectedState.onItem(apId);
                 if (_logicEvaluator != null) _logicEvaluator.markDirty();
+                if (_achPanelPatcher != null && _achievementUnlocker != null) {
+                    _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+                    _achPanelPatcher.refreshIfActive();
+                }
 
                 var strId:String = AV.serverData.tokenMap[String(apId)];
                 if (strId != null) {
