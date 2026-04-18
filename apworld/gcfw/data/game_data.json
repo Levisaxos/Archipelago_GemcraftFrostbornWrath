@@ -387,7 +387,7 @@
     {
       "str_id": "W2",
       "type": "NORMAL",
-      "item_ap_id": 2,
+      "item_ap_id": null,
       "loc_ap_id": 2,
       "unlocks": [
         "W3"
@@ -403,7 +403,7 @@
     {
       "str_id": "W3",
       "type": "STORY_RELATED",
-      "item_ap_id": 3,
+      "item_ap_id": null,
       "loc_ap_id": 3,
       "unlocks": [
         "W4"
@@ -419,7 +419,7 @@
     {
       "str_id": "W4",
       "type": "EPIC",
-      "item_ap_id": 4,
+      "item_ap_id": null,
       "loc_ap_id": 4,
       "unlocks": [
         "S1"
