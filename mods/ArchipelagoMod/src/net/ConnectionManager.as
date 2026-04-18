@@ -372,21 +372,16 @@ package net {
             try {
                 var hasController:Boolean = GV.ingameController != null;
                 var hasCore:Boolean = hasController && GV.ingameController.core != null;
-                _logger.log(_modName, "  ingameController=" + hasController + "  core=" + hasCore);
                 if (!hasController || !hasCore) return;
 
                 var ending:* = GV.ingameController.core.ending;
-                _logger.log(_modName, "  ending=" + ending
-                    + "  isBattleWon=" + (ending != null ? ending.isBattleWon : "n/a"));
                 if (ending == null || !ending.isBattleWon) return;
 
                 var hasPpd:Boolean   = GV.ppd != null;
                 var hasMetas:Boolean = GV.stageCollection != null && GV.stageCollection.stageMetas != null;
-                _logger.log(_modName, "  ppd=" + hasPpd + "  stageMetas=" + hasMetas);
                 if (!hasPpd || !hasMetas) return;
 
                 var metas:Array = GV.stageCollection.stageMetas;
-                _logger.log(_modName, "  metas.length=" + metas.length);
 
                 var toSend:Array = [];
                 _lastCheckedLocations = [];

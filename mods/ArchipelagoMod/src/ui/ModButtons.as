@@ -89,8 +89,6 @@ package ui {
             _reportBtn.y      = tmpl.y + stepY;
             _reportBtn.onClick = _onReportClick;
             mc.addChild(_reportBtn);
-            _logger.log(_modName, "Report Issues button added at ("
-                + _reportBtn.x + ", " + _reportBtn.y + ")");
 
             // ---- AP Settings (hidden until AP connects) ----
             _settingsBtn         = new CustomButton(tmpl, "AP Settings");
@@ -101,17 +99,12 @@ package ui {
                 if (onSettingsClick != null) onSettingsClick();
             };
             mc.addChild(_settingsBtn);
-            _logger.log(_modName, "AP Settings button added at ("
-                + _settingsBtn.x + ", " + _settingsBtn.y
-                + ") [hidden until connected]");
 
             // ---- Fields in Logic ----
             _fieldsBtn   = new FieldsInLogicButton(tmpl);
             _fieldsBtn.x = tmpl.x;
             _fieldsBtn.y = tmpl.y + stepY * 3;
             mc.addChild(_fieldsBtn);
-            _logger.log(_modName, "Fields in Logic button added at ("
-                + _fieldsBtn.x + ", " + _fieldsBtn.y + ")");
 
             // ---- Archipelago debug (hidden until Ctrl+Alt+Shift+End) ----
             _apDebugBtn         = new CustomButton(tmpl, "Archipelago");
@@ -122,7 +115,6 @@ package ui {
                 if (onApDebugClick != null) onApDebugClick();
             };
             mc.addChild(_apDebugBtn);
-            _logger.log(_modName, "Archipelago button added at ("+ _apDebugBtn.x + ", " + _apDebugBtn.y + ") [hidden]");
 
             _selectorAdded = true;
         }

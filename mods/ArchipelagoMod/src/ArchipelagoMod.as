@@ -376,7 +376,6 @@ package {
             {
                 AV.populateStages();
                 _stagesPopulated = true;
-                _logger.log(MOD_NAME, "Stage data populated into AV");
             }
 
             // Add toasts to stage once available.
@@ -408,21 +407,14 @@ package {
             // Main menu overlay — show/tick/hide driven by screen state.
             var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
             if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
-                _logger.log(MOD_NAME, "[MainMenuUI] Adding — screen=" + int(GV.main.currentScreen));
                 _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
             }
             if (_mainMenuUI.isShowing) {
                 _mainMenuUI.onFrame();
-                if (!onMainMenu) {
-                    _logger.log(MOD_NAME, "[MainMenuUI] Removing — screen=" + int(GV.main.currentScreen));
+                if (!onMainMenu)
                     _mainMenuUI.hide();
-                }
             }
-            // Throttled log: every 120 frames while showing, confirm screen is still MAINMENU.
             _dbgFrameCounter++;
-            if (_dbgFrameCounter % 120 == 0 && _mainMenuUI.isShowing) {
-                _logger.log(MOD_NAME, "[MainMenuUI] Still on stage — screen=" + int(GV.main.currentScreen));
-            }
 
             // Register the debug hotkey once the stage exists.
             if (!_keyListenerAdded && this.stage != null) {
@@ -446,14 +438,9 @@ package {
 
             // Track screen transitions.
             var screen:int = int(GV.main.currentScreen);
-            if (_lastScreen == -1) {
+            if (_lastScreen == -1)
                 _lastScreen = screen;
-                _logger.log(MOD_NAME, "Screen init — currentScreen=" + screen);
-            }
             if (screen != _lastScreen) {
-                _logger.log(MOD_NAME, "Screen change: " + _lastScreen + " → " + screen
-                    + "  _isConnected=" + _connectionManager.isConnected
-                    + "  _needsConnection=" + _needsConnection);
 
                 // Entering MAINMENU — disconnect early so the connection doesn't
                 // linger while the player is on the main menu.
@@ -606,7 +593,6 @@ package {
                 _stageUnlocker.syncMapTilesWithStages();
                 GV.selectorCore.renderer.setMapTilesVisibility();
                 _mapTilesUnlocked = true;
-                _logger.log(MOD_NAME, "Map tile visibility synced with stage states");
             }
 
             _stageUnlocker.enforceFullWorldScrollLimits();

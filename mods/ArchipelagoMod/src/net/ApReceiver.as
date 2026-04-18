@@ -110,8 +110,6 @@ package net {
 
         public function handleConnected(p:Object):void {
             _mySlot = int(p.slot);
-            _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
-
             _requestedGames = {};
 
             // Build player registry
@@ -127,7 +125,6 @@ package net {
             }
             var myPlayer:PlayerData = AV.archipelagoData.players[_mySlot] as PlayerData;
             AV.currentSlot = (myPlayer != null) ? myPlayer.name : "";
-            _logger.log(_modName, "  currentSlot=" + AV.currentSlot);
 
             // Token map
             if (p.slot_data && p.slot_data.token_map) {
@@ -246,7 +243,6 @@ package net {
 
                 if (senderSlot == _mySlot) {
                     var sentItemId:int      = int(p.item.item);
-                    _logger.log(_modName, "Attempting to get <" + sentItemId + "> from " + receiving);
                     var sentLocId:int       = int(p.item.location);
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
@@ -310,7 +306,6 @@ package net {
                         var resolvedName:String = byId[String(int(pending.item))];
                         check.name = (resolvedName != null) ? resolvedName : ("Item #" + pending.item);
                         filled++;
-                        _logger.log(_modName, "    [DataPackage] " + check.id + " = " + check.name);
                     }
                     if (filled > 0)
                         _logger.log(_modName, "    [DataPackage] Filled " + filled + " check name(s) for '" + gameName + "'");
@@ -323,7 +318,6 @@ package net {
         }
 
         public function handleLocationInfo(p:Object):void {
-            _logger.log(_modName, "----- Handle location info -----");
             var locations:Array = p.locations as Array;
             if (locations == null) return;
 
@@ -341,7 +335,6 @@ package net {
                 AV.archipelagoData.checks[locId] = {id: locId, name: null, game: game, playerName: playerName};
 
                 if (game != null) uniqueGames[game] = true;
-                _logger.log(_modName, "  loc=" + locId + " item=" + itemId + " player=" + ownerSlot + " game=" + game);
             }
 
             for (var gameName:String in uniqueGames)
@@ -407,25 +400,16 @@ package net {
                 return playerEntry.items[itemId].name;
 
             var gameName:String = (playerEntry != null) ? playerEntry.game : null;
-            _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
 
             if (gameName != null) {
                 var gameItems:Object = AV.archipelagoData.games[gameName];
                 if (gameItems != null) {
                     var name:String = gameItems[itemIdStr];
-                    if (name != null) {
-                        _logger.log(_modName, "[resolveItemName] Found in DataPackage: " + name);
+                    if (name != null)
                         return name;
-                    }
-                    _logger.log(_modName, "[resolveItemName] Not in DataPackage for " + gameName + ", itemId=" + itemId);
-                } else {
-                    _logger.log(_modName, "[resolveItemName] Game '" + gameName + "' not in DataPackage cache");
                 }
-            } else {
-                _logger.log(_modName, "[resolveItemName] No gameName for slot " + ownerSlot);
             }
 
-            _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
             return "Item #" + itemId;
         }
 

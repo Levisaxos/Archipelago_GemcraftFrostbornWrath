@@ -116,10 +116,6 @@ package data {
                         _logger.log("AV", "VALIDATION MISMATCH: Skill AP ID=" + gameSkill.apId + " game_id=" + gameSkill.gameId + " ap game_id=" + apSkillGameId);
                         hasErrors = true;
                     }
-                    else
-                    {
-                        _logger.log("AV", "OK Skill: gameId=" + gameSkill.gameId + ", AP ID=" + gameSkill.apId + ", name=" + gameSkill.name);
-                    }
                 }
             }
 
@@ -147,10 +143,6 @@ package data {
                         _logger.log("AV", "VALIDATION MISMATCH: Trait AP ID=" + gameTrait.apId + " game_id=" + gameTrait.gameId + " ap game_id=" + apTraitGameId);
                         hasErrors = true;
                     }
-                    else
-                    {
-                        _logger.log("AV", "OK Trait: gameId=" + gameTrait.gameId + ", AP ID=" + gameTrait.apId + ", name=" + gameTrait.name);
-                    }
                 }
             }
 
@@ -172,10 +164,6 @@ package data {
                         _logger.log("AV", "VALIDATION MISMATCH: MapTile AP ID=" + mapTile.apId + " letter=" + mapTile.letter + " game_id=" + mapTile.gameId + " ap game_id=" + apTileGameId);
                         hasErrors = true;
                     }
-                    else
-                    {
-                        _logger.log("AV", "OK MapTile: letter=" + mapTile.letter + ", gameId=" + mapTile.gameId + ", apId=" + mapTile.apId);
-                    }
                 }
             }
 
@@ -196,10 +184,6 @@ package data {
                     {
                         _logger.log("AV", "VALIDATION ERROR: Stage strId=" + stage.strId + " (gameId=" + stage.gameId + ") not found in serverData.stagesByStrId");
                         hasErrors = true;
-                    }
-                    else
-                    {
-                        _logger.log("AV", "OK Stage: gameId=" + stage.gameId + ", strId=" + stage.strId);
                     }
                 }
             }
