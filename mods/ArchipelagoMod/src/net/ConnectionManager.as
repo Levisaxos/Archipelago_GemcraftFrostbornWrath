@@ -2,29 +2,29 @@ package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import data.AV;
-    import data.EmbeddedData;
     import ui.ToastPanel;
     import ui.ItemToastPanel;
     import ui.MessageLog;
-    import data.ArchipelagoData
-    import data.PlayerData
 
     /**
-     * Manages the Archipelago server connection lifecycle and protocol.
+     * Manages the Archipelago server connection lifecycle.
      *
-     * Owns the WebSocketClient, connection state, AP packet parsing,
-     * token maps, and missing-location tracking.  Fires callbacks to
-     * ArchipelagoMod when high-level events occur (connected, items
-     * received, state changes).
+     * Owns the WebSocketClient, connection state, and credentials.
+     * Delegates outbound packets to ApSender and inbound packet handling to ApReceiver.
+     * Proxies the public getter / send API that ArchipelagoMod and other callers
+     * already depend on.
+     *
+     * Guards: sendDeathLink, sendConnectUpdate, sendGoalComplete, and
+     * checkCompletedLocations all require isConnected; callers need not check first.
      */
     public class ConnectionManager {
 
         private var _logger:Logger;
         private var _modName:String;
         private var _toast:ToastPanel;
-        private var _itemToast:ItemToastPanel;
-        private var _messageLog:MessageLog;
         private var _webSocketClient:WebSocketClient;
+        private var _sender:ApSender;
+        private var _receiver:ApReceiver;
 
         // Connection state
         private var _isConnected:Boolean  = false;
@@ -36,29 +36,13 @@ package net {
         private var _archipelagoPort:int        = 38281;
         private var _archipelagoSlot:String     = "Levisaxos";
         private var _archipelagoPassword:String = "";
-        private var _saveSlot:int      = 0;
-        // TLS is used only for archipelago.gg; local/IP servers use plain ws://
-        private static function isSecureHost(host:String):Boolean
-        {
+        private var _saveSlot:int               = 0;
+
+        private static function isSecureHost(host:String):Boolean {
             return host.toLowerCase() == "archipelago.gg";
         }
 
-        // AP slot data
-        private var _tokenMap:Object    = {};   // item AP ID (string) → stage str_id
-        private var _tokenStages:Object = {};   // stage str_id → true  (has an AP token)
-        private var _talismanMap:Object = {};     // item AP ID (string) → "seed/rarity/type/upgradeLevel"
-        private var _talismanNameMap:Object = {}; // item AP ID (string) → str_id (e.g. "Z3")
-        private var _shadowCoreMap:Object = {};     // item AP ID (string) → amount (int)
-        private var _shadowCoreNameMap:Object = {}; // item AP ID (string) → str_id (e.g. "Z2")
-        private var _wizStashTalData:Object = {};   // str_id → "seed/rarity/type/upgradeLevel"
-        private var _missingLocations:Object = {};
-        private var _lastCheckedLocations:Array = [];  // [{strId, locType}] — populated by checkCompletedLocations()
-        private var _itemsSentThisLevel:Object = {};   // [locationId → {itemId, itemName, receivingSlot, receivingName}] — populated by handlePrintJSON()
-        private var _mySlot:int         = 0;
-        private var _requestedGames:Object     = {}; // gameName → true, tracks in-flight/completed DataPackage requests
-        private var _pendingChecks:Object      = {}; // locationId(int) → {id:int, player:int, item:int}
-
-        // Stage str_id → AP location ID (Journey).  Bonus = locId + 500.
+        // Stage str_id → AP location ID (Journey).  Bonus = locId + 199.  Stash = locId + 399.
         private static const STAGE_LOC_AP_IDS:Object = {
             "W1":1,  "W2":2,  "W3":3,  "W4":4,
             "S1":5,  "S2":6,  "S3":7,  "S4":8,
@@ -88,19 +72,15 @@ package net {
             "I1":121,"I2":107,"I3":108,"I4":109
         };
 
-        /** Public read-only view of the stage -> base-Journey AP location id map. */
-        public static function get stageLocIds():Object
-        {
-            return STAGE_LOC_AP_IDS;
-        }
+        /** Public read-only view of the stage → base Journey AP location id map. */
+        public static function get stageLocIds():Object { return STAGE_LOC_AP_IDS; }
 
-        /** Locations checked during the most recent battle victory. Read by LevelEndScreenBuilder. */
+        // Populated by checkCompletedLocations(); read by LevelEndScreenBuilder.
+        private var _lastCheckedLocations:Array = [];
+
         public function get lastCheckedLocations():Array { return _lastCheckedLocations; }
 
-        /** Items sent out for checked locations (locationId → {itemId, itemName, receivingSlot, receivingName}). */
-        public function get itemsSentThisLevel():Object { return _itemsSentThisLevel; }
-
-        /** Server data (tokenMap, etc.) for item icon resolution. */
+        /** Server data convenience getter. */
         public function get serverData():Object { return AV.serverData; }
 
         // -----------------------------------------------------------------------
@@ -111,18 +91,16 @@ package net {
         /** Called with the full item list on initial sync (index=0). Signature: (items:Array):void */
         public var onFullSync:Function;
         /** Called for each incremental item grant. Signature: (apId:int):void */
-        public var onItemReceived:Function;       
+        public var onItemReceived:Function;
         /** Called when the connection panel should show an error. Signature: (msg:String):void */
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
         public var onPanelReset:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called for each PrintJSON ItemSend event involving us. Signature: (msg:String, color:uint):void */
-        public var onItemSend:Function;
-        /** Called when we send an item from a location (senderSlot==us). Signature: (locId:int, itemName:String, receivingName:String):void */
+        /** Called when we send an item from a location. Signature: (locId:int, itemName:String, receivingName:String):void */
         public var onItemSentFromLocation:Function;
-        /** Called when the connection drops unexpectedly (was connected, not a deliberate disconnect). Signature: ():void */
+        /** Called when the connection drops unexpectedly. Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
         // -----------------------------------------------------------------------
@@ -131,170 +109,117 @@ package net {
             _logger  = logger;
             _modName = modName;
             _toast   = toast;
+
+            _sender   = new ApSender(logger, modName);
+            _receiver = new ApReceiver(logger, modName, _sender, toast);
+
+            // Wire receiver callbacks up to CM-level callbacks
+            _receiver.onConnectionEstablished = _onConnectionEstablished;
+            _receiver.onFullSync = function(items:Array):void {
+                if (onFullSync != null) onFullSync(items);
+            };
+            _receiver.onItemReceived = function(apId:int):void {
+                if (onItemReceived != null) onItemReceived(apId);
+            };
+            _receiver.onDeathLinkReceived = function(src:String):void {
+                if (onDeathLinkReceived != null) onDeathLinkReceived(src);
+            };
+            _receiver.onItemSentFromLocation = function(loc:int, name:String, recv:String):void {
+                if (onItemSentFromLocation != null) onItemSentFromLocation(loc, name, recv);
+            };
         }
 
-        public function get isConnected():Boolean
-        {
-            return _isConnected;
+        private function _onConnectionEstablished(p:Object):void {
+            _isConnected = true;
+            _toast.addMessage("Connected to " + _archipelagoHost + ":" + _archipelagoPort
+                + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
+            if (onConnected != null) onConnected(p);
         }
 
-        public function get tokenMap():Object
-        {
-            return _tokenMap;
-        }
+        // -----------------------------------------------------------------------
+        // Proxy getters — backed by receiver
 
-        public function get tokenStages():Object
-        {
-            return _tokenStages;
-        }
+        public function get isConnected():Boolean          { return _isConnected; }
+        public function get tokenMap():Object              { return _receiver.tokenMap; }
+        public function get tokenStages():Object           { return _receiver.tokenStages; }
+        public function get talismanMap():Object           { return _receiver.talismanMap; }
+        public function get talismanNameMap():Object       { return _receiver.talismanNameMap; }
+        public function get shadowCoreMap():Object         { return _receiver.shadowCoreMap; }
+        public function get shadowCoreNameMap():Object     { return _receiver.shadowCoreNameMap; }
+        public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
+        public function get missingLocations():Object      { return _receiver.missingLocations; }
+        public function get itemsSentThisLevel():Object    { return _receiver.itemsSentThisLevel; }
 
-        public function get talismanMap():Object
-        {
-            return _talismanMap;
-        }
+        // -----------------------------------------------------------------------
+        // Credentials
 
-        public function get talismanNameMap():Object
-        {
-            return _talismanNameMap;
-        }
+        public function get apHost():String       { return _archipelagoHost; }
+        public function set apHost(v:String):void  { _archipelagoHost = v; }
+        public function get apPort():int          { return _archipelagoPort; }
+        public function set apPort(v:int):void    { _archipelagoPort = v; }
+        public function get apSlot():String       { return _archipelagoSlot; }
+        public function set apSlot(v:String):void  { _archipelagoSlot = v; }
+        public function get apPassword():String   { return _archipelagoPassword; }
+        public function set apPassword(v:String):void { _archipelagoPassword = v; }
+        public function get saveSlot():int        { return _saveSlot; }
+        public function set saveSlot(v:int):void  { _saveSlot = v; }
 
-        public function get shadowCoreMap():Object
-        {
-            return _shadowCoreMap;
-        }
-
-        public function get shadowCoreNameMap():Object
-        {
-            return _shadowCoreNameMap;
-        }
-
-        public function get wizStashTalData():Object
-        {
-            return _wizStashTalData;
-        }
-
-        public function get missingLocations():Object
-        {
-            return _missingLocations;
-        }
-
-        public function get apHost():String
-        {
-            return _archipelagoHost;
-        }
-
-        public function set apHost(value:String):void
-        {
-            _archipelagoHost = value;
-        }
-
-        public function get apPort():int
-        {
-            return _archipelagoPort;
-        }
-
-        public function set apPort(value:int):void
-        {
-            _archipelagoPort = value;
-        }
-
-        public function get apSlot():String
-        {
-            return _archipelagoSlot;
-        }
-
-        public function set apSlot(value:String):void
-        {
-            _archipelagoSlot = value;
-        }
-
-        public function get apPassword():String
-        {
-            return _archipelagoPassword;
-        }
-
-        public function set apPassword(value:String):void
-        {
-            _archipelagoPassword = value;
-        }
-
-        public function get saveSlot():int
-        {
-            return _saveSlot;
-        }
-
-        public function set saveSlot(value:int):void
-        {
-            _saveSlot = value;
-        }
+        // -----------------------------------------------------------------------
+        // Panel plumbing — forwarded to receiver
 
         /** Provide the item-notification panel used for received/found/sent item toasts. */
-        public function setItemToast(panel:ItemToastPanel):void
-        {
-            _itemToast = panel;
-        }
+        public function setItemToast(panel:ItemToastPanel):void { _receiver.setItemToast(panel); }
 
         /** Provide the message log so item send/receive events are recorded. */
-        public function setMessageLog(log:MessageLog):void
-        {
-            _messageLog = log;
-        }
+        public function setMessageLog(log:MessageLog):void { _receiver.setMessageLog(log); }
 
         // -----------------------------------------------------------------------
         // Lifecycle
 
-        public function load():void
-        {
+        public function load():void {
             _webSocketClient = new WebSocketClient(_logger);
             _webSocketClient.onOpen    = wsOnOpen;
             _webSocketClient.onMessage = onApMessage;
             _webSocketClient.onError   = wsOnError;
             _webSocketClient.onClose   = wsOnClose;
+            _sender.setWebSocket(_webSocketClient);
             _logger.log(_modName, "ConnectionManager loaded — waiting for slot selection");
         }
 
-        public function unload():void
-        {
-            if (_webSocketClient != null)
-            {
+        public function unload():void {
+            if (_webSocketClient != null) {
                 _webSocketClient.disconnect();
                 _webSocketClient = null;
+                _sender.setWebSocket(null);
             }
         }
 
         // -----------------------------------------------------------------------
         // Connection control
 
-        public function connect(host:String, port:int, slot:String, password:String):void
-        {
+        public function connect(host:String, port:int, slot:String, password:String):void {
             _archipelagoHost     = host;
             _archipelagoPort     = port;
             _archipelagoSlot     = slot;
             _archipelagoPassword = password;
-            if (_webSocketClient != null && _isConnecting == false)
-            {
+            if (_webSocketClient != null && _isConnecting == false) {
                 _isConnecting = true;
                 _reconnecting = true;
                 _webSocketClient.disconnect();
                 _reconnecting = false;
-                _toast.addMessage("Connecting to " + _archipelagoHost + ":" + _archipelagoPort + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
-                _webSocketClient.connect(_archipelagoHost, _archipelagoPort, isSecureHost(_archipelagoHost));
-                _logger.log(_modName, "Connecting to " + _archipelagoHost + ":" + _archipelagoPort + "  slot=" + _archipelagoSlot);
+                _toast.addMessage("Connecting to " + host + ":" + port
+                    + " as " + slot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
+                _webSocketClient.connect(host, port, isSecureHost(host));
+                _logger.log(_modName, "Connecting to " + host + ":" + port + "  slot=" + slot);
             }
         }
 
-        public function disconnect():void
-        {
-            if (_webSocketClient != null)
-            {
-                _webSocketClient.disconnect();
-            }
+        public function disconnect():void {
+            if (_webSocketClient != null) _webSocketClient.disconnect();
         }
 
-        public function disconnectAndReset():void
-        {
-            if (_webSocketClient != null)
-            {
+        public function disconnectAndReset():void {
+            if (_webSocketClient != null) {
                 _reconnecting = false;
                 _webSocketClient.disconnect();
             }
@@ -302,16 +227,14 @@ package net {
         }
 
         /** Reset connection settings to defaults. */
-        public function resetSettings():void
-        {
+        public function resetSettings():void {
             _archipelagoHost     = "localhost";
             _archipelagoPort     = 38281;
             _archipelagoSlot     = "Levisaxos";
             _archipelagoPassword = "";
         }
 
-        public function failConnection():void
-        {
+        public function failConnection():void {
             _isConnecting = false;
         }
 
@@ -319,18 +242,18 @@ package net {
         // WebSocket callbacks
 
         private function wsOnOpen():void {
-            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");                        
+            _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");
             if (onError != null) onError("Authenticating...");
         }
 
-        private function wsOnError(msg:String):void {            
+        private function wsOnError(msg:String):void {
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
             var failMsg:String = "Failed to connect to " + _archipelagoHost + ":" + _archipelagoPort
                 + " with name " + _archipelagoSlot;
             if (onError != null) onError(failMsg);
-            _toast.addMessage(failMsg, 0xFFFF6666);            
+            _toast.addMessage(failMsg, 0xFFFF6666);
         }
 
         private function wsOnClose():void {
@@ -341,25 +264,24 @@ package net {
             if (!_reconnecting && wasConnected) {
                 _toast.addMessage("AP disconnected", 0xFFFFAA44);
                 if (onUnexpectedDisconnect != null) onUnexpectedDisconnect();
-            }            
+            }
         }
 
         // -----------------------------------------------------------------------
-        // AP protocol
+        // AP protocol dispatch
 
         private function onApMessage(text:String):void {
             try {
                 var packets:Array = JSON.parse(text) as Array;
-                for each (var packet:Object in packets) {
-                    handlePacket(packet);
-                }
+                for each (var packet:Object in packets)
+                    _dispatchPacket(packet);
             } catch (e:Error) {
                 _logger.log(_modName, "Failed to parse AP message: " + e.message);
                 _toast.addMessage("AP parse error: " + e.message, 0xFFFF6666);
             }
         }
 
-        private function handlePacket(p:Object):void {
+        private function _dispatchPacket(p:Object):void {
             var cmd:String = p.cmd;
             _logger.log(_modName, "AP << " + cmd);
 
@@ -367,19 +289,15 @@ package net {
                 case "RoomInfo":
                     _logger.log(_modName, "  seed=" + p.seed_name + "  server=" +
                         p.version.major + "." + p.version.minor + "." + p.version.build);
-                    sendConnect();
+                    _sender.sendConnect(_archipelagoSlot, _archipelagoPassword);
                     break;
 
                 case "Connected":
-                    handleConnected(p);
-                    break;
-
-                case "ReceivedItems":
-                    handleReceivedItems(p);
+                    _receiver.handleConnected(p);
                     break;
 
                 case "ConnectionRefused":
-                    var errors:Array = p.errors as Array;
+                    var errors:Array  = p.errors as Array;
                     var errMsg:String = errors && errors.length > 0 ? errors.join(", ") : "unknown reason";
                     _logger.log(_modName, "  ConnectionRefused: " + errMsg);
                     _isConnected = false;
@@ -388,20 +306,24 @@ package net {
                     _toast.addMessage("AP refused: " + errMsg, 0xFFFF6666);
                     break;
 
+                case "ReceivedItems":
+                    _receiver.handleReceivedItems(p);
+                    break;
+
                 case "PrintJSON":
-                    handlePrintJSON(p);
+                    _receiver.handlePrintJSON(p);
                     break;
 
                 case "DataPackage":
-                    handleDataPackage(p);
+                    _receiver.handleDataPackage(p);
                     break;
 
                 case "LocationInfo":
-                    handleLocationInfo(p);
+                    _receiver.handleLocationInfo(p);
                     break;
 
                 case "Bounced":
-                    handleBounced(p);
+                    _receiver.handleBounced(p);
                     break;
 
                 default:
@@ -409,470 +331,18 @@ package net {
             }
         }
 
-        private function handleConnected(p:Object):void {
-            _isConnected = true;
-            _mySlot = int(p.slot);
-            _logger.log(_modName, "  team=" + p.team + "  slot=" + p.slot);
-
-            _requestedGames    = {};
-
-            // Extract player names from players array
-            var players:Array = p.players as Array;
-            if (players) {
-                for each (var player:Object in players) {
-                    var achPlayer:PlayerData = new PlayerData();
-                    achPlayer.id = player.slot;
-                    achPlayer.name = player.alias;
-                    achPlayer.game = p.slot_info[player.slot].game;
-                    AV.archipelagoData.players[int(player.slot)] = achPlayer;
-                }
-            }
-            var myPlayer:PlayerData = AV.archipelagoData.players[_mySlot] as PlayerData;
-            AV.currentSlot = (myPlayer != null) ? myPlayer.name : "";
-            _logger.log(_modName, "  currentSlot=" + AV.currentSlot);
-
-
-            if (p.slot_data && p.slot_data.token_map)
-            {
-                _tokenMap = p.slot_data.token_map;
-                _tokenStages = {};
-                var tokenCount:int = 0;
-                for (var apIdStr:String in _tokenMap)
-                {
-                    _tokenStages[_tokenMap[apIdStr]] = true;
-                    tokenCount++;
-                }
-            }
-
-            if (p.slot_data && p.slot_data.talisman_map)
-            {
-                _talismanMap = p.slot_data.talisman_map;
-            }
-
-            if (p.slot_data && p.slot_data.talisman_name_map)
-            {
-                _talismanNameMap = p.slot_data.talisman_name_map;
-            }
-
-            if (p.slot_data && p.slot_data.shadow_core_map)
-            {
-                _shadowCoreMap = p.slot_data.shadow_core_map;
-            }
-
-            if (p.slot_data && p.slot_data.shadow_core_name_map)
-            {
-                _shadowCoreNameMap = p.slot_data.shadow_core_name_map;
-            }
-
-            if (p.slot_data && p.slot_data.wiz_stash_tal_data)
-            {
-                _wizStashTalData = p.slot_data.wiz_stash_tal_data;
-            }
-
-            if (p.slot_data && p.slot_data.free_stages)
-            {
-                AV.serverData.freeStages = p.slot_data.free_stages as Array;
-            }
-
-            // Populate AV.serverData.serverOptions from slot_data
-            if (p.slot_data)
-            {
-                AV.serverData.serverOptions.goal = int(p.slot_data.goal);
-                AV.serverData.serverOptions.talismanMinRarity = int(p.slot_data.talisman_min_rarity);
-
-                if (p.slot_data.tattered_scroll_levels !== undefined)
-                {
-                    AV.serverData.serverOptions.tomeXpLevels.tattered = int(p.slot_data.tattered_scroll_levels);
-                }
-                if (p.slot_data.worn_tome_levels !== undefined)
-                {
-                    AV.serverData.serverOptions.tomeXpLevels.worn = int(p.slot_data.worn_tome_levels);
-                }
-                if (p.slot_data.ancient_grimoire_levels !== undefined)
-                {
-                    AV.serverData.serverOptions.tomeXpLevels.ancient = int(p.slot_data.ancient_grimoire_levels);
-                }
-                if (p.slot_data.field_token_placement !== undefined)
-                {
-                    AV.serverData.serverOptions.fieldTokenPlacement = int(p.slot_data.field_token_placement);
-                }
-                if (p.slot_data.enforce_logic !== undefined)
-                {
-                    AV.serverData.serverOptions.enforce_logic = Boolean(p.slot_data.enforce_logic);
-                }
-                if (p.slot_data.disable_endurance !== undefined)
-                {
-                    AV.serverData.serverOptions.disable_endurance = Boolean(p.slot_data.disable_endurance);
-                }
-                if (p.slot_data.disable_trial !== undefined)
-                {
-                    AV.serverData.serverOptions.disable_trial = Boolean(p.slot_data.disable_trial);
-                }
-                if (p.slot_data.starting_wizard_level !== undefined)
-                {
-                    AV.serverData.serverOptions.startingWizardLevel = int(p.slot_data.starting_wizard_level);
-                }
-                if (p.slot_data.starting_overcrowd !== undefined)
-                {
-                    AV.serverData.serverOptions.startingOvercrowd = Boolean(p.slot_data.starting_overcrowd);
-                }
-                if (p.slot_data.enemy_hp_multiplier !== undefined)
-                {
-                    AV.serverData.serverOptions.enemyMultipliers.hp = int(p.slot_data.enemy_hp_multiplier);
-                }
-                if (p.slot_data.enemy_armor_multiplier !== undefined)
-                {
-                    AV.serverData.serverOptions.enemyMultipliers.armor = int(p.slot_data.enemy_armor_multiplier);
-                }
-                if (p.slot_data.enemy_shield_multiplier !== undefined)
-                {
-                    AV.serverData.serverOptions.enemyMultipliers.shield = int(p.slot_data.enemy_shield_multiplier);
-                }
-                if (p.slot_data.enemies_per_wave_multiplier !== undefined)
-                {
-                    AV.serverData.serverOptions.enemyMultipliers.waves = int(p.slot_data.enemies_per_wave_multiplier);
-                }
-                if (p.slot_data.extra_wave_count !== undefined)
-                {
-                    AV.serverData.serverOptions.enemyMultipliers.extraWaves = int(p.slot_data.extra_wave_count);
-                }
-                if (p.slot_data.fields_required !== undefined)
-                {
-                    AV.serverData.serverOptions.fieldsRequired = int(p.slot_data.fields_required);
-                }
-                if (p.slot_data.fields_required_percentage !== undefined)
-                {
-                    AV.serverData.serverOptions.fieldsRequiredPercentage = int(p.slot_data.fields_required_percentage);
-                }
-                if (p.slot_data.achievement_required_effort !== undefined)
-                {
-                    AV.serverData.serverOptions.achievementRequiredEffort = int(p.slot_data.achievement_required_effort);
-                }
-            }
-
-            var missing:Array  = p.missing_locations as Array;
-            var checked:Array  = p.checked_locations as Array;
-            _logger.log(_modName, " - missing_locations=" + (missing ? missing.length : "?") + "  checked_locations=" + (checked ? checked.length : "?"));
-
-            _missingLocations = {};
-            if (missing != null)
-            {
-                for each (var locId:int in missing)
-                {
-                    _missingLocations[locId] = true;
-                }
-            }
-
-            sendLocationScouts();
-
-            _toast.addMessage("Connected to " + _archipelagoHost + ":" + _archipelagoPort + " as " + _archipelagoSlot + " (Slot " + _saveSlot + ")", 0xFF88FF88);
-
-            if (onConnected != null)
-            {
-                onConnected(p);
-            }
-        }
-
-        private function handleReceivedItems(p:Object):void {
-            var index:int   = p.index;
-            var items:Array = p.items as Array;
-            _logger.log(_modName, "ReceivedItems index=" + index + " count=" + items.length);
-
-            if (index == 0) {
-                if (onFullSync != null) onFullSync(items);
-            } else {
-                for each (var networkItem:Object in items) {
-                    var apId:int = networkItem.item;                    
-                    if (onItemReceived != null) onItemReceived(apId);
-                }
-            }
-        }
-
-        private function handleBounced(p:Object):void {
-            var tags:Array = p.tags as Array;
-            if (tags == null || tags.indexOf("DeathLink") < 0) return;
-            var source:String = (p.data && p.data.source) ? String(p.data.source) : "unknown";
-            _logger.log(_modName, "DeathLink received from " + source);
-            if (onDeathLinkReceived != null) onDeathLinkReceived(source);
-        }
-
-        private function handlePrintJSON(p:Object):void {
-            var msgType:String = (p.type != null) ? String(p.type) : "";
-
-            if (msgType == "ItemSend") {
-                var receiving:int  = int(p.receiving);
-                var senderSlot:int = int(p.item.player);
-                if (receiving != _mySlot && senderSlot != _mySlot) return;
-
-                // Resolve item names using DataPackage
-                var logText:String = resolvePartsText(p.data, senderSlot);
-                _logger.log(_modName, "  ItemSend: " + logText);
-
-                // Always log to message log
-                if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
-
-                if (senderSlot == _mySlot) {
-                    // We sent an item (to ourselves or another player) — track it for ending-screen display
-                    _logger.log(_modName, "Attempting to get <" +sentItemId + "> from " +receiving);
-                    var sentItemId:int   = int(p.item.item);
-                    var sentLocId:int    = int(p.item.location);
-                    var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
-                    var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
-                    var recvName:String  = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
-
-                    // Store for ending-screen icon display
-                    _itemsSentThisLevel[sentLocId] = {
-                        itemId: sentItemId,
-                        itemName: sentItemName,
-                        receivingSlot: receiving,
-                        receivingName: recvName
-                    };
-
-                    // Notify ending screen to add icon now that we have the real name from AP
-                    if (onItemSentFromLocation != null) onItemSentFromLocation(sentLocId, sentItemName, recvName);
-
-                    var recipientLabel:String = (recvPlayer != null) ? recvPlayer.name : "Archipelago";
-                    if (_itemToast != null) {
-                        var toastMessage:String = AV.archipelagoData.getCheckName(sentLocId, null);
-                        if (toastMessage != null) 
-                            _itemToast.addItem(toastMessage, 0xCC99FF);
-                        else 
-                            _itemToast.addItem("Unknown item", 0xCC99FF);
-                    }
-                }
-                return;
-            }
-
-            if (msgType == "Chat" || msgType == "ServerChat") {
-                var chatText:String = resolvePartsText(p.data);
-                _logger.log(_modName, "  Chat: " + chatText);
-                _toast.addMessage(chatText, 0xFFFFFFDD);
-                return;
-            }
-        }
-
-        /**
-         * Build a simple message from parts using minimal processing.
-         * This is the Archipelago server's native message - just resolve player names
-         * (for our own world) and pass everything else through as-is.
-         * This avoids trying to guess item/location names when the server hasn't resolved them.
-         */
-        /**
-         * Resolve a PrintJSON data array to a human-readable string.
-         * defaultItemOwner is the slot to assume owns any item_id part that
-         * does not include its own player field (e.g. the receiving slot in
-         * an ItemSend PrintJSON).
-         */
-        private function resolvePartsText(data:*, defaultItemOwner:int = -1):String {
-            var result:String = "";
-            if (data == null) return result;
-            var parts:Array = data as Array;
-            for each (var part:Object in parts) {
-                var ptype:String = (part.type != null) ? String(part.type) : "text";
-                if (ptype == "player_id") {
-                    var pSlot:int = int(part.text);
-                    var pData:PlayerData = AV.archipelagoData.players[pSlot] as PlayerData;
-                    result += (pData != null) ? pData.name : ("Slot " + pSlot);
-                } else if (ptype == "item_id") {
-                    var ownerSlot:int = (part.player != null) ? int(part.player) : defaultItemOwner;
-                    result += resolveItemNameForSlot(int(part.text), ownerSlot);
-                } else if (ptype == "location_id") {
-                    result += resolveLocationName(int(part.text));
-                } else {
-                    if (part.text != null) result += String(part.text);
-                }
-            }
-            return result;
-        }
-
-        /**
-         * Resolve an item name given its AP id and the slot whose game owns it.
-         *
-         * Resolution order:
-         *   0. Persistent cache — returns previously-resolved names instantly.
-         *   1. Own game resolver (itemName) — fast path for our own items.
-         *   2. DataPackage cache — covers all games, including our own, using
-         *      the item_name_to_id tables received over the WebSocket.
-         *   3. Own game resolver again — last-resort fallback for cross-slot
-         *      items from the same game when the DataPackage hasn't arrived yet.
-         */
-        private function resolveItemNameForSlot(itemId:int, ownerSlot:int):String {
-            var itemIdStr:String = String(itemId);
-
-            _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
-            // Step 0: Check persistent cache first (Ori-style approach)
-            if (AV.archipelagoData.players[ownerSlot].items != null && AV.archipelagoData.players[ownerSlot].items[itemId] != null)
-                return AV.archipelagoData.players[ownerSlot].items[itemId].name
-
-            var result:String = null;
-
-            if (result == null) {
-                var gameName:String =  AV.archipelagoData.players[ownerSlot].game;
-                _logger.log(_modName, "[resolveItemName] itemId=" + itemId + " ownerSlot=" + ownerSlot + " gameName=" + gameName);
-                if (gameName != null) {
-                    var gameItems:Object = AV.archipelagoData.games[gameName];
-                    if (gameItems != null) {
-                        var name:String = gameItems[itemIdStr];
-                        if (name != null) {
-                            result = name;
-                            _logger.log(_modName, "[resolveItemName] Found in DataPackage: " + name);
-                        } else {
-                             _logger.log(_modName, "[resolveItemName] Not in DataPackage for " + gameName + ", itemId=" + itemId);
-                        }
-                    } else {
-                         _logger.log(_modName, "[resolveItemName] Game '" + gameName + "' not in DataPackage cache");
-                    }
-                } else {
-                    _logger.log(_modName, "[resolveItemName] No gameName for slot " + ownerSlot);
-                }
-            }
-
-            if (result == null) {
-                _logger.log(_modName, "[resolveItemName] Falling back to Item #" + itemId);
-                return "Item #" + itemId;
-            }
-
-            return result;
-        }
-
-        private function resolveLocationName(locId:int):String {
-            var suffix:String = "";
-            var baseId:int = locId;
-            if (baseId >= 1000) { baseId -= 1000; suffix = " Stash"; }
-            else if (baseId >= 500) { baseId -= 500; suffix = " Bonus"; }
-            for (var strId:String in STAGE_LOC_AP_IDS) {
-                if (int(STAGE_LOC_AP_IDS[strId]) == baseId) return strId + suffix;
-            }
-            return "Location #" + locId;
-        }
-                
-        private function getGameDataPackage(gameName:String):void {
-            if (_webSocketClient == null || gameName == null || gameName.length == 0) return;
-            if (_requestedGames[gameName] || AV.archipelagoData.games[gameName] != null) return;
-            _requestedGames[gameName] = true;
-            var safe:String = gameName.split('"').join('\\"');
-            var packet:String = '[{"cmd":"GetDataPackage","games":["' + safe + '"]}]';
-            _logger.log(_modName, "AP >> GetDataPackage (lazy)  game=" + gameName);
-            _logger.log(_modName, packet);
-            _webSocketClient.send(packet);
-        }
-
-        private function handleDataPackage(p:Object):void {
-            try {
-                var pkgData:Object = p.data;
-                if (pkgData == null) return;
-                var games:Object = pkgData.games;
-                if (games == null) return;
-                var loaded:int = 0;
-                for (var gameName:String in games) {
-                    var gameData:Object = games[gameName];
-                    if (gameData == null) continue;
-                    var nameToId:Object = gameData.item_name_to_id;
-                    if (nameToId == null) continue;
-                    var byId:Object = {};
-                    var itemCount:int = 0;
-                    for (var iname:String in nameToId) {
-                        byId[String(int(nameToId[iname]))] = iname;
-                        itemCount++;
-                    }
-                    AV.archipelagoData.games[gameName] = byId;
-                    _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items");
-
-                    // Back-fill names for checks that were waiting on this DataPackage
-                    var filled:int = 0;
-                    for (var locIdStr:String in AV.archipelagoData.checks) {
-                        var check:Object = AV.archipelagoData.checks[locIdStr];
-                        if (check.name != null || check.game != gameName) continue;
-                        var pending:Object = _pendingChecks[int(locIdStr)];
-                        if (pending == null) continue;
-                        var resolvedName:String = byId[String(int(pending.item))];
-                        check.name = (resolvedName != null) ? resolvedName : ("Item #" + pending.item);
-                        filled++;
-                        _logger.log(_modName, "    [DataPackage] " + check.id + " = " + check.name);
-                    }
-                    if (filled > 0) _logger.log(_modName, "    [DataPackage] Filled " + filled + " check name(s) for '" + gameName + "'");
-                    loaded++;
-                }
-                _logger.log(_modName, "  DataPackage loaded: " + loaded + " game(s)");
-            } catch (err:Error) {
-                _logger.log(_modName, "handleDataPackage ERROR: " + err.message);
-            }
-        }
-
-        private function sendConnect():void {
-            var packet:String = '[{"cmd":"Connect",' +
-                '"game":"GemCraft: Frostborn Wrath",' +
-                '"name":"' + _archipelagoSlot + '",' +
-                '"password":"' + _archipelagoPassword + '",' +
-                '"version":{"major":0,"minor":6,"build":6,"class":"Version"},' +
-                '"items_handling":7,' +
-                '"tags":[],' +
-                '"uuid":"gcfw-mod"}]';
-            _logger.log(_modName, "AP >> Connect  slot=" + _archipelagoSlot);
-            _webSocketClient.send(packet);
-        }
-
         // -----------------------------------------------------------------------
-        // Location checks
+        // Public send API — proxy to sender (isConnected guards applied here)
 
+        /** Send location check IDs to the server. */
         public function sendLocationChecks(locationIds:Array):void {
-            if (_webSocketClient == null || locationIds.length == 0) return;
-            var packet:String = '[{"cmd":"LocationChecks","locations":[' + locationIds.join(",") + ']}]';
-            _logger.log(_modName, "AP >> LocationChecks  ids=" + locationIds.join(","));
-            _webSocketClient.send(packet);
-        }
-
-        private function sendLocationScouts():void {
-            if (_webSocketClient == null) return;
-            var ids:Array = [];
-            for (var locId:String in _missingLocations)
-                ids.push(int(locId));
-            if (ids.length == 0) return;
-            var packet:String = '[{"cmd":"LocationScouts","locations":[' + ids.join(",") + '],"create_as_hint":0}]';
-            _logger.log(_modName, "AP >> LocationScouts  count=" + ids.length + " " + packet);
-            var data = _webSocketClient.send(packet);            
-        }
-
-        private function handleLocationInfo(p:Object):void {
-            _logger.log(_modName, "----- Handle location info -----");
-            var locations:Array = p.locations as Array;
-            if (locations == null) return;
-
-            var uniqueGames:Object = {};
-            for each (var loc:Object in locations) {
-                var locId:int = int(loc.location);
-                var ownerSlot:int = int(loc.player);
-                var itemId:int = int(loc.item);
-
-                _pendingChecks[locId] = {id: locId, player: ownerSlot, item: itemId};
-
-                var playerData:PlayerData = AV.archipelagoData.players[ownerSlot] as PlayerData;
-                var game:String = (playerData != null) ? playerData.game : null;
-                var playerName:String = (playerData != null) ? playerData.name : ("Slot " + ownerSlot);
-                AV.archipelagoData.checks[locId] = {id: locId, name: null, game: game, playerName: playerName};
-
-                if (game != null) uniqueGames[game] = true;
-                _logger.log(_modName, "  loc=" + locId + " item=" + itemId + " player=" + ownerSlot + " game=" + game);
-            }
-
-            for (var gameName:String in uniqueGames) {
-                getGameDataPackage(gameName);
-            }
-            _logger.log(_modName, "LocationInfo: scouted " + locations.length + " locations, requested " + _countKeys(uniqueGames) + " DataPackage(s).");
-        }
-
-        private function _countKeys(obj:Object):int {
-            var n:int = 0;
-            for (var k:String in obj) n++;
-            return n;
+            _sender.sendLocationChecks(locationIds);
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
         public function sendDeathLink(source:String):void {
-            if (_webSocketClient == null || !_isConnected) return;
-            var packet:String = '[{"cmd":"Bounce","tags":["DeathLink"],"data":{"time":0,"cause":"died","source":"' + source + '"}}]';
-            _logger.log(_modName, "AP >> Bounce (DeathLink) source=" + source);
-            _webSocketClient.send(packet);
+            if (!_isConnected) return;
+            _sender.sendDeathLink(source);
         }
 
         /**
@@ -880,21 +350,18 @@ package net {
          * @param tags  Array of tag strings, e.g. ["DeathLink"] or [].
          */
         public function sendConnectUpdate(tags:Array):void {
-            if (_webSocketClient == null || !_isConnected) return;
-            var tagJson:String = '["' + tags.join('","') + '"]';
-            if (tags.length == 0) tagJson = "[]";
-            var packet:String = '[{"cmd":"ConnectUpdate","tags":' + tagJson + '}]';
-            _logger.log(_modName, "AP >> ConnectUpdate tags=" + tagJson);
-            _webSocketClient.send(packet);
+            if (!_isConnected) return;
+            _sender.sendConnectUpdate(tags);
         }
 
         /** Send the goal-complete status to the AP server (status 30 = CLIENT_GOAL). */
         public function sendGoalComplete():void {
-            if (_webSocketClient == null || !_isConnected) return;
-            var packet:String = '[{"cmd":"StatusUpdate","status":30}]';
-            _logger.log(_modName, "AP >> StatusUpdate (Goal complete)");
-            _webSocketClient.send(packet);
+            if (!_isConnected) return;
+            _sender.sendGoalComplete();
         }
+
+        // -----------------------------------------------------------------------
+        // Location checking — coordinates receiver state and sender
 
         /**
          * Scan completed stages and send any unchecked locations to the server.
@@ -925,27 +392,25 @@ package net {
                 _lastCheckedLocations = [];
                 // Clear stage-location data but preserve achievement entries (2000-2636)
                 // so that hover lookups on achievement icons still work after this call.
-                var preservedSent:Object = {};
-                for (var achKey:String in _itemsSentThisLevel) {
-                    var achId:int = int(achKey);
-                    if (achId >= 2000 && achId <= 2636) preservedSent[achKey] = _itemsSentThisLevel[achKey];
-                }
-                _itemsSentThisLevel = preservedSent;
+                _receiver.resetItemsSentThisLevel(true);
+
+                var missing:Object = _receiver.missingLocations;
+
                 for (var i:int = 0; i < metas.length; i++) {
                     var meta:* = metas[i];
                     if (meta == null) continue;
                     var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
                     if (xp <= 0) continue;
-                    var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
-                    var bonusLocId:int  = locId + 199;
+                    var locId:int        = int(STAGE_LOC_AP_IDS[meta.strId]);
+                    var bonusLocId:int   = locId + 199;
                     var wizStashLocId:int = locId + 399;
-                    var journeyNew:Boolean = _missingLocations[locId] == true;
-                    var bonusNew:Boolean   = _missingLocations[bonusLocId] == true;
+                    var journeyNew:Boolean = missing[locId] == true;
+                    var bonusNew:Boolean   = missing[bonusLocId] == true;
                     _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
                         + "  xp=" + xp + "  locId=" + locId
                         + "  bonusLocId=" + bonusLocId + "  wizStashLocId=" + wizStashLocId
                         + "  journeyNew=" + journeyNew + "  bonusNew=" + bonusNew
-                        + "  stashNew=" + (_missingLocations[wizStashLocId] == true));
+                        + "  stashNew=" + (missing[wizStashLocId] == true));
                     if (locId <= 0) continue;
                     if (journeyNew) {
                         toSend.push(locId);
@@ -957,9 +422,7 @@ package net {
                         _lastCheckedLocations.push({strId: meta.strId, locType: "bonus"});
                         _logger.log(_modName, "Pending: " + meta.strId + " (field bonus)  locId=" + bonusLocId);
                     }
-
-                    // Wiz stash check: OPEN (1) or DESTROYED (2) = stash was cleared.
-                    if (_missingLocations[wizStashLocId] == true) {
+                    if (missing[wizStashLocId] == true) {
                         var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
                         if (stashStatus == 1 || stashStatus == 2) {
                             toSend.push(wizStashLocId);
@@ -968,17 +431,16 @@ package net {
                         }
                     }
                 }
+
                 _logger.log(_modName, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " new checks)");
                 if (toSend.length > 0) {
-                    for each (var sentId:int in toSend) {
-                        delete _missingLocations[sentId];
-                    }
-                    sendLocationChecks(toSend);
+                    for each (var sentId:int in toSend)
+                        delete missing[sentId];
+                    _sender.sendLocationChecks(toSend);
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "checkCompletedLocations ERROR: " + err.message + "\n" + err.getStackTrace());
             }
         }
-
     }
 }
