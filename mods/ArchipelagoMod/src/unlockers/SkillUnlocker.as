@@ -1,7 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
 
     /**
      * Handles unlocking skills by Archipelago item ID.
@@ -19,7 +19,7 @@ package unlockers {
             "Pylons", "Lanterns", "Traps", "Seeker Sense"
         ];
 
-        public function SkillUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function SkillUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
         }
 
@@ -40,7 +40,7 @@ package unlockers {
             GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
             var skillName:String = SKILL_NAMES[gameId];
             logAction("Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
-            showToast("Skill Unlocked: " + skillName, 0xDDA0FF);
+            showToast("Received " + skillName, 0xDDA0FF);
             showPlusNodeOnSelector("mcPlusNodeSkills");
         }
 

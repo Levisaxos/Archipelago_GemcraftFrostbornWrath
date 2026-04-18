@@ -7,7 +7,7 @@ package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
 
-    import ui.ToastPanel;
+    import ui.SystemToast;
     /**
      * Intercepts Chilling/Frostborn/Iron mode-selector clicks and delete-slot
      * buttons on the LOADGAME screen.  Hooks and unhooks its own mouse/key
@@ -20,7 +20,7 @@ package patch {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _toast:SystemToast;
         private var _stage:Stage;
 
         private var _hooked:Boolean          = false;
@@ -53,7 +53,7 @@ package patch {
 
         // -----------------------------------------------------------------------
 
-        public function ModeSelectorInterceptor(logger:Logger, modName:String, toast:ToastPanel) {
+        public function ModeSelectorInterceptor(logger:Logger, modName:String, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _toast   = toast;

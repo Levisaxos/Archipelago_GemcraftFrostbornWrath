@@ -2,8 +2,8 @@ package net {
     import Bezel.Logger;
     import data.AV;
     import data.PlayerData;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
 
     /**
@@ -22,8 +22,8 @@ package net {
         private var _logger:Logger;
         private var _modName:String;
         private var _sender:ApSender;
-        private var _toast:ToastPanel;
-        private var _itemToast:ItemToastPanel;
+        private var _toast:SystemToast;
+        private var _receivedToast:ReceivedToast;
         private var _messageLog:MessageLog;
 
         // AP slot data — populated by handleConnected
@@ -56,15 +56,15 @@ package net {
 
         // -----------------------------------------------------------------------
 
-        public function ApReceiver(logger:Logger, modName:String, sender:ApSender, toast:ToastPanel) {
+        public function ApReceiver(logger:Logger, modName:String, sender:ApSender, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _sender  = sender;
             _toast   = toast;
         }
 
-        /** Provide the item-notification panel. */
-        public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
+        /** Provide the panel used for received-item toasts. */
+        public function setReceivedToast(panel:ReceivedToast):void { _receivedToast = panel; }
 
         /** Provide the message log so item send/receive events are recorded. */
         public function setMessageLog(log:MessageLog):void { _messageLog = log; }
@@ -261,10 +261,7 @@ package net {
                     if (onItemSentFromLocation != null)
                         onItemSentFromLocation(sentLocId, sentItemName, recvName);
 
-                    if (_itemToast != null) {
-                        var toastMsg:String = AV.archipelagoData.getCheckName(sentLocId, null);
-                        _itemToast.addItem(toastMsg != null ? toastMsg : "Unknown item", 0xCC99FF);
-                    }
+                    _toast.addMessage("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
                 }
                 return;
             }

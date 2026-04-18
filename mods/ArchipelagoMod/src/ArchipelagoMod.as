@@ -17,8 +17,8 @@ package {
 
     import ui.ModButtons;
     import ui.ScrSlotSettings;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
@@ -77,7 +77,8 @@ package {
      *   GoalManager              — Detects goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
-     *   ToastPanel               — On-screen notifications
+     *   SystemToast              — On-screen system/sent-item notifications
+     *   ReceivedToast            — On-screen received-item notifications
      *   ScrDebugOptions          — Debug panel
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
@@ -96,11 +97,11 @@ package {
         private var _modButtons:ModButtons;
         private var _slotSettings:ScrSlotSettings;
 
-        private var _toast:ToastPanel;
-        private var _toastOnStage:Boolean = false;
+        private var _systemToast:SystemToast;
+        private var _systemToastOnStage:Boolean = false;
 
-        private var _itemToast:ItemToastPanel;
-        private var _itemToastOnStage:Boolean = false;
+        private var _receivedToast:ReceivedToast;
+        private var _receivedToastOnStage:Boolean = false;
 
         private var _messageLog:MessageLog;
         private var _messageLogPanel:MessageLogPanel;
@@ -171,17 +172,17 @@ package {
 
                 // Create subsystems
                 _messageLog    = new MessageLog();
-                _toast         = new ToastPanel();
-                _itemToast     = new ItemToastPanel();
-                _toast.messageLog = _messageLog;
+                _systemToast   = new SystemToast();
+                _receivedToast = new ReceivedToast();
+                _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
-                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
+                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
+                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
                 _stageUnlocker      = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
-                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
-                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
+                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _receivedToast);
+                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _receivedToast);
+                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _receivedToast);
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
@@ -200,8 +201,8 @@ package {
                 _levelEndScreenBuilder = new LevelEndScreenBuilder(_logger, MOD_NAME);
 
                 // Connection manager — AP protocol + WebSocket
-                _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
-                _connectionManager.setItemToast(_itemToast);
+                _connectionManager = new ConnectionManager(_logger, MOD_NAME, _systemToast);
+                _connectionManager.setReceivedToast(_receivedToast);
                 _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
@@ -213,7 +214,7 @@ package {
                 _connectionManager.load();
 
                 // Initialize achievement unlocker
-                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager);
+                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _receivedToast);
                 _achievementUnlocker.loadData();
                 _achievementLogicEvaluator.loadData();
 
@@ -247,12 +248,12 @@ package {
                 _saveManager.talismanUnlocker   = _talismanUnlocker;
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
-                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
+                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _systemToast);
                 _deathLinkHandler.onPlayerDied         = onPlayerDied;
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
-                _goalManager = new GoalManager(_logger, MOD_NAME, _itemToast);
+                _goalManager = new GoalManager(_logger, MOD_NAME, _systemToast);
                 _goalManager.onGoalReached = onGoalReached;
 
                 // Main menu UI — version label, update badge, changelog
@@ -262,7 +263,7 @@ package {
                 _connectionPanel = null;
 
                 // Mode-selector interceptor
-                _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _toast);
+                _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _systemToast);
                 _modeInterceptor.onModeIntercepted    = onModeIntercepted;
                 _modeInterceptor.onSlotDeleteWarning   = onSlotDeleteWarning;
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
@@ -301,16 +302,16 @@ package {
             if (this.stage != null) {
                 this.stage.removeEventListener(Event.RESIZE, onStageResize);
             }
-            if (_toast != null && _toast.parent != null) {
-                _toast.parent.removeChild(_toast);
+            if (_systemToast != null && _systemToast.parent != null) {
+                _systemToast.parent.removeChild(_systemToast);
             }
-            _toast = null;
-            _toastOnStage = false;
-            if (_itemToast != null && _itemToast.parent != null) {
-                _itemToast.parent.removeChild(_itemToast);
+            _systemToast = null;
+            _systemToastOnStage = false;
+            if (_receivedToast != null && _receivedToast.parent != null) {
+                _receivedToast.parent.removeChild(_receivedToast);
             }
-            _itemToast = null;
-            _itemToastOnStage = false;
+            _receivedToast = null;
+            _receivedToastOnStage = false;
             if (_messageLogPanel != null) {
                 if (_messageLogPanel.isOpen) _messageLogPanel.close();
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
@@ -380,15 +381,15 @@ package {
             }
 
             // Add toasts to stage once available.
-            if (!_toastOnStage && _toast != null && this.stage != null) {
-                this.stage.addChild(_toast);
-                _toastOnStage = true;
-                positionToast();
+            if (!_systemToastOnStage && _systemToast != null && this.stage != null) {
+                this.stage.addChild(_systemToast);
+                _systemToastOnStage = true;
+                positionSystemToast();
                 this.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
             }
-            if (!_itemToastOnStage && _itemToast != null && this.stage != null) {
-                this.stage.addChild(_itemToast);
-                _itemToastOnStage = true;
+            if (!_receivedToastOnStage && _receivedToast != null && this.stage != null) {
+                this.stage.addChild(_receivedToast);
+                _receivedToastOnStage = true;
             }
             if (!_messageLogOnStage && _messageLogPanel != null && this.stage != null) {
                 this.stage.addChild(_messageLogPanel);
@@ -400,9 +401,9 @@ package {
                 _disconnectPanel.visible = false;
                 _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
             }
-            // Keep item toast horizontally centered as panelWidth may change each item.
-            if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
-                positionItemToast();
+            // Keep received toast horizontally centered as panelWidth may change each item.
+            if (_receivedToastOnStage && _receivedToast != null && _receivedToast.alpha > 0) {
+                positionReceivedToast();
             }
 
             // Main menu overlay — show/tick/hide driven by screen state.
@@ -453,8 +454,8 @@ package {
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
                     _goalManager.reset();
-                    if (_toast != null) _toast.clear();
-                    if (_itemToast != null) _itemToast.clear();
+                    if (_systemToast != null) _systemToast.clear();
+                    if (_receivedToast != null) _receivedToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
                     _mainMenuUI.hide(); // remove any existing set before re-adding next frame
                 }
@@ -641,24 +642,24 @@ package {
         // -----------------------------------------------------------------------
         // Toast positioning
 
-        private function positionToast():void {
-            if (_toast == null || this.stage == null) return;
+        private function positionSystemToast():void {
+            if (_systemToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
-            _toast.x = gameRoot.x + TOAST_OFFSET_X * gameRoot.scaleX;
-            _toast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
+            _systemToast.x = gameRoot.x + TOAST_OFFSET_X * gameRoot.scaleX;
+            _systemToast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
-        private function positionItemToast():void {
-            if (_itemToast == null || this.stage == null) return;
+        private function positionReceivedToast():void {
+            if (_receivedToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
             // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
-            _itemToast.x = this.stage.stageWidth * 0.5 - _itemToast.panelWidth * 0.5;
-            _itemToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
+            _receivedToast.x = this.stage.stageWidth * 0.5 - _receivedToast.panelWidth * 0.5;
+            _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
         private function onStageResize(e:Event):void {
-            positionToast();
-            positionItemToast();
+            positionSystemToast();
+            positionReceivedToast();
             if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
                 _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
             }
@@ -743,7 +744,7 @@ package {
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
             _saveManager.currentSlot = slotId;
             if (_disconnectPanel != null && _disconnectPanel.isShowing) {
-                _toast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
+                _systemToast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
                 _modeInterceptor.clearPending();
                 return;
             }
@@ -754,7 +755,7 @@ package {
             // Standalone slots have no Archipelago goal — skip the completion warning.
             if (_saveManager.isSlotStandalone(slotId)) return;
             if (!_saveManager.isSlotCompleted(slotId)) {
-                _toast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
+                _systemToast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
             }
         }
 
@@ -781,7 +782,7 @@ package {
                 AV.sessionData.reset();
                 _progressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
-                _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
+                _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
                 return;
             }
@@ -816,7 +817,7 @@ package {
                 _connectionManager.apPassword
             );
             if (!_connectionPanel.isShowing) {
-                _connectionPanel.showWithOverlay(this.stage, _toast, _messageLogPanel);
+                _connectionPanel.showWithOverlay(this.stage, _systemToast, _messageLogPanel);
                 _logger.log(MOD_NAME, "Connection overlay shown");
             }
         }
@@ -844,7 +845,7 @@ package {
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
+            _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -1016,7 +1017,7 @@ package {
                 if (strId != null) {
                     _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
                     _stageUnlocker.unlockStage(strId);
-                    _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
+                    _receivedToast.addItem("Received " + strId + " Field Token", 0xFFDD55);
                     return;
                 }
                 if (apId >= 700 && apId <= 723) {
@@ -1060,12 +1061,14 @@ package {
                 }
                 if (apId >= 2000 && apId <= 2636) {
                     _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
-                    // Achievement reward from another player (only award skill points, don't mark as collected)
                     var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
                     _logger.log(MOD_NAME, "     Found achievement name: " + achName);
-                    if (achName != null && _achievementUnlocker != null) {
+                    if (achName != null) {
                         _achievementUnlocker.receiveAchievementReward(achName, apId);
-                        _itemToast.addItem("Achievement Reward: " + achName, 0xAA55FF);
+                        _receivedToast.addItem("Received " + achName, 0xAA55FF);
+                    } else {
+                        _receivedToast.addItem("Received Achievement #" + apId, 0xAA55FF);
+                        _logger.log(MOD_NAME, "  grantItem: achievement apId=" + apId + " not found in data map");
                     }
                     return;
                 }
@@ -1241,7 +1244,7 @@ package {
         }
 
         private function onPunishmentReceived(source:String):void {
-            _toast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
+            _systemToast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
         }
 
         private function onDeathLinkReceived(source:String):void {
@@ -1260,7 +1263,7 @@ package {
             var tags:Array = _saveManager.deathLinkEnabled ? ["DeathLink"] : [];
             _connectionManager.sendConnectUpdate(tags);
             _logger.log(MOD_NAME, "DeathLink toggled: " + (_saveManager.deathLinkEnabled ? "ON" : "OFF"));
-            _toast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
+            _systemToast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
                 _saveManager.deathLinkEnabled ? 0xFF88FF88 : 0xFFFFAA44);
         }
 

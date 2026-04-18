@@ -2,8 +2,8 @@ package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import data.AV;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
 
     /**
@@ -21,7 +21,7 @@ package net {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _toast:SystemToast;
         private var _webSocketClient:WebSocketClient;
         private var _sender:ApSender;
         private var _receiver:ApReceiver;
@@ -105,7 +105,7 @@ package net {
 
         // -----------------------------------------------------------------------
 
-        public function ConnectionManager(logger:Logger, modName:String, toast:ToastPanel) {
+        public function ConnectionManager(logger:Logger, modName:String, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _toast   = toast;
@@ -167,8 +167,8 @@ package net {
         // -----------------------------------------------------------------------
         // Panel plumbing — forwarded to receiver
 
-        /** Provide the item-notification panel used for received/found/sent item toasts. */
-        public function setItemToast(panel:ItemToastPanel):void { _receiver.setItemToast(panel); }
+        /** Provide the panel used for received-item toasts. */
+        public function setReceivedToast(panel:ReceivedToast):void { _receiver.setReceivedToast(panel); }
 
         /** Provide the message log so item send/receive events are recorded. */
         public function setMessageLog(log:MessageLog):void { _receiver.setMessageLog(log); }

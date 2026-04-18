@@ -5,6 +5,7 @@ package unlockers {
     import data.AV;
     import data.EmbeddedData;
     import patch.ProgressionBlocker;
+    import ui.ReceivedToast;
 
     /**
      * Handles achievement detection, reporting, and skill-point rewards.
@@ -26,6 +27,8 @@ package unlockers {
         private var _modName:String;
         private var _connectionManager:ConnectionManager;
 
+        private var _receivedToast:ReceivedToast;
+
         private var _achievementData:Object = {};
 
         // Achievements already sent to AP this session (reset on screen change)
@@ -43,10 +46,12 @@ package unlockers {
 
         public function AchievementUnlocker(logger:Logger,
                                             modName:String,
-                                            connectionManager:ConnectionManager):void {
+                                            connectionManager:ConnectionManager,
+                                            receivedToast:ReceivedToast = null):void {
             _logger            = logger;
             _modName           = modName;
             _connectionManager = connectionManager;
+            _receivedToast     = receivedToast;
         }
 
         // -----------------------------------------------------------------------

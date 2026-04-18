@@ -2,7 +2,7 @@ package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.entity.TalismanFragment;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
     import utils.ApIdMapper;
 
     /**
@@ -26,7 +26,7 @@ package unlockers {
         private var _talNameMap:Object;            // AP ID string → display name
         private var _grantedApIds:Object = {};     // String(apId) → true; persisted via SaveManager
 
-        public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
             _talDataMapper = null;
         }
@@ -109,7 +109,7 @@ package unlockers {
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
                 : ("Talisman Fragment #" + apId);
-            showToast("Found " + label, 0xFFCC44);
+            showToast("Received " + label, 0xFFCC44);
             logAction("Granted talisman apId=" + apId
                 + " seed=" + seed + " rarity=" + rarity
                 + " type=" + type + " slot=" + slotIdx);
