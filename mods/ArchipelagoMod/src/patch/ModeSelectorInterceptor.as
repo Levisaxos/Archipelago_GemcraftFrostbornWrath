@@ -1,4 +1,4 @@
-package {
+package patch {
     import flash.display.Stage;
     import flash.events.KeyboardEvent;
     import flash.events.MouseEvent;
@@ -171,7 +171,7 @@ package {
             if (onModeIntercepted != null) onModeIntercepted(slotId, _pendingModeButton, _pendingModeTarget);
         }
 
-        private function onIronBtnUp(e:MouseEvent):void {            
+        private function onIronBtnUp(e:MouseEvent):void {
             e.stopImmediatePropagation();
             _toast.addMessage("Iron is not allowed (yet) for Archipelago", 0xFFFF8844);
             _logger.log(_modName, "Iron mode blocked — not supported in AP");

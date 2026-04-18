@@ -8,8 +8,6 @@ package ui {
 
     import data.AV;
 
-    import ApItemIcon;
-
     /**
      * Builds and manages the AP drop icons on the level-end screen.
      *

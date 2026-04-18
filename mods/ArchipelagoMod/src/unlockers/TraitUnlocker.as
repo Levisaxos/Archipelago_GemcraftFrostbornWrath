@@ -10,7 +10,7 @@ package unlockers {
     public class TraitUnlocker extends BaseUnlocker {
 
         // Battle trait names indexed by game_id (matches BattleTraitId constants).
-        private static const BATTLE_TRAIT_NAMES:Array = [
+        public static const BATTLE_TRAIT_NAMES:Array = [
             "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
             "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
             "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",

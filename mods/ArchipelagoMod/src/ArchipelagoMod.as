@@ -18,7 +18,6 @@ package {
     import com.giab.games.gcfw.constants.ScreenId;
 
     import data.AV;
-    import data.EmbeddedData;
     import goals.GoalManager;
 
     import ui.ModButtons;
@@ -37,6 +36,7 @@ package {
     import deathlink.DeathLinkHandler;
     import deathlink.EnragerOverride;
 
+    import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
     import ui.LevelEndScreenBuilder;
     import unlockers.SkillUnlocker;
@@ -131,9 +131,6 @@ package {
         private var _talismanUnlocker:TalismanUnlocker;
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _achievementUnlocker:AchievementUnlocker;
-        private var _achievementData:Object = {};         // achievement name -> apId, reward, required_effort, etc.
-        private var _elementStages:Object = {};           // element name -> Array of stage strIds
-        private var _reportedAchievements:Object = {};    // achievement name -> true (already reported this session)
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
@@ -142,16 +139,10 @@ package {
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
-        private var _achPanelLogicDirty:Boolean = false; // set when logic changes, cleared after update
-
-        // Cache for in-logic achievements (recomputed only when dirty)
-        private var _inLogicAchievementsCache:Array = [];
-        private var _inLogicAchievementsDirty:Boolean = false; // set when items arrive or windows open
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
         private var _lastScreen:int            = -1;
-        private var _lastAchievementWindowStatus:int = -1; // detect when achievement window opens (305/306)
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
@@ -247,8 +238,9 @@ package {
                 // Initialize logic helper (for achievement and field access checks)
                 _logicHelper = new LogicHelper(_logger, MOD_NAME, _collectedState, _logicEvaluator, _connectionManager);
 
-                // Load achievement map for achievement tracking
-                loadAchievementMap();
+                // Wire achievement unlocker with logic subsystems and load data
+                _achievementUnlocker.configure(_logicEvaluator, _logicHelper);
+                _achievementUnlocker.loadData();
 
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
 
@@ -481,7 +473,7 @@ package {
 
             // Detect and report achievements every 30 frames
             if (!_standalone && _dbgFrameCounter % 30 == 0) {
-                detectAndReportAchievements();
+                _achievementUnlocker.detectAndReport();
             }
 
             // Track screen transitions.
@@ -501,7 +493,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
-                    _reportedAchievements = {};
+                    _achievementUnlocker.resetReportedAchievements();
                     if (_modButtons != null) _modButtons.removeFromMainMenu();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
@@ -518,7 +510,7 @@ package {
                     _connectionManager.disconnectAndReset();
                     _needsConnection = false;
                     _standalone      = false;
-                    _reportedAchievements = {};
+                    _achievementUnlocker.resetReportedAchievements();
                     if (_modButtons != null) _modButtons.removeFromSelector();
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     _modeInterceptor.clearPending();
@@ -634,7 +626,6 @@ package {
                     || GV.selectorCore.renderer == null
                     || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
-                _lastAchievementWindowStatus = -1;  // Reset achievement window status tracking
                 return;
             }
 
@@ -648,7 +639,6 @@ package {
                 _stageUnlocker.syncMapTilesWithStages();
                 GV.selectorCore.renderer.setMapTilesVisibility();
                 _mapTilesUnlocked = true;
-                _inLogicAchievementsDirty = true;  // Recompute when map tiles loaded
                 _logger.log(MOD_NAME, "Map tile visibility synced with stage states");
             }
 
@@ -886,277 +876,6 @@ package {
 
         // -----------------------------------------------------------------------
         // Debug hotkey
-
-        /**
-         * Returns a sorted array of achievement names that haven't been collected yet
-         * (i.e., location checks still missing from AP server).
-         * Only shows achievements that are actually in the AP world (based on YAML config).
-         */
-        private function _computeInLogicAchievements():Array {
-            var result:Array = [];
-            if (!_connectionManager.isConnected || !_collectedState || !_achievementData) {
-                return result;
-            }
-            var missing:Object = AV.saveData.missingLocations;
-            var requiredEffort:int = AV.serverData.serverOptions.achievementRequiredEffort;
-
-            // Effort hierarchy for filtering
-            var effortHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
-            var maxEffortStr:String = requiredEffort > 0 && requiredEffort <= 4
-                ? effortHierarchy[requiredEffort - 1]
-                : "Trivial";
-
-            // Check each achievement in alphabetical order
-            var achNames:Array = [];
-            for (var name:String in _achievementData) {
-                achNames.push(name);
-            }
-            achNames.sort(Array.CASEINSENSITIVE);
-
-            for (var i:int = 0; i < achNames.length; i++) {
-                var achName:String = achNames[i];
-                var achData:Object = _achievementData[achName];
-                if (!achData || !achData.apId) continue;
-
-                var apId:int = int(achData.apId);
-
-                // Filter by mode: only include achievements playable in journey mode
-                var modes:Array = achData.modes as Array;
-                if (modes != null && modes.indexOf("journey") < 0) {
-                    continue; // Not available in journey mode, skip entirely
-                }
-
-                // Filter by required effort level
-                var achEffort:String = achData.required_effort || "Trivial";
-                if (effortHierarchy.indexOf(achEffort) > effortHierarchy.indexOf(maxEffortStr)) {
-                    continue;
-                }
-                
-
-                // Include if location check is still missing (AP server included it in world but not yet collected)
-                if (missing[apId] == true) {                    
-                    // Validate access requirements
-                    var achHasRequirements:Boolean = _checkAchievementAccessible(achName, achData);
-                    if (achHasRequirements) {                        
-                        result.push(achName);
-                    }
-                }                            
-            }            
-
-            return result;
-        }
-
-        /**
-         * Check if an achievement's requirements are met (skills, battle traits, stage elements).
-         * Returns true if all AP-gated requirements have been collected or no special requirements exist.
-         */
-        private function _checkAchievementAccessible(achName:String, achData:Object):Boolean {
-            if (!achData || !achData.requirements) return false;
-
-            var requirements:Array = achData.requirements as Array;
-            if (!requirements || requirements.length == 0) return true;
-
-            // Debug logging for specific achievement
-            var isDebugAch:Boolean = (achName == "Shattered Waves");
-            if (isDebugAch) {
-                _logger.log(MOD_NAME, "=== CHECKING ACHIEVEMENT: " + achName + " ===");
-                _logger.log(MOD_NAME, "  Total requirements: " + requirements.length);
-            }
-
-            // Battle trait names indexed by game_id (must match TraitUnlocker.BATTLE_TRAIT_NAMES order)
-            var TRAIT_NAMES:Array = [
-                "Adaptive Carapace", "Dark Masonry", "Swarmling Domination", "Overcrowd",
-                "Corrupted Banishment", "Awakening", "Insulation", "Hatred",
-                "Swarmling Parasites", "Haste", "Thick Air", "Vital Link",
-                "Giant Domination", "Strength in Numbers", "Ritual"
-            ];
-
-            for (var i:int = 0; i < requirements.length; i++) {
-                // Trim whitespace and newlines from each requirement string
-                var req:String = _trimString(String(requirements[i]));
-                var reqLower:String = req.toLowerCase();
-
-                // --- Skill requirement: "X skill" ---
-                // Also handles pipe-separated OR: "Freeze skill|Whiteout skill|Ice Shards skill"
-                // meaning the achievement can be done with ANY one of the listed skills.
-                if (reqLower.indexOf(" skill") >= 0) {
-                    if (isDebugAch) _logger.log(MOD_NAME, "  Checking requirement: " + req);
-                    if (req.indexOf("|") >= 0) {
-                        // OR: need at least one of the piped skills
-                        var skillOptions:Array = req.split("|");
-                        var anySkillFound:Boolean = false;
-                        for each (var skillOpt:String in skillOptions) {
-                            skillOpt = _trimString(skillOpt);
-                            var optLower:String = skillOpt.toLowerCase();
-                            if (optLower.indexOf(" skill") >= 0) {
-                                var optSkillName:String = _trimString(skillOpt.substring(0, optLower.indexOf(" skill")));
-                                var optSkillIdx:int = CollectedState.SKILL_NAMES.indexOf(optSkillName);
-                                if (isDebugAch) _logger.log(MOD_NAME, "    Option: '" + optSkillName + "' (idx=" + optSkillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(700 + optSkillIdx)) + ")");
-                                if (optSkillIdx >= 0 && _collectedState && _collectedState.hasItem(700 + optSkillIdx)) {
-                                    anySkillFound = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!anySkillFound) {
-                            if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: no skills matched");
-                            return false;
-                        }
-                        if (isDebugAch) _logger.log(MOD_NAME, "    -> PASSED: at least one skill found");
-                    } else {
-                        var skillEndIdx:int = reqLower.indexOf(" skill");
-                        var skillName:String = _trimString(req.substring(0, skillEndIdx));
-                        var skillIdx:int = CollectedState.SKILL_NAMES.indexOf(skillName);
-                        if (isDebugAch) _logger.log(MOD_NAME, "    Skill: '" + skillName + "' (idx=" + skillIdx + ", hasItem=" + (_collectedState && _collectedState.hasItem(700 + skillIdx)) + ")");
-                        // If skill not found or not collected, block the achievement
-                        if (skillIdx < 0) {
-                            // Unknown skill name — log and block
-                            _logger.log(MOD_NAME, "Warning: unknown skill in achievement '" + achName + "': " + skillName);
-                            if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: unknown skill");
-                            return false;
-                        }
-                        if (!_collectedState || !_collectedState.hasItem(700 + skillIdx)) {
-                            if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: skill not collected");
-                            return false;
-                        }
-                        if (isDebugAch) _logger.log(MOD_NAME, "    -> PASSED: skill collected");
-                    }
-                }
-
-                // --- Element requirement: "X element" ---
-                // Check via _elementStages map: is any stage with this element currently in logic?
-                else if (reqLower.indexOf(" element") >= 0) {
-                    if (isDebugAch) _logger.log(MOD_NAME, "  Checking requirement: " + req);
-                    var elemEndIdx:int = reqLower.indexOf(" element");
-                    var elemName:String = _trimString(req.substring(0, elemEndIdx));
-                    if (_elementStages != null) {
-                        var stages:Array = _elementStages[elemName] as Array;
-                        if (isDebugAch) _logger.log(MOD_NAME, "    Element: '" + elemName + "' (stages=" + (stages ? stages.length : 0) + ")");
-                        if (stages != null && stages.length > 0) {
-                            var elemAccessible:Boolean = false;
-                            for (var s:int = 0; s < stages.length; s++) {
-                                var stageInLogic:Boolean = _logicEvaluator != null && _logicEvaluator.isStageInLogic(stages[s]);
-                                if (isDebugAch) _logger.log(MOD_NAME, "      Stage " + stages[s] + ": " + (stageInLogic ? "IN" : "OUT"));
-                                if (stageInLogic) {
-                                    elemAccessible = true;
-                                    break;
-                                }
-                            }
-                            if (!elemAccessible) {
-                                if (isDebugAch) _logger.log(MOD_NAME, "    -> FAILED: no stages in logic");
-                                return false;
-                            }
-                            if (isDebugAch) _logger.log(MOD_NAME, "    -> PASSED: at least one stage in logic");
-                        } else {
-                            if (isDebugAch) _logger.log(MOD_NAME, "    -> No stage mapping found, assuming accessible");
-                        }
-                        // If no stage mapping for this element, assume accessible (don't block)
-                    } else {
-                        if (isDebugAch) _logger.log(MOD_NAME, "    -> _elementStages is null");
-                    }
-                }
-
-                // --- Trait requirement: "X trait" ---
-                // Format in logic_rules.json is "Ritual trait" (not "battle trait")
-                else if (reqLower.indexOf(" trait") >= 0) {
-                    var traitEndIdx:int = reqLower.indexOf(" trait");
-                    var traitName:String = _trimString(req.substring(0, traitEndIdx));
-
-                    if (traitName.toLowerCase() == "any battle") {
-                        // Special case: need at least one battle trait (AP IDs 400–414)
-                        var hasTrait:Boolean = false;
-                        for (var t:int = 0; t < 15; t++) {
-                            if (_collectedState && _collectedState.hasItem(400 + t)) { hasTrait = true; break; }
-                        }
-                        if (!hasTrait) return false;
-                    } else {
-                        var traitId:int = TRAIT_NAMES.indexOf(traitName);
-                        if (traitId >= 0 && _collectedState && !_collectedState.hasItem(400 + traitId)) {
-                            return false;
-                        }
-                    }
-                }
-
-                // --- Field requirement: "Field A4" or "Field N1, U1 or R5" (OR) ---
-                else if (reqLower.indexOf("field ") == 0) {
-                    var fieldPart:String = _trimString(req.substring(6));
-                    // Split on ", " or " or " to get individual stage strIds
-                    var stageTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
-                    var fieldAccessible:Boolean = false;
-                    for (var f:int = 0; f < stageTokens.length; f++) {
-                        var stageId:String = _trimString(String(stageTokens[f]));
-                        if (stageId.length > 0 && _logicEvaluator != null
-                                && _logicEvaluator.isStageInLogic(stageId)) {
-                            fieldAccessible = true;
-                            break;
-                        }
-                    }
-                    if (!fieldAccessible) return false;
-                }
-
-                // --- Game mode requirements ---
-                // Mod is journey-only; any requirement for endurance or trial blocks the achievement.
-                else if (reqLower == "trial") {
-                    return false;
-                }
-                else if (reqLower == "endurance") {
-                    return false;
-                }
-                else if (reqLower == "endurance and trial") {
-                    return false;
-                }
-
-                // --- Skill group counters: "strikeSpells: N", "enhancementSpells: N", "gemSkills: N" ---
-                // strikeSpells  = {Freeze, Whiteout, Ice Shards} — need at least N
-                // enhancementSpells = {Bolt, Beam, Barrage} — need at least N
-                // gemSkills = {Critical Hit, Mana Leech, Bleeding, Armor Tearing, Poison, Slowing} — need at least N
-                else if (reqLower.indexOf("strikespells") == 0) {
-                    var strikeNeeded:int = int(_trimString(reqLower.substring(reqLower.indexOf(":") + 1)));
-                    if (!_logicHelper.hasStrikeSpells(strikeNeeded)) return false;
-                }
-                else if (reqLower.indexOf("enhancementspells") == 0) {
-                    var enhanceNeeded:int = int(_trimString(reqLower.substring(reqLower.indexOf(":") + 1)));
-                    if (!_logicHelper.hasEnhancementSpells(enhanceNeeded)) return false;
-                }
-                else if (reqLower.indexOf("gemskills") == 0) {
-                    var gemNeeded:int = int(_trimString(reqLower.substring(reqLower.indexOf(":") + 1)));
-                    if (!_logicHelper.hasGemSkills(gemNeeded)) return false;
-                }
-
-                // --- Wave requirement: "minWave: N" ---
-                // Delegates to LogicHelper which checks both journey tier accessibility
-                // and endurance/trial availability for waves > 96.
-                else if (reqLower.indexOf("minwave") == 0) {
-                    var waveColonIdx:int = reqLower.indexOf(":");
-                    var waveNeeded:int = int(_trimString(reqLower.substring(waveColonIdx + 1)));
-                    if (!_logicHelper.HasFieldWithMinWaveCount(waveNeeded)) return false;
-                }
-
-                // --- Field token requirement: "fieldToken: N" ---
-                // Checks that at least N field tokens (AP IDs 1-199) have been received.
-                else if (reqLower.indexOf("fieldtoken") == 0) {
-                    var ftColonIdx:int = reqLower.indexOf(":");
-                    var ftNeeded:int = int(_trimString(reqLower.substring(ftColonIdx + 1)));
-                    var ftCount:int = 0;
-                    for (var ftId:int = 1; ftId <= 199; ftId++) {
-                        if (_collectedState && _collectedState.hasItem(ftId)) ftCount++;
-                    }
-                    if (ftCount < ftNeeded) return false;
-                }
-
-                // Stat, wave, and other in-game requirements are not AP-gated; skip them.
-            }
-
-            if (isDebugAch) {
-                _logger.log(MOD_NAME, "=== RESULT: " + achName + " IS IN LOGIC ===");
-            }
-            return true;
-        }
-
-        /** Trim whitespace from both ends of a string (ActionScript 3 doesn't have String.trim()). */
-        private function _trimString(str:String):String {
-            return str.replace(/^\s+|\s+$/g, "");
-        }
 
         private function onKeyDown(e:KeyboardEvent):void {
             // Backtick / tilde (keyCode 192) — toggle message log
@@ -1477,8 +1196,6 @@ package {
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 if (_collectedState != null) _collectedState.onItem(apId);
                 if (_logicEvaluator != null) _logicEvaluator.markDirty();
-                _achPanelLogicDirty = true;
-                _inLogicAchievementsDirty = true;  // Recompute achievements cache when items arrive
 
                 var strId:String = AV.serverData.tokenMap[String(apId)];
                 if (strId != null) {
@@ -1529,10 +1246,10 @@ package {
                 if (apId >= 2000 && apId <= 2636) {
                     _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
                     // Achievement reward from another player (only award skill points, don't mark as collected)
-                    var achName:String = _findAchievementNameByApId(apId);
+                    var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
                     _logger.log(MOD_NAME, "     Found achievement name: " + achName);
                     if (achName != null && _achievementUnlocker != null) {
-                        _achievementUnlocker.receiveAchievementReward(achName, apId, _achievementData);
+                        _achievementUnlocker.receiveAchievementReward(achName, apId);
                         _itemToast.addItem("Achievement Reward: " + achName, 0xAA55FF);
                     }
                     return;
@@ -1734,156 +1451,7 @@ package {
         public function get deathLinkEnabled():Boolean { return _saveManager.deathLinkEnabled; }
 
         // -----------------------------------------------------------------------
-        // Achievement Helpers
-
-        /**
-         * Reverse-lookup: find achievement name by AP ID.
-         * Returns null if not found.
-         */
-        private function _findAchievementNameByApId(apId:int):String {
-            for (var name:String in _achievementData) {
-                var achEntry:Object = _achievementData[name];
-                if (achEntry && achEntry.apId == apId) {
-                    return name;
-                }
-            }
-            return null;
-        }
-
-        /**
-         * Detect achievements collected in-game and submit them to AP.
-         * Called periodically from onEnterFrame.
-         */
-        private function detectAndReportAchievements():void {
-            if (!GV.achiCollection || !_connectionManager.isConnected || !_achievementUnlocker || !_achievementData) {
-                if (_dbgFrameCounter % 600 == 0) {
-                    _logger.log(MOD_NAME, "detectAndReportAchievements: guard blocked"
-                        + "  achiCollection=" + (GV.achiCollection != null)
-                        + "  connected=" + _connectionManager.isConnected
-                        + "  unlocker=" + (_achievementUnlocker != null)
-                        + "  data=" + (_achievementData != null));
-                }
-                return;
-            }
-
-            try {
-                // Access achievements from the game's AchiCollection
-                var achisByOrder:Array = GV.achiCollection.achisByOrder;
-                if (!achisByOrder) {
-                    _logger.log(MOD_NAME, "detectAndReportAchievements: GV.achiCollection.achisByOrder not found");
-                    return;
-                }
-
-                // Iterate through all achievements
-                for (var i:int = 0; i < achisByOrder.length; i++) {
-                    var ach:* = achisByOrder[i];
-                    if (!ach) continue;
-
-                    // Send as soon as the game marks the achievement earned (status 2+).
-                    // Status 2 = condition met in a live battle; status 3 = permanently saved.
-                    // We intentionally send at status 2 so the check goes out immediately
-                    // without requiring a win.
-                    var status:int = int(ach.status);
-                    var achTitle:String = String(ach.title);
-                    if (status < 2) {
-                        continue;
-                    }
-
-                    // achTitle already set above when checking status
-                    if (!achTitle) {
-                        continue;
-                    }
-
-                    // Check if we've already reported this one
-                    if (_reportedAchievements[achTitle]) {
-                        continue; // Already reported
-                    }
-
-                    // Look up AP ID for this achievement by title
-                    var achData:Object = _achievementData[achTitle];
-                    if (!achData) {
-                        _logger.log(MOD_NAME, "  Achievement '" + achTitle + "' not found in achievement map");
-                        continue; // Not in our map
-                    }
-
-                    var apId:int = int(achData.apId);
-                    if (apId < 2000 || apId > 2636) {
-                        _logger.log(MOD_NAME, "  Achievement '" + achTitle + "' has invalid apId=" + apId + " (expected 2000-2636), skipping");
-                        continue;
-                    }
-
-                    // Mark as reported and submit
-                    _reportedAchievements[achTitle] = true;
-                    _logger.log(MOD_NAME, "Sending achievement: " + achTitle + "  apId=" + apId);
-                    _achievementUnlocker.unlockAchievement(achTitle, apId, _achievementData);
-                }
-            } catch (err:Error) {
-                _logger.log(MOD_NAME, "detectAndReportAchievements error: " + err.message);
-                return;
-            }
-        }
-
-        /**
-         * Load achievement map from embedded logic.json (via EmbeddedData).
-         * This contains achievement name → AP ID, reward, required effort, and requirements.
-         */
-        private function loadAchievementMap():void {
-            try {
-                // Ensure _achievementData is initialized
-                if (!_achievementData) {
-                    _achievementData = {};
-                }
-
-                var jsonString:String = EmbeddedData.getAchievementLogicJSON();
-                if (!jsonString || jsonString.length == 0) {
-                    _logger.log(MOD_NAME, "Warning: achievement_map data is empty");
-                    return;
-                }
-
-                var jsonData:Object = JSON.parse(jsonString);
-                if (jsonData) {
-                    // New format: { "achievements": {...}, "element_stages": {...} }
-                    // Old format (flat): { achievementName: {...}, ... }
-                    if (jsonData.achievements) {
-                        _achievementData = jsonData.achievements;
-                        _elementStages   = jsonData.element_stages || {};
-                        var elemCount:int = 0;
-                        for (var e:String in _elementStages) elemCount++;
-                        _logger.log(MOD_NAME, "Loaded element_stages: " + elemCount + " elements");
-                    } else {
-                        _achievementData = jsonData;
-                        _elementStages   = {};
-                    }
-                    var count:int = 0;
-                    for (var k:String in _achievementData) count++;
-                    _logger.log(MOD_NAME, "Loaded achievement map: " + count + " achievements");
-                } else {
-                    _logger.log(MOD_NAME, "Warning: JSON parsed but returned null/empty");
-                }
-            } catch (e:Error) {
-                _logger.log(MOD_NAME, "Error loading achievement_map: " + e.message + " (will continue with empty map)");
-                _achievementData = {};
-            }
-        }
-
-        // -----------------------------------------------------------------------
         // Helpers
-
-        /**
-         * Build a set of AP location IDs for achievements that are currently in-logic.
-         * Delegates to _computeInLogicAchievements() and converts names -> AP IDs.
-         */
-        private function _getInLogicAchApIds():Object {
-            var result:Object = {};
-            var names:Array = _computeInLogicAchievements();
-            for (var i:int = 0; i < names.length; i++) {
-                var achData:Object = _achievementData[names[i]];
-                if (achData && achData.apId) {
-                    result[int(achData.apId)] = true;
-                }
-            }
-            return result;
-        }
 
         private function itemName(apId:int):String {
             var skillName:String = _skillUnlocker.getSkillName(apId);
@@ -1899,7 +1467,7 @@ package {
                 return AV.serverData.shadowCoreNameMap[String(apId)];
             }
             if (apId >= 2000 && apId <= 2636) {
-                var achName:String = _findAchievementNameByApId(apId);
+                var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
                 return achName != null ? achName : ("Achievement #" + apId);
             }
             return null; // let ConnectionManager handle the rest

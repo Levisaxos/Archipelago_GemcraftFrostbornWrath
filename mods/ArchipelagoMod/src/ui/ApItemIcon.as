@@ -1,4 +1,4 @@
-package {
+package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.Sprite;
@@ -20,7 +20,7 @@ package {
      */
     public class ApItemIcon extends Sprite {
 
-        [Embed(source="images/IconColorSmall.png")]
+        [Embed(source="../images/IconColorSmall.png")]
         private static const IconAsset:Class;
 
         /** Type constant; doesn't match any DropType so animation plays no sound. */
