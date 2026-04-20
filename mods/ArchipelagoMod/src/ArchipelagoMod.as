@@ -626,6 +626,7 @@ package {
                     _achPanelPatcher.tryPatch();
                     if (!wasPatched && _achPanelPatcher.patched && _achievementLogicEvaluator != null) {
                         // First successful patch: populate filterFlags before the panel opens.
+                        _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
                         _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                         _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     }
@@ -948,6 +949,7 @@ package {
             _modeInterceptor.redispatchPendingClick();
 
             if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
                 _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
@@ -1020,6 +1022,7 @@ package {
                 if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
                 if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
                 if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                    _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
                     _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                     _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     _achPanelPatcher.refreshIfActive();

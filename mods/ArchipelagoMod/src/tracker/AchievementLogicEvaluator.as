@@ -86,6 +86,24 @@ package tracker {
             return AV.sessionData.achievementsInLogic;
         }
 
+        /**
+         * Return apId->true for every achievement that has no requirements
+         * (i.e. always receives a filler item and is excluded from logic).
+         * The set is static — call once after loadData().
+         */
+        public function getExcludedAchApIds():Object {
+            var result:Object = {};
+            for (var achName:String in _achievementData) {
+                var achData:Object = _achievementData[achName];
+                if (!achData || !achData.apId) continue;
+                var reqs:Array = achData.requirements as Array;
+                if (reqs == null || reqs.length == 0) {
+                    result[int(achData.apId)] = true;
+                }
+            }
+            return result;
+        }
+
         /** Check requirements for a single achievement without using the cache. */
         public function isAchievementInLogic(achName:String, achData:Object):Boolean {
             if (!achData) return false;

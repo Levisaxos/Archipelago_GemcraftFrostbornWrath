@@ -49,9 +49,13 @@ package patch {
         private var _gameIdToApId:Object = {};
 
         // apId (int) -> true for achievements whose requirements are currently met
-        private var _reqMetApIds:Object = {};
-        private var _dotsDirty:Boolean  = false;
-        private var _dotFrame:int       = 0;
+        private var _reqMetApIds:Object   = {};
+        // apId (int) -> true for achievements with no requirements (always filler)
+        private var _excludedApIds:Object = {};
+        private var _dotsDirty:Boolean    = false;
+        private var _dotFrame:int         = 0;
+
+        private var _tooltipOverlay:AchievementTooltipOverlay;
 
         // -----------------------------------------------------------------------
 
@@ -59,6 +63,8 @@ package patch {
             _logger  = logger;
             _modName = modName;
             _loadGameIdMapping();
+            _tooltipOverlay = new AchievementTooltipOverlay(logger, modName);
+            _tooltipOverlay.gameIdToApId = _gameIdToApId;
         }
 
         // -----------------------------------------------------------------------
@@ -258,6 +264,19 @@ package patch {
         public function updateDots(reqMetApIds:Object):void {
             _reqMetApIds = reqMetApIds || {};
             _dotsDirty   = true;
+            if (_tooltipOverlay != null) _tooltipOverlay.reqMetApIds = _reqMetApIds;
+        }
+
+        /**
+         * Store the set of achievements that are excluded from logic (no requirements).
+         * Call alongside updateDots/updateLogicFlags — the set is static but kept in
+         * sync for simplicity.
+         * @param excludedApIds  apId->true for every excluded achievement
+         */
+        public function updateExcluded(excludedApIds:Object):void {
+            _excludedApIds = excludedApIds || {};
+            _dotsDirty     = true;
+            if (_tooltipOverlay != null) _tooltipOverlay.excludedApIds = _excludedApIds;
         }
 
         /**
@@ -266,6 +285,9 @@ package patch {
          */
         public function onSelectorFrame(panel:PnlAchievements):void {
             if (!_patched || panel == null) return;
+
+            // Drive the tooltip overlay every frame (it does its own visibility checks).
+            if (_tooltipOverlay != null) _tooltipOverlay.onSelectorFrame(panel);
 
             _dotFrame++;
             var needsUpdate:Boolean = _dotsDirty || (_dotFrame >= DOT_INTERVAL);
@@ -306,11 +328,13 @@ package patch {
                 // Skip if not in the display list (filtered out or panel closed)
                 try { if (mcAchi.parent == null) continue; } catch (e:Error) { continue; }
 
-                var inLogic:Boolean   = (_reqMetApIds[int(apId)] === true);
+                var apIdInt:int       = int(apId);
+                var excluded:Boolean  = (_excludedApIds[apIdInt] === true);
+                var inLogic:Boolean   = (!excluded && _reqMetApIds[apIdInt] === true);
                 var isEarned:Boolean  = (int(ach.status) >= 2);
 
-                // Collected (game-earned) + in logic → remove any stale dot, show nothing
-                if (inLogic && isEarned) {
+                // Earned achievements need no dot (collected = done).
+                if (isEarned) {
                     try {
                         var stale:* = mcAchi.getChildByName(DOT_NAME);
                         if (stale != null) mcAchi.removeChild(stale);
@@ -319,7 +343,7 @@ package patch {
                     continue;
                 }
 
-                _updateDot(mcAchi, inLogic);
+                _updateDot(mcAchi, inLogic, excluded);
                 applied++;
             }
 
@@ -338,7 +362,7 @@ package patch {
             return null;
         }
 
-        private function _updateDot(mcAchi:*, inLogic:Boolean):void {
+        private function _updateDot(mcAchi:*, inLogic:Boolean, excluded:Boolean = false):void {
             // Remove any existing dot
             try {
                 var existing:* = mcAchi.getChildByName(DOT_NAME);
@@ -347,7 +371,8 @@ package patch {
 
             var dot:Shape = new Shape();
             dot.name = DOT_NAME;
-            var fillColor:uint = inLogic ? 0x44FF44 : 0xFF4444;
+            // Grey = excluded/filler, green = in-logic, red = not yet in-logic
+            var fillColor:uint = excluded ? 0x888888 : (inLogic ? 0x44FF44 : 0xFF4444);
             dot.graphics.lineStyle(1, 0x000000, 0.6);
             dot.graphics.beginFill(fillColor, 0.9);
             dot.graphics.drawCircle(0, 0, DOT_RADIUS);
