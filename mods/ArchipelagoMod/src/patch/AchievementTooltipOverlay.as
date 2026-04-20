@@ -111,6 +111,14 @@ package patch {
                 return;
             }
 
+            // drawBitmap() multiplied vIp.w by projectorZoom in-place during the first
+            // render.  Undo that now so addTextfield() and the second drawBitmap() both
+            // use the original unscaled width — otherwise text x-positions are double-zoomed.
+            try {
+                var zoom:Number = Number(GV.projectorZoom);
+                if (zoom > 0) vIp.w = vIp.w / zoom;
+            } catch (e2:Error) {}
+
             // Add separator + our lines into the existing textfields array.
             // Match game's own separator pattern: addExtraHeight(7) + addSeparator(-2).
             try {
@@ -119,16 +127,16 @@ package patch {
                 for each (var pair:Array in lines) {
                     vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
                 }
-            } catch (e2:Error) {
-                _logger.log(_modName, "TooltipOverlay: addTextfield error: " + e2.message);
+            } catch (e3:Error) {
+                _logger.log(_modName, "TooltipOverlay: addTextfield error: " + e3.message);
                 return;
             }
 
             // Re-render: drawBitmap() now includes game content + our lines.
             try {
                 vIp.doEnterFrame();
-            } catch (e3:Error) {
-                _logger.log(_modName, "TooltipOverlay: doEnterFrame error: " + e3.message);
+            } catch (e4:Error) {
+                _logger.log(_modName, "TooltipOverlay: doEnterFrame error: " + e4.message);
             }
         }
 

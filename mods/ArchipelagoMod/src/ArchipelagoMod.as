@@ -53,6 +53,7 @@ package {
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
     import patch.AchievementPanelPatcher;
+    import patch.FieldTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -135,6 +136,7 @@ package {
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
+        private var _fieldTooltipOverlay:FieldTooltipOverlay;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -231,6 +233,7 @@ package {
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
+                _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
 
                 // Button factory — owns all mod buttons on selector + main menu
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
@@ -619,6 +622,7 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
+                if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
