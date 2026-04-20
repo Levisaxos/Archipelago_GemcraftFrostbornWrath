@@ -143,7 +143,7 @@ package unlockers {
 
                     _reportedAchievements[achTitle] = true;
                     _logger.log(_modName, "Sending achievement: " + achTitle + "  apId=" + apId);
-                    unlockAchievement(achTitle, apId);
+                    unlockAchievement(achTitle, apId, int(ach.id));
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "detectAndReport error: " + err.message);
@@ -157,8 +157,11 @@ package unlockers {
          * Queue an achievement unlock (when player collects it in-game).
          * Marks it collected in sessionData, sends the AP location check,
          * awards skill points, and queues a level-end icon.
+         *
+         * @param gameId  The game's internal achievement ID (ach.id from achisByOrder).
+         *                Pass -1 if unknown; the level-end screen will fall back to the generic AP icon.
          */
-        public function unlockAchievement(achievementName:String, apId:int):void {
+        public function unlockAchievement(achievementName:String, apId:int, gameId:int = -1):void {
             if (!achievementName || apId < 2000 || apId > 2636) return;
 
             AV.sessionData.onAchievementCollected(apId);
@@ -166,8 +169,8 @@ package unlockers {
                 _connectionManager.sendLocationChecks([apId]);
             }
             _awardSkillPointsForAchievement(achievementName);
-            _pendingLevelAchievements.push({ apId: apId, achievementName: achievementName });
-            _logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId);
+            _pendingLevelAchievements.push({ apId: apId, achievementName: achievementName, gameId: gameId });
+            _logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId + "  gameId=" + gameId);
         }
 
         /**

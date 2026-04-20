@@ -32,6 +32,14 @@ package ui {
         /** AP location ID (2000-2636 for achievements); used to look up sent-item data on hover. */
         public var locationId:int = 0;
 
+        /**
+         * Sort priority for the ending-screen icon row.  Lower = further left.
+         *   1 = our field token   2 = our skill    3 = our trait
+         *   4 = our talisman      5 = our orb      6 = our achievement
+         *  10 = item for others
+         */
+        public var sortOrder:int = 10;
+
         /** Properties required by IngameEnding.removeAllDropIcons() for cleanup. */
         public var data:Object;
         public var cntInner:Sprite;

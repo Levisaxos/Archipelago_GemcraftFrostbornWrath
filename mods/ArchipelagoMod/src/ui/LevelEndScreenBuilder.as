@@ -172,9 +172,15 @@ package ui {
                         var achLocId:int = int(achEntry.apId);
                         var achIcon:ApItemIcon;
                         if (sentItems != null && sentItems[achLocId] != null) {
-                            achIcon = _buildSentItemIcon(sentItems[achLocId]);
+                            // Server already told us what item was sent — show that item's icon.
+                            var achSentData:Object = sentItems[achLocId];
+                            achIcon = _buildSentItemIcon(achSentData);
+                            achIcon.sortOrder = _sortOrderForSentItem(achSentData);
                         } else {
-                            achIcon = new ApItemIcon("Sent: " + String(achEntry.achievementName) + " \u2192 ?");
+                            // Still waiting for the server — use the achievement's icon as a placeholder.
+                            var achBmpd:BitmapData = _getAchievementBitmapByGameId(int(achEntry.gameId));
+                            achIcon = new ApItemIcon("Sent: " + String(achEntry.achievementName) + " \u2192 ?", achBmpd);
+                            achIcon.sortOrder = 6;
                         }
                         achIcon.locationId = achLocId;
                         icons.push(achIcon);
@@ -184,12 +190,9 @@ package ui {
 
                 if (icons.length == 0 && _preservedBattleIcons.length == 0) return;
 
-                var n:int = icons.length;
-                var xOffset:Number = n < 13 ? 70 * (13 - n) : 0;
-
-                for (var k:int = 0; k < n; k++) {
+                // Add AP achievement icons to the display list.
+                for (var k:int = 0; k < icons.length; k++) {
                     var icon:ApItemIcon = icons[k];
-                    icon.x = 48 + k * 140 + xOffset;
                     icon.y = 789;
                     icon.visible = false;
                     ending.cnt.mcOutcomePanel.addChild(icon);
@@ -211,6 +214,7 @@ package ui {
                 }
                 _preservedBattleIcons = [];
 
+                // Sort by priority and lay out all icons.
                 repositionIcons(ending.dropIcons);
 
                 _logger.log(_modName, "LevelEndScreenBuilder.buildIcons: "
@@ -236,6 +240,8 @@ package ui {
 
                 var icon:ApItemIcon = _makeApIcon(itemName + " \u2192 " + receivingName, itemName);
                 icon.locationId = locId;
+                var sentData:Object = (_connectionManager != null) ? _connectionManager.itemsSentThisLevel[locId] : null;
+                icon.sortOrder = (sentData != null) ? _sortOrderForSentItem(sentData) : 10;
                 icon.y = 789;
                 icon.visible = false;
                 ending.cnt.mcOutcomePanel.addChild(icon);
@@ -295,18 +301,25 @@ package ui {
         }
 
         /**
-         * Create an ApItemIcon using the cached native game bitmap for the item type,
-         * or fall back to the generic AP icon if no cached bitmap is available.
+         * Create an ApItemIcon using the native game bitmap for the item type.
+         * Achievements are constructed on-demand (each has a unique icon).
+         * Other GCFW types use the static pre-populated cache.
+         * Falls back to the generic AP icon if no bitmap is available.
          */
         private function _makeApIcon(label:String, itemName:String):ApItemIcon {
             var gcfwType:int = _detectGcfwDropType(itemName);
-            var cachedBmpd:BitmapData = (gcfwType > 0) ? (_iconBitmapCache[gcfwType] as BitmapData) : null;
-            return new ApItemIcon(label, cachedBmpd);
+            var bmpd:BitmapData = (gcfwType > 0) ? (_iconBitmapCache[gcfwType] as BitmapData) : null;
+            return new ApItemIcon(label, bmpd);
         }
 
         /**
          * Detect which GCFW drop type an item name corresponds to.
          * Returns the DropType int, or -1 if the item is from another game / unrecognised.
+         *
+         * Note: achievements are intentionally excluded here. Achievement icons are
+         * applied directly in buildIcons() where we have the exact achievement name.
+         * Doing a name lookup here causes false positives (achievement titles like "H5"
+         * or "V4" accidentally match AP item names).
          */
         private function _detectGcfwDropType(itemName:String):int {
             if (itemName == null) return -1;
@@ -322,6 +335,21 @@ package ui {
         private function _endsWith(str:String, suffix:String):Boolean {
             if (str.length < suffix.length) return false;
             return str.substr(str.length - suffix.length) == suffix;
+        }
+
+        /**
+         * Construct the native achievement drop icon bitmap for a given game achievement ID.
+         * The ID comes directly from ach.id in GV.achiCollection.achisByOrder — no name lookup needed.
+         * Returns null if gameId is invalid (≤0) or McDropIconOutcome throws.
+         */
+        private function _getAchievementBitmapByGameId(gameId:int):BitmapData {
+            if (gameId <= 0) return null;
+            try {
+                var icon:McDropIconOutcome = new McDropIconOutcome(DropType.ACHIEVEMENT, gameId);
+                return icon.bmpdIcon.clone();
+            } catch (err:Error) {
+                return null;
+            }
         }
 
         /**
@@ -347,12 +375,62 @@ package ui {
             } catch (err:Error) {}
         }
 
-        /** Centre-align all icons across the ending screen row. */
+        /**
+         * Sort by sortOrder then centre-align across the ending-screen row.
+         * Mutates the icons array in place (game code holds a reference to the same array).
+         */
         private function repositionIcons(icons:Array):void {
+            icons.sort(_compareIconOrder);
             var n:int = icons.length;
             var xOff:Number = n < 13 ? 70 * (13 - n) : 0;
             for (var i:int = 0; i < n; i++) {
                 icons[i].x = 48 + i * 140 + xOff;
+            }
+        }
+
+        private function _compareIconOrder(a:*, b:*):int {
+            return _iconSortOrder(a) - _iconSortOrder(b);
+        }
+
+        /**
+         * Return the sort priority for any icon in ending.dropIcons.
+         * ApItemIcon carries a typed sortOrder property.
+         * McDropIconOutcome (preserved battle icons) are identified by their DropType.
+         */
+        private function _iconSortOrder(icon:*):int {
+            if (icon == null) return 10;
+            if (icon is ApItemIcon) return int((icon as ApItemIcon).sortOrder);
+            // Preserved game icon — derive order from DropType (always our in-battle item).
+            var t:int = int(icon.type);
+            if (t == DropType.TALISMAN_FRAGMENT) return 4;
+            if (t == DropType.SHADOW_CORE)        return 5;
+            return 10;
+        }
+
+        /**
+         * Determine the sort order for an item in itemsSentThisLevel.
+         * Items going to us are sorted by type (1-5); items going to others get 10.
+         */
+        private function _sortOrderForSentItem(sentData:Object):int {
+            if (sentData == null) return 10;
+            var isOurs:Boolean = (_connectionManager != null)
+                && (int(sentData.receivingSlot) == _connectionManager.mySlot);
+            if (!isOurs) return 10;
+            return _gcfwTypeToSortOrder(_detectGcfwDropType(String(sentData.itemName || "")));
+        }
+
+        /**
+         * Map a DropType constant to a sort-order slot for "our" items.
+         * Returns 9 for unrecognised GCFW items (XP tomes, etc.) that still belong to us.
+         */
+        private function _gcfwTypeToSortOrder(gcfwType:int):int {
+            switch (gcfwType) {
+                case DropType.FIELD_TOKEN:        return 1;
+                case DropType.SKILL_TOME:         return 2;
+                case DropType.BATTLETRAIT_SCROLL: return 3;
+                case DropType.TALISMAN_FRAGMENT:  return 4;
+                case DropType.SHADOW_CORE:        return 5;
+                default:                          return 9; // our item, unknown type
             }
         }
 

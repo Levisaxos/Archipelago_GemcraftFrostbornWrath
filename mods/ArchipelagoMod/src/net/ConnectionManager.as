@@ -149,6 +149,7 @@ package net {
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
         public function get missingLocations():Object      { return _receiver.missingLocations; }
         public function get itemsSentThisLevel():Object    { return _receiver.itemsSentThisLevel; }
+        public function get mySlot():int                   { return _receiver.mySlot; }
 
         // -----------------------------------------------------------------------
         // Credentials
