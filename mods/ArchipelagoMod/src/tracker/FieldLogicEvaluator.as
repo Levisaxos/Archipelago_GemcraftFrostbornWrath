@@ -174,10 +174,10 @@ package tracker {
             }
 
             // Mark each stage by tier.
-            for (var strId:String in _stageTier) {
-                var tier:int = int(_stageTier[strId]);
-                _inLogicByStrId[strId] = _freeStages[strId] == true || tier <= _reachableTier;
-            }
+            // for (var strId:String in _stageTier) {
+            //     var tier:int = int(_stageTier[strId]);
+            //     _inLogicByStrId[strId] = _freeStages[strId] == true || tier <= _reachableTier;
+            // }
             // Free stages (W1-W4) are not in _stageTier but are always reachable.
             for (var freeSid:String in _freeStages) {
                 _inLogicByStrId[freeSid] = true;
