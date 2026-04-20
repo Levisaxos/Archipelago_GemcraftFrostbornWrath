@@ -5,11 +5,13 @@ All 636 achievements with their requirements, AP IDs, and metadata.
 This is the single source of truth for achievement data.
 
 Fields per achievement:
-  ap_id           - Archipelago item ID (2000-2636)
-  description     - Human-readable description
-  requirements    - List of requirement strings for logic checks
-  reward          - Reward string, e.g. "skillPoints:2"
-  required_effort - Effort level: "Trivial", "Minor", "Major", "Extreme"
+  ap_id            - Archipelago item ID (2000-2636)
+  description      - Human-readable description
+  always_as_filler - (optional) True → location always holds a filler item;
+                     no access rules are set and the mod shows it as excluded
+  requirements     - List of requirement strings for logic checks
+  reward           - Reward string, e.g. "skillPoints:2"
+  required_effort  - Effort level: "Trivial", "Minor", "Major", "Extreme"
 """
 
 achievement_requirements = {
@@ -509,7 +511,8 @@ achievement_requirements = {
         "ap_id": 2051,
         "game_id": 607,
         "description": "Kill 2.100 green blooded monsters.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
     },
@@ -892,7 +895,8 @@ achievement_requirements = {
         "ap_id": 2091,
         "game_id": 608,
         "description": "Kill 4.500 green blooded monsters.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
     },
@@ -910,6 +914,7 @@ achievement_requirements = {
         "ap_id": 2093,
         "game_id": 187,
         "description": "Reach 50.000 monsters with special properties killed through all the battles.",
+        "always_as_filler": True,
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -1261,9 +1266,10 @@ achievement_requirements = {
         "ap_id": 2130,
         "game_id": 159,
         "description": "Kill a possessed giant with barrage.",
+        "always_as_filler": True,
         "requirements": [
             'Barrage skill',
-            'Possessed Monster element',
+            'Possessed Monster element',            
         ],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -1632,6 +1638,7 @@ achievement_requirements = {
         "ap_id": 2166,
         "game_id": 148,
         "description": "Kill 199 possessed monsters.",
+        "always_as_filler": True,
         "requirements": ['Possessed Monster element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -1668,7 +1675,8 @@ achievement_requirements = {
         "ap_id": 2170,
         "game_id": 606,
         "description": "Kill 900 green blooded monsters.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
     },
@@ -1809,7 +1817,8 @@ achievement_requirements = {
         "ap_id": 2184,
         "game_id": 541,
         "description": "Win a flipped field battle.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
     },
@@ -2194,7 +2203,8 @@ achievement_requirements = {
         "ap_id": 2223,
         "game_id": 609,
         "description": "Kill 9.900 green blooded monsters.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
     },
@@ -2323,7 +2333,8 @@ achievement_requirements = {
         "ap_id": 2237,
         "game_id": 542,
         "description": "Activate all mods.",
-        "requirements": ['Hidden Codes Element'],
+        "always_as_filler": True,
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
     },
@@ -2362,6 +2373,7 @@ achievement_requirements = {
         "ap_id": 2241,
         "game_id": 500,
         "description": "Have a watchtower kill a possessed monster.",
+        "always_as_filler": True,
         "requirements": [
             'Possessed Monster element',
             'Watchtower element',
@@ -2401,6 +2413,7 @@ achievement_requirements = {
         "ap_id": 2245,
         "game_id": 147,
         "description": "Kill 189 twisted monsters.",
+        "always_as_filler": True,
         "requirements": ['Twisted Monster element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3294,6 +3307,7 @@ achievement_requirements = {
         "ap_id": 2334,
         "game_id": 185,
         "description": "Reach 10.000 monsters with special properties killed through all the battles.",
+        "always_as_filler": True,
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -3301,6 +3315,7 @@ achievement_requirements = {
             'Marked Monster element',
             'minWave: 70',
         ],
+        
         "reward": "skillPoints:1",
         "required_effort": "Minor",
     },
@@ -3892,6 +3907,7 @@ achievement_requirements = {
         "ap_id": 2393,
         "game_id": 160,
         "description": "Kill a whited out possessed monster with bolt.",
+        "always_as_filler": True,
         "requirements": [
             'Bolt skill',
             'Whiteout skill',
@@ -4176,6 +4192,7 @@ achievement_requirements = {
         "ap_id": 2421,
         "game_id": 146,
         "description": "Kill 179 marked monsters.",
+        "always_as_filler": True,
         "requirements": ['Marked Monster element', 'minWave: 70'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -4983,6 +5000,7 @@ achievement_requirements = {
         "ap_id": 2503,
         "game_id": 176,
         "description": "Reach 2.000 monsters with special properties killed through all the battles.",
+        "always_as_filler": True,
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -5849,6 +5867,7 @@ achievement_requirements = {
         "ap_id": 2589,
         "game_id": 186,
         "description": "Reach 20.000 monsters with special properties killed through all the battles.",
+        "always_as_filler": True,
         "requirements": [
             'Endurance',
             'Possessed Monster element',

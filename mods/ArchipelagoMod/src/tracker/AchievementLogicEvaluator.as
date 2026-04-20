@@ -96,8 +96,7 @@ package tracker {
             for (var achName:String in _achievementData) {
                 var achData:Object = _achievementData[achName];
                 if (!achData || !achData.apId) continue;
-                var reqs:Array = achData.requirements as Array;
-                if (reqs == null || reqs.length == 0) {
+                if (achData.always_as_filler === true) {
                     result[int(achData.apId)] = true;
                 }
             }
@@ -149,6 +148,27 @@ package tracker {
                 _logger.log(_modName, "getRequirementsMetApIds error: " + e.message);
             }
             return result;
+        }
+
+        /**
+         * Returns [text, color] pairs describing failing requirements for the
+         * achievement identified by apId.  Empty if in logic, excluded, or not found.
+         */
+        public function getFailingReqLines(apId:int):Array {
+            if (_logicEvaluator == null) return [];
+            for (var k:String in _achievementData) {
+                var d:Object = _achievementData[k];
+                if (d == null || int(d.apId) != apId) continue;
+                var reqs:Array = d.requirements as Array;
+                if (reqs == null || reqs.length == 0) return [];
+                var descs:Array = _logicEvaluator.getFailingReqDescriptions(reqs);
+                var result:Array = [];
+                for each (var desc:String in descs) {
+                    if (desc != null) result.push([desc, 0xCCCCCC]);
+                }
+                return result;
+            }
+            return [];
         }
 
         // -----------------------------------------------------------------------

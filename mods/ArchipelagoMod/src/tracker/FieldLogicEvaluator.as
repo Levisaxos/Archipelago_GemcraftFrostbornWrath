@@ -144,6 +144,48 @@ package tracker {
             return false;
         }
 
+        /**
+         * For a stage not yet tier-reachable, returns the token count needed from
+         * the current reachable tier and all stage strIds in that tier.
+         * Returns null if the stage is already in logic, a free stage, or no rules loaded.
+         * Result: { needed:int, strIds:Array<String> }
+         */
+        public function getBlockingTokenReq(strId:String):Object {
+            if (_stageTier == null || _freeStages[strId] == true) return null;
+            if (_dirty) recompute();
+            if (_inLogicByStrId[strId] == true) return null;
+
+            var prevTier:int  = _reachableTier;
+            var prevCount:int = int(_tierStageCounts[String(prevTier)]);
+            if (prevCount <= 0) return null;
+
+            var needed:int = Math.max(1, int((prevCount * _tokenPct) / 100));
+
+            var allStrIds:Array = [];
+            for (var sid:String in _stageTier) {
+                if (int(_stageTier[sid]) == prevTier) allStrIds.push(sid);
+            }
+            allStrIds.sort(Array.CASEINSENSITIVE);
+            return { needed: needed, strIds: allStrIds };
+        }
+
+        /**
+         * Returns skill names required for this stage's Journey/Bonus that
+         * the player has not yet collected.
+         */
+        public function getMissingStageSkills(strId:String):Array {
+            if (_stageSkills == null) return [];
+            var required:Array = _stageSkills[strId] as Array;
+            if (required == null || required.length == 0) return [];
+
+            var missing:Array = [];
+            for each (var skillName:String in required) {
+                var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (idx >= 0 && !AV.sessionData.hasItem(700 + idx)) missing.push(skillName);
+            }
+            return missing;
+        }
+
         // -----------------------------------------------------------------------
         // Recompute
 

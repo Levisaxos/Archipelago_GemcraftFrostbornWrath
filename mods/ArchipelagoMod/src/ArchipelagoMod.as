@@ -231,6 +231,7 @@ package {
                 _logicHelper = new LogicHelper(_logger, MOD_NAME, _fieldLogicEvaluator);
 
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
+                _achPanelPatcher.setAchievementLogicEvaluator(_achievementLogicEvaluator);
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);

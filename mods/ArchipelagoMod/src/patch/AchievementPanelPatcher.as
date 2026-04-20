@@ -6,6 +6,7 @@ package patch {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.BtnAchiFilter;
     import com.giab.games.gcfw.selector.PnlAchievements;
+    import tracker.AchievementLogicEvaluator;
     import data.EmbeddedData;
 
     /**
@@ -95,6 +96,21 @@ package patch {
         }
 
         // -----------------------------------------------------------------------
+
+        /**
+         * Register a provider that appends failing requirement lines for achievements
+         * that are not yet in logic.  Call once after the evaluator is configured.
+         */
+        public function setAchievementLogicEvaluator(evaluator:AchievementLogicEvaluator):void {
+            if (_tooltipOverlay == null || evaluator == null) return;
+            var ev:AchievementLogicEvaluator = evaluator;
+            _tooltipOverlay.registerProvider(
+                function(ach:*, achName:String, apId:int,
+                         isExcluded:Boolean, isInLogic:Boolean):Array {
+                    if (isInLogic || isExcluded) return [];
+                    return ev.getFailingReqLines(apId);
+                });
+        }
 
         /**
          * Try to inject the "In Logic" filter button into the achievement panel.

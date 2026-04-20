@@ -62,6 +62,77 @@ package tracker {
             return true;
         }
 
+        /**
+         * Returns human-readable descriptions of all FAILING requirements.
+         * Used by tooltip overlays to show why an achievement is not yet in logic.
+         */
+        public function getFailingReqDescriptions(requirements:Array):Array {
+            if (requirements == null || requirements.length == 0) return [];
+            var result:Array = [];
+            for each (var req:* in requirements) {
+                var s:String = _trim(String(req));
+                if (!evaluateRequirement(s)) {
+                    var desc:String = describeRequirement(s);
+                    if (desc != null) result.push(desc);
+                }
+            }
+            return result;
+        }
+
+        /** Returns a human-readable label for a single requirement string. */
+        public function describeRequirement(req:String):String {
+            var lower:String = req.toLowerCase();
+
+            if (lower.indexOf(" skill") >= 0) {
+                if (req.indexOf("|") >= 0) {
+                    var parts:Array = req.split("|");
+                    var labels:Array = [];
+                    for each (var p:String in parts) {
+                        p = _trim(p);
+                        var pi:int = p.toLowerCase().indexOf(" skill");
+                        if (pi >= 0) labels.push(_trim(p.substring(0, pi)) + " skill");
+                    }
+                    return "Requires " + labels.join(" or ");
+                }
+                return "Requires " + req;
+            }
+
+            if (lower.indexOf(" element") >= 0) {
+                var elemName:String = _trim(req.substring(0, lower.indexOf(" element")));
+                if (_elementStages != null) {
+                    var stages:Array = _elementStages[elemName] as Array;
+                    if (stages != null && stages.length > 0) {
+                        var sorted:Array = stages.concat();
+                        sorted.sort(Array.CASEINSENSITIVE);
+                        if (sorted.length == 1) {
+                            return "Requires " + elemName + " on " + sorted[0];
+                        }
+                        return "Requires " + elemName + " (any of " + sorted.join(", ") + ")";
+                    }
+                }
+                return "Requires " + elemName + " element stage";
+            }
+
+            if (lower.indexOf(" trait") >= 0)
+                return "Requires " + req;
+            if (lower.indexOf("field ") == 0)
+                return "Requires " + req + " in logic";
+            if (lower == "trial" || lower == "endurance" || lower == "endurance and trial")
+                return null;
+
+            var colon:int = lower.indexOf(":");
+            var n:int = colon >= 0 ? int(_trim(lower.substring(colon + 1))) : 0;
+
+            if (lower.indexOf("strikespells")      == 0) return "Requires " + n + " strike spells";
+            if (lower.indexOf("enhancementspells") == 0) return "Requires " + n + " enhancement spells";
+            if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
+            if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
+            if (lower.indexOf("minwave")           == 0) return "Requires stage with " + n + "+ waves";
+            if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+
+            return "Requires " + req;
+        }
+
         /** Evaluate a single requirement string.  Unknown patterns return true. */
         public function evaluateRequirement(req:String):Boolean {
             var lower:String = req.toLowerCase();

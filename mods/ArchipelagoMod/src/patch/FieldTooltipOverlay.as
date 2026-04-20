@@ -167,24 +167,48 @@ package patch {
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
             var lines:Array = [["Archipelago", 0xE5AD0A]];
 
-            var journeyExists:Boolean = journeyMissing || journeyDone;
-            var bonusExists:Boolean   = bonusMissing   || bonusDone;
-            var stashExists:Boolean   = stashMissing   || stashDone;
+            var journeyExists:Boolean  = journeyMissing || journeyDone;
+            var bonusExists:Boolean    = bonusMissing   || bonusDone;
+            var stashExists:Boolean    = stashMissing   || stashDone;
 
-            if (journeyExists) {
-                var journeyInLogic:Boolean = journeyMissing &&
-                        _evaluator.stageHasInLogicMissing(strId, true, false, false);
-                lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
-            }
-            if (bonusExists) {
-                var bonusInLogic:Boolean = bonusMissing &&
-                        _evaluator.stageHasInLogicMissing(strId, false, true, false);
-                lines.push(_checkLine("Bonus", bonusDone, bonusInLogic));
-            }
-            if (stashExists) {
-                var stashInLogic:Boolean = stashMissing &&
-                        _evaluator.stageHasInLogicMissing(strId, false, false, true);
-                lines.push(_checkLine("Stash", stashDone, stashInLogic));
+            var journeyInLogic:Boolean = journeyMissing &&
+                    _evaluator.stageHasInLogicMissing(strId, true,  false, false);
+            var bonusInLogic:Boolean   = bonusMissing   &&
+                    _evaluator.stageHasInLogicMissing(strId, false, true,  false);
+            var stashInLogic:Boolean   = stashMissing   &&
+                    _evaluator.stageHasInLogicMissing(strId, false, false, true);
+
+            if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
+            if (bonusExists)   lines.push(_checkLine("Bonus",   bonusDone,   bonusInLogic));
+            if (stashExists)   lines.push(_checkLine("Stash",   stashDone,   stashInLogic));
+
+            // Append requirements for any checks that are blocked (missing + not in logic).
+            var anyBlocked:Boolean =
+                (journeyExists && journeyMissing && !journeyInLogic) ||
+                (bonusExists   && bonusMissing   && !bonusInLogic)   ||
+                (stashExists   && stashMissing   && !stashInLogic);
+
+            if (anyBlocked) {
+                var stageReachable:Boolean = _evaluator.isStageInLogic(strId);
+                if (!stageReachable) {
+                    // Tier-blocked: show token requirement.
+                    var req:Object = _evaluator.getBlockingTokenReq(strId);
+                    if (req != null && (req.strIds as Array).length > 0) {
+                        lines.push(["Complete at least " + req.needed + " of:", 0x888888]);
+                        lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
+                    }
+                } else if ((journeyMissing && !journeyInLogic) ||
+                           (bonusMissing   && !bonusInLogic)) {
+                    // Skill-gated: stage is tier-reachable but journey/bonus blocked by skills.
+                    var skills:Array = _evaluator.getMissingStageSkills(strId);
+                    if (skills.length > 0)
+                        lines.push(["Needs: " + skills.join(", "), 0x888888]);
+                    if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
+                        var have:int = AV.sessionData.totalSkillsCollected;
+                        if (have < 24)
+                            lines.push(["All 24 skills (" + have + "/24)", 0x888888]);
+                    }
+                }
             }
 
             return lines;

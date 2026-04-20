@@ -60,12 +60,11 @@ def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
     EXCLUDED so it can only hold filler.
 
     Triggers:
-      - Achievement has `"exclude": True` in its data
-      - Requirements contain "Hidden Codes Element" (not supported by the mod)
+      - Achievement has `"always_as_filler": True` in its data
     """
-    if ach_data and ach_data.get("exclude", False):
+    if ach_data and ach_data.get("always_as_filler", False):
         return True
-    return any("Hidden Codes Element" in r for r in requirements)
+    return False
 
 
 def _can_achievement_be_met(requirements: list) -> bool:

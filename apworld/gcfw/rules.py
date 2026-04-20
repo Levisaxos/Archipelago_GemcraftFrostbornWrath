@@ -409,12 +409,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
-            # Excluded achievements (Hidden Codes etc.) get no access rules —
+            # Excluded achievements (always_as_filler=True) get no access rules —
             # their locations exist but are marked EXCLUDED and always hold filler.
-            requirements_raw = ach_data.get("requirements", [])
-            if ach_data.get("exclude", False) or any(
-                "Hidden Codes Element" in r for r in requirements_raw
-            ):
+            if ach_data.get("always_as_filler", False):
                 continue
 
             loc_name = f"Achievement: {ach_name}"
