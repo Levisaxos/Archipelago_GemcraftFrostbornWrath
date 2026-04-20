@@ -88,7 +88,8 @@ package tracker {
 
         /** Check requirements for a single achievement without using the cache. */
         public function isAchievementInLogic(achName:String, achData:Object):Boolean {
-            if (!achData || !achData.requirements) return false;
+            if (!achData) return false;
+            if (!achData.requirements) return true;
             var reqs:Array = achData.requirements as Array;
             if (!reqs || reqs.length == 0) return true;
             return _logicEvaluator != null && _logicEvaluator.evaluateRequirements(reqs);

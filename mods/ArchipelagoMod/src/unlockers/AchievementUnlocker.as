@@ -29,9 +29,10 @@ package unlockers {
 
         private var _receivedToast:ReceivedToast;
 
-        private var _achievementData:Object = {};
+        private var _achievementData:Object = {}; // name  -> entry (for skill-point lookups)
+        private var _gameIdToData:Object   = {}; // game_id (int) -> entry (for detection)
 
-        // Achievements already sent to AP this session (reset on screen change)
+        // Achievements already sent to AP this session, keyed by game_id (reset on screen change)
         private var _reportedAchievements:Object = {};
 
         // Queued icons for the level-end screen (cleared by LevelEndScreenBuilder)
@@ -71,8 +72,15 @@ package unlockers {
                 var jsonData:Object = JSON.parse(jsonString);
                 if (jsonData) {
                     _achievementData = jsonData.achievements || jsonData;
+                    _gameIdToData    = {};
                     var count:int = 0;
-                    for (var k:String in _achievementData) count++;
+                    for (var k:String in _achievementData) {
+                        var entry:Object = _achievementData[k];
+                        if (entry && entry.game_id != null) {
+                            _gameIdToData[int(entry.game_id)] = entry;
+                        }
+                        count++;
+                    }
                     _logger.log(_modName, "AchievementUnlocker.loadData: loaded " + count + " achievements");
                 }
             } catch (e:Error) {
@@ -125,25 +133,24 @@ package unlockers {
                     var status:int = int(ach.status);
                     if (status < 2) continue;
 
-                    var achTitle:String = String(ach.title);
-                    if (!achTitle) continue;
-                    if (_reportedAchievements[achTitle]) continue;
+                    var gameId:int = int(ach.id);
+                    if (_reportedAchievements[gameId]) continue;
 
-                    var achData:Object = _achievementData[achTitle];
+                    var achData:Object = _gameIdToData[gameId];
                     if (!achData) {
-                        _logger.log(_modName, "  Achievement '" + achTitle + "' not found in achievement map");
+                        _logger.log(_modName, "  Achievement gameId=" + gameId + " ('" + ach.title + "') not found in map");
                         continue;
                     }
 
                     var apId:int = int(achData.apId);
                     if (apId < 2000 || apId > 2636) {
-                        _logger.log(_modName, "  Achievement '" + achTitle + "' has invalid apId=" + apId + ", skipping");
+                        _logger.log(_modName, "  Achievement gameId=" + gameId + " has invalid apId=" + apId + ", skipping");
                         continue;
                     }
 
-                    _reportedAchievements[achTitle] = true;
-                    _logger.log(_modName, "Sending achievement: " + achTitle + "  apId=" + apId);
-                    unlockAchievement(achTitle, apId, int(ach.id));
+                    _reportedAchievements[gameId] = true;
+                    _logger.log(_modName, "Sending achievement: " + ach.title + "  apId=" + apId + "  gameId=" + gameId);
+                    unlockAchievement(String(ach.title), apId, gameId);
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "detectAndReport error: " + err.message);

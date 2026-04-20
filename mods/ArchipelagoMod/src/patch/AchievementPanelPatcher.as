@@ -45,8 +45,8 @@ package patch {
         private var _ourFilterButton:BtnAchiFilter;
         private var _resetButtonHandler:Function;
 
-        // achievement title (String) -> AP location ID (int), built from logic_rules.json
-        private var _titleToApId:Object = {};
+        // game-internal achievement ID (int) -> AP location ID (int)
+        private var _gameIdToApId:Object = {};
 
         // apId (int) -> true for achievements whose requirements are currently met
         private var _reqMetApIds:Object = {};
@@ -58,13 +58,13 @@ package patch {
         public function AchievementPanelPatcher(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
-            _loadTitleMapping();
+            _loadGameIdMapping();
         }
 
         // -----------------------------------------------------------------------
 
-        /** Build title -> apId map from logic_rules.json (via EmbeddedData). */
-        private function _loadTitleMapping():void {
+        /** Build gameId -> apId map from achievement_logic.json (via EmbeddedData). */
+        private function _loadGameIdMapping():void {
             try {
                 var json:String = EmbeddedData.getAchievementLogicJSON();
                 if (!json || json.length <= 2) return;
@@ -76,14 +76,15 @@ package patch {
                 }
                 var count:int = 0;
                 for (var name:String in achs) {
-                    if (achs[name].apId != null) {
-                        _titleToApId[name] = int(achs[name].apId);
+                    var entry:Object = achs[name];
+                    if (entry.game_id != null && entry.apId != null) {
+                        _gameIdToApId[int(entry.game_id)] = int(entry.apId);
                         count++;
                     }
                 }
-                _logger.log(_modName, "AchievementPanelPatcher: loaded " + count + " title->apId mappings");
+                _logger.log(_modName, "AchievementPanelPatcher: loaded " + count + " gameId->apId mappings");
             } catch (e:Error) {
-                _logger.log(_modName, "AchievementPanelPatcher: error loading title map: " + e.message);
+                _logger.log(_modName, "AchievementPanelPatcher: error loading gameId map: " + e.message);
             }
         }
 
@@ -189,7 +190,7 @@ package patch {
         /**
          * Update filterFlags on every achievement to reflect the current logic state.
          *
-         * Looks up each achievement by ach.title in _titleToApId (from logic_rules.json),
+         * Looks up each achievement by ach.id in _gameIdToApId (from achievement_logic.json),
          * then checks if that AP ID is in the provided inLogicApIds set.
          *
          * IMPORTANT: The game's showAchiList() iterates filterFlags by index and
@@ -210,8 +211,7 @@ package patch {
                     var ach:* = achis[i];
                     if (ach == null) continue;
 
-                    // Look up by title — the only reliable key between game and our data
-                    var apId:* = _titleToApId[ach.title];
+                    var apId:* = _gameIdToApId[int(ach.id)];
 
                     var isInLogic:Boolean = false;
                     if (apId != null && apId !== undefined) {
@@ -297,7 +297,7 @@ package patch {
                 var ach:* = achis[i];
                 if (ach == null) continue;
 
-                var apId:* = _titleToApId[ach.title];
+                var apId:* = _gameIdToApId[int(ach.id)];
                 if (apId == null) continue; // not AP-tracked
 
                 var mcAchi:* = _getAchMcAchi(ach);
