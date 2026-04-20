@@ -627,9 +627,12 @@ package {
                     if (!wasPatched && _achPanelPatcher.patched && _achievementLogicEvaluator != null) {
                         // First successful patch: populate filterFlags before the panel opens.
                         _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                        _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     }
-                    if (GV.selectorCore != null)
+                    if (GV.selectorCore != null) {
                         _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
+                        _achPanelPatcher.onSelectorFrame(GV.selectorCore.pnlAchievements);
+                    }
                 }
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
@@ -946,6 +949,7 @@ package {
 
             if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                 _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
             }
         }
@@ -1017,6 +1021,7 @@ package {
                 if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
                 if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                     _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                    _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     _achPanelPatcher.refreshIfActive();
                 }
 

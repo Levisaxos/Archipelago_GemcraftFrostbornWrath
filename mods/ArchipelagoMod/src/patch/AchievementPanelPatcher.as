@@ -1,5 +1,7 @@
 package patch {
+    import flash.display.Shape;
     import flash.events.MouseEvent;
+    import flash.geom.Rectangle;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.mcDyn.BtnAchiFilter;
@@ -31,6 +33,10 @@ package patch {
         private static const ACHIEVEMENTS_IDLE_STAGES:int   = 305;
         private static const ACHIEVEMENTS_IDLE_SETTINGS:int = 306;
 
+        private static const DOT_NAME:String     = "apLogicDot";
+        private static const DOT_RADIUS:Number   = 5;
+        private static const DOT_INTERVAL:int    = 30; // frames between periodic re-checks
+
         private var _logger:Logger;
         private var _modName:String;
         private var _patched:Boolean = false;
@@ -41,6 +47,11 @@ package patch {
 
         // achievement title (String) -> AP location ID (int), built from logic_rules.json
         private var _titleToApId:Object = {};
+
+        // apId (int) -> true for achievements whose requirements are currently met
+        private var _reqMetApIds:Object = {};
+        private var _dotsDirty:Boolean  = false;
+        private var _dotFrame:int       = 0;
 
         // -----------------------------------------------------------------------
 
@@ -154,9 +165,10 @@ package patch {
             // Update button text to reflect new state
             _updateResetButtonText(panel.mc.btnResetAchievements);
 
-            // Refresh the achievement list
+            // Refresh the achievement list, then re-apply dots
             try {
                 panel.showAchiList();
+                _applyLogicDots();
             } catch (e:Error) {
                 _logger.log(_modName, "Error refreshing achievement list: " + e.message);
             }
@@ -229,8 +241,133 @@ package patch {
             if (status != ACHIEVEMENTS_IDLE_STAGES && status != ACHIEVEMENTS_IDLE_SETTINGS) return;
             try {
                 GV.selectorCore.pnlAchievements.showAchiList();
+                _applyLogicDots();
             } catch (e:Error) {
                 _logger.log(_modName, "AchievementPanelPatcher.refreshIfActive error: " + e.message);
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // Logic dot overlays
+
+        /**
+         * Store the latest "requirements met" map for dot rendering.
+         * Call whenever logic changes (same timing as updateLogicFlags).
+         * @param reqMetApIds  apId->true for every achievement with requirements met
+         */
+        public function updateDots(reqMetApIds:Object):void {
+            _reqMetApIds = reqMetApIds || {};
+            _dotsDirty   = true;
+        }
+
+        /**
+         * Call every selector frame.  Applies dots when the panel is visible,
+         * throttled to DOT_INTERVAL frames unless _dotsDirty is set.
+         */
+        public function onSelectorFrame(panel:PnlAchievements):void {
+            if (!_patched || panel == null) return;
+
+            _dotFrame++;
+            var needsUpdate:Boolean = _dotsDirty || (_dotFrame >= DOT_INTERVAL);
+            if (!needsUpdate) return;
+
+            if (GV.selectorCore == null) return;
+            var status:int = int(GV.selectorCore.screenStatus);
+            if (status != ACHIEVEMENTS_IDLE_STAGES && status != ACHIEVEMENTS_IDLE_SETTINGS) {
+                _dotFrame = 0;
+                return;
+            }
+
+            _dotFrame    = 0;
+            _dotsDirty   = false;
+            _applyLogicDots();
+        }
+
+        // -----------------------------------------------------------------------
+
+        private function _applyLogicDots():void {
+            if (!_patched || GV.achiCollection == null) return;
+            var achis:Array = GV.achiCollection.achisByOrder;
+            if (achis == null) return;
+
+            var applied:int = 0;
+            var noMc:int    = 0;
+
+            for (var i:int = 0; i < achis.length; i++) {
+                var ach:* = achis[i];
+                if (ach == null) continue;
+
+                var apId:* = _titleToApId[ach.title];
+                if (apId == null) continue; // not AP-tracked
+
+                var mcAchi:* = _getAchMcAchi(ach);
+                if (mcAchi == null) { noMc++; continue; }
+
+                // Skip if not in the display list (filtered out or panel closed)
+                try { if (mcAchi.parent == null) continue; } catch (e:Error) { continue; }
+
+                var inLogic:Boolean   = (_reqMetApIds[int(apId)] === true);
+                var isEarned:Boolean  = (int(ach.status) >= 2);
+
+                // Collected (game-earned) + in logic → remove any stale dot, show nothing
+                if (inLogic && isEarned) {
+                    try {
+                        var stale:* = mcAchi.getChildByName(DOT_NAME);
+                        if (stale != null) mcAchi.removeChild(stale);
+                    } catch (e2:Error) {}
+                    applied++;
+                    continue;
+                }
+
+                _updateDot(mcAchi, inLogic);
+                applied++;
+            }
+
+            if (noMc > 0 && applied == 0) {
+                _logger.log(_modName, "applyLogicDots: no McAchi found (tried 'mc', 'mcAchi', 'icon'). noMc=" + noMc);
+            }
+        }
+
+        /** Try common property names that Flash games use for a single child MC. */
+        private function _getAchMcAchi(ach:*):* {
+            try {
+                if (ach.hasOwnProperty("mc")     && ach["mc"]     != null) return ach["mc"];
+                if (ach.hasOwnProperty("mcAchi")  && ach["mcAchi"] != null) return ach["mcAchi"];
+                if (ach.hasOwnProperty("icon")    && ach["icon"]   != null) return ach["icon"];
+            } catch (e:Error) {}
+            return null;
+        }
+
+        private function _updateDot(mcAchi:*, inLogic:Boolean):void {
+            // Remove any existing dot
+            try {
+                var existing:* = mcAchi.getChildByName(DOT_NAME);
+                if (existing != null) mcAchi.removeChild(existing);
+            } catch (e:Error) {}
+
+            var dot:Shape = new Shape();
+            dot.name = DOT_NAME;
+            var fillColor:uint = inLogic ? 0x44FF44 : 0xFF4444;
+            dot.graphics.lineStyle(1, 0x000000, 0.6);
+            dot.graphics.beginFill(fillColor, 0.9);
+            dot.graphics.drawCircle(0, 0, DOT_RADIUS);
+            dot.graphics.endFill();
+
+            // Place in top-right corner, using actual bounds when available
+            try {
+                var b:Rectangle = mcAchi.getBounds(mcAchi) as Rectangle;
+                if (b != null && b.width > 20) {
+                    dot.x = b.right  - DOT_RADIUS - 1;
+                    dot.y = b.top    + DOT_RADIUS + 1;
+                } else {
+                    dot.x = 54; dot.y = 10;
+                }
+            } catch (e:Error) {
+                dot.x = 54; dot.y = 10;
+            }
+
+            try { mcAchi.addChild(dot); } catch (e:Error) {
+                _logger.log(_modName, "_updateDot addChild error: " + e.message);
             }
         }
     }

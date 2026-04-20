@@ -94,6 +94,44 @@ package tracker {
             return _logicEvaluator != null && _logicEvaluator.evaluateRequirements(reqs);
         }
 
+        /**
+         * Return apId->true for every AP achievement whose requirements are
+         * currently met, regardless of whether it has been collected yet.
+         * Applies the same mode and effort filters as getInLogicAchApIds().
+         * Used for the visual green/red dot indicators on achievement icons.
+         */
+        public function getRequirementsMetApIds():Object {
+            var result:Object = {};
+            if (_logicEvaluator == null || _achievementData == null) return result;
+
+            var requiredEffort:int = (AV.serverData != null && AV.serverData.serverOptions != null)
+                ? AV.serverData.serverOptions.achievementRequiredEffort : 0;
+            var effortHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
+            var maxEffortStr:String = (requiredEffort > 0 && requiredEffort <= 4)
+                ? effortHierarchy[requiredEffort - 1]
+                : "Trivial";
+
+            try {
+                for (var achName:String in _achievementData) {
+                    var achData:Object = _achievementData[achName];
+                    if (!achData || !achData.apId) continue;
+
+                    var modes:Array = achData.modes as Array;
+                    if (modes != null && modes.indexOf("journey") < 0) continue;
+
+                    var achEffort:String = achData.required_effort || "Trivial";
+                    if (effortHierarchy.indexOf(achEffort) > effortHierarchy.indexOf(maxEffortStr)) continue;
+
+                    if (isAchievementInLogic(achName, achData)) {
+                        result[int(achData.apId)] = true;
+                    }
+                }
+            } catch (e:Error) {
+                _logger.log(_modName, "getRequirementsMetApIds error: " + e.message);
+            }
+            return result;
+        }
+
         // -----------------------------------------------------------------------
         // Private
 
