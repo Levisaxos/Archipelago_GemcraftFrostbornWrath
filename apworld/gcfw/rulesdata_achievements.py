@@ -89,7 +89,7 @@ achievement_requirements = {
     "Adept Enhancer": {
         "ap_id": 2008,
         "game_id": 438,
-        "description": "Reach 500 enhancement spells cast through all the ...",
+        "description": "Reach 500 enhancement spells cast through all the battles.",
         "requirements": [
             'Beam skill',
             'Bolt skill',
@@ -155,7 +155,7 @@ achievement_requirements = {
     "Almost": {
         "ap_id": 2014,
         "game_id": 197,
-        "description": "Kill a monster with shots blinking to the monster ...",
+        "description": "Kill a monster with shots blinking to the monster attacking your orb that would otherwise destroy your orb.",
         "requirements": [
             'Watchtower element',
             'Wizard Hunter element',
@@ -176,7 +176,7 @@ achievement_requirements = {
     "Almost Ruined": {
         "ap_id": 2016,
         "game_id": 104,
-        "description": "Leave a monster nest at 1 hit point at the end of ...",
+        "description": "Leave a monster nest at 1 hit point at the end of the battle.",
         "requirements": ['Monster Nest element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -185,7 +185,7 @@ achievement_requirements = {
     "Am I a Joke to You?": {
         "ap_id": 2017,
         "game_id": 492,
-        "description": "Start an enraged wave early while there is a wizar...",
+        "description": "Start an enraged wave early while there is a wizard hunter on the battlefield.",
         "requirements": ['Wizard Hunter element'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -194,7 +194,7 @@ achievement_requirements = {
     "Ambitious Builder": {
         "ap_id": 2018,
         "game_id": 65,
-        "description": "Reach 500 structures built through all the battles...",
+        "description": "Reach 500 structures built through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -239,7 +239,7 @@ achievement_requirements = {
     "Angry Wasps": {
         "ap_id": 2023,
         "game_id": 142,
-        "description": "Reach 1.000 gem wasp kills through all the battles...",
+        "description": "Reach 1.000 gem wasp kills through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -324,7 +324,7 @@ achievement_requirements = {
     "Barrage Battery": {
         "ap_id": 2032,
         "game_id": 321,
-        "description": "Have a Maximum Charge of 300% for the Barrage Spel...",
+        "description": "Have a Maximum Charge of 300% for the Barrage Spell.",
         "requirements": ['Barrage skill'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -333,7 +333,7 @@ achievement_requirements = {
     "Basic Gem Tactics": {
         "ap_id": 2033,
         "game_id": 304,
-        "description": "Beat 120 waves and don't use any gem enhancement s...",
+        "description": "Beat 120 waves and don't use any gem enhancement spells.",
         "requirements": ['minWave: 120'],
         "reward": "skillPoints:3",
         "required_effort": "Trivial",
@@ -396,7 +396,7 @@ achievement_requirements = {
     "Beacons Be Gone": {
         "ap_id": 2040,
         "game_id": 305,
-        "description": "Reach 500 beacons destroyed through all the battle...",
+        "description": "Reach 500 beacons destroyed through all the battles.",
         "requirements": ['Beacon element'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -405,7 +405,7 @@ achievement_requirements = {
     "Beastmaster": {
         "ap_id": 2041,
         "game_id": 199,
-        "description": "Kill a monster having at least 100.000 hit points ...",
+        "description": "Kill a monster having at least 100.000 hit points and 1000 armor.",
         "requirements": ['A monster with atleast 100.000hp and 1000 amror'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -484,7 +484,7 @@ achievement_requirements = {
     "Bleeding For Everyone": {
         "ap_id": 2049,
         "game_id": 523,
-        "description": "Enhance a pure bleeding gem having random priority...",
+        "description": "Enhance a pure bleeding gem having random priority with beam.",
         "requirements": [
             'Beam skill',
             'Bleeding skill',
@@ -538,7 +538,7 @@ achievement_requirements = {
     "Blood on my Hands": {
         "ap_id": 2054,
         "game_id": 118,
-        "description": "Reach 20.000 monsters killed through all the battl...",
+        "description": "Reach 20.000 monsters killed through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -637,7 +637,7 @@ achievement_requirements = {
     "Brickery": {
         "ap_id": 2065,
         "game_id": 69,
-        "description": "Reach 1.000 structures built through all the battl...",
+        "description": "Reach 1.000 structures built through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -691,7 +691,7 @@ achievement_requirements = {
     "Build Along": {
         "ap_id": 2071,
         "game_id": 64,
-        "description": "Reach 200 structures built through all the battles...",
+        "description": "Reach 200 structures built through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -700,7 +700,7 @@ achievement_requirements = {
     "Busted": {
         "ap_id": 2072,
         "game_id": 593,
-        "description": "Destroy a full health possession obelisk with one ...",
+        "description": "Destroy a full health possession obelisk with one gem bomb blast.",
         "requirements": ['Obelisk element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -824,7 +824,7 @@ achievement_requirements = {
     "Catch and Release": {
         "ap_id": 2084,
         "game_id": 521,
-        "description": "Destroy a jar of wasps, but don't have any wasp ki...",
+        "description": "Destroy a jar of wasps, but don't have any wasp kills.",
         "requirements": ['Field X2'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -833,7 +833,7 @@ achievement_requirements = {
     "Century Egg": {
         "ap_id": 2085,
         "game_id": 18,
-        "description": "Reach 100 monster eggs cracked through all the bat...",
+        "description": "Reach 100 monster eggs cracked through all the battles.",
         "requirements": ['Swarm Queen element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -851,7 +851,7 @@ achievement_requirements = {
     "Charge Fire Repeat": {
         "ap_id": 2087,
         "game_id": 441,
-        "description": "Reach 5.000 enhancement spells cast through all th...",
+        "description": "Reach 5.000 enhancement spells cast through all the battles.",
         "requirements": [
             'Bolt skill',
             'Beam skill',
@@ -873,7 +873,7 @@ achievement_requirements = {
     "Charm": {
         "ap_id": 2089,
         "game_id": 360,
-        "description": "Fill all the sockets in your talisman with fragmen...",
+        "description": "Fill all the sockets in your talisman with fragments upgraded to their limit.",
         "requirements": ['Shadow Core element'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -900,7 +900,7 @@ achievement_requirements = {
     "Clean Orb": {
         "ap_id": 2092,
         "game_id": 418,
-        "description": "Win a battle without any monster getting to your o...",
+        "description": "Win a battle without any monster getting to your orb.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -909,7 +909,7 @@ achievement_requirements = {
     "Cleansing the Wilderness": {
         "ap_id": 2093,
         "game_id": 187,
-        "description": "Reach 50.000 monsters with special properties kill...",
+        "description": "Reach 50.000 monsters with special properties killed through all the battles.",
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -933,7 +933,7 @@ achievement_requirements = {
     "Close Quarter": {
         "ap_id": 2095,
         "game_id": 252,
-        "description": "Reach -12% decreased banishment cost with your orb...",
+        "description": "Reach -12% decreased banishment cost with your orb.",
         "requirements": ['Amplifiers skill'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -1059,7 +1059,7 @@ achievement_requirements = {
     "Crimson Journal": {
         "ap_id": 2109,
         "game_id": 119,
-        "description": "Reach 100.000 monsters killed through all the batt...",
+        "description": "Reach 100.000 monsters killed through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -1068,7 +1068,7 @@ achievement_requirements = {
     "Crowd Control": {
         "ap_id": 2110,
         "game_id": 371,
-        "description": "Have the Overcrowd trait set to level 6 or higher ...",
+        "description": "Have the Overcrowd trait set to level 6 or higher and win the battle.",
         "requirements": ['Overcrowd trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -1077,7 +1077,7 @@ achievement_requirements = {
     "Crowded Queue": {
         "ap_id": 2111,
         "game_id": 211,
-        "description": "Have 600 monsters on the battlefield at the same t...",
+        "description": "Have 600 monsters on the battlefield at the same time.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -1155,7 +1155,7 @@ achievement_requirements = {
     "Deluminati": {
         "ap_id": 2119,
         "game_id": 370,
-        "description": "Have the Dark Masonry trait set to level 6 or high...",
+        "description": "Have the Dark Masonry trait set to level 6 or higher and win the battle.",
         "requirements": ['Dark Masonry trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -1182,7 +1182,7 @@ achievement_requirements = {
     "Desperate Clash": {
         "ap_id": 2122,
         "game_id": 253,
-        "description": "Reach -16% decreased banishment cost with your orb...",
+        "description": "Reach -16% decreased banishment cost with your orb.",
         "requirements": ['Amplifiers skill'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -1308,7 +1308,7 @@ achievement_requirements = {
     "Drone Warfare": {
         "ap_id": 2135,
         "game_id": 154,
-        "description": "Reach 20.000 gem wasp kills through all the battle...",
+        "description": "Reach 20.000 gem wasp kills through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -1317,7 +1317,7 @@ achievement_requirements = {
     "Drop the Ice": {
         "ap_id": 2136,
         "game_id": 444,
-        "description": "Reach 50.000 strike spell hits through all the bat...",
+        "description": "Reach 50.000 strike spell hits through all the battles.",
         "requirements": [
             'Freeze skill',
             'Whiteout skill',
@@ -1378,7 +1378,7 @@ achievement_requirements = {
     "Early Bird": {
         "ap_id": 2142,
         "game_id": 10,
-        "description": "Reach 500 waves started early through all the batt...",
+        "description": "Reach 500 waves started early through all the battles.",
         "requirements": [
             'minWave: 500',
             'Endurance',
@@ -1390,7 +1390,7 @@ achievement_requirements = {
     "Early Harvest": {
         "ap_id": 2143,
         "game_id": 116,
-        "description": "Harvest 2.500 mana from shards before wave 3 start...",
+        "description": "Harvest 2.500 mana from shards before wave 3 starts.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -1430,7 +1430,7 @@ achievement_requirements = {
     "Eggcracker": {
         "ap_id": 2147,
         "game_id": 573,
-        "description": "Don't let any egg laid by a swarm queen to hatch o...",
+        "description": "Don't let any egg laid by a swarm queen to hatch on its own.",
         "requirements": ['Swarm Queen element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -1448,7 +1448,7 @@ achievement_requirements = {
     "Eggs Royale": {
         "ap_id": 2149,
         "game_id": 115,
-        "description": "Reach 1.000 monster eggs cracked through all the b...",
+        "description": "Reach 1.000 monster eggs cracked through all the battles.",
         "requirements": ['Swarm Queen element'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -1479,7 +1479,7 @@ achievement_requirements = {
     "Endgame Balance": {
         "ap_id": 2152,
         "game_id": 423,
-        "description": "Have 25.000 shadow cores at the start of the battl...",
+        "description": "Have 25.000 shadow cores at the start of the battle.",
         "requirements": ['Shadow Core element'],
         "reward": "skillPoints:2",
         "required_effort": "Extreme",
@@ -1497,7 +1497,7 @@ achievement_requirements = {
     "Enhance Like No Tomorrow": {
         "ap_id": 2154,
         "game_id": 440,
-        "description": "Reach 2.500 enhancement spells cast through all th...",
+        "description": "Reach 2.500 enhancement spells cast through all the battles.",
         "requirements": [
             'Bolt skill',
             'Beam skill',
@@ -1523,7 +1523,7 @@ achievement_requirements = {
     "Enhancing Challenge": {
         "ap_id": 2156,
         "game_id": 555,
-        "description": "Beat 200 waves on max Swarmling and Giant dominati...",
+        "description": "Beat 200 waves on max Swarmling and Giant domination traits.",
         "requirements": [
             'Swarmling Domination trait',
             'Giant Domination trait',
@@ -1658,7 +1658,7 @@ achievement_requirements = {
     "Face the Phobia": {
         "ap_id": 2169,
         "game_id": 375,
-        "description": "Have the Swarmling Parasites trait set to level 6 ...",
+        "description": "Have the Swarmling Parasites trait set to level 6 or higher and win the battle.",
         "requirements": ['Swarmling Parasites trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -1826,7 +1826,7 @@ achievement_requirements = {
     "Flying Multikill": {
         "ap_id": 2186,
         "game_id": 411,
-        "description": "Destroy 1 apparition, 1 specter, 1 wraith and 1 sh...",
+        "description": "Destroy 1 apparition, 1 specter, 1 wraith and 1 shadow in the same battle.",
         "requirements": [
             'Ritual trait',
             'Apparition element',
@@ -1850,7 +1850,7 @@ achievement_requirements = {
     "Forces Within my Comprehension": {
         "ap_id": 2188,
         "game_id": 398,
-        "description": "Have the Ritual trait set to level 6 or higher and...",
+        "description": "Have the Ritual trait set to level 6 or higher and win the battle.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -1913,7 +1913,7 @@ achievement_requirements = {
     "Frittata": {
         "ap_id": 2195,
         "game_id": 83,
-        "description": "Reach 500 monster eggs cracked through all the bat...",
+        "description": "Reach 500 monster eggs cracked through all the battles.",
         "requirements": ['Swarm Queen element'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -1931,7 +1931,7 @@ achievement_requirements = {
     "Frostborn": {
         "ap_id": 2197,
         "game_id": 437,
-        "description": "Reach 5.000 strike spells cast through all the bat...",
+        "description": "Reach 5.000 strike spells cast through all the battles.",
         "requirements": [
             'Whiteout skill',
             'Ice Shards skill',
@@ -1957,7 +1957,7 @@ achievement_requirements = {
     "Frozen Crowd": {
         "ap_id": 2199,
         "game_id": 443,
-        "description": "Reach 10.000 strike spell hits through all the bat...",
+        "description": "Reach 10.000 strike spell hits through all the battles.",
         "requirements": [
             'Freeze skill',
             'Whiteout skill',
@@ -2045,7 +2045,7 @@ achievement_requirements = {
     "Gemhancement": {
         "ap_id": 2208,
         "game_id": 439,
-        "description": "Reach 1.000 enhancement spells cast through all th...",
+        "description": "Reach 1.000 enhancement spells cast through all the battles.",
         "requirements": [
             'Bolt skill',
             'Beam skill',
@@ -2067,7 +2067,7 @@ achievement_requirements = {
     "Get This Done Quick": {
         "ap_id": 2210,
         "game_id": 559,
-        "description": "Win a Trial battle with at least 3 waves started e...",
+        "description": "Win a Trial battle with at least 3 waves started early.",
         "requirements": [
             'minWave: 3',
             'Trial',
@@ -2106,7 +2106,7 @@ achievement_requirements = {
     "Getting Waves Done": {
         "ap_id": 2214,
         "game_id": 12,
-        "description": "Reach 2.000 waves started early through all the ba...",
+        "description": "Reach 2.000 waves started early through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -2136,7 +2136,7 @@ achievement_requirements = {
     "Glowing Armada": {
         "ap_id": 2217,
         "game_id": 491,
-        "description": "Have 240 gem wasps on the battlefield when the bat...",
+        "description": "Have 240 gem wasps on the battlefield when the battle ends.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -2175,7 +2175,7 @@ achievement_requirements = {
     "Great Survivor": {
         "ap_id": 2221,
         "game_id": 507,
-        "description": "Kill a monster from wave 1 when wave 20 has alread...",
+        "description": "Kill a monster from wave 1 when wave 20 has already started.",
         "requirements": ["minWave:20"],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -2202,7 +2202,7 @@ achievement_requirements = {
     "Green Vial": {
         "ap_id": 2224,
         "game_id": 204,
-        "description": "Have more than 75% of the monster kills caused by ...",
+        "description": "Have more than 75% of the monster kills caused by poison.",
         "requirements": ['Poison skill'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -2238,7 +2238,7 @@ achievement_requirements = {
     "Guarding the Fallen Gate": {
         "ap_id": 2228,
         "game_id": 372,
-        "description": "Have the Corrupted Banishment trait set to level 6...",
+        "description": "Have the Corrupted Banishment trait set to level 6 or higher and win the battle.",
         "requirements": ['Corrupted Banishment trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -2247,7 +2247,7 @@ achievement_requirements = {
     "Hacked Gem": {
         "ap_id": 2229,
         "game_id": 61,
-        "description": "Have a grade 3 gem with 1.200 effective max damage...",
+        "description": "Have a grade 3 gem with 1.200 effective max damage.",
         "requirements": ['minGemGrade: 3'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -2256,7 +2256,7 @@ achievement_requirements = {
     "Half Full": {
         "ap_id": 2230,
         "game_id": 633,
-        "description": "Add 32 talisman fragments to your shape collection...",
+        "description": "Add 32 talisman fragments to your shape collection.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -2283,7 +2283,7 @@ achievement_requirements = {
     "Has Stood Long Enough": {
         "ap_id": 2233,
         "game_id": 561,
-        "description": "Destroy a monster nest after the last wave has sta...",
+        "description": "Destroy a monster nest after the last wave has started.",
         "requirements": ['Monster Nest element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -2292,7 +2292,7 @@ achievement_requirements = {
     "Hateful": {
         "ap_id": 2234,
         "game_id": 353,
-        "description": "Have the Hatred trait set to level 6 or higher and...",
+        "description": "Have the Hatred trait set to level 6 or higher and win the battle.",
         "requirements": ['Hatred trait'],
         "reward": "skillPoints:3",
         "required_effort": "Trivial",
@@ -2391,7 +2391,7 @@ achievement_requirements = {
     "High Targets": {
         "ap_id": 2244,
         "game_id": 138,
-        "description": "Reach 100 non-monsters killed through all the batt...",
+        "description": "Reach 100 non-monsters killed through all the battles.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -2430,7 +2430,7 @@ achievement_requirements = {
     "How About Some Skill Points": {
         "ap_id": 2248,
         "game_id": 422,
-        "description": "Have 5.000 shadow cores at the start of the battle...",
+        "description": "Have 5.000 shadow cores at the start of the battle.",
         "requirements": ['Shadow Core element'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -2451,7 +2451,7 @@ achievement_requirements = {
     "Hunt For Hard Targets": {
         "ap_id": 2250,
         "game_id": 534,
-        "description": "Kill 680 monsters while there are at least 2 wrait...",
+        "description": "Kill 680 monsters while there are at least 2 wraiths in the air.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -2523,7 +2523,7 @@ achievement_requirements = {
     "I am Tougher": {
         "ap_id": 2257,
         "game_id": 535,
-        "description": "Kill 1.360 monsters while there are at least 2 wra...",
+        "description": "Kill 1.360 monsters while there are at least 2 wraiths in the air.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -2535,7 +2535,7 @@ achievement_requirements = {
     "Ice Cube": {
         "ap_id": 2258,
         "game_id": 320,
-        "description": "Have a Maximum Charge of 300% for the Freeze Spell...",
+        "description": "Have a Maximum Charge of 300% for the Freeze Spell.",
         "requirements": ['Freeze skill'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -2544,7 +2544,7 @@ achievement_requirements = {
     "Ice Mage": {
         "ap_id": 2259,
         "game_id": 436,
-        "description": "Reach 2.500 strike spells cast through all the bat...",
+        "description": "Reach 2.500 strike spells cast through all the battles.",
         "requirements": [
             'Freeze skill',
             'Whiteout skill',
@@ -2578,7 +2578,7 @@ achievement_requirements = {
     "Ice for Everyone": {
         "ap_id": 2262,
         "game_id": 445,
-        "description": "Reach 100.000 strike spell hits through all the ba...",
+        "description": "Reach 100.000 strike spell hits through all the battles.",
         "requirements": [
             'Freeze skill',
             'Whiteout skill',
@@ -2612,7 +2612,7 @@ achievement_requirements = {
     "Icy Fingers": {
         "ap_id": 2265,
         "game_id": 434,
-        "description": "Reach 500 strike spells cast through all the battl...",
+        "description": "Reach 500 strike spells cast through all the battles.",
         "requirements": [
             'Whiteout skill',
             'Freeze skill',
@@ -2655,7 +2655,7 @@ achievement_requirements = {
     "Impressive": {
         "ap_id": 2269,
         "game_id": 558,
-        "description": "Win a Trial battle without any monster reaching yo...",
+        "description": "Win a Trial battle without any monster reaching your Orb.",
         "requirements": ['Trial'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -2725,7 +2725,7 @@ achievement_requirements = {
     "Insane Investment": {
         "ap_id": 2276,
         "game_id": 279,
-        "description": "Reach -20% decreased banishment cost with your orb...",
+        "description": "Reach -20% decreased banishment cost with your orb.",
         "requirements": ['Amplifiers skill'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -2734,7 +2734,7 @@ achievement_requirements = {
     "Instant Spawn": {
         "ap_id": 2277,
         "game_id": 528,
-        "description": "Have a shadow spawn a monster while time is frozen...",
+        "description": "Have a shadow spawn a monster while time is frozen.",
         "requirements": [
             'Ritual trait',
             'Shadow element',
@@ -2746,7 +2746,7 @@ achievement_requirements = {
     "Ionized Air": {
         "ap_id": 2278,
         "game_id": 374,
-        "description": "Have the Insulation trait set to level 6 or higher...",
+        "description": "Have the Insulation trait set to level 6 or higher and win the battle.",
         "requirements": ['Insulation trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -2800,7 +2800,7 @@ achievement_requirements = {
     "It's Lagging Alright": {
         "ap_id": 2284,
         "game_id": 284,
-        "description": "Have 1.200 monsters on the battlefield at the same...",
+        "description": "Have 1.200 monsters on the battlefield at the same time.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -2809,7 +2809,7 @@ achievement_requirements = {
     "It's a Trap": {
         "ap_id": 2285,
         "game_id": 262,
-        "description": "Don't let any monster touch your orb for 120 beate...",
+        "description": "Don't let any monster touch your orb for 120 beaten waves.",
         "requirements": ['minWave: 120'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -2857,7 +2857,7 @@ achievement_requirements = {
     "Just Breathe In": {
         "ap_id": 2290,
         "game_id": 524,
-        "description": "Enhance a pure poison gem having random priority w...",
+        "description": "Enhance a pure poison gem having random priority with beam.",
         "requirements": [
             'Beam skill',
             'Poison skill',
@@ -2869,7 +2869,7 @@ achievement_requirements = {
     "Just Fire More at Them": {
         "ap_id": 2291,
         "game_id": 376,
-        "description": "Have the Thick Air trait set to level 6 or higher ...",
+        "description": "Have the Thick Air trait set to level 6 or higher and win the battle.",
         "requirements": ['Thick Air trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -2908,7 +2908,7 @@ achievement_requirements = {
     "Keep Losing Keep Harvesting": {
         "ap_id": 2295,
         "game_id": 580,
-        "description": "Deplete a mana shard while there is a shadow on th...",
+        "description": "Deplete a mana shard while there is a shadow on the battlefield.",
         "requirements": [
             'Ritual trait',
             'Mana Shard element',
@@ -2962,7 +2962,7 @@ achievement_requirements = {
     "Lagging Already?": {
         "ap_id": 2300,
         "game_id": 212,
-        "description": "Have 900 monsters on the battlefield at the same t...",
+        "description": "Have 900 monsters on the battlefield at the same time.",
         "requirements": [],
         "reward": "skillPoints:2",
         "required_effort": "Major",
@@ -3005,7 +3005,7 @@ achievement_requirements = {
     "Legendary": {
         "ap_id": 2304,
         "game_id": 26,
-        "description": "Create a gem with a raw minimum damage of 30.000 o...",
+        "description": "Create a gem with a raw minimum damage of 30.000 or higher.",
         "requirements": ['gemSkills: 1'],
         "reward": "skillPoints:2",
         "required_effort": "Extreme",
@@ -3188,7 +3188,7 @@ achievement_requirements = {
     "Mana First": {
         "ap_id": 2323,
         "game_id": 461,
-        "description": "Deplete a shard when there are more than 300 swarm...",
+        "description": "Deplete a shard when there are more than 300 swarmlings on the battlefield.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3245,7 +3245,7 @@ achievement_requirements = {
     "Mana Tap": {
         "ap_id": 2329,
         "game_id": 106,
-        "description": "Reach 10.000 mana harvested from shards through al...",
+        "description": "Reach 10.000 mana harvested from shards through all the battles.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -3272,7 +3272,7 @@ achievement_requirements = {
     "Mana is All I Need": {
         "ap_id": 2332,
         "game_id": 563,
-        "description": "Win a battle with no skill point spent and a battl...",
+        "description": "Win a battle with no skill point spent and a battle trait maxed.",
         "requirements": ['Any battle trait\n\n'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -3293,7 +3293,7 @@ achievement_requirements = {
     "Marked Targets": {
         "ap_id": 2334,
         "game_id": 185,
-        "description": "Reach 10.000 monsters with special properties kill...",
+        "description": "Reach 10.000 monsters with special properties killed through all the battles.",
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -3347,7 +3347,7 @@ achievement_requirements = {
     "Meet the Spartans": {
         "ap_id": 2339,
         "game_id": 210,
-        "description": "Have 300 monsters on the battlefield at the same t...",
+        "description": "Have 300 monsters on the battlefield at the same time.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3356,7 +3356,7 @@ achievement_requirements = {
     "Megalithic": {
         "ap_id": 2340,
         "game_id": 70,
-        "description": "Reach 2.000 structures built through all the battl...",
+        "description": "Reach 2.000 structures built through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -3400,7 +3400,7 @@ achievement_requirements = {
     "Mighty": {
         "ap_id": 2344,
         "game_id": 25,
-        "description": "Create a gem with a raw minimum damage of 3.000 or...",
+        "description": "Create a gem with a raw minimum damage of 3.000 or higher.",
         "requirements": ['gemSkills: 1'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -3436,7 +3436,7 @@ achievement_requirements = {
     "Mixing Up": {
         "ap_id": 2348,
         "game_id": 553,
-        "description": "Beat 50 waves on max Swarmling and Giant dominatio...",
+        "description": "Beat 50 waves on max Swarmling and Giant domination traits.",
         "requirements": [
             'Swarmling Domination trait',
             'Giant Domination trait',
@@ -3479,7 +3479,7 @@ achievement_requirements = {
     "Multifreeze": {
         "ap_id": 2352,
         "game_id": 442,
-        "description": "Reach 5.000 strike spell hits through all the batt...",
+        "description": "Reach 5.000 strike spell hits through all the battles.",
         "requirements": [
             'Ice Shards skill',
             'Whiteout skill',
@@ -3510,7 +3510,7 @@ achievement_requirements = {
     "Mythic Ancient Legendary": {
         "ap_id": 2355,
         "game_id": 277,
-        "description": "Create a gem with a raw minimum damage of 300.000 ...",
+        "description": "Create a gem with a raw minimum damage of 300.000 or higher.",
         "requirements": ['gemSkills: 1'],
         "reward": "skillPoints:2",
         "required_effort": "Extreme",
@@ -3519,7 +3519,7 @@ achievement_requirements = {
     "Nature Takes Over": {
         "ap_id": 2356,
         "game_id": 399,
-        "description": "Have no own buildings on the field at the end of t...",
+        "description": "Have no own buildings on the field at the end of the battle.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3528,7 +3528,7 @@ achievement_requirements = {
     "Near Death": {
         "ap_id": 2357,
         "game_id": 488,
-        "description": "Suffer mana loss from a shadow projectile when und...",
+        "description": "Suffer mana loss from a shadow projectile when under 200 mana.",
         "requirements": ['Shadow element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3603,7 +3603,7 @@ achievement_requirements = {
     "No Beacon Zone": {
         "ap_id": 2365,
         "game_id": 303,
-        "description": "Reach 200 beacons destroyed through all the battle...",
+        "description": "Reach 200 beacons destroyed through all the battles.",
         "requirements": ['Beacon element'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -3674,7 +3674,7 @@ achievement_requirements = {
     "No Time to Rest": {
         "ap_id": 2372,
         "game_id": 351,
-        "description": "Have the Haste trait set to level 6 or higher and ...",
+        "description": "Have the Haste trait set to level 6 or higher and win the battle.",
         "requirements": ['Haste trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -3683,7 +3683,7 @@ achievement_requirements = {
     "No Time to Waste": {
         "ap_id": 2373,
         "game_id": 13,
-        "description": "Reach 5.000 waves started early through all the ba...",
+        "description": "Reach 5.000 waves started early through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -3786,7 +3786,7 @@ achievement_requirements = {
     "Ok Flier": {
         "ap_id": 2383,
         "game_id": 533,
-        "description": "Kill 340 monsters while there are at least 2 wrait...",
+        "description": "Kill 340 monsters while there are at least 2 wraiths in the air.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -3798,7 +3798,7 @@ achievement_requirements = {
     "Omelette": {
         "ap_id": 2384,
         "game_id": 78,
-        "description": "Reach 200 monster eggs cracked through all the bat...",
+        "description": "Reach 200 monster eggs cracked through all the battles.",
         "requirements": ['Swarm Queen element'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -3807,7 +3807,7 @@ achievement_requirements = {
     "Omnibomb": {
         "ap_id": 2385,
         "game_id": 578,
-        "description": "Destroy a building and a non-monster creature with...",
+        "description": "Destroy a building and a non-monster creature with one gem bomb.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -3816,7 +3816,7 @@ achievement_requirements = {
     "On the Shoulders of Giants": {
         "ap_id": 2386,
         "game_id": 354,
-        "description": "Have the Giant Domination trait set to level 6 or ...",
+        "description": "Have the Giant Domination trait set to level 6 or higher and win the battle.",
         "requirements": ['Giant Domination trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -3837,7 +3837,7 @@ achievement_requirements = {
     "One Less Problem": {
         "ap_id": 2388,
         "game_id": 581,
-        "description": "Destroy a monster nest while there is a wraith on ...",
+        "description": "Destroy a monster nest while there is a wraith on the battlefield.",
         "requirements": [
             'Ritual trait',
             'Monster Nest element',
@@ -3877,7 +3877,7 @@ achievement_requirements = {
     "Out of Misery": {
         "ap_id": 2392,
         "game_id": 194,
-        "description": "Kill a monster that is whited out, poisoned, froze...",
+        "description": "Kill a monster that is whited out, poisoned, frozen and slowed at the same time.",
         "requirements": [
             'Freeze skill',
             'Poison skill',
@@ -3943,7 +3943,7 @@ achievement_requirements = {
     "Paranormal Paragon": {
         "ap_id": 2398,
         "game_id": 141,
-        "description": "Reach 500 non-monsters killed through all the batt...",
+        "description": "Reach 500 non-monsters killed through all the battles.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -3970,7 +3970,7 @@ achievement_requirements = {
     "Peek Into The Abyss": {
         "ap_id": 2401,
         "game_id": 544,
-        "description": "Kill a monster with all battle traits set to the h...",
+        "description": "Kill a monster with all battle traits set to the highest level.",
         "requirements": [
             'Adaptive Carapace trait',
             'Dark Masonry trait',
@@ -4004,7 +4004,7 @@ achievement_requirements = {
     "Plentiful": {
         "ap_id": 2403,
         "game_id": 357,
-        "description": "Have 1.000 shadow cores at the start of the battle...",
+        "description": "Have 1.000 shadow cores at the start of the battle.",
         "requirements": ['Shadow Core element'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -4100,7 +4100,7 @@ achievement_requirements = {
     "Powerful": {
         "ap_id": 2413,
         "game_id": 24,
-        "description": "Create a gem with a raw minimum damage of 300 or h...",
+        "description": "Create a gem with a raw minimum damage of 300 or higher.",
         "requirements": ['gemSkills: 1'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -4184,7 +4184,7 @@ achievement_requirements = {
     "Purist": {
         "ap_id": 2422,
         "game_id": 308,
-        "description": "Beat 120 waves and don't use any strike or gem enh...",
+        "description": "Beat 120 waves and don't use any strike or gem enhancement spells.",
         "requirements": ['minWave: 120'],
         "reward": "skillPoints:3",
         "required_effort": "Trivial",
@@ -4202,7 +4202,7 @@ achievement_requirements = {
     "Put Those Down Now!": {
         "ap_id": 2424,
         "game_id": 595,
-        "description": "Have 10 orblets carried by monsters at the same ti...",
+        "description": "Have 10 orblets carried by monsters at the same time.",
         "requirements": ['Orb of Presence skill'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -4211,7 +4211,7 @@ achievement_requirements = {
     "Puzzling Bunch": {
         "ap_id": 2425,
         "game_id": 632,
-        "description": "Add 16 talisman fragments to your shape collection...",
+        "description": "Add 16 talisman fragments to your shape collection.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -4379,7 +4379,7 @@ achievement_requirements = {
     "Resourceful": {
         "ap_id": 2443,
         "game_id": 105,
-        "description": "Reach 5.000 mana harvested from shards through all...",
+        "description": "Reach 5.000 mana harvested from shards through all the battles.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -4418,7 +4418,7 @@ achievement_requirements = {
     "Rising Tide": {
         "ap_id": 2447,
         "game_id": 584,
-        "description": "Banish 150 monsters while there are 2 or more wrai...",
+        "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -4622,7 +4622,7 @@ achievement_requirements = {
     "Shard Siphon": {
         "ap_id": 2467,
         "game_id": 107,
-        "description": "Reach 20.000 mana harvested from shards through al...",
+        "description": "Reach 20.000 mana harvested from shards through all the battles.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -4640,7 +4640,7 @@ achievement_requirements = {
     "Sharp Shot": {
         "ap_id": 2469,
         "game_id": 576,
-        "description": "Kill a shadow with a shot fired by a gem having at...",
+        "description": "Kill a shadow with a shot fired by a gem having at least 5.000 hits.",
         "requirements": [
             'Ritual trait',
             'Shadow element',
@@ -4666,7 +4666,7 @@ achievement_requirements = {
     "Shatter Them All": {
         "ap_id": 2471,
         "game_id": 306,
-        "description": "Reach 1.000 beacons destroyed through all the batt...",
+        "description": "Reach 1.000 beacons destroyed through all the battles.",
         "requirements": ['Beacon element'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -4786,7 +4786,7 @@ achievement_requirements = {
     "Sigil": {
         "ap_id": 2483,
         "game_id": 361,
-        "description": "Fill all the sockets in your talisman with fragmen...",
+        "description": "Fill all the sockets in your talisman with fragments upgraded to level 5 or higher.",
         "requirements": ['Shadow Core element'],
         "reward": "skillPoints:3",
         "required_effort": "Extreme",
@@ -4795,7 +4795,7 @@ achievement_requirements = {
     "Size Matters": {
         "ap_id": 2484,
         "game_id": 554,
-        "description": "Beat 100 waves on max Swarmling and Giant dominati...",
+        "description": "Beat 100 waves on max Swarmling and Giant domination traits.",
         "requirements": [
             'Swarmling Domination trait',
             'Giant Domination trait',
@@ -4865,7 +4865,7 @@ achievement_requirements = {
     "Slow Motion": {
         "ap_id": 2491,
         "game_id": 525,
-        "description": "Enhance a pure slowing gem having random priority ...",
+        "description": "Enhance a pure slowing gem having random priority with beam.",
         "requirements": [
             'Beam skill',
             'Slowing skill',
@@ -4889,7 +4889,7 @@ achievement_requirements = {
     "Smoke in the Sky": {
         "ap_id": 2493,
         "game_id": 137,
-        "description": "Reach 20 non-monsters killed through all the battl...",
+        "description": "Reach 20 non-monsters killed through all the battles.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -4955,7 +4955,7 @@ achievement_requirements = {
     "So Early": {
         "ap_id": 2500,
         "game_id": 11,
-        "description": "Reach 1.000 waves started early through all the ba...",
+        "description": "Reach 1.000 waves started early through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -4964,7 +4964,7 @@ achievement_requirements = {
     "So Enduring": {
         "ap_id": 2501,
         "game_id": 369,
-        "description": "Have the Adaptive Carapace trait set to level 6 or...",
+        "description": "Have the Adaptive Carapace trait set to level 6 or higher and win the battle.",
         "requirements": ['Adaptive Carapace trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -4982,7 +4982,7 @@ achievement_requirements = {
     "Something Special": {
         "ap_id": 2503,
         "game_id": 176,
-        "description": "Reach 2.000 monsters with special properties kille...",
+        "description": "Reach 2.000 monsters with special properties killed through all the battles.",
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -5015,7 +5015,7 @@ achievement_requirements = {
     "Spectrin Tetramer": {
         "ap_id": 2506,
         "game_id": 379,
-        "description": "Have the Vital Link trait set to level 6 or higher...",
+        "description": "Have the Vital Link trait set to level 6 or higher and win the battle.",
         "requirements": ['Vital Link trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -5024,7 +5024,7 @@ achievement_requirements = {
     "Spitting Darkness": {
         "ap_id": 2507,
         "game_id": 626,
-        "description": "Leave a gatekeeper fang alive until it can launch ...",
+        "description": "Leave a gatekeeper fang alive until it can launch 100 projectiles.",
         "requirements": [
             'Gatekeeper element',
             'Field A4',
@@ -5094,7 +5094,7 @@ achievement_requirements = {
     "Still Lit": {
         "ap_id": 2514,
         "game_id": 97,
-        "description": "Have 15 or more beacons standing at the end of the...",
+        "description": "Have 15 or more beacons standing at the end of the battle.",
         "requirements": [
             'Dark Masonry trait',
             'Beacon element',
@@ -5133,7 +5133,7 @@ achievement_requirements = {
     "Stingy Cloud": {
         "ap_id": 2518,
         "game_id": 149,
-        "description": "Reach 5.000 gem wasp kills through all the battles...",
+        "description": "Reach 5.000 gem wasp kills through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -5202,7 +5202,7 @@ achievement_requirements = {
     "Stormbringer": {
         "ap_id": 2525,
         "game_id": 435,
-        "description": "Reach 1.000 strike spells cast through all the bat...",
+        "description": "Reach 1.000 strike spells cast through all the battles.",
         "requirements": [
             'Freeze skill',
             'Whiteout skill',
@@ -5237,7 +5237,7 @@ achievement_requirements = {
     "Stronger Than Before": {
         "ap_id": 2528,
         "game_id": 355,
-        "description": "Set corrupted banishment to level 12 and banish a ...",
+        "description": "Set corrupted banishment to level 12 and banish a monster 3 times.",
         "requirements": ['Corrupted Banishment trait'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -5255,7 +5255,7 @@ achievement_requirements = {
     "Super Gem": {
         "ap_id": 2530,
         "game_id": 40,
-        "description": "Create a grade 3 gem with 300 effective max damage...",
+        "description": "Create a grade 3 gem with 300 effective max damage.",
         "requirements": ['minGemGrade: 3'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -5391,7 +5391,7 @@ achievement_requirements = {
     "That Was Rude": {
         "ap_id": 2543,
         "game_id": 502,
-        "description": "Lose a gem with more than 1.000 hits to a watchtow...",
+        "description": "Lose a gem with more than 1.000 hits to a watchtower.",
         "requirements": ['Watchtower element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -5400,7 +5400,7 @@ achievement_requirements = {
     "That Was Your Last Move": {
         "ap_id": 2544,
         "game_id": 630,
-        "description": "Kill a wizard hunter while it's attacking one of y...",
+        "description": "Kill a wizard hunter while it's attacking one of your buildings.",
         "requirements": ['Wizard Hunter element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -5439,7 +5439,7 @@ achievement_requirements = {
     "The Killing Will Never Stop": {
         "ap_id": 2548,
         "game_id": 120,
-        "description": "Reach 200.000 monsters killed through all the batt...",
+        "description": "Reach 200.000 monsters killed through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -5448,7 +5448,7 @@ achievement_requirements = {
     "The Mana Reaper": {
         "ap_id": 2549,
         "game_id": 114,
-        "description": "Reach 100.000 mana harvested from shards through a...",
+        "description": "Reach 100.000 mana harvested from shards through all the battles.",
         "requirements": ['Mana Shard element'],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -5511,7 +5511,7 @@ achievement_requirements = {
     "They Are Millions": {
         "ap_id": 2555,
         "game_id": 125,
-        "description": "Reach 1.000.000 monsters killed through all the ba...",
+        "description": "Reach 1.000.000 monsters killed through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -5553,7 +5553,7 @@ achievement_requirements = {
     "Thin Them Out": {
         "ap_id": 2559,
         "game_id": 397,
-        "description": "Have the Strength in Numbers trait set to level 6 ...",
+        "description": "Have the Strength in Numbers trait set to level 6 or higher and win the battle.",
         "requirements": ['Strength in Numbers trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -5598,7 +5598,7 @@ achievement_requirements = {
     "Tightly Secured": {
         "ap_id": 2564,
         "game_id": 261,
-        "description": "Don't let any monster touch your orb for 60 beaten...",
+        "description": "Don't let any monster touch your orb for 60 beaten waves.",
         "requirements": ['minWave: 60'],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
@@ -5616,7 +5616,7 @@ achievement_requirements = {
     "Time to Rise": {
         "ap_id": 2566,
         "game_id": 373,
-        "description": "Have the Awakening trait set to level 6 or higher ...",
+        "description": "Have the Awakening trait set to level 6 or higher and win the battle.",
         "requirements": ['Awakening trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -5634,7 +5634,7 @@ achievement_requirements = {
     "Tiny but Deadly": {
         "ap_id": 2568,
         "game_id": 164,
-        "description": "Reach 50.000 gem wasp kills through all the battle...",
+        "description": "Reach 50.000 gem wasp kills through all the battles.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Extreme",
@@ -5655,7 +5655,7 @@ achievement_requirements = {
     "Tomb No Matter What": {
         "ap_id": 2570,
         "game_id": 582,
-        "description": "Open a tomb while there is a spire on the battlefi...",
+        "description": "Open a tomb while there is a spire on the battlefield.",
         "requirements": [
             'Ritual trait',
             'Spire element',
@@ -5767,7 +5767,7 @@ achievement_requirements = {
     "Tumbling Billows": {
         "ap_id": 2581,
         "game_id": 352,
-        "description": "Have the Swarmling Domination trait set to level 6...",
+        "description": "Have the Swarmling Domination trait set to level 6 or higher and win the battle.",
         "requirements": ['Swarmling Domination trait'],
         "reward": "skillPoints:2",
         "required_effort": "Trivial",
@@ -5794,7 +5794,7 @@ achievement_requirements = {
     "Twice the Steepness": {
         "ap_id": 2584,
         "game_id": 532,
-        "description": "Kill 170 monsters while there are at least 2 wrait...",
+        "description": "Kill 170 monsters while there are at least 2 wraiths in the air.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -5848,7 +5848,7 @@ achievement_requirements = {
     "Unholy Stack": {
         "ap_id": 2589,
         "game_id": 186,
-        "description": "Reach 20.000 monsters with special properties kill...",
+        "description": "Reach 20.000 monsters with special properties killed through all the battles.",
         "requirements": [
             'Endurance',
             'Possessed Monster element',
@@ -5872,7 +5872,7 @@ achievement_requirements = {
     "Unsupportive": {
         "ap_id": 2591,
         "game_id": 302,
-        "description": "Reach 100 beacons destroyed through all the battle...",
+        "description": "Reach 100 beacons destroyed through all the battles.",
         "requirements": ['Beacon element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -5893,7 +5893,7 @@ achievement_requirements = {
     "Urban Warfare": {
         "ap_id": 2593,
         "game_id": 579,
-        "description": "Destroy a dwelling and kill a monster with one gem...",
+        "description": "Destroy a dwelling and kill a monster with one gem bomb.",
         "requirements": ['Abandoned Dwelling element'],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -6064,7 +6064,7 @@ achievement_requirements = {
     "Well Defended": {
         "ap_id": 2611,
         "game_id": 260,
-        "description": "Don't let any monster touch your orb for 20 beaten...",
+        "description": "Don't let any monster touch your orb for 20 beaten waves.",
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -6100,7 +6100,7 @@ achievement_requirements = {
     "Well Trained for This": {
         "ap_id": 2615,
         "game_id": 575,
-        "description": "Kill a wraith with a shot fired by a gem having at...",
+        "description": "Kill a wraith with a shot fired by a gem having at least 1.000 kills.",
         "requirements": [
             'Ritual trait',
             'Wraith element',
@@ -6189,7 +6189,7 @@ achievement_requirements = {
     "Wings and Tentacles": {
         "ap_id": 2623,
         "game_id": 139,
-        "description": "Reach 200 non-monsters killed through all the batt...",
+        "description": "Reach 200 non-monsters killed through all the battles.",
         "requirements": ['Ritual trait'],
         "reward": "skillPoints:1",
         "required_effort": "Major",
@@ -6198,7 +6198,7 @@ achievement_requirements = {
     "Worst of Both Sizes": {
         "ap_id": 2624,
         "game_id": 556,
-        "description": "Beat 300 waves on max Swarmling and Giant dominati...",
+        "description": "Beat 300 waves on max Swarmling and Giant domination traits.",
         "requirements": [
             'Swarmling Domination trait',
             'Giant Domination trait',
@@ -6260,7 +6260,7 @@ achievement_requirements = {
     "You Shall Not Pass": {
         "ap_id": 2630,
         "game_id": 248,
-        "description": "Don't let any monster touch your orb for 240 beate...",
+        "description": "Don't let any monster touch your orb for 240 beaten waves.",
         "requirements": [
             'minWave: 240',
             'Endurance',
