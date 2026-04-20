@@ -78,6 +78,14 @@ def _extract_skill_requirements(requirements: list) -> list:
                 is_group_counter = True
                 break
 
+        # Also handle category counters from game_skills_categories (e.g., "BattleTraits: 1")
+        if not is_group_counter:
+            for group_name in game_skills_categories.keys():
+                if req.startswith(f"{group_name}:"):
+                    skill_requirements.append(req)
+                    is_group_counter = True
+                    break
+
         if is_group_counter:
             continue
 
@@ -401,6 +409,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
+            # Excluded achievements (Hidden Codes etc.) get no access rules —
+            # their locations exist but are marked EXCLUDED and always hold filler.
+            requirements_raw = ach_data.get("requirements", [])
+            if ach_data.get("exclude", False) or any(
+                "Hidden Codes Element" in r for r in requirements_raw
+            ):
+                continue
+
             loc_name = f"Achievement: {ach_name}"
             try:
                 location = multiworld.get_location(loc_name, player)
@@ -488,17 +504,26 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                                             if not any(state.has(item, player) for item in req):
                                                 return False
                                         elif isinstance(req, str) and ":" in req:
-                                            # Skill group counter requirement (e.g., "strikeSpells: 1")
+                                            # Skill group counter (e.g., "strikeSpells: 1", "BattleTraits: 1")
                                             group_name, count_str = req.split(":", 1)
                                             group_name = group_name.strip()
                                             count_needed = int(count_str.strip())
 
                                             if group_name in skill_groups:
-                                                # Count how many skills from this group the player has
                                                 group_members = skill_groups[group_name].get("members", [])
                                                 count_owned = sum(
                                                     1 for member in group_members
                                                     if state.has(f"{member} Skill", player)
+                                                )
+                                                if count_owned < count_needed:
+                                                    return False
+                                            elif group_name in game_skills_categories:
+                                                group_members = game_skills_categories[group_name].get("members", [])
+                                                # BattleTraits items use " Battle Trait"; other categories use " Skill"
+                                                suffix = " Battle Trait" if group_name == "BattleTraits" else " Skill"
+                                                count_owned = sum(
+                                                    1 for member in group_members
+                                                    if state.has(f"{member}{suffix}", player)
                                                 )
                                                 if count_owned < count_needed:
                                                     return False

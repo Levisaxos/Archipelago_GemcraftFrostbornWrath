@@ -156,7 +156,11 @@ game_level_elements = {
     "Swarm Queen": {"levels": ["K4"]},
     "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
-    "Wizard Tower": {"levels": ["L5", "W1", "Y3"]},
+    "Wizard Tower": {"levels": ["L5"]},
+    # Hidden Codes: not supported by the mod — empty levels marks it as excluded.
+    "Hidden Codes": {"levels": []},
+    # Sealed gem: gem locked in a map socket that can be freed. Fill in levels once confirmed.
+    "Sealed gem": {"levels": []},
 }
 
 # =====================================================================

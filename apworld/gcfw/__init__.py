@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import Dict, List
 
-from BaseClasses import ItemClassification, Region
+from BaseClasses import ItemClassification, LocationProgressType, Region
 from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
@@ -50,6 +50,22 @@ def _load_game_data():
 
 def _load_stages():
     return _load_game_data()["stages"]
+
+
+def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
+    """
+    Return True if this achievement should be excluded from logic and always
+    receive a filler item.  Excluded achievements still have a location (so the
+    player gets something when they complete it), but the location is marked
+    EXCLUDED so it can only hold filler.
+
+    Triggers:
+      - Achievement has `"exclude": True` in its data
+      - Requirements contain "Hidden Codes Element" (not supported by the mod)
+    """
+    if ach_data and ach_data.get("exclude", False):
+        return True
+    return any("Hidden Codes Element" in r for r in requirements)
 
 
 def _can_achievement_be_met(requirements: list) -> bool:
@@ -377,15 +393,18 @@ class GemcraftFrostbornWrathWorld(World):
                         continue  # Skip achievements above selected effort level
 
                 total_achievements += 1
-                # Validate that achievement requirements can be met
                 requirements = ach_data.get("requirements", [])
-                if not _can_achievement_be_met(requirements):
-                    # Log why achievement was filtered
-                    filter_reason = _get_filter_reason(requirements)
-                    if filter_reason not in filtered_achievements:
-                        filtered_achievements[filter_reason] = []
-                    filtered_achievements[filter_reason].append(ach_name)
-                    continue  # Skip achievements with unavailable requirements
+
+                # Excluded achievements (Hidden Codes etc.) still contribute an item
+                # to the pool — it ends up at a non-excluded location elsewhere.
+                if not _is_achievement_excluded(requirements, ach_data):
+                    # Validate that non-excluded achievement requirements can be met
+                    if not _can_achievement_be_met(requirements):
+                        filter_reason = _get_filter_reason(requirements)
+                        if filter_reason not in filtered_achievements:
+                            filtered_achievements[filter_reason] = []
+                        filtered_achievements[filter_reason].append(ach_name)
+                        continue  # Skip achievements with unavailable requirements
 
                 item_name = f"Achievement: {ach_name}"
                 if item_name in item_table:
@@ -452,15 +471,18 @@ class GemcraftFrostbornWrathWorld(World):
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
                         continue  # Skip achievements above selected effort level
 
-                # Validate that achievement requirements can be met
                 requirements = ach_data.get("requirements", [])
-                if not _can_achievement_be_met(requirements):
-                    continue  # Skip achievements with unavailable requirements
+                excluded = _is_achievement_excluded(requirements, ach_data)
+
+                if not excluded and not _can_achievement_be_met(requirements):
+                    continue  # Skip achievements with truly unavailable requirements
 
                 loc_name = f"Achievement: {ach_name}"
                 if loc_name in location_table:
                     loc_data = location_table[loc_name]
                     loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
+                    if excluded:
+                        loc.progress_type = LocationProgressType.EXCLUDED
                     achievements_region.locations.append(loc)
 
             self.multiworld.regions.append(achievements_region)

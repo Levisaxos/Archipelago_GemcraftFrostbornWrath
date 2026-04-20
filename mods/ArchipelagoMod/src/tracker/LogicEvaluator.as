@@ -25,6 +25,7 @@ package tracker {
      *   "strikeSpells: N"       — count(712-714) >= N
      *   "enhancementSpells: N"  — count(715-717) >= N
      *   "gemSkills: N"          — count(706-711) >= N
+     *   "BattleTraits: N"       — count(800-814) >= N
      *   "minWave: N"            — FieldLogicEvaluator.hasInLogicFieldWithMinWaves(N)
      *   "fieldToken: N"         — count(1-122) >= N
      */
@@ -87,15 +88,18 @@ package tracker {
                 return AV.sessionData.hasItem(700 + skillIdx);
             }
 
-            // "X element"
+            // "X element"            
             if (lower.indexOf(" element") >= 0) {
                 var eEnd:int     = lower.indexOf(" element");
-                var elemName:String = _trim(req.substring(0, eEnd));
+                var elemName:String = _trim(req.substring(0, eEnd));                
                 if (_elementStages != null) {
-                    var stages:Array = _elementStages[elemName] as Array;
+                    var stages:Array = _elementStages[elemName] as Array;                    
                     if (stages != null) {
-                        for each (var stId:String in stages) {
-                            if (AV.sessionData.fieldsInLogic[stId] == true) return true;
+                        for each (var stId:String in stages) {                               
+                            if (AV.sessionData.fieldsInLogic[stId] == true){
+                                _logger.log(_modName, "Found field " + stId + " in fieldsInLogic");
+                                 return true;
+                            }
                         }
                         return false;
                     }
@@ -146,6 +150,10 @@ package tracker {
             if (lower.indexOf("gemskills") == 0) {
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
+            }
+            if (lower.indexOf("battletraits") == 0) {
+                var btNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
             // "minWave: N"

@@ -7,8 +7,7 @@
       "description": "Have 30 fields lit in Journey mode.",
       "requirements": [
         "fieldToken: 30"
-      ],
-      "game_id": 509
+      ]
     },
     "A Shrubbery!": {
       "apId": 2001,
@@ -17,8 +16,7 @@
       "description": "Place a shrub wall.",
       "requirements": [
         "Wall element"
-      ],
-      "game_id": 3
+      ]
     },
     "Ablatio Retinae": {
       "apId": 2002,
@@ -27,8 +25,7 @@
       "description": "Whiteout 111 whited out monsters.",
       "requirements": [
         "Whiteout skill"
-      ],
-      "game_id": 311
+      ]
     },
     "Absolute Zero": {
       "apId": 2003,
@@ -37,8 +34,7 @@
       "description": "Kill 273 frozen monsters.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 126
+      ]
     },
     "Acid Rain": {
       "apId": 2004,
@@ -47,8 +43,7 @@
       "description": "Kill 85 poisoned monsters while it's raining.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 191
+      ]
     },
     "Added Protection": {
       "apId": 2005,
@@ -57,8 +52,7 @@
       "description": "Strengthen your orb with a gem in an amplifier.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 258
+      ]
     },
     "Addicted": {
       "apId": 2006,
@@ -67,8 +61,7 @@
       "description": "Activate shrines a total of 12 times.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 265
+      ]
     },
     "Adept": {
       "apId": 2007,
@@ -78,8 +71,7 @@
       "requirements": [
         "Trial",
         "fieldToken: 30"
-      ],
-      "game_id": 518
+      ]
     },
     "Adept Enhancer": {
       "apId": 2008,
@@ -90,8 +82,7 @@
         "Beam skill",
         "Bolt skill",
         "Barrage skill"
-      ],
-      "game_id": 438
+      ]
     },
     "Adept Grade": {
       "apId": 2009,
@@ -100,8 +91,7 @@
       "description": "Create a grade 8 gem.",
       "requirements": [
         "minGemGrade: 8"
-      ],
-      "game_id": 45
+      ]
     },
     "Adventurer": {
       "apId": 2010,
@@ -113,8 +103,7 @@
         "Corrupted Mana Shard element",
         "Drop Holder element",
         "Mana Shard element"
-      ],
-      "game_id": 250
+      ]
     },
     "Ages Old Memories": {
       "apId": 2011,
@@ -123,8 +112,7 @@
       "description": "Unlock a wizard tower.",
       "requirements": [
         "Wizard Tower element"
-      ],
-      "game_id": 103
+      ]
     },
     "Agitated": {
       "apId": 2012,
@@ -133,8 +121,7 @@
       "description": "Call 70 waves early.",
       "requirements": [
         "minWave: 70"
-      ],
-      "game_id": 325
+      ]
     },
     "All Your Mana Belongs to Us": {
       "apId": 2013,
@@ -144,8 +131,7 @@
       "requirements": [
         "Mana Leech skill",
         "minWave: 90"
-      ],
-      "game_id": 33
+      ]
     },
     "Almost": {
       "apId": 2014,
@@ -155,15 +141,13 @@
       "requirements": [
         "Watchtower element",
         "Wizard Hunter element"
-      ],
-      "game_id": 197
+      ]
     },
     "Almost Like Hacked": {
       "apId": 2015,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Have at least 20 different talisman properties.",
-      "game_id": 506
+      "description": "Have at least 20 different talisman properties."
     },
     "Almost Ruined": {
       "apId": 2016,
@@ -172,8 +156,7 @@
       "description": "Leave a monster nest at 1 hit point at the end of ...",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 104
+      ]
     },
     "Am I a Joke to You?": {
       "apId": 2017,
@@ -182,15 +165,13 @@
       "description": "Start an enraged wave early while there is a wizar...",
       "requirements": [
         "Wizard Hunter element"
-      ],
-      "game_id": 492
+      ]
     },
     "Ambitious Builder": {
       "apId": 2018,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 500 structures built through all the battles...",
-      "game_id": 65
+      "description": "Reach 500 structures built through all the battles..."
     },
     "Amplification": {
       "apId": 2019,
@@ -199,8 +180,7 @@
       "description": "Spend 18.000 mana on amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 238
+      ]
     },
     "Amplifinity": {
       "apId": 2020,
@@ -209,8 +189,7 @@
       "description": "Build 45 amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 356
+      ]
     },
     "Amulet": {
       "apId": 2021,
@@ -219,8 +198,7 @@
       "description": "Fill all the sockets in your talisman.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 359
+      ]
     },
     "And Don't Come Back": {
       "apId": 2022,
@@ -229,15 +207,13 @@
       "description": "Kill 460 banished monsters with shrines.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 547
+      ]
     },
     "Angry Wasps": {
       "apId": 2023,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach 1.000 gem wasp kills through all the battles...",
-      "game_id": 142
+      "description": "Reach 1.000 gem wasp kills through all the battles..."
     },
     "Antitheft": {
       "apId": 2024,
@@ -246,15 +222,13 @@
       "description": "Kill 90 monsters with orblet explosions.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 611
+      ]
     },
     "Armored Orb": {
       "apId": 2025,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Strengthen your orb by dropping a gem on it.",
-      "game_id": 257
+      "description": "Strengthen your orb by dropping a gem on it."
     },
     "Army Glue": {
       "apId": 2026,
@@ -263,8 +237,7 @@
       "description": "Have a pure slowing gem with 4.000 hits.",
       "requirements": [
         "Slowing skill"
-      ],
-      "game_id": 477
+      ]
     },
     "At my Fingertips": {
       "apId": 2027,
@@ -275,8 +248,7 @@
         "Ice Shards skill",
         "Whiteout skill",
         "Freeze skill"
-      ],
-      "game_id": 410
+      ]
     },
     "Avenged": {
       "apId": 2028,
@@ -285,8 +257,7 @@
       "description": "Kill 15 monsters carrying orblets.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 188
+      ]
     },
     "Awakening": {
       "apId": 2029,
@@ -295,22 +266,19 @@
       "description": "Activate a shrine.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 263
+      ]
     },
     "Bang": {
       "apId": 2030,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Throw 30 gem bombs.",
-      "game_id": 343
+      "description": "Throw 30 gem bombs."
     },
     "Barbed Sphere": {
       "apId": 2031,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Deliver 1.200 banishments with your orb.",
-      "game_id": 256
+      "description": "Deliver 1.200 banishments with your orb."
     },
     "Barrage Battery": {
       "apId": 2032,
@@ -319,8 +287,7 @@
       "description": "Have a Maximum Charge of 300% for the Barrage Spel...",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 321
+      ]
     },
     "Basic Gem Tactics": {
       "apId": 2033,
@@ -329,8 +296,7 @@
       "description": "Beat 120 waves and don't use any gem enhancement s...",
       "requirements": [
         "minWave: 120"
-      ],
-      "game_id": 304
+      ]
     },
     "Bastion": {
       "apId": 2034,
@@ -339,8 +305,7 @@
       "description": "Build 90 towers.",
       "requirements": [
         "Tower element"
-      ],
-      "game_id": 274
+      ]
     },
     "Bath Bomb": {
       "apId": 2035,
@@ -349,29 +314,25 @@
       "description": "Kill 30 monsters with orblet explosions.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 610
+      ]
     },
     "Battle Heat": {
       "apId": 2036,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Gain 200 xp with kill chains.",
-      "game_id": 245
+      "description": "Gain 200 xp with kill chains."
     },
     "Bazaar": {
       "apId": 2037,
       "required_effort": "Minor",
       "reward": "skillPoints:2",
-      "description": "Have 30 gems on the battlefield.",
-      "game_id": 58
+      "description": "Have 30 gems on the battlefield."
     },
     "Be Gone For Good": {
       "apId": 2038,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Kill 790 banished monsters.",
-      "game_id": 552
+      "description": "Kill 790 banished monsters."
     },
     "Beacon Hunt": {
       "apId": 2039,
@@ -380,8 +341,7 @@
       "description": "Destroy 55 beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 409
+      ]
     },
     "Beacons Be Gone": {
       "apId": 2040,
@@ -390,8 +350,7 @@
       "description": "Reach 500 beacons destroyed through all the battle...",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 305
+      ]
     },
     "Beastmaster": {
       "apId": 2041,
@@ -400,15 +359,13 @@
       "description": "Kill a monster having at least 100.000 hit points ...",
       "requirements": [
         "A monster with atleast 100.000hp and 1000 amror"
-      ],
-      "game_id": 199
+      ]
     },
     "Behold Aurora": {
       "apId": 2042,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Go Igniculus and Light Ray (All)+++!",
-      "game_id": 624
+      "description": "Go Igniculus and Light Ray (All)+++!"
     },
     "Biohazard": {
       "apId": 2043,
@@ -418,8 +375,7 @@
       "requirements": [
         "Poison skill",
         "minGemGrade: 12"
-      ],
-      "game_id": 21
+      ]
     },
     "Black Blood": {
       "apId": 2044,
@@ -430,15 +386,13 @@
         "Poison skill",
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 417
+      ]
     },
     "Black Wand": {
       "apId": 2045,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Reach wizard level 1.000.",
-      "game_id": 419
+      "description": "Reach wizard level 1.000."
     },
     "Blackout": {
       "apId": 2046,
@@ -447,8 +401,7 @@
       "description": "Destroy a beacon.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 94
+      ]
     },
     "Blastwave": {
       "apId": 2047,
@@ -457,8 +410,7 @@
       "description": "Reach 1.000 shrine kills through all the battles.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 349
+      ]
     },
     "Bleed Out": {
       "apId": 2048,
@@ -467,8 +419,7 @@
       "description": "Kill 480 bleeding monsters.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 457
+      ]
     },
     "Bleeding For Everyone": {
       "apId": 2049,
@@ -478,8 +429,7 @@
       "requirements": [
         "Beam skill",
         "Bleeding skill"
-      ],
-      "game_id": 523
+      ]
     },
     "Blind Hit": {
       "apId": 2050,
@@ -489,8 +439,7 @@
       "requirements": [
         "Beam skill",
         "Whiteout skill"
-      ],
-      "game_id": 183
+      ]
     },
     "Blood Censorship": {
       "apId": 2051,
@@ -498,9 +447,8 @@
       "reward": "skillPoints:1",
       "description": "Kill 2.100 green blooded monsters.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 607
+        "Hidden Codes Element"
+      ]
     },
     "Blood Clot": {
       "apId": 2052,
@@ -510,8 +458,7 @@
       "requirements": [
         "Bleeding skill",
         "minWave: 90"
-      ],
-      "game_id": 35
+      ]
     },
     "Blood Magic": {
       "apId": 2053,
@@ -520,43 +467,37 @@
       "description": "Win a battle using only bleeding gems.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 36
+      ]
     },
     "Blood on my Hands": {
       "apId": 2054,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach 20.000 monsters killed through all the battl...",
-      "game_id": 118
+      "description": "Reach 20.000 monsters killed through all the battl..."
     },
     "Bloodmaster": {
       "apId": 2055,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Gain 1.200 xp with kill chains.",
-      "game_id": 246
+      "description": "Gain 1.200 xp with kill chains."
     },
     "Bloodrush": {
       "apId": 2056,
       "required_effort": "Trivial",
       "reward": "skillPoints:2",
-      "description": "Call an enraged wave early.",
-      "game_id": 28
+      "description": "Call an enraged wave early."
     },
     "Bloodstream": {
       "apId": 2057,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 4.000 monsters.",
-      "game_id": 429
+      "description": "Kill 4.000 monsters."
     },
     "Blue Wand": {
       "apId": 2058,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 100.",
-      "game_id": 386
+      "description": "Reach wizard level 100."
     },
     "Boatload of Cores": {
       "apId": 2059,
@@ -565,15 +506,13 @@
       "description": "Find 540 shadow cores.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 350
+      ]
     },
     "Boiling Red": {
       "apId": 2060,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach a kill chain of 2400.",
-      "game_id": 249
+      "description": "Reach a kill chain of 2400."
     },
     "Bone Shredder": {
       "apId": 2061,
@@ -582,15 +521,13 @@
       "description": "Kill 600 monsters before wave 12 starts.",
       "requirements": [
         "Atleast 600 monsters before wave 10"
-      ],
-      "game_id": 150
+      ]
     },
     "Boom": {
       "apId": 2062,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Throw a gem bomb.",
-      "game_id": 342
+      "description": "Throw a gem bomb."
     },
     "Bouncy Zap": {
       "apId": 2063,
@@ -599,8 +536,7 @@
       "description": "Reach 2.000 pylon kills through all the battles.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 222
+      ]
     },
     "Breath of Cold": {
       "apId": 2064,
@@ -609,15 +545,13 @@
       "description": "Have 90 monsters frozen at the same time.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 208
+      ]
     },
     "Brickery": {
       "apId": 2065,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 1.000 structures built through all the battl...",
-      "game_id": 69
+      "description": "Reach 1.000 structures built through all the battl..."
     },
     "Bright Weakening": {
       "apId": 2066,
@@ -626,15 +560,16 @@
       "description": "Gain 1.200 xp with Whiteout spell crowd hits.",
       "requirements": [
         "Whiteout skill"
-      ],
-      "game_id": 242
+      ]
     },
     "Broken Seal": {
       "apId": 2067,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Free a sealed gem.",
-      "game_id": 121
+      "requirements": [
+        "Sealed gem Element"
+      ]
     },
     "Broken Siege": {
       "apId": 2068,
@@ -643,29 +578,25 @@
       "description": "Destroy 8 beacons before wave 8.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 96
+      ]
     },
     "Brought Some Mana": {
       "apId": 2069,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 5.000 initial mana.",
-      "game_id": 223
+      "description": "Have 5.000 initial mana."
     },
     "Brown Wand": {
       "apId": 2070,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach wizard level 300.",
-      "game_id": 388
+      "description": "Reach wizard level 300."
     },
     "Build Along": {
       "apId": 2071,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach 200 structures built through all the battles...",
-      "game_id": 64
+      "description": "Reach 200 structures built through all the battles..."
     },
     "Busted": {
       "apId": 2072,
@@ -674,15 +605,13 @@
       "description": "Destroy a full health possession obelisk with one ...",
       "requirements": [
         "Obelisk element"
-      ],
-      "game_id": 593
+      ]
     },
     "Buzz Feed": {
       "apId": 2073,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 99 gem wasps on the battlefield.",
-      "game_id": 341
+      "description": "Have 99 gem wasps on the battlefield."
     },
     "By Three They Go": {
       "apId": 2074,
@@ -693,8 +622,7 @@
         "Ritual trait",
         "Specter element",
         "Watchtower element"
-      ],
-      "game_id": 484
+      ]
     },
     "Bye Bye Hideous": {
       "apId": 2075,
@@ -704,15 +632,13 @@
       "requirements": [
         "Ritual trait",
         "Spire element"
-      ],
-      "game_id": 174
+      ]
     },
     "Call in the Wave!": {
       "apId": 2076,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Call a wave early.",
-      "game_id": 322
+      "description": "Call a wave early."
     },
     "Can't Crawl Away": {
       "apId": 2077,
@@ -722,15 +648,13 @@
       "requirements": [
         "Barrage skill",
         "Whiteout skill"
-      ],
-      "game_id": 184
+      ]
     },
     "Can't Stop": {
       "apId": 2078,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 900.",
-      "game_id": 157
+      "description": "Reach a kill chain of 900."
     },
     "Can't Take Any Risks": {
       "apId": 2079,
@@ -740,8 +664,7 @@
       "requirements": [
         "Bleeding skill",
         "Poison skill"
-      ],
-      "game_id": 482
+      ]
     },
     "Care to Die Already?": {
       "apId": 2080,
@@ -750,15 +673,13 @@
       "description": "Cast 8 ice shards on the same monster.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 592
+      ]
     },
     "Carnage": {
       "apId": 2081,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 600.",
-      "game_id": 156
+      "description": "Reach a kill chain of 600."
     },
     "Cartographer": {
       "apId": 2082,
@@ -767,8 +688,7 @@
       "description": "Have 90 fields lit in Journey mode.",
       "requirements": [
         "fieldToken: 90"
-      ],
-      "game_id": 512
+      ]
     },
     "Catalyst": {
       "apId": 2083,
@@ -778,8 +698,7 @@
       "requirements": [
         "Amplifiers skill",
         "Poison skill"
-      ],
-      "game_id": 50
+      ]
     },
     "Catch and Release": {
       "apId": 2084,
@@ -788,8 +707,7 @@
       "description": "Destroy a jar of wasps, but don't have any wasp ki...",
       "requirements": [
         "Field X2"
-      ],
-      "game_id": 521
+      ]
     },
     "Century Egg": {
       "apId": 2085,
@@ -798,15 +716,13 @@
       "description": "Reach 100 monster eggs cracked through all the bat...",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 18
+      ]
     },
     "Chainsaw": {
       "apId": 2086,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Gain 3.200 xp with kill chains.",
-      "game_id": 272
+      "description": "Gain 3.200 xp with kill chains."
     },
     "Charge Fire Repeat": {
       "apId": 2087,
@@ -817,8 +733,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 441
+      ]
     },
     "Charged for the Kill": {
       "apId": 2088,
@@ -827,8 +742,7 @@
       "description": "Reach 200 pylon kills through all the battles.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 165
+      ]
     },
     "Charm": {
       "apId": 2089,
@@ -837,8 +751,7 @@
       "description": "Fill all the sockets in your talisman with fragmen...",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 360
+      ]
     },
     "Chilling Edges": {
       "apId": 2090,
@@ -847,8 +760,7 @@
       "description": "Gain 140 xp with Ice Shards spell crowd hits.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 243
+      ]
     },
     "Chlorophyll": {
       "apId": 2091,
@@ -856,16 +768,14 @@
       "reward": "skillPoints:1",
       "description": "Kill 4.500 green blooded monsters.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 608
+        "Hidden Codes Element"
+      ]
     },
     "Clean Orb": {
       "apId": 2092,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Win a battle without any monster getting to your o...",
-      "game_id": 418
+      "description": "Win a battle without any monster getting to your o..."
     },
     "Cleansing the Wilderness": {
       "apId": 2093,
@@ -878,8 +788,7 @@
         "Twisted Monster element",
         "Marked Monster element",
         "minWave: 70"
-      ],
-      "game_id": 187
+      ]
     },
     "Clear Sky": {
       "apId": 2094,
@@ -888,8 +797,7 @@
       "description": "Beat 120 waves and don't use any strike spells.",
       "requirements": [
         "minWave: 120"
-      ],
-      "game_id": 301
+      ]
     },
     "Close Quarter": {
       "apId": 2095,
@@ -898,8 +806,7 @@
       "description": "Reach -12% decreased banishment cost with your orb...",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 252
+      ]
     },
     "Cold Wisdom": {
       "apId": 2096,
@@ -908,15 +815,13 @@
       "description": "Gain 700 xp with Freeze spell crowd hits.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 240
+      ]
     },
     "Come Again": {
       "apId": 2097,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 190 banished monsters.",
-      "game_id": 549
+      "description": "Kill 190 banished monsters."
     },
     "Come Out": {
       "apId": 2098,
@@ -925,8 +830,7 @@
       "description": "Lure 20 swarmlings out of a sleeping hive.",
       "requirements": [
         "Sleeping Hive element"
-      ],
-      "game_id": 109
+      ]
     },
     "Come Out, Come Out": {
       "apId": 2099,
@@ -935,8 +839,7 @@
       "description": "Lure 100 swarmlings out of a sleeping hive.",
       "requirements": [
         "Sleeping Hive element"
-      ],
-      "game_id": 110
+      ]
     },
     "Confusion Junction": {
       "apId": 2100,
@@ -945,8 +848,7 @@
       "description": "Build 30 walls.",
       "requirements": [
         "Wall element"
-      ],
-      "game_id": 80
+      ]
     },
     "Connected": {
       "apId": 2101,
@@ -955,8 +857,7 @@
       "description": "Build an amplifier.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 59
+      ]
     },
     "Connecting the Dots": {
       "apId": 2102,
@@ -965,8 +866,7 @@
       "description": "Have 50 fields lit in Journey mode.",
       "requirements": [
         "fieldToken: 50"
-      ],
-      "game_id": 510
+      ]
     },
     "Core Haul": {
       "apId": 2103,
@@ -975,8 +875,7 @@
       "description": "Find 180 shadow cores.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 348
+      ]
     },
     "Core Pack": {
       "apId": 2104,
@@ -985,8 +884,7 @@
       "description": "Find 20 shadow cores.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 346
+      ]
     },
     "Core Pile": {
       "apId": 2105,
@@ -995,8 +893,7 @@
       "description": "Find 60 shadow cores.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 347
+      ]
     },
     "Core Pouch": {
       "apId": 2106,
@@ -1005,8 +902,7 @@
       "description": "Have 100 shadow cores at the start of the battle.",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 345
+      ]
     },
     "Corrosive Stings": {
       "apId": 2107,
@@ -1015,8 +911,7 @@
       "description": "Tear a total of 5.000 armor with wasp stings.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 567
+      ]
     },
     "Couldn't Decide": {
       "apId": 2108,
@@ -1025,15 +920,13 @@
       "description": "Kill 400 monsters with prismatic gem wasps.",
       "requirements": [
         "gemSkills: 6"
-      ],
-      "game_id": 537
+      ]
     },
     "Crimson Journal": {
       "apId": 2109,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 100.000 monsters killed through all the batt...",
-      "game_id": 119
+      "description": "Reach 100.000 monsters killed through all the batt..."
     },
     "Crowd Control": {
       "apId": 2110,
@@ -1042,15 +935,13 @@
       "description": "Have the Overcrowd trait set to level 6 or higher ...",
       "requirements": [
         "Overcrowd trait"
-      ],
-      "game_id": 371
+      ]
     },
     "Crowded Queue": {
       "apId": 2111,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Have 600 monsters on the battlefield at the same t...",
-      "game_id": 211
+      "description": "Have 600 monsters on the battlefield at the same t..."
     },
     "Crunchy Bites": {
       "apId": 2112,
@@ -1059,8 +950,7 @@
       "description": "Kill 160 frozen swarmlings.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 206
+      ]
     },
     "Damage Support": {
       "apId": 2113,
@@ -1069,8 +959,7 @@
       "description": "Have a pure bleeding gem with 2.500 hits.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 474
+      ]
     },
     "Darkness Walk With Me": {
       "apId": 2114,
@@ -1080,8 +969,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 166
+      ]
     },
     "Deadly Curse": {
       "apId": 2115,
@@ -1090,8 +978,7 @@
       "description": "Reach 5.000 poison kills through all the battles.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 307
+      ]
     },
     "Deal Some Damage Too": {
       "apId": 2116,
@@ -1101,8 +988,7 @@
       "requirements": [
         "Bolt skill",
         "Traps skill"
-      ],
-      "game_id": 469
+      ]
     },
     "Deathball": {
       "apId": 2117,
@@ -1111,15 +997,13 @@
       "description": "Reach 1.000 pylon kills through all the battles.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 201
+      ]
     },
     "Deckard Would Be Proud": {
       "apId": 2118,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "All I could get for a prismatic amulet",
-      "game_id": 621
+      "description": "All I could get for a prismatic amulet"
     },
     "Deluminati": {
       "apId": 2119,
@@ -1128,8 +1012,7 @@
       "description": "Have the Dark Masonry trait set to level 6 or high...",
       "requirements": [
         "Dark Masonry trait"
-      ],
-      "game_id": 370
+      ]
     },
     "Denested": {
       "apId": 2120,
@@ -1138,15 +1021,13 @@
       "description": "Destroy 5 monster nests.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 62
+      ]
     },
     "Derangement": {
       "apId": 2121,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Decrease the range of a gem.",
-      "game_id": 536
+      "description": "Decrease the range of a gem."
     },
     "Desperate Clash": {
       "apId": 2122,
@@ -1155,15 +1036,13 @@
       "description": "Reach -16% decreased banishment cost with your orb...",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 253
+      ]
     },
     "Diabolic Trophy": {
       "apId": 2123,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 666 swarmlings.",
-      "game_id": 143
+      "description": "Kill 666 swarmlings."
     },
     "Dichromatic": {
       "apId": 2124,
@@ -1172,8 +1051,7 @@
       "description": "Combine two gems of different colors.",
       "requirements": [
         "gemSkills: 2"
-      ],
-      "game_id": 0
+      ]
     },
     "Disciple": {
       "apId": 2125,
@@ -1183,8 +1061,7 @@
       "requirements": [
         "Trial",
         "fieldToken: 10"
-      ],
-      "game_id": 517
+      ]
     },
     "Disco Ball": {
       "apId": 2126,
@@ -1194,15 +1071,13 @@
       "requirements": [
         "Lanterns skill",
         "gemSkills: 6"
-      ],
-      "game_id": 526
+      ]
     },
     "Don't Break it!": {
       "apId": 2127,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Spend 90.000 mana on banishment.",
-      "game_id": 420
+      "description": "Spend 90.000 mana on banishment."
     },
     "Don't Look at the Light": {
       "apId": 2128,
@@ -1211,8 +1086,7 @@
       "description": "Reach 10.000 shrine kills through all the battles.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 432
+      ]
     },
     "Don't Touch it!": {
       "apId": 2129,
@@ -1222,8 +1096,7 @@
       "requirements": [
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 168
+      ]
     },
     "Doom Drop": {
       "apId": 2130,
@@ -1233,8 +1106,7 @@
       "requirements": [
         "Barrage skill",
         "Possessed Monster element"
-      ],
-      "game_id": 159
+      ]
     },
     "Double Punch": {
       "apId": 2131,
@@ -1243,8 +1115,7 @@
       "description": "Have 2 bolt enhanced gems at the same time.",
       "requirements": [
         "Bolt skill"
-      ],
-      "game_id": 298
+      ]
     },
     "Double Sharded": {
       "apId": 2132,
@@ -1253,8 +1124,7 @@
       "description": "Cast 2 ice shards on the same monster.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 589
+      ]
     },
     "Double Splash": {
       "apId": 2133,
@@ -1263,8 +1133,7 @@
       "description": "Kill two non-monster creatures with one gem bomb.",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 577
+      ]
     },
     "Double Strike": {
       "apId": 2134,
@@ -1273,15 +1142,13 @@
       "description": "Activate the same shrine 2 times.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 266
+      ]
     },
     "Drone Warfare": {
       "apId": 2135,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 20.000 gem wasp kills through all the battle...",
-      "game_id": 154
+      "description": "Reach 20.000 gem wasp kills through all the battle..."
     },
     "Drop the Ice": {
       "apId": 2136,
@@ -1292,15 +1159,13 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 444
+      ]
     },
     "Drumroll": {
       "apId": 2137,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Deal 200 gem wasp stings to buildings.",
-      "game_id": 219
+      "description": "Deal 200 gem wasp stings to buildings."
     },
     "Dry Puddle": {
       "apId": 2138,
@@ -1309,8 +1174,7 @@
       "description": "Harvest all mana from a mana shard.",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 112
+      ]
     },
     "Dual Downfall": {
       "apId": 2139,
@@ -1320,8 +1184,7 @@
       "requirements": [
         "Ritual trait",
         "Spire element"
-      ],
-      "game_id": 175
+      ]
     },
     "Dual Pulse": {
       "apId": 2140,
@@ -1330,8 +1193,7 @@
       "description": "Have 2 beam enhanced gems at the same time.",
       "requirements": [
         "Beam skill"
-      ],
-      "game_id": 294
+      ]
     },
     "Eagle Eye": {
       "apId": 2141,
@@ -1340,8 +1202,7 @@
       "description": "Reach an amplified gem range of 18.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 39
+      ]
     },
     "Early Bird": {
       "apId": 2142,
@@ -1351,8 +1212,7 @@
       "requirements": [
         "minWave: 500",
         "Endurance"
-      ],
-      "game_id": 10
+      ]
     },
     "Early Harvest": {
       "apId": 2143,
@@ -1361,8 +1221,7 @@
       "description": "Harvest 2.500 mana from shards before wave 3 start...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 116
+      ]
     },
     "Earthquake": {
       "apId": 2144,
@@ -1371,8 +1230,7 @@
       "description": "Activate shrines a total of 4 times.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 264
+      ]
     },
     "Easy Kill": {
       "apId": 2145,
@@ -1381,8 +1239,7 @@
       "description": "Kill 120 bleeding monsters.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 455
+      ]
     },
     "Eat my Light": {
       "apId": 2146,
@@ -1393,8 +1250,7 @@
         "Ritual trait",
         "Shrine element",
         "Wraith element"
-      ],
-      "game_id": 465
+      ]
     },
     "Eggcracker": {
       "apId": 2147,
@@ -1403,8 +1259,7 @@
       "description": "Don't let any egg laid by a swarm queen to hatch o...",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 573
+      ]
     },
     "Eggnog": {
       "apId": 2148,
@@ -1413,8 +1268,7 @@
       "description": "Crack a monster egg open while time is frozen.",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 527
+      ]
     },
     "Eggs Royale": {
       "apId": 2149,
@@ -1423,8 +1277,7 @@
       "description": "Reach 1.000 monster eggs cracked through all the b...",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 115
+      ]
     },
     "Elementary": {
       "apId": 2150,
@@ -1433,8 +1286,7 @@
       "description": "Beat 30 waves using at most grade 2 gems.",
       "requirements": [
         "minWave: 30"
-      ],
-      "game_id": 569
+      ]
     },
     "End of the Tunnel": {
       "apId": 2151,
@@ -1445,8 +1297,7 @@
         "Ritual trait",
         "Apparition element",
         "Shrine element"
-      ],
-      "game_id": 466
+      ]
     },
     "Endgame Balance": {
       "apId": 2152,
@@ -1455,8 +1306,7 @@
       "description": "Have 25.000 shadow cores at the start of the battl...",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 423
+      ]
     },
     "Endured a Lot": {
       "apId": 2153,
@@ -1466,8 +1316,7 @@
       "requirements": [
         "Endurance",
         "fieldToken: 80"
-      ],
-      "game_id": 516
+      ]
     },
     "Enhance Like No Tomorrow": {
       "apId": 2154,
@@ -1478,8 +1327,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 440
+      ]
     },
     "Enhancement Storage": {
       "apId": 2155,
@@ -1490,8 +1338,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 463
+      ]
     },
     "Enhancing Challenge": {
       "apId": 2156,
@@ -1503,8 +1350,7 @@
         "Giant Domination trait",
         "minWave: 200",
         "Endurance"
-      ],
-      "game_id": 555
+      ]
     },
     "Enough Frozen Time Trickery": {
       "apId": 2157,
@@ -1513,8 +1359,7 @@
       "description": "Kill a shadow while time is frozen.",
       "requirements": [
         "Shadow element"
-      ],
-      "game_id": 529
+      ]
     },
     "Enough is Enough": {
       "apId": 2158,
@@ -1525,8 +1370,7 @@
         "Ritual trait",
         "Specter element",
         "Watchtower element"
-      ],
-      "game_id": 487
+      ]
     },
     "Enraged is the New Norm": {
       "apId": 2159,
@@ -1536,8 +1380,7 @@
       "requirements": [
         "minWave: 240",
         "Endurance"
-      ],
-      "game_id": 338
+      ]
     },
     "Ensnared": {
       "apId": 2160,
@@ -1546,8 +1389,7 @@
       "description": "Kill 12 monsters with gems in traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 127
+      ]
     },
     "Enter The Gate": {
       "apId": 2161,
@@ -1557,8 +1399,7 @@
       "requirements": [
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 635
+      ]
     },
     "Entrenched": {
       "apId": 2162,
@@ -1567,8 +1408,7 @@
       "description": "Build 20 traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 72
+      ]
     },
     "Epidemic Gem": {
       "apId": 2163,
@@ -1577,8 +1417,7 @@
       "description": "Have a pure poison gem with 3.500 hits.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 476
+      ]
     },
     "Even if You Thaw": {
       "apId": 2164,
@@ -1588,15 +1427,13 @@
       "requirements": [
         "Freeze skill",
         "Whiteout skill"
-      ],
-      "game_id": 312
+      ]
     },
     "Every Hit Counts": {
       "apId": 2165,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Deliver 3750 one hit kills.",
-      "game_id": 278
+      "description": "Deliver 3750 one hit kills."
     },
     "Exorcism": {
       "apId": 2166,
@@ -1605,8 +1442,7 @@
       "description": "Kill 199 possessed monsters.",
       "requirements": [
         "Possessed Monster element"
-      ],
-      "game_id": 148
+      ]
     },
     "Expert": {
       "apId": 2167,
@@ -1616,8 +1452,7 @@
       "requirements": [
         "Trial",
         "fieldToken: 50"
-      ],
-      "game_id": 519
+      ]
     },
     "Extorted": {
       "apId": 2168,
@@ -1626,8 +1461,7 @@
       "description": "Harvest all mana from 3 mana shards.",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 113
+      ]
     },
     "Face the Phobia": {
       "apId": 2169,
@@ -1636,8 +1470,7 @@
       "description": "Have the Swarmling Parasites trait set to level 6 ...",
       "requirements": [
         "Swarmling Parasites trait"
-      ],
-      "game_id": 375
+      ]
     },
     "Family Friendlier": {
       "apId": 2170,
@@ -1645,9 +1478,8 @@
       "reward": "skillPoints:1",
       "description": "Kill 900 green blooded monsters.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 606
+        "Hidden Codes Element"
+      ]
     },
     "Farewell": {
       "apId": 2171,
@@ -1657,8 +1489,7 @@
       "requirements": [
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 496
+      ]
     },
     "Feels Like Endurance": {
       "apId": 2172,
@@ -1667,15 +1498,13 @@
       "description": "Beat 120 waves.",
       "requirements": [
         "minWave: 120"
-      ],
-      "game_id": 145
+      ]
     },
     "Fierce Encounter": {
       "apId": 2173,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach -8% decreased banishment cost with your orb.",
-      "game_id": 251
+      "description": "Reach -8% decreased banishment cost with your orb."
     },
     "Fifth Grader": {
       "apId": 2174,
@@ -1684,15 +1513,13 @@
       "description": "Create a grade 5 gem.",
       "requirements": [
         "minGemGrade: 5"
-      ],
-      "game_id": 44
+      ]
     },
     "Filled 5 Times": {
       "apId": 2175,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach mana pool level 5.",
-      "game_id": 226
+      "description": "Reach mana pool level 5."
     },
     "Final Cut": {
       "apId": 2176,
@@ -1701,8 +1528,7 @@
       "description": "Kill 960 bleeding monsters.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 458
+      ]
     },
     "Final Touch": {
       "apId": 2177,
@@ -1712,8 +1538,7 @@
       "requirements": [
         "Ritual trait",
         "Spire element"
-      ],
-      "game_id": 490
+      ]
     },
     "Finders": {
       "apId": 2178,
@@ -1725,8 +1550,7 @@
         "Corrupted Mana Shard element",
         "Drop Holder element",
         "Apparition element"
-      ],
-      "game_id": 233
+      ]
     },
     "Fire Away": {
       "apId": 2179,
@@ -1737,8 +1561,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 293
+      ]
     },
     "Fire in the Hole": {
       "apId": 2180,
@@ -1747,8 +1570,7 @@
       "description": "Destroy a monster nest.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 90
+      ]
     },
     "Firefall": {
       "apId": 2181,
@@ -1757,22 +1579,19 @@
       "description": "Have 16 barrage enhanced gems at the same time.",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 427
+      ]
     },
     "First Blood": {
       "apId": 2182,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill a monster.",
-      "game_id": 122
+      "description": "Kill a monster."
     },
     "First Puzzle Piece": {
       "apId": 2183,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Find a talisman fragment.",
-      "game_id": 364
+      "description": "Find a talisman fragment."
     },
     "Flip Flop": {
       "apId": 2184,
@@ -1780,16 +1599,14 @@
       "reward": "skillPoints:1",
       "description": "Win a flipped field battle.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 541
+        "Hidden Codes Element"
+      ]
     },
     "Flows Through my Veins": {
       "apId": 2185,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach mana pool level 10.",
-      "game_id": 227
+      "description": "Reach mana pool level 10."
     },
     "Flying Multikill": {
       "apId": 2186,
@@ -1802,15 +1619,13 @@
         "Shadow element",
         "Specter element",
         "Wraith element"
-      ],
-      "game_id": 411
+      ]
     },
     "Fool Me Once": {
       "apId": 2187,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 390 banished monsters.",
-      "game_id": 550
+      "description": "Kill 390 banished monsters."
     },
     "Forces Within my Comprehension": {
       "apId": 2188,
@@ -1819,15 +1634,13 @@
       "description": "Have the Ritual trait set to level 6 or higher and...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 398
+      ]
     },
     "Forged in Battle": {
       "apId": 2189,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 200 battles won.",
-      "game_id": 8
+      "description": "Reach 200 battles won."
     },
     "Fortress": {
       "apId": 2190,
@@ -1836,22 +1649,19 @@
       "description": "Build 30 towers.",
       "requirements": [
         "Tower element"
-      ],
-      "game_id": 68
+      ]
     },
     "Fortunate": {
       "apId": 2191,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Find 2 talisman fragments.",
-      "game_id": 365
+      "description": "Find 2 talisman fragments."
     },
     "Frag Rain": {
       "apId": 2192,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Find 5 talisman fragments.",
-      "game_id": 358
+      "description": "Find 5 talisman fragments."
     },
     "Freezing Wounds": {
       "apId": 2193,
@@ -1860,8 +1670,7 @@
       "description": "Freeze a monster 3 times.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 309
+      ]
     },
     "Friday Night": {
       "apId": 2194,
@@ -1870,8 +1679,7 @@
       "description": "Have 4 beam enhanced gems at the same time.",
       "requirements": [
         "Beam skill"
-      ],
-      "game_id": 295
+      ]
     },
     "Frittata": {
       "apId": 2195,
@@ -1880,15 +1688,13 @@
       "description": "Reach 500 monster eggs cracked through all the bat...",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 83
+      ]
     },
     "From Above": {
       "apId": 2196,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 40 monsters with gem bombs and wasps.",
-      "game_id": 130
+      "description": "Kill 40 monsters with gem bombs and wasps."
     },
     "Frostborn": {
       "apId": 2197,
@@ -1899,8 +1705,7 @@
         "Whiteout skill",
         "Ice Shards skill",
         "Freeze skill"
-      ],
-      "game_id": 437
+      ]
     },
     "Frosting": {
       "apId": 2198,
@@ -1911,8 +1716,7 @@
         "Freeze skill",
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 479
+      ]
     },
     "Frozen Crowd": {
       "apId": 2199,
@@ -1923,15 +1727,13 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 443
+      ]
     },
     "Frozen Grave": {
       "apId": 2200,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 220 monsters while it's snowing.",
-      "game_id": 192
+      "description": "Kill 220 monsters while it's snowing."
     },
     "Frozen Over": {
       "apId": 2201,
@@ -1940,8 +1742,7 @@
       "description": "Gain 4.500 xp with Freeze spell crowd hits.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 289
+      ]
     },
     "Ful Ir": {
       "apId": 2202,
@@ -1950,8 +1751,7 @@
       "description": "Blast like a fireball",
       "requirements": [
         "Kill 15 monsters simultaneously with 1 gem bomb"
-      ],
-      "game_id": 202
+      ]
     },
     "Fully Lit": {
       "apId": 2203,
@@ -1960,15 +1760,13 @@
       "description": "Have a field beaten in all three battle modes.",
       "requirements": [
         "Endurance and trial"
-      ],
-      "game_id": 508
+      ]
     },
     "Fully Shining": {
       "apId": 2204,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Have 60 gems on the battlefield.",
-      "game_id": 403
+      "description": "Have 60 gems on the battlefield."
     },
     "Fusion Core": {
       "apId": 2205,
@@ -1977,15 +1775,13 @@
       "description": "Have 16 beam enhanced gems at the same time.",
       "requirements": [
         "Beam skill"
-      ],
-      "game_id": 297
+      ]
     },
     "Gearing Up": {
       "apId": 2206,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Have 5 fragments socketed in your talisman.",
-      "game_id": 363
+      "description": "Have 5 fragments socketed in your talisman."
     },
     "Gem Lust": {
       "apId": 2207,
@@ -1995,8 +1791,7 @@
       "requirements": [
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 170
+      ]
     },
     "Gemhancement": {
       "apId": 2208,
@@ -2007,8 +1802,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 439
+      ]
     },
     "Get Them": {
       "apId": 2209,
@@ -2017,8 +1811,7 @@
       "description": "Have a watchtower kill 39 monsters.",
       "requirements": [
         "Watchtower element"
-      ],
-      "game_id": 499
+      ]
     },
     "Get This Done Quick": {
       "apId": 2210,
@@ -2028,8 +1821,7 @@
       "requirements": [
         "minWave: 3",
         "Trial"
-      ],
-      "game_id": 559
+      ]
     },
     "Getting My Feet Wet": {
       "apId": 2211,
@@ -2039,8 +1831,7 @@
       "requirements": [
         "Endurance",
         "fieldToken: 20"
-      ],
-      "game_id": 513
+      ]
     },
     "Getting Rid of Them": {
       "apId": 2212,
@@ -2049,8 +1840,7 @@
       "description": "Drop 48 gem bombs on beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 344
+      ]
     },
     "Getting Serious": {
       "apId": 2213,
@@ -2059,15 +1849,13 @@
       "description": "Have a grade 1 gem with 1.500 hits.",
       "requirements": [
         "minGemGrade: 1"
-      ],
-      "game_id": 53
+      ]
     },
     "Getting Waves Done": {
       "apId": 2214,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 2.000 waves started early through all the ba...",
-      "game_id": 12
+      "description": "Reach 2.000 waves started early through all the ba..."
     },
     "Getting Wet": {
       "apId": 2215,
@@ -2076,8 +1864,7 @@
       "description": "Beat 30 waves.",
       "requirements": [
         "minWave: 30"
-      ],
-      "game_id": 132
+      ]
     },
     "Glitter Cloud": {
       "apId": 2216,
@@ -2087,15 +1874,13 @@
       "requirements": [
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 489
+      ]
     },
     "Glowing Armada": {
       "apId": 2217,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 240 gem wasps on the battlefield when the bat...",
-      "game_id": 491
+      "description": "Have 240 gem wasps on the battlefield when the bat..."
     },
     "Going Deviant": {
       "apId": 2218,
@@ -2104,8 +1889,7 @@
       "description": "Rook to a9",
       "requirements": [
         "Scroll to edge of the world map"
-      ],
-      "game_id": 616
+      ]
     },
     "Going for the Weak": {
       "apId": 2219,
@@ -2115,8 +1899,7 @@
       "requirements": [
         "Poison skill",
         "Watchtower element"
-      ],
-      "game_id": 501
+      ]
     },
     "Got the Price Back": {
       "apId": 2220,
@@ -2125,15 +1908,16 @@
       "description": "Have a pure mana leeching gem with 4.500 hits.",
       "requirements": [
         "Mana Leech skill"
-      ],
-      "game_id": 478
+      ]
     },
     "Great Survivor": {
       "apId": 2221,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Kill a monster from wave 1 when wave 20 has alread...",
-      "game_id": 507
+      "requirements": [
+        "minWave:20"
+      ]
     },
     "Green Eyed Ninja": {
       "apId": 2222,
@@ -2142,8 +1926,7 @@
       "description": "Entering: The Wilderness",
       "requirements": [
         "Field N1, U1 or R5"
-      ],
-      "game_id": 614
+      ]
     },
     "Green Path": {
       "apId": 2223,
@@ -2151,9 +1934,8 @@
       "reward": "skillPoints:1",
       "description": "Kill 9.900 green blooded monsters.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 609
+        "Hidden Codes Element"
+      ]
     },
     "Green Vial": {
       "apId": 2224,
@@ -2162,22 +1944,19 @@
       "description": "Have more than 75% of the monster kills caused by ...",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 204
+      ]
     },
     "Green Wand": {
       "apId": 2225,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 60.",
-      "game_id": 385
+      "description": "Reach wizard level 60."
     },
     "Ground Luck": {
       "apId": 2226,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Find 3 talisman fragments.",
-      "game_id": 366
+      "description": "Find 3 talisman fragments."
     },
     "Groundfill": {
       "apId": 2227,
@@ -2186,8 +1965,7 @@
       "description": "Demolish a trap.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 601
+      ]
     },
     "Guarding the Fallen Gate": {
       "apId": 2228,
@@ -2196,8 +1974,7 @@
       "description": "Have the Corrupted Banishment trait set to level 6...",
       "requirements": [
         "Corrupted Banishment trait"
-      ],
-      "game_id": 372
+      ]
     },
     "Hacked Gem": {
       "apId": 2229,
@@ -2206,15 +1983,13 @@
       "description": "Have a grade 3 gem with 1.200 effective max damage...",
       "requirements": [
         "minGemGrade: 3"
-      ],
-      "game_id": 61
+      ]
     },
     "Half Full": {
       "apId": 2230,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Add 32 talisman fragments to your shape collection...",
-      "game_id": 633
+      "description": "Add 32 talisman fragments to your shape collection..."
     },
     "Handle With Care": {
       "apId": 2231,
@@ -2223,8 +1998,7 @@
       "description": "Kill 300 monsters with orblet explosions.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 613
+      ]
     },
     "Hard Reset": {
       "apId": 2232,
@@ -2233,8 +2007,7 @@
       "description": "Reach 5.000 shrine kills through all the battles.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 408
+      ]
     },
     "Has Stood Long Enough": {
       "apId": 2233,
@@ -2243,8 +2016,7 @@
       "description": "Destroy a monster nest after the last wave has sta...",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 561
+      ]
     },
     "Hateful": {
       "apId": 2234,
@@ -2253,8 +2025,7 @@
       "description": "Have the Hatred trait set to level 6 or higher and...",
       "requirements": [
         "Hatred trait"
-      ],
-      "game_id": 353
+      ]
     },
     "Hazardous Materials": {
       "apId": 2235,
@@ -2264,8 +2035,7 @@
       "requirements": [
         "Poison skill",
         "Have atleast 1.000 enemies poisoned and alive on a field"
-      ],
-      "game_id": 161
+      ]
     },
     "Healing Denied": {
       "apId": 2236,
@@ -2274,8 +2044,7 @@
       "description": "Destroy 3 healing beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 467
+      ]
     },
     "Heavily Modified": {
       "apId": 2237,
@@ -2283,9 +2052,8 @@
       "reward": "skillPoints:1",
       "description": "Activate all mods.",
       "requirements": [
-        "Requires \"hidden codes\""
-      ],
-      "game_id": 542
+        "Hidden Codes Element"
+      ]
     },
     "Heavy Hitting": {
       "apId": 2238,
@@ -2294,8 +2062,7 @@
       "description": "Have 4 bolt enhanced gems at the same time.",
       "requirements": [
         "Bolt skill"
-      ],
-      "game_id": 299
+      ]
     },
     "Heavy Support": {
       "apId": 2239,
@@ -2305,8 +2072,7 @@
       "requirements": [
         "Dark Masonry trait",
         "Beacon element"
-      ],
-      "game_id": 98
+      ]
     },
     "Hedgehog": {
       "apId": 2240,
@@ -2315,8 +2081,7 @@
       "description": "Kill a swarmling having at least 100 armor.",
       "requirements": [
         "a swarmling with atleast 100 armor"
-      ],
-      "game_id": 200
+      ]
     },
     "Helping Hand": {
       "apId": 2241,
@@ -2326,8 +2091,7 @@
       "requirements": [
         "Possessed Monster element",
         "Watchtower element"
-      ],
-      "game_id": 500
+      ]
     },
     "Hiding Spot": {
       "apId": 2242,
@@ -2336,15 +2100,16 @@
       "description": "Open 3 drop holders before wave 3.",
       "requirements": [
         "Drop Holder element"
-      ],
-      "game_id": 100
+      ]
     },
     "High Stakes": {
       "apId": 2243,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Set a battle trait to level 12.",
-      "game_id": 381
+      "requirements": [
+        "BattleTraits: 1"
+      ]
     },
     "High Targets": {
       "apId": 2244,
@@ -2353,8 +2118,7 @@
       "description": "Reach 100 non-monsters killed through all the batt...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 138
+      ]
     },
     "Hint of Darkness": {
       "apId": 2245,
@@ -2363,8 +2127,7 @@
       "description": "Kill 189 twisted monsters.",
       "requirements": [
         "Twisted Monster element"
-      ],
-      "game_id": 147
+      ]
     },
     "Hold Still": {
       "apId": 2246,
@@ -2374,8 +2137,7 @@
       "requirements": [
         "Freeze skill",
         "Whiteout skill"
-      ],
-      "game_id": 313
+      ]
     },
     "Hope has fallen": {
       "apId": 2247,
@@ -2384,8 +2146,7 @@
       "description": "Dismantled bunkhouses",
       "requirements": [
         "Field E3"
-      ],
-      "game_id": 622
+      ]
     },
     "How About Some Skill Points": {
       "apId": 2248,
@@ -2394,8 +2155,7 @@
       "description": "Have 5.000 shadow cores at the start of the battle...",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 422
+      ]
     },
     "Hungry Little Gem": {
       "apId": 2249,
@@ -2405,8 +2165,7 @@
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
-      ],
-      "game_id": 599
+      ]
     },
     "Hunt For Hard Targets": {
       "apId": 2250,
@@ -2416,8 +2175,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 534
+      ]
     },
     "Hurtified": {
       "apId": 2251,
@@ -2426,8 +2184,7 @@
       "description": "Kill 240 bleeding monsters.",
       "requirements": [
         "Bleeding skill"
-      ],
-      "game_id": 456
+      ]
     },
     "Hyper Gem": {
       "apId": 2252,
@@ -2436,22 +2193,19 @@
       "description": "Have a grade 3 gem with 600 effective max damage.",
       "requirements": [
         "minGemGrade: 3"
-      ],
-      "game_id": 41
+      ]
     },
     "I Have Experience": {
       "apId": 2253,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 50 battles won.",
-      "game_id": 7
+      "description": "Reach 50 battles won."
     },
     "I Never Asked For This": {
       "apId": 2254,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "All my aug points spent",
-      "game_id": 620
+      "description": "All my aug points spent"
     },
     "I Saw Something": {
       "apId": 2255,
@@ -2461,8 +2215,7 @@
       "requirements": [
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 163
+      ]
     },
     "I Warned You...": {
       "apId": 2256,
@@ -2472,8 +2225,7 @@
       "requirements": [
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 169
+      ]
     },
     "I am Tougher": {
       "apId": 2257,
@@ -2483,8 +2235,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 535
+      ]
     },
     "Ice Cube": {
       "apId": 2258,
@@ -2493,8 +2244,7 @@
       "description": "Have a Maximum Charge of 300% for the Freeze Spell...",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 320
+      ]
     },
     "Ice Mage": {
       "apId": 2259,
@@ -2505,8 +2255,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 436
+      ]
     },
     "Ice Snap": {
       "apId": 2260,
@@ -2515,8 +2264,7 @@
       "description": "Gain 90 xp with Freeze spell crowd hits.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 239
+      ]
     },
     "Ice Stand": {
       "apId": 2261,
@@ -2526,8 +2274,7 @@
       "requirements": [
         "Freeze skill",
         "Orb of Presence skill"
-      ],
-      "game_id": 189
+      ]
     },
     "Ice for Everyone": {
       "apId": 2262,
@@ -2538,8 +2285,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 445
+      ]
     },
     "Icecracker": {
       "apId": 2263,
@@ -2549,8 +2295,7 @@
       "requirements": [
         "Barrage skill",
         "Freeze skill"
-      ],
-      "game_id": 181
+      ]
     },
     "Icepicked": {
       "apId": 2264,
@@ -2559,8 +2304,7 @@
       "description": "Gain 3.200 xp with Ice Shards spell crowd hits.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 196
+      ]
     },
     "Icy Fingers": {
       "apId": 2265,
@@ -2571,15 +2315,13 @@
         "Whiteout skill",
         "Freeze skill",
         "Ice Shards skill"
-      ],
-      "game_id": 434
+      ]
     },
     "Impaling Charges": {
       "apId": 2266,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Deliver 250 one hit kills.",
-      "game_id": 124
+      "description": "Deliver 250 one hit kills."
     },
     "Impenetrable": {
       "apId": 2267,
@@ -2588,8 +2330,7 @@
       "description": "Have 8 bolt enhanced gems at the same time.",
       "requirements": [
         "Bolt skill"
-      ],
-      "game_id": 339
+      ]
     },
     "Implosion": {
       "apId": 2268,
@@ -2599,8 +2340,7 @@
       "requirements": [
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 629
+      ]
     },
     "Impressive": {
       "apId": 2269,
@@ -2609,8 +2349,7 @@
       "description": "Win a Trial battle without any monster reaching yo...",
       "requirements": [
         "Trial"
-      ],
-      "game_id": 558
+      ]
     },
     "Impudence": {
       "apId": 2270,
@@ -2621,15 +2360,13 @@
         "Ritual trait",
         "Specter element",
         "Watchtower element"
-      ],
-      "game_id": 485
+      ]
     },
     "In Flames": {
       "apId": 2271,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 400 spawnlings.",
-      "game_id": 415
+      "description": "Kill 400 spawnlings."
     },
     "In Focus": {
       "apId": 2272,
@@ -2638,22 +2375,19 @@
       "description": "Amplify a gem with 8 other gems.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 49
+      ]
     },
     "In a Blink of an Eye": {
       "apId": 2273,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 100 monsters while time is frozen.",
-      "game_id": 530
+      "description": "Kill 100 monsters while time is frozen."
     },
     "In for a Trait": {
       "apId": 2274,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Activate a battle trait.",
-      "game_id": 380
+      "description": "Activate a battle trait."
     },
     "Inedible": {
       "apId": 2275,
@@ -2663,8 +2397,7 @@
       "requirements": [
         "Freeze skill",
         "Poison skill"
-      ],
-      "game_id": 316
+      ]
     },
     "Insane Investment": {
       "apId": 2276,
@@ -2673,8 +2406,7 @@
       "description": "Reach -20% decreased banishment cost with your orb...",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 279
+      ]
     },
     "Instant Spawn": {
       "apId": 2277,
@@ -2684,8 +2416,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 528
+      ]
     },
     "Ionized Air": {
       "apId": 2278,
@@ -2694,8 +2425,7 @@
       "description": "Have the Insulation trait set to level 6 or higher...",
       "requirements": [
         "Insulation trait"
-      ],
-      "game_id": 374
+      ]
     },
     "Is Anyone in There?": {
       "apId": 2279,
@@ -2704,15 +2434,13 @@
       "description": "Break a tomb open.",
       "requirements": [
         "Tomb element"
-      ],
-      "game_id": 87
+      ]
     },
     "Is This a Match-3 or What?": {
       "apId": 2280,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Have 90 gems on the battlefield.",
-      "game_id": 416
+      "description": "Have 90 gems on the battlefield."
     },
     "It Has to Do": {
       "apId": 2281,
@@ -2721,15 +2449,13 @@
       "description": "Beat 50 waves using at most grade 2 gems.",
       "requirements": [
         "minWave: 50"
-      ],
-      "game_id": 571
+      ]
     },
     "It Hurts!": {
       "apId": 2282,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Spend 9.000 mana on banishment.",
-      "game_id": 236
+      "description": "Spend 9.000 mana on banishment."
     },
     "It was Abandoned Anyway": {
       "apId": 2283,
@@ -2738,15 +2464,13 @@
       "description": "Destroy a dwelling.",
       "requirements": [
         "Abandoned Dwelling element"
-      ],
-      "game_id": 101
+      ]
     },
     "It's Lagging Alright": {
       "apId": 2284,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Have 1.200 monsters on the battlefield at the same...",
-      "game_id": 284
+      "description": "Have 1.200 monsters on the battlefield at the same..."
     },
     "It's a Trap": {
       "apId": 2285,
@@ -2755,22 +2479,19 @@
       "description": "Don't let any monster touch your orb for 120 beate...",
       "requirements": [
         "minWave: 120"
-      ],
-      "game_id": 262
+      ]
     },
     "Itchy Sphere": {
       "apId": 2286,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Deliver 3.600 banishments with your orb.",
-      "game_id": 230
+      "description": "Deliver 3.600 banishments with your orb."
     },
     "Jewel Box": {
       "apId": 2287,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Fill all inventory slots with gems.",
-      "game_id": 54
+      "description": "Fill all inventory slots with gems."
     },
     "Jinx Blast": {
       "apId": 2288,
@@ -2780,8 +2501,7 @@
       "requirements": [
         "Bolt skill",
         "Whiteout skill"
-      ],
-      "game_id": 182
+      ]
     },
     "Juggler": {
       "apId": 2289,
@@ -2790,8 +2510,7 @@
       "description": "Use demolition 7 times.",
       "requirements": [
         "Demolition skill"
-      ],
-      "game_id": 86
+      ]
     },
     "Just Breathe In": {
       "apId": 2290,
@@ -2801,8 +2520,7 @@
       "requirements": [
         "Beam skill",
         "Poison skill"
-      ],
-      "game_id": 524
+      ]
     },
     "Just Fire More at Them": {
       "apId": 2291,
@@ -2811,8 +2529,7 @@
       "description": "Have the Thick Air trait set to level 6 or higher ...",
       "requirements": [
         "Thick Air trait"
-      ],
-      "game_id": 376
+      ]
     },
     "Just Give Me That Mana": {
       "apId": 2292,
@@ -2822,22 +2539,19 @@
       "requirements": [
         "Mana Leech skill",
         "Whiteout skill"
-      ],
-      "game_id": 588
+      ]
     },
     "Just Started": {
       "apId": 2293,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach 10 battles won.",
-      "game_id": 6
+      "description": "Reach 10 battles won."
     },
     "Just Take My Mana!": {
       "apId": 2294,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Spend 900.000 mana on banishment.",
-      "game_id": 421
+      "description": "Spend 900.000 mana on banishment."
     },
     "Keep Losing Keep Harvesting": {
       "apId": 2295,
@@ -2848,8 +2562,7 @@
         "Ritual trait",
         "Mana Shard element",
         "Shadow element"
-      ],
-      "game_id": 580
+      ]
     },
     "Keepers": {
       "apId": 2296,
@@ -2861,8 +2574,7 @@
         "Corrupted Mana Shard element",
         "Mana Shard element",
         "Drop Holder element"
-      ],
-      "game_id": 234
+      ]
     },
     "Keeping Low": {
       "apId": 2297,
@@ -2871,15 +2583,13 @@
       "description": "Beat 40 waves using at most grade 2 gems.",
       "requirements": [
         "minWave: 40"
-      ],
-      "game_id": 570
+      ]
     },
     "Killed So Many": {
       "apId": 2298,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Gain 7.200 xp with kill chains.",
-      "game_id": 288
+      "description": "Gain 7.200 xp with kill chains."
     },
     "Knowledge Seeker": {
       "apId": 2299,
@@ -2888,15 +2598,13 @@
       "description": "Open a wizard stash.",
       "requirements": [
         "Wizard Stash element"
-      ],
-      "game_id": 377
+      ]
     },
     "Lagging Already?": {
       "apId": 2300,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Have 900 monsters on the battlefield at the same t...",
-      "game_id": 212
+      "description": "Have 900 monsters on the battlefield at the same t..."
     },
     "Landing Spot": {
       "apId": 2301,
@@ -2907,8 +2615,7 @@
         "Ritual trait",
         "Spire element",
         "Wall element"
-      ],
-      "game_id": 583
+      ]
     },
     "Laser Slicer": {
       "apId": 2302,
@@ -2917,8 +2624,7 @@
       "description": "Have 8 beam enhanced gems at the same time.",
       "requirements": [
         "Beam skill"
-      ],
-      "game_id": 296
+      ]
     },
     "Last Minute Mana": {
       "apId": 2303,
@@ -2928,8 +2634,7 @@
       "requirements": [
         "Mana Leech skill",
         "Poison skill"
-      ],
-      "game_id": 451
+      ]
     },
     "Legendary": {
       "apId": 2304,
@@ -2938,8 +2643,7 @@
       "description": "Create a gem with a raw minimum damage of 30.000 o...",
       "requirements": [
         "gemSkills: 1"
-      ],
-      "game_id": 26
+      ]
     },
     "Let Them Hatch": {
       "apId": 2305,
@@ -2948,8 +2652,7 @@
       "description": "Don't crack any egg laid by a swarm queen.",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 574
+      ]
     },
     "Let it Go": {
       "apId": 2306,
@@ -2959,8 +2662,7 @@
       "requirements": [
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 413
+      ]
     },
     "Let's Have a Look": {
       "apId": 2307,
@@ -2969,8 +2671,7 @@
       "description": "Open a drop holder.",
       "requirements": [
         "Drop Holder element"
-      ],
-      "game_id": 390
+      ]
     },
     "Light My Path": {
       "apId": 2308,
@@ -2979,8 +2680,7 @@
       "description": "Have 70 fields lit in Journey mode.",
       "requirements": [
         "fieldToken: 70"
-      ],
-      "game_id": 511
+      ]
     },
     "Like a Necro": {
       "apId": 2309,
@@ -2989,8 +2689,7 @@
       "description": "Kill 25 monsters with frozen corpse explosion.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 198
+      ]
     },
     "Limited Vision": {
       "apId": 2310,
@@ -2999,8 +2698,7 @@
       "description": "Gain 100 xp with Whiteout spell crowd hits.",
       "requirements": [
         "Whiteout skill"
-      ],
-      "game_id": 241
+      ]
     },
     "Liquid Explosive": {
       "apId": 2311,
@@ -3009,8 +2707,7 @@
       "description": "Kill 180 monsters with orblet explosions.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 612
+      ]
     },
     "Locked and Loaded": {
       "apId": 2312,
@@ -3019,8 +2716,7 @@
       "description": "Have 3 pylons charged up to 3 shots each.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 596
+      ]
     },
     "Long Crawl": {
       "apId": 2313,
@@ -3029,8 +2725,7 @@
       "description": "Win a battle using only slowing gems.",
       "requirements": [
         "Slowing skill"
-      ],
-      "game_id": 37
+      ]
     },
     "Long Lasting": {
       "apId": 2314,
@@ -3039,8 +2734,7 @@
       "description": "Reach 500 poison kills through all the battles.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 283
+      ]
     },
     "Long Run": {
       "apId": 2315,
@@ -3050,8 +2744,7 @@
       "requirements": [
         "minWave: 360",
         "Endurance"
-      ],
-      "game_id": 281
+      ]
     },
     "Longrunner": {
       "apId": 2316,
@@ -3061,8 +2754,7 @@
       "requirements": [
         "Endurance",
         "fieldToken: 60"
-      ],
-      "game_id": 515
+      ]
     },
     "Lost Signal": {
       "apId": 2317,
@@ -3071,8 +2763,7 @@
       "description": "Destroy 35 beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 405
+      ]
     },
     "Lots of Crit Hits": {
       "apId": 2318,
@@ -3081,15 +2772,13 @@
       "description": "Have a pure critical hit gem with 2.000 hits.",
       "requirements": [
         "Critical Hit skill"
-      ],
-      "game_id": 473
+      ]
     },
     "Lots of Scratches": {
       "apId": 2319,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 300.",
-      "game_id": 155
+      "description": "Reach a kill chain of 300."
     },
     "Major Shutdown": {
       "apId": 2320,
@@ -3098,8 +2787,7 @@
       "description": "Destroy 3 monster nests.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 60
+      ]
     },
     "Mana Blinded": {
       "apId": 2321,
@@ -3109,8 +2797,7 @@
       "requirements": [
         "Mana Leech skill",
         "Whiteout skill"
-      ],
-      "game_id": 585
+      ]
     },
     "Mana Cult": {
       "apId": 2322,
@@ -3120,8 +2807,7 @@
       "requirements": [
         "Bleeding skill",
         "Mana Leech skill"
-      ],
-      "game_id": 450
+      ]
     },
     "Mana First": {
       "apId": 2323,
@@ -3130,8 +2816,7 @@
       "description": "Deplete a shard when there are more than 300 swarm...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 461
+      ]
     },
     "Mana Greedy": {
       "apId": 2324,
@@ -3141,15 +2826,13 @@
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
-      ],
-      "game_id": 598
+      ]
     },
     "Mana Hack": {
       "apId": 2325,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Have 80.000 initial mana.",
-      "game_id": 285
+      "description": "Have 80.000 initial mana."
     },
     "Mana Magnet": {
       "apId": 2326,
@@ -3158,22 +2841,19 @@
       "description": "Win a battle using only mana leeching gems.",
       "requirements": [
         "Mana Leech skill"
-      ],
-      "game_id": 30
+      ]
     },
     "Mana Salvation": {
       "apId": 2327,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Salvage mana by destroying a gem.",
-      "game_id": 1
+      "description": "Salvage mana by destroying a gem."
     },
     "Mana Singularity": {
       "apId": 2328,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Reach mana pool level 20.",
-      "game_id": 275
+      "description": "Reach mana pool level 20."
     },
     "Mana Tap": {
       "apId": 2329,
@@ -3182,22 +2862,19 @@
       "description": "Reach 10.000 mana harvested from shards through al...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 106
+      ]
     },
     "Mana Trader": {
       "apId": 2330,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Salvage 8.000 mana from gems.",
-      "game_id": 225
+      "description": "Salvage 8.000 mana from gems."
     },
     "Mana in a Bottle": {
       "apId": 2331,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Have 40.000 initial mana.",
-      "game_id": 229
+      "description": "Have 40.000 initial mana."
     },
     "Mana is All I Need": {
       "apId": 2332,
@@ -3206,8 +2883,7 @@
       "description": "Win a battle with no skill point spent and a battl...",
       "requirements": [
         "Any battle trait"
-      ],
-      "game_id": 563
+      ]
     },
     "Mana of the Dying": {
       "apId": 2333,
@@ -3217,8 +2893,7 @@
       "requirements": [
         "Mana Leech skill",
         "Poison skill"
-      ],
-      "game_id": 453
+      ]
     },
     "Marked Targets": {
       "apId": 2334,
@@ -3231,8 +2906,7 @@
         "Twisted Monster element",
         "Marked Monster element",
         "minWave: 70"
-      ],
-      "game_id": 185
+      ]
     },
     "Marmalade": {
       "apId": 2335,
@@ -3241,8 +2915,7 @@
       "description": "Don't destroy any of the jars of wasps.",
       "requirements": [
         "Field X2"
-      ],
-      "game_id": 483
+      ]
     },
     "Mass Awakening": {
       "apId": 2336,
@@ -3251,15 +2924,13 @@
       "description": "Lure 2.500 swarmlings out of a sleeping hive.",
       "requirements": [
         "Sleeping Hive element"
-      ],
-      "game_id": 318
+      ]
     },
     "Mastery": {
       "apId": 2337,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Raise a skill to level 70.",
-      "game_id": 564
+      "description": "Raise a skill to level 70."
     },
     "Max Trap Max leech": {
       "apId": 2338,
@@ -3269,22 +2940,19 @@
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
-      ],
-      "game_id": 600
+      ]
     },
     "Meet the Spartans": {
       "apId": 2339,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 300 monsters on the battlefield at the same t...",
-      "game_id": 210
+      "description": "Have 300 monsters on the battlefield at the same t..."
     },
     "Megalithic": {
       "apId": 2340,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 2.000 structures built through all the battl...",
-      "game_id": 70
+      "description": "Reach 2.000 structures built through all the battl..."
     },
     "Melting Armor": {
       "apId": 2341,
@@ -3293,8 +2961,7 @@
       "description": "Tear a total of 10.000 armor with wasp stings.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 568
+      ]
     },
     "Melting Pulse": {
       "apId": 2342,
@@ -3304,8 +2971,7 @@
       "requirements": [
         "Freeze skill",
         "Shrine element"
-      ],
-      "game_id": 270
+      ]
     },
     "Might Need it Later": {
       "apId": 2343,
@@ -3317,8 +2983,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 462
+      ]
     },
     "Mighty": {
       "apId": 2344,
@@ -3327,8 +2992,7 @@
       "description": "Create a gem with a raw minimum damage of 3.000 or...",
       "requirements": [
         "gemSkills: 1"
-      ],
-      "game_id": 25
+      ]
     },
     "Minefield": {
       "apId": 2345,
@@ -3337,8 +3001,7 @@
       "description": "Kill 300 monsters with gems in traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 129
+      ]
     },
     "Miniblasts": {
       "apId": 2346,
@@ -3347,8 +3010,7 @@
       "description": "Tear a total of 1.250 armor with wasp stings.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 565
+      ]
     },
     "Minor Detour": {
       "apId": 2347,
@@ -3357,8 +3019,7 @@
       "description": "Build 15 walls.",
       "requirements": [
         "Wall element"
-      ],
-      "game_id": 79
+      ]
     },
     "Mixing Up": {
       "apId": 2348,
@@ -3369,15 +3030,13 @@
         "Swarmling Domination trait",
         "Giant Domination trait",
         "minWave: 50"
-      ],
-      "game_id": 553
+      ]
     },
     "More Than Enough": {
       "apId": 2349,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Summon 1.000 monsters by enraging waves.",
-      "game_id": 334
+      "description": "Summon 1.000 monsters by enraging waves."
     },
     "More Wounds": {
       "apId": 2350,
@@ -3387,8 +3046,7 @@
       "requirements": [
         "Barrage skill",
         "Bleeding skill"
-      ],
-      "game_id": 446
+      ]
     },
     "Morning March": {
       "apId": 2351,
@@ -3397,8 +3055,7 @@
       "description": "Lure 500 swarmlings out of a sleeping hive.",
       "requirements": [
         "Sleeping Hive element"
-      ],
-      "game_id": 317
+      ]
     },
     "Multifreeze": {
       "apId": 2352,
@@ -3409,15 +3066,13 @@
         "Ice Shards skill",
         "Whiteout skill",
         "Freeze skill"
-      ],
-      "game_id": 442
+      ]
     },
     "Multiline": {
       "apId": 2353,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have at least 5 different talisman properties.",
-      "game_id": 503
+      "description": "Have at least 5 different talisman properties."
     },
     "Multinerf": {
       "apId": 2354,
@@ -3426,8 +3081,7 @@
       "description": "Kill 1.600 monsters with prismatic gem wasps.",
       "requirements": [
         "gemSkills: 6"
-      ],
-      "game_id": 539
+      ]
     },
     "Mythic Ancient Legendary": {
       "apId": 2355,
@@ -3436,15 +3090,13 @@
       "description": "Create a gem with a raw minimum damage of 300.000 ...",
       "requirements": [
         "gemSkills: 1"
-      ],
-      "game_id": 277
+      ]
     },
     "Nature Takes Over": {
       "apId": 2356,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have no own buildings on the field at the end of t...",
-      "game_id": 399
+      "description": "Have no own buildings on the field at the end of t..."
     },
     "Near Death": {
       "apId": 2357,
@@ -3453,8 +3105,7 @@
       "description": "Suffer mana loss from a shadow projectile when und...",
       "requirements": [
         "Shadow element"
-      ],
-      "game_id": 488
+      ]
     },
     "Necrotrophic": {
       "apId": 2358,
@@ -3463,8 +3114,7 @@
       "description": "Reach 1.000 poison kills through all the battles.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 300
+      ]
     },
     "Need Lots of Them": {
       "apId": 2359,
@@ -3473,22 +3123,19 @@
       "description": "Beat 60 waves using at most grade 2 gems.",
       "requirements": [
         "minWave: 60"
-      ],
-      "game_id": 572
+      ]
     },
     "Need More Rage": {
       "apId": 2360,
       "required_effort": "Trivial",
       "reward": "skillPoints:2",
-      "description": "Upgrade a gem in the enraging socket.",
-      "game_id": 117
+      "description": "Upgrade a gem in the enraging socket."
     },
     "Needle Storm": {
       "apId": 2361,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Deal 350 gem wasp stings to creatures.",
-      "game_id": 217
+      "description": "Deal 350 gem wasp stings to creatures."
     },
     "Nest Blaster": {
       "apId": 2362,
@@ -3497,8 +3144,7 @@
       "description": "Destroy 2 monster nests before wave 12.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 93
+      ]
     },
     "Nest Buster": {
       "apId": 2363,
@@ -3507,8 +3153,7 @@
       "description": "Destroy 3 monster nests before wave 6.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 92
+      ]
     },
     "No Armor Area": {
       "apId": 2364,
@@ -3518,8 +3163,7 @@
       "requirements": [
         "Armor Tearing skill",
         "minWave: 90"
-      ],
-      "game_id": 22
+      ]
     },
     "No Beacon Zone": {
       "apId": 2365,
@@ -3528,8 +3172,7 @@
       "description": "Reach 200 beacons destroyed through all the battle...",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 303
+      ]
     },
     "No Honor Among Thieves": {
       "apId": 2366,
@@ -3540,15 +3183,13 @@
         "Ritual trait",
         "Specter element",
         "Watchtower element"
-      ],
-      "game_id": 497
+      ]
     },
     "No Land for Swarmlings": {
       "apId": 2367,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Kill 3.333 swarmlings.",
-      "game_id": 280
+      "description": "Kill 3.333 swarmlings."
     },
     "No More Rounds": {
       "apId": 2368,
@@ -3557,8 +3198,7 @@
       "description": "Kill 60 banished monsters with shrines.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 545
+      ]
     },
     "No Need to Aim": {
       "apId": 2369,
@@ -3567,8 +3207,7 @@
       "description": "Have 4 barrage enhanced gems at the same time.",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 425
+      ]
     },
     "No Place to Hide": {
       "apId": 2370,
@@ -3579,8 +3218,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 292
+      ]
     },
     "No Stone Unturned": {
       "apId": 2371,
@@ -3589,8 +3227,7 @@
       "description": "Open 5 drop holders.",
       "requirements": [
         "Drop Holder element"
-      ],
-      "game_id": 99
+      ]
     },
     "No Time to Rest": {
       "apId": 2372,
@@ -3599,15 +3236,13 @@
       "description": "Have the Haste trait set to level 6 or higher and ...",
       "requirements": [
         "Haste trait"
-      ],
-      "game_id": 351
+      ]
     },
     "No Time to Waste": {
       "apId": 2373,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 5.000 waves started early through all the ba...",
-      "game_id": 13
+      "description": "Reach 5.000 waves started early through all the ba..."
     },
     "No Use of Vitality": {
       "apId": 2374,
@@ -3616,8 +3251,7 @@
       "description": "Kill a monster having at least 20.000 hit points.",
       "requirements": [
         "A monster with atleast 20.000hp"
-      ],
-      "game_id": 152
+      ]
     },
     "No You Won't!": {
       "apId": 2375,
@@ -3627,8 +3261,7 @@
       "requirements": [
         "Bolt skill",
         "Watchtower element"
-      ],
-      "game_id": 522
+      ]
     },
     "Not Chasing Shadows Anymore": {
       "apId": 2376,
@@ -3638,8 +3271,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 173
+      ]
     },
     "Not So Fast": {
       "apId": 2377,
@@ -3650,8 +3282,7 @@
         "Freeze skill",
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 395
+      ]
     },
     "Not So Omni Anymore": {
       "apId": 2378,
@@ -3660,8 +3291,7 @@
       "description": "Destroy 10 omnibeacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 605
+      ]
     },
     "Not Worth It": {
       "apId": 2379,
@@ -3670,8 +3300,7 @@
       "description": "Harvest 9.000 mana from a corrupted mana shard.",
       "requirements": [
         "Corrupted Mana Shard element"
-      ],
-      "game_id": 108
+      ]
     },
     "Nothing Prevails": {
       "apId": 2380,
@@ -3680,8 +3309,7 @@
       "description": "Reach 25.000 poison kills through all the battles.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 330
+      ]
     },
     "Nox Mist": {
       "apId": 2381,
@@ -3690,8 +3318,7 @@
       "description": "Win a battle using only poison gems.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 34
+      ]
     },
     "Oh Ven": {
       "apId": 2382,
@@ -3701,8 +3328,7 @@
       "requirements": [
         "Poison skill",
         "90 monsters poisoned at the same time"
-      ],
-      "game_id": 209
+      ]
     },
     "Ok Flier": {
       "apId": 2383,
@@ -3712,8 +3338,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 533
+      ]
     },
     "Omelette": {
       "apId": 2384,
@@ -3722,8 +3347,7 @@
       "description": "Reach 200 monster eggs cracked through all the bat...",
       "requirements": [
         "Swarm Queen element"
-      ],
-      "game_id": 78
+      ]
     },
     "Omnibomb": {
       "apId": 2385,
@@ -3732,8 +3356,7 @@
       "description": "Destroy a building and a non-monster creature with...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 578
+      ]
     },
     "On the Shoulders of Giants": {
       "apId": 2386,
@@ -3742,8 +3365,7 @@
       "description": "Have the Giant Domination trait set to level 6 or ...",
       "requirements": [
         "Giant Domination trait"
-      ],
-      "game_id": 354
+      ]
     },
     "One Hit is All it Takes": {
       "apId": 2387,
@@ -3753,8 +3375,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 494
+      ]
     },
     "One Less Problem": {
       "apId": 2388,
@@ -3765,29 +3386,25 @@
         "Ritual trait",
         "Monster Nest element",
         "Wraith element"
-      ],
-      "game_id": 581
+      ]
     },
     "One by One": {
       "apId": 2389,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Deliver 750 one hit kills.",
-      "game_id": 406
+      "description": "Deliver 750 one hit kills."
     },
     "Orange Wand": {
       "apId": 2390,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 40.",
-      "game_id": 384
+      "description": "Reach wizard level 40."
     },
     "Ouch!": {
       "apId": 2391,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Spend 900 mana on banishment.",
-      "game_id": 235
+      "description": "Spend 900 mana on banishment."
     },
     "Out of Misery": {
       "apId": 2392,
@@ -3799,8 +3416,7 @@
         "Poison skill",
         "Slowing skill",
         "Whiteout skill"
-      ],
-      "game_id": 194
+      ]
     },
     "Out of Nowhere": {
       "apId": 2393,
@@ -3811,8 +3427,7 @@
         "Bolt skill",
         "Whiteout skill",
         "Possessed Monster element"
-      ],
-      "game_id": 160
+      ]
     },
     "Outwhited": {
       "apId": 2394,
@@ -3821,8 +3436,7 @@
       "description": "Gain 4.700 xp with Whiteout spell crowd hits.",
       "requirements": [
         "Whiteout skill"
-      ],
-      "game_id": 310
+      ]
     },
     "Overheated": {
       "apId": 2395,
@@ -3831,15 +3445,13 @@
       "description": "Kill a giant with beam shot.",
       "requirements": [
         "Beam skill"
-      ],
-      "game_id": 195
+      ]
     },
     "Overpecked": {
       "apId": 2396,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deal 100 gem wasp stings to the same monster.",
-      "game_id": 214
+      "description": "Deal 100 gem wasp stings to the same monster."
     },
     "Painful Leech": {
       "apId": 2397,
@@ -3849,8 +3461,7 @@
       "requirements": [
         "Bleeding skill",
         "Mana Leech skill"
-      ],
-      "game_id": 449
+      ]
     },
     "Paranormal Paragon": {
       "apId": 2398,
@@ -3859,8 +3470,7 @@
       "description": "Reach 500 non-monsters killed through all the batt...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 141
+      ]
     },
     "Pat on the Back": {
       "apId": 2399,
@@ -3869,15 +3479,13 @@
       "description": "Amplify a gem.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 48
+      ]
     },
     "Path of Splats": {
       "apId": 2400,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 400 monsters.",
-      "game_id": 428
+      "description": "Kill 400 monsters."
     },
     "Peek Into The Abyss": {
       "apId": 2401,
@@ -3900,15 +3508,13 @@
         "Giant Domination trait",
         "Strength in Numbers trait",
         "Ritual trait"
-      ],
-      "game_id": 544
+      ]
     },
     "Pest Control": {
       "apId": 2402,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 333 swarmlings.",
-      "game_id": 140
+      "description": "Kill 333 swarmlings."
     },
     "Plentiful": {
       "apId": 2403,
@@ -3917,15 +3523,13 @@
       "description": "Have 1.000 shadow cores at the start of the battle...",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 357
+      ]
     },
     "Pointed Pain": {
       "apId": 2404,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deal 50 gem wasp stings to creatures.",
-      "game_id": 216
+      "description": "Deal 50 gem wasp stings to creatures."
     },
     "Popped": {
       "apId": 2405,
@@ -3935,8 +3539,7 @@
       "requirements": [
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 628
+      ]
     },
     "Popped Eggs": {
       "apId": 2406,
@@ -3946,8 +3549,7 @@
       "requirements": [
         "Bolt skill",
         "Swarm Queen element"
-      ],
-      "game_id": 470
+      ]
     },
     "Popping Lights": {
       "apId": 2407,
@@ -3956,8 +3558,7 @@
       "description": "Destroy 5 beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 95
+      ]
     },
     "Power Exchange": {
       "apId": 2408,
@@ -3966,8 +3567,7 @@
       "description": "Build 25 amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 77
+      ]
     },
     "Power Flow": {
       "apId": 2409,
@@ -3976,8 +3576,7 @@
       "description": "Build 15 amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 76
+      ]
     },
     "Power Node": {
       "apId": 2410,
@@ -3986,15 +3585,13 @@
       "description": "Activate the same shrine 5 times.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 267
+      ]
     },
     "Power Overwhelming": {
       "apId": 2411,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Reach mana pool level 15.",
-      "game_id": 228
+      "description": "Reach mana pool level 15."
     },
     "Power Sharing": {
       "apId": 2412,
@@ -4003,8 +3600,7 @@
       "description": "Build 5 amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 75
+      ]
     },
     "Powerful": {
       "apId": 2413,
@@ -4013,8 +3609,7 @@
       "description": "Create a gem with a raw minimum damage of 300 or h...",
       "requirements": [
         "gemSkills: 1"
-      ],
-      "game_id": 24
+      ]
     },
     "Precious": {
       "apId": 2414,
@@ -4023,8 +3618,7 @@
       "description": "Get a gem from a drop holder.",
       "requirements": [
         "Drop Holder element"
-      ],
-      "game_id": 111
+      ]
     },
     "Prismatic": {
       "apId": 2415,
@@ -4033,8 +3627,7 @@
       "description": "Create a gem of 6 components.",
       "requirements": [
         "gemSkills: 6"
-      ],
-      "game_id": 29
+      ]
     },
     "Prismatic Takeaway": {
       "apId": 2416,
@@ -4044,8 +3637,7 @@
       "requirements": [
         "Specter element",
         "gemSkills: 6"
-      ],
-      "game_id": 472
+      ]
     },
     "Punching Deep": {
       "apId": 2417,
@@ -4054,29 +3646,25 @@
       "description": "Tear a total of 2.500 armor with wasp stings.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 566
+      ]
     },
     "Puncture Therapy": {
       "apId": 2418,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Deal 950 gem wasp stings to creatures.",
-      "game_id": 247
+      "description": "Deal 950 gem wasp stings to creatures."
     },
     "Punctured Texture": {
       "apId": 2419,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Deal 5.000 gem wasp stings to buildings.",
-      "game_id": 221
+      "description": "Deal 5.000 gem wasp stings to buildings."
     },
     "Puncturing Shots": {
       "apId": 2420,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deliver 75 one hit kills.",
-      "game_id": 123
+      "description": "Deliver 75 one hit kills."
     },
     "Purged": {
       "apId": 2421,
@@ -4086,8 +3674,7 @@
       "requirements": [
         "Marked Monster element",
         "minWave: 70"
-      ],
-      "game_id": 146
+      ]
     },
     "Purist": {
       "apId": 2422,
@@ -4096,15 +3683,13 @@
       "description": "Beat 120 waves and don't use any strike or gem enh...",
       "requirements": [
         "minWave: 120"
-      ],
-      "game_id": 308
+      ]
     },
     "Purple Wand": {
       "apId": 2423,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach wizard level 200.",
-      "game_id": 387
+      "description": "Reach wizard level 200."
     },
     "Put Those Down Now!": {
       "apId": 2424,
@@ -4113,15 +3698,13 @@
       "description": "Have 10 orblets carried by monsters at the same ti...",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 595
+      ]
     },
     "Puzzling Bunch": {
       "apId": 2425,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Add 16 talisman fragments to your shape collection...",
-      "game_id": 632
+      "description": "Add 16 talisman fragments to your shape collection..."
     },
     "Pylons of Destruction": {
       "apId": 2426,
@@ -4130,8 +3713,7 @@
       "description": "Reach 5.000 pylon kills through all the battles.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 231
+      ]
     },
     "Quadpierced": {
       "apId": 2427,
@@ -4140,8 +3722,7 @@
       "description": "Cast 4 ice shards on the same monster.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 590
+      ]
     },
     "Quick Circle": {
       "apId": 2428,
@@ -4150,22 +3731,19 @@
       "description": "Create a grade 12 gem before wave 12.",
       "requirements": [
         "minGemGrade: 12"
-      ],
-      "game_id": 84
+      ]
     },
     "Quicksave": {
       "apId": 2429,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Instantly drop a gem to your inventory.",
-      "game_id": 603
+      "description": "Instantly drop a gem to your inventory."
     },
     "Quite a List": {
       "apId": 2430,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Have at least 15 different talisman properties.",
-      "game_id": 505
+      "description": "Have at least 15 different talisman properties."
     },
     "Rage Control": {
       "apId": 2431,
@@ -4174,8 +3752,7 @@
       "description": "Kill 400 enraged swarmlings with barrage.",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 481
+      ]
     },
     "Rageout": {
       "apId": 2432,
@@ -4184,8 +3761,7 @@
       "description": "Enrage 30 waves.",
       "requirements": [
         "minWave: 30"
-      ],
-      "game_id": 336
+      ]
     },
     "Rageroom": {
       "apId": 2433,
@@ -4195,8 +3771,7 @@
       "requirements": [
         "Wall element",
         "minWave: 100"
-      ],
-      "game_id": 493
+      ]
     },
     "Raging Habit": {
       "apId": 2434,
@@ -4205,8 +3780,7 @@
       "description": "Enrage 80 waves.",
       "requirements": [
         "minWave: 80"
-      ],
-      "game_id": 337
+      ]
     },
     "Rainbow Strike": {
       "apId": 2435,
@@ -4215,15 +3789,13 @@
       "description": "Kill 900 monsters with prismatic gem wasps.",
       "requirements": [
         "gemSkills: 6"
-      ],
-      "game_id": 538
+      ]
     },
     "Raindrop": {
       "apId": 2436,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Drop 18 gem bombs while it's raining.",
-      "game_id": 391
+      "description": "Drop 18 gem bombs while it's raining."
     },
     "Razor Path": {
       "apId": 2437,
@@ -4232,8 +3804,7 @@
       "description": "Build 60 traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 74
+      ]
     },
     "Red Orange": {
       "apId": 2438,
@@ -4243,15 +3814,13 @@
       "requirements": [
         "Bleeding skill",
         "Mana Leech skill"
-      ],
-      "game_id": 447
+      ]
     },
     "Red Wand": {
       "apId": 2439,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Reach wizard level 500.",
-      "game_id": 389
+      "description": "Reach wizard level 500."
     },
     "Refrost": {
       "apId": 2440,
@@ -4260,15 +3829,13 @@
       "description": "Freeze 111 frozen monsters.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 314
+      ]
     },
     "Regaining Knowledge": {
       "apId": 2441,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Acquire 5 skills.",
-      "game_id": 367
+      "description": "Acquire 5 skills."
     },
     "Renzokuken": {
       "apId": 2442,
@@ -4277,8 +3844,7 @@
       "description": "Break your frozen time gem bombing limits",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 618
+      ]
     },
     "Resourceful": {
       "apId": 2443,
@@ -4287,8 +3853,7 @@
       "description": "Reach 5.000 mana harvested from shards through all...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 105
+      ]
     },
     "Restless": {
       "apId": 2444,
@@ -4297,8 +3862,7 @@
       "description": "Call 35 waves early.",
       "requirements": [
         "minWave: 35"
-      ],
-      "game_id": 324
+      ]
     },
     "Return of Investment": {
       "apId": 2445,
@@ -4308,15 +3872,13 @@
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
-      ],
-      "game_id": 597
+      ]
     },
     "Riding the Waves": {
       "apId": 2446,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 1.000 waves beaten through all the battles.",
-      "game_id": 15
+      "description": "Reach 1.000 waves beaten through all the battles."
     },
     "Rising Tide": {
       "apId": 2447,
@@ -4326,15 +3888,13 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 584
+      ]
     },
     "Roof Knocking": {
       "apId": 2448,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deal 20 gem wasp stings to buildings.",
-      "game_id": 218
+      "description": "Deal 20 gem wasp stings to buildings."
     },
     "Root Canal": {
       "apId": 2449,
@@ -4343,8 +3903,7 @@
       "description": "Destroy 2 monster nests.",
       "requirements": [
         "Monster Nest element"
-      ],
-      "game_id": 91
+      ]
     },
     "Rooting From Afar": {
       "apId": 2450,
@@ -4355,8 +3914,7 @@
         "Barrage skill",
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 625
+      ]
     },
     "Rotten Aura": {
       "apId": 2451,
@@ -4366,8 +3924,7 @@
       "requirements": [
         "Mana Leech skill",
         "Poison skill"
-      ],
-      "game_id": 452
+      ]
     },
     "Rough Path": {
       "apId": 2452,
@@ -4376,8 +3933,7 @@
       "description": "Kill 60 monsters with gems in traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 128
+      ]
     },
     "Round Cut": {
       "apId": 2453,
@@ -4386,8 +3942,7 @@
       "description": "Create a grade 12 gem.",
       "requirements": [
         "minGemGrade: 12"
-      ],
-      "game_id": 46
+      ]
     },
     "Round Cut Plus": {
       "apId": 2454,
@@ -4396,8 +3951,7 @@
       "description": "Create a grade 16 gem.",
       "requirements": [
         "minGemGrade: 16"
-      ],
-      "game_id": 47
+      ]
     },
     "Route Planning": {
       "apId": 2455,
@@ -4406,8 +3960,7 @@
       "description": "Destroy 5 barricades.",
       "requirements": [
         "Barricade element"
-      ],
-      "game_id": 4
+      ]
     },
     "Rugged Defense": {
       "apId": 2456,
@@ -4416,8 +3969,7 @@
       "description": "Have 16 bolt enhanced gems at the same time.",
       "requirements": [
         "Bolt skill"
-      ],
-      "game_id": 340
+      ]
     },
     "Ruined Ghost Town": {
       "apId": 2457,
@@ -4426,8 +3978,7 @@
       "description": "Destroy 5 dwellings.",
       "requirements": [
         "Abandoned Dwelling element"
-      ],
-      "game_id": 102
+      ]
     },
     "Safe and Secure": {
       "apId": 2458,
@@ -4436,8 +3987,7 @@
       "description": "Strengthen your orb with 7 gems in amplifiers.",
       "requirements": [
         "Amplifiers skill"
-      ],
-      "game_id": 259
+      ]
     },
     "Salvation": {
       "apId": 2459,
@@ -4447,8 +3997,7 @@
       "requirements": [
         "Whiteout skill",
         "Shrine element"
-      ],
-      "game_id": 271
+      ]
     },
     "Scare Tactics": {
       "apId": 2460,
@@ -4459,8 +4008,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 291
+      ]
     },
     "Scour You All": {
       "apId": 2461,
@@ -4469,8 +4017,7 @@
       "description": "Kill 660 banished monsters with shrines.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 548
+      ]
     },
     "Second Thoughts": {
       "apId": 2462,
@@ -4481,8 +4028,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 401
+      ]
     },
     "Seen Battle": {
       "apId": 2463,
@@ -4491,8 +4037,7 @@
       "description": "Have a grade 1 gem with 500 hits.",
       "requirements": [
         "minGemGrade: 1"
-      ],
-      "game_id": 52
+      ]
     },
     "Settlement": {
       "apId": 2464,
@@ -4501,8 +4046,7 @@
       "description": "Build 15 towers.",
       "requirements": [
         "Tower element"
-      ],
-      "game_id": 67
+      ]
     },
     "Shaken Ice": {
       "apId": 2465,
@@ -4512,15 +4056,13 @@
       "requirements": [
         "Freeze skill",
         "Shrine element"
-      ],
-      "game_id": 329
+      ]
     },
     "Shapeshifter": {
       "apId": 2466,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Complete your talisman fragment shape collection.",
-      "game_id": 634
+      "description": "Complete your talisman fragment shape collection."
     },
     "Shard Siphon": {
       "apId": 2467,
@@ -4529,8 +4071,7 @@
       "description": "Reach 20.000 mana harvested from shards through al...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 107
+      ]
     },
     "Shardalot": {
       "apId": 2468,
@@ -4539,8 +4080,7 @@
       "description": "Cast 6 ice shards on the same monster.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 591
+      ]
     },
     "Sharp Shot": {
       "apId": 2469,
@@ -4550,8 +4090,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 576
+      ]
     },
     "Sharpened": {
       "apId": 2470,
@@ -4563,8 +4102,7 @@
         "Beam skill",
         "Bolt skill",
         "Barrage skill"
-      ],
-      "game_id": 400
+      ]
     },
     "Shatter Them All": {
       "apId": 2471,
@@ -4573,15 +4111,13 @@
       "description": "Reach 1.000 beacons destroyed through all the batt...",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 306
+      ]
     },
     "Shattered Orb": {
       "apId": 2472,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Lose a battle.",
-      "game_id": 319
+      "description": "Lose a battle."
     },
     "Shattered Waves": {
       "apId": 2473,
@@ -4591,8 +4127,7 @@
       "requirements": [
         "Freeze skill",
         "Shrine element"
-      ],
-      "game_id": 273
+      ]
     },
     "Shattering": {
       "apId": 2474,
@@ -4602,8 +4137,7 @@
       "requirements": [
         "Bolt skill",
         "Freeze skill"
-      ],
-      "game_id": 179
+      ]
     },
     "Shavings All Around": {
       "apId": 2475,
@@ -4612,8 +4146,7 @@
       "description": "Win a battle using only armor tearing gems.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 38
+      ]
     },
     "Shell Shock": {
       "apId": 2476,
@@ -4622,8 +4155,7 @@
       "description": "Have 8 barrage enhanced gems at the same time.",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 426
+      ]
     },
     "Shieldbreaker": {
       "apId": 2477,
@@ -4632,8 +4164,7 @@
       "description": "Destroy 3 shield beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 468
+      ]
     },
     "Shooting Where it Hurts": {
       "apId": 2478,
@@ -4643,8 +4174,7 @@
       "requirements": [
         "Critical Hit skill",
         "minWave: 90"
-      ],
-      "game_id": 32
+      ]
     },
     "Short Tempered": {
       "apId": 2479,
@@ -4653,8 +4183,7 @@
       "description": "Call 5 waves early.",
       "requirements": [
         "minWave: 5"
-      ],
-      "game_id": 323
+      ]
     },
     "Shovel Swing": {
       "apId": 2480,
@@ -4664,8 +4193,7 @@
       "requirements": [
         "Freeze skill",
         "Shrine element"
-      ],
-      "game_id": 269
+      ]
     },
     "Shred Some Armor": {
       "apId": 2481,
@@ -4674,8 +4202,7 @@
       "description": "Have a pure armor tearing gem with 3.000 hits.",
       "requirements": [
         "Armor Tearing skill"
-      ],
-      "game_id": 475
+      ]
     },
     "Shrinemaster": {
       "apId": 2482,
@@ -4684,8 +4211,7 @@
       "description": "Reach 20.000 shrine kills through all the battles.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 433
+      ]
     },
     "Sigil": {
       "apId": 2483,
@@ -4694,8 +4220,7 @@
       "description": "Fill all the sockets in your talisman with fragmen...",
       "requirements": [
         "Shadow Core element"
-      ],
-      "game_id": 361
+      ]
     },
     "Size Matters": {
       "apId": 2484,
@@ -4706,22 +4231,19 @@
         "Swarmling Domination trait",
         "Giant Domination trait",
         "minWave: 100"
-      ],
-      "game_id": 554
+      ]
     },
     "Skillful": {
       "apId": 2485,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Acquire and raise all skills to level 5 or above.",
-      "game_id": 368
+      "description": "Acquire and raise all skills to level 5 or above."
     },
     "Skylark": {
       "apId": 2486,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Call every wave early in a battle.",
-      "game_id": 460
+      "description": "Call every wave early in a battle."
     },
     "Sliced Ice": {
       "apId": 2487,
@@ -4730,8 +4252,7 @@
       "description": "Gain 1.800 xp with Ice Shards spell crowd hits.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 244
+      ]
     },
     "Slime Block": {
       "apId": 2488,
@@ -4740,8 +4261,7 @@
       "description": "Nine slimeballs is all it takes",
       "requirements": [
         "A monster with atleast 20.000hp"
-      ],
-      "game_id": 623
+      ]
     },
     "Slow Creep": {
       "apId": 2489,
@@ -4751,8 +4271,7 @@
       "requirements": [
         "Poison skill",
         "Whiteout skill"
-      ],
-      "game_id": 315
+      ]
     },
     "Slow Drain": {
       "apId": 2490,
@@ -4761,8 +4280,7 @@
       "description": "Deal 10.000 poison damage to a monster.",
       "requirements": [
         "Poison skill"
-      ],
-      "game_id": 414
+      ]
     },
     "Slow Motion": {
       "apId": 2491,
@@ -4772,8 +4290,7 @@
       "requirements": [
         "Beam skill",
         "Slowing skill"
-      ],
-      "game_id": 525
+      ]
     },
     "Slowly but Surely": {
       "apId": 2492,
@@ -4783,8 +4300,7 @@
       "requirements": [
         "Slowing skill",
         "minWave: 90"
-      ],
-      "game_id": 19
+      ]
     },
     "Smoke in the Sky": {
       "apId": 2493,
@@ -4793,15 +4309,13 @@
       "description": "Reach 20 non-monsters killed through all the battl...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 137
+      ]
     },
     "Snatchers": {
       "apId": 2494,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Gain 3.200 mana from drops.",
-      "game_id": 287
+      "description": "Gain 3.200 mana from drops."
     },
     "Snow Blower": {
       "apId": 2495,
@@ -4811,8 +4325,7 @@
       "requirements": [
         "Barrage skill",
         "Freeze skill"
-      ],
-      "game_id": 178
+      ]
     },
     "Snow Dust": {
       "apId": 2496,
@@ -4821,15 +4334,13 @@
       "description": "Kill 95 frozen monsters while it's snowing.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 193
+      ]
     },
     "Snowball": {
       "apId": 2497,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Drop 27 gem bombs while it's snowing.",
-      "game_id": 392
+      "description": "Drop 27 gem bombs while it's snowing."
     },
     "Snowdust Blindness": {
       "apId": 2498,
@@ -4838,8 +4349,7 @@
       "description": "Gain 2.300 xp with Whiteout spell crowd hits.",
       "requirements": [
         "Whiteout skill"
-      ],
-      "game_id": 133
+      ]
     },
     "So Attached": {
       "apId": 2499,
@@ -4848,15 +4358,13 @@
       "description": "Win a Trial battle without losing any orblets.",
       "requirements": [
         "Trial"
-      ],
-      "game_id": 557
+      ]
     },
     "So Early": {
       "apId": 2500,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 1.000 waves started early through all the ba...",
-      "game_id": 11
+      "description": "Reach 1.000 waves started early through all the ba..."
     },
     "So Enduring": {
       "apId": 2501,
@@ -4865,15 +4373,13 @@
       "description": "Have the Adaptive Carapace trait set to level 6 or...",
       "requirements": [
         "Adaptive Carapace trait"
-      ],
-      "game_id": 369
+      ]
     },
     "Socketed Rage": {
       "apId": 2502,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Enrage a wave.",
-      "game_id": 327
+      "description": "Enrage a wave."
     },
     "Something Special": {
       "apId": 2503,
@@ -4886,8 +4392,7 @@
         "Twisted Monster element",
         "Marked Monster element",
         "minWave: 70"
-      ],
-      "game_id": 176
+      ]
     },
     "Sparse Snares": {
       "apId": 2504,
@@ -4896,15 +4401,13 @@
       "description": "Build 10 traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 71
+      ]
     },
     "Special Purpose": {
       "apId": 2505,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Change the target priority of a gem.",
-      "game_id": 402
+      "description": "Change the target priority of a gem."
     },
     "Spectrin Tetramer": {
       "apId": 2506,
@@ -4913,8 +4416,7 @@
       "description": "Have the Vital Link trait set to level 6 or higher...",
       "requirements": [
         "Vital Link trait"
-      ],
-      "game_id": 379
+      ]
     },
     "Spitting Darkness": {
       "apId": 2507,
@@ -4924,8 +4426,7 @@
       "requirements": [
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 626
+      ]
     },
     "Splash Swim Splash": {
       "apId": 2508,
@@ -4934,15 +4435,13 @@
       "description": "Full of oxygen",
       "requirements": [
         "Click on water in a field\nRequires a field with water"
-      ],
-      "game_id": 615
+      ]
     },
     "Starter Pack": {
       "apId": 2509,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Add 8 talisman fragments to your shape collection.",
-      "game_id": 631
+      "description": "Add 8 talisman fragments to your shape collection."
     },
     "Stash No More": {
       "apId": 2510,
@@ -4951,8 +4450,7 @@
       "description": "Destroy a previously opened wizard stash.",
       "requirements": [
         "Wizard Stash element"
-      ],
-      "game_id": 378
+      ]
     },
     "Stay Some More": {
       "apId": 2511,
@@ -4963,8 +4461,7 @@
         "Freeze skill",
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 531
+      ]
     },
     "Still Alive": {
       "apId": 2512,
@@ -4973,8 +4470,7 @@
       "description": "Beat 60 waves.",
       "requirements": [
         "minWave: 60"
-      ],
-      "game_id": 136
+      ]
     },
     "Still Chill": {
       "apId": 2513,
@@ -4983,8 +4479,7 @@
       "description": "Gain 1.500 xp with Freeze spell crowd hits.",
       "requirements": [
         "Freeze skill"
-      ],
-      "game_id": 151
+      ]
     },
     "Still Lit": {
       "apId": 2514,
@@ -4994,8 +4489,7 @@
       "requirements": [
         "Dark Masonry trait",
         "Beacon element"
-      ],
-      "game_id": 97
+      ]
     },
     "Still No Match": {
       "apId": 2515,
@@ -5004,29 +4498,25 @@
       "description": "Destroy an omnibeacon.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 604
+      ]
     },
     "Sting Stack": {
       "apId": 2516,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Deal 1.000 gem wasp stings to buildings.",
-      "game_id": 220
+      "description": "Deal 1.000 gem wasp stings to buildings."
     },
     "Stinging Sphere": {
       "apId": 2517,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deliver 100 banishments with your orb.",
-      "game_id": 254
+      "description": "Deliver 100 banishments with your orb."
     },
     "Stingy Cloud": {
       "apId": 2518,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 5.000 gem wasp kills through all the battles...",
-      "game_id": 149
+      "description": "Reach 5.000 gem wasp kills through all the battles..."
     },
     "Stingy Downfall": {
       "apId": 2519,
@@ -5036,22 +4526,19 @@
       "requirements": [
         "Ritual trait",
         "Spire element"
-      ],
-      "game_id": 594
+      ]
     },
     "Stirring Up the Nest": {
       "apId": 2520,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deliver gem bomb and wasp kills only.",
-      "game_id": 203
+      "description": "Deliver gem bomb and wasp kills only."
     },
     "Stockpile": {
       "apId": 2521,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Have 30 fragments in your talisman inventory.",
-      "game_id": 362
+      "description": "Have 30 fragments in your talisman inventory."
     },
     "Stolen Shine": {
       "apId": 2522,
@@ -5061,8 +4548,7 @@
       "requirements": [
         "Mana Leech skill",
         "Whiteout skill"
-      ],
-      "game_id": 586
+      ]
     },
     "Stone Monument": {
       "apId": 2523,
@@ -5071,15 +4557,13 @@
       "description": "Build 240 walls.",
       "requirements": [
         "Wall element"
-      ],
-      "game_id": 282
+      ]
     },
     "Stones to Dust": {
       "apId": 2524,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Demolish one of your structures.",
-      "game_id": 85
+      "description": "Demolish one of your structures."
     },
     "Stormbringer": {
       "apId": 2525,
@@ -5090,8 +4574,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 435
+      ]
     },
     "Stormed Beacons": {
       "apId": 2526,
@@ -5100,8 +4583,7 @@
       "description": "Destroy 15 beacons.",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 404
+      ]
     },
     "Strike Anywhere": {
       "apId": 2527,
@@ -5112,8 +4594,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 290
+      ]
     },
     "Stronger Than Before": {
       "apId": 2528,
@@ -5122,8 +4603,7 @@
       "description": "Set corrupted banishment to level 12 and banish a ...",
       "requirements": [
         "Corrupted Banishment trait"
-      ],
-      "game_id": 355
+      ]
     },
     "Stumbling": {
       "apId": 2529,
@@ -5132,8 +4612,7 @@
       "description": "Hit the same monster with traps 100 times.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 213
+      ]
     },
     "Super Gem": {
       "apId": 2530,
@@ -5142,8 +4621,7 @@
       "description": "Create a grade 3 gem with 300 effective max damage...",
       "requirements": [
         "minGemGrade: 3"
-      ],
-      "game_id": 40
+      ]
     },
     "Supply Line Cut": {
       "apId": 2531,
@@ -5153,15 +4631,13 @@
       "requirements": [
         "Barrage skill",
         "Swarm Queen element"
-      ],
-      "game_id": 471
+      ]
     },
     "Swarmling Season": {
       "apId": 2532,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Kill 999 swarmlings.",
-      "game_id": 144
+      "description": "Kill 999 swarmlings."
     },
     "Swift Death": {
       "apId": 2533,
@@ -5172,15 +4648,13 @@
         "Bolt skill",
         "Gatekeeper element",
         "Field A4"
-      ],
-      "game_id": 627
+      ]
     },
     "Swift Deployment": {
       "apId": 2534,
       "required_effort": "Trivial",
       "reward": "skillPoints:2",
-      "description": "Have 20 gems on the battlefield before wave 5.",
-      "game_id": 56
+      "description": "Have 20 gems on the battlefield before wave 5."
     },
     "Take Them I Have More": {
       "apId": 2535,
@@ -5191,8 +4665,7 @@
         "Ritual trait",
         "Specter element",
         "Watchtower element"
-      ],
-      "game_id": 486
+      ]
     },
     "Takers": {
       "apId": 2536,
@@ -5204,8 +4677,7 @@
         "Corrupted Mana Shard element",
         "Drop Holder element",
         "Mana Shard element"
-      ],
-      "game_id": 268
+      ]
     },
     "Tapped Essence": {
       "apId": 2537,
@@ -5215,8 +4687,7 @@
       "requirements": [
         "Bleeding skill",
         "Mana Leech skill"
-      ],
-      "game_id": 448
+      ]
     },
     "Targeting Weak Points": {
       "apId": 2538,
@@ -5225,8 +4696,7 @@
       "description": "Win a battle using only critical hit gems.",
       "requirements": [
         "Critical Hit skill"
-      ],
-      "game_id": 31
+      ]
     },
     "Taste All The Affixes": {
       "apId": 2539,
@@ -5235,8 +4705,7 @@
       "description": "Kill 2.500 monsters with prismatic gem wasps.",
       "requirements": [
         "gemSkills: 6"
-      ],
-      "game_id": 540
+      ]
     },
     "Tasting the Darkness": {
       "apId": 2540,
@@ -5245,15 +4714,13 @@
       "description": "Break 3 tombs open.",
       "requirements": [
         "Tomb element"
-      ],
-      "game_id": 88
+      ]
     },
     "Teleport Lag": {
       "apId": 2541,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Banish a monster at least 5 times.",
-      "game_id": 215
+      "description": "Banish a monster at least 5 times."
     },
     "Ten Angry Waves": {
       "apId": 2542,
@@ -5262,8 +4729,7 @@
       "description": "Enrage 10 waves.",
       "requirements": [
         "minWave: 10"
-      ],
-      "game_id": 335
+      ]
     },
     "That Was Rude": {
       "apId": 2543,
@@ -5272,8 +4738,7 @@
       "description": "Lose a gem with more than 1.000 hits to a watchtow...",
       "requirements": [
         "Watchtower element"
-      ],
-      "game_id": 502
+      ]
     },
     "That Was Your Last Move": {
       "apId": 2544,
@@ -5282,22 +4747,19 @@
       "description": "Kill a wizard hunter while it's attacking one of y...",
       "requirements": [
         "Wizard Hunter element"
-      ],
-      "game_id": 630
+      ]
     },
     "That one!": {
       "apId": 2545,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Select a monster.",
-      "game_id": 393
+      "description": "Select a monster."
     },
     "The Gathering": {
       "apId": 2546,
       "required_effort": "Major",
       "reward": "skillPoints:3",
-      "description": "Summon 500 monsters by enraging waves.",
-      "game_id": 333
+      "description": "Summon 500 monsters by enraging waves."
     },
     "The Horror": {
       "apId": 2547,
@@ -5307,15 +4769,13 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 237
+      ]
     },
     "The Killing Will Never Stop": {
       "apId": 2548,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 200.000 monsters killed through all the batt...",
-      "game_id": 120
+      "description": "Reach 200.000 monsters killed through all the batt..."
     },
     "The Mana Reaper": {
       "apId": 2549,
@@ -5324,8 +4784,7 @@
       "description": "Reach 100.000 mana harvested from shards through a...",
       "requirements": [
         "Mana Shard element"
-      ],
-      "game_id": 114
+      ]
     },
     "The Messenger Must Die": {
       "apId": 2550,
@@ -5335,8 +4794,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 171
+      ]
     },
     "The Peeler": {
       "apId": 2551,
@@ -5346,22 +4804,19 @@
       "requirements": [
         "Armor Tearing skill",
         "minGemGrade: 12"
-      ],
-      "game_id": 23
+      ]
     },
     "The Price of Obsession": {
       "apId": 2552,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Kill 590 banished monsters.",
-      "game_id": 551
+      "description": "Kill 590 banished monsters."
     },
     "There it is!": {
       "apId": 2553,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Select a building.",
-      "game_id": 394
+      "description": "Select a building."
     },
     "There's No Time": {
       "apId": 2554,
@@ -5371,15 +4826,13 @@
       "requirements": [
         "minWave: 140",
         "Endurance"
-      ],
-      "game_id": 326
+      ]
     },
     "They Are Millions": {
       "apId": 2555,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 1.000.000 monsters killed through all the ba...",
-      "game_id": 125
+      "description": "Reach 1.000.000 monsters killed through all the ba..."
     },
     "They Are Still Here": {
       "apId": 2556,
@@ -5389,15 +4842,13 @@
       "requirements": [
         "Ritual trait",
         "Apparition element"
-      ],
-      "game_id": 167
+      ]
     },
     "They Keep Coming": {
       "apId": 2557,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Kill 12.000 monsters.",
-      "game_id": 430
+      "description": "Kill 12.000 monsters."
     },
     "Thin Ice": {
       "apId": 2558,
@@ -5407,8 +4858,7 @@
       "requirements": [
         "Freeze skill",
         "Traps skill"
-      ],
-      "game_id": 158
+      ]
     },
     "Thin Them Out": {
       "apId": 2559,
@@ -5417,8 +4867,7 @@
       "description": "Have the Strength in Numbers trait set to level 6 ...",
       "requirements": [
         "Strength in Numbers trait"
-      ],
-      "game_id": 397
+      ]
     },
     "Third Grade": {
       "apId": 2560,
@@ -5427,15 +4876,13 @@
       "description": "Create a grade 3 gem.",
       "requirements": [
         "minGemGrade: 3"
-      ],
-      "game_id": 43
+      ]
     },
     "Thorned Sphere": {
       "apId": 2561,
       "required_effort": "Minor",
       "reward": "skillPoints:2",
-      "description": "Deliver 400 banishments with your orb.",
-      "game_id": 255
+      "description": "Deliver 400 banishments with your orb."
     },
     "Through All Layers": {
       "apId": 2562,
@@ -5444,15 +4891,13 @@
       "description": "Kill a monster having at least 200 armor.",
       "requirements": [
         "A monster with atleast 200 armor"
-      ],
-      "game_id": 153
+      ]
     },
     "Thunderstruck": {
       "apId": 2563,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 120 monsters with gem bombs and wasps.",
-      "game_id": 131
+      "description": "Kill 120 monsters with gem bombs and wasps."
     },
     "Tightly Secured": {
       "apId": 2564,
@@ -5461,8 +4906,7 @@
       "description": "Don't let any monster touch your orb for 60 beaten...",
       "requirements": [
         "minWave: 60"
-      ],
-      "game_id": 261
+      ]
     },
     "Time Bent": {
       "apId": 2565,
@@ -5471,8 +4915,7 @@
       "description": "Have 90 monsters slowed at the same time.",
       "requirements": [
         "Slowing skill"
-      ],
-      "game_id": 207
+      ]
     },
     "Time to Rise": {
       "apId": 2566,
@@ -5481,8 +4924,7 @@
       "description": "Have the Awakening trait set to level 6 or higher ...",
       "requirements": [
         "Awakening trait"
-      ],
-      "game_id": 373
+      ]
     },
     "Time to Upgrade": {
       "apId": 2567,
@@ -5491,15 +4933,13 @@
       "description": "Have a grade 1 gem with 4.500 hits.",
       "requirements": [
         "minGemGrade: 1"
-      ],
-      "game_id": 57
+      ]
     },
     "Tiny but Deadly": {
       "apId": 2568,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 50.000 gem wasp kills through all the battle...",
-      "game_id": 164
+      "description": "Reach 50.000 gem wasp kills through all the battle..."
     },
     "To the Last Drop": {
       "apId": 2569,
@@ -5509,8 +4949,7 @@
       "requirements": [
         "Mana Leech skill",
         "Poison skill"
-      ],
-      "game_id": 454
+      ]
     },
     "Tomb No Matter What": {
       "apId": 2570,
@@ -5521,8 +4960,7 @@
         "Ritual trait",
         "Spire element",
         "Tomb element"
-      ],
-      "game_id": 582
+      ]
     },
     "Tomb Raiding": {
       "apId": 2571,
@@ -5531,8 +4969,7 @@
       "description": "Break a tomb open before wave 15.",
       "requirements": [
         "Tomb element"
-      ],
-      "game_id": 89
+      ]
     },
     "Tomb Stomping": {
       "apId": 2572,
@@ -5541,8 +4978,7 @@
       "description": "Break 4 tombs open.",
       "requirements": [
         "Tomb element"
-      ],
-      "game_id": 63
+      ]
     },
     "Too Curious": {
       "apId": 2573,
@@ -5551,8 +4987,7 @@
       "description": "Break 2 tombs open.",
       "requirements": [
         "Tomb element"
-      ],
-      "game_id": 82
+      ]
     },
     "Too Easy": {
       "apId": 2574,
@@ -5562,8 +4997,7 @@
       "requirements": [
         "minWave: 3",
         "Trial"
-      ],
-      "game_id": 560
+      ]
     },
     "Too Long to Hold Your Breath": {
       "apId": 2575,
@@ -5573,8 +5007,7 @@
       "requirements": [
         "Poison skill",
         "minWave: 90"
-      ],
-      "game_id": 20
+      ]
     },
     "Towerful": {
       "apId": 2576,
@@ -5583,8 +5016,7 @@
       "description": "Build 5 towers.",
       "requirements": [
         "Tower element"
-      ],
-      "game_id": 66
+      ]
     },
     "Trapland": {
       "apId": 2577,
@@ -5594,8 +5026,7 @@
       "requirements": [
         "Traps skill",
         "Complete a level using only traps and no poison gems"
-      ],
-      "game_id": 162
+      ]
     },
     "Trembling": {
       "apId": 2578,
@@ -5604,8 +5035,7 @@
       "description": "Kill 1.500 monsters with gems in traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 407
+      ]
     },
     "Tricolor": {
       "apId": 2579,
@@ -5614,8 +5044,7 @@
       "description": "Create a gem of 3 components.",
       "requirements": [
         "gemSkills: 3"
-      ],
-      "game_id": 27
+      ]
     },
     "Troll's Eye": {
       "apId": 2580,
@@ -5624,8 +5053,7 @@
       "description": "Kill a giant with one shot.",
       "requirements": [
         "Bolt skill"
-      ],
-      "game_id": 205
+      ]
     },
     "Tumbling Billows": {
       "apId": 2581,
@@ -5634,8 +5062,7 @@
       "description": "Have the Swarmling Domination trait set to level 6...",
       "requirements": [
         "Swarmling Domination trait"
-      ],
-      "game_id": 352
+      ]
     },
     "Twice the Blast": {
       "apId": 2582,
@@ -5644,8 +5071,7 @@
       "description": "Have 2 barrage enhanced gems at the same time.",
       "requirements": [
         "Barrage skill"
-      ],
-      "game_id": 424
+      ]
     },
     "Twice the Shock": {
       "apId": 2583,
@@ -5654,8 +5080,7 @@
       "description": "Hit the same monster 2 times with shrines.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 562
+      ]
     },
     "Twice the Steepness": {
       "apId": 2584,
@@ -5665,8 +5090,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 532
+      ]
     },
     "Twice the Terror": {
       "apId": 2585,
@@ -5676,8 +5100,7 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 172
+      ]
     },
     "Unarmed": {
       "apId": 2586,
@@ -5686,8 +5109,7 @@
       "description": "Have no gems when wave 20 starts.",
       "requirements": [
         "minWave: 20"
-      ],
-      "game_id": 480
+      ]
     },
     "Under Pressure": {
       "apId": 2587,
@@ -5697,15 +5119,13 @@
       "requirements": [
         "Ritual trait",
         "Shadow element"
-      ],
-      "game_id": 396
+      ]
     },
     "Unending Flow": {
       "apId": 2588,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Kill 24.000 monsters.",
-      "game_id": 431
+      "description": "Kill 24.000 monsters."
     },
     "Unholy Stack": {
       "apId": 2589,
@@ -5718,15 +5138,13 @@
         "Twisted Monster element",
         "Marked Monster element",
         "minWave: 70"
-      ],
-      "game_id": 186
+      ]
     },
     "Uninvited": {
       "apId": 2590,
       "required_effort": "Minor",
       "reward": "skillPoints:2",
-      "description": "Summon 100 monsters by enraging waves.",
-      "game_id": 332
+      "description": "Summon 100 monsters by enraging waves."
     },
     "Unsupportive": {
       "apId": 2591,
@@ -5735,8 +5153,7 @@
       "description": "Reach 100 beacons destroyed through all the battle...",
       "requirements": [
         "Beacon element"
-      ],
-      "game_id": 302
+      ]
     },
     "Uraj and Khalis": {
       "apId": 2592,
@@ -5746,8 +5163,7 @@
       "requirements": [
         "Lanterns skill",
         "Field H3"
-      ],
-      "game_id": 619
+      ]
     },
     "Urban Warfare": {
       "apId": 2593,
@@ -5756,8 +5172,7 @@
       "description": "Destroy a dwelling and kill a monster with one gem...",
       "requirements": [
         "Abandoned Dwelling element"
-      ],
-      "game_id": 579
+      ]
     },
     "Vantage Point Down": {
       "apId": 2594,
@@ -5766,15 +5181,13 @@
       "description": "Demolish a pylon.",
       "requirements": [
         "Pylons skill"
-      ],
-      "game_id": 602
+      ]
     },
     "Versatile Charm": {
       "apId": 2595,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Have at least 10 different talisman properties.",
-      "game_id": 504
+      "description": "Have at least 10 different talisman properties."
     },
     "Violet Ray": {
       "apId": 2596,
@@ -5784,8 +5197,7 @@
       "requirements": [
         "Beam skill",
         "Freeze skill"
-      ],
-      "game_id": 177
+      ]
     },
     "Warming Up": {
       "apId": 2597,
@@ -5794,15 +5206,13 @@
       "description": "Have a grade 1 gem with 100 hits.",
       "requirements": [
         "minGemGrade: 1"
-      ],
-      "game_id": 51
+      ]
     },
     "Wash Away": {
       "apId": 2598,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 110 monsters while it's raining.",
-      "game_id": 190
+      "description": "Kill 110 monsters while it's raining."
     },
     "Wasp Defense": {
       "apId": 2599,
@@ -5811,22 +5221,19 @@
       "description": "Smash 3 jars of wasps before wave 3.",
       "requirements": [
         "Field X2"
-      ],
-      "game_id": 459
+      ]
     },
     "Wasp Storm": {
       "apId": 2600,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Kill 360 monsters with gem bombs and wasps.",
-      "game_id": 134
+      "description": "Kill 360 monsters with gem bombs and wasps."
     },
     "Waspocalypse": {
       "apId": 2601,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Kill 1.080 monsters with gem bombs and wasps.",
-      "game_id": 135
+      "description": "Kill 1.080 monsters with gem bombs and wasps."
     },
     "Watch Your Step": {
       "apId": 2602,
@@ -5835,29 +5242,25 @@
       "description": "Build 40 traps.",
       "requirements": [
         "Traps skill"
-      ],
-      "game_id": 73
+      ]
     },
     "Wave Pecking": {
       "apId": 2603,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Summon 20 monsters by enraging waves.",
-      "game_id": 331
+      "description": "Summon 20 monsters by enraging waves."
     },
     "Wave Smasher": {
       "apId": 2604,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 10.000 waves beaten through all the battles.",
-      "game_id": 17
+      "description": "Reach 10.000 waves beaten through all the battles."
     },
     "Waves for Breakfast": {
       "apId": 2605,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach 2.000 waves beaten through all the battles.",
-      "game_id": 16
+      "description": "Reach 2.000 waves beaten through all the battles."
     },
     "Wavy": {
       "apId": 2606,
@@ -5867,15 +5270,13 @@
       "requirements": [
         "minWave: 500",
         "Endurance"
-      ],
-      "game_id": 14
+      ]
     },
     "We Just Wanna Be Free": {
       "apId": 2607,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "More than blue triangles",
-      "game_id": 617
+      "description": "More than blue triangles"
     },
     "Weakened Wallet": {
       "apId": 2608,
@@ -5885,8 +5286,7 @@
       "requirements": [
         "Mana Leech skill",
         "Whiteout skill"
-      ],
-      "game_id": 587
+      ]
     },
     "Weather Tower": {
       "apId": 2609,
@@ -5895,43 +5295,37 @@
       "description": "Activate a shrine while raining.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 412
+      ]
     },
     "Weather of Wasps": {
       "apId": 2610,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Deal 3950 gem wasp stings to creatures.",
-      "game_id": 276
+      "description": "Deal 3950 gem wasp stings to creatures."
     },
     "Well Defended": {
       "apId": 2611,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Don't let any monster touch your orb for 20 beaten...",
-      "game_id": 260
+      "description": "Don't let any monster touch your orb for 20 beaten..."
     },
     "Well Earned": {
       "apId": 2612,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Reach 500 battles won.",
-      "game_id": 9
+      "description": "Reach 500 battles won."
     },
     "Well Laid": {
       "apId": 2613,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 10 gems on the battlefield.",
-      "game_id": 55
+      "description": "Have 10 gems on the battlefield."
     },
     "Well Prepared": {
       "apId": 2614,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Have 20.000 initial mana.",
-      "game_id": 224
+      "description": "Have 20.000 initial mana."
     },
     "Well Trained for This": {
       "apId": 2615,
@@ -5941,8 +5335,7 @@
       "requirements": [
         "Ritual trait",
         "Wraith element"
-      ],
-      "game_id": 575
+      ]
     },
     "Whacked": {
       "apId": 2616,
@@ -5952,8 +5345,7 @@
       "requirements": [
         "Ritual trait",
         "Specter element"
-      ],
-      "game_id": 495
+      ]
     },
     "What Are You Waiting For?": {
       "apId": 2617,
@@ -5964,8 +5356,7 @@
         "Freeze skill",
         "Whiteout skill",
         "Ice Shards skill"
-      ],
-      "game_id": 5
+      ]
     },
     "White Ray": {
       "apId": 2618,
@@ -5975,8 +5366,7 @@
       "requirements": [
         "Beam skill",
         "Freeze skill"
-      ],
-      "game_id": 180
+      ]
     },
     "White Ring of Death": {
       "apId": 2619,
@@ -5985,15 +5375,13 @@
       "description": "Gain 4.900 xp with Ice Shards spell crowd hits.",
       "requirements": [
         "Ice Shards skill"
-      ],
-      "game_id": 328
+      ]
     },
     "White Wand": {
       "apId": 2620,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 10.",
-      "game_id": 382
+      "description": "Reach wizard level 10."
     },
     "Why Not": {
       "apId": 2621,
@@ -6004,8 +5392,7 @@
         "Bolt skill",
         "Beam skill",
         "Barrage skill"
-      ],
-      "game_id": 464
+      ]
     },
     "Wicked Gem": {
       "apId": 2622,
@@ -6014,8 +5401,7 @@
       "description": "Have a grade 3 gem with 900 effective max damage.",
       "requirements": [
         "minGemGrade: 3"
-      ],
-      "game_id": 42
+      ]
     },
     "Wings and Tentacles": {
       "apId": 2623,
@@ -6024,8 +5410,7 @@
       "description": "Reach 200 non-monsters killed through all the batt...",
       "requirements": [
         "Ritual trait"
-      ],
-      "game_id": 139
+      ]
     },
     "Worst of Both Sizes": {
       "apId": 2624,
@@ -6037,8 +5422,7 @@
         "Giant Domination trait",
         "minWave: 300",
         "Endurance"
-      ],
-      "game_id": 556
+      ]
     },
     "Worthy": {
       "apId": 2625,
@@ -6048,8 +5432,7 @@
       "requirements": [
         "Trial",
         "fieldToken: 70"
-      ],
-      "game_id": 520
+      ]
     },
     "Xp Harvest": {
       "apId": 2626,
@@ -6059,15 +5442,13 @@
       "requirements": [
         "Endurance",
         "fieldToken: 40"
-      ],
-      "game_id": 514
+      ]
     },
     "Yellow Wand": {
       "apId": 2627,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 20.",
-      "game_id": 383
+      "description": "Reach wizard level 20."
     },
     "You Could Be my Apprentice": {
       "apId": 2628,
@@ -6077,8 +5458,7 @@
       "requirements": [
         "Watchtower element",
         "Wizard Hunter element"
-      ],
-      "game_id": 498
+      ]
     },
     "You Had Your Chance": {
       "apId": 2629,
@@ -6087,8 +5467,7 @@
       "description": "Kill 260 banished monsters with shrines.",
       "requirements": [
         "Shrine element"
-      ],
-      "game_id": 546
+      ]
     },
     "You Shall Not Pass": {
       "apId": 2630,
@@ -6098,8 +5477,7 @@
       "requirements": [
         "minWave: 240",
         "Endurance"
-      ],
-      "game_id": 248
+      ]
     },
     "You're Safe With Me": {
       "apId": 2631,
@@ -6108,8 +5486,7 @@
       "description": "Win a battle with at least 10 orblets remaining.",
       "requirements": [
         "Orb of Presence skill"
-      ],
-      "game_id": 543
+      ]
     },
     "Your Mana is Mine": {
       "apId": 2632,
@@ -6118,8 +5495,7 @@
       "description": "Leech 10.000 mana with gems.",
       "requirements": [
         "Mana Leech skill"
-      ],
-      "game_id": 232
+      ]
     },
     "Zap Away": {
       "apId": 2633,
@@ -6130,8 +5506,7 @@
         "Ice Shards skill",
         "Whiteout skill",
         "Freeze skill"
-      ],
-      "game_id": 286
+      ]
     },
     "Zapped": {
       "apId": 2634,
@@ -6140,8 +5515,7 @@
       "description": "Get your Orb destroyed by a wizard tower.",
       "requirements": [
         "Wizard Tower element"
-      ],
-      "game_id": 2
+      ]
     },
     "Zigzag Corridor": {
       "apId": 2635,
@@ -6150,8 +5524,7 @@
       "description": "Build 60 walls.",
       "requirements": [
         "Wall element"
-      ],
-      "game_id": 81
+      ]
     }
   },
   "element_stages": {
@@ -6339,10 +5712,10 @@
       "K1"
     ],
     "Wizard Tower": [
-      "L5",
-      "W1",
-      "Y3"
+      "L5"
     ],
+    "Hidden Codes": [],
+    "Sealed gem": [],
     "Shadow": [
       "A4",
       "C5",
