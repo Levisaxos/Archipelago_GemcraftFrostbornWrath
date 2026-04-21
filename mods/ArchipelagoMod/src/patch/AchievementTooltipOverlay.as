@@ -153,6 +153,21 @@ package patch {
                 if (shownAchis == null) return null;
                 var mx:Number = panel.mc.mouseX;
                 var my:Number = panel.mc.mouseY;
+
+                // Mirror the game's doEnterFrame Y-constraint so we don't trigger
+                // when the mouse is outside the achievement grid region.
+                if (my < 126 || my > 950) return null;
+
+                // If the mouse is over the skill-points plate the game shows its own
+                // info panel via a MOUSE_OVER listener — don't hijack that tooltip.
+                try {
+                    var sp:* = panel.mc.mcSkillPtsPlate;
+                    if (sp != null && sp.visible &&
+                            sp.hitTestPoint(panel.mc.stage.mouseX, panel.mc.stage.mouseY, true)) {
+                        return null;
+                    }
+                } catch (esp:Error) {}
+
                 for (var i:int = 0; i < shownAchis.length; i++) {
                     var ach:* = shownAchis[i];
                     if (ach == null || ach.mc == null) continue;
