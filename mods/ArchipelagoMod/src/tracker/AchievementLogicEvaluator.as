@@ -103,6 +103,40 @@ package tracker {
             return result;
         }
 
+        /**
+         * Return apId->true for every achievement filtered out by the yaml
+         * achievement_required_effort setting (effort exceeds the threshold).
+         * Excludes always_as_filler achievements (they are in getExcludedAchApIds).
+         */
+        public function getEffortExcludedAchApIds():Object {
+            var result:Object = {};
+            if (AV.serverData == null || AV.serverData.serverOptions == null) return result;
+            var effortHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
+            var maxEffortStr:String = getMaxEffortLabel();
+            for (var achName:String in _achievementData) {
+                var achData:Object = _achievementData[achName];
+                if (!achData || !achData.apId) continue;
+                if (achData.always_as_filler === true) continue;
+                var modes:Array = achData.modes as Array;
+                if (modes != null && modes.indexOf("journey") < 0) continue;
+                var achEffort:String = achData.required_effort || "Trivial";
+                if (effortHierarchy.indexOf(achEffort) > effortHierarchy.indexOf(maxEffortStr)) {
+                    result[int(achData.apId)] = true;
+                }
+            }
+            return result;
+        }
+
+        /** Returns the human-readable label for the current achievement_required_effort setting. */
+        public function getMaxEffortLabel():String {
+            if (AV.serverData == null || AV.serverData.serverOptions == null) return "Trivial";
+            var requiredEffort:int = AV.serverData.serverOptions.achievementRequiredEffort;
+            var effortHierarchy:Array = ["Trivial", "Minor", "Major", "Extreme"];
+            return (requiredEffort > 0 && requiredEffort <= 4)
+                ? effortHierarchy[requiredEffort - 1]
+                : "Trivial";
+        }
+
         /** Check requirements for a single achievement without using the cache. */
         public function isAchievementInLogic(achName:String, achData:Object):Boolean {
             if (!achData) return false;

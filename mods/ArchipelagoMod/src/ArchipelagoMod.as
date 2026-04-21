@@ -632,6 +632,7 @@ package {
                     if (!wasPatched && _achPanelPatcher.patched && _achievementLogicEvaluator != null) {
                         // First successful patch: populate filterFlags before the panel opens.
                         _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                        _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
                         _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                         _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     }
@@ -955,6 +956,7 @@ package {
 
             if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                 _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
                 _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
@@ -1028,6 +1030,7 @@ package {
                 if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
                 if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                     _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                    _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
                     _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                     _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     _achPanelPatcher.refreshIfActive();

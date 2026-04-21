@@ -32,9 +32,11 @@ package patch {
         private var _modName:String;
 
         // Data kept in sync by AchievementPanelPatcher
-        private var _gameIdToApId:Object  = {}; // game ach.id (int) -> apId (int)
-        private var _excludedApIds:Object = {}; // apId -> true
-        private var _reqMetApIds:Object   = {}; // apId -> true
+        private var _gameIdToApId:Object       = {}; // game ach.id (int) -> apId (int)
+        private var _excludedApIds:Object      = {}; // apId -> true (always_as_filler)
+        private var _effortExcludedApIds:Object = {}; // apId -> true (effort > threshold)
+        private var _maxEffortLabel:String      = "Trivial";
+        private var _reqMetApIds:Object        = {}; // apId -> true
 
         // Array of Function(ach:*, achName:String, apId:int, isExcluded:Boolean, isInLogic:Boolean):Array
         private var _providers:Array = [];
@@ -50,9 +52,11 @@ package patch {
         // -----------------------------------------------------------------------
         // Data setters (called by AchievementPanelPatcher on every logic update)
 
-        public function set gameIdToApId(v:Object):void { _gameIdToApId = v || {}; }
-        public function set excludedApIds(v:Object):void { _excludedApIds = v || {}; }
-        public function set reqMetApIds(v:Object):void   { _reqMetApIds   = v || {}; }
+        public function set gameIdToApId(v:Object):void        { _gameIdToApId        = v || {}; }
+        public function set excludedApIds(v:Object):void       { _excludedApIds        = v || {}; }
+        public function set effortExcludedApIds(v:Object):void { _effortExcludedApIds  = v || {}; }
+        public function set maxEffortLabel(v:String):void      { _maxEffortLabel       = v || "Trivial"; }
+        public function set reqMetApIds(v:Object):void         { _reqMetApIds          = v || {}; }
 
         /**
          * Register an additional tooltip content provider.
@@ -89,8 +93,8 @@ package patch {
             var rawApId:* = _gameIdToApId[int(hoveredAch.id)];
             if (rawApId == null) return; // Not AP-tracked — don't modify panel.
 
-            var apId:int         = int(rawApId);
-            var isExcluded:Boolean = (_excludedApIds[apId] === true);
+            var apId:int           = int(rawApId);
+            var isExcluded:Boolean = (_excludedApIds[apId] === true || _effortExcludedApIds[apId] === true);
             var isInLogic:Boolean  = (!isExcluded && _reqMetApIds[apId] === true);
             var achName:String     = String(hoveredAch.title);
 
@@ -180,12 +184,17 @@ package patch {
         }
 
         private function _registerDefaultProvider():void {
+            var self:AchievementTooltipOverlay = this;
             _providers.push(function(ach:*, achName:String, apId:int,
                                      isExcluded:Boolean, isInLogic:Boolean):Array {
                 var statusText:String;
                 var statusColor:uint;
                 if (isExcluded) {
-                    statusText  = "Filler \u2014 excluded from logic";
+                    if (self._effortExcludedApIds[apId] === true) {
+                        statusText  = "Filler \u2014 excluded by yaml settings (effort > " + self._maxEffortLabel + ")";
+                    } else {
+                        statusText  = "Filler \u2014 no logic requirements";
+                    }
                     statusColor = 0xAAAAAA;
                 } else if (isInLogic) {
                     statusText  = "In logic \u2713";

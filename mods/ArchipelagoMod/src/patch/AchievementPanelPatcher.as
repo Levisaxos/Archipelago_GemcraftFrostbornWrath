@@ -50,9 +50,12 @@ package patch {
         private var _gameIdToApId:Object = {};
 
         // apId (int) -> true for achievements whose requirements are currently met
-        private var _reqMetApIds:Object   = {};
+        private var _reqMetApIds:Object        = {};
         // apId (int) -> true for achievements with no requirements (always filler)
-        private var _excludedApIds:Object = {};
+        private var _excludedApIds:Object      = {};
+        // apId (int) -> true for achievements excluded by the yaml effort setting
+        private var _effortExcludedApIds:Object = {};
+        private var _maxEffortLabel:String      = "Trivial";
         private var _dotsDirty:Boolean    = false;
         private var _dotFrame:int         = 0;
 
@@ -296,6 +299,21 @@ package patch {
         }
 
         /**
+         * Store the set of achievements excluded by the yaml effort threshold.
+         * @param effortExcludedApIds  apId->true for every effort-filtered achievement
+         * @param maxEffortLabel       human-readable threshold label (e.g. "Trivial")
+         */
+        public function updateEffortExcluded(effortExcludedApIds:Object, maxEffortLabel:String):void {
+            _effortExcludedApIds = effortExcludedApIds || {};
+            _maxEffortLabel      = maxEffortLabel || "Trivial";
+            _dotsDirty           = true;
+            if (_tooltipOverlay != null) {
+                _tooltipOverlay.effortExcludedApIds = _effortExcludedApIds;
+                _tooltipOverlay.maxEffortLabel      = _maxEffortLabel;
+            }
+        }
+
+        /**
          * Call every selector frame.  Applies dots when the panel is visible,
          * throttled to DOT_INTERVAL frames unless _dotsDirty is set.
          */
@@ -345,7 +363,7 @@ package patch {
                 try { if (mcAchi.parent == null) continue; } catch (e:Error) { continue; }
 
                 var apIdInt:int       = int(apId);
-                var excluded:Boolean  = (_excludedApIds[apIdInt] === true);
+                var excluded:Boolean  = (_excludedApIds[apIdInt] === true || _effortExcludedApIds[apIdInt] === true);
                 var inLogic:Boolean   = (!excluded && _reqMetApIds[apIdInt] === true);
                 var isEarned:Boolean  = (int(ach.status) >= 2);
 
