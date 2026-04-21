@@ -175,36 +175,55 @@ package patch {
                 var stageMeta:* = GV.ingameCore.stageMeta;
                 if (stageMeta == null) return;
                 var stageId:int = int(stageMeta.id);
+                var isStarterStage:Boolean = (stageMeta.strId == "W1");
+                var isFirstPlay:Boolean = GV.ppd.stageHighestXpsJourney[stageId].g() == 0;
 
-                if (GV.ppd.stageHighestXpsJourney[stageId].g() != 0) return;
+                // W1 on revisit: vanilla already handles skill gems, nothing to do.
+                if (isStarterStage && !isFirstPlay) return;
 
                 var availableGemTypes:Array = GV.ingameCore.availableGemTypes;
                 var cnt:*                   = GV.ingameCore.cnt;
                 if (availableGemTypes == null || cnt == null) return;
 
-                // Skip if we've already injected into this exact array instance.
+                // Skip if we've already processed this exact array instance.
                 // On restart the game creates a new array, so the reference
-                // differs and we fall through to re-inject.
+                // differs and we fall through to re-process.
                 if (_patchedAvailableGemTypes === availableGemTypes) return;
 
-                var added:int = 0;
+                var added:int   = 0;
+                var removed:int = 0;
                 for each (var entry:Array in SKILL_GEM_MAP) {
                     var skillId:int  = int(entry[0]);
                     var gemType:int  = int(entry[1]);
                     var spellIdx:int = int(entry[2]);
-                    if (Boolean(GV.ppd.gainedSkillTomes[skillId]) &&
-                            availableGemTypes.indexOf(gemType) == -1) {
-                        availableGemTypes.push(gemType);
-                        cnt.mcIngameFrame.addChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
-                        GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = true;
-                        added++;
+                    var hasSkill:Boolean = Boolean(GV.ppd.gainedSkillTomes[skillId]);
+
+                    if (hasSkill) {
+                        // Ensure this skill's gem is available.
+                        if (availableGemTypes.indexOf(gemType) == -1) {
+                            availableGemTypes.push(gemType);
+                            cnt.mcIngameFrame.addChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
+                            GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = true;
+                            added++;
+                        }
+                    } else if (!isStarterStage) {
+                        // Non-starter stage: strip any GIVEGT gem the player hasn't earned.
+                        var idx:int = availableGemTypes.indexOf(gemType);
+                        if (idx != -1) {
+                            availableGemTypes.splice(idx, 1);
+                            try {
+                                cnt.mcIngameFrame.removeChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
+                            } catch (e:Error) {}
+                            GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = false;
+                            removed++;
+                        }
                     }
                 }
 
                 _patchedAvailableGemTypes = availableGemTypes;
-                if (added > 0) {
-                    _logger.log(_modName, "FirstPlayBypass: injected " + added +
-                        " skill gem(s) for first-play stage id=" + stageId);
+                if (added > 0 || removed > 0) {
+                    _logger.log(_modName, "FirstPlayBypass: stage=" + stageMeta.strId +
+                        " added=" + added + " removed=" + removed + " skill gems");
                 }
             } catch (err:Error) {
                 _logger.log(_modName,

@@ -309,8 +309,17 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
         conditions = []
         for skill in rule.skills:
-            item_name = f"{skill} Skill"
-            conditions.append(lambda state, i=item_name: state.has(i, player))
+            if ":" in skill:
+                group_name, count_str = skill.split(":", 1)
+                group_name = group_name.strip()
+                count_needed = int(count_str.strip())
+                if group_name in skill_groups:
+                    group_members = skill_groups[group_name].get("members", [])
+                    conditions.append(lambda state, mems=group_members, n=count_needed:
+                        sum(1 for m in mems if state.has(f"{m} Skill", player)) >= n)
+            else:
+                item_name = f"{skill} Skill"
+                conditions.append(lambda state, i=item_name: state.has(i, player))
 
         def make_rule(conds):
             return lambda state: all(c(state) for c in conds)
