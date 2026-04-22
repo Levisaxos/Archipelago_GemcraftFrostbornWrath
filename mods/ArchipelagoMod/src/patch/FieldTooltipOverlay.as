@@ -16,11 +16,18 @@ package patch {
      *   ✓  grey  — already checked
      *   in logic     green — missing and reachable
      *   not in logic red   — missing and blocked
+     *
+     * Also removes the "Available gems" section for levels that are not W1-W4,
+     * since those gems reflect the original game state rather than the
+     * randomised AP state.
      */
     public class FieldTooltipOverlay {
 
         private static const ACHIEVEMENTS_IDLE_STAGES:int   = 305;
         private static const ACHIEVEMENTS_IDLE_SETTINGS:int = 306;
+
+        // Gem section extra height added by SelectorRenderer after the gem icons.
+        private static const GEMS_EXTRA_HEIGHT:int = 46;
 
         private var _logger:Logger;
         private var _modName:String;
@@ -78,28 +85,20 @@ package patch {
             if (meta == null) return;
             var strId:String = String(meta.strId);
 
+            // W1-W4 are the free stages whose gem lists match the AP state.
+            // All other levels should have the "Available gems" section hidden.
+            var isFreestage:Boolean = (strId == "W1" || strId == "W2" ||
+                                       strId == "W3" || strId == "W4");
+            var shouldRemoveGems:Boolean = !isFreestage;
+
             var base:int = int(ConnectionManager.stageLocIds[strId]);
-            if (base <= 0) return; // not an AP-tracked stage
+            var shouldAddApOverlay:Boolean = base > 0;
 
-            // Per-check status.
-            var missing:Object = AV.saveData.missingLocations;
-            var checked:Object = AV.saveData.checkedLocations;
-
-            var journeyMissing:Boolean = missing[base]       == true;
-            var journeyDone:Boolean    = checked[base]       == true;
-
-            var bonusId:int            = base + 199;
-            var bonusMissing:Boolean   = missing[bonusId]    == true;
-            var bonusDone:Boolean      = checked[bonusId]    == true;
-
-            var stashId:int            = base + 399;
-            var stashMissing:Boolean   = missing[stashId]    == true;
-            var stashDone:Boolean      = checked[stashId]    == true;
-
-            var lines:Array = _buildLines(strId,
-                    journeyMissing, journeyDone,
-                    bonusMissing,   bonusDone,
-                    stashMissing,   stashDone);
+            // Nothing for us to do on this tooltip.
+            if (!shouldRemoveGems && !shouldAddApOverlay) {
+                _appended = true;
+                return;
+            }
 
             // Dispose game's bitmap and reset so drawBitmap() runs again.
             try {
@@ -121,15 +120,42 @@ package patch {
                 if (zoom > 0) vIp.w = vIp.w / zoom;
             } catch (e2:Error) {}
 
-            try {
-                vIp.addExtraHeight(7);
-                vIp.addSeparator(-2);
-                for each (var pair:Array in lines) {
-                    vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
+            // Strip the "Available gems" section from the panel data for non-W1-W4 levels.
+            if (shouldRemoveGems) {
+                _removeAvailableGems(vIp);
+            }
+
+            // Append AP check-status lines.
+            if (shouldAddApOverlay) {
+                var missing:Object = AV.saveData.missingLocations;
+                var checked:Object = AV.saveData.checkedLocations;
+
+                var journeyMissing:Boolean = missing[base]       == true;
+                var journeyDone:Boolean    = checked[base]       == true;
+
+                var bonusId:int            = base + 199;
+                var bonusMissing:Boolean   = missing[bonusId]    == true;
+                var bonusDone:Boolean      = checked[bonusId]    == true;
+
+                var stashId:int            = base + 399;
+                var stashMissing:Boolean   = missing[stashId]    == true;
+                var stashDone:Boolean      = checked[stashId]    == true;
+
+                var lines:Array = _buildLines(strId,
+                        journeyMissing, journeyDone,
+                        bonusMissing,   bonusDone,
+                        stashMissing,   stashDone);
+
+                try {
+                    vIp.addExtraHeight(7);
+                    vIp.addSeparator(-2);
+                    for each (var pair:Array in lines) {
+                        vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
+                    }
+                } catch (e3:Error) {
+                    _logger.log(_modName, "FieldTooltipOverlay: addTextfield error: " + e3.message);
+                    return;
                 }
-            } catch (e3:Error) {
-                _logger.log(_modName, "FieldTooltipOverlay: addTextfield error: " + e3.message);
-                return;
             }
 
             _appended = true;
@@ -137,6 +163,60 @@ package patch {
                 vIp.doEnterFrame();
             } catch (e4:Error) {
                 _logger.log(_modName, "FieldTooltipOverlay: doEnterFrame error: " + e4.message);
+            }
+        }
+
+        // -----------------------------------------------------------------------
+
+        /**
+         * Removes the "Available gems:" title textfield and gem sprite entries from
+         * McInfoPanel's internal arrays, then adjusts nextTfPos / h so the content
+         * that followed the gems section closes the gap.
+         */
+        private function _removeAvailableGems(vIp:*):void {
+            try {
+                var textfields:Array = vIp.textfields as Array;
+                if (textfields == null) return;
+
+                // Locate the "Available gems:" textfield.
+                var gemsIdx:int = -1;
+                var gemsTf:*    = null;
+                for (var i:int = 0; i < textfields.length; i++) {
+                    var tf:* = textfields[i];
+                    if (tf != null && tf.text == "Available gems:") {
+                        gemsIdx = i;
+                        gemsTf  = tf;
+                        break;
+                    }
+                }
+                if (gemsIdx < 0) return; // not found — nothing to do
+
+                // Height occupied by the gems section:
+                //   textfield height + 9 px leading (from addTextfield with pSmallLeading=false)
+                //   + 46 px from addExtraHeight(46) that follows the gem icons.
+                var removeHeight:Number = gemsTf.height + 9 + GEMS_EXTRA_HEIGHT;
+
+                // Remove the "Available gems:" textfield.
+                textfields.splice(gemsIdx, 1);
+
+                // Shift every textfield that came after the gems section upward.
+                for (var j:int = gemsIdx; j < textfields.length; j++) {
+                    textfields[j].y -= removeHeight;
+                }
+
+                // Remove gem sprite entries from attachedMcs.
+                // The minimap bitmap is a Bitmap instance; gem MCs are not — filter them out.
+                var newMcs:Array = [];
+                for each (var mc:* in (vIp.attachedMcs as Array)) {
+                    if (mc is Bitmap) newMcs.push(mc);
+                }
+                vIp.attachedMcs = newMcs;
+
+                // Close the vertical gap.
+                vIp.nextTfPos -= removeHeight;
+                vIp.h         -= removeHeight;
+            } catch (e:Error) {
+                _logger.log(_modName, "FieldTooltipOverlay: _removeAvailableGems error: " + e.message);
             }
         }
 
