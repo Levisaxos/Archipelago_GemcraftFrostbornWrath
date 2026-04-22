@@ -4641,7 +4641,6 @@
       "reward": "skillPoints:1",
       "description": "Kill a shadow with a shot fired by a gem having at least 5.000 hits.",
       "requirements": [
-        "Ritual trait",
         [
           "Shadow element",
           "Ritual trait"
@@ -5920,11 +5919,7 @@
       "game_id": 51,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have a grade 1 gem with 100 hits.",
-      "always_as_filler": true,
-      "requirements": [
-        "minGemGrade: 1"
-      ]
+      "description": "Have a grade 1 gem with 100 hits."
     },
     "Wash Away": {
       "apId": 2598,

@@ -44,6 +44,10 @@ package ui {
         // at grant time).  Flushed into McDropIconOutcome icons by buildIcons().
         private var _pendingApTalismans:Array = [];
 
+        // Shadow core amounts received from AP during the level (extra cores, IDs 1300-1351).
+        // Flushed into McDropIconOutcome icons by buildIcons().
+        private var _pendingApShadowCores:Array = [];
+
         public function LevelEndScreenBuilder(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
@@ -236,13 +240,32 @@ package ui {
                 }
                 _pendingApTalismans = [];
 
+                // --- Step 6: flush AP-received extra shadow cores (received mid-level) ---
+                var pendingScCount:int = _pendingApShadowCores.length;
+                for (var sc:int = 0; sc < pendingScCount; sc++) {
+                    try {
+                        var scIcon:McDropIconOutcome = new McDropIconOutcome(
+                            DropType.SHADOW_CORE, _pendingApShadowCores[sc]);
+                        scIcon.y = 789;
+                        scIcon.visible = false;
+                        ending.cnt.mcOutcomePanel.addChild(scIcon);
+                        ending.dropIcons.push(scIcon);
+                        scIcon.addEventListener(MouseEvent.MOUSE_OVER, onGameIconOver, false, 0, true);
+                        scIcon.addEventListener(MouseEvent.MOUSE_OUT,  onIconOut,      false, 0, true);
+                    } catch (sce:Error) {
+                        _logger.log(_modName, "buildIcons: pending shadow core icon error: " + sce.message);
+                    }
+                }
+                _pendingApShadowCores = [];
+
                 // Sort by priority and lay out all icons.
                 repositionIcons(ending.dropIcons);
 
                 _logger.log(_modName, "LevelEndScreenBuilder.buildIcons: "
                     + icons.length + " AP icons, "
                     + preservedCount + " preserved game icons, "
-                    + pendingTalCount + " AP talisman icons");
+                    + pendingTalCount + " AP talisman icons, "
+                    + pendingScCount + " AP shadow core icons");
             } catch (err:Error) {
                 _logger.log(_modName, "LevelEndScreenBuilder.buildIcons ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -302,6 +325,20 @@ package ui {
                 addGameDropIconToEndingScreen(DropType.TALISMAN_FRAGMENT, frag);
             } else {
                 _pendingApTalismans.push(frag);
+            }
+        }
+
+        /**
+         * Show an extra shadow core item (IDs 1300-1351) as a native drop icon.
+         * If the ending screen is already showing, adds immediately; otherwise queues for buildIcons.
+         */
+        public function addShadowCoreDropIconToEndingScreen(amount:int):void {
+            var ending:* = (GV.ingameController != null && GV.ingameController.core != null)
+                ? GV.ingameController.core.ending : null;
+            if (ending != null && ending.isBattleWon) {
+                addGameDropIconToEndingScreen(DropType.SHADOW_CORE, amount);
+            } else {
+                _pendingApShadowCores.push(amount);
             }
         }
 

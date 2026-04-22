@@ -1100,6 +1100,11 @@ package {
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
+                    if (apId >= 1300 && apId <= 1351) {
+                        var scAmt:int = int(AV.serverData.shadowCoreMap[String(apId)]);
+                        if (scAmt > 0)
+                            _levelEndScreenBuilder.addShadowCoreDropIconToEndingScreen(scAmt);
+                    }
                     _saveManager.saveSlotData();
                     return;
                 }

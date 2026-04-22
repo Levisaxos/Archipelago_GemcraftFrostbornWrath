@@ -88,6 +88,9 @@ package patch {
             // Replicate game's hover detection (PnlAchievements.doEnterFrame lines 395-402).
             var hoveredAch:* = _findHoveredAch(panel);
             if (hoveredAch == null) return;
+            
+            if (int(hoveredAch.status) >= 2)
+                return;
 
             // Resolve AP data.
             var rawApId:* = _gameIdToApId[int(hoveredAch.id)];

@@ -394,7 +394,7 @@ package patch {
             if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
             var achis:Array = GV.achiCollection.achisByOrder;
 
-            var g1:Array = [], g2:Array = [], g3:Array = [], g4:Array = [], gRest:Array = [];
+            var g1:Array = [], g2:Array = [], g3:Array = [], g4:Array = [], g5:Array = [], gRest:Array = [];
 
             for (var i:int = 0; i < achis.length; i++) {
                 var ach:* = achis[i];
@@ -402,13 +402,19 @@ package patch {
                 var rawApId:* = _gameIdToApId[int(ach.id)];
                 if (rawApId == null) { gRest.push(ach); continue; }
                 var apId:int = int(rawApId);
-                if      (_excludedApIds[apId] === true)                         g4.push(ach);
-                else if (_effortExcludedApIds[apId] === true)                  g3.push(ach);
-                else if (int(ach.status) < 2 && _inLogicApIds[apId] === true) g1.push(ach);
-                else                                                           g2.push(ach);
+                if (_excludedApIds[apId] === true)
+                    g5.push(ach);
+                else if (_effortExcludedApIds[apId] === true)                 
+                    g4.push(ach);
+                else if (int(ach.status) < 2 && _inLogicApIds[apId] === true) 
+                    g1.push(ach);
+                else if (int(ach.status) >= 2)
+                    g2.push(ach);
+                else                                                          
+                    g3.push(ach);
             }
 
-            GV.achiCollection.achisByOrder = g1.concat(g2, g3, g4, gRest);
+            GV.achiCollection.achisByOrder = g1.sortOn("title").concat(g2.sortOn("title"), g3.sortOn("title"), g4.sortOn("title"), gRest.sortOn("title"));
         }
 
         // -----------------------------------------------------------------------
