@@ -39,6 +39,7 @@ package tracker {
         private var _dirty:Boolean = true;
         private var _reachableTier:int = -1;
         private var _inLogicByStrId:Object = {};
+        private var _levelStats:Object = {};  // strId -> {maxGiantHP, maxReaverHP, ...}
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
@@ -140,6 +141,53 @@ package tracker {
                         && _inLogicByStrId[strId] == true) {
                     return true;
                 }
+            }
+            return false;
+        }
+
+        /** Load per-level monster stat data from achievement_logic.json. */
+        public function setLevelStats(stats:Object):void {
+            _levelStats = stats || {};
+        }
+
+        /** True if any in-logic field has max(maxGiantHP, maxReaverHP) >= threshold. */
+        public function hasInLogicFieldWithMinMonsterHP(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true) {
+                    var s:Object = _levelStats[sid];
+                    if (Math.max(int(s.maxGiantHP), int(s.maxReaverHP)) >= threshold) return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has max(maxGiantArmor, maxReaverArmor) >= threshold. */
+        public function hasInLogicFieldWithMinMonsterArmor(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true) {
+                    var s:Object = _levelStats[sid];
+                    if (Math.max(int(s.maxGiantArmor), int(s.maxReaverArmor)) >= threshold) return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has estMonsters >= threshold. */
+        public function hasInLogicFieldWithMinMonsters(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].estMonsters) >= threshold) return true;
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has maxSwarmlingArmor >= threshold. */
+        public function hasInLogicFieldWithMinSwarmlingArmor(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].maxSwarmlingArmor) >= threshold) return true;
             }
             return false;
         }

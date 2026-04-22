@@ -261,7 +261,7 @@ skill_groups = {
         "description": "Enhancement spells (Bolt, Beam, Barrage)",
         "members": ["Bolt", "Beam", "Barrage"],
     },
-    "gemTypes": {
+    "gemSkills": {
         "description": "Gem skill types (all gem types)",
         "members": ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
     },

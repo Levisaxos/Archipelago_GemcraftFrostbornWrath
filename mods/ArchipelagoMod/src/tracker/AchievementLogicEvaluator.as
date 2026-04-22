@@ -22,6 +22,7 @@ package tracker {
 
         private var _achievementData:Object = {}; // name -> { apId, requirements, ... }
         private var _elementStages:Object   = {}; // element name -> Array<String>
+        private var _levelStats:Object      = {}; // strId -> monster stat data
         private var _fieldEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
 
@@ -50,6 +51,10 @@ package tracker {
                 if (parsed) {
                     _achievementData = parsed.achievements || parsed;
                     _elementStages   = parsed.element_stages || {};
+                    _levelStats      = parsed.levelStats || {};
+                    if (_fieldEvaluator != null) {
+                        _fieldEvaluator.setLevelStats(_levelStats);
+                    }
                     var count:int = 0;
                     for (var k:String in _achievementData) count++;
                     _logger.log(_modName, "AchievementLogicEvaluator.loadData: loaded " + count + " achievements");
@@ -67,6 +72,7 @@ package tracker {
                                   logicEvaluator:LogicEvaluator):void {
             _fieldEvaluator = fieldEvaluator;
             _logicEvaluator = logicEvaluator;
+            _fieldEvaluator.setLevelStats(_levelStats);
             _logicEvaluator.configure(fieldEvaluator, _elementStages);
             _dirty = true;
         }

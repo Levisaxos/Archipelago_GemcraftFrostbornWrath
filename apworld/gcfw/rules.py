@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List
 from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
 from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements, skill_groups
 from .rulesdata_goals import goal_requirements
+from .rulesdata_levels import level_requirements as LEVEL_DATA
 from .options import AchievementProgression
 
 if TYPE_CHECKING:
@@ -88,7 +89,9 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
                 (elem_name in game_level_elements and bool(game_level_elements[elem_name].get("levels"))))
     if ":" in req:
         group_name = req.split(":")[0].strip()
-        return group_name in skill_groups or group_name in game_skills_categories
+        if group_name in skill_groups or group_name in game_skills_categories:
+            return True
+        return group_name in ("minWave", "minMonsters", "minMonsterHP", "minMonsterArmor", "minSwarmlingArmor", "Skills")
     if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
         return any(skill_name in cat.get("members", []) for cat in game_skills_categories.values())
@@ -129,6 +132,28 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             members = game_skills_categories[group_name].get("members", [])
             suffix = " Battle Trait" if group_name == "BattleTraits" else " Skill"
             return sum(1 for m in members if state.has(f"{m}{suffix}", player)) >= count_needed
+        if group_name == "Skills":
+            all_skill_names = [m for cat in game_skills_categories.values() for m in cat.get("members", [])]
+            suffix_map = {m: (" Battle Trait" if cat == "BattleTraits" else " Skill")
+                          for cat, data in game_skills_categories.items() for m in data.get("members", [])}
+            return sum(1 for m in all_skill_names if state.has(f"{m}{suffix_map[m]}", player)) >= count_needed
+        if group_name == "minWave":
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("wave_count", 0) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "minMonsters":
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("estMonsters", 0) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "minMonsterHP":
+            qualifying = [sid for sid, d in LEVEL_DATA.items()
+                          if max(d.get("maxGiantHP", 0), d.get("maxReaverHP", 0)) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "minMonsterArmor":
+            qualifying = [sid for sid, d in LEVEL_DATA.items()
+                          if max(d.get("maxGiantArmor", 0), d.get("maxReaverArmor", 0)) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "minSwarmlingArmor":
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("maxSwarmlingArmor", 0) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
         return True  # Unknown counter (fieldToken, gemCount, etc.) — metadata only
 
     if " trait" in req.lower() or " skill" in req.lower():

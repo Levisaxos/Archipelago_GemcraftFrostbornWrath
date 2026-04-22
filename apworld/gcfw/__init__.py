@@ -69,44 +69,34 @@ def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
 
 def _can_achievement_be_met(requirements: list) -> bool:
     """
-    Check if an achievement can be met based on its requirements.
-
-    Rules:
-    - If requirement matches a game_level_element with empty levels list → cannot be met
-    - If requirement matches a non_monster_element:
-      - If has requires_trait → can be met (via trait unlock)
-      - If has levels list with entries → can be met (in those levels)
-      - If BOTH are empty → cannot be met
-
-    Returns True if achievement can potentially be met, False otherwise.
+    Check if an achievement can be met based on its requirements (DNF format).
+    Returns True if any AND-group can be met, False only if all groups are blocked.
     """
-    for req in requirements:
-        req = req.strip()
+    def _group_can_be_met(group: list) -> bool:
+        for req in group:
+            if isinstance(req, list):
+                if not _can_achievement_be_met(req):
+                    return False
+                continue
+            req = req.strip()
+            if " element" not in req.lower():
+                continue
+            elem_name = req.replace(" element", "").strip()
+            if elem_name in game_level_elements:
+                if not game_level_elements[elem_name].get("levels", []):
+                    return False
+            elif elem_name in non_monster_elements:
+                elem_data = non_monster_elements[elem_name]
+                if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
+                    return False
+        return True
 
-        # Skip non-element requirements (gemCount, minWave, etc.)
-        if " element" not in req.lower():
-            continue
-
-        # Extract element name (remove " element" suffix if present)
-        elem_name = req.replace(" element", "").strip()
-
-        # Check if it's a game_level_element
-        if elem_name in game_level_elements:
-            if not game_level_elements[elem_name].get("levels", []):
-                # Element has no levels defined, requirement cannot be met
-                return False
-
-        # Check if it's a non_monster_element
-        elif elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            # Can be met if it has a requires_trait (unlocked by obtaining trait)
-            # OR if it has levels (unlocked in those levels)
-            if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                # Neither trait requirement nor level mapping exists
-                return False
-
-    # All element requirements can be met
-    return True
+    if not requirements:
+        return True
+    # Normalize to DNF: if first element is a list, treat as OR-of-AND-groups
+    if isinstance(requirements[0], list):
+        return any(_group_can_be_met(group) for group in requirements)
+    return _group_can_be_met(requirements)
 
 
 def _detect_achievement_chains(all_achievements) -> dict:
@@ -348,25 +338,34 @@ class GemcraftFrostbornWrathWorld(World):
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
 
+            def _reqs_have_trait(reqs):
+                for r in reqs:
+                    if isinstance(r, list):
+                        if _reqs_have_trait(r):
+                            return True
+                    elif "trait" in r.lower():
+                        return True
+                return False
+
+            def _strip_elements(reqs):
+                result = []
+                for r in reqs:
+                    if isinstance(r, list):
+                        inner = _strip_elements(r)
+                        if inner:
+                            result.append(inner)
+                    else:
+                        r_lower = r.lower()
+                        if "trait" in r_lower or "skill" in r_lower or r.startswith("Achievement:"):
+                            result.append(r)
+                return result
+
             # Simplify achievements: if they have trait requirements, remove element requirements
             # This avoids circular dependencies where trait items might be in trait-locked locations
             for ach_name, ach_data in all_achievements.items():
                 requirements = ach_data.get("requirements", [])
-                if requirements:
-                    # Check if this achievement has a trait requirement
-                    has_trait = any("trait" in req.lower() for req in requirements)
-
-                    if has_trait:
-                        # Keep only trait and skill requirements, remove element and stat requirements
-                        simplified = []
-                        for req in requirements:
-                            req_lower = req.lower()
-                            # Keep traits and skills
-                            if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
-                                simplified.append(req)
-                            # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
-
-                        ach_data["requirements"] = simplified
+                if requirements and _reqs_have_trait(requirements):
+                    ach_data["requirements"] = _strip_elements(requirements)
 
             # Add achievements filtered by required_effort level
             total_achievements = 0

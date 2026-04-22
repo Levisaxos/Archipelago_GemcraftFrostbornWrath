@@ -28,6 +28,10 @@ package tracker {
      *   "BattleTraits: N"       — count(800-814) >= N
      *   "minWave: N"            — FieldLogicEvaluator.hasInLogicFieldWithMinWaves(N)
      *   "fieldToken: N"         — count(1-122) >= N
+     *   "minMonsterHP: N"       — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterHP(N)
+     *   "minMonsterArmor: N"    — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterArmor(N)
+     *   "minMonsters: N"        — FieldLogicEvaluator.hasInLogicFieldWithMinMonsters(N)
+     *   "minSwarmlingArmor: N"  — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlingArmor(N)
      */
     public class LogicEvaluator {
 
@@ -53,9 +57,27 @@ package tracker {
 
         // -----------------------------------------------------------------------
 
-        /** Returns true iff every requirement in the array passes. */
+        /** Returns true iff every requirement in the array passes.
+         *  Supports DNF: if the first element is an Array, treats outer as OR of inner AND-groups. */
         public function evaluateRequirements(requirements:Array):Boolean {
             if (requirements == null || requirements.length == 0) return true;
+            if (requirements[0] is Array) {
+                // DNF format: outer = OR, inner = AND-groups
+                for each (var group:* in requirements) {
+                    var andGroup:Array = group as Array;
+                    if (andGroup == null) continue;
+                    var groupPasses:Boolean = true;
+                    for each (var groupReq:* in andGroup) {
+                        if (!evaluateRequirement(_trim(String(groupReq)))) {
+                            groupPasses = false;
+                            break;
+                        }
+                    }
+                    if (groupPasses) return true;
+                }
+                return false;
+            }
+            // Flat list = single AND-group (backward compatibility)
             for each (var req:* in requirements) {
                 if (!evaluateRequirement(_trim(String(req)))) return false;
             }
@@ -65,9 +87,36 @@ package tracker {
         /**
          * Returns human-readable descriptions of all FAILING requirements.
          * Used by tooltip overlays to show why an achievement is not yet in logic.
+         * For DNF, shows failing reqs from the group closest to passing.
          */
         public function getFailingReqDescriptions(requirements:Array):Array {
             if (requirements == null || requirements.length == 0) return [];
+            if (requirements[0] is Array) {
+                // DNF: find the group with the most passing reqs, show its failures
+                var bestFailing:Array = null;
+                var bestPassCount:int = -1;
+                for each (var group:* in requirements) {
+                    var andGroup:Array = group as Array;
+                    if (andGroup == null) continue;
+                    var failing:Array = [];
+                    var passCount:int = 0;
+                    for each (var groupReq:* in andGroup) {
+                        var gs:String = _trim(String(groupReq));
+                        if (!evaluateRequirement(gs)) {
+                            var gd:String = describeRequirement(gs);
+                            if (gd != null) failing.push(gd);
+                        } else {
+                            passCount++;
+                        }
+                    }
+                    if (failing.length == 0) return []; // group fully passes
+                    if (passCount > bestPassCount) {
+                        bestPassCount = passCount;
+                        bestFailing = failing;
+                    }
+                }
+                return bestFailing != null ? bestFailing : [];
+            }
             var result:Array = [];
             for each (var req:* in requirements) {
                 var s:String = _trim(String(req));
@@ -123,12 +172,17 @@ package tracker {
             var colon:int = lower.indexOf(":");
             var n:int = colon >= 0 ? int(_trim(lower.substring(colon + 1))) : 0;
 
+            if (lower.indexOf("skills")            == 0) return "Requires " + n + " skills total";
             if (lower.indexOf("strikespells")      == 0) return "Requires " + n + " strike spells";
             if (lower.indexOf("enhancementspells") == 0) return "Requires " + n + " enhancement spells";
             if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
             if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
-            if (lower.indexOf("minwave")           == 0) return "Requires stage with " + n + "+ waves";
+            if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+            if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
+            if (lower.indexOf("minmonsterarmor")   == 0) return "Requires stage with monster armor " + n + "+";
+            if (lower.indexOf("minmonsters")       == 0) return "Requires stage with " + n + "+ monsters";
+            if (lower.indexOf("minswarmlingarmor") == 0) return "Requires stage with swarmling armor " + n + "+";
 
             return "Requires " + req;
         }
@@ -210,6 +264,10 @@ package tracker {
             }
 
             // Spell / skill group counters
+            if (lower.indexOf("skills") == 0) {
+                var skillsNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return AV.sessionData.totalSkillsCollected >= skillsNeed;
+            }
             if (lower.indexOf("strikespells") == 0) {
                 var sNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(712, 714) >= sNeed;
@@ -238,6 +296,24 @@ package tracker {
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
+            }
+
+            // Level monster stat requirements
+            if (lower.indexOf("minmonsterhp") == 0) {
+                var mhpNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinMonsterHP(mhpNeed);
+            }
+            if (lower.indexOf("minmonsterarmor") == 0) {
+                var marmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinMonsterArmor(marmNeed);
+            }
+            if (lower.indexOf("minmonsters") == 0) {
+                var monsNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinMonsters(monsNeed);
+            }
+            if (lower.indexOf("minswarmlingarmor") == 0) {
+                var sarmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlingArmor(sarmNeed);
             }
 
             // Unknown requirement — don't block

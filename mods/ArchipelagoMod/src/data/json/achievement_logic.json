@@ -76,6 +76,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:3",
       "description": "Have 30 fields lit in Trial mode.",
+      "always_as_filler": true,
       "requirements": [
         "Trial",
         "fieldToken: 30"
@@ -88,9 +89,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 500 enhancement spells cast through all the battles.",
       "requirements": [
-        "Beam skill",
-        "Bolt skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Adept Grade": {
@@ -99,6 +98,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Create a grade 8 gem.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 8"
       ]
@@ -110,10 +110,7 @@
       "reward": "skillPoints:1",
       "description": "Gain 600 xp from drops.",
       "requirements": [
-        "Apparition element",
-        "Corrupted Mana Shard element",
-        "Drop Holder element",
-        "Mana Shard element"
+        "Drop Holder element"
       ]
     },
     "Ages Old Memories": {
@@ -163,7 +160,8 @@
       "game_id": 506,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Have at least 20 different talisman properties."
+      "description": "Have at least 20 different talisman properties.",
+      "always_as_filler": true
     },
     "Almost Ruined": {
       "apId": 2016,
@@ -188,7 +186,7 @@
     "Ambitious Builder": {
       "apId": 2018,
       "game_id": 65,
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Reach 500 structures built through all the battles."
     },
@@ -218,6 +216,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Fill all the sockets in your talisman.",
+      "always_as_filler": true,
       "requirements": [
         "Shadow Core element"
       ]
@@ -245,6 +244,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Kill 90 monsters with orblet explosions.",
+      "always_as_filler": true,
       "requirements": [
         "Orb of Presence skill"
       ]
@@ -263,7 +263,8 @@
       "reward": "skillPoints:1",
       "description": "Have a pure slowing gem with 4.000 hits.",
       "requirements": [
-        "Slowing skill"
+        "Slowing skill",
+        "Beam Skill"
       ]
     },
     "At my Fingertips": {
@@ -273,9 +274,7 @@
       "reward": "skillPoints:2",
       "description": "Cast 75 strike spells.",
       "requirements": [
-        "Ice Shards skill",
-        "Whiteout skill",
-        "Freeze skill"
+        "strikeSpells:1"
       ]
     },
     "Avenged": {
@@ -310,7 +309,10 @@
       "game_id": 256,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Deliver 1.200 banishments with your orb."
+      "description": "Deliver 1.200 banishments with your orb.",
+      "requirements": [
+        "minMonsters:1200"
+      ]
     },
     "Barrage Battery": {
       "apId": 2032,
@@ -328,6 +330,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:3",
       "description": "Beat 120 waves and don't use any gem enhancement spells.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 120"
       ]
@@ -348,6 +351,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Kill 30 monsters with orblet explosions.",
+      "always_as_filler": true,
       "requirements": [
         "Orb of Presence skill"
       ]
@@ -371,7 +375,10 @@
       "game_id": 552,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Kill 790 banished monsters."
+      "description": "Kill 790 banished monsters.",
+      "requirements": [
+        "minMonsters:790"
+      ]
     },
     "Beacon Hunt": {
       "apId": 2039,
@@ -380,7 +387,7 @@
       "reward": "skillPoints:2",
       "description": "Destroy 55 beacons.",
       "requirements": [
-        "Beacon element"
+        "Dark Masonry Trait"
       ]
     },
     "Beacons Be Gone": {
@@ -390,7 +397,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 500 beacons destroyed through all the battles.",
       "requirements": [
-        "Beacon element"
+        "Dark Masonry Trait"
       ]
     },
     "Beastmaster": {
@@ -400,7 +407,8 @@
       "reward": "skillPoints:1",
       "description": "Kill a monster having at least 100.000 hit points and 1000 armor.",
       "requirements": [
-        "A monster with atleast 100.000hp and 1000 amror"
+        "minMonsterHP:100000",
+        "minMonsterArmor:1000"
       ]
     },
     "Behold Aurora": {
@@ -408,7 +416,8 @@
       "game_id": 624,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Go Igniculus and Light Ray (All)+++!"
+      "description": "Go Igniculus and Light Ray (All)+++!",
+      "always_as_filler": true
     },
     "Biohazard": {
       "apId": 2043,
@@ -416,6 +425,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:2",
       "description": "Create a grade 12 pure poison gem.",
+      "always_as_filler": true,
       "requirements": [
         "Poison skill",
         "minGemGrade: 12"
@@ -429,8 +439,10 @@
       "description": "Deal 5.000 poison damage to a shadow.",
       "requirements": [
         "Poison skill",
-        "Ritual trait",
-        "Shadow element"
+        [
+          "Ritual trait",
+          "Shadow element"
+        ]
       ]
     },
     "Black Wand": {
@@ -438,7 +450,8 @@
       "game_id": 419,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Reach wizard level 1.000."
+      "description": "Reach wizard level 1.000.",
+      "always_as_filler": true
     },
     "Blackout": {
       "apId": 2046,
@@ -447,7 +460,12 @@
       "reward": "skillPoints:1",
       "description": "Destroy a beacon.",
       "requirements": [
-        "Beacon element"
+        [
+          "Beacon element"
+        ],
+        [
+          "Dark Masonry Trait"
+        ]
       ]
     },
     "Blastwave": {
@@ -554,7 +572,8 @@
       "game_id": 386,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 100."
+      "description": "Reach wizard level 100.",
+      "always_as_filler": true
     },
     "Boatload of Cores": {
       "apId": 2059,
@@ -571,7 +590,10 @@
       "game_id": 249,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach a kill chain of 2400."
+      "description": "Reach a kill chain of 2400.",
+      "requirements": [
+        "minMonsters:2400"
+      ]
     },
     "Bone Shredder": {
       "apId": 2061,
@@ -580,7 +602,8 @@
       "reward": "skillPoints:2",
       "description": "Kill 600 monsters before wave 12 starts.",
       "requirements": [
-        "Atleast 600 monsters before wave 10"
+        "minMonsters:600",
+        "maxWave:12"
       ]
     },
     "Boom": {
@@ -659,7 +682,8 @@
       "game_id": 388,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach wizard level 300."
+      "description": "Reach wizard level 300.",
+      "always_as_filler": true
     },
     "Build Along": {
       "apId": 2071,
@@ -731,7 +755,10 @@
       "game_id": 157,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 900."
+      "description": "Reach a kill chain of 900.",
+      "requirements": [
+        "minMonsters:900"
+      ]
     },
     "Can't Take Any Risks": {
       "apId": 2079,
@@ -759,7 +786,10 @@
       "game_id": 156,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 600."
+      "description": "Reach a kill chain of 600.",
+      "requirements": [
+        "minMonsters:600"
+      ]
     },
     "Cartographer": {
       "apId": 2082,
@@ -875,9 +905,11 @@
       "always_as_filler": true,
       "requirements": [
         "Endurance",
-        "Possessed Monster element",
-        "Twisted Monster element",
-        "Marked Monster element",
+        [
+          "Possessed Monster element",
+          "Twisted Monster element",
+          "Marked Monster element"
+        ],
         "minWave: 70"
       ]
     },
@@ -886,9 +918,11 @@
       "game_id": 301,
       "required_effort": "Trivial",
       "reward": "skillPoints:3",
-      "description": "Beat 120 waves and don't use any strike spells.",
+      "description": "Beat 120 waves and don't use any  spells.",
+      "always_as_filler": true,
       "requirements": [
-        "minWave: 120"
+        "minWave: 120",
+        "Endurance"
       ]
     },
     "Close Quarter": {
@@ -1069,7 +1103,8 @@
       "reward": "skillPoints:1",
       "description": "Have a pure bleeding gem with 2.500 hits.",
       "requirements": [
-        "Bleeding skill"
+        "Bleeding skill",
+        "Beam Skill"
       ]
     },
     "Darkness Walk With Me": {
@@ -1079,8 +1114,10 @@
       "reward": "skillPoints:3",
       "description": "Kill 3 shadows.",
       "requirements": [
-        "Ritual trait",
-        "Shadow element"
+        [
+          "Ritual trait",
+          "Shadow element"
+        ]
       ]
     },
     "Deadly Curse": {
@@ -1119,7 +1156,8 @@
       "game_id": 621,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "All I could get for a prismatic amulet"
+      "description": "All I could get for a prismatic amulet",
+      "always_as_filler": true
     },
     "Deluminati": {
       "apId": 2119,
@@ -1170,10 +1208,7 @@
       "game_id": 0,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Combine two gems of different colors.",
-      "requirements": [
-        "gemSkills: 2"
-      ]
+      "description": "Combine two gems of different colors."
     },
     "Disciple": {
       "apId": 2125,
@@ -1221,8 +1256,10 @@
       "reward": "skillPoints:1",
       "description": "Kill a specter.",
       "requirements": [
-        "Ritual trait",
-        "Specter element"
+        [
+          "Ritual trait",
+          "Specter element"
+        ]
       ]
     },
     "Doom Drop": {
@@ -1347,13 +1384,9 @@
     "Early Bird": {
       "apId": 2142,
       "game_id": 10,
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach 500 waves started early through all the battles.",
-      "requirements": [
-        "minWave: 500",
-        "Endurance"
-      ]
+      "description": "Reach 500 waves started early through all the battles."
     },
     "Early Harvest": {
       "apId": 2143,
@@ -1500,6 +1533,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Beat 200 waves on max Swarmling and Giant domination traits.",
+      "always_as_filler": true,
       "requirements": [
         "Swarmling Domination trait",
         "Giant Domination trait",
@@ -1535,6 +1569,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Enrage 240 waves.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 240",
         "Endurance"
@@ -1577,6 +1612,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Have a pure poison gem with 3.500 hits.",
+      "always_as_filler": true,
       "requirements": [
         "Poison skill"
       ]
@@ -1666,6 +1702,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
       "description": "Beat 120 waves.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 120"
       ]
@@ -1683,6 +1720,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Create a grade 5 gem.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 5"
       ]
@@ -1947,8 +1985,9 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Blast like a fireball",
+      "always_as_filler": true,
       "requirements": [
-        "Kill 15 monsters simultaneously with 1 gem bomb"
+        ""
       ]
     },
     "Fully Lit": {
@@ -2053,11 +2092,11 @@
     "Getting Serious": {
       "apId": 2213,
       "game_id": 53,
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Have a grade 1 gem with 1.500 hits.",
       "requirements": [
-        "minGemGrade: 1"
+        "Beam Skill"
       ]
     },
     "Getting Waves Done": {
@@ -2101,8 +2140,9 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Rook to a9",
+      "always_as_filler": true,
       "requirements": [
-        "Scroll to edge of the world map"
+        ""
       ]
     },
     "Going for the Weak": {
@@ -2169,7 +2209,8 @@
       "game_id": 385,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 60."
+      "description": "Reach wizard level 60.",
+      "always_as_filler": true
     },
     "Ground Luck": {
       "apId": 2226,
@@ -2204,6 +2245,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Have a grade 3 gem with 1.200 effective max damage.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 3"
       ]
@@ -2312,7 +2354,7 @@
       "reward": "skillPoints:1",
       "description": "Kill a swarmling having at least 100 armor.",
       "requirements": [
-        "a swarmling with atleast 100 armor"
+        "minSwarmlingArmor:100"
       ]
     },
     "Helping Hand": {
@@ -2405,6 +2447,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Leech 3.600 mana with a grade 1 gem.",
+      "always_as_filler": true,
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
@@ -2437,6 +2480,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Have a grade 3 gem with 600 effective max damage.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 3"
       ]
@@ -2453,7 +2497,8 @@
       "game_id": 620,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "All my aug points spent"
+      "description": "All my aug points spent",
+      "always_as_filler": true
     },
     "I Saw Something": {
       "apId": 2255,
@@ -2631,7 +2676,10 @@
       "game_id": 415,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 400 spawnlings."
+      "description": "Kill 400 spawnlings.",
+      "requirements": [
+        "Tomb Element"
+      ]
     },
     "In Focus": {
       "apId": 2272,
@@ -2722,6 +2770,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:3",
       "description": "Beat 50 waves using at most grade 2 gems.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 50"
       ]
@@ -2801,6 +2850,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Enhance a pure poison gem having random priority with beam.",
+      "always_as_filler": true,
       "requirements": [
         "Beam skill",
         "Poison skill"
@@ -2872,6 +2922,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:2",
       "description": "Beat 40 waves using at most grade 2 gems.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 40"
       ]
@@ -3050,6 +3101,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Beat 360 waves.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 360",
         "Endurance"
@@ -3091,7 +3143,10 @@
       "game_id": 155,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach a kill chain of 300."
+      "description": "Reach a kill chain of 300.",
+      "requirements": [
+        "minMonsters:300"
+      ]
     },
     "Major Shutdown": {
       "apId": 2320,
@@ -3141,6 +3196,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Leech 1.800 mana with a grade 1 gem.",
+      "always_as_filler": true,
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
@@ -3262,7 +3318,10 @@
       "game_id": 564,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Raise a skill to level 70."
+      "description": "Raise a skill to level 70.",
+      "requirements": [
+        "Skills:1"
+      ]
     },
     "Max Trap Max leech": {
       "apId": 2338,
@@ -3270,6 +3329,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Leech 6.300 mana with a grade 1 gem.",
+      "always_as_filler": true,
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
@@ -3280,7 +3340,10 @@
       "game_id": 210,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Have 300 monsters on the battlefield at the same time."
+      "description": "Have 300 monsters on the battlefield at the same time.",
+      "requirements": [
+        "minMonsters:300"
+      ]
     },
     "Megalithic": {
       "apId": 2340,
@@ -3475,6 +3538,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Beat 60 waves using at most grade 2 gems.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 60"
       ]
@@ -3619,7 +3683,7 @@
       "reward": "skillPoints:1",
       "description": "Kill a monster having at least 20.000 hit points.",
       "requirements": [
-        "A monster with atleast 20.000hp"
+        "minMonsterHP:20000"
       ]
     },
     "No You Won't!": {
@@ -3691,10 +3755,7 @@
       "game_id": 34,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Win a battle using only poison gems.",
-      "requirements": [
-        "Poison skill"
-      ]
+      "description": "Win a battle using only poison gems."
     },
     "Oh Ven": {
       "apId": 2382,
@@ -3776,14 +3837,16 @@
       "game_id": 406,
       "required_effort": "Major",
       "reward": "skillPoints:2",
-      "description": "Deliver 750 one hit kills."
+      "description": "Deliver 750 one hit kills.",
+      "always_as_filler": true
     },
     "Orange Wand": {
       "apId": 2390,
       "game_id": 384,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 40."
+      "description": "Reach wizard level 40.",
+      "always_as_filler": true
     },
     "Ouch!": {
       "apId": 2391,
@@ -3881,7 +3944,10 @@
       "game_id": 428,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 400 monsters."
+      "description": "Kill 400 monsters.",
+      "requirements": [
+        "minMonsters:400"
+      ]
     },
     "Peek Into The Abyss": {
       "apId": 2401,
@@ -3912,7 +3978,10 @@
       "game_id": 140,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 333 swarmlings."
+      "description": "Kill 333 swarmlings.",
+      "requirements": [
+        "minSwarmlings:333"
+      ]
     },
     "Plentiful": {
       "apId": 2403,
@@ -4080,7 +4149,10 @@
       "game_id": 123,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deliver 75 one hit kills."
+      "description": "Deliver 75 one hit kills.",
+      "requirements": [
+        "minMonsters:75"
+      ]
     },
     "Purged": {
       "apId": 2421,
@@ -4100,6 +4172,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:3",
       "description": "Beat 120 waves and don't use any strike or gem enhancement spells.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 120"
       ]
@@ -4109,7 +4182,8 @@
       "game_id": 387,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Reach wizard level 200."
+      "description": "Reach wizard level 200.",
+      "always_as_filler": true
     },
     "Put Those Down Now!": {
       "apId": 2424,
@@ -4126,7 +4200,8 @@
       "game_id": 632,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Add 16 talisman fragments to your shape collection."
+      "description": "Add 16 talisman fragments to your shape collection.",
+      "always_as_filler": true
     },
     "Pylons of Destruction": {
       "apId": 2426,
@@ -4141,7 +4216,7 @@
     "Quadpierced": {
       "apId": 2427,
       "game_id": 590,
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Cast 4 ice shards on the same monster.",
       "requirements": [
@@ -4154,6 +4229,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
       "description": "Create a grade 12 gem before wave 12.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 12"
       ]
@@ -4179,7 +4255,11 @@
       "reward": "skillPoints:1",
       "description": "Kill 400 enraged swarmlings with barrage.",
       "requirements": [
-        "Barrage skill"
+        "Barrage skill",
+        [
+          "minSwarmlings:400",
+          "Swarmling Trait"
+        ]
       ]
     },
     "Rageout": {
@@ -4198,6 +4278,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Build 100 walls and start 100 enraged waves.",
+      "always_as_filler": true,
       "requirements": [
         "Wall element",
         "minWave: 100"
@@ -4256,7 +4337,8 @@
       "game_id": 389,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Reach wizard level 500."
+      "description": "Reach wizard level 500.",
+      "always_as_filler": true
     },
     "Refrost": {
       "apId": 2440,
@@ -4273,7 +4355,10 @@
       "game_id": 367,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Acquire 5 skills."
+      "description": "Acquire 5 skills.",
+      "requirements": [
+        "Skills:5"
+      ]
     },
     "Renzokuken": {
       "apId": 2442,
@@ -4311,6 +4396,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Leech 900 mana with a grade 1 gem.",
+      "always_as_filler": true,
       "requirements": [
         "Mana Leech skill",
         "minGemGrade: 1"
@@ -4330,8 +4416,7 @@
       "reward": "skillPoints:1",
       "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
       "requirements": [
-        "Ritual trait",
-        "Wraith element"
+        "Ritual trait"
       ]
     },
     "Roof Knocking": {
@@ -4339,7 +4424,10 @@
       "game_id": 218,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Deal 20 gem wasp stings to buildings."
+      "description": "Deal 20 gem wasp stings to buildings.",
+      "requirements": [
+        "Monster Nest Element"
+      ]
     },
     "Root Canal": {
       "apId": 2449,
@@ -4359,8 +4447,7 @@
       "description": "Kill a gatekeeper fang with a barrage shell.",
       "requirements": [
         "Barrage skill",
-        "Gatekeeper element",
-        "Field A4"
+        "Gatekeeper element"
       ]
     },
     "Rotten Aura": {
@@ -4390,6 +4477,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
       "description": "Create a grade 12 gem.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 12"
       ]
@@ -4400,6 +4488,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Create a grade 16 gem.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 16"
       ]
@@ -4462,9 +4551,7 @@
       "reward": "skillPoints:1",
       "description": "Cast 5 strike spells.",
       "requirements": [
-        "Freeze skill",
-        "Whiteout skill",
-        "Ice Shards skill"
+        "strikeSpells:1"
       ]
     },
     "Scour You All": {
@@ -4484,9 +4571,7 @@
       "reward": "skillPoints:1",
       "description": "Add a different enhancement on an enhanced gem.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:2"
       ]
     },
     "Seen Battle": {
@@ -4495,6 +4580,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Have a grade 1 gem with 500 hits.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 1"
       ]
@@ -4525,7 +4611,8 @@
       "game_id": 634,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Complete your talisman fragment shape collection."
+      "description": "Complete your talisman fragment shape collection.",
+      "always_as_filler": true
     },
     "Shard Siphon": {
       "apId": 2467,
@@ -4555,7 +4642,10 @@
       "description": "Kill a shadow with a shot fired by a gem having at least 5.000 hits.",
       "requirements": [
         "Ritual trait",
-        "Shadow element"
+        [
+          "Shadow element",
+          "Ritual trait"
+        ]
       ]
     },
     "Sharpened": {
@@ -4566,9 +4656,7 @@
       "description": "Enhance a gem in a trap.",
       "requirements": [
         "Traps skill",
-        "Beam skill",
-        "Bolt skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Shatter Them All": {
@@ -4596,7 +4684,8 @@
       "description": "Hit 225 frozen monsters with shrines.",
       "requirements": [
         "Freeze skill",
-        "Shrine element"
+        "Shrine element",
+        "minMonsters:225"
       ]
     },
     "Shattering": {
@@ -4607,7 +4696,8 @@
       "description": "Kill 90 frozen monsters with bolt.",
       "requirements": [
         "Bolt skill",
-        "Freeze skill"
+        "Freeze skill",
+        "minMonsters:90"
       ]
     },
     "Shavings All Around": {
@@ -4698,6 +4788,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Fill all the sockets in your talisman with fragments upgraded to level 5 or higher.",
+      "always_as_filler": true,
       "requirements": [
         "Shadow Core element"
       ]
@@ -4719,7 +4810,10 @@
       "game_id": 368,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Acquire and raise all skills to level 5 or above."
+      "description": "Acquire and raise all skills to level 5 or above.",
+      "requirements": [
+        "Skills:24"
+      ]
     },
     "Skylark": {
       "apId": 2486,
@@ -4745,7 +4839,7 @@
       "reward": "skillPoints:1",
       "description": "Nine slimeballs is all it takes",
       "requirements": [
-        "A monster with atleast 20.000hp"
+        "minMonsterHP:20000"
       ]
     },
     "Slow Creep": {
@@ -4806,7 +4900,10 @@
       "game_id": 287,
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
-      "description": "Gain 3.200 mana from drops."
+      "description": "Gain 3.200 mana from drops.",
+      "requirements": [
+        "Drop Holder Element"
+      ]
     },
     "Snow Blower": {
       "apId": 2495,
@@ -4889,9 +4986,11 @@
       "always_as_filler": true,
       "requirements": [
         "Endurance",
-        "Possessed Monster element",
-        "Twisted Monster element",
-        "Marked Monster element",
+        [
+          "Possessed Monster element",
+          "Twisted Monster element",
+          "Marked Monster element"
+        ],
         "minWave: 70"
       ]
     },
@@ -4929,8 +5028,7 @@
       "reward": "skillPoints:1",
       "description": "Leave a gatekeeper fang alive until it can launch 100 projectiles.",
       "requirements": [
-        "Gatekeeper element",
-        "Field A4"
+        "Gatekeeper element"
       ]
     },
     "Splash Swim Splash": {
@@ -4939,8 +5037,9 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Full of oxygen",
+      "always_as_filler": true,
       "requirements": [
-        "Click on water in a field\nRequires a field with water"
+        "Water Element"
       ]
     },
     "Starter Pack": {
@@ -4948,7 +5047,8 @@
       "game_id": 631,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Add 8 talisman fragments to your shape collection."
+      "description": "Add 8 talisman fragments to your shape collection.",
+      "always_as_filler": true
     },
     "Stash No More": {
       "apId": 2510,
@@ -4968,8 +5068,7 @@
       "description": "Cast freeze on an apparition 3 times.",
       "requirements": [
         "Freeze skill",
-        "Ritual trait",
-        "Apparition element"
+        "Ritual trait"
       ]
     },
     "Still Alive": {
@@ -4999,8 +5098,7 @@
       "reward": "skillPoints:1",
       "description": "Have 15 or more beacons standing at the end of the battle.",
       "requirements": [
-        "Dark Masonry trait",
-        "Beacon element"
+        "Dark Masonry trait"
       ]
     },
     "Still No Match": {
@@ -5009,6 +5107,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Destroy an omnibeacon.",
+      "always_as_filler": true,
       "requirements": [
         "Beacon element"
       ]
@@ -5018,7 +5117,10 @@
       "game_id": 220,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Deal 1.000 gem wasp stings to buildings."
+      "description": "Deal 1.000 gem wasp stings to buildings.",
+      "requirements": [
+        "Monster Nest Element"
+      ]
     },
     "Stinging Sphere": {
       "apId": 2517,
@@ -5057,7 +5159,8 @@
       "game_id": 362,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Have 30 fragments in your talisman inventory."
+      "description": "Have 30 fragments in your talisman inventory.",
+      "always_as_filler": true
     },
     "Stolen Shine": {
       "apId": 2522,
@@ -5094,9 +5197,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 1.000 strike spells cast through all the battles.",
       "requirements": [
-        "Freeze skill",
-        "Whiteout skill",
-        "Ice Shards skill"
+        "strikeSpells:1"
       ]
     },
     "Stormed Beacons": {
@@ -5106,7 +5207,7 @@
       "reward": "skillPoints:1",
       "description": "Destroy 15 beacons.",
       "requirements": [
-        "Beacon element"
+        "Dark Masonry Trait"
       ]
     },
     "Strike Anywhere": {
@@ -5116,9 +5217,7 @@
       "reward": "skillPoints:1",
       "description": "Cast a strike spell.",
       "requirements": [
-        "Freeze skill",
-        "Whiteout skill",
-        "Ice Shards skill"
+        "strikeSpells:1"
       ]
     },
     "Stronger Than Before": {
@@ -5147,6 +5246,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Create a grade 3 gem with 300 effective max damage.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 3"
       ]
@@ -5167,7 +5267,10 @@
       "game_id": 144,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Kill 999 swarmlings."
+      "description": "Kill 999 swarmlings.",
+      "requirements": [
+        "minSwarmlings:999"
+      ]
     },
     "Swift Death": {
       "apId": 2533,
@@ -5177,8 +5280,7 @@
       "description": "Kill the gatekeeper with a bolt.",
       "requirements": [
         "Bolt skill",
-        "Gatekeeper element",
-        "Field A4"
+        "Gatekeeper element"
       ]
     },
     "Swift Deployment": {
@@ -5207,10 +5309,7 @@
       "reward": "skillPoints:1",
       "description": "Gain 1.600 mana from drops.",
       "requirements": [
-        "Apparition element",
-        "Corrupted Mana Shard element",
-        "Drop Holder element",
-        "Mana Shard element"
+        "Drop Holder element"
       ]
     },
     "Tapped Essence": {
@@ -5274,7 +5373,7 @@
     "That Was Rude": {
       "apId": 2543,
       "game_id": 502,
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Lose a gem with more than 1.000 hits to a watchtower.",
       "requirements": [
@@ -5350,6 +5449,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Create a grade 12 pure armor tearing gem.",
+      "always_as_filler": true,
       "requirements": [
         "Armor Tearing skill",
         "minGemGrade: 12"
@@ -5375,6 +5475,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Call 140 waves early.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 140",
         "Endurance"
@@ -5432,6 +5533,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Create a grade 3 gem.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 3"
       ]
@@ -5450,7 +5552,7 @@
       "reward": "skillPoints:1",
       "description": "Kill a monster having at least 200 armor.",
       "requirements": [
-        "A monster with atleast 200 armor"
+        "minMonsterArmor:200"
       ]
     },
     "Thunderstruck": {
@@ -5458,7 +5560,10 @@
       "game_id": 131,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 120 monsters with gem bombs and wasps."
+      "description": "Kill 120 monsters with gem bombs and wasps.",
+      "requirements": [
+        "minMonsters:120"
+      ]
     },
     "Tightly Secured": {
       "apId": 2564,
@@ -5477,7 +5582,8 @@
       "reward": "skillPoints:1",
       "description": "Have 90 monsters slowed at the same time.",
       "requirements": [
-        "Slowing skill"
+        "Slowing skill",
+        "minMonsters:90"
       ]
     },
     "Time to Rise": {
@@ -5496,6 +5602,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Have a grade 1 gem with 4.500 hits.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 1"
       ]
@@ -5525,8 +5632,10 @@
       "reward": "skillPoints:1",
       "description": "Open a tomb while there is a spire on the battlefield.",
       "requirements": [
-        "Ritual trait",
-        "Spire element",
+        [
+          "Ritual trait",
+          "Spire element"
+        ],
         "Tomb element"
       ]
     },
@@ -5566,6 +5675,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:3",
       "description": "Win a Trial battle with at least 3 waves enraged.",
+      "always_as_filler": true,
       "requirements": [
         "minWave: 3",
         "Trial"
@@ -5670,8 +5780,7 @@
       "reward": "skillPoints:1",
       "description": "Kill 170 monsters while there are at least 2 wraiths in the air.",
       "requirements": [
-        "Ritual trait",
-        "Wraith element"
+        "Ritual trait"
       ]
     },
     "Twice the Terror": {
@@ -5681,8 +5790,10 @@
       "reward": "skillPoints:2",
       "description": "Kill 2 shadows.",
       "requirements": [
-        "Ritual trait",
-        "Shadow element"
+        [
+          "Ritual trait",
+          "Shadow element"
+        ]
       ]
     },
     "Unarmed": {
@@ -5702,8 +5813,10 @@
       "reward": "skillPoints:1",
       "description": "Shoot down 340 shadow projectiles.",
       "requirements": [
-        "Ritual trait",
-        "Shadow element"
+        [
+          "Ritual trait",
+          "Shadow element"
+        ]
       ]
     },
     "Unending Flow": {
@@ -5711,7 +5824,10 @@
       "game_id": 431,
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
-      "description": "Kill 24.000 monsters."
+      "description": "Kill 24.000 monsters.",
+      "requirements": [
+        "minMonsters:24000"
+      ]
     },
     "Unholy Stack": {
       "apId": 2589,
@@ -5722,9 +5838,11 @@
       "always_as_filler": true,
       "requirements": [
         "Endurance",
-        "Possessed Monster element",
-        "Twisted Monster element",
-        "Marked Monster element",
+        [
+          "Possessed Monster element",
+          "Twisted Monster element",
+          "Marked Monster element"
+        ],
         "minWave: 70"
       ]
     },
@@ -5742,7 +5860,10 @@
       "reward": "skillPoints:1",
       "description": "Reach 100 beacons destroyed through all the battles.",
       "requirements": [
-        "Beacon element"
+        [
+          "Dark Masonry trait",
+          "Beacon element"
+        ]
       ]
     },
     "Uraj and Khalis": {
@@ -5800,6 +5921,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Have a grade 1 gem with 100 hits.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 1"
       ]
@@ -5872,17 +5994,15 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Reach 500 waves beaten through all the battles.",
-      "requirements": [
-        "minWave: 500",
-        "Endurance"
-      ]
+      "always_as_filler": true
     },
     "We Just Wanna Be Free": {
       "apId": 2607,
       "game_id": 617,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "More than blue triangles"
+      "description": "More than blue triangles",
+      "always_as_filler": true
     },
     "Weakened Wallet": {
       "apId": 2608,
@@ -5917,7 +6037,10 @@
       "game_id": 260,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Don't let any monster touch your orb for 20 beaten waves."
+      "description": "Don't let any monster touch your orb for 20 beaten waves.",
+      "requirements": [
+        "minWave:20"
+      ]
     },
     "Well Earned": {
       "apId": 2612,
@@ -5938,7 +6061,8 @@
       "game_id": 224,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Have 20.000 initial mana."
+      "description": "Have 20.000 initial mana.",
+      "always_as_filler": true
     },
     "Well Trained for This": {
       "apId": 2615,
@@ -5969,9 +6093,7 @@
       "reward": "skillPoints:1",
       "description": "Have all spells charged to 200%.",
       "requirements": [
-        "Freeze skill",
-        "Whiteout skill",
-        "Ice Shards skill"
+        "strikeSpells:3"
       ]
     },
     "White Ray": {
@@ -6000,7 +6122,8 @@
       "game_id": 382,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 10."
+      "description": "Reach wizard level 10.",
+      "always_as_filler": true
     },
     "Why Not": {
       "apId": 2621,
@@ -6009,9 +6132,7 @@
       "reward": "skillPoints:1",
       "description": "Enhance a gem in the enraging socket.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Wicked Gem": {
@@ -6020,6 +6141,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Have a grade 3 gem with 900 effective max damage.",
+      "always_as_filler": true,
       "requirements": [
         "minGemGrade: 3"
       ]
@@ -6040,6 +6162,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Beat 300 waves on max Swarmling and Giant domination traits.",
+      "always_as_filler": true,
       "requirements": [
         "Swarmling Domination trait",
         "Giant Domination trait",
@@ -6053,6 +6176,7 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:3",
       "description": "Have 70 fields lit in Trial mode.",
+      "always_as_filler": true,
       "requirements": [
         "Trial",
         "fieldToken: 70"
@@ -6074,7 +6198,8 @@
       "game_id": 383,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Reach wizard level 20."
+      "description": "Reach wizard level 20.",
+      "always_as_filler": true
     },
     "You Could Be my Apprentice": {
       "apId": 2628,
@@ -6135,9 +6260,7 @@
       "reward": "skillPoints:2",
       "description": "Cast 175 strike spells.",
       "requirements": [
-        "Ice Shards skill",
-        "Whiteout skill",
-        "Freeze skill"
+        "strikeSpells:1"
       ]
     },
     "Zapped": {
@@ -6371,5 +6494,1105 @@
       "X4"
     ]
   },
-  "stage_properties": {}
+  "stage_properties": {},
+  "levelStats": {
+    "A1": {
+      "maxGiantHP": 1153349,
+      "maxReaverHP": 116260,
+      "maxSwarmlingHP": 48457,
+      "maxGiantArmor": 4239,
+      "maxReaverArmor": 4623,
+      "maxSwarmlingArmor": 4947,
+      "estMonsters": 1339
+    },
+    "A2": {
+      "maxGiantHP": 1397710,
+      "maxReaverHP": 90448,
+      "maxSwarmlingHP": 43485,
+      "maxGiantArmor": 3083,
+      "maxReaverArmor": 2249,
+      "maxSwarmlingArmor": 2717,
+      "estMonsters": 1339
+    },
+    "A3": {
+      "maxGiantHP": 1586008,
+      "maxReaverHP": 102634,
+      "maxSwarmlingHP": 45901,
+      "maxGiantArmor": 3282,
+      "maxReaverArmor": 2396,
+      "maxSwarmlingArmor": 2717,
+      "estMonsters": 1339
+    },
+    "A4": {
+      "maxGiantHP": 2178948,
+      "maxReaverHP": 141663,
+      "maxSwarmlingHP": 62768,
+      "maxGiantArmor": 7763,
+      "maxReaverArmor": 5698,
+      "maxSwarmlingArmor": 6402,
+      "estMonsters": 1416
+    },
+    "A5": {
+      "maxGiantHP": 3075848,
+      "maxReaverHP": 314395,
+      "maxSwarmlingHP": 112658,
+      "maxGiantArmor": 3722,
+      "maxReaverArmor": 3965,
+      "maxSwarmlingArmor": 3723,
+      "estMonsters": 1416
+    },
+    "A6": {
+      "maxGiantHP": 4777689,
+      "maxReaverHP": 418679,
+      "maxSwarmlingHP": 150027,
+      "maxGiantArmor": 7952,
+      "maxReaverArmor": 7579,
+      "maxSwarmlingArmor": 7083,
+      "estMonsters": 1485
+    },
+    "B1": {
+      "maxGiantHP": 382131,
+      "maxReaverHP": 21398,
+      "maxSwarmlingHP": 11059,
+      "maxGiantArmor": 964,
+      "maxReaverArmor": 626,
+      "maxSwarmlingArmor": 791,
+      "estMonsters": 1357
+    },
+    "B2": {
+      "maxGiantHP": 104147,
+      "maxReaverHP": 10277,
+      "maxSwarmlingHP": 5021,
+      "maxGiantArmor": 378,
+      "maxReaverArmor": 388,
+      "maxSwarmlingArmor": 472,
+      "estMonsters": 2248
+    },
+    "B3": {
+      "maxGiantHP": 574626,
+      "maxReaverHP": 34915,
+      "maxSwarmlingHP": 16553,
+      "maxGiantArmor": 1721,
+      "maxReaverArmor": 1189,
+      "maxSwarmlingArmor": 1416,
+      "estMonsters": 2191
+    },
+    "B4": {
+      "maxGiantHP": 304994,
+      "maxReaverHP": 25992,
+      "maxSwarmlingHP": 11516,
+      "maxGiantArmor": 964,
+      "maxReaverArmor": 888,
+      "maxSwarmlingArmor": 998,
+      "estMonsters": 1593
+    },
+    "B5": {
+      "maxGiantHP": 278832,
+      "maxReaverHP": 23430,
+      "maxSwarmlingHP": 9657,
+      "maxGiantArmor": 888,
+      "maxReaverArmor": 807,
+      "maxSwarmlingArmor": 851,
+      "estMonsters": 1953
+    },
+    "C1": {
+      "maxGiantHP": 208035,
+      "maxReaverHP": 13653,
+      "maxSwarmlingHP": 6293,
+      "maxGiantArmor": 612,
+      "maxReaverArmor": 450,
+      "maxSwarmlingArmor": 520,
+      "estMonsters": 1215
+    },
+    "C2": {
+      "maxGiantHP": 344267,
+      "maxReaverHP": 29339,
+      "maxSwarmlingHP": 10612,
+      "maxGiantArmor": 1082,
+      "maxReaverArmor": 998,
+      "maxSwarmlingArmor": 942,
+      "estMonsters": 1181
+    },
+    "C3": {
+      "maxGiantHP": 371996,
+      "maxReaverHP": 27560,
+      "maxSwarmlingHP": 8291,
+      "maxGiantArmor": 1042,
+      "maxReaverArmor": 851,
+      "maxSwarmlingArmor": 687,
+      "estMonsters": 1249
+    },
+    "C4": {
+      "maxGiantHP": 497964,
+      "maxReaverHP": 32527,
+      "maxSwarmlingHP": 10421,
+      "maxGiantArmor": 1289,
+      "maxReaverArmor": 947,
+      "maxSwarmlingArmor": 807,
+      "estMonsters": 1294
+    },
+    "C5": {
+      "maxGiantHP": 586802,
+      "maxReaverHP": 43475,
+      "maxSwarmlingHP": 12280,
+      "maxGiantArmor": 2171,
+      "maxReaverArmor": 1787,
+      "maxSwarmlingArmor": 1336,
+      "estMonsters": 1339
+    },
+    "D1": {
+      "maxGiantHP": 101904,
+      "maxReaverHP": 6309,
+      "maxSwarmlingHP": 2908,
+      "maxGiantArmor": 474,
+      "maxReaverArmor": 331,
+      "maxSwarmlingArmor": 383,
+      "estMonsters": 994
+    },
+    "D2": {
+      "maxGiantHP": 167368,
+      "maxReaverHP": 13206,
+      "maxSwarmlingHP": 3503,
+      "maxGiantArmor": 734,
+      "maxReaverArmor": 631,
+      "maxSwarmlingArmor": 457,
+      "estMonsters": 1004
+    },
+    "D3": {
+      "maxGiantHP": 156601,
+      "maxReaverHP": 9147,
+      "maxSwarmlingHP": 3977,
+      "maxGiantArmor": 633,
+      "maxReaverArmor": 423,
+      "maxSwarmlingArmor": 466,
+      "estMonsters": 1014
+    },
+    "D4": {
+      "maxGiantHP": 170013,
+      "maxReaverHP": 14488,
+      "maxSwarmlingHP": 5240,
+      "maxGiantArmor": 727,
+      "maxReaverArmor": 669,
+      "maxSwarmlingArmor": 631,
+      "estMonsters": 944
+    },
+    "D5": {
+      "maxGiantHP": 245468,
+      "maxReaverHP": 13027,
+      "maxSwarmlingHP": 5394,
+      "maxGiantArmor": 809,
+      "maxReaverArmor": 496,
+      "maxSwarmlingArmor": 526,
+      "estMonsters": 966
+    },
+    "E1": {
+      "maxGiantHP": 115288,
+      "maxReaverHP": 7530,
+      "maxSwarmlingHP": 2413,
+      "maxGiantArmor": 721,
+      "maxReaverArmor": 526,
+      "maxSwarmlingArmor": 441,
+      "estMonsters": 1049
+    },
+    "E2": {
+      "maxGiantHP": 63782,
+      "maxReaverHP": 4725,
+      "maxSwarmlingHP": 1947,
+      "maxGiantArmor": 405,
+      "maxReaverArmor": 330,
+      "maxSwarmlingArmor": 350,
+      "estMonsters": 961
+    },
+    "E3": {
+      "maxGiantHP": 89729,
+      "maxReaverHP": 7880,
+      "maxSwarmlingHP": 2561,
+      "maxGiantArmor": 273,
+      "maxReaverArmor": 249,
+      "maxSwarmlingArmor": 218,
+      "estMonsters": 1173
+    },
+    "E4": {
+      "maxGiantHP": 155322,
+      "maxReaverHP": 11507,
+      "maxSwarmlingHP": 2527,
+      "maxGiantArmor": 858,
+      "maxReaverArmor": 704,
+      "maxSwarmlingArmor": 416,
+      "estMonsters": 937
+    },
+    "E5": {
+      "maxGiantHP": 295090,
+      "maxReaverHP": 17930,
+      "maxSwarmlingHP": 8500,
+      "maxGiantArmor": 1298,
+      "maxReaverArmor": 895,
+      "maxSwarmlingArmor": 1066,
+      "estMonsters": 1201
+    },
+    "F1": {
+      "maxGiantHP": 84051,
+      "maxReaverHP": 5439,
+      "maxSwarmlingHP": 1821,
+      "maxGiantArmor": 639,
+      "maxReaverArmor": 463,
+      "maxSwarmlingArmor": 408,
+      "estMonsters": 678
+    },
+    "F2": {
+      "maxGiantHP": 106964,
+      "maxReaverHP": 7999,
+      "maxSwarmlingHP": 2492,
+      "maxGiantArmor": 770,
+      "maxReaverArmor": 634,
+      "maxSwarmlingArmor": 525,
+      "estMonsters": 668
+    },
+    "F3": {
+      "maxGiantHP": 483503,
+      "maxReaverHP": 41205,
+      "maxSwarmlingHP": 17062,
+      "maxGiantArmor": 1364,
+      "maxReaverArmor": 1260,
+      "maxSwarmlingArmor": 1336,
+      "estMonsters": 969
+    },
+    "F4": {
+      "maxGiantHP": 654896,
+      "maxReaverHP": 55811,
+      "maxSwarmlingHP": 20186,
+      "maxGiantArmor": 1721,
+      "maxReaverArmor": 1591,
+      "maxSwarmlingArmor": 1501,
+      "estMonsters": 857
+    },
+    "F5": {
+      "maxGiantHP": 948161,
+      "maxReaverHP": 57611,
+      "maxSwarmlingHP": 14857,
+      "maxGiantArmor": 2301,
+      "maxReaverArmor": 1591,
+      "maxSwarmlingArmor": 1121,
+      "estMonsters": 670
+    },
+    "G1": {
+      "maxGiantHP": 34701,
+      "maxReaverHP": 2595,
+      "maxSwarmlingHP": 752,
+      "maxGiantArmor": 323,
+      "maxReaverArmor": 263,
+      "maxSwarmlingArmor": 204,
+      "estMonsters": 595
+    },
+    "G2": {
+      "maxGiantHP": 20125,
+      "maxReaverHP": 1484,
+      "maxSwarmlingHP": 190,
+      "maxGiantArmor": 183,
+      "maxReaverArmor": 144,
+      "maxSwarmlingArmor": 57,
+      "estMonsters": 529
+    },
+    "G3": {
+      "maxGiantHP": 34486,
+      "maxReaverHP": 2115,
+      "maxSwarmlingHP": 722,
+      "maxGiantArmor": 237,
+      "maxReaverArmor": 162,
+      "maxSwarmlingArmor": 145,
+      "estMonsters": 594
+    },
+    "G4": {
+      "maxGiantHP": 59858,
+      "maxReaverHP": 3874,
+      "maxSwarmlingHP": 629,
+      "maxGiantArmor": 415,
+      "maxReaverArmor": 300,
+      "maxSwarmlingArmor": 141,
+      "estMonsters": 701
+    },
+    "H1": {
+      "maxGiantHP": 127334,
+      "maxReaverHP": 9522,
+      "maxSwarmlingHP": 1922,
+      "maxGiantArmor": 642,
+      "maxReaverArmor": 528,
+      "maxSwarmlingArmor": 300,
+      "estMonsters": 924
+    },
+    "H2": {
+      "maxGiantHP": 107482,
+      "maxReaverHP": 6531,
+      "maxSwarmlingHP": 2362,
+      "maxGiantArmor": 572,
+      "maxReaverArmor": 393,
+      "maxSwarmlingArmor": 371,
+      "estMonsters": 933
+    },
+    "H3": {
+      "maxGiantHP": 91554,
+      "maxReaverHP": 6815,
+      "maxSwarmlingHP": 2012,
+      "maxGiantArmor": 482,
+      "maxReaverArmor": 393,
+      "maxSwarmlingArmor": 311,
+      "estMonsters": 911
+    },
+    "H4": {
+      "maxGiantHP": 143118,
+      "maxReaverHP": 8127,
+      "maxSwarmlingHP": 4123,
+      "maxGiantArmor": 935,
+      "maxReaverArmor": 599,
+      "maxSwarmlingArmor": 771,
+      "estMonsters": 1001
+    },
+    "H5": {
+      "maxGiantHP": 107008,
+      "maxReaverHP": 8522,
+      "maxSwarmlingHP": 3529,
+      "maxGiantArmor": 540,
+      "maxReaverArmor": 468,
+      "maxSwarmlingArmor": 496,
+      "estMonsters": 959
+    },
+    "I1": {
+      "maxGiantHP": 234499,
+      "maxReaverHP": 18677,
+      "maxSwarmlingHP": 6755,
+      "maxGiantArmor": 1029,
+      "maxReaverArmor": 895,
+      "maxSwarmlingArmor": 844,
+      "estMonsters": 774
+    },
+    "I2": {
+      "maxGiantHP": 342053,
+      "maxReaverHP": 18153,
+      "maxSwarmlingHP": 4089,
+      "maxGiantArmor": 1146,
+      "maxReaverArmor": 704,
+      "maxSwarmlingArmor": 441,
+      "estMonsters": 639
+    },
+    "I3": {
+      "maxGiantHP": 380075,
+      "maxReaverHP": 28291,
+      "maxSwarmlingHP": 3466,
+      "maxGiantArmor": 1457,
+      "maxReaverArmor": 1198,
+      "maxSwarmlingArmor": 445,
+      "estMonsters": 441
+    },
+    "I4": {
+      "maxGiantHP": 482856,
+      "maxReaverHP": 140,
+      "maxSwarmlingHP": 54,
+      "maxGiantArmor": 1445,
+      "maxReaverArmor": 10,
+      "maxSwarmlingArmor": 10,
+      "estMonsters": 246
+    },
+    "J1": {
+      "maxGiantHP": 33623,
+      "maxReaverHP": 2062,
+      "maxSwarmlingHP": 582,
+      "maxGiantArmor": 220,
+      "maxReaverArmor": 152,
+      "maxSwarmlingArmor": 119,
+      "estMonsters": 895
+    },
+    "J2": {
+      "maxGiantHP": 31869,
+      "maxReaverHP": 4431,
+      "maxSwarmlingHP": 1588,
+      "maxGiantArmor": 309,
+      "maxReaverArmor": 433,
+      "maxSwarmlingArmor": 405,
+      "estMonsters": 1020
+    },
+    "J3": {
+      "maxGiantHP": 73384,
+      "maxReaverHP": 3752,
+      "maxSwarmlingHP": 2134,
+      "maxGiantArmor": 600,
+      "maxReaverArmor": 353,
+      "maxSwarmlingArmor": 496,
+      "estMonsters": 1058
+    },
+    "J4": {
+      "maxGiantHP": 75210,
+      "maxReaverHP": 6103,
+      "maxSwarmlingHP": 2551,
+      "maxGiantArmor": 771,
+      "maxReaverArmor": 689,
+      "maxSwarmlingArmor": 740,
+      "estMonsters": 1112
+    },
+    "K1": {
+      "maxGiantHP": 21131,
+      "maxReaverHP": 1374,
+      "maxSwarmlingHP": 497,
+      "maxGiantArmor": 267,
+      "maxReaverArmor": 192,
+      "maxSwarmlingArmor": 180,
+      "estMonsters": 519
+    },
+    "K2": {
+      "maxGiantHP": 17609,
+      "maxReaverHP": 1080,
+      "maxSwarmlingHP": 392,
+      "maxGiantArmor": 183,
+      "maxReaverArmor": 123,
+      "maxSwarmlingArmor": 116,
+      "estMonsters": 487
+    },
+    "K3": {
+      "maxGiantHP": 37303,
+      "maxReaverHP": 1943,
+      "maxSwarmlingHP": 487,
+      "maxGiantArmor": 429,
+      "maxReaverArmor": 252,
+      "maxSwarmlingArmor": 168,
+      "estMonsters": 495
+    },
+    "K4": {
+      "maxGiantHP": 14562,
+      "maxReaverHP": 1074,
+      "maxSwarmlingHP": 219,
+      "maxGiantArmor": 169,
+      "maxReaverArmor": 134,
+      "maxSwarmlingArmor": 74,
+      "estMonsters": 437
+    },
+    "K5": {
+      "maxGiantHP": 1064,
+      "maxReaverHP": 4372,
+      "maxSwarmlingHP": 1567,
+      "maxGiantArmor": 21,
+      "maxReaverArmor": 554,
+      "maxSwarmlingArmor": 516,
+      "estMonsters": 670
+    },
+    "L1": {
+      "maxGiantHP": 19334,
+      "maxReaverHP": 1251,
+      "maxSwarmlingHP": 86,
+      "maxGiantArmor": 160,
+      "maxReaverArmor": 113,
+      "maxSwarmlingArmor": 25,
+      "estMonsters": 334
+    },
+    "L2": {
+      "maxGiantHP": 23834,
+      "maxReaverHP": 1074,
+      "maxSwarmlingHP": 480,
+      "maxGiantArmor": 221,
+      "maxReaverArmor": 112,
+      "maxSwarmlingArmor": 128,
+      "estMonsters": 364
+    },
+    "L3": {
+      "maxGiantHP": 28046,
+      "maxReaverHP": 1672,
+      "maxSwarmlingHP": 815,
+      "maxGiantArmor": 257,
+      "maxReaverArmor": 171,
+      "maxSwarmlingArmor": 210,
+      "estMonsters": 462
+    },
+    "L4": {
+      "maxGiantHP": 33810,
+      "maxReaverHP": 1894,
+      "maxSwarmlingHP": 510,
+      "maxGiantArmor": 359,
+      "maxReaverArmor": 225,
+      "maxSwarmlingArmor": 160,
+      "estMonsters": 446
+    },
+    "L5": {
+      "maxGiantHP": 110184,
+      "maxReaverHP": 9522,
+      "maxSwarmlingHP": 1922,
+      "maxGiantArmor": 567,
+      "maxReaverArmor": 528,
+      "maxSwarmlingArmor": 300,
+      "estMonsters": 700
+    },
+    "M1": {
+      "maxGiantHP": 65392,
+      "maxReaverHP": 4251,
+      "maxSwarmlingHP": 1255,
+      "maxGiantArmor": 405,
+      "maxReaverArmor": 294,
+      "maxSwarmlingArmor": 233,
+      "estMonsters": 889
+    },
+    "M2": {
+      "maxGiantHP": 69963,
+      "maxReaverHP": 5208,
+      "maxSwarmlingHP": 1760,
+      "maxGiantArmor": 429,
+      "maxReaverArmor": 350,
+      "maxSwarmlingArmor": 311,
+      "estMonsters": 923
+    },
+    "M3": {
+      "maxGiantHP": 73298,
+      "maxReaverHP": 6247,
+      "maxSwarmlingHP": 1611,
+      "maxGiantArmor": 429,
+      "maxReaverArmor": 393,
+      "maxSwarmlingArmor": 277,
+      "estMonsters": 957
+    },
+    "M4": {
+      "maxGiantHP": 105153,
+      "maxReaverHP": 6836,
+      "maxSwarmlingHP": 2159,
+      "maxGiantArmor": 572,
+      "maxReaverArmor": 416,
+      "maxSwarmlingArmor": 350,
+      "estMonsters": 995
+    },
+    "N1": {
+      "maxGiantHP": 5046,
+      "maxReaverHP": 602,
+      "maxSwarmlingHP": 200,
+      "maxGiantArmor": 85,
+      "maxReaverArmor": 100,
+      "maxSwarmlingArmor": 87,
+      "estMonsters": 536
+    },
+    "N2": {
+      "maxGiantHP": 3220,
+      "maxReaverHP": 608,
+      "maxSwarmlingHP": 275,
+      "maxGiantArmor": 55,
+      "maxReaverArmor": 93,
+      "maxSwarmlingArmor": 107,
+      "estMonsters": 491
+    },
+    "N3": {
+      "maxGiantHP": 10623,
+      "maxReaverHP": 862,
+      "maxSwarmlingHP": 210,
+      "maxGiantArmor": 143,
+      "maxReaverArmor": 122,
+      "maxSwarmlingArmor": 81,
+      "estMonsters": 468
+    },
+    "N4": {
+      "maxGiantHP": 123064,
+      "maxReaverHP": 9160,
+      "maxSwarmlingHP": 3793,
+      "maxGiantArmor": 642,
+      "maxReaverArmor": 526,
+      "maxSwarmlingArmor": 557,
+      "estMonsters": 1035
+    },
+    "N5": {
+      "maxGiantHP": 117501,
+      "maxReaverHP": 8747,
+      "maxSwarmlingHP": 2582,
+      "maxGiantArmor": 606,
+      "maxReaverArmor": 496,
+      "maxSwarmlingArmor": 393,
+      "estMonsters": 1013
+    },
+    "O1": {
+      "maxGiantHP": 8611,
+      "maxReaverHP": 552,
+      "maxSwarmlingHP": 252,
+      "maxGiantArmor": 109,
+      "maxReaverArmor": 75,
+      "maxSwarmlingArmor": 87,
+      "estMonsters": 426
+    },
+    "O2": {
+      "maxGiantHP": 8294,
+      "maxReaverHP": 737,
+      "maxSwarmlingHP": 263,
+      "maxGiantArmor": 102,
+      "maxReaverArmor": 94,
+      "maxSwarmlingArmor": 87,
+      "estMonsters": 409
+    },
+    "O3": {
+      "maxGiantHP": 5462,
+      "maxReaverHP": 478,
+      "maxSwarmlingHP": 40,
+      "maxGiantArmor": 84,
+      "maxReaverArmor": 75,
+      "maxSwarmlingArmor": 18,
+      "estMonsters": 372
+    },
+    "O4": {
+      "maxGiantHP": 7590,
+      "maxReaverHP": 453,
+      "maxSwarmlingHP": 189,
+      "maxGiantArmor": 95,
+      "maxReaverArmor": 61,
+      "maxSwarmlingArmor": 65,
+      "estMonsters": 391
+    },
+    "P1": {
+      "maxGiantHP": 9056,
+      "maxReaverHP": 793,
+      "maxSwarmlingHP": 97,
+      "maxGiantArmor": 134,
+      "maxReaverArmor": 122,
+      "maxSwarmlingArmor": 44,
+      "estMonsters": 418
+    },
+    "P2": {
+      "maxGiantHP": 11011,
+      "maxReaverHP": 1126,
+      "maxSwarmlingHP": 346,
+      "maxGiantArmor": 152,
+      "maxReaverArmor": 160,
+      "maxSwarmlingArmor": 131,
+      "estMonsters": 410
+    },
+    "P3": {
+      "maxGiantHP": 13383,
+      "maxReaverHP": 1006,
+      "maxSwarmlingHP": 334,
+      "maxGiantArmor": 174,
+      "maxReaverArmor": 140,
+      "maxSwarmlingArmor": 122,
+      "estMonsters": 426
+    },
+    "P4": {
+      "maxGiantHP": 14993,
+      "maxReaverHP": 1126,
+      "maxSwarmlingHP": 149,
+      "maxGiantArmor": 174,
+      "maxReaverArmor": 140,
+      "maxSwarmlingArmor": 54,
+      "estMonsters": 316
+    },
+    "P5": {
+      "maxGiantHP": 9430,
+      "maxReaverHP": 457,
+      "maxSwarmlingHP": 273,
+      "maxGiantArmor": 174,
+      "maxReaverArmor": 93,
+      "maxSwarmlingArmor": 140,
+      "estMonsters": 1073
+    },
+    "P6": {
+      "maxGiantHP": 14461,
+      "maxReaverHP": 50,
+      "maxSwarmlingHP": 19,
+      "maxGiantArmor": 185,
+      "maxReaverArmor": 10,
+      "maxSwarmlingArmor": 10,
+      "estMonsters": 120
+    },
+    "Q1": {
+      "maxGiantHP": 316,
+      "maxReaverHP": 120,
+      "maxSwarmlingHP": 50,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 18,
+      "maxSwarmlingArmor": 19,
+      "estMonsters": 300
+    },
+    "Q2": {
+      "maxGiantHP": 345,
+      "maxReaverHP": 121,
+      "maxSwarmlingHP": 43,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 25,
+      "maxSwarmlingArmor": 23,
+      "estMonsters": 318
+    },
+    "Q3": {
+      "maxGiantHP": 2530,
+      "maxReaverHP": 151,
+      "maxSwarmlingHP": 63,
+      "maxGiantArmor": 54,
+      "maxReaverArmor": 33,
+      "maxSwarmlingArmor": 35,
+      "estMonsters": 281
+    },
+    "Q4": {
+      "maxGiantHP": 2286,
+      "maxReaverHP": 171,
+      "maxSwarmlingHP": 57,
+      "maxGiantArmor": 58,
+      "maxReaverArmor": 43,
+      "maxSwarmlingArmor": 38,
+      "estMonsters": 314
+    },
+    "Q5": {
+      "maxGiantHP": 2559,
+      "maxReaverHP": 192,
+      "maxSwarmlingHP": 63,
+      "maxGiantArmor": 44,
+      "maxReaverArmor": 33,
+      "maxSwarmlingArmor": 28,
+      "estMonsters": 334
+    },
+    "R1": {
+      "maxGiantHP": 288,
+      "maxReaverHP": 93,
+      "maxSwarmlingHP": 39,
+      "maxGiantArmor": 8,
+      "maxReaverArmor": 8,
+      "maxSwarmlingArmor": 8,
+      "estMonsters": 298
+    },
+    "R2": {
+      "maxGiantHP": 288,
+      "maxReaverHP": 93,
+      "maxSwarmlingHP": 39,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 15,
+      "maxSwarmlingArmor": 17,
+      "estMonsters": 318
+    },
+    "R3": {
+      "maxGiantHP": 3249,
+      "maxReaverHP": 261,
+      "maxSwarmlingHP": 75,
+      "maxGiantArmor": 43,
+      "maxReaverArmor": 33,
+      "maxSwarmlingArmor": 26,
+      "estMonsters": 378
+    },
+    "R4": {
+      "maxGiantHP": 4140,
+      "maxReaverHP": 335,
+      "maxSwarmlingHP": 96,
+      "maxGiantArmor": 70,
+      "maxReaverArmor": 57,
+      "maxSwarmlingArmor": 43,
+      "estMonsters": 378
+    },
+    "R5": {
+      "maxGiantHP": 6253,
+      "maxReaverHP": 403,
+      "maxSwarmlingHP": 134,
+      "maxGiantArmor": 89,
+      "maxReaverArmor": 61,
+      "maxSwarmlingArmor": 53,
+      "estMonsters": 396
+    },
+    "R6": {
+      "maxGiantHP": 9991,
+      "maxReaverHP": 362,
+      "maxSwarmlingHP": 248,
+      "maxGiantArmor": 167,
+      "maxReaverArmor": 70,
+      "maxSwarmlingArmor": 117,
+      "estMonsters": 328
+    },
+    "S1": {
+      "maxGiantHP": 230,
+      "maxReaverHP": 64,
+      "maxSwarmlingHP": 39,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 14,
+      "maxSwarmlingArmor": 20,
+      "estMonsters": 65
+    },
+    "S2": {
+      "maxGiantHP": 259,
+      "maxReaverHP": 78,
+      "maxSwarmlingHP": 48,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 14,
+      "maxSwarmlingArmor": 22,
+      "estMonsters": 76
+    },
+    "S3": {
+      "maxGiantHP": 230,
+      "maxReaverHP": 55,
+      "maxSwarmlingHP": 6,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 12,
+      "maxSwarmlingArmor": 4,
+      "estMonsters": -33
+    },
+    "S4": {
+      "maxGiantHP": 288,
+      "maxReaverHP": 86,
+      "maxSwarmlingHP": 31,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 14,
+      "maxSwarmlingArmor": 14,
+      "estMonsters": 148
+    },
+    "T1": {
+      "maxGiantHP": 460,
+      "maxReaverHP": 219,
+      "maxSwarmlingHP": 62,
+      "maxGiantArmor": 16,
+      "maxReaverArmor": 43,
+      "maxSwarmlingArmor": 33,
+      "estMonsters": 362
+    },
+    "T2": {
+      "maxGiantHP": 3910,
+      "maxReaverHP": 251,
+      "maxSwarmlingHP": 72,
+      "maxGiantArmor": 55,
+      "maxReaverArmor": 36,
+      "maxSwarmlingArmor": 29,
+      "estMonsters": 281
+    },
+    "T3": {
+      "maxGiantHP": 4140,
+      "maxReaverHP": 266,
+      "maxSwarmlingHP": 96,
+      "maxGiantArmor": 70,
+      "maxReaverArmor": 46,
+      "maxSwarmlingArmor": 43,
+      "estMonsters": 567
+    },
+    "T4": {
+      "maxGiantHP": 575,
+      "maxReaverHP": 262,
+      "maxSwarmlingHP": 126,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 35,
+      "maxSwarmlingArmor": 43,
+      "estMonsters": 606
+    },
+    "T5": {
+      "maxGiantHP": 575,
+      "maxReaverHP": 745,
+      "maxSwarmlingHP": 312,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 78,
+      "maxSwarmlingArmor": 84,
+      "estMonsters": 1000
+    },
+    "U1": {
+      "maxGiantHP": 518,
+      "maxReaverHP": 311,
+      "maxSwarmlingHP": 130,
+      "maxGiantArmor": 16,
+      "maxReaverArmor": 53,
+      "maxSwarmlingArmor": 57,
+      "estMonsters": 486
+    },
+    "U2": {
+      "maxGiantHP": 546,
+      "maxReaverHP": 413,
+      "maxSwarmlingHP": 148,
+      "maxGiantArmor": 16,
+      "maxReaverArmor": 65,
+      "maxSwarmlingArmor": 61,
+      "estMonsters": 599
+    },
+    "U3": {
+      "maxGiantHP": 518,
+      "maxReaverHP": 288,
+      "maxSwarmlingHP": 130,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 37,
+      "maxSwarmlingArmor": 43,
+      "estMonsters": 697
+    },
+    "U4": {
+      "maxGiantHP": 546,
+      "maxReaverHP": 304,
+      "maxSwarmlingHP": 137,
+      "maxGiantArmor": 16,
+      "maxReaverArmor": 50,
+      "maxSwarmlingArmor": 57,
+      "estMonsters": 608
+    },
+    "V1": {
+      "maxGiantHP": 216,
+      "maxReaverHP": 65,
+      "maxSwarmlingHP": 23,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 14,
+      "maxSwarmlingArmor": 14,
+      "estMonsters": 276
+    },
+    "V2": {
+      "maxGiantHP": 259,
+      "maxReaverHP": 91,
+      "maxSwarmlingHP": 28,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 17,
+      "maxSwarmlingArmor": 14,
+      "estMonsters": 318
+    },
+    "V3": {
+      "maxGiantHP": 259,
+      "maxReaverHP": 98,
+      "maxSwarmlingHP": 41,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 27,
+      "maxSwarmlingArmor": 28,
+      "estMonsters": 360
+    },
+    "V4": {
+      "maxGiantHP": 316,
+      "maxReaverHP": 129,
+      "maxSwarmlingHP": 43,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 19,
+      "maxSwarmlingArmor": 17,
+      "estMonsters": 380
+    },
+    "W1": {
+      "maxGiantHP": 144,
+      "maxReaverHP": 9,
+      "maxSwarmlingHP": 5,
+      "maxGiantArmor": 13,
+      "maxReaverArmor": 6,
+      "maxSwarmlingArmor": 7,
+      "estMonsters": 24
+    },
+    "W2": {
+      "maxGiantHP": 144,
+      "maxReaverHP": 20,
+      "maxSwarmlingHP": 12,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 7,
+      "maxSwarmlingArmor": 11,
+      "estMonsters": 98
+    },
+    "W3": {
+      "maxGiantHP": 115,
+      "maxReaverHP": 23,
+      "maxSwarmlingHP": 14,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 10,
+      "maxSwarmlingArmor": 15,
+      "estMonsters": 87
+    },
+    "W4": {
+      "maxGiantHP": 201,
+      "maxReaverHP": 56,
+      "maxSwarmlingHP": 34,
+      "maxGiantArmor": 11,
+      "maxReaverArmor": 14,
+      "maxSwarmlingArmor": 20,
+      "estMonsters": 65
+    },
+    "X1": {
+      "maxGiantHP": 12348,
+      "maxReaverHP": 1067,
+      "maxSwarmlingHP": 357,
+      "maxGiantArmor": 140,
+      "maxReaverArmor": 128,
+      "maxSwarmlingArmor": 112,
+      "estMonsters": 899
+    },
+    "X2": {
+      "maxGiantHP": 24021,
+      "maxReaverHP": 1796,
+      "maxSwarmlingHP": 450,
+      "maxGiantArmor": 294,
+      "maxReaverArmor": 240,
+      "maxSwarmlingArmor": 160,
+      "estMonsters": 656
+    },
+    "X3": {
+      "maxGiantHP": 16172,
+      "maxReaverHP": 1300,
+      "maxSwarmlingHP": 468,
+      "maxGiantArmor": 211,
+      "maxReaverArmor": 183,
+      "maxSwarmlingArmor": 171,
+      "estMonsters": 630
+    },
+    "X4": {
+      "maxGiantHP": 15698,
+      "maxReaverHP": 954,
+      "maxSwarmlingHP": 395,
+      "maxGiantArmor": 180,
+      "maxReaverArmor": 120,
+      "maxSwarmlingArmor": 128,
+      "estMonsters": 460
+    },
+    "Y1": {
+      "maxGiantHP": 5462,
+      "maxReaverHP": 443,
+      "maxSwarmlingHP": 185,
+      "maxGiantArmor": 71,
+      "maxReaverArmor": 57,
+      "maxSwarmlingArmor": 61,
+      "estMonsters": 603
+    },
+    "Y2": {
+      "maxGiantHP": 5290,
+      "maxReaverHP": 457,
+      "maxSwarmlingHP": 190,
+      "maxGiantArmor": 64,
+      "maxReaverArmor": 56,
+      "maxSwarmlingArmor": 60,
+      "estMonsters": 656
+    },
+    "Y3": {
+      "maxGiantHP": 5046,
+      "maxReaverHP": 380,
+      "maxSwarmlingHP": 159,
+      "maxGiantArmor": 85,
+      "maxReaverArmor": 66,
+      "maxSwarmlingArmor": 71,
+      "estMonsters": 499
+    },
+    "Y4": {
+      "maxGiantHP": 12851,
+      "maxReaverHP": 966,
+      "maxSwarmlingHP": 320,
+      "maxGiantArmor": 174,
+      "maxReaverArmor": 140,
+      "maxSwarmlingArmor": 122,
+      "estMonsters": 684
+    },
+    "Z1": {
+      "maxGiantHP": 12348,
+      "maxReaverHP": 1233,
+      "maxSwarmlingHP": 357,
+      "maxGiantArmor": 140,
+      "maxReaverArmor": 147,
+      "maxSwarmlingArmor": 112,
+      "estMonsters": 734
+    },
+    "Z2": {
+      "maxGiantHP": 21591,
+      "maxReaverHP": 1398,
+      "maxSwarmlingHP": 503,
+      "maxGiantArmor": 221,
+      "maxReaverArmor": 157,
+      "maxSwarmlingArmor": 147,
+      "estMonsters": 678
+    },
+    "Z3": {
+      "maxGiantHP": 45195,
+      "maxReaverHP": 2268,
+      "maxSwarmlingHP": 1121,
+      "maxGiantArmor": 271,
+      "maxReaverArmor": 155,
+      "maxSwarmlingArmor": 193,
+      "estMonsters": 276
+    },
+    "Z4": {
+      "maxGiantHP": 27111,
+      "maxReaverHP": 1412,
+      "maxSwarmlingHP": 632,
+      "maxGiantArmor": 252,
+      "maxReaverArmor": 147,
+      "maxSwarmlingArmor": 168,
+      "estMonsters": 500
+    },
+    "Z5": {
+      "maxGiantHP": 62632,
+      "maxReaverHP": 80,
+      "maxSwarmlingHP": 31,
+      "maxGiantArmor": 288,
+      "maxReaverArmor": 8,
+      "maxSwarmlingArmor": 8,
+      "estMonsters": 150
+    }
+  }
 }
