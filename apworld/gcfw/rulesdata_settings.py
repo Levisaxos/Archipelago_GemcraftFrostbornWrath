@@ -208,6 +208,13 @@ game_skills_categories = {
             "Vital Link",
         ],
     },
+    "Skills": {
+        "description": "Gem-related abilities (basic gem types)",
+        "members": [
+            "GemSkills",
+            "OtherSkills"
+        ]
+    },    
     "GemSkills": {
         "description": "Gem-related abilities (basic gem types)",
         "members": [
