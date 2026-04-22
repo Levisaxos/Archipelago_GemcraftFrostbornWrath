@@ -174,6 +174,8 @@ package tracker {
                     var achData:Object = _achievementData[achName];
                     if (!achData || !achData.apId) continue;
 
+                    if (achData.always_as_filler === true) continue;
+
                     var modes:Array = achData.modes as Array;
                     if (modes != null && modes.indexOf("journey") < 0) continue;
 
@@ -237,6 +239,9 @@ package tracker {
                 if (!achData || !achData.apId) continue;
 
                 var apId:int = int(achData.apId);
+
+                // Always-filler achievements are design-excluded, never in logic
+                if (achData.always_as_filler === true) continue;
 
                 // Journey-only check
                 var modes:Array = achData.modes as Array;
