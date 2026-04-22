@@ -46,207 +46,99 @@ def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     return _has_tier_tokens(state, player, prev, token_percent)
 
 
-def _extract_skill_requirements(requirements: list) -> list:
-    """
-    Extract skill names from achievement requirements.
-    Returns list of skill item names like ["Critical Hit Skill", "Poison Skill"] or ["Ritual Battle Trait"].
-    Traits are formatted as "{trait_name} Battle Trait" while skills use "{skill_name} Skill".
+def _normalize_requirements(requirements: list) -> list:
+    """Convert requirements to DNF: list of AND-groups (outer=OR, inner=AND).
+    Flat list of strings is treated as a single AND-group for backward compatibility."""
+    if not requirements:
+        return []
+    if isinstance(requirements[0], list):
+        return requirements
+    return [requirements]
 
-    Supports skill group counters:
-    - "Freeze skill" → ["Freeze Skill"] (single requirement)
-    - "strikeSpells: 1" → ["strikeSpells: 1"] (need 1 strike spell)
-    - "enhancementSpells: 2" → ["enhancementSpells: 2"] (need 2 enhancement spells)
-    - "gemTypes: 1" → ["gemTypes: 1"] (need 1 gem type)
 
-    Supports OR logic with pipe-separated requirements (for non-skill contexts):
-    - "Achievement: X|Achievement: Y" → [("Achievement: X", "Achievement: Y")] (OR tuple)
-    """
-    skill_requirements = []
+def _simplify_requirements(normalized: list) -> list:
+    """If any AND-group contains a trait requirement, strip element reqs from all groups.
+    Prevents circular dependencies where trait items may sit behind element-locked locations."""
+    has_trait = any(" trait" in req.lower() for group in normalized for req in group)
+    if not has_trait:
+        return normalized
+    return [[req for req in group if not req.endswith(" element")] for group in normalized]
 
-    for req in requirements:
-        req = req.strip()
 
-        # Skip achievement requirements (handled separately)
-        if req.startswith("Achievement:"):
-            continue
+def _can_reach_any_stage(state, player: int, stages: list) -> bool:
+    """Return True if the player can reach any completion location across the given stages."""
+    for stage in stages:
+        for suffix in ("Journey", "Bonus", "Wizard stash"):
+            try:
+                if state.can_reach(f"Complete {stage} - {suffix}", "Location", player):
+                    return True
+            except KeyError:
+                pass
+    return False
 
-        # Check for skill group counter requirements (e.g., "strikeSpells: 1")
-        is_group_counter = False
-        for group_name in skill_groups.keys():
-            if req.startswith(f"{group_name}:"):
-                skill_requirements.append(req)
-                is_group_counter = True
-                break
 
-        # Also handle category counters from game_skills_categories (e.g., "BattleTraits: 1")
-        if not is_group_counter:
-            for group_name in game_skills_categories.keys():
-                if req.startswith(f"{group_name}:"):
-                    skill_requirements.append(req)
-                    is_group_counter = True
-                    break
-
-        if is_group_counter:
-            continue
-
-        # Handle single skill/trait requirements
-        is_trait = " trait" in req.lower()
-        is_skill = " skill" in req.lower()
-
-        # Skip non-skill/trait requirements
-        if not is_trait and not is_skill:
-            continue
-
-        # Extract skill/trait name (remove " skill", " Skill", " trait", or " Trait" suffix)
+def _is_gating_req(req: str, is_progressive: bool) -> bool:
+    """Return True if this requirement string actually gates access to something."""
+    req = req.strip()
+    if req.startswith("Achievement:"):
+        return is_progressive
+    if req.endswith(" element"):
+        elem_name = req[:-8]
+        return (elem_name in non_monster_elements or
+                (elem_name in game_level_elements and bool(game_level_elements[elem_name].get("levels"))))
+    if ":" in req:
+        group_name = req.split(":")[0].strip()
+        return group_name in skill_groups or group_name in game_skills_categories
+    if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
-
-        # Check each skill category to verify it's a valid skill or trait
-        found = False
-        for category, category_data in game_skills_categories.items():
-            if skill_name in category_data.get("members", []):
-                # Format depends on category: Battle Traits use " Battle Trait", others use " Skill"
-                if category == "BattleTraits":
-                    skill_requirements.append(f"{skill_name} Battle Trait")
-                else:
-                    skill_requirements.append(f"{skill_name} Skill")
-                found = True
-                break
-
-    return skill_requirements
+        return any(skill_name in cat.get("members", []) for cat in game_skills_categories.values())
+    return False
 
 
-def _extract_achievement_requirements(requirements: list, progressive_mode: bool) -> list:
-    """
-    Extract achievement requirements from the requirements list.
-    Only returns them if progressive mode is enabled.
-    Returns list of achievement item names like ["Achievement: Kill 10 Waves"]
+def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
+    """Evaluate a single requirement string against the current collection state."""
+    req = req.strip()
 
-    Supports OR logic with pipe-separated requirements:
-    - "Achievement: X" → ["Achievement: X"] (single requirement)
-    - "Achievement: X|Achievement: Y" → [("Achievement: X", "Achievement: Y")] (OR tuple)
-    """
-    if not progressive_mode:
-        return []  # Ignore achievement requirements if not in progressive mode
+    if req.startswith("Achievement:"):
+        return state.has(req, player) if is_progressive else True
 
-    achievement_requirements = []
-    for req in requirements:
-        req = req.strip()
-
-        # Handle pipe-separated OR requirements
-        if "|" in req and req.startswith("Achievement:"):
-            or_group = []
-            for or_req in req.split("|"):
-                or_req = or_req.strip()
-                if or_req.startswith("Achievement:"):
-                    or_group.append(or_req)
-            if or_group:
-                achievement_requirements.append(tuple(or_group))
-            continue
-
-        # Single achievement requirement
-        if req.startswith("Achievement:"):
-            achievement_requirements.append(req)
-
-    return achievement_requirements
-
-
-def _extract_element_requirements(requirements: list) -> list:
-    """
-    Extract element requirements (game_level_elements or non_monster_elements).
-    Returns which elements are required.
-
-    Supports OR logic with pipe-separated requirements:
-    - "Fire element" → ["Fire"] (single requirement)
-    - "Fire element|Ice element" → [("Fire", "Ice")] (OR tuple)
-    """
-    element_requirements = []
-
-    for req in requirements:
-        req = req.strip()
-
-        # Handle pipe-separated OR requirements
-        if "|" in req and " element" in req:
-            or_group = []
-            for or_req in req.split("|"):
-                or_req = or_req.strip()
-                if not or_req.endswith(" element"):
-                    continue
-                elem_name = or_req[:-8]  # Remove " element"
-
-                if elem_name in game_level_elements:
-                    if game_level_elements[elem_name].get("levels", []):
-                        or_group.append(elem_name)
-                elif elem_name in non_monster_elements:
-                    or_group.append(elem_name)
-
-            if or_group:
-                element_requirements.append(tuple(or_group))
-            continue
-
-        # Single element requirement
-        if not req.endswith(" element"):
-            continue
-
-        elem_name = req[:-8]  # Remove " element"
-
-        # Check if element has levels defined
+    if req.endswith(" element"):
+        elem_name = req[:-8]
+        if elem_name in non_monster_elements:
+            trait = non_monster_elements[elem_name].get("requires_trait")
+            if trait:
+                return state.has(f"{trait} Battle Trait", player)
+            return _can_reach_any_stage(state, player, non_monster_elements[elem_name].get("levels", []))
         if elem_name in game_level_elements:
-            if game_level_elements[elem_name].get("levels", []):
-                # Element has levels, can be gated
-                element_requirements.append(elem_name)
-        elif elem_name in non_monster_elements:
-            # Non-monster elements can be gated by their trait requirement
-            element_requirements.append(elem_name)
+            stages = game_level_elements[elem_name].get("levels", [])
+            if stages:
+                return _can_reach_any_stage(state, player, stages)
+        return True
 
-    return element_requirements
+    if ":" in req:
+        group_name, count_str = req.split(":", 1)
+        group_name = group_name.strip()
+        try:
+            count_needed = int(count_str.strip())
+        except ValueError:
+            return True
+        if group_name in skill_groups:
+            members = skill_groups[group_name].get("members", [])
+            return sum(1 for m in members if state.has(f"{m} Skill", player)) >= count_needed
+        if group_name in game_skills_categories:
+            members = game_skills_categories[group_name].get("members", [])
+            suffix = " Battle Trait" if group_name == "BattleTraits" else " Skill"
+            return sum(1 for m in members if state.has(f"{m}{suffix}", player)) >= count_needed
+        return True  # Unknown counter (fieldToken, gemCount, etc.) — metadata only
 
-
-def _build_achievement_access_rule(requirements: list, player: int):
-    """
-    Build an access rule function for an achievement based on its requirements.
-    Checks if player has obtained all required skills and traits.
-
-    Returns a lambda that checks requirements, or None if no skill/trait requirements.
-    """
-    skill_requirements = []
-
-    for req in requirements:
-        req = req.strip()
-
-        is_trait = " trait" in req.lower()
-        is_skill = " skill" in req.lower()
-
-        # Skip non-skill/trait requirements (gemCount, minWave, element requirements, etc.)
-        if not is_trait and not is_skill:
-            continue
-
-        # Extract skill/trait name (remove " skill", " Skill", " trait", or " Trait" suffix)
+    if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
-
-        # Check each skill category to verify it's a valid skill or trait
-        found = False
         for category, category_data in game_skills_categories.items():
             if skill_name in category_data.get("members", []):
-                # Format depends on category: Battle Traits use " Battle Trait", others use " Skill"
-                if category == "BattleTraits":
-                    skill_requirements.append(f"{skill_name} Battle Trait")
-                else:
-                    skill_requirements.append(f"{skill_name} Skill")
-                found = True
-                break
+                suffix = " Battle Trait" if category == "BattleTraits" else " Skill"
+                return state.has(f"{skill_name}{suffix}", player)
 
-        # If not in our categories, skip it
-        if not found:
-            continue
-
-    if not skill_requirements:
-        return None
-
-    # Return a lambda that checks if all required skills/traits are obtained
-    def check_skills(state):
-        return all(state.has(skill, player) for skill in skill_requirements)
-
-    return check_skills
+    return True  # Metadata requirement (gemCount, minWave, etc.) — not gated
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -372,45 +264,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
 
     # --- Achievement location access rules ---
-    # Achievements require specific skills to be obtained first
     try:
         from .rulesdata_achievements import achievement_requirements as all_achievements
 
-        # Simplify achievements: if they have trait requirements, remove element requirements
-        # This avoids circular dependencies where trait items might be in trait-locked locations
-        for ach_name, ach_data in all_achievements.items():
-            requirements = ach_data.get("requirements", [])
-            if requirements:
-                # Check if this achievement has a trait requirement
-                has_trait = any("trait" in req.lower() for req in requirements)
-
-                if has_trait:
-                    # Keep only trait and skill requirements, remove element and stat requirements
-                    simplified = []
-                    for req in requirements:
-                        req_lower = req.lower()
-                        # Keep traits and skills
-                        if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
-                            simplified.append(req)
-                        # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
-
-                    ach_data["requirements"] = simplified
-
-        with_rules = 0
-        without_rules = 0
-        not_found = 0
-        skipped_modes = 0
-
         is_progressive = world.options.achievement_progression.value == AchievementProgression.option_progressive
         max_effort_level = world.options.achievement_required_effort.value
-
-        # Effort hierarchy: higher number = more effort required
         effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
         max_effort_index = min(max_effort_level - 1, len(effort_hierarchy) - 1)
         max_effort_str = effort_hierarchy[max_effort_index] if max_effort_level > 0 else None
 
         for ach_name, ach_data in all_achievements.items():
-            # Skip if required_effort level exceeds selected max
             ach_effort = ach_data.get("required_effort", "Trivial")
             if max_effort_str:
                 effort_index = effort_hierarchy.index(ach_effort) if ach_effort in effort_hierarchy else 0
@@ -418,182 +281,29 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
-            # Excluded achievements (always_as_filler=True) get no access rules —
-            # their locations exist but are marked EXCLUDED and always hold filler.
             if ach_data.get("always_as_filler", False):
                 continue
 
-            loc_name = f"Achievement: {ach_name}"
             try:
-                location = multiworld.get_location(loc_name, player)
-                requirements = ach_data.get("requirements", [])
+                location = multiworld.get_location(f"Achievement: {ach_name}", player)
+                raw = ach_data.get("requirements", [])
+                normalized = _simplify_requirements(_normalize_requirements(raw))
 
-                skill_requirements = _extract_skill_requirements(requirements)
-                achievement_requirements = _extract_achievement_requirements(requirements, is_progressive)
-                element_requirements = _extract_element_requirements(requirements)
+                has_gating = any(
+                    _is_gating_req(req, is_progressive)
+                    for group in normalized
+                    for req in group
+                )
+                if has_gating:
+                    def make_rule(groups, prog):
+                        return lambda state: any(
+                            all(_eval_req(r, state, player, prog) for r in group)
+                            for group in groups
+                        )
+                    location.access_rule = make_rule(normalized, is_progressive)
 
-                has_skills = len(skill_requirements) > 0
-                has_achievements = len(achievement_requirements) > 0
-                has_elements = len(element_requirements) > 0
-
-                # Build all requirement lists for access rule
-                all_requirements = []
-
-                if has_achievements:
-                    all_requirements.append(("achievement", achievement_requirements))
-                if has_skills:
-                    all_requirements.append(("skill", skill_requirements))
-                if has_elements:
-                        # For elements, create requirements based on where they appear
-                        trait_requirements = []
-                        stage_requirements = []  # List of (element_name_or_tuple, stages_list) tuples
-
-                        for elem_or_group in element_requirements:
-                            # Handle OR groups (tuples) or single elements
-                            if isinstance(elem_or_group, tuple):
-                                # OR group: collect traits/stages for all elements, check as OR
-                                or_traits = []
-                                or_stages = []
-                                for elem in elem_or_group:
-                                    if elem in non_monster_elements:
-                                        trait = non_monster_elements[elem].get("requires_trait")
-                                        if trait:
-                                            or_traits.append(f"{trait} Battle Trait")
-                                        stages = non_monster_elements[elem].get("levels", [])
-                                        if stages:
-                                            or_stages.append((elem, stages))
-                                    elif elem in game_level_elements:
-                                        stages = game_level_elements[elem].get("levels", [])
-                                        if stages:
-                                            or_stages.append((elem, stages))
-
-                                if or_traits:
-                                    trait_requirements.append(tuple(or_traits))
-                                if or_stages:
-                                    stage_requirements.append(("OR", or_stages))
-                            else:
-                                # Single element
-                                elem = elem_or_group
-                                if elem in non_monster_elements:
-                                    trait = non_monster_elements[elem].get("requires_trait")
-                                    if trait:
-                                        trait_requirements.append(f"{trait} Battle Trait")
-                                    # Also check if it has stage mappings
-                                    stages = non_monster_elements[elem].get("levels", [])
-                                    if stages:
-                                        stage_requirements.append((elem, stages))
-
-                                # Check game-level elements for stage mappings
-                                elif elem in game_level_elements:
-                                    stages = game_level_elements[elem].get("levels", [])
-                                    if stages:
-                                        stage_requirements.append((elem, stages))
-
-                        # Add trait requirements
-                        if trait_requirements:
-                            all_requirements.append(("trait", trait_requirements))
-
-                        # Add stage requirements (OR logic: can reach ANY of the stages with this element)
-                        if stage_requirements:
-                            all_requirements.append(("stages", stage_requirements))
-
-                if all_requirements:
-                    # Create unified access rule checking all requirement types
-                    def make_rule(req_list, ach_name_debug):
-                        def check_requirements(state):
-                            for req_type, req_values in req_list:
-                                if req_type == "skill" or req_type == "trait":
-                                    # Check each requirement (AND logic for list items)
-                                    for req in req_values:
-                                        if isinstance(req, tuple):
-                                            # OR logic: at least one must be true
-                                            if not any(state.has(item, player) for item in req):
-                                                return False
-                                        elif isinstance(req, str) and ":" in req:
-                                            # Skill group counter (e.g., "strikeSpells: 1", "BattleTraits: 1")
-                                            group_name, count_str = req.split(":", 1)
-                                            group_name = group_name.strip()
-                                            count_needed = int(count_str.strip())
-
-                                            if group_name in skill_groups:
-                                                group_members = skill_groups[group_name].get("members", [])
-                                                count_owned = sum(
-                                                    1 for member in group_members
-                                                    if state.has(f"{member} Skill", player)
-                                                )
-                                                if count_owned < count_needed:
-                                                    return False
-                                            elif group_name in game_skills_categories:
-                                                group_members = game_skills_categories[group_name].get("members", [])
-                                                # BattleTraits items use " Battle Trait"; other categories use " Skill"
-                                                suffix = " Battle Trait" if group_name == "BattleTraits" else " Skill"
-                                                count_owned = sum(
-                                                    1 for member in group_members
-                                                    if state.has(f"{member}{suffix}", player)
-                                                )
-                                                if count_owned < count_needed:
-                                                    return False
-                                        else:
-                                            # Single requirement: must be true
-                                            if not state.has(req, player):
-                                                return False
-                                elif req_type == "stages":
-                                    # For stages: must be able to reach ANY stage in ANY element's stage list
-                                    # req_values is list of (element_name_or_"OR", stages) tuples
-                                    can_reach_all_elements = True
-                                    for elem_marker, stages_list in req_values:
-                                        if elem_marker == "OR":
-                                            # OR group: need to reach ANY of these stages
-                                            can_reach_or_element = False
-                                            for elem_name, stages in stages_list:
-                                                # Check if can reach ANY location in ANY of the stages
-                                                for stage in stages:
-                                                    for suffix in ("Journey", "Bonus", "Wizard stash"):
-                                                        loc_name = f"Complete {stage} - {suffix}"
-                                                        try:
-                                                            if state.can_reach(loc_name, "Location", player):
-                                                                can_reach_or_element = True
-                                                                break
-                                                        except KeyError:
-                                                            pass
-                                                    if can_reach_or_element:
-                                                        break
-                                                if can_reach_or_element:
-                                                    break
-                                            if not can_reach_or_element:
-                                                can_reach_all_elements = False
-                                                break
-                                        else:
-                                            # Single element: need to reach this element's stages
-                                            elem_name = elem_marker
-                                            can_reach_element = False
-                                            for stage in stages_list:
-                                                for suffix in ("Journey", "Bonus", "Wizard stash"):
-                                                    loc_name = f"Complete {stage} - {suffix}"
-                                                    try:
-                                                        if state.can_reach(loc_name, "Location", player):
-                                                            can_reach_element = True
-                                                            break
-                                                    except KeyError:
-                                                        pass
-                                                if can_reach_element:
-                                                    break
-                                            if not can_reach_element:
-                                                can_reach_all_elements = False
-                                                break
-                                    if not can_reach_all_elements:
-                                        return False
-                            return True
-                        return check_requirements
-
-                    location.access_rule = make_rule(all_requirements, ach_name)
-                    with_rules += 1
-
-                else:
-                    without_rules += 1
-            except Exception as e:
-                # Location might not exist if achievement was filtered out
-                not_found += 1
+            except Exception:
+                pass
 
     except Exception as e:
         print(f"ERROR setting achievement access rules: {e}")
