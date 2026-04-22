@@ -32,6 +32,7 @@ package patch {
         private var _blockListenersAdded:Boolean   = false;
         private var _disableEndurance:Boolean      = false;
         private var _disableTrial:Boolean          = true;
+        private var _freeStages:Object             = {}; // strId → true
         // Tracks the availableGemTypes array reference we last injected into.
         // When the game rebuilds this array (on restart or new stage) the
         // reference changes and we re-inject automatically.
@@ -75,9 +76,15 @@ package patch {
          * Apply slot_data mode-disable flags. Call once after AP connects.
          * Defaults match the option defaults: endurance ON, trial OFF.
          */
-        public function configure(disableEndurance:Boolean, disableTrial:Boolean):void {
+        public function configure(disableEndurance:Boolean, disableTrial:Boolean, freeStages:Array = null):void {
             _disableEndurance = disableEndurance;
             _disableTrial     = disableTrial;
+            _freeStages       = {};
+            if (freeStages != null) {
+                for each (var strId:String in freeStages) {
+                    _freeStages[strId] = true;
+                }
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -175,7 +182,7 @@ package patch {
                 var stageMeta:* = GV.ingameCore.stageMeta;
                 if (stageMeta == null) return;
                 var stageId:int = int(stageMeta.id);
-                var isStarterStage:Boolean = (stageMeta.strId == "W1");
+                var isStarterStage:Boolean = Boolean(_freeStages[stageMeta.strId]);
                 var isFirstPlay:Boolean = GV.ppd.stageHighestXpsJourney[stageId].g() == 0;
 
                 // W1 on revisit: vanilla already handles skill gems, nothing to do.

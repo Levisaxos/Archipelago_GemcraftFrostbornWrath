@@ -40,6 +40,10 @@ package ui {
         // McDropIconOutcome icons saved from the game's ending.dropIcons to re-add at the end.
         private var _preservedBattleIcons:Array = [];
 
+        // TalismanFragment objects received from AP during the level (isBattleWon was false
+        // at grant time).  Flushed into McDropIconOutcome icons by buildIcons().
+        private var _pendingApTalismans:Array = [];
+
         public function LevelEndScreenBuilder(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
@@ -188,7 +192,7 @@ package ui {
                     _achievementUnlocker.clearPendingLevelAchievements();
                 }
 
-                if (icons.length == 0 && _preservedBattleIcons.length == 0) return;
+                if (icons.length == 0 && _preservedBattleIcons.length == 0 && _pendingApTalismans.length == 0) return;
 
                 // Add AP achievement icons to the display list.
                 for (var k:int = 0; k < icons.length; k++) {
@@ -214,12 +218,31 @@ package ui {
                 }
                 _preservedBattleIcons = [];
 
+                // --- Step 5: flush AP-received talisman fragments (received mid-level) ---
+                var pendingTalCount:int = _pendingApTalismans.length;
+                for (var t:int = 0; t < pendingTalCount; t++) {
+                    try {
+                        var talIcon:McDropIconOutcome = new McDropIconOutcome(
+                            DropType.TALISMAN_FRAGMENT, _pendingApTalismans[t]);
+                        talIcon.y = 789;
+                        talIcon.visible = false;
+                        ending.cnt.mcOutcomePanel.addChild(talIcon);
+                        ending.dropIcons.push(talIcon);
+                        talIcon.addEventListener(MouseEvent.MOUSE_OVER, onGameIconOver, false, 0, true);
+                        talIcon.addEventListener(MouseEvent.MOUSE_OUT,  onIconOut,      false, 0, true);
+                    } catch (te:Error) {
+                        _logger.log(_modName, "buildIcons: pending talisman icon error: " + te.message);
+                    }
+                }
+                _pendingApTalismans = [];
+
                 // Sort by priority and lay out all icons.
                 repositionIcons(ending.dropIcons);
 
                 _logger.log(_modName, "LevelEndScreenBuilder.buildIcons: "
                     + icons.length + " AP icons, "
-                    + preservedCount + " preserved game icons");
+                    + preservedCount + " preserved game icons, "
+                    + pendingTalCount + " AP talisman icons");
             } catch (err:Error) {
                 _logger.log(_modName, "LevelEndScreenBuilder.buildIcons ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -253,6 +276,47 @@ package ui {
                 _logger.log(_modName, "addSentItemToEndingScreen: " + itemName + " \u2192 " + receivingName + " (locId=" + locId + ")");
             } catch (err:Error) {
                 _logger.log(_modName, "addSentItemToEndingScreen ERROR: " + err.message);
+            }
+        }
+
+        /**
+         * Add a talisman fragment's native drop icon.
+         * If the ending screen is already showing (isBattleWon), adds immediately.
+         * Otherwise queues the fragment so buildIcons() picks it up when the level ends.
+         */
+        public function addTalismanDropIconToEndingScreen(frag:*):void {
+            if (frag == null) return;
+            var ending:* = (GV.ingameController != null && GV.ingameController.core != null)
+                ? GV.ingameController.core.ending : null;
+            if (ending != null && ending.isBattleWon) {
+                addGameDropIconToEndingScreen(DropType.TALISMAN_FRAGMENT, frag);
+            } else {
+                _pendingApTalismans.push(frag);
+            }
+        }
+
+        /**
+         * Add a native game drop icon to the still-open ending screen.
+         * Used for AP-received items that should render with the game's own icon and hover tooltip.
+         * Safe to call when not on the ending screen — returns early if isBattleWon is false.
+         */
+        public function addGameDropIconToEndingScreen(dropType:int, data:*):void {
+            try {
+                if (GV.ingameController == null || GV.ingameController.core == null) return;
+                var ending:* = GV.ingameController.core.ending;
+                if (ending == null || ending.dropIcons == null || !ending.isBattleWon) return;
+
+                var icon:McDropIconOutcome = new McDropIconOutcome(dropType, data);
+                icon.y = 789;
+                icon.visible = false;
+                ending.cnt.mcOutcomePanel.addChild(icon);
+                ending.dropIcons.push(icon);
+                icon.addEventListener(MouseEvent.MOUSE_OVER, onGameIconOver, false, 0, true);
+                icon.addEventListener(MouseEvent.MOUSE_OUT,  onIconOut,      false, 0, true);
+                repositionIcons(ending.dropIcons);
+                _logger.log(_modName, "addGameDropIconToEndingScreen: dropType=" + dropType);
+            } catch (err:Error) {
+                _logger.log(_modName, "addGameDropIconToEndingScreen ERROR: " + err.message);
             }
         }
 

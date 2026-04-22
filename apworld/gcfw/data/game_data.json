@@ -396,9 +396,7 @@
         "Armor Tear",
         "Poison"
       ],
-      "required_skills": [
-        "gemTypes: 2"
-      ],
+      "required_skills": [],
       "wave_count": 8,
       "wiz_stash_loc_ap_id": 401
     },
@@ -414,9 +412,7 @@
         "Leech",
         "Slow"
       ],
-      "required_skills": [
-        "gemTypes: 2"
-      ],
+      "required_skills": [],
       "wave_count": 12,
       "wiz_stash_loc_ap_id": 402
     },
@@ -431,9 +427,7 @@
       "available_gems": [
         "Poison"
       ],
-      "required_skills": [
-        "gemTypes: 1"
-      ],
+      "required_skills": [],
       "wave_count": 14,
       "wiz_stash_loc_ap_id": 403
     },

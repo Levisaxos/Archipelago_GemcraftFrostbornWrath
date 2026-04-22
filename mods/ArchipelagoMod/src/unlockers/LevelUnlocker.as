@@ -131,7 +131,7 @@ package unlockers {
             var levels:int = levelsForApId(apId);
             if (levels <= 0) return;
 
-            if (label == "") label = "XP Tome";
+            if (label == null || label == "") label = "XP Tome";
 
             var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
 

@@ -900,7 +900,7 @@ package {
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
             }
-            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
+            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial, AV.serverData.freeStages);
             _wavePrePatcher.configure(
                 AV.serverData.serverOptions.enemyMultipliers.hp,
                 AV.serverData.serverOptions.enemyMultipliers.armor,
@@ -1072,7 +1072,10 @@ package {
                 }
                 if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
-                    _talismanUnlocker.grantFragment(apId);
+                    var frag:* = _talismanUnlocker.grantFragment(apId);
+                    if (frag != null) {
+                        _levelEndScreenBuilder.addTalismanDropIconToEndingScreen(frag);
+                    }
                     _saveManager.saveSlotData();
                     return;
                 }
@@ -1250,8 +1253,21 @@ package {
         }
 
         private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
-            if (_progressionBlocker != null)
-                _levelEndScreenBuilder.addSentItemToEndingScreen(locId, sentItemName, recvName);
+            if (_progressionBlocker == null) return;
+
+            // In solo play every item-send is a self-send.  Talisman fragments are
+            // already shown with a native McDropIconOutcome (via grantItem →
+            // addTalismanDropIconToEndingScreen), so adding an AP icon here would
+            // produce a duplicate.  Skip the sent-item AP icon for talisman self-sends.
+            var sentData:Object = _connectionManager.itemsSentThisLevel[locId];
+            if (sentData != null
+                    && int(sentData.receivingSlot) == _connectionManager.mySlot
+                    && sentItemName != null
+                    && sentItemName.toLowerCase().indexOf("talisman") >= 0) {
+                return;
+            }
+
+            _levelEndScreenBuilder.addSentItemToEndingScreen(locId, sentItemName, recvName);
         }
 
         private function onGoalReached():void {

@@ -44,10 +44,11 @@ package unlockers {
         // -----------------------------------------------------------------------
         // Incremental grant (ReceivedItems index > 0)
 
-        /** Grant a single talisman fragment by AP ID (900–999). */
-        public function grantFragment(apId:int):void {
+        /** Grant a single talisman fragment by AP ID (900–999).
+         *  Returns the created TalismanFragment on success, or null on failure. */
+        public function grantFragment(apId:int):* {
             var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
-            addFragmentFromTalData(talData, apId);
+            return addFragmentFromTalData(talData, apId);
         }
 
         // -----------------------------------------------------------------------
@@ -74,14 +75,14 @@ package unlockers {
         // -----------------------------------------------------------------------
         // Helpers
 
-        private function addFragmentFromTalData(talData:String, apId:int):void {
+        private function addFragmentFromTalData(talData:String, apId:int):* {
             if (!ensurePpdExists("grantFragment")) {
-                return;
+                return null;
             }
             var inv:Array = GV.ppd.talismanInventory;
             if (inv == null) {
                 logAction("grantFragment: talismanInventory null");
-                return;
+                return null;
             }
             var slotIdx:int = -1;
             for (var i:int = 0; i < inv.length; i++) {
@@ -89,17 +90,17 @@ package unlockers {
             }
             if (slotIdx < 0) {
                 logAction("grantFragment: talisman inventory full, cannot grant apId=" + apId);
-                return;
+                return null;
             }
 
             var parts:Array = talData.split("/");
             if (parts.length < 4) {
                 logAction("grantFragment: invalid talData '" + talData + "' for apId=" + apId);
-                return;
+                return null;
             }
-            var seed:int        = int(parts[0]);
-            var rarity:int      = int(parts[1]);
-            var type:int        = int(parts[2]);
+            var seed:int         = int(parts[0]);
+            var rarity:int       = int(parts[1]);
+            var type:int         = int(parts[2]);
             var upgradeLevel:int = int(parts[3]);
 
             var frag:TalismanFragment = new TalismanFragment(seed, rarity, type, upgradeLevel);
@@ -114,6 +115,7 @@ package unlockers {
                 + " seed=" + seed + " rarity=" + rarity
                 + " type=" + type + " slot=" + slotIdx);
             showPlusNodeOnSelector("mcPlusNodeTalisman");
+            return frag;
         }
 
         private function hasFragmentWithSeed(seed:int):Boolean {

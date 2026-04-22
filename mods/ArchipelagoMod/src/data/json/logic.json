@@ -15,9 +15,7 @@
       "unlocks": [
         "W3"
       ],
-      "requiredSkills": [
-        "gemTypes: 2"
-      ],
+      "requiredSkills": [],
       "availableGems": ["Armor Tear", "Poison"],
       "waveCount": 8
     },
@@ -26,9 +24,7 @@
       "unlocks": [
         "W4"
       ],
-      "requiredSkills": [
-        "gemTypes: 2"
-      ],
+      "requiredSkills": [],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 12
     },
@@ -37,9 +33,7 @@
       "unlocks": [
         "S1"
       ],
-      "requiredSkills": [
-        "gemTypes: 1"
-      ],
+      "requiredSkills": [],
       "availableGems": ["Poison"],
       "waveCount": 14
     },
