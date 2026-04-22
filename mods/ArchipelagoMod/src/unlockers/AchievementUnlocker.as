@@ -40,6 +40,15 @@ package unlockers {
 
         private var _detectCallCount:int = 0;
 
+        /**
+         * Called after any achievement location check is sent to AP.
+         * ArchipelagoMod wires this to mark the logic evaluator dirty and
+         * refresh the achievement panel so collected achievements immediately
+         * leave the "In Logic" group without waiting for the next item grant.
+         * Signature: ():void
+         */
+        public var onChecked:Function = null;
+
         // -----------------------------------------------------------------------
 
         public function get pendingLevelAchievements():Array { return _pendingLevelAchievements; }
@@ -175,9 +184,9 @@ package unlockers {
             if (_connectionManager.isConnected) {
                 _connectionManager.sendLocationChecks([apId]);
             }
-            _awardSkillPointsForAchievement(achievementName);
             _pendingLevelAchievements.push({ apId: apId, achievementName: achievementName, gameId: gameId });
             _logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId + "  gameId=" + gameId);
+            if (onChecked != null) onChecked();
         }
 
         /**

@@ -47,7 +47,8 @@ package patch {
         private var _gameIdToApId:Object = {};
 
         // Data sets — populated by update*() calls from ArchipelagoMod
-        private var _reqMetApIds:Object         = {}; // apId -> true: req currently met
+        private var _reqMetApIds:Object         = {}; // apId -> true: req currently met (for dots)
+        private var _inLogicApIds:Object        = {}; // apId -> true: req met AND still missing (for grouping/counts)
         private var _excludedApIds:Object       = {}; // apId -> true: always_as_filler
         private var _effortExcludedApIds:Object = {}; // apId -> true: effort > threshold
         private var _maxEffortLabel:String      = "Trivial";
@@ -227,11 +228,14 @@ package patch {
 
                     if (rawApId != null && sel != 0) {
                         var apId:int = int(rawApId);
+                        var isEarned:Boolean = (int(ach.status) >= 2);
                         if (_excludedApIds[apId] === true) {
                             passes = (sel & AchievementGroupPanel.GROUP_DESIGN) != 0;
                         } else if (_effortExcludedApIds[apId] === true) {
                             passes = (sel & AchievementGroupPanel.GROUP_EFFORT) != 0;
-                        } else if (_reqMetApIds[apId] === true) {
+                        } else if (!isEarned && _inLogicApIds[apId] === true) {
+                            // Only unearned achievements belong in the In Logic group;
+                            // earned-but-pending ones fall through to Out of Logic.
                             passes = (sel & AchievementGroupPanel.GROUP_IN_LOGIC) != 0;
                         } else {
                             passes = (sel & AchievementGroupPanel.GROUP_OUT_LOGIC) != 0;
@@ -256,12 +260,16 @@ package patch {
             for (var i:int = 0; i < achis.length; i++) {
                 var ach:* = achis[i];
                 if (ach == null) continue;
+                // Earned achievements (status >= 2) are hidden by the game panel when any
+                // filter is active — exclude them from all group counts so the button
+                // label matches what is actually visible in the window.
+                if (int(ach.status) >= 2) continue;
                 var rawApId:* = _gameIdToApId[int(ach.id)];
                 if (rawApId == null) continue;
                 var apId:int = int(rawApId);
                 if (_excludedApIds[apId] === true)       { g4++; }
                 else if (_effortExcludedApIds[apId] === true) { g3++; }
-                else if (_reqMetApIds[apId] === true)    { g1++; }
+                else if (_inLogicApIds[apId] === true)   { g1++; }
                 else                                     { g2++; }
             }
             _groupPanel.setCounts(g1, g2, g3, g4);
@@ -276,6 +284,7 @@ package patch {
          * if filterFlags[_ourFilterIndex] is out of bounds.
          */
         public function updateLogicFlags(inLogicApIds:Object):void {
+            _inLogicApIds = inLogicApIds || {};
             if (!_patched || _ourFilterIndex < 0) return;
             if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
             try {
@@ -393,10 +402,10 @@ package patch {
                 var rawApId:* = _gameIdToApId[int(ach.id)];
                 if (rawApId == null) { gRest.push(ach); continue; }
                 var apId:int = int(rawApId);
-                if      (_excludedApIds[apId] === true)       g4.push(ach);
-                else if (_effortExcludedApIds[apId] === true) g3.push(ach);
-                else if (_reqMetApIds[apId] === true)         g1.push(ach);
-                else                                          g2.push(ach);
+                if      (_excludedApIds[apId] === true)                         g4.push(ach);
+                else if (_effortExcludedApIds[apId] === true)                  g3.push(ach);
+                else if (int(ach.status) < 2 && _inLogicApIds[apId] === true) g1.push(ach);
+                else                                                           g2.push(ach);
             }
 
             GV.achiCollection.achisByOrder = g1.concat(g2, g3, g4, gRest);

@@ -338,6 +338,14 @@ package net {
         /** Send location check IDs to the server. */
         public function sendLocationChecks(locationIds:Array):void {
             _sender.sendLocationChecks(locationIds);
+            // Remove from missing so the logic evaluator stops counting them as in-logic.
+            // Field checks do this manually before calling _sender directly; achievement
+            // checks go through this method, so we centralise the deletion here.
+            var missing:Object = _receiver.missingLocations;
+            if (missing != null) {
+                for each (var locId:int in locationIds)
+                    delete missing[locId];
+            }
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */

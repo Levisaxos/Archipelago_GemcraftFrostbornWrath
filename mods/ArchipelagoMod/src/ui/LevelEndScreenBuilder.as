@@ -261,7 +261,17 @@ package ui {
                 var ending:* = GV.ingameController.core.ending;
                 if (ending == null || ending.dropIcons == null || !ending.isBattleWon) return;
 
-                var icon:ApItemIcon = _makeApIcon(itemName + " \u2192 " + receivingName, itemName);
+                // If buildIcons() already placed a "?" placeholder for this location, update it.
+                var label:String = itemName + " \u2192 " + receivingName;
+                for (var pi:int = 0; pi < ending.dropIcons.length; pi++) {
+                    var existing:ApItemIcon = ending.dropIcons[pi] as ApItemIcon;
+                    if (existing != null && existing.locationId == locId) {
+                        existing.tooltipText = label;
+                        return;
+                    }
+                }
+
+                var icon:ApItemIcon = _makeApIcon(label, itemName);
                 icon.locationId = locId;
                 var sentData:Object = (_connectionManager != null) ? _connectionManager.itemsSentThisLevel[locId] : null;
                 icon.sortOrder = (sentData != null) ? _sortOrderForSentItem(sentData) : 10;

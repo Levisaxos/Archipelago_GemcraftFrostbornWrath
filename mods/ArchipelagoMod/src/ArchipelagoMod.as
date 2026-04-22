@@ -233,6 +233,10 @@ package {
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
                 _achPanelPatcher.setAchievementLogicEvaluator(_achievementLogicEvaluator);
 
+                // When an achievement check is sent, immediately refresh the panel so the
+                // achievement leaves "In Logic" without waiting for the next item grant.
+                _achievementUnlocker.onChecked = _refreshAchievementPanel;
+
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
 
@@ -957,6 +961,20 @@ package {
             if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                 _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
                 _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
+                _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
+                _achPanelPatcher.refreshIfActive();
+            }
+        }
+
+        /**
+         * Refresh the achievement panel logic state.
+         * Called as `_achievementUnlocker.onChecked` after any achievement location
+         * check is sent, so collected achievements immediately leave "In Logic".
+         */
+        private function _refreshAchievementPanel():void {
+            if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+            if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                 _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
