@@ -31,6 +31,7 @@ SKILL_CATEGORIES: Dict[str, List[str]] = {
 # Tier 5: spells + buildings        Tier 11: spells + buildings
 # Tier 6: gems + wrath              Tier 12: gems + wrath
 TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
+    0:  ["gems", "gems"],
     1:  ["spells", "focus"],
     2:  ["gems", "buildings"],
     3:  ["spells", "wrath"],
@@ -46,15 +47,21 @@ TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
 }
 
 CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
+# Tier 0 is a flat (non-cascading) requirement — NOT carried forward into tier 1+.
+# This prevents tier 1-12 cumulative totals from overflowing the available skill count.
+CUMULATIVE_SKILL_REQUIREMENTS[0] = {
+    skill_name: TIER_SKILL_REQUIREMENTS.get(0, []).count(skill_name)
+    for skill_name in SKILL_CATEGORIES.keys()
+}
 # TODO: make not hard coded to 12 tiers
-for tier in range(1,12+1):
+for tier in range(1, 12+1):
     this_tier_skills: Dict[str, int] = {
         skill_name: (
             CUMULATIVE_SKILL_REQUIREMENTS[tier-1][skill_name] if tier > 1
             else 0
         ) for skill_name in SKILL_CATEGORIES.keys()
     }
-    for tier_req in TIER_SKILL_REQUIREMENTS[tier]:
+    for tier_req in TIER_SKILL_REQUIREMENTS.get(tier, []):
         this_tier_skills[tier_req] += 1
     CUMULATIVE_SKILL_REQUIREMENTS[tier] = this_tier_skills
 

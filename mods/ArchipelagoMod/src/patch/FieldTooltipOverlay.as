@@ -100,7 +100,7 @@ package patch {
                 return;
             }
 
-            // Dispose game's bitmap and reset so drawBitmap() runs again.
+            // Dispose game's bitmap so doEnterFrame() re-renders.
             try {
                 var oldBmp:Bitmap = vIp.bmp as Bitmap;
                 if (oldBmp != null && oldBmp.bitmapData != null) {
@@ -111,6 +111,22 @@ package patch {
             } catch (e:Error) {
                 _logger.log(_modName, "FieldTooltipOverlay: bitmap dispose error: " + e.message);
                 return;
+            }
+
+            // For non-tutorial stages, remove gem icons from the panel.
+            // Two complementary approaches — whichever applies to McInfoPanel's internals:
+            //   1. Filter the internal render list to remove gem entries (and the "Available
+            //      gems:" label). Textfield entries have a "text" property; image/preview
+            //      entries have a "bitmapData"/"bitmap"/"image" property. Entries with none
+            //      of these are gem icon entries and are removed.
+            //   2. Hide any non-Bitmap display children (gem icons added as addChild).
+            if (!_evaluator.isFreeStage(strId)) {
+                _tryRemoveGemEntries(vIp);
+                for (var ci:int = 0; ci < vIp.numChildren; ci++) {
+                    var ch:* = vIp.getChildAt(ci);
+                    if (ch == null || ch is Bitmap) continue;
+                    try { ch.visible = false; } catch (he:Error) {}
+                }
             }
 
             // drawBitmap() multiplied vIp.w by projectorZoom in-place during the first
@@ -245,7 +261,10 @@ package patch {
                                      journeyMissing:Boolean, journeyDone:Boolean,
                                      bonusMissing:Boolean,   bonusDone:Boolean,
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
+            var stageTier:int = _evaluator.getStageTier(strId);
+            var tierLabel:String = (stageTier >= 0) ? ("Tier: " + stageTier) : "";
             var lines:Array = [["Archipelago", 0xE5AD0A]];
+            if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
             var journeyExists:Boolean  = journeyMissing || journeyDone;
             var bonusExists:Boolean    = bonusMissing   || bonusDone;
@@ -274,7 +293,7 @@ package patch {
                     // Tier-blocked: show token requirement.
                     var req:Object = _evaluator.getBlockingTokenReq(strId);
                     if (req != null && (req.strIds as Array).length > 0) {
-                        lines.push(["Complete at least " + req.needed + " of:", 0x888888]);
+                        lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0x888888]);
                         lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
                     }
                 } else if ((journeyMissing && !journeyInLogic) ||
@@ -298,6 +317,42 @@ package patch {
             if (done)         return [label + ": \u2713",         0x888888];
             if (inLogic)      return [label + ": in logic",       0x44FF44];
             return                   [label + ": not in logic",   0xFF4444];
+        }
+
+        /**
+         * Attempt to remove gem icon entries (and the "Available gems:" label) from
+         * McInfoPanel's internal render list without touching the map preview or text.
+         *
+         * McInfoPanel's internal list is a private implementation detail; we probe
+         * several likely property names. If none match this is a safe no-op.
+         *
+         * Identification heuristic:
+         *   textfield entries  → have a "text" property
+         *   image/preview      → have a "bitmapData", "bitmap", or "image" property
+         *   gem icon entries   → have none of the above → removed
+         *   "Available gems:"  → textfield whose text contains "gems" → removed
+         */
+        private function _tryRemoveGemEntries(vIp:*):void {
+            var listProps:Array = ["_items", "items", "_textItems", "_renders", "_content", "_tfItems"];
+            for each (var pn:String in listProps) {
+                try {
+                    var lst:* = vIp[pn];
+                    if (!(lst is Array) || (lst as Array).length == 0) continue;
+                    var filtered:Array = [];
+                    for each (var item:* in lst as Array) {
+                        if (item == null) continue;
+                        var hasText:Boolean = item.hasOwnProperty("text");
+                        var hasBmp:Boolean  = item.hasOwnProperty("bitmapData")
+                                           || item.hasOwnProperty("bitmap")
+                                           || item.hasOwnProperty("image");
+                        if (!hasText && !hasBmp) continue; // gem icon entry — skip
+                        if (hasText && String(item["text"]).toLowerCase().indexOf("gems") >= 0) continue; // "Available gems:" — skip
+                        filtered.push(item);
+                    }
+                    vIp[pn] = filtered;
+                    return;
+                } catch (fe:Error) {}
+            }
         }
     }
 }

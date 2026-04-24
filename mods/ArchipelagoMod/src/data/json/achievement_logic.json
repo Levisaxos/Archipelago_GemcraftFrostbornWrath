@@ -846,9 +846,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 5.000 enhancement spells cast through all the battles.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Charged for the Kill": {
@@ -1510,9 +1508,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 2.500 enhancement spells cast through all the battles.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Enhancement Storage": {
@@ -1522,9 +1518,7 @@
       "reward": "skillPoints:1",
       "description": "Enhance a gem in the inventory.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Enhancing Challenge": {
@@ -1773,9 +1767,7 @@
       "reward": "skillPoints:1",
       "description": "Cast a gem enhancement spell.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Fire in the Hole": {
@@ -2038,13 +2030,11 @@
     "Gemhancement": {
       "apId": 2208,
       "game_id": 439,
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Reach 1.000 enhancement spells cast through all the battles.",
       "requirements": [
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Get Them": {
@@ -3381,9 +3371,7 @@
       "description": "Enhance a gem in an amplifier.",
       "requirements": [
         "Amplifiers skill",
-        "Bolt skill",
-        "Beam skill",
-        "Barrage skill"
+        "enhancementSpells:1"
       ]
     },
     "Mighty": {

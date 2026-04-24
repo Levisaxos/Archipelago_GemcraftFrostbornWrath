@@ -446,6 +446,17 @@ package {
                 _achievementUnlocker.detectAndReport();
             }
 
+            // Build AP drop icons on the fail ending screen. SAVE_SAVE only fires on a
+            // level win, so we poll here to catch the loss case. The deduplication guard
+            // in buildIcons ensures this is a no-op after the first successful call.
+            if (!_standalone && _levelEndScreenBuilder != null
+                    && GV.ingameController != null && GV.ingameController.core != null) {
+                var failEnding:* = GV.ingameController.core.ending;
+                if (failEnding != null && !failEnding.isBattleWon && failEnding.dropIcons != null) {
+                    _levelEndScreenBuilder.buildIcons(failEnding);
+                }
+            }
+
             // Track screen transitions.
             var screen:int = int(GV.main.currentScreen);
             if (_lastScreen == -1)

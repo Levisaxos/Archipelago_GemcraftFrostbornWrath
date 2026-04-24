@@ -75,6 +75,18 @@ package tracker {
         public function get hasRules():Boolean { return _stageTier != null; }
         public function get reachableTier():int { return _reachableTier; }
 
+        /** True if this stage is a free/tutorial stage (W1-W4, always reachable). */
+        public function isFreeStage(strId:String):Boolean {
+            return _freeStages[strId] == true;
+        }
+
+        /** Returns the tier of the given stage, or -1 if unknown. */
+        public function getStageTier(strId:String):int {
+            if (_stageTier == null) return -1;
+            var t:* = _stageTier[strId];
+            return (t !== undefined) ? int(t) : -1;
+        }
+
         // -----------------------------------------------------------------------
         // Public queries
 
@@ -203,7 +215,7 @@ package tracker {
             if (_dirty) recompute();
             if (_inLogicByStrId[strId] == true) return null;
 
-            var prevTier:int  = _reachableTier;
+            var prevTier:int  = int(_stageTier[strId]) - 1;
             var prevCount:int = int(_tierStageCounts[String(prevTier)]);
             if (prevCount <= 0) return null;
 
@@ -214,7 +226,7 @@ package tracker {
                 if (int(_stageTier[sid]) == prevTier) allStrIds.push(sid);
             }
             allStrIds.sort(Array.CASEINSENSITIVE);
-            return { needed: needed, strIds: allStrIds };
+            return { needed: needed, strIds: allStrIds, tier: prevTier };
         }
 
         /**
@@ -252,7 +264,7 @@ package tracker {
             // Find highest contiguously-reachable tier.
             var t:int = 0;
             while (true) {
-                var ok:Boolean = t == 0 || (_tierTokensMet(t) && _tierSkillsMet(t));
+                var ok:Boolean = _tierSkillsMet(t) && (t == 0 || _tierTokensMet(t));
                 if (!ok) break;
                 _reachableTier = t;
                 t++;

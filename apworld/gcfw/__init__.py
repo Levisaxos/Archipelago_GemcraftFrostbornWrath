@@ -713,9 +713,11 @@ class GemcraftFrostbornWrathWorld(World):
         tier_stage_counts: Dict[str, int] = {
             str(t): len(stages) for t, stages in TIERS.items()
         }
-        cumulative_skill_reqs: Dict[str, Dict[str, int]] = {
-            str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
-        }
+        skill_reqs_enabled = bool(self.options.tier_skill_requirements.value)
+        cumulative_skill_reqs: Dict[str, Dict[str, int]] = (
+            {str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()}
+            if skill_reqs_enabled else {}
+        )
 
         # Build achievement requirements map: achievement name → [requirements]
         achievement_requirements_map: Dict[str, list] = {}
@@ -740,6 +742,7 @@ class GemcraftFrostbornWrathWorld(World):
             # Tracker logic rules (see LogicEvaluator.as)
             "logic_rules_version":   1,
             "skill_categories":      SKILL_CATEGORIES,
+            "tier_skill_requirements": skill_reqs_enabled,
             "cumulative_skill_reqs": cumulative_skill_reqs,
             "stage_tier":            stage_tier_map,
             "stage_skills":          stage_skills_map,
