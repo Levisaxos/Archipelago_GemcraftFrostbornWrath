@@ -296,6 +296,11 @@ package patch {
                         lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0x888888]);
                         lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
                     }
+                    // Show any unmet tier skill requirements.
+                    var skillReqLines:Array = _evaluator.getBlockingTierSkillLines(strId);
+                    for each (var srl:Array in skillReqLines) {
+                        lines.push(srl);
+                    }
                 } else if ((journeyMissing && !journeyInLogic) ||
                            (bonusMissing   && !bonusInLogic)) {
                     // Skill-gated: stage is tier-reachable but journey/bonus blocked by skills.

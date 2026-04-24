@@ -205,6 +205,53 @@ package tracker {
         }
 
         /**
+         * Returns [text, color] line pairs for any unmet tier skill requirements
+         * blocking this stage.  Empty array when skill reqs are disabled or all met.
+         */
+        public function getBlockingTierSkillLines(strId:String):Array {
+            if (_cumulativeSkillReqs == null || _stageTier == null) return [];
+            var lines:Array = [];
+            var counts:Object = AV.sessionData.skillCountByCategory;
+
+            var catLabel:Object = { gems: "gem", spells: "spell", focus: "focus",
+                                    buildings: "building", wrath: "wrath" };
+
+            // tier0 flat gem requirement (not cascaded into higher tiers).
+            var tier0Reqs:Object = _cumulativeSkillReqs["0"];
+            if (tier0Reqs != null) {
+                for (var cat0:String in tier0Reqs) {
+                    var need0:int = int(tier0Reqs[cat0]);
+                    if (need0 <= 0) continue;
+                    var have0:int = int(counts[cat0]);
+                    if (have0 < need0) {
+                        var lbl0:String = catLabel[cat0] != null ? String(catLabel[cat0]) : cat0;
+                        lines.push(["Requires " + need0 + " " + lbl0 + " skill" + (need0 != 1 ? "s" : "") +
+                                    " (" + have0 + "/" + need0 + ")", 0x888888]);
+                    }
+                }
+            }
+
+            // Cumulative tier skill requirements for this stage's tier (tier1+).
+            var tier:int = int(_stageTier[strId]);
+            if (tier > 0) {
+                var tierReqs:Object = _cumulativeSkillReqs[String(tier)];
+                if (tierReqs != null) {
+                    for (var cat:String in tierReqs) {
+                        var need:int = int(tierReqs[cat]);
+                        if (need <= 0) continue;
+                        var have:int = int(counts[cat]);
+                        if (have < need) {
+                            var lbl:String = catLabel[cat] != null ? String(catLabel[cat]) : cat;
+                            lines.push(["Requires " + need + " " + lbl + " skill" + (need != 1 ? "s" : "") +
+                                        " (" + have + "/" + need + ")", 0x888888]);
+                        }
+                    }
+                }
+            }
+            return lines;
+        }
+
+        /**
          * For a stage not yet tier-reachable, returns the token count needed from
          * the current reachable tier and all stage strIds in that tier.
          * Returns null if the stage is already in logic, a free stage, or no rules loaded.

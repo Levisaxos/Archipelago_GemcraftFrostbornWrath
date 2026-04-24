@@ -714,10 +714,11 @@ class GemcraftFrostbornWrathWorld(World):
             str(t): len(stages) for t, stages in TIERS.items()
         }
         skill_reqs_enabled = bool(self.options.tier_skill_requirements.value)
-        cumulative_skill_reqs: Dict[str, Dict[str, int]] = (
-            {str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()}
-            if skill_reqs_enabled else {}
-        )
+        # Always send the full table — the mod uses it for tooltip display regardless
+        # of whether the option gates logic.  The Python access rules gate separately.
+        cumulative_skill_reqs: Dict[str, Dict[str, int]] = {
+            str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
+        }
 
         # Build achievement requirements map: achievement name → [requirements]
         achievement_requirements_map: Dict[str, list] = {}
