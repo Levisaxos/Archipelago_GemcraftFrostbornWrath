@@ -107,12 +107,13 @@ package patch {
          * victory screen finds an empty array and displays nothing. Data effects
          * for known drop types are reverted immediately; unknown types are logged.
          */
-        public function tickDropIcons():void {
-            if (GV.ingameController == null || GV.ingameController.core == null) return;
+        /** Returns true if any drops were cleared this tick (caller can start a log countdown). */
+        public function tickDropIcons():Boolean {
+            if (GV.ingameController == null || GV.ingameController.core == null) return false;
             var ending:* = GV.ingameController.core.ending;
-            if (ending == null) return;
+            if (ending == null) return false;
             var drops:Array = ending.dropIcons;
-            if (drops == null || drops.length == 0) return;
+            if (drops == null || drops.length == 0) return false;
 
             for (var i:int = 0; i < drops.length; i++) {
                 var di:* = drops[i];
@@ -134,6 +135,7 @@ package patch {
                 }
             }
             drops.splice(0, drops.length);
+            return true;
         }
 
         // -----------------------------------------------------------------------

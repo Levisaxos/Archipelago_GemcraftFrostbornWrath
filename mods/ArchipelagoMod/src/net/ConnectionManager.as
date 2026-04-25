@@ -95,6 +95,8 @@ package net {
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
         public var onPanelReset:Function;
+        /** Called when we are the sender of an AP item. Signature: (itemName:String):void */
+        public var onItemSent:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
         /** Called when the connection drops unexpectedly. Signature: ():void */
@@ -120,6 +122,9 @@ package net {
             };
             _receiver.onDeathLinkReceived = function(src:String):void {
                 if (onDeathLinkReceived != null) onDeathLinkReceived(src);
+            };
+            _receiver.onItemSent = function(itemName:String):void {
+                if (onItemSent != null) onItemSent(itemName);
             };
         }
 

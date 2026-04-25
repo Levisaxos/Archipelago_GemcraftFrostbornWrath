@@ -147,6 +147,11 @@ package {
         private var _mainMenuUI:MainMenuUI;
         private var _dbgFrameCounter:int = 0; // for throttled screen logging
 
+        // Items sent to AP during the current level session (via PrintJSON onItemSent).
+        // Logged and cleared after a short post-level countdown to capture late async packets.
+        private var _sessionDrops:Array = [];
+        private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
+
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
         private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
@@ -202,6 +207,10 @@ package {
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
                 _connectionManager.onItemReceived          = grantItem;
+                _connectionManager.onItemSent              = function(itemName:String):void {
+                    _sessionDrops.push(itemName);
+                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] " + itemName);
+                };
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
@@ -420,8 +429,25 @@ package {
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
 
-            // Suppress all dropicons mid-battle so the victory screen shows nothing.
-            if (_progressionBlocker != null) _progressionBlocker.tickDropIcons();
+            // Suppress all dropicons mid-battle. When drops are cleared, start a
+            // short countdown so late-arriving async PrintJSON packets are included.
+            if (_progressionBlocker != null && _progressionBlocker.tickDropIcons()) {
+                _levelEndCountdown = 15;
+            }
+
+            // After the countdown expires, log and clear the session drops list.
+            if (_levelEndCountdown > 0) {
+                _levelEndCountdown--;
+                if (_levelEndCountdown == 0) {
+                    _logger.log(MOD_NAME, "=== AP items sent this level: " + _sessionDrops.length + " ===");
+                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + _sessionDrops[sd]);
+                    }
+                    _logger.log(MOD_NAME, "=== end ===");
+                    _sessionDrops = [];
+                    _levelEndCountdown = -1;
+                }
+            }
 
             // Poll the goal manager every frame so mid-battle goals (e.g. Swarm
             // Queen kill on K4) fire as soon as the condition is met, not only
@@ -438,6 +464,7 @@ package {
             if (_lastScreen == -1)
                 _lastScreen = screen;
             if (screen != _lastScreen) {
+                _logger.log(MOD_NAME, "Screen transition: " + _lastScreen + " → " + screen);
 
                 // Entering MAINMENU — disconnect early so the connection doesn't
                 // linger while the player is on the main menu.
@@ -495,6 +522,13 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                    _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
+                    _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
+                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + _sessionDrops[sd]);
+                    }
+                    _logger.log(MOD_NAME, "=== end of AP items list ===");
+                    _sessionDrops = [];
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {

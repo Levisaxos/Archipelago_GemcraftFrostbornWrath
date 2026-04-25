@@ -221,8 +221,7 @@ package tracker {
                     var stages:Array = _elementStages[elemName] as Array;                    
                     if (stages != null) {
                         for each (var stId:String in stages) {                               
-                            if (AV.sessionData.fieldsInLogic[stId] == true){
-                                _logger.log(_modName, "Found field " + stId + " in fieldsInLogic");
+                            if (AV.sessionData.fieldsInLogic[stId] == true){                                
                                  return true;
                             }
                         }
