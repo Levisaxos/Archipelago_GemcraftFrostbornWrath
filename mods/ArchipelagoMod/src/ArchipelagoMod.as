@@ -1289,16 +1289,15 @@ package {
         private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
             if (_progressionBlocker == null) return;
 
-            // Talisman and shadow core self-sends are already shown with a native
-            // McDropIconOutcome (via grantItem → addTalismanDropIconToEndingScreen /
-            // addShadowCoreDropIconToEndingScreen), so adding an AP icon here would
-            // produce a duplicate.  Skip for both item types when sent to ourselves.
+            // In solo play every item-send is a self-send.  Talisman fragments are
+            // already shown with a native McDropIconOutcome (via grantItem →
+            // addTalismanDropIconToEndingScreen), so adding an AP icon here would
+            // produce a duplicate.  Skip the sent-item AP icon for talisman self-sends.
             var sentData:Object = _connectionManager.itemsSentThisLevel[locId];
             if (sentData != null
                     && int(sentData.receivingSlot) == _connectionManager.mySlot
                     && sentItemName != null
-                    && (sentItemName.toLowerCase().indexOf("talisman") >= 0
-                        || sentItemName.toLowerCase().indexOf("shadow core") >= 0)) {
+                    && sentItemName.toLowerCase().indexOf("talisman") >= 0) {
                 return;
             }
 

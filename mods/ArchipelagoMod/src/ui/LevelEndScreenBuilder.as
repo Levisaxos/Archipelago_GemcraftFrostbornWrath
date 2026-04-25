@@ -137,7 +137,6 @@ package ui {
                 _preservedBattleIcons = [];
 
                 // --- Step 1: scan and categorise existing icons ---
-                var preservedTalismanSeeds:Object = {};  // seed (int) → true
                 var existingIcons:Array = ending.dropIcons;
                 for (var i:int = 0; i < existingIcons.length; i++) {
                     var di:* = existingIcons[i];
@@ -150,9 +149,7 @@ package ui {
 
                     if (di.type == DropType.TALISMAN_FRAGMENT) {
                         if (_isTalismanInInventory(di.data)) {
-                            // In-battle talisman — preserve it and record its seed so
-                            // Step 5 doesn't add a duplicate AP icon for the same fragment.
-                            try { preservedTalismanSeeds[int(TalismanFragment(di.data).seed)] = true; } catch (se:Error) {}
+                            // In-battle talisman — preserve it.
                             ending.cnt.mcOutcomePanel.removeChild(di);
                             _preservedBattleIcons.push(di);
                         } else {
@@ -185,15 +182,6 @@ package ui {
                         if (sentItems != null && sentItems[achLocId] != null) {
                             // Server already told us what item was sent — show that item's icon.
                             var achSentData:Object = sentItems[achLocId];
-                            // Native GCFW items (talismans, shadow cores) sent to us are shown
-                            // via proper McDropIconOutcome in Step 5/6. Skip the generic
-                            // ApItemIcon here to avoid a duplicate icon.
-                            var achNativeType:int = _detectGcfwDropType(String(achSentData.itemName || ""));
-                            var achIsNativeForUs:Boolean = _connectionManager != null
-                                && int(achSentData.receivingSlot) == _connectionManager.mySlot
-                                && (achNativeType == DropType.TALISMAN_FRAGMENT
-                                    || achNativeType == DropType.SHADOW_CORE);
-                            if (achIsNativeForUs) continue;
                             achIcon = _buildSentItemIcon(achSentData);
                             achIcon.sortOrder = _sortOrderForSentItem(achSentData);
                         } else {
@@ -238,10 +226,6 @@ package ui {
                 var pendingTalCount:int = _pendingApTalismans.length;
                 for (var t:int = 0; t < pendingTalCount; t++) {
                     try {
-                        try {
-                            var pendingFrag:TalismanFragment = TalismanFragment(_pendingApTalismans[t]);
-                            if (preservedTalismanSeeds[pendingFrag.seed] == true) continue;
-                        } catch (seedErr:Error) {}
                         var talIcon:McDropIconOutcome = new McDropIconOutcome(
                             DropType.TALISMAN_FRAGMENT, _pendingApTalismans[t]);
                         talIcon.y = 789;
