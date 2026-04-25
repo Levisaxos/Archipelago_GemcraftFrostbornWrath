@@ -35,9 +35,6 @@ package unlockers {
         // Achievements already sent to AP this session, keyed by game_id (reset on screen change)
         private var _reportedAchievements:Object = {};
 
-        // Queued icons for the level-end screen (cleared by LevelEndScreenBuilder)
-        private var _pendingLevelAchievements:Array = [];
-
         private var _detectCallCount:int = 0;
 
         /**
@@ -50,9 +47,6 @@ package unlockers {
         public var onChecked:Function = null;
 
         // -----------------------------------------------------------------------
-
-        public function get pendingLevelAchievements():Array { return _pendingLevelAchievements; }
-        public function clearPendingLevelAchievements():void { _pendingLevelAchievements = []; }
 
         public function AchievementUnlocker(logger:Logger,
                                             modName:String,
@@ -184,7 +178,6 @@ package unlockers {
             if (_connectionManager.isConnected) {
                 _connectionManager.sendLocationChecks([apId]);
             }
-            _pendingLevelAchievements.push({ apId: apId, achievementName: achievementName, gameId: gameId });
             _logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId + "  gameId=" + gameId);
             if (onChecked != null) onChecked();
         }

@@ -7,15 +7,11 @@ package patch {
     import com.giab.games.gcfw.constants.DropType;
     import com.giab.games.gcfw.entity.TalismanFragment;
 
-    import ui.LevelEndScreenBuilder;
-
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
      * skill-tome, battle-trait, shadow-core, and talisman-fragment unlocks
      * that the game wrote to PlayerProgressData. The save file is immediately
      * overwritten so the reverted state is persisted.
-     *
-     * After reverting, delegates level-end icon construction to LevelEndScreenBuilder.
      */
     public class ProgressionBlocker {
 
@@ -48,12 +44,9 @@ package patch {
         // so we don't double-subtract on subsequent saves.
         private var _stashBlockedIds:Object = {};
 
-        private var _levelEndScreenBuilder:LevelEndScreenBuilder;
-
-        public function ProgressionBlocker(logger:Logger, modName:String, levelEndScreenBuilder:LevelEndScreenBuilder) {
+        public function ProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
-            _levelEndScreenBuilder = levelEndScreenBuilder;
             _apGrantedSkills = new Array(24);
             _apGrantedTraits = new Array(15);
             for (var i:int = 0; i < 24; i++) _apGrantedSkills[i] = false;
@@ -227,15 +220,6 @@ package patch {
                             removePlusNodeFromSelector("mcPlusNodeTalisman");
                         }
                     }
-                }
-
-                // Delegate level-end icon construction to LevelEndScreenBuilder.
-                if (_levelEndScreenBuilder != null
-                        && GV.ingameController != null
-                        && GV.ingameController.core != null) {
-                    var endingForIcons:* = GV.ingameController.core.ending;
-                    if (endingForIcons != null && endingForIcons.isBattleWon)
-                        _levelEndScreenBuilder.buildIcons(endingForIcons);
                 }
 
                 if (reverted > 0) {

@@ -38,8 +38,6 @@ package net {
         private var _missingLocations:Object = {};
         private var _requestedGames:Object   = {};   // gameName → true (prevents duplicate DataPackage requests)
         private var _pendingChecks:Object    = {};   // locationId(int) → {id, player, item}
-        private var _itemsSentThisLevel:Object = {}; // locationId(int) → {itemId, itemName, receivingSlot, receivingName}
-
         // -----------------------------------------------------------------------
         // Callbacks — set by ConnectionManager
 
@@ -51,8 +49,6 @@ package net {
         public var onItemReceived:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we send an item from a location. Signature: (locId:int, itemName:String, receivingName:String):void */
-        public var onItemSentFromLocation:Function;
 
         // -----------------------------------------------------------------------
 
@@ -81,29 +77,6 @@ package net {
         public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
         public function get wizStashTalData():Object   { return _wizStashTalData; }
         public function get missingLocations():Object  { return _missingLocations; }
-        public function get itemsSentThisLevel():Object { return _itemsSentThisLevel; }
-
-        // -----------------------------------------------------------------------
-        // Level reset
-
-        /**
-         * Reset the items-sent tracking at the start of a new battle check.
-         * When preserveAchievements is true, entries with IDs 2000-2636 are kept
-         * so hover lookups on achievement icons remain available after the reset.
-         */
-        public function resetItemsSentThisLevel(preserveAchievements:Boolean):void {
-            if (!preserveAchievements) {
-                _itemsSentThisLevel = {};
-                return;
-            }
-            var preserved:Object = {};
-            for (var key:String in _itemsSentThisLevel) {
-                var id:int = int(key);
-                if (id >= 2000 && id <= 2636)
-                    preserved[key] = _itemsSentThisLevel[key];
-            }
-            _itemsSentThisLevel = preserved;
-        }
 
         // -----------------------------------------------------------------------
         // Packet handlers — called by ConnectionManager._dispatchPacket
@@ -250,17 +223,6 @@ package net {
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
                     var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
-
-                    _itemsSentThisLevel[sentLocId] = {
-                        itemId:        sentItemId,
-                        itemName:      sentItemName,
-                        receivingSlot: receiving,
-                        receivingName: recvName
-                    };
-
-                    if (onItemSentFromLocation != null)
-                        onItemSentFromLocation(sentLocId, sentItemName, recvName);
-
                     _toast.addMessage("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
                 }
                 return;

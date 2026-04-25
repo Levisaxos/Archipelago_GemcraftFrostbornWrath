@@ -31,7 +31,6 @@ package {
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
-    import ui.LevelEndScreenBuilder;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -69,7 +68,6 @@ package {
      *   ConnectionPanel          — Connection UI overlay (self-managing)
      *   ModeSelectorInterceptor  — Mode button / delete button hooks
      *   ProgressionBlocker       — Reverts auto-unlocks after battles
-     *   LevelEndScreenBuilder    — Builds AP drop icons on the ending screen
      *   SkillUnlocker            — Skill unlock logic
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
@@ -110,7 +108,6 @@ package {
 
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
-        private var _levelEndScreenBuilder:LevelEndScreenBuilder;
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
@@ -198,10 +195,6 @@ package {
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
 
-                // Level-end screen builder — constructed early; configured once
-                // _achievementUnlocker and _connectionManager are both available (below).
-                _levelEndScreenBuilder = new LevelEndScreenBuilder(_logger, MOD_NAME);
-
                 // Connection manager — AP protocol + WebSocket
                 _connectionManager = new ConnectionManager(_logger, MOD_NAME, _systemToast);
                 _connectionManager.setReceivedToast(_receivedToast);
@@ -212,7 +205,6 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
-                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;
                 _connectionManager.load();
 
                 // Initialize achievement unlocker
@@ -220,12 +212,8 @@ package {
                 _achievementUnlocker.loadData();
                 _achievementLogicEvaluator.loadData();
 
-                // Wire level-end builder now that both dependencies are available
-                _levelEndScreenBuilder.configure(_achievementUnlocker, _connectionManager);
-
                 // ProgressionBlocker: intercepts SAVE_SAVE and reverts game auto-unlocks.
-                // Delegates icon construction to LevelEndScreenBuilder.
-                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME, _levelEndScreenBuilder);
+                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
 
                 // Logic helper (thin wrapper for external callers e.g. debug UI)
                 _logicHelper = new LogicHelper(_logger, MOD_NAME, _fieldLogicEvaluator);
@@ -278,9 +266,6 @@ package {
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
 
-                // Register ProgressionBlocker AFTER our own handler so its SAVE_SAVE fires second.
-                // This guarantees checkCompletedLocations() has already run before buildIcons() reads
-                // itemsSentThisLevel from ConnectionManager.
                 _progressionBlocker.enable(_bezel);
 
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
@@ -302,7 +287,6 @@ package {
                 _progressionBlocker.disable();
                 _progressionBlocker = null;
             }
-            _levelEndScreenBuilder = null;
             if (_modeInterceptor != null) {
                 _modeInterceptor.unhook();
                 _modeInterceptor = null;
@@ -444,17 +428,6 @@ package {
             // Detect and report achievements every 30 frames
             if (!_standalone && _dbgFrameCounter % 30 == 0) {
                 _achievementUnlocker.detectAndReport();
-            }
-
-            // Build AP drop icons on the fail ending screen. SAVE_SAVE only fires on a
-            // level win, so we poll here to catch the loss case. The deduplication guard
-            // in buildIcons ensures this is a no-op after the first successful call.
-            if (!_standalone && _levelEndScreenBuilder != null
-                    && GV.ingameController != null && GV.ingameController.core != null) {
-                var failEnding:* = GV.ingameController.core.ending;
-                if (failEnding != null && !failEnding.isBattleWon && failEnding.dropIcons != null) {
-                    _levelEndScreenBuilder.buildIcons(failEnding);
-                }
             }
 
             // Track screen transitions.
@@ -602,13 +575,6 @@ package {
                     || GV.selectorCore.mapTiles == null) {
                 _mapTilesUnlocked = false;
                 return;
-            }
-
-            // Pre-populate the drop-icon bitmap cache once per session.
-            if (!AV.sessionData.iconsCached) {
-                LevelEndScreenBuilder.preCacheIcons();
-                AV.sessionData.iconsCached = true;
-                _logger.log(MOD_NAME, "Drop icon bitmap cache populated");
             }
 
             _levelUnlocker.renderXpBarIfDirty();
@@ -1045,14 +1011,6 @@ package {
             try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
-                // Track item for ending screen display
-                var itemDisplayName:String = itemName(apId);
-                if (_progressionBlocker != null) {
-                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
-                    // Sent-item icons on the ending screen come from addSentItemToEndingScreen
-                    // (triggered by handlePrintJSON) so we don't add received items here.
-                }
-
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 AV.sessionData.onItem(apId);
                 if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
@@ -1086,7 +1044,7 @@ package {
                 }
                 if (apId >= 1100 && apId <= 1199) {
                     _logger.log(MOD_NAME, "  → XP tome apId: " + apId);
-                    _levelUnlocker.grantXpFromApId(apId, itemDisplayName);
+                    _levelUnlocker.grantXpFromApId(apId, itemName(apId));
                     return;
                 }
                 if (apId >= 600 && apId <= 625) {
@@ -1101,21 +1059,13 @@ package {
                 }
                 if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
-                    var frag:* = _talismanUnlocker.grantFragment(apId);
-                    if (frag != null) {
-                        _levelEndScreenBuilder.addTalismanDropIconToEndingScreen(frag);
-                    }
+                    _talismanUnlocker.grantFragment(apId);
                     _saveManager.saveSlotData();
                     return;
                 }
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
-                    if (apId >= 1300 && apId <= 1351) {
-                        var scAmt:int = int(AV.serverData.shadowCoreMap[String(apId)]);
-                        if (scAmt > 0)
-                            _levelEndScreenBuilder.addShadowCoreDropIconToEndingScreen(scAmt);
-                    }
                     _saveManager.saveSlotData();
                     return;
                 }
@@ -1164,12 +1114,6 @@ package {
             for each (var item:Object in items) {
                 var apId:int = item.item;
                 AV.sessionData.onItem(apId);
-
-                // Track item for ending screen display
-                if (_progressionBlocker != null) {
-                    var itemDisplayName:String = itemName(apId);
-                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
-                }
 
                 if (apId >= 700 && apId <= 723) {
                     apSkills[apId - 700] = true;
@@ -1284,24 +1228,6 @@ package {
             _logger.log(MOD_NAME, "onSaveSave fired — _isConnected=" + _connectionManager.isConnected);
             _connectionManager.checkCompletedLocations();
             _goalManager.check();
-        }
-
-        private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
-            if (_progressionBlocker == null) return;
-
-            // In solo play every item-send is a self-send.  Talisman fragments are
-            // already shown with a native McDropIconOutcome (via grantItem →
-            // addTalismanDropIconToEndingScreen), so adding an AP icon here would
-            // produce a duplicate.  Skip the sent-item AP icon for talisman self-sends.
-            var sentData:Object = _connectionManager.itemsSentThisLevel[locId];
-            if (sentData != null
-                    && int(sentData.receivingSlot) == _connectionManager.mySlot
-                    && sentItemName != null
-                    && sentItemName.toLowerCase().indexOf("talisman") >= 0) {
-                return;
-            }
-
-            _levelEndScreenBuilder.addSentItemToEndingScreen(locId, sentItemName, recvName);
         }
 
         private function onGoalReached():void {

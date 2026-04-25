@@ -75,7 +75,6 @@ package net {
         /** Public read-only view of the stage → base Journey AP location id map. */
         public static function get stageLocIds():Object { return STAGE_LOC_AP_IDS; }
 
-        // Populated by checkCompletedLocations(); read by LevelEndScreenBuilder.
         private var _lastCheckedLocations:Array = [];
 
         public function get lastCheckedLocations():Array { return _lastCheckedLocations; }
@@ -98,8 +97,6 @@ package net {
         public var onPanelReset:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we send an item from a location. Signature: (locId:int, itemName:String, receivingName:String):void */
-        public var onItemSentFromLocation:Function;
         /** Called when the connection drops unexpectedly. Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
@@ -124,9 +121,6 @@ package net {
             _receiver.onDeathLinkReceived = function(src:String):void {
                 if (onDeathLinkReceived != null) onDeathLinkReceived(src);
             };
-            _receiver.onItemSentFromLocation = function(loc:int, name:String, recv:String):void {
-                if (onItemSentFromLocation != null) onItemSentFromLocation(loc, name, recv);
-            };
         }
 
         private function _onConnectionEstablished(p:Object):void {
@@ -148,7 +142,6 @@ package net {
         public function get shadowCoreNameMap():Object     { return _receiver.shadowCoreNameMap; }
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
         public function get missingLocations():Object      { return _receiver.missingLocations; }
-        public function get itemsSentThisLevel():Object    { return _receiver.itemsSentThisLevel; }
         public function get mySlot():int                   { return _receiver.mySlot; }
 
         // -----------------------------------------------------------------------
@@ -394,9 +387,6 @@ package net {
 
                 var toSend:Array = [];
                 _lastCheckedLocations = [];
-                // Clear stage-location data but preserve achievement entries (2000-2636)
-                // so that hover lookups on achievement icons still work after this call.
-                _receiver.resetItemsSentThisLevel(true);
 
                 var missing:Object = _receiver.missingLocations;
 
