@@ -300,20 +300,6 @@ class AchievementProgression(Choice):
     default = 0
 
 
-class TierSkillRequirements(Toggle):
-    """Require a minimum number of skills in specific categories to unlock each tier of stages.
-
-    When enabled, progression through tiers gates on collecting skills:
-    tier 0 (S/V stages) requires 2 gem skills, tier 1 requires 1 spell + 1 focus skill, etc.
-
-    When disabled (default), tiers are gated only by field tokens from the previous tier.
-    With 636 achievement locations most of which require skills, disabling this still produces
-    natural skill spread across the multiworld.
-    """
-    display_name = "Tier Skill Requirements"
-    default = 0
-
-
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                        Goal
@@ -329,7 +315,6 @@ class GCFWOptions(PerGameCommonOptions):
     starting_overcrowd:        StartingOvercrowd
     achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
-    tier_skill_requirements:   TierSkillRequirements
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier
     enemy_shield_multiplier:     EnemyShieldMultiplier

@@ -27,30 +27,18 @@ TIER_SKILL_NAMES: dict[str, List[str]] = {
 }
 
 
-def _has_tier_tokens(state, player: int, tier: int, token_percent: int,
-                     skill_reqs_enabled: bool = False) -> bool:
+def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     """Check whether the player has collected enough field tokens from the
-    previous tier AND (if skill_reqs_enabled) the required skills for this tier."""
+    previous tier (and all lower tiers, recursively)."""
     prev = tier-1
     count = len(TIERS[prev]) * token_percent // 100
     # Check token requirement from previous tier.
     if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
         return False
-    if skill_reqs_enabled:
-        # Check skill category requirements for this tier.
-        for category, count_req in CUMULATIVE_SKILL_REQUIREMENTS.get(tier, {}).items():
-            total_category = [state.has(skill_name, player) for skill_name in TIER_SKILL_NAMES[category]].count(True)
-            if total_category < count_req:
-                return False
     # Recurse to ensure all lower tiers are also satisfied.
     if prev == 0:
-        if skill_reqs_enabled:
-            for category, count_req in CUMULATIVE_SKILL_REQUIREMENTS.get(0, {}).items():
-                total_category = [state.has(s, player) for s in TIER_SKILL_NAMES[category]].count(True)
-                if total_category < count_req:
-                    return False
         return True
-    return _has_tier_tokens(state, player, prev, token_percent, skill_reqs_enabled)
+    return _has_tier_tokens(state, player, prev, token_percent)
 
 
 def _normalize_requirements(requirements: list) -> list:
@@ -190,7 +178,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     stage_map = {s["str_id"]: s for s in stages}
 
     token_percent = world.options.tier_requirements_percent.value
-    skill_reqs_enabled = bool(world.options.tier_skill_requirements.value)
 
     w1_region = multiworld.get_region("W1", player)
 
@@ -212,26 +199,15 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # They have no token items; the mod unlocks them on connect.
             pass
         elif tier == 0:
-            if skill_reqs_enabled:
-                gem_reqs = CUMULATIVE_SKILL_REQUIREMENTS.get(0, {})
-                connection.access_rule = (
-                    lambda state, tok=token_name, reqs=gem_reqs: (
-                        state.has(tok, player) and
-                        all(
-                            sum(1 for s in TIER_SKILL_NAMES[cat] if state.has(s, player)) >= n
-                            for cat, n in reqs.items() if n > 0
-                        )
-                    )
-                )
-            else:
-                connection.access_rule = (
-                    lambda state, tok=token_name: state.has(tok, player)
-                )
+            # Other Tier 0: require own field token only (no tier gate).
+            connection.access_rule = (
+                lambda state, tok=token_name: state.has(tok, player)
+            )
         else:
             # Tier 1+: require own field token + N tokens from previous tier.
             connection.access_rule = (
-                lambda state, tok=token_name, ti=tier, tper=token_percent, sre=skill_reqs_enabled: (
-                    state.has(tok, player) and _has_tier_tokens(state, player, ti, tper, sre)
+                lambda state, tok=token_name, ti=tier, tper=token_percent: (
+                    state.has(tok, player) and _has_tier_tokens(state, player, ti, tper)
                 )
             )
 

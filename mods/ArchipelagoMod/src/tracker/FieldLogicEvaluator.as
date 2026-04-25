@@ -287,6 +287,13 @@ package tracker {
 
             var missing:Array = [];
             for each (var skillName:String in required) {
+                var lower:String = skillName.toLowerCase().split(" ").join("");
+                if (lower.indexOf("gemskills:") == 0) {
+                    var need:int = int(skillName.split(":")[1]);
+                    var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
+                    if (have < need) missing.push(need + " gem skills (" + have + "/" + need + ")");
+                    continue;
+                }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
                 if (idx >= 0 && !AV.sessionData.hasItem(700 + idx)) missing.push(skillName);
             }
@@ -311,7 +318,7 @@ package tracker {
             // Find highest contiguously-reachable tier.
             var t:int = 0;
             while (true) {
-                var ok:Boolean = _tierSkillsMet(t) && (t == 0 || _tierTokensMet(t));
+                var ok:Boolean = t == 0 || (_tierTokensMet(t) && _tierSkillsMet(t));
                 if (!ok) break;
                 _reachableTier = t;
                 t++;
@@ -344,6 +351,12 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return true;
             for each (var skillName:String in required) {
+                var lower:String = skillName.toLowerCase().split(" ").join("");
+                if (lower.indexOf("gemskills:") == 0) {
+                    var need:int = int(skillName.split(":")[1]);
+                    if (int(AV.sessionData.skillCountByCategory["gems"]) < need) return false;
+                    continue;
+                }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
                 if (idx < 0) continue; // unknown name — don't block
                 if (!AV.sessionData.hasItem(700 + idx)) return false;

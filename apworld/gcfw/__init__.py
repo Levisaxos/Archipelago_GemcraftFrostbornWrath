@@ -32,7 +32,6 @@ from .rules import set_rules
 from .rulesdata import (
     TIERS,
     TIER_REQUIREMENTS,
-    TIER_SKILL_REQUIREMENTS,
     GAME_DATA,
     SKILL_CATEGORIES,
     CUMULATIVE_SKILL_REQUIREMENTS,
@@ -713,13 +712,6 @@ class GemcraftFrostbornWrathWorld(World):
         tier_stage_counts: Dict[str, int] = {
             str(t): len(stages) for t, stages in TIERS.items()
         }
-        skill_reqs_enabled = bool(self.options.tier_skill_requirements.value)
-        # Always send the full table — the mod uses it for tooltip display regardless
-        # of whether the option gates logic.  The Python access rules gate separately.
-        cumulative_skill_reqs: Dict[str, Dict[str, int]] = {
-            str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
-        }
-
         # Build achievement requirements map: achievement name → [requirements]
         achievement_requirements_map: Dict[str, list] = {}
         required_effort = self.options.achievement_required_effort.value
@@ -743,8 +735,7 @@ class GemcraftFrostbornWrathWorld(World):
             # Tracker logic rules (see LogicEvaluator.as)
             "logic_rules_version":   1,
             "skill_categories":      SKILL_CATEGORIES,
-            "tier_skill_requirements": skill_reqs_enabled,
-            "cumulative_skill_reqs": cumulative_skill_reqs,
+            "cumulative_skill_reqs": {},
             "stage_tier":            stage_tier_map,
             "stage_skills":          stage_skills_map,
             "tier_stage_counts":     tier_stage_counts,
