@@ -420,6 +420,9 @@ package {
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
 
+            // Suppress all dropicons mid-battle so the victory screen shows nothing.
+            if (_progressionBlocker != null) _progressionBlocker.tickDropIcons();
+
             // Poll the goal manager every frame so mid-battle goals (e.g. Swarm
             // Queen kill on K4) fire as soon as the condition is met, not only
             // on the next save event. No-ops once the goal has been sent.

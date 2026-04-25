@@ -100,6 +100,43 @@ package patch {
         }
 
         // -----------------------------------------------------------------------
+        // Per-frame drop suppression
+
+        /**
+         * Call every frame. Clears ending.dropIcons as items are collected so the
+         * victory screen finds an empty array and displays nothing. Data effects
+         * for known drop types are reverted immediately; unknown types are logged.
+         */
+        public function tickDropIcons():void {
+            if (GV.ingameController == null || GV.ingameController.core == null) return;
+            var ending:* = GV.ingameController.core.ending;
+            if (ending == null) return;
+            var drops:Array = ending.dropIcons;
+            if (drops == null || drops.length == 0) return;
+
+            for (var i:int = 0; i < drops.length; i++) {
+                var di:* = drops[i];
+                if (di == null) continue;
+                switch (di.type) {
+                    case DropType.FIELD_TOKEN:
+                        if (GV.ppd != null)
+                            GV.ppd.stageHighestXpsJourney[Number(di.data)].s(-1);
+                        _logger.log(_modName, "tickDropIcons: blocked FIELD_TOKEN id=" + di.data);
+                        break;
+                    case DropType.MAP_TILE:
+                        if (GV.ppd != null)
+                            GV.ppd.gainedMapTiles[Number(di.data)] = false;
+                        _logger.log(_modName, "tickDropIcons: blocked MAP_TILE id=" + di.data);
+                        break;
+                    default:
+                        _logger.log(_modName, "tickDropIcons: suppressed drop type=" + di.type + " data=" + di.data);
+                        break;
+                }
+            }
+            drops.splice(0, drops.length);
+        }
+
+        // -----------------------------------------------------------------------
         // Save hook
 
         private function onSaveSave(e:*):void {
