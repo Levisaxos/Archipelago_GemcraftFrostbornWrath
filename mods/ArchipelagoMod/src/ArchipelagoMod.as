@@ -148,7 +148,9 @@ package {
         private var _dbgFrameCounter:int = 0; // for throttled screen logging
 
         // Items sent to AP during the current level session (via PrintJSON onItemSent).
-        // Logged and cleared after a short post-level countdown to capture late async packets.
+        // Each entry is { name:String, apId:int }. Logged, used to inject AP-relevant
+        // drop icons (e.g. shadow cores) onto the ending screen after a short post-level
+        // countdown so late-arriving async packets are included, then cleared.
         private var _sessionDrops:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
@@ -207,9 +209,9 @@ package {
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
                 _connectionManager.onItemReceived          = grantItem;
-                _connectionManager.onItemSent              = function(itemName:String):void {
-                    _sessionDrops.push(itemName);
-                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] " + itemName);
+                _connectionManager.onItemSent              = function(itemName:String, apId:int):void {
+                    _sessionDrops.push({ name: itemName, apId: apId });
+                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] " + itemName + " (apId=" + apId + ")");
                 };
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
@@ -432,18 +434,20 @@ package {
             // Suppress all dropicons mid-battle. When drops are cleared, start a
             // short countdown so late-arriving async PrintJSON packets are included.
             if (_progressionBlocker != null && _progressionBlocker.tickDropIcons()) {
-                _levelEndCountdown = 15;
+                _levelEndCountdown = 120;
             }
 
-            // After the countdown expires, log and clear the session drops list.
+            // After the countdown expires, log session drops and inject AP drop icons.
             if (_levelEndCountdown > 0) {
                 _levelEndCountdown--;
                 if (_levelEndCountdown == 0) {
                     _logger.log(MOD_NAME, "=== AP items sent this level: " + _sessionDrops.length + " ===");
                     for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
-                        _logger.log(MOD_NAME, "  [" + sd + "] " + _sessionDrops[sd]);
+                        var sdEntry:Object = _sessionDrops[sd];
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
                     }
                     _logger.log(MOD_NAME, "=== end ===");
+                    _injectApDropIcons();
                     _sessionDrops = [];
                     _levelEndCountdown = -1;
                 }
@@ -525,10 +529,12 @@ package {
                     _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
                     _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
                     for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
-                        _logger.log(MOD_NAME, "  [" + sd + "] " + _sessionDrops[sd]);
+                        var sdEntry:Object = _sessionDrops[sd];
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
                     }
                     _logger.log(MOD_NAME, "=== end of AP items list ===");
                     _sessionDrops = [];
+                    if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
@@ -894,8 +900,13 @@ package {
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
 
-            // Populate tokenMap from the Connected packet (loadServerDataFromJSON resets it to {}).
-            AV.serverData.tokenMap = _connectionManager.tokenMap;
+            // Populate slot_data maps from the Connected packet (loadServerDataFromJSON
+            // resets them to {} and the embedded itemdata.json doesn't fill these).
+            AV.serverData.tokenMap           = _connectionManager.tokenMap;
+            AV.serverData.shadowCoreMap      = _connectionManager.shadowCoreMap;
+            AV.serverData.shadowCoreNameMap  = _connectionManager.shadowCoreNameMap;
+            AV.serverData.talismanNameMap    = _connectionManager.talismanNameMap;
+            AV.serverData.wizStashTalData    = _connectionManager.wizStashTalData;
 
             // Reset + configure the in-game tracker from slot_data.  Must happen
             // BEFORE syncWithAP (which will populate session data via onItem).
@@ -992,6 +1003,30 @@ package {
                 _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
+            }
+        }
+
+        /**
+         * Walk _sessionDrops and inject AP-specific drop icons onto the ending screen.
+         * Currently handles SHADOW_CORE only (sums all shadow core item amounts into a
+         * single icon, matching how IngameEnding.prepareDropIcons combines battle +
+         * stash shadow cores into one drop icon). Talisman fragments etc. are deferred.
+         */
+        private function _injectApDropIcons():void {
+            if (_progressionBlocker == null || _connectionManager == null) return;
+            var scMap:Object = _connectionManager.shadowCoreMap;
+            if (scMap == null) return;
+
+            var totalShadowCores:int = 0;
+            for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                var entry:Object = _sessionDrops[sd];
+                var key:String = String(entry.apId);
+                if (key in scMap) {
+                    totalShadowCores += int(scMap[key]);
+                }
+            }
+            if (totalShadowCores > 0) {
+                _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
         }
 

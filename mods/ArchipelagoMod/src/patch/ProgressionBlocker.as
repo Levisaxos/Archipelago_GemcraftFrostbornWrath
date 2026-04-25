@@ -6,6 +6,9 @@ package patch {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
     import com.giab.games.gcfw.entity.TalismanFragment;
+    import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
+
+    import flash.events.MouseEvent;
 
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
@@ -43,6 +46,11 @@ package patch {
         // Tracks which stage IDs have had their stash rewards blocked already
         // so we don't double-subtract on subsequent saves.
         private var _stashBlockedIds:Object = {};
+
+        // Set true once AP-specific drop icons have been injected for the current
+        // ending screen. Prevents tickDropIcons() from clearing them on the next
+        // frame. Reset by resetApIconsState() when the player leaves the level.
+        private var _apIconsInjected:Boolean = false;
 
         public function ProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
@@ -109,6 +117,7 @@ package patch {
          */
         /** Returns true if any drops were cleared this tick (caller can start a log countdown). */
         public function tickDropIcons():Boolean {
+            if (_apIconsInjected) return false;
             if (GV.ingameController == null || GV.ingameController.core == null) return false;
             var ending:* = GV.ingameController.core.ending;
             if (ending == null) return false;
@@ -136,6 +145,60 @@ package patch {
             }
             drops.splice(0, drops.length);
             return true;
+        }
+
+        // -----------------------------------------------------------------------
+        // AP drop icon injection
+
+        /**
+         * Reset the AP-injection flag so tickDropIcons resumes clearing.
+         * Call when the player leaves the ending screen (transitions away from INGAME).
+         */
+        public function resetApIconsState():void {
+            _apIconsInjected = false;
+        }
+
+        /**
+         * Inject a single SHADOW_CORE drop icon onto the ending screen using the
+         * vanilla McDropIconOutcome. Mirrors what IngameEnding.prepareDropIcons does
+         * for shadow cores: positions the icon in the dropIcons row, adds it to
+         * mcOutcomePanel, and wires the standard tooltip mouse listeners.
+         *
+         * Sets _apIconsInjected so subsequent tickDropIcons calls leave it alone.
+         */
+        public function addShadowCoreDropIcon(amount:int):void {
+            if (amount <= 0) return;
+            if (GV.ingameController == null || GV.ingameController.core == null) return;
+            var ending:* = GV.ingameController.core.ending;
+            if (ending == null || ending.cnt == null || ending.cnt.mcOutcomePanel == null) return;
+
+            try {
+                var icon:McDropIconOutcome = new McDropIconOutcome(DropType.SHADOW_CORE, amount);
+                if (ending.dropIcons == null) ending.dropIcons = new Array();
+                ending.dropIcons.push(icon);
+
+                // Re-position all icons using the same formula as prepareDropIcons.
+                var n:int = ending.dropIcons.length;
+                for (var i:int = 0; i < n; i++) {
+                    var di:* = ending.dropIcons[i];
+                    di.x = 48 + i * 140 + (n < 13 ? 70 * (13 - n) : 0);
+                    di.y = 789;
+                }
+
+                icon.visible = true;
+                ending.cnt.mcOutcomePanel.addChild(icon);
+
+                var ih:* = GV.ingameController.core.inputHandler2;
+                if (ih != null) {
+                    icon.addEventListener(MouseEvent.MOUSE_OVER, ih.ehDropIconOver, false, 0, true);
+                    icon.addEventListener(MouseEvent.MOUSE_OUT,  ih.ehDropIconOut,  false, 0, true);
+                }
+
+                _apIconsInjected = true;
+                _logger.log(_modName, "Injected SHADOW_CORE drop icon amount=" + amount);
+            } catch (err:Error) {
+                _logger.log(_modName, "addShadowCoreDropIcon ERROR: " + err.message);
+            }
         }
 
         // -----------------------------------------------------------------------
