@@ -1008,23 +1008,32 @@ package {
 
         /**
          * Walk _sessionDrops and inject AP-specific drop icons onto the ending screen.
-         * Currently handles SHADOW_CORE only (sums all shadow core item amounts into a
-         * single icon, matching how IngameEnding.prepareDropIcons combines battle +
-         * stash shadow cores into one drop icon). Talisman fragments etc. are deferred.
+         * Currently handles SHADOW_CORE only — sums AP-granted shadow cores (from
+         * sent items) plus the in-battle monster drops (which ProgressionBlocker
+         * intentionally preserves so the game stays beatable without relying solely
+         * on AP grants), matching how vanilla IngameEnding.prepareDropIcons combines
+         * battle + stash into a single icon. Talisman fragments etc. are deferred.
          */
         private function _injectApDropIcons():void {
             if (_progressionBlocker == null || _connectionManager == null) return;
             var scMap:Object = _connectionManager.shadowCoreMap;
             if (scMap == null) return;
 
-            var totalShadowCores:int = 0;
+            var apShadowCores:int = 0;
             for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
                 var entry:Object = _sessionDrops[sd];
                 var key:String = String(entry.apId);
                 if (key in scMap) {
-                    totalShadowCores += int(scMap[key]);
+                    apShadowCores += int(scMap[key]);
                 }
             }
+
+            var monsterShadowCores:int = 0;
+            if (GV.ingameCore != null && GV.ingameCore.ocLootShadowCoreNum != null) {
+                monsterShadowCores = int(GV.ingameCore.ocLootShadowCoreNum.g());
+            }
+
+            var totalShadowCores:int = apShadowCores + monsterShadowCores;
             if (totalShadowCores > 0) {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
