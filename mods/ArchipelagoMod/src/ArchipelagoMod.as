@@ -1079,6 +1079,29 @@ package {
                 }
             }
 
+            // --- Field tokens, skill tomes, battle trait scrolls ---
+            // One icon per sent item, dispatched by AP id range. We use sessionDrops
+            // (sent items) rather than received items so the dropicon reflects what
+            // this player produced from the level — same convention as shadow cores.
+            var tokenMap:Object = _connectionManager.tokenMap;
+            for (var t:int = 0; t < _sessionDrops.length; t++) {
+                var tEntry:Object = _sessionDrops[t];
+                var apId:int = int(tEntry.apId);
+
+                if (apId >= 1 && apId <= 122) {
+                    var rawStrId:* = (tokenMap != null) ? tokenMap[String(apId)] : null;
+                    if (rawStrId == null) continue;
+                    var stageId:int = GV.getFieldId(String(rawStrId));
+                    if (stageId >= 0) {
+                        _progressionBlocker.addFieldTokenDropIcon(stageId);
+                    }
+                } else if (apId >= 700 && apId <= 723) {
+                    _progressionBlocker.addSkillTomeDropIcon(apId - 700);
+                } else if (apId >= 800 && apId <= 814) {
+                    _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
+                }
+            }
+
             // Kick off the vanilla one-by-one reveal animation. No-op if stats
             // rolling is still in progress (the natural transition will pick it
             // up once stats finish, since dropIcons.length > 0 by then).

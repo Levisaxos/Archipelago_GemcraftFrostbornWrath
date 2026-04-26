@@ -184,6 +184,38 @@ package patch {
                 "TALISMAN_FRAGMENT seed=" + frag.seed);
         }
 
+        /**
+         * Inject a FIELD_TOKEN drop icon for the given stage. stageId is the index
+         * into GV.stageCollection.stageMetas (NOT the AP id). The icon shows the
+         * field-specific plate; tooltip reads "Token for field <strId>".
+         */
+        public function addFieldTokenDropIcon(stageId:int):void {
+            if (stageId < 0) return;
+            _addDropIcon(new McDropIconOutcome(DropType.FIELD_TOKEN, stageId),
+                "FIELD_TOKEN stageId=" + stageId);
+        }
+
+        /**
+         * Inject a SKILL_TOME drop icon. skillGameId is 0-23. The icon is the
+         * generic tome bitmap (vanilla doesn't render skill-specific art); tooltip
+         * reads the skill name from selectorCore.pnlSkills.skillTitles[gameId].
+         */
+        public function addSkillTomeDropIcon(skillGameId:int):void {
+            if (skillGameId < 0 || skillGameId >= 24) return;
+            _addDropIcon(new McDropIconOutcome(DropType.SKILL_TOME, skillGameId),
+                "SKILL_TOME gameId=" + skillGameId);
+        }
+
+        /**
+         * Inject a BATTLETRAIT_SCROLL drop icon. traitGameId is 0-14. Generic scroll
+         * bitmap; tooltip reads the trait name from selectorCore.renderer.traitTitles[gameId].
+         */
+        public function addBattleTraitScrollDropIcon(traitGameId:int):void {
+            if (traitGameId < 0 || traitGameId >= 15) return;
+            _addDropIcon(new McDropIconOutcome(DropType.BATTLETRAIT_SCROLL, traitGameId),
+                "BATTLETRAIT_SCROLL gameId=" + traitGameId);
+        }
+
         private function _addDropIcon(icon:McDropIconOutcome, label:String):void {
             if (GV.ingameController == null || GV.ingameController.core == null) return;
             var ending:* = GV.ingameController.core.ending;
