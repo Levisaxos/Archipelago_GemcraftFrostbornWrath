@@ -5,6 +5,7 @@ package patch {
 
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.entity.TalismanFragment;
     import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
 
@@ -200,7 +201,11 @@ package patch {
                     di.y = 789;
                 }
 
-                icon.visible = true;
+                // Hidden by default — playDropIconsAnimation() makes them appear one-by-one
+                // via the vanilla doEnterFrameOutcomePanelDropsListing loop. If the caller
+                // forgets to start the animation, the icons stay invisible (acceptable
+                // failure mode — better than popping in all at once).
+                icon.visible = false;
                 ending.cnt.mcOutcomePanel.addChild(icon);
 
                 var ih:* = GV.ingameController.core.inputHandler2;
@@ -214,6 +219,29 @@ package patch {
             } catch (err:Error) {
                 _logger.log(_modName, "_addDropIcon ERROR: " + err.message);
             }
+        }
+
+        /**
+         * Trigger the vanilla per-frame drops-listing animation
+         * (doEnterFrameOutcomePanelDropsListing) so injected icons appear one at a
+         * time with sounds and the appearing-glow VFX.
+         *
+         * Safe to call only when the ending screen is past stats rolling. If stats
+         * are still rolling, the natural transition at IngameCore.as:1992 will
+         * detect dropIcons.length > 0 and start the animation on its own — calling
+         * this is a no-op in that case (we only switch from SHOWING_IDLE).
+         */
+        public function playDropIconsAnimation():void {
+            if (GV.ingameController == null || GV.ingameController.core == null) return;
+            var core:* = GV.ingameController.core;
+            if (core.ingameStatus != IngameStatus.GAMEOVER_PANEL_SHOWING_IDLE) return;
+            if (core.ending == null || core.ending.dropIcons == null) return;
+            if (core.ending.dropIcons.length == 0) return;
+
+            core.timer = 0;
+            core.ingameStatus = IngameStatus.GAMEOVER_PANEL_DROPS_LISTING;
+            _logger.log(_modName, "Restarted drops-listing animation for "
+                + core.ending.dropIcons.length + " injected icon(s)");
         }
 
         // -----------------------------------------------------------------------

@@ -1078,6 +1078,11 @@ package {
                     _progressionBlocker.addTalismanFragmentDropIcon(apFrag);
                 }
             }
+
+            // Kick off the vanilla one-by-one reveal animation. No-op if stats
+            // rolling is still in progress (the natural transition will pick it
+            // up once stats finish, since dropIcons.length > 0 by then).
+            _progressionBlocker.playDropIconsAnimation();
         }
 
         private function onSettingsClicked():void {
