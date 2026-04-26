@@ -49,7 +49,7 @@ package net {
         public var onItemReceived:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String):void */
+        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
         public var onItemSent:Function;
 
         // -----------------------------------------------------------------------
@@ -226,7 +226,8 @@ package net {
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
                     var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
                     _toast.addMessage("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
-                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName);
+                    var isForMe:Boolean = (receiving == _mySlot);
+                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe);
                 }
                 return;
             }

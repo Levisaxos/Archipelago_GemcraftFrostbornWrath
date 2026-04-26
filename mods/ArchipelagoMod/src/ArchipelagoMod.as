@@ -214,10 +214,10 @@ package {
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
                 _connectionManager.onItemReceived          = grantItem;
-                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String):void {
-                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName });
+                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
+                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
                     _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
-                        + itemName + " (apId=" + apId + ") → " + recipientName);
+                        + itemName + " (apId=" + apId + ") → " + recipientName + (isForMe ? " (self)" : ""));
                 };
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
@@ -1038,6 +1038,7 @@ package {
             var apShadowCores:int = 0;
             for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
                 var entry:Object = _sessionDrops[sd];
+                if (entry.isForMe !== true) continue; // cores routed to other players don't add to our total
                 var key:String = String(entry.apId);
                 if (key in scMap) {
                     apShadowCores += int(scMap[key]);
@@ -1089,14 +1090,26 @@ package {
                 }
             }
 
-            // --- Field tokens, skill tomes, battle trait scrolls ---
-            // One icon per sent item, dispatched by AP id range. We use sessionDrops
-            // (sent items) rather than received items so the dropicon reflects what
-            // this player produced from the level — same convention as shadow cores.
+            // --- Per-item dispatch ---
+            // For each sent item: if it was routed back to us, show the type-specific
+            // icon (or skip if handled by the bulk loops above for shadow cores /
+            // talismans). If it was routed to ANOTHER player, show the generic
+            // Archipelago icon with a "Sent X to Y" tooltip — regardless of whether
+            // the apId belongs to our game or not. This way another player getting
+            // our F4 token sees the AP icon (not an F4 plate), since we never
+            // actually got that token ourselves.
             var tokenMap:Object = _connectionManager.tokenMap;
             for (var t:int = 0; t < _sessionDrops.length; t++) {
                 var tEntry:Object = _sessionDrops[t];
                 var apId:int = int(tEntry.apId);
+                var isForMe:Boolean = (tEntry.isForMe === true);
+
+                if (!isForMe) {
+                    _progressionBlocker.addRemoteItemDropIcon(
+                        String(tEntry.name),
+                        String(tEntry.recipient));
+                    continue;
+                }
 
                 if (apId >= 1 && apId <= 122) {
                     var rawStrId:* = (tokenMap != null) ? tokenMap[String(apId)] : null;
@@ -1117,19 +1130,20 @@ package {
                         _progressionBlocker.addAchievementDropIcon(achGameId);
                     }
                 } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
-                    // Talisman fragments — already iconified by the _sessionGrantedFragments
-                    // loop above (which also covers monster-drop fragments). Skip here.
+                    // Self-bound talisman fragment — already iconified by the
+                    // _sessionGrantedFragments loop above (TalismanUnlocker constructed
+                    // the fragment object when AP granted it back to us, and we use
+                    // that fresh object for the icon). Non-self talismans were caught
+                    // above by `if (!isForMe)` and got the AP icon instead.
                 } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
-                    // Shadow cores — already iconified as one combined icon by the
-                    // shadowCoreMap aggregation above. Skip here.
-                } else {
-                    // apId doesn't belong to any of our handled ranges, so this
-                    // item is from another AP world. Show the generic AP icon
-                    // with a "Sent X to Y" tooltip.
-                    _progressionBlocker.addRemoteItemDropIcon(
-                        String(tEntry.name),
-                        String(tEntry.recipient));
+                    // Self-bound shadow cores — already added to the combined icon
+                    // by the shadowCoreMap sum above. Non-self cores were caught
+                    // above by `if (!isForMe)` and got their own AP icon (one per
+                    // sent item, since "Sent X to Y" doesn't combine usefully).
                 }
+                // No final else: a self-bound item with an apId outside all our
+                // ranges should never happen (AP wouldn't route a non-GCFW item
+                // to a GCFW slot). If it does, silently no-op rather than guess.
             }
 
             // Kick off the vanilla one-by-one reveal animation. No-op if stats
