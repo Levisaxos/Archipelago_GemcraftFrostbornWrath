@@ -85,7 +85,11 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
         group_name = req.split(":")[0].strip()
         if group_name in skill_groups or group_name in game_skills_categories:
             return True
-        return group_name in ("minWave", "minMonsters", "minMonsterHP", "minMonsterArmor", "minSwarmlingArmor", "Skills")
+        return group_name in (
+            "minWave", "beforeWave", "minMonsters", "minMonsterHP",
+            "minMonsterArmor", "minSwarmlingArmor", "minSwarmlings",
+            "fieldToken", "Skills",
+        )
     if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
         return any(skill_name in cat.get("members", []) for cat in game_skills_categories.values())
@@ -131,7 +135,10 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             suffix_map = {m: (" Battle Trait" if cat == "BattleTraits" else " Skill")
                           for cat, data in game_skills_categories.items() for m in data.get("members", [])}
             return sum(1 for m in all_skill_names if state.has(f"{m}{suffix_map[m]}", player)) >= count_needed
-        if group_name == "minWave":
+        if group_name in ("minWave", "beforeWave"):
+            # beforeWave is the same gen-time gate as minWave: a stage exists with
+            # at least N waves so wave N is actually reached. Kept distinct in data
+            # because the in-game semantic is "must happen before wave N".
             qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("wave_count", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsters":
@@ -148,7 +155,26 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         if group_name == "minSwarmlingArmor":
             qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("maxSwarmlingArmor", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
-        return True  # Unknown counter (fieldToken, gemCount, etc.) — metadata only
+        if group_name == "minSwarmlings":
+            # Estimated swarmling count per stage: swarmlingWaves * (estMonsters / wave_count).
+            qualifying = []
+            for sid, d in LEVEL_DATA.items():
+                wave_count = d.get("wave_count", 0)
+                if wave_count <= 0:
+                    continue
+                est = d.get("swarmlingWaves", 0) * d.get("estMonsters", 0) / wave_count
+                if est >= count_needed:
+                    qualifying.append(sid)
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "fieldToken":
+            collected = sum(
+                1
+                for tier_tokens in TIER_TOKEN_NAMES.values()
+                for name in tier_tokens
+                if state.has(name, player)
+            )
+            return collected >= count_needed
+        return True  # Unknown counter (minGemGrade, etc.) — metadata only
 
     if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
@@ -298,7 +324,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
-            if ach_data.get("always_as_filler", False):
+            if ach_data.get("untrackable", False):
                 continue
 
             try:

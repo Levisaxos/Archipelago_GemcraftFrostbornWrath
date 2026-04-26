@@ -59,9 +59,9 @@ def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
     EXCLUDED so it can only hold filler.
 
     Triggers:
-      - Achievement has `"always_as_filler": True` in its data
+      - Achievement has `"untrackable": True` in its data
     """
-    if ach_data and ach_data.get("always_as_filler", False):
+    if ach_data and ach_data.get("untrackable", False):
         return True
     return False
 
