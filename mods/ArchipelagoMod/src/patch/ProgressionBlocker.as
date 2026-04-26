@@ -13,6 +13,7 @@ package patch {
     import flash.events.MouseEvent;
 
     import ui.XpTomeDropIcon;
+    import ui.RemoteItemDropIcon;
 
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
@@ -276,6 +277,19 @@ package patch {
             if (apId < 1100 || apId > 1199) return;
             _addDropIcon(new XpTomeDropIcon(apId),
                 "XP_TOME apId=" + apId,
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a generic AP icon for an item this player sent out that belongs
+         * to ANOTHER game (apId outside any of our handled ranges). Tooltip
+         * reads "Sent <itemName> to <recipientName>".
+         */
+        public function addRemoteItemDropIcon(itemName:String, recipientName:String):void {
+            if (itemName == null) itemName = "Unknown item";
+            if (recipientName == null) recipientName = "another player";
+            _addDropIcon(new RemoteItemDropIcon(itemName, recipientName),
+                "REMOTE_ITEM '" + itemName + "' → " + recipientName,
                 false /* useVanillaHover */);
         }
 

@@ -214,9 +214,10 @@ package {
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
                 _connectionManager.onItemReceived          = grantItem;
-                _connectionManager.onItemSent              = function(itemName:String, apId:int):void {
-                    _sessionDrops.push({ name: itemName, apId: apId });
-                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] " + itemName + " (apId=" + apId + ")");
+                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String):void {
+                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName });
+                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
+                        + itemName + " (apId=" + apId + ") → " + recipientName);
                 };
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
@@ -1115,6 +1116,19 @@ package {
                     if (achGameId >= 0) {
                         _progressionBlocker.addAchievementDropIcon(achGameId);
                     }
+                } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
+                    // Talisman fragments — already iconified by the _sessionGrantedFragments
+                    // loop above (which also covers monster-drop fragments). Skip here.
+                } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
+                    // Shadow cores — already iconified as one combined icon by the
+                    // shadowCoreMap aggregation above. Skip here.
+                } else {
+                    // apId doesn't belong to any of our handled ranges, so this
+                    // item is from another AP world. Show the generic AP icon
+                    // with a "Sent X to Y" tooltip.
+                    _progressionBlocker.addRemoteItemDropIcon(
+                        String(tEntry.name),
+                        String(tEntry.recipient));
                 }
             }
 
