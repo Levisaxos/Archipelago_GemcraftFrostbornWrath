@@ -168,12 +168,27 @@ package patch {
          */
         public function addShadowCoreDropIcon(amount:int):void {
             if (amount <= 0) return;
+            _addDropIcon(new McDropIconOutcome(DropType.SHADOW_CORE, amount),
+                "SHADOW_CORE amount=" + amount);
+        }
+
+        /**
+         * Inject a single TALISMAN_FRAGMENT drop icon for the given fragment.
+         * Caller is responsible for ensuring no duplicates (typically by checking
+         * inventory presence before calling).
+         */
+        public function addTalismanFragmentDropIcon(frag:TalismanFragment):void {
+            if (frag == null) return;
+            _addDropIcon(new McDropIconOutcome(DropType.TALISMAN_FRAGMENT, frag),
+                "TALISMAN_FRAGMENT seed=" + frag.seed);
+        }
+
+        private function _addDropIcon(icon:McDropIconOutcome, label:String):void {
             if (GV.ingameController == null || GV.ingameController.core == null) return;
             var ending:* = GV.ingameController.core.ending;
             if (ending == null || ending.cnt == null || ending.cnt.mcOutcomePanel == null) return;
 
             try {
-                var icon:McDropIconOutcome = new McDropIconOutcome(DropType.SHADOW_CORE, amount);
                 if (ending.dropIcons == null) ending.dropIcons = new Array();
                 ending.dropIcons.push(icon);
 
@@ -195,9 +210,9 @@ package patch {
                 }
 
                 _apIconsInjected = true;
-                _logger.log(_modName, "Injected SHADOW_CORE drop icon amount=" + amount);
+                _logger.log(_modName, "Injected drop icon: " + label);
             } catch (err:Error) {
-                _logger.log(_modName, "addShadowCoreDropIcon ERROR: " + err.message);
+                _logger.log(_modName, "_addDropIcon ERROR: " + err.message);
             }
         }
 

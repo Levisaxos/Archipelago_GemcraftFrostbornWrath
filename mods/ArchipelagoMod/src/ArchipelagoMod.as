@@ -152,6 +152,11 @@ package {
         // drop icons (e.g. shadow cores) onto the ending screen after a short post-level
         // countdown so late-arriving async packets are included, then cleared.
         private var _sessionDrops:Array = [];
+        // TalismanFragment objects granted by AP during the current level session.
+        // Captured from grantFragment(apId) return values so we can show one drop icon
+        // per AP-granted fragment without duplicating monster-drop fragments (which
+        // are tracked separately via GV.ingameCore.ocLootTalFrags).
+        private var _sessionGrantedFragments:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
@@ -449,6 +454,7 @@ package {
                     _logger.log(MOD_NAME, "=== end ===");
                     _injectApDropIcons();
                     _sessionDrops = [];
+                    _sessionGrantedFragments = [];
                     _levelEndCountdown = -1;
                 }
             }
@@ -534,6 +540,7 @@ package {
                     }
                     _logger.log(MOD_NAME, "=== end of AP items list ===");
                     _sessionDrops = [];
+                    _sessionGrantedFragments = [];
                     if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
@@ -1007,12 +1014,20 @@ package {
         }
 
         /**
-         * Walk _sessionDrops and inject AP-specific drop icons onto the ending screen.
-         * Currently handles SHADOW_CORE only — sums AP-granted shadow cores (from
-         * sent items) plus the in-battle monster drops (which ProgressionBlocker
-         * intentionally preserves so the game stays beatable without relying solely
-         * on AP grants), matching how vanilla IngameEnding.prepareDropIcons combines
-         * battle + stash into a single icon. Talisman fragments etc. are deferred.
+         * Inject AP-relevant drop icons onto the ending screen. Two categories:
+         *
+         * SHADOW_CORE: one combined icon for AP-granted cores (from sent items) +
+         *   in-battle monster drops (which ProgressionBlocker intentionally
+         *   preserves so the game stays beatable). Matches vanilla, which combines
+         *   battle + stash into a single icon.
+         *
+         * TALISMAN_FRAGMENT: one icon per fragment the player ended up with.
+         *   - Monster drops: GV.ingameCore.ocLootTalFrags entries that survived the
+         *     stash revert (still in inventory by reference).
+         *   - AP grants: the new TalismanFragment objects returned by grantFragment,
+         *     captured into _sessionGrantedFragments. These are different OBJECTS
+         *     from anything in ocLootTalFrags even when seeds collide, so iterating
+         *     both sources never produces a duplicate icon.
          */
         private function _injectApDropIcons():void {
             if (_progressionBlocker == null || _connectionManager == null) return;
@@ -1036,6 +1051,32 @@ package {
             var totalShadowCores:int = apShadowCores + monsterShadowCores;
             if (totalShadowCores > 0) {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
+            }
+
+            // --- Talisman fragments ---
+            if (GV.ppd == null || GV.ppd.talismanInventory == null) return;
+            var inv:Array = GV.ppd.talismanInventory;
+
+            // Monster drops: iterate ocLootTalFrags, keep only those still in inventory.
+            // Stash drops were removed by ProgressionBlocker.onSaveSave; AP-granted
+            // replacements are NEW objects (handled in the next loop).
+            if (GV.ingameCore != null && GV.ingameCore.ocLootTalFrags != null) {
+                var ocLoot:Array = GV.ingameCore.ocLootTalFrags;
+                for (var i:int = 0; i < ocLoot.length; i++) {
+                    var monsterFrag:* = ocLoot[i];
+                    if (monsterFrag != null && inv.indexOf(monsterFrag) != -1) {
+                        _progressionBlocker.addTalismanFragmentDropIcon(monsterFrag);
+                    }
+                }
+            }
+
+            // AP-granted: iterate fragments captured during this level. Skip any that
+            // are no longer in inventory (defensive — shouldn't happen mid-level).
+            for (var g:int = 0; g < _sessionGrantedFragments.length; g++) {
+                var apFrag:* = _sessionGrantedFragments[g];
+                if (apFrag != null && inv.indexOf(apFrag) != -1) {
+                    _progressionBlocker.addTalismanFragmentDropIcon(apFrag);
+                }
             }
         }
 
@@ -1140,7 +1181,8 @@ package {
                 }
                 if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
-                    _talismanUnlocker.grantFragment(apId);
+                    var grantedFrag:* = _talismanUnlocker.grantFragment(apId);
+                    if (grantedFrag != null) _sessionGrantedFragments.push(grantedFrag);
                     _saveManager.saveSlotData();
                     return;
                 }
