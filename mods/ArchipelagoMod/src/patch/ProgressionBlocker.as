@@ -216,6 +216,24 @@ package patch {
                 "BATTLETRAIT_SCROLL gameId=" + traitGameId);
         }
 
+        /**
+         * Inject an ACHIEVEMENT drop icon. achievementGameId is the internal id from
+         * GV.achiCollection.achisById. Vanilla draws the achievement-specific 86×86
+         * bitmap (Achievement.drawBitmap86) and the tooltip delegates to
+         * pnlAchievements.renderAchiInfoPanel for the full description.
+         */
+        public function addAchievementDropIcon(achievementGameId:int):void {
+            if (achievementGameId < 0) return;
+            // Defensive: vanilla constructor will throw if achisById[gameId] is null.
+            if (GV.achiCollection == null || GV.achiCollection.achisById == null) return;
+            if (GV.achiCollection.achisById[achievementGameId] == null) {
+                _logger.log(_modName, "addAchievementDropIcon: unknown gameId=" + achievementGameId);
+                return;
+            }
+            _addDropIcon(new McDropIconOutcome(DropType.ACHIEVEMENT, achievementGameId),
+                "ACHIEVEMENT gameId=" + achievementGameId);
+        }
+
         private function _addDropIcon(icon:McDropIconOutcome, label:String):void {
             if (GV.ingameController == null || GV.ingameController.core == null) return;
             var ending:* = GV.ingameController.core.ending;

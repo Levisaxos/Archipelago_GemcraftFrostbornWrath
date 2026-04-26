@@ -1099,6 +1099,11 @@ package {
                     _progressionBlocker.addSkillTomeDropIcon(apId - 700);
                 } else if (apId >= 800 && apId <= 814) {
                     _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
+                } else if (apId >= 2000 && apId <= 2636) {
+                    var achGameId:int = _achievementUnlocker.findGameIdByApId(apId);
+                    if (achGameId >= 0) {
+                        _progressionBlocker.addAchievementDropIcon(achGameId);
+                    }
                 }
             }
 

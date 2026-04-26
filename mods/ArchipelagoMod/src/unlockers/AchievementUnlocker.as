@@ -207,6 +207,22 @@ package unlockers {
             return null;
         }
 
+        /**
+         * Reverse-lookup: find game-internal achievement id by AP ID.
+         * Used to construct ACHIEVEMENT drop icons (vanilla McDropIconOutcome
+         * looks up the achievement bitmap via GV.achiCollection.achisById[gameId]).
+         * Returns -1 if not found.
+         */
+        public function findGameIdByApId(apId:int):int {
+            for (var name:String in _achievementData) {
+                var entry:Object = _achievementData[name];
+                if (entry && entry.apId == apId && entry.game_id != null) {
+                    return int(entry.game_id);
+                }
+            }
+            return -1;
+        }
+
         // -----------------------------------------------------------------------
         // Private helpers
 
