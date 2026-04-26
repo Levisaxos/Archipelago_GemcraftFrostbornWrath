@@ -1053,6 +1053,15 @@ package {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
+            // --- Endurance wave stones ---
+            // Vanilla loot, not part of AP. The amount was captured by tickDropIcons
+            // from the original icon's data field before that icon was wiped (the
+            // ppd update already happened in updatePpdWithDrops).
+            var ews:int = _progressionBlocker.pendingEnduranceWaveStones;
+            if (ews > 0) {
+                _progressionBlocker.addEnduranceWaveStoneDropIcon(ews);
+            }
+
             // --- Talisman fragments ---
             if (GV.ppd == null || GV.ppd.talismanInventory == null) return;
             var inv:Array = GV.ppd.talismanInventory;
@@ -1099,6 +1108,8 @@ package {
                     _progressionBlocker.addSkillTomeDropIcon(apId - 700);
                 } else if (apId >= 800 && apId <= 814) {
                     _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
+                } else if (apId >= 1100 && apId <= 1199) {
+                    _progressionBlocker.addXpTomeDropIcon(apId);
                 } else if (apId >= 2000 && apId <= 2636) {
                     var achGameId:int = _achievementUnlocker.findGameIdByApId(apId);
                     if (achGameId >= 0) {

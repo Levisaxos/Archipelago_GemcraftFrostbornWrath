@@ -9,7 +9,10 @@ package patch {
     import com.giab.games.gcfw.entity.TalismanFragment;
     import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
 
+    import flash.display.Sprite;
     import flash.events.MouseEvent;
+
+    import ui.XpTomeDropIcon;
 
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
@@ -52,6 +55,12 @@ package patch {
         // ending screen. Prevents tickDropIcons() from clearing them on the next
         // frame. Reset by resetApIconsState() when the player leaves the level.
         private var _apIconsInjected:Boolean = false;
+
+        // Captured from the vanilla ENDURANCE_WAVE_STONE icon during tickDropIcons,
+        // before that icon is wiped. updatePpdWithDrops has already applied the
+        // amount to GV.ppd.gainedEnduranceWaveStones, so we just need the value
+        // to re-inject a visual icon. Reset by resetApIconsState().
+        private var _pendingEnduranceWaveStones:int = 0;
 
         public function ProgressionBlocker(logger:Logger, modName:String) {
             _logger  = logger;
@@ -139,6 +148,12 @@ package patch {
                             GV.ppd.gainedMapTiles[Number(di.data)] = false;
                         _logger.log(_modName, "tickDropIcons: blocked MAP_TILE id=" + di.data);
                         break;
+                    case DropType.ENDURANCE_WAVE_STONE:
+                        // Vanilla updatePpdWithDrops already applied the amount to ppd —
+                        // just remember it so we can re-inject the visual icon later.
+                        _pendingEnduranceWaveStones += int(Number(di.data));
+                        _logger.log(_modName, "tickDropIcons: captured ENDURANCE_WAVE_STONE amount=" + di.data);
+                        break;
                     default:
                         _logger.log(_modName, "tickDropIcons: suppressed drop type=" + di.type + " data=" + di.data);
                         break;
@@ -157,7 +172,11 @@ package patch {
          */
         public function resetApIconsState():void {
             _apIconsInjected = false;
+            _pendingEnduranceWaveStones = 0;
         }
+
+        /** Amount captured from the vanilla ENDURANCE_WAVE_STONE icon this level (0 if none). */
+        public function get pendingEnduranceWaveStones():int { return _pendingEnduranceWaveStones; }
 
         /**
          * Inject a single SHADOW_CORE drop icon onto the ending screen using the
@@ -217,6 +236,18 @@ package patch {
         }
 
         /**
+         * Inject an ENDURANCE_WAVE_STONE drop icon. amount is how many waves the
+         * stone(s) extend the endurance limit by. Vanilla picks a randomized
+         * variant (1-4 stones) inside the McDropIconOutcome constructor; tooltip
+         * just reads "Endurance Wave Stone +N waves".
+         */
+        public function addEnduranceWaveStoneDropIcon(amount:int):void {
+            if (amount <= 0) return;
+            _addDropIcon(new McDropIconOutcome(DropType.ENDURANCE_WAVE_STONE, amount),
+                "ENDURANCE_WAVE_STONE amount=" + amount);
+        }
+
+        /**
          * Inject an ACHIEVEMENT drop icon. achievementGameId is the internal id from
          * GV.achiCollection.achisById. Vanilla draws the achievement-specific 86×86
          * bitmap (Achievement.drawBitmap86) and the tooltip delegates to
@@ -234,7 +265,21 @@ package patch {
                 "ACHIEVEMENT gameId=" + achievementGameId);
         }
 
-        private function _addDropIcon(icon:McDropIconOutcome, label:String):void {
+        /**
+         * Inject a custom XP-tome drop icon (Tattered Scroll / Worn Tome /
+         * Ancient Grimoire). The variant is chosen inside XpTomeDropIcon based
+         * on the AP id range. Uses its own MOUSE_OVER tooltip handler — the
+         * vanilla renderDropIconInfoPanel doesn't know our type, so we opt out
+         * of the standard hover wiring.
+         */
+        public function addXpTomeDropIcon(apId:int):void {
+            if (apId < 1100 || apId > 1199) return;
+            _addDropIcon(new XpTomeDropIcon(apId),
+                "XP_TOME apId=" + apId,
+                false /* useVanillaHover */);
+        }
+
+        private function _addDropIcon(icon:Sprite, label:String, useVanillaHover:Boolean = true):void {
             if (GV.ingameController == null || GV.ingameController.core == null) return;
             var ending:* = GV.ingameController.core.ending;
             if (ending == null || ending.cnt == null || ending.cnt.mcOutcomePanel == null) return;
@@ -258,10 +303,16 @@ package patch {
                 icon.visible = false;
                 ending.cnt.mcOutcomePanel.addChild(icon);
 
-                var ih:* = GV.ingameController.core.inputHandler2;
-                if (ih != null) {
-                    icon.addEventListener(MouseEvent.MOUSE_OVER, ih.ehDropIconOver, false, 0, true);
-                    icon.addEventListener(MouseEvent.MOUSE_OUT,  ih.ehDropIconOut,  false, 0, true);
+                // Vanilla hover: ehDropIconOver dispatches by .type into
+                // renderDropIconInfoPanel, which throws on unknown types. Custom
+                // icon classes (e.g. XpTomeDropIcon) wire their own listeners in
+                // their constructor and pass useVanillaHover=false here.
+                if (useVanillaHover) {
+                    var ih:* = GV.ingameController.core.inputHandler2;
+                    if (ih != null) {
+                        icon.addEventListener(MouseEvent.MOUSE_OVER, ih.ehDropIconOver, false, 0, true);
+                        icon.addEventListener(MouseEvent.MOUSE_OUT,  ih.ehDropIconOut,  false, 0, true);
+                    }
                 }
 
                 _apIconsInjected = true;
