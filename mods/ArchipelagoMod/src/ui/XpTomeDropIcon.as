@@ -52,11 +52,11 @@ package ui {
         [Embed(source='../../resources/WornTome.png')]
         private static const AncientAsset:Class;
 
-        public function XpTomeDropIcon(apId:int) {
+        public function XpTomeDropIcon(apId:int, levels:int = 0) {
             super();
 
             this.type = DropType.SKILL_TOME; // for the vanilla reveal sound
-            this.data = { apId: apId, label: _labelForApId(apId) };
+            this.data = { apId: apId, label: _labelForApId(apId), levels: levels };
 
             this.cntInner = new Sprite();
             addChild(this.cntInner);
@@ -116,7 +116,11 @@ package ui {
                 vIp.reset(260);
                 vIp.addTextfield(0xFFD700, String(this.data.label), false, 13);
                 vIp.addTextfield(0xCCCCCC, "Wizard XP Tome", false, 11);
-                vIp.addTextfield(0x999999, "Grants wizard levels when collected", false, 11);
+                var lv:int = int(this.data.levels);
+                var grantText:String = (lv > 0)
+                    ? ("Grants " + lv + " wizard level" + (lv == 1 ? "" : "s"))
+                    : "Grants wizard levels when collected";
+                vIp.addTextfield(0x99FF99, grantText, false, 11);
                 GV.main.cntInfoPanel.addChild(vIp);
                 vIp.doEnterFrame();
             } catch (err:Error) {

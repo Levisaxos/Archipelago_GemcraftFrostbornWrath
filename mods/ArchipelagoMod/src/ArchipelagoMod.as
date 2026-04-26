@@ -1015,135 +1015,146 @@ package {
         }
 
         /**
-         * Inject AP-relevant drop icons onto the ending screen. Two categories:
+         * Inject AP-relevant drop icons onto the ending screen, ordered by
+         * importance so the most progression-critical items appear leftmost
+         * in the icon row (and animate in first):
          *
-         * SHADOW_CORE: one combined icon for AP-granted cores (from sent items) +
-         *   in-battle monster drops (which ProgressionBlocker intentionally
-         *   preserves so the game stays beatable). Matches vanilla, which combines
-         *   battle + stash into a single icon.
+         *   1. Field tokens
+         *   2. Skill tomes
+         *   3. Battle trait scrolls
+         *   4. XP tomes
+         *   5. Shadow cores  (one combined icon: AP-granted + monster drops)
+         *   6. Talisman fragments  (monster drops + AP-granted)
+         *   7. Endurance wave stones  (vanilla loot, endurance only)
+         *   8. Achievements
+         *   9. Remote items  (anything sent to another player — AP icon)
          *
-         * TALISMAN_FRAGMENT: one icon per fragment the player ended up with.
-         *   - Monster drops: GV.ingameCore.ocLootTalFrags entries that survived the
-         *     stash revert (still in inventory by reference).
-         *   - AP grants: the new TalismanFragment objects returned by grantFragment,
-         *     captured into _sessionGrantedFragments. These are different OBJECTS
-         *     from anything in ocLootTalFrags even when seeds collide, so iterating
-         *     both sources never produces a duplicate icon.
+         * Implementation: each priority gets its own pass over _sessionDrops
+         * (or its dedicated source like _sessionGrantedFragments). A bit
+         * redundant compared to one dispatch loop, but trivial to reorder
+         * and easy to read.
          */
         private function _injectApDropIcons():void {
             if (_progressionBlocker == null || _connectionManager == null) return;
-            var scMap:Object = _connectionManager.shadowCoreMap;
+            var scMap:Object    = _connectionManager.shadowCoreMap;
+            var tokenMap:Object = _connectionManager.tokenMap;
             if (scMap == null) return;
 
-            var apShadowCores:int = 0;
-            for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
-                var entry:Object = _sessionDrops[sd];
-                if (entry.isForMe !== true) continue; // cores routed to other players don't add to our total
-                var key:String = String(entry.apId);
-                if (key in scMap) {
-                    apShadowCores += int(scMap[key]);
+            var i:int;
+            var entry:Object;
+            var apId:int;
+
+            // 1. Field tokens (self-bound only)
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1 || apId > 122) continue;
+                var rawStrId:* = (tokenMap != null) ? tokenMap[String(apId)] : null;
+                if (rawStrId == null) continue;
+                var stageId:int = GV.getFieldId(String(rawStrId));
+                if (stageId >= 0) {
+                    _progressionBlocker.addFieldTokenDropIcon(stageId);
                 }
             }
 
+            // 2. Skill tomes
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 700 || apId > 723) continue;
+                _progressionBlocker.addSkillTomeDropIcon(apId - 700);
+            }
+
+            // 3. Battle trait scrolls
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 800 || apId > 814) continue;
+                _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
+            }
+
+            // 4. XP tomes (Tattered / Worn / Ancient) — pass the actual level
+            // count from LevelUnlocker so the tooltip can show "Grants N levels".
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1100 || apId > 1199) continue;
+                _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
+            }
+
+            // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).
+            // Cores routed to other players are not summed here — they get their own
+            // AP icon in the remote-items pass below.
+            var apShadowCores:int = 0;
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                var key:String = String(entry.apId);
+                if (key in scMap) apShadowCores += int(scMap[key]);
+            }
             var monsterShadowCores:int = 0;
             if (GV.ingameCore != null && GV.ingameCore.ocLootShadowCoreNum != null) {
                 monsterShadowCores = int(GV.ingameCore.ocLootShadowCoreNum.g());
             }
-
             var totalShadowCores:int = apShadowCores + monsterShadowCores;
             if (totalShadowCores > 0) {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
-            // --- Endurance wave stones ---
-            // Vanilla loot, not part of AP. The amount was captured by tickDropIcons
-            // from the original icon's data field before that icon was wiped (the
-            // ppd update already happened in updatePpdWithDrops).
+            // 6. Talisman fragments: one icon per fragment we ended up with.
+            // Monster drops + AP-granted fragments are different OBJECTS so iterating
+            // both sources without dedup never produces a duplicate icon.
+            if (GV.ppd != null && GV.ppd.talismanInventory != null) {
+                var inv:Array = GV.ppd.talismanInventory;
+
+                if (GV.ingameCore != null && GV.ingameCore.ocLootTalFrags != null) {
+                    var ocLoot:Array = GV.ingameCore.ocLootTalFrags;
+                    for (i = 0; i < ocLoot.length; i++) {
+                        var monsterFrag:* = ocLoot[i];
+                        if (monsterFrag != null && inv.indexOf(monsterFrag) != -1) {
+                            _progressionBlocker.addTalismanFragmentDropIcon(monsterFrag);
+                        }
+                    }
+                }
+
+                for (i = 0; i < _sessionGrantedFragments.length; i++) {
+                    var apFrag:* = _sessionGrantedFragments[i];
+                    if (apFrag != null && inv.indexOf(apFrag) != -1) {
+                        _progressionBlocker.addTalismanFragmentDropIcon(apFrag);
+                    }
+                }
+            }
+
+            // 7. Endurance wave stones (vanilla loot, captured by tickDropIcons)
             var ews:int = _progressionBlocker.pendingEnduranceWaveStones;
             if (ews > 0) {
                 _progressionBlocker.addEnduranceWaveStoneDropIcon(ews);
             }
 
-            // --- Talisman fragments ---
-            if (GV.ppd == null || GV.ppd.talismanInventory == null) return;
-            var inv:Array = GV.ppd.talismanInventory;
-
-            // Monster drops: iterate ocLootTalFrags, keep only those still in inventory.
-            // Stash drops were removed by ProgressionBlocker.onSaveSave; AP-granted
-            // replacements are NEW objects (handled in the next loop).
-            if (GV.ingameCore != null && GV.ingameCore.ocLootTalFrags != null) {
-                var ocLoot:Array = GV.ingameCore.ocLootTalFrags;
-                for (var i:int = 0; i < ocLoot.length; i++) {
-                    var monsterFrag:* = ocLoot[i];
-                    if (monsterFrag != null && inv.indexOf(monsterFrag) != -1) {
-                        _progressionBlocker.addTalismanFragmentDropIcon(monsterFrag);
-                    }
+            // 8. Achievements
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 2000 || apId > 2636) continue;
+                var achGameId:int = _achievementUnlocker.findGameIdByApId(apId);
+                if (achGameId >= 0) {
+                    _progressionBlocker.addAchievementDropIcon(achGameId);
                 }
             }
 
-            // AP-granted: iterate fragments captured during this level. Skip any that
-            // are no longer in inventory (defensive — shouldn't happen mid-level).
-            for (var g:int = 0; g < _sessionGrantedFragments.length; g++) {
-                var apFrag:* = _sessionGrantedFragments[g];
-                if (apFrag != null && inv.indexOf(apFrag) != -1) {
-                    _progressionBlocker.addTalismanFragmentDropIcon(apFrag);
-                }
-            }
-
-            // --- Per-item dispatch ---
-            // For each sent item: if it was routed back to us, show the type-specific
-            // icon (or skip if handled by the bulk loops above for shadow cores /
-            // talismans). If it was routed to ANOTHER player, show the generic
-            // Archipelago icon with a "Sent X to Y" tooltip — regardless of whether
-            // the apId belongs to our game or not. This way another player getting
-            // our F4 token sees the AP icon (not an F4 plate), since we never
-            // actually got that token ourselves.
-            var tokenMap:Object = _connectionManager.tokenMap;
-            for (var t:int = 0; t < _sessionDrops.length; t++) {
-                var tEntry:Object = _sessionDrops[t];
-                var apId:int = int(tEntry.apId);
-                var isForMe:Boolean = (tEntry.isForMe === true);
-
-                if (!isForMe) {
-                    _progressionBlocker.addRemoteItemDropIcon(
-                        String(tEntry.name),
-                        String(tEntry.recipient));
-                    continue;
-                }
-
-                if (apId >= 1 && apId <= 122) {
-                    var rawStrId:* = (tokenMap != null) ? tokenMap[String(apId)] : null;
-                    if (rawStrId == null) continue;
-                    var stageId:int = GV.getFieldId(String(rawStrId));
-                    if (stageId >= 0) {
-                        _progressionBlocker.addFieldTokenDropIcon(stageId);
-                    }
-                } else if (apId >= 700 && apId <= 723) {
-                    _progressionBlocker.addSkillTomeDropIcon(apId - 700);
-                } else if (apId >= 800 && apId <= 814) {
-                    _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
-                } else if (apId >= 1100 && apId <= 1199) {
-                    _progressionBlocker.addXpTomeDropIcon(apId);
-                } else if (apId >= 2000 && apId <= 2636) {
-                    var achGameId:int = _achievementUnlocker.findGameIdByApId(apId);
-                    if (achGameId >= 0) {
-                        _progressionBlocker.addAchievementDropIcon(achGameId);
-                    }
-                } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
-                    // Self-bound talisman fragment — already iconified by the
-                    // _sessionGrantedFragments loop above (TalismanUnlocker constructed
-                    // the fragment object when AP granted it back to us, and we use
-                    // that fresh object for the icon). Non-self talismans were caught
-                    // above by `if (!isForMe)` and got the AP icon instead.
-                } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
-                    // Self-bound shadow cores — already added to the combined icon
-                    // by the shadowCoreMap sum above. Non-self cores were caught
-                    // above by `if (!isForMe)` and got their own AP icon (one per
-                    // sent item, since "Sent X to Y" doesn't combine usefully).
-                }
-                // No final else: a self-bound item with an apId outside all our
-                // ranges should never happen (AP wouldn't route a non-GCFW item
-                // to a GCFW slot). If it does, silently no-op rather than guess.
+            // 9. Remote items: anything routed to another player gets a generic AP
+            // icon, regardless of whether the apId is in our game or not.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe === true) continue;
+                _progressionBlocker.addRemoteItemDropIcon(
+                    String(entry.name),
+                    String(entry.recipient));
             }
 
             // Kick off the vanilla one-by-one reveal animation. No-op if stats

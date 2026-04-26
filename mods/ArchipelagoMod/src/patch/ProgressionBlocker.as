@@ -273,10 +273,10 @@ package patch {
          * vanilla renderDropIconInfoPanel doesn't know our type, so we opt out
          * of the standard hover wiring.
          */
-        public function addXpTomeDropIcon(apId:int):void {
+        public function addXpTomeDropIcon(apId:int, levels:int = 0):void {
             if (apId < 1100 || apId > 1199) return;
-            _addDropIcon(new XpTomeDropIcon(apId),
-                "XP_TOME apId=" + apId,
+            _addDropIcon(new XpTomeDropIcon(apId, levels),
+                "XP_TOME apId=" + apId + " levels=" + levels,
                 false /* useVanillaHover */);
         }
 
