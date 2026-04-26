@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import Dict, List
 
-from BaseClasses import ItemClassification, Region
+from BaseClasses import ItemClassification, LocationProgressType, Region
 from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
@@ -32,7 +32,6 @@ from .rules import set_rules
 from .rulesdata import (
     TIERS,
     TIER_REQUIREMENTS,
-    TIER_SKILL_REQUIREMENTS,
     GAME_DATA,
     SKILL_CATEGORIES,
     CUMULATIVE_SKILL_REQUIREMENTS,
@@ -52,46 +51,51 @@ def _load_stages():
     return _load_game_data()["stages"]
 
 
+def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
+    """
+    Return True if this achievement should be excluded from logic and always
+    receive a filler item.  Excluded achievements still have a location (so the
+    player gets something when they complete it), but the location is marked
+    EXCLUDED so it can only hold filler.
+
+    Triggers:
+      - Achievement has `"always_as_filler": True` in its data
+    """
+    if ach_data and ach_data.get("always_as_filler", False):
+        return True
+    return False
+
+
 def _can_achievement_be_met(requirements: list) -> bool:
     """
-    Check if an achievement can be met based on its requirements.
-
-    Rules:
-    - If requirement matches a game_level_element with empty levels list → cannot be met
-    - If requirement matches a non_monster_element:
-      - If has requires_trait → can be met (via trait unlock)
-      - If has levels list with entries → can be met (in those levels)
-      - If BOTH are empty → cannot be met
-
-    Returns True if achievement can potentially be met, False otherwise.
+    Check if an achievement can be met based on its requirements (DNF format).
+    Returns True if any AND-group can be met, False only if all groups are blocked.
     """
-    for req in requirements:
-        req = req.strip()
+    def _group_can_be_met(group: list) -> bool:
+        for req in group:
+            if isinstance(req, list):
+                if not _can_achievement_be_met(req):
+                    return False
+                continue
+            req = req.strip()
+            if " element" not in req.lower():
+                continue
+            elem_name = req.replace(" element", "").strip()
+            if elem_name in game_level_elements:
+                if not game_level_elements[elem_name].get("levels", []):
+                    return False
+            elif elem_name in non_monster_elements:
+                elem_data = non_monster_elements[elem_name]
+                if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
+                    return False
+        return True
 
-        # Skip non-element requirements (gemCount, minWave, etc.)
-        if " element" not in req.lower():
-            continue
-
-        # Extract element name (remove " element" suffix if present)
-        elem_name = req.replace(" element", "").strip()
-
-        # Check if it's a game_level_element
-        if elem_name in game_level_elements:
-            if not game_level_elements[elem_name].get("levels", []):
-                # Element has no levels defined, requirement cannot be met
-                return False
-
-        # Check if it's a non_monster_element
-        elif elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            # Can be met if it has a requires_trait (unlocked by obtaining trait)
-            # OR if it has levels (unlocked in those levels)
-            if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                # Neither trait requirement nor level mapping exists
-                return False
-
-    # All element requirements can be met
-    return True
+    if not requirements:
+        return True
+    # Normalize to DNF: if first element is a list, treat as OR-of-AND-groups
+    if isinstance(requirements[0], list):
+        return any(_group_can_be_met(group) for group in requirements)
+    return _group_can_be_met(requirements)
 
 
 def _detect_achievement_chains(all_achievements) -> dict:
@@ -276,11 +280,13 @@ class GemcraftFrostbornWrathWorld(World):
         pool: List[GCFWItem] = []
 
         # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
-        # W2/W3/W4 are always accessible (free stages); the mod unlocks them on connect.
+        # All four are free stages; the mod unlocks them on connect.
+        # W1 Field Token is intentionally absent; Extra XP Item #1 fills its slot.
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue
             pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+        pool.append(self.create_item("Extra XP Item #1"))  # W1 token removed; keep item count balanced
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -331,25 +337,34 @@ class GemcraftFrostbornWrathWorld(World):
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
 
+            def _reqs_have_trait(reqs):
+                for r in reqs:
+                    if isinstance(r, list):
+                        if _reqs_have_trait(r):
+                            return True
+                    elif "trait" in r.lower():
+                        return True
+                return False
+
+            def _strip_elements(reqs):
+                result = []
+                for r in reqs:
+                    if isinstance(r, list):
+                        inner = _strip_elements(r)
+                        if inner:
+                            result.append(inner)
+                    else:
+                        r_lower = r.lower()
+                        if "trait" in r_lower or "skill" in r_lower or r.startswith("Achievement:"):
+                            result.append(r)
+                return result
+
             # Simplify achievements: if they have trait requirements, remove element requirements
             # This avoids circular dependencies where trait items might be in trait-locked locations
             for ach_name, ach_data in all_achievements.items():
                 requirements = ach_data.get("requirements", [])
-                if requirements:
-                    # Check if this achievement has a trait requirement
-                    has_trait = any("trait" in req.lower() for req in requirements)
-
-                    if has_trait:
-                        # Keep only trait and skill requirements, remove element and stat requirements
-                        simplified = []
-                        for req in requirements:
-                            req_lower = req.lower()
-                            # Keep traits and skills
-                            if "trait" in req_lower or "skill" in req_lower or req.startswith("Achievement:"):
-                                simplified.append(req)
-                            # Remove elements and stats (gemCount, minWave, minGemGrade, etc.)
-
-                        ach_data["requirements"] = simplified
+                if requirements and _reqs_have_trait(requirements):
+                    ach_data["requirements"] = _strip_elements(requirements)
 
             # Add achievements filtered by required_effort level
             total_achievements = 0
@@ -375,15 +390,18 @@ class GemcraftFrostbornWrathWorld(World):
                         continue  # Skip achievements above selected effort level
 
                 total_achievements += 1
-                # Validate that achievement requirements can be met
                 requirements = ach_data.get("requirements", [])
-                if not _can_achievement_be_met(requirements):
-                    # Log why achievement was filtered
-                    filter_reason = _get_filter_reason(requirements)
-                    if filter_reason not in filtered_achievements:
-                        filtered_achievements[filter_reason] = []
-                    filtered_achievements[filter_reason].append(ach_name)
-                    continue  # Skip achievements with unavailable requirements
+
+                # Excluded achievements (Hidden Codes etc.) still contribute an item
+                # to the pool — it ends up at a non-excluded location elsewhere.
+                if not _is_achievement_excluded(requirements, ach_data):
+                    # Validate that non-excluded achievement requirements can be met
+                    if not _can_achievement_be_met(requirements):
+                        filter_reason = _get_filter_reason(requirements)
+                        if filter_reason not in filtered_achievements:
+                            filtered_achievements[filter_reason] = []
+                        filtered_achievements[filter_reason].append(ach_name)
+                        continue  # Skip achievements with unavailable requirements
 
                 item_name = f"Achievement: {ach_name}"
                 if item_name in item_table:
@@ -450,15 +468,18 @@ class GemcraftFrostbornWrathWorld(World):
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
                         continue  # Skip achievements above selected effort level
 
-                # Validate that achievement requirements can be met
                 requirements = ach_data.get("requirements", [])
-                if not _can_achievement_be_met(requirements):
-                    continue  # Skip achievements with unavailable requirements
+                excluded = _is_achievement_excluded(requirements, ach_data)
+
+                if not excluded and not _can_achievement_be_met(requirements):
+                    continue  # Skip achievements with truly unavailable requirements
 
                 loc_name = f"Achievement: {ach_name}"
                 if loc_name in location_table:
                     loc_data = location_table[loc_name]
                     loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
+                    if excluded:
+                        loc.progress_type = LocationProgressType.EXCLUDED
                     achievements_region.locations.append(loc)
 
             self.multiworld.regions.append(achievements_region)
@@ -616,7 +637,7 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Free stages: all stages with item_ap_id=None (W1, W2, W3, W4).
+        # Free stages: W1/W2/W3/W4 all have item_ap_id=None → mod unlocks them on connect.
         free_stages = [s["str_id"] for s in stages if s["item_ap_id"] is None]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
@@ -691,10 +712,6 @@ class GemcraftFrostbornWrathWorld(World):
         tier_stage_counts: Dict[str, int] = {
             str(t): len(stages) for t, stages in TIERS.items()
         }
-        cumulative_skill_reqs: Dict[str, Dict[str, int]] = {
-            str(t): dict(reqs) for t, reqs in CUMULATIVE_SKILL_REQUIREMENTS.items()
-        }
-
         # Build achievement requirements map: achievement name → [requirements]
         achievement_requirements_map: Dict[str, list] = {}
         required_effort = self.options.achievement_required_effort.value
@@ -718,7 +735,7 @@ class GemcraftFrostbornWrathWorld(World):
             # Tracker logic rules (see LogicEvaluator.as)
             "logic_rules_version":   1,
             "skill_categories":      SKILL_CATEGORIES,
-            "cumulative_skill_reqs": cumulative_skill_reqs,
+            "cumulative_skill_reqs": {},
             "stage_tier":            stage_tier_map,
             "stage_skills":          stage_skills_map,
             "tier_stage_counts":     tier_stage_counts,

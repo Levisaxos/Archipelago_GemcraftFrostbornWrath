@@ -2,7 +2,7 @@ package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.entity.TalismanFragment;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
     import utils.ApIdMapper;
 
     /**
@@ -26,7 +26,7 @@ package unlockers {
         private var _talNameMap:Object;            // AP ID string → display name
         private var _grantedApIds:Object = {};     // String(apId) → true; persisted via SaveManager
 
-        public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
             _talDataMapper = null;
         }
@@ -44,10 +44,11 @@ package unlockers {
         // -----------------------------------------------------------------------
         // Incremental grant (ReceivedItems index > 0)
 
-        /** Grant a single talisman fragment by AP ID (900–999). */
-        public function grantFragment(apId:int):void {
+        /** Grant a single talisman fragment by AP ID (900–999).
+         *  Returns the created TalismanFragment on success, or null on failure. */
+        public function grantFragment(apId:int):* {
             var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
-            addFragmentFromTalData(talData, apId);
+            return addFragmentFromTalData(talData, apId);
         }
 
         // -----------------------------------------------------------------------
@@ -55,12 +56,12 @@ package unlockers {
 
         /**
          * Ensure all talisman fragments in the received AP item list are in inventory.
-         * Deduplicates by seed — every ID 900–999 has a unique seed so this is always safe.
+         * Deduplicates by seed — every ID 900–952 and 1200–1246 has a unique seed so this is always safe.
          * Call after resetGrants().
          */
         public function syncTalismans(apIds:Array):void {
             for each (var apId:int in apIds) {
-                if (apId < 900 || apId > 999) continue;
+                if (!((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246))) continue;
                 if (_grantedApIds[String(apId)] == true) continue; // already granted; persisted check
                 var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
                 if (talData == null) continue;
@@ -74,14 +75,14 @@ package unlockers {
         // -----------------------------------------------------------------------
         // Helpers
 
-        private function addFragmentFromTalData(talData:String, apId:int):void {
+        private function addFragmentFromTalData(talData:String, apId:int):* {
             if (!ensurePpdExists("grantFragment")) {
-                return;
+                return null;
             }
             var inv:Array = GV.ppd.talismanInventory;
             if (inv == null) {
                 logAction("grantFragment: talismanInventory null");
-                return;
+                return null;
             }
             var slotIdx:int = -1;
             for (var i:int = 0; i < inv.length; i++) {
@@ -89,17 +90,17 @@ package unlockers {
             }
             if (slotIdx < 0) {
                 logAction("grantFragment: talisman inventory full, cannot grant apId=" + apId);
-                return;
+                return null;
             }
 
             var parts:Array = talData.split("/");
             if (parts.length < 4) {
                 logAction("grantFragment: invalid talData '" + talData + "' for apId=" + apId);
-                return;
+                return null;
             }
-            var seed:int        = int(parts[0]);
-            var rarity:int      = int(parts[1]);
-            var type:int        = int(parts[2]);
+            var seed:int         = int(parts[0]);
+            var rarity:int       = int(parts[1]);
+            var type:int         = int(parts[2]);
             var upgradeLevel:int = int(parts[3]);
 
             var frag:TalismanFragment = new TalismanFragment(seed, rarity, type, upgradeLevel);
@@ -109,11 +110,12 @@ package unlockers {
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
                 : ("Talisman Fragment #" + apId);
-            showToast("Found " + label, 0xFFCC44);
+            showToast("Received " + label, 0xFFCC44);
             logAction("Granted talisman apId=" + apId
                 + " seed=" + seed + " rarity=" + rarity
                 + " type=" + type + " slot=" + slotIdx);
             showPlusNodeOnSelector("mcPlusNodeTalisman");
+            return frag;
         }
 
         private function hasFragmentWithSeed(seed:int):Boolean {

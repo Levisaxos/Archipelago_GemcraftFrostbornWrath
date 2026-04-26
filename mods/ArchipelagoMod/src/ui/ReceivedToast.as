@@ -13,7 +13,7 @@ package ui {
     import flash.utils.getTimer;
 
     /**
-     * Top-center HUD panel for Archipelago item notifications.
+     * Top-center HUD panel for items received by the player.
      *
      * Shows one item at a time with an icon on the left and item text
      * on the right. Extras wait in a queue and appear in sequence.
@@ -23,7 +23,7 @@ package ui {
      * it remains horizontally centered (panelWidth is updated each time
      * a new item is dequeued).
      */
-    public class ItemToastPanel extends Sprite {
+    public class ReceivedToast extends Sprite {
 
         [Embed(source='../images/IconColorSmall.png')]
         private static const ICON_CLASS:Class;
@@ -76,7 +76,7 @@ package ui {
 
         // -----------------------------------------------------------------------
 
-        public function ItemToastPanel() {
+        public function ReceivedToast() {
             super();
             mouseEnabled  = false;
             mouseChildren = false;
@@ -105,7 +105,7 @@ package ui {
 
         /**
          * Enqueue an item notification.
-         * @param text   The full message string (e.g. "Received Stone of Order from Alice")
+         * @param text   The full message string (e.g. "Received Stone of Order")
          * @param color  Text colour as 0xRRGGBB (no alpha component needed)
          */
         public function addItem(text:String, color:uint):void {

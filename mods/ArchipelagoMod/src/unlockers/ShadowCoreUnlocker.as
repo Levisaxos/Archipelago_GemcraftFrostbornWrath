@@ -2,7 +2,7 @@ package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import flash.utils.getDefinitionByName;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
     import utils.ApIdMapper;
 
     /**
@@ -25,7 +25,7 @@ package unlockers {
         private var _shadowCoreNameMap:Object;     // AP ID string → display name
         private var _totalGranted:int = 0;         // total AP-granted shadow cores; persisted via SaveManager
 
-        public function ShadowCoreUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function ShadowCoreUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
             _shadowCoreMapper = null;
         }
@@ -56,10 +56,6 @@ package unlockers {
             var oldAmount:Number = GV.ppd.shadowCoreAmount.g();
             GV.ppd.shadowCoreAmount.s(oldAmount + amount);
             _totalGranted += amount;
-            var label:String = (_shadowCoreNameMap != null && _shadowCoreNameMap[String(apId)] != null)
-                ? String(_shadowCoreNameMap[String(apId)])
-                : "Shadow Cores";
-            showToast("Found " + label + " (+" + amount + ")", 0x88AAFF);
             logAction("Granted shadow cores apId=" + apId
                 + " amount=" + amount + " totalGranted=" + _totalGranted);
             pushSelectorEvent(5, [oldAmount, oldAmount + amount]); // 5 = SC_INCREASING
@@ -92,10 +88,6 @@ package unlockers {
         // -----------------------------------------------------------------------
         // Helpers
 
-        /**
-         * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
-         * if the selector is currently idle so the animation plays immediately.
-         */
         private function pushSelectorEvent(type:int, args:Array):void {
             try {
                 var core:* = GV.selectorCore;

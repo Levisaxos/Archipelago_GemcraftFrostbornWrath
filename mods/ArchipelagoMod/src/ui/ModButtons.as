@@ -7,7 +7,7 @@ package ui {
 
     import data.AV;
     import net.ConnectionManager;
-    import tracker.LogicEvaluator;
+    import tracker.FieldLogicEvaluator;
 
     /**
      * Creates and manages all mod buttons across the selector screen and the
@@ -32,7 +32,7 @@ package ui {
         private var _logger:Logger;
         private var _modName:String;
         private var _connectionManager:ConnectionManager;
-        private var _logicEvaluator:LogicEvaluator;
+        private var _logicEvaluator:FieldLogicEvaluator;
 
         // Selector-screen buttons
         private var _reportBtn:CustomButton;
@@ -51,7 +51,7 @@ package ui {
 
         public function ModButtons(logger:Logger, modName:String,
                                    connectionManager:ConnectionManager,
-                                   logicEvaluator:LogicEvaluator) {
+                                   logicEvaluator:FieldLogicEvaluator) {
             _logger            = logger;
             _modName           = modName;
             _connectionManager = connectionManager;
@@ -145,7 +145,8 @@ package ui {
 
             if (_fieldsBtn != null) {
                 var inLogicList:Array = _computeInLogicStages();
-                _fieldsBtn.update(inLogicList.length, inLogicList);
+                var inLogicAchs:Array = AV.sessionData.achievementNamesInLogic;
+                _fieldsBtn.update(inLogicList, inLogicAchs);
                 _fieldsBtn.onFrame();
             }
         }
@@ -241,8 +242,8 @@ package ui {
                 var base:int = int(locIds[strId]);
                 if (base <= 0) continue;
                 var jMiss:Boolean = missing[base]        == true;
-                var bMiss:Boolean = missing[base + 500]  == true;
-                var sMiss:Boolean = missing[base + 1000] == true;
+                var bMiss:Boolean = missing[base + 199]  == true;
+                var sMiss:Boolean = missing[base + 399]  == true;
                 if (_logicEvaluator.stageHasInLogicMissing(strId, jMiss, bMiss, sMiss)) {
                     result.push(strId);
                 }

@@ -5,7 +5,7 @@ package deathlink {
     import com.giab.games.gcfw.constants.BattleMode;
     import flash.utils.getTimer;
 
-    import ui.ToastPanel;
+    import ui.SystemToast;
 
     /**
      * Handles DeathLink send and receive for the Archipelago mod.
@@ -36,7 +36,7 @@ package deathlink {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _toast:SystemToast;
 
         // Settings
         private var _enabled:Boolean       = false;
@@ -71,7 +71,7 @@ package deathlink {
         /** Fired when a DeathLink is received and queued. (source:String):void */
         public var onPunishmentReceived:Function;
 
-        public function DeathLinkHandler(logger:Logger, modName:String, toast:ToastPanel) {
+        public function DeathLinkHandler(logger:Logger, modName:String, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _toast   = toast;

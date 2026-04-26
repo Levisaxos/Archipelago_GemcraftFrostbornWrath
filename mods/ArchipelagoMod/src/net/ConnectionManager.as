@@ -2,8 +2,8 @@ package net {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import data.AV;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
 
     /**
@@ -21,7 +21,7 @@ package net {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _toast:ToastPanel;
+        private var _toast:SystemToast;
         private var _webSocketClient:WebSocketClient;
         private var _sender:ApSender;
         private var _receiver:ApReceiver;
@@ -75,7 +75,6 @@ package net {
         /** Public read-only view of the stage → base Journey AP location id map. */
         public static function get stageLocIds():Object { return STAGE_LOC_AP_IDS; }
 
-        // Populated by checkCompletedLocations(); read by LevelEndScreenBuilder.
         private var _lastCheckedLocations:Array = [];
 
         public function get lastCheckedLocations():Array { return _lastCheckedLocations; }
@@ -96,16 +95,16 @@ package net {
         public var onError:Function;
         /** Called when the connection panel should reset. Signature: ():void */
         public var onPanelReset:Function;
+        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
+        public var onItemSent:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we send an item from a location. Signature: (locId:int, itemName:String, receivingName:String):void */
-        public var onItemSentFromLocation:Function;
         /** Called when the connection drops unexpectedly. Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
         // -----------------------------------------------------------------------
 
-        public function ConnectionManager(logger:Logger, modName:String, toast:ToastPanel) {
+        public function ConnectionManager(logger:Logger, modName:String, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _toast   = toast;
@@ -124,8 +123,8 @@ package net {
             _receiver.onDeathLinkReceived = function(src:String):void {
                 if (onDeathLinkReceived != null) onDeathLinkReceived(src);
             };
-            _receiver.onItemSentFromLocation = function(loc:int, name:String, recv:String):void {
-                if (onItemSentFromLocation != null) onItemSentFromLocation(loc, name, recv);
+            _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
+                if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe);
             };
         }
 
@@ -148,7 +147,7 @@ package net {
         public function get shadowCoreNameMap():Object     { return _receiver.shadowCoreNameMap; }
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
         public function get missingLocations():Object      { return _receiver.missingLocations; }
-        public function get itemsSentThisLevel():Object    { return _receiver.itemsSentThisLevel; }
+        public function get mySlot():int                   { return _receiver.mySlot; }
 
         // -----------------------------------------------------------------------
         // Credentials
@@ -167,8 +166,8 @@ package net {
         // -----------------------------------------------------------------------
         // Panel plumbing — forwarded to receiver
 
-        /** Provide the item-notification panel used for received/found/sent item toasts. */
-        public function setItemToast(panel:ItemToastPanel):void { _receiver.setItemToast(panel); }
+        /** Provide the panel used for received-item toasts. */
+        public function setReceivedToast(panel:ReceivedToast):void { _receiver.setReceivedToast(panel); }
 
         /** Provide the message log so item send/receive events are recorded. */
         public function setMessageLog(log:MessageLog):void { _receiver.setMessageLog(log); }
@@ -337,6 +336,14 @@ package net {
         /** Send location check IDs to the server. */
         public function sendLocationChecks(locationIds:Array):void {
             _sender.sendLocationChecks(locationIds);
+            // Remove from missing so the logic evaluator stops counting them as in-logic.
+            // Field checks do this manually before calling _sender directly; achievement
+            // checks go through this method, so we centralise the deletion here.
+            var missing:Object = _receiver.missingLocations;
+            if (missing != null) {
+                for each (var locId:int in locationIds)
+                    delete missing[locId];
+            }
         }
 
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
@@ -385,9 +392,6 @@ package net {
 
                 var toSend:Array = [];
                 _lastCheckedLocations = [];
-                // Clear stage-location data but preserve achievement entries (2000-2636)
-                // so that hover lookups on achievement icons still work after this call.
-                _receiver.resetItemsSentThisLevel(true);
 
                 var missing:Object = _receiver.missingLocations;
 

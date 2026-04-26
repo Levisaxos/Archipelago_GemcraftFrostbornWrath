@@ -2,7 +2,7 @@ package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import flash.utils.getDefinitionByName;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
 
     /**
      * Handles AP wizard level / XP bonus grants.
@@ -31,7 +31,7 @@ package unlockers {
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
 
-        public function LevelUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function LevelUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
         }
 
@@ -120,7 +120,7 @@ package unlockers {
             }
 
             logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            showToast("Found " + label, 0x88CCFF);
+            showToast("Received " + label, 0x88CCFF);
         }
 
         /**
@@ -131,7 +131,7 @@ package unlockers {
             var levels:int = levelsForApId(apId);
             if (levels <= 0) return;
 
-            if (label == "") label = "XP Tome";
+            if (label == null || label == "") label = "XP Tome";
 
             var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
 
@@ -147,7 +147,7 @@ package unlockers {
             }
 
             logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            showToast("Found " + label, 0x88CCFF);
+            showToast("Received " + label, 0x88CCFF);
         }
 
         /**

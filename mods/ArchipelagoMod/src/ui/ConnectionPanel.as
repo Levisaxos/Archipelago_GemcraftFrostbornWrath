@@ -10,7 +10,7 @@ package ui {
     import flash.text.TextFormatAlign;
     import flash.ui.Keyboard;
 
-    import ui.ToastPanel;
+    import ui.SystemToast;
     import ui.MessageLogPanel;
 
     /**

@@ -17,8 +17,8 @@ package {
 
     import ui.ModButtons;
     import ui.ScrSlotSettings;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
@@ -31,7 +31,6 @@ package {
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
-    import ui.LevelEndScreenBuilder;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -42,8 +41,9 @@ package {
 
     import net.ConnectionManager;
 
-    import tracker.CollectedState;
+    import tracker.FieldLogicEvaluator;
     import tracker.LogicEvaluator;
+    import tracker.AchievementLogicEvaluator;
     import tracker.StageTinter;
     import tracker.LogicHelper;
 
@@ -52,6 +52,7 @@ package {
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
     import patch.AchievementPanelPatcher;
+    import patch.FieldTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -67,7 +68,6 @@ package {
      *   ConnectionPanel          — Connection UI overlay (self-managing)
      *   ModeSelectorInterceptor  — Mode button / delete button hooks
      *   ProgressionBlocker       — Reverts auto-unlocks after battles
-     *   LevelEndScreenBuilder    — Builds AP drop icons on the ending screen
      *   SkillUnlocker            — Skill unlock logic
      *   TraitUnlocker            — Battle trait unlock logic
      *   StageUnlocker            — Stage / tile unlock logic
@@ -76,7 +76,8 @@ package {
      *   GoalManager              — Detects goal completion, fires onGoalReached once
      *   SaveManager              — Slot JSON persistence (coordinates FileHandler/ConnectionManager/LevelUnlocker)
      *   FileHandler              — Raw slot file I/O
-     *   ToastPanel               — On-screen notifications
+     *   SystemToast              — On-screen system/sent-item notifications
+     *   ReceivedToast            — On-screen received-item notifications
      *   ScrDebugOptions          — Debug panel
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
@@ -95,11 +96,11 @@ package {
         private var _modButtons:ModButtons;
         private var _slotSettings:ScrSlotSettings;
 
-        private var _toast:ToastPanel;
-        private var _toastOnStage:Boolean = false;
+        private var _systemToast:SystemToast;
+        private var _systemToastOnStage:Boolean = false;
 
-        private var _itemToast:ItemToastPanel;
-        private var _itemToastOnStage:Boolean = false;
+        private var _receivedToast:ReceivedToast;
+        private var _receivedToastOnStage:Boolean = false;
 
         private var _messageLog:MessageLog;
         private var _messageLogPanel:MessageLogPanel;
@@ -107,7 +108,6 @@ package {
 
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
-        private var _levelEndScreenBuilder:LevelEndScreenBuilder;
         private var _connectionManager:ConnectionManager;
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
@@ -127,11 +127,13 @@ package {
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
-        private var _collectedState:CollectedState;
+        private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
+        private var _achievementLogicEvaluator:AchievementLogicEvaluator;
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
+        private var _fieldTooltipOverlay:FieldTooltipOverlay;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -144,6 +146,18 @@ package {
 
         private var _mainMenuUI:MainMenuUI;
         private var _dbgFrameCounter:int = 0; // for throttled screen logging
+
+        // Items sent to AP during the current level session (via PrintJSON onItemSent).
+        // Each entry is { name:String, apId:int }. Logged, used to inject AP-relevant
+        // drop icons (e.g. shadow cores) onto the ending screen after a short post-level
+        // countdown so late-arriving async packets are included, then cleared.
+        private var _sessionDrops:Array = [];
+        // TalismanFragment objects granted by AP during the current level session.
+        // Captured from grantFragment(apId) return values so we can show one drop icon
+        // per AP-granted fragment without duplicating monster-drop fragments (which
+        // are tracked separately via GV.ingameCore.ocLootTalFrags).
+        private var _sessionGrantedFragments:Array = [];
+        private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -169,69 +183,70 @@ package {
 
                 // Create subsystems
                 _messageLog    = new MessageLog();
-                _toast         = new ToastPanel();
-                _itemToast     = new ItemToastPanel();
-                _toast.messageLog = _messageLog;
+                _systemToast   = new SystemToast();
+                _receivedToast = new ReceivedToast();
+                _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
-                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _itemToast);
-                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _itemToast);
+                _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
+                _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
                 _stageUnlocker      = new StageUnlocker(_logger, MOD_NAME);
-                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _itemToast);
-                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _itemToast);
-                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _itemToast);
+                _levelUnlocker      = new LevelUnlocker(_logger, MOD_NAME, _receivedToast);
+                _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _receivedToast);
+                _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _receivedToast);
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
-                // In-game tracker (stage light tinting)
-                _collectedState  = new CollectedState(_logger, MOD_NAME);
-                _logicEvaluator  = new LogicEvaluator(_logger, MOD_NAME, _collectedState);
+                // In-game tracker (stage light tinting + logic evaluation)
+                _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
+                _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
+                _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
 
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
 
-                // Level-end screen builder — constructed early; configured once
-                // _achievementUnlocker and _connectionManager are both available (below).
-                _levelEndScreenBuilder = new LevelEndScreenBuilder(_logger, MOD_NAME);
-
                 // Connection manager — AP protocol + WebSocket
-                _connectionManager = new ConnectionManager(_logger, MOD_NAME, _toast);
-                _connectionManager.setItemToast(_itemToast);
+                _connectionManager = new ConnectionManager(_logger, MOD_NAME, _systemToast);
+                _connectionManager.setReceivedToast(_receivedToast);
                 _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
                 _connectionManager.onItemReceived          = grantItem;
+                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
+                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
+                    _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
+                        + itemName + " (apId=" + apId + ") → " + recipientName + (isForMe ? " (self)" : ""));
+                };
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
-                _connectionManager.onItemSentFromLocation  = onItemSentFromLocation;
                 _connectionManager.load();
 
                 // Initialize achievement unlocker
-                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _collectedState);
-
-                // Wire level-end builder now that both dependencies are available
-                _levelEndScreenBuilder.configure(_achievementUnlocker, _connectionManager);
+                _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _receivedToast);
+                _achievementUnlocker.loadData();
+                _achievementLogicEvaluator.loadData();
 
                 // ProgressionBlocker: intercepts SAVE_SAVE and reverts game auto-unlocks.
-                // Delegates icon construction to LevelEndScreenBuilder.
-                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME, _levelEndScreenBuilder);
+                _progressionBlocker = new ProgressionBlocker(_logger, MOD_NAME);
 
-                // Initialize logic helper (for achievement and field access checks)
-                _logicHelper = new LogicHelper(_logger, MOD_NAME, _collectedState, _logicEvaluator, _connectionManager);
-
-                // Wire achievement unlocker with logic subsystems and load data
-                _achievementUnlocker.configure(_logicEvaluator, _logicHelper);
-                _achievementUnlocker.loadData();
+                // Logic helper (thin wrapper for external callers e.g. debug UI)
+                _logicHelper = new LogicHelper(_logger, MOD_NAME, _fieldLogicEvaluator);
 
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
+                _achPanelPatcher.setAchievementLogicEvaluator(_achievementLogicEvaluator);
 
-                _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                // When an achievement check is sent, immediately refresh the panel so the
+                // achievement leaves "In Logic" without waiting for the next item grant.
+                _achievementUnlocker.onChecked = _refreshAchievementPanel;
+
+                _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
+                _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
 
                 // Button factory — owns all mod buttons on selector + main menu
-                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _logicEvaluator);
+                _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _modButtons.onSettingsClick  = onSettingsClicked;
                 _modButtons.onApDebugClick   = _toggleDebugOptions;
                 _modButtons.onChangelogClick = openChangelog;
@@ -246,12 +261,12 @@ package {
                 _saveManager.talismanUnlocker   = _talismanUnlocker;
                 _levelUnlocker.onDataChanged = _saveManager.saveSlotData;
 
-                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _toast);
+                _deathLinkHandler = new DeathLinkHandler(_logger, MOD_NAME, _systemToast);
                 _deathLinkHandler.onPlayerDied         = onPlayerDied;
                 _deathLinkHandler.onPunishmentReceived = onPunishmentReceived;
                 _connectionManager.onDeathLinkReceived = onDeathLinkReceived;
 
-                _goalManager = new GoalManager(_logger, MOD_NAME, _itemToast);
+                _goalManager = new GoalManager(_logger, MOD_NAME, _systemToast);
                 _goalManager.onGoalReached = onGoalReached;
 
                 // Main menu UI — version label, update badge, changelog
@@ -261,16 +276,13 @@ package {
                 _connectionPanel = null;
 
                 // Mode-selector interceptor
-                _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _toast);
+                _modeInterceptor = new ModeSelectorInterceptor(_logger, MOD_NAME, _systemToast);
                 _modeInterceptor.onModeIntercepted    = onModeIntercepted;
                 _modeInterceptor.onSlotDeleteWarning   = onSlotDeleteWarning;
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
 
                 _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
 
-                // Register ProgressionBlocker AFTER our own handler so its SAVE_SAVE fires second.
-                // This guarantees checkCompletedLocations() has already run before buildIcons() reads
-                // itemsSentThisLevel from ConnectionManager.
                 _progressionBlocker.enable(_bezel);
 
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
@@ -292,7 +304,6 @@ package {
                 _progressionBlocker.disable();
                 _progressionBlocker = null;
             }
-            _levelEndScreenBuilder = null;
             if (_modeInterceptor != null) {
                 _modeInterceptor.unhook();
                 _modeInterceptor = null;
@@ -300,16 +311,16 @@ package {
             if (this.stage != null) {
                 this.stage.removeEventListener(Event.RESIZE, onStageResize);
             }
-            if (_toast != null && _toast.parent != null) {
-                _toast.parent.removeChild(_toast);
+            if (_systemToast != null && _systemToast.parent != null) {
+                _systemToast.parent.removeChild(_systemToast);
             }
-            _toast = null;
-            _toastOnStage = false;
-            if (_itemToast != null && _itemToast.parent != null) {
-                _itemToast.parent.removeChild(_itemToast);
+            _systemToast = null;
+            _systemToastOnStage = false;
+            if (_receivedToast != null && _receivedToast.parent != null) {
+                _receivedToast.parent.removeChild(_receivedToast);
             }
-            _itemToast = null;
-            _itemToastOnStage = false;
+            _receivedToast = null;
+            _receivedToastOnStage = false;
             if (_messageLogPanel != null) {
                 if (_messageLogPanel.isOpen) _messageLogPanel.close();
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
@@ -379,15 +390,15 @@ package {
             }
 
             // Add toasts to stage once available.
-            if (!_toastOnStage && _toast != null && this.stage != null) {
-                this.stage.addChild(_toast);
-                _toastOnStage = true;
-                positionToast();
+            if (!_systemToastOnStage && _systemToast != null && this.stage != null) {
+                this.stage.addChild(_systemToast);
+                _systemToastOnStage = true;
+                positionSystemToast();
                 this.stage.addEventListener(Event.RESIZE, onStageResize, false, 0, true);
             }
-            if (!_itemToastOnStage && _itemToast != null && this.stage != null) {
-                this.stage.addChild(_itemToast);
-                _itemToastOnStage = true;
+            if (!_receivedToastOnStage && _receivedToast != null && this.stage != null) {
+                this.stage.addChild(_receivedToast);
+                _receivedToastOnStage = true;
             }
             if (!_messageLogOnStage && _messageLogPanel != null && this.stage != null) {
                 this.stage.addChild(_messageLogPanel);
@@ -399,9 +410,9 @@ package {
                 _disconnectPanel.visible = false;
                 _disconnectPanel.positionAtBottom(this.stage.stageWidth, this.stage.stageHeight);
             }
-            // Keep item toast horizontally centered as panelWidth may change each item.
-            if (_itemToastOnStage && _itemToast != null && _itemToast.alpha > 0) {
-                positionItemToast();
+            // Keep received toast horizontally centered as panelWidth may change each item.
+            if (_receivedToastOnStage && _receivedToast != null && _receivedToast.alpha > 0) {
+                positionReceivedToast();
             }
 
             // Main menu overlay — show/tick/hide driven by screen state.
@@ -426,6 +437,29 @@ package {
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
 
+            // Suppress all dropicons mid-battle. When drops are cleared, start a
+            // short countdown so late-arriving async PrintJSON packets are included.
+            if (_progressionBlocker != null && _progressionBlocker.tickDropIcons()) {
+                _levelEndCountdown = 120;
+            }
+
+            // After the countdown expires, log session drops and inject AP drop icons.
+            if (_levelEndCountdown > 0) {
+                _levelEndCountdown--;
+                if (_levelEndCountdown == 0) {
+                    _logger.log(MOD_NAME, "=== AP items sent this level: " + _sessionDrops.length + " ===");
+                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                        var sdEntry:Object = _sessionDrops[sd];
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
+                    }
+                    _logger.log(MOD_NAME, "=== end ===");
+                    _injectApDropIcons();
+                    _sessionDrops = [];
+                    _sessionGrantedFragments = [];
+                    _levelEndCountdown = -1;
+                }
+            }
+
             // Poll the goal manager every frame so mid-battle goals (e.g. Swarm
             // Queen kill on K4) fire as soon as the condition is met, not only
             // on the next save event. No-ops once the goal has been sent.
@@ -441,6 +475,7 @@ package {
             if (_lastScreen == -1)
                 _lastScreen = screen;
             if (screen != _lastScreen) {
+                _logger.log(MOD_NAME, "Screen transition: " + _lastScreen + " → " + screen);
 
                 // Entering MAINMENU — disconnect early so the connection doesn't
                 // linger while the player is on the main menu.
@@ -452,8 +487,8 @@ package {
                     if (_connectionPanel != null) _connectionPanel.dismiss();
                     hideDisconnectPanel();
                     _goalManager.reset();
-                    if (_toast != null) _toast.clear();
-                    if (_itemToast != null) _itemToast.clear();
+                    if (_systemToast != null) _systemToast.clear();
+                    if (_receivedToast != null) _receivedToast.clear();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
                     _mainMenuUI.hide(); // remove any existing set before re-adding next frame
                 }
@@ -498,6 +533,16 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                    _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
+                    _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
+                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                        var sdEntry:Object = _sessionDrops[sd];
+                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
+                    }
+                    _logger.log(MOD_NAME, "=== end of AP items list ===");
+                    _sessionDrops = [];
+                    _sessionGrantedFragments = [];
+                    if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
@@ -610,12 +655,23 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
+                if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
+                    var wasPatched:Boolean = _achPanelPatcher.patched;
                     _achPanelPatcher.tryPatch();
-                    if (GV.selectorCore != null)
+                    if (!wasPatched && _achPanelPatcher.patched && _achievementLogicEvaluator != null) {
+                        // First successful patch: populate filterFlags before the panel opens.
+                        _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                        _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
+                        _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                        _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
+                    }
+                    if (GV.selectorCore != null) {
                         _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
+                        _achPanelPatcher.onSelectorFrame(GV.selectorCore.pnlAchievements);
+                    }
                 }
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
@@ -635,24 +691,24 @@ package {
         // -----------------------------------------------------------------------
         // Toast positioning
 
-        private function positionToast():void {
-            if (_toast == null || this.stage == null) return;
+        private function positionSystemToast():void {
+            if (_systemToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
-            _toast.x = gameRoot.x + TOAST_OFFSET_X * gameRoot.scaleX;
-            _toast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
+            _systemToast.x = gameRoot.x + TOAST_OFFSET_X * gameRoot.scaleX;
+            _systemToast.y = gameRoot.y + TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
-        private function positionItemToast():void {
-            if (_itemToast == null || this.stage == null) return;
+        private function positionReceivedToast():void {
+            if (_receivedToast == null || this.stage == null) return;
             var gameRoot:* = this.stage.getChildAt(0);
             // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
-            _itemToast.x = this.stage.stageWidth * 0.5 - _itemToast.panelWidth * 0.5;
-            _itemToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
+            _receivedToast.x = this.stage.stageWidth * 0.5 - _receivedToast.panelWidth * 0.5;
+            _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
         private function onStageResize(e:Event):void {
-            positionToast();
-            positionItemToast();
+            positionSystemToast();
+            positionReceivedToast();
             if (_messageLogPanel != null && _messageLogPanel.isOpen && this.stage != null) {
                 _messageLogPanel.resize(this.stage.stageWidth, this.stage.stageHeight);
             }
@@ -737,7 +793,7 @@ package {
         private function onModeIntercepted(slotId:int, pendingBtn:*, pendingTarget:*):void {
             _saveManager.currentSlot = slotId;
             if (_disconnectPanel != null && _disconnectPanel.isShowing) {
-                _toast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
+                _systemToast.addMessage("Reconnect to Archipelago before starting a level", 0xFFFF8844);
                 _modeInterceptor.clearPending();
                 return;
             }
@@ -748,7 +804,7 @@ package {
             // Standalone slots have no Archipelago goal — skip the completion warning.
             if (_saveManager.isSlotStandalone(slotId)) return;
             if (!_saveManager.isSlotCompleted(slotId)) {
-                _toast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
+                _systemToast.addMessage("Warning: slot " + slotId + " is not yet completed. Deleting will lose most of your progress. Press D to confirm.", 0xFFFF8844);
             }
         }
 
@@ -772,10 +828,10 @@ package {
             // Slot file exists and player previously chose standalone — skip popup entirely.
             if (_saveManager.standaloneSet && _saveManager.standalone) {
                 _standalone = true;
-                if (_collectedState != null) _collectedState.reset();
+                AV.sessionData.reset();
                 _progressionBlocker.disable();
                 _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
-                _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
+                _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
                 _modeInterceptor.redispatchPendingClick();
                 return;
             }
@@ -810,7 +866,7 @@ package {
                 _connectionManager.apPassword
             );
             if (!_connectionPanel.isShowing) {
-                _connectionPanel.showWithOverlay(this.stage, _toast, _messageLogPanel);
+                _connectionPanel.showWithOverlay(this.stage, _systemToast, _messageLogPanel);
                 _logger.log(MOD_NAME, "Connection overlay shown");
             }
         }
@@ -833,12 +889,12 @@ package {
             _saveManager.standalone = true;
             _saveManager.saveSlotData();
             _standalone = true;
-            if (_collectedState != null) _collectedState.reset();
+            AV.sessionData.reset();
             _progressionBlocker.disable();
             if (_connectionPanel != null) _connectionPanel.dismiss();
             hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _toast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
+            _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -852,15 +908,23 @@ package {
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
 
+            // Populate slot_data maps from the Connected packet (loadServerDataFromJSON
+            // resets them to {} and the embedded itemdata.json doesn't fill these).
+            AV.serverData.tokenMap           = _connectionManager.tokenMap;
+            AV.serverData.shadowCoreMap      = _connectionManager.shadowCoreMap;
+            AV.serverData.shadowCoreNameMap  = _connectionManager.shadowCoreNameMap;
+            AV.serverData.talismanNameMap    = _connectionManager.talismanNameMap;
+            AV.serverData.wizStashTalData    = _connectionManager.wizStashTalData;
+
             // Reset + configure the in-game tracker from slot_data.  Must happen
-            // BEFORE syncWithAP (which will populate collected state via onItem).
-            if (_collectedState != null) _collectedState.reset();
+            // BEFORE syncWithAP (which will populate session data via onItem).
+            AV.sessionData.reset();
             if (p.slot_data != null) {
-                _collectedState.configure(
+                AV.sessionData.configure(
                     AV.serverData.tokenMap,
                     p.slot_data.skill_categories
                 );
-                _logicEvaluator.configure(
+                _fieldLogicEvaluator.configure(
                     p.slot_data.stage_tier,
                     p.slot_data.stage_skills,
                     p.slot_data.cumulative_skill_reqs,
@@ -868,11 +932,12 @@ package {
                     int(p.slot_data.token_requirement_percent),
                     p.slot_data.free_stages as Array
                 );
+                _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
-                _logicEnforcer.configure(_logicEvaluator, AV.serverData.serverOptions.enforce_logic);
+                _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
             }
-            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial);
+            _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial, AV.serverData.freeStages);
             _wavePrePatcher.configure(
                 AV.serverData.serverOptions.enemyMultipliers.hp,
                 AV.serverData.serverOptions.enemyMultipliers.armor,
@@ -926,10 +991,176 @@ package {
             hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
 
-            if (_achPanelPatcher != null && _achievementUnlocker != null) {
-                _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+            if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
+                _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
             }
+        }
+
+        /**
+         * Refresh the achievement panel logic state.
+         * Called as `_achievementUnlocker.onChecked` after any achievement location
+         * check is sent, so collected achievements immediately leave "In Logic".
+         */
+        private function _refreshAchievementPanel():void {
+            if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+            if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
+                _achPanelPatcher.refreshIfActive();
+            }
+        }
+
+        /**
+         * Inject AP-relevant drop icons onto the ending screen, ordered by
+         * importance so the most progression-critical items appear leftmost
+         * in the icon row (and animate in first):
+         *
+         *   1. Field tokens
+         *   2. Skill tomes
+         *   3. Battle trait scrolls
+         *   4. XP tomes
+         *   5. Shadow cores  (one combined icon: AP-granted + monster drops)
+         *   6. Talisman fragments  (monster drops + AP-granted)
+         *   7. Endurance wave stones  (vanilla loot, endurance only)
+         *   8. Achievements
+         *   9. Remote items  (anything sent to another player — AP icon)
+         *
+         * Implementation: each priority gets its own pass over _sessionDrops
+         * (or its dedicated source like _sessionGrantedFragments). A bit
+         * redundant compared to one dispatch loop, but trivial to reorder
+         * and easy to read.
+         */
+        private function _injectApDropIcons():void {
+            if (_progressionBlocker == null || _connectionManager == null) return;
+            var scMap:Object    = _connectionManager.shadowCoreMap;
+            var tokenMap:Object = _connectionManager.tokenMap;
+            if (scMap == null) return;
+
+            var i:int;
+            var entry:Object;
+            var apId:int;
+
+            // 1. Field tokens (self-bound only)
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1 || apId > 122) continue;
+                var rawStrId:* = (tokenMap != null) ? tokenMap[String(apId)] : null;
+                if (rawStrId == null) continue;
+                var stageId:int = GV.getFieldId(String(rawStrId));
+                if (stageId >= 0) {
+                    _progressionBlocker.addFieldTokenDropIcon(stageId);
+                }
+            }
+
+            // 2. Skill tomes
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 700 || apId > 723) continue;
+                _progressionBlocker.addSkillTomeDropIcon(apId - 700);
+            }
+
+            // 3. Battle trait scrolls
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 800 || apId > 814) continue;
+                _progressionBlocker.addBattleTraitScrollDropIcon(apId - 800);
+            }
+
+            // 4. XP tomes (Tattered / Worn / Ancient) — pass the actual level
+            // count from LevelUnlocker so the tooltip can show "Grants N levels".
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1100 || apId > 1199) continue;
+                _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
+            }
+
+            // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).
+            // Cores routed to other players are not summed here — they get their own
+            // AP icon in the remote-items pass below.
+            var apShadowCores:int = 0;
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                var key:String = String(entry.apId);
+                if (key in scMap) apShadowCores += int(scMap[key]);
+            }
+            var monsterShadowCores:int = 0;
+            if (GV.ingameCore != null && GV.ingameCore.ocLootShadowCoreNum != null) {
+                monsterShadowCores = int(GV.ingameCore.ocLootShadowCoreNum.g());
+            }
+            var totalShadowCores:int = apShadowCores + monsterShadowCores;
+            if (totalShadowCores > 0) {
+                _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
+            }
+
+            // 6. Talisman fragments: one icon per fragment we ended up with.
+            // Monster drops + AP-granted fragments are different OBJECTS so iterating
+            // both sources without dedup never produces a duplicate icon.
+            if (GV.ppd != null && GV.ppd.talismanInventory != null) {
+                var inv:Array = GV.ppd.talismanInventory;
+
+                if (GV.ingameCore != null && GV.ingameCore.ocLootTalFrags != null) {
+                    var ocLoot:Array = GV.ingameCore.ocLootTalFrags;
+                    for (i = 0; i < ocLoot.length; i++) {
+                        var monsterFrag:* = ocLoot[i];
+                        if (monsterFrag != null && inv.indexOf(monsterFrag) != -1) {
+                            _progressionBlocker.addTalismanFragmentDropIcon(monsterFrag);
+                        }
+                    }
+                }
+
+                for (i = 0; i < _sessionGrantedFragments.length; i++) {
+                    var apFrag:* = _sessionGrantedFragments[i];
+                    if (apFrag != null && inv.indexOf(apFrag) != -1) {
+                        _progressionBlocker.addTalismanFragmentDropIcon(apFrag);
+                    }
+                }
+            }
+
+            // 7. Endurance wave stones (vanilla loot, captured by tickDropIcons)
+            var ews:int = _progressionBlocker.pendingEnduranceWaveStones;
+            if (ews > 0) {
+                _progressionBlocker.addEnduranceWaveStoneDropIcon(ews);
+            }
+
+            // 8. Achievements
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 2000 || apId > 2636) continue;
+                var achGameId:int = _achievementUnlocker.findGameIdByApId(apId);
+                if (achGameId >= 0) {
+                    _progressionBlocker.addAchievementDropIcon(achGameId);
+                }
+            }
+
+            // 9. Remote items: anything routed to another player gets a generic AP
+            // icon, regardless of whether the apId is in our game or not.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe === true) continue;
+                _progressionBlocker.addRemoteItemDropIcon(
+                    String(entry.name),
+                    String(entry.recipient));
+            }
+
+            // Kick off the vanilla one-by-one reveal animation. No-op if stats
+            // rolling is still in progress (the natural transition will pick it
+            // up once stats finish, since dropIcons.length > 0 by then).
+            _progressionBlocker.playDropIconsAnimation();
         }
 
         private function onSettingsClicked():void {
@@ -985,19 +1216,15 @@ package {
             try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
-                // Track item for ending screen display
-                var itemDisplayName:String = itemName(apId);
-                if (_progressionBlocker != null) {
-                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
-                    // Sent-item icons on the ending screen come from addSentItemToEndingScreen
-                    // (triggered by handlePrintJSON) so we don't add received items here.
-                }
-
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
-                if (_collectedState != null) _collectedState.onItem(apId);
-                if (_logicEvaluator != null) _logicEvaluator.markDirty();
-                if (_achPanelPatcher != null && _achievementUnlocker != null) {
-                    _achPanelPatcher.updateLogicFlags(_achievementUnlocker.getInLogicAchApIds());
+                AV.sessionData.onItem(apId);
+                if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+                if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+                if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
+                    _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
+                    _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
+                    _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
+                    _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                     _achPanelPatcher.refreshIfActive();
                 }
 
@@ -1005,7 +1232,7 @@ package {
                 if (strId != null) {
                     _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
                     _stageUnlocker.unlockStage(strId);
-                    _itemToast.addItem("Unlocked: " + strId + " Field Token", 0xFFDD55);
+                    _receivedToast.addItem("Received " + strId + " Field Token", 0xFFDD55);
                     return;
                 }
                 if (apId >= 700 && apId <= 723) {
@@ -1022,7 +1249,7 @@ package {
                 }
                 if (apId >= 1100 && apId <= 1199) {
                     _logger.log(MOD_NAME, "  → XP tome apId: " + apId);
-                    _levelUnlocker.grantXpFromApId(apId, itemDisplayName);
+                    _levelUnlocker.grantXpFromApId(apId, itemName(apId));
                     return;
                 }
                 if (apId >= 600 && apId <= 625) {
@@ -1037,7 +1264,8 @@ package {
                 }
                 if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
-                    _talismanUnlocker.grantFragment(apId);
+                    var grantedFrag:* = _talismanUnlocker.grantFragment(apId);
+                    if (grantedFrag != null) _sessionGrantedFragments.push(grantedFrag);
                     _saveManager.saveSlotData();
                     return;
                 }
@@ -1049,12 +1277,14 @@ package {
                 }
                 if (apId >= 2000 && apId <= 2636) {
                     _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
-                    // Achievement reward from another player (only award skill points, don't mark as collected)
                     var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
                     _logger.log(MOD_NAME, "     Found achievement name: " + achName);
-                    if (achName != null && _achievementUnlocker != null) {
+                    if (achName != null) {
                         _achievementUnlocker.receiveAchievementReward(achName, apId);
-                        _itemToast.addItem("Achievement Reward: " + achName, 0xAA55FF);
+                        _receivedToast.addItem("Received " + achName, 0xAA55FF);
+                    } else {
+                        _receivedToast.addItem("Received Achievement #" + apId, 0xAA55FF);
+                        _logger.log(MOD_NAME, "  grantItem: achievement apId=" + apId + " not found in data map");
                     }
                     return;
                 }
@@ -1085,17 +1315,11 @@ package {
             var tokenStages:Object = AV.serverData.tokenStages;
 
             // Rebuild tracker state from the full item list.
-            if (_collectedState != null) _collectedState.reset();
+            AV.sessionData.reset();
 
             for each (var item:Object in items) {
                 var apId:int = item.item;
-                if (_collectedState != null) _collectedState.onItem(apId);
-
-                // Track item for ending screen display
-                if (_progressionBlocker != null) {
-                    var itemDisplayName:String = itemName(apId);
-                    _levelEndScreenBuilder.trackReceivedItem(apId, itemDisplayName);
-                }
+                AV.sessionData.onItem(apId);
 
                 if (apId >= 700 && apId <= 723) {
                     apSkills[apId - 700] = true;
@@ -1194,7 +1418,8 @@ package {
 
             _saveManager.saveSlotData();
 
-            if (_logicEvaluator != null) _logicEvaluator.markDirty();
+            if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+            if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
@@ -1211,11 +1436,6 @@ package {
             _goalManager.check();
         }
 
-        private function onItemSentFromLocation(locId:int, sentItemName:String, recvName:String):void {
-            if (_progressionBlocker != null)
-                _levelEndScreenBuilder.addSentItemToEndingScreen(locId, sentItemName, recvName);
-        }
-
         private function onGoalReached():void {
             _connectionManager.sendGoalComplete();
             _saveManager.markSlotCompleted();
@@ -1229,7 +1449,7 @@ package {
         }
 
         private function onPunishmentReceived(source:String):void {
-            _toast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
+            _systemToast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
         }
 
         private function onDeathLinkReceived(source:String):void {
@@ -1248,7 +1468,7 @@ package {
             var tags:Array = _saveManager.deathLinkEnabled ? ["DeathLink"] : [];
             _connectionManager.sendConnectUpdate(tags);
             _logger.log(MOD_NAME, "DeathLink toggled: " + (_saveManager.deathLinkEnabled ? "ON" : "OFF"));
-            _toast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
+            _systemToast.addMessage("DeathLink " + (_saveManager.deathLinkEnabled ? "enabled" : "disabled"),
                 _saveManager.deathLinkEnabled ? 0xFF88FF88 : 0xFFFFAA44);
         }
 

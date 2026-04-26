@@ -2,6 +2,7 @@ package goals {
     import Bezel.Logger;
 
     import com.giab.games.gcfw.GV;
+    import ui.SystemToast;
 
     /**
      * Manages goal detection lifecycle — creates the right IGoal strategy,
@@ -17,17 +18,17 @@ package goals {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _itemToast:*;
+        private var _systemToast:SystemToast;
         private var _goalSent:Boolean = false;
         private var _goal:IGoal;
 
         /** Fired once when the goal is detected as complete and not yet reported. */
         public var onGoalReached:Function; // ():void
 
-        public function GoalManager(logger:Logger, modName:String, itemToast:*) {
-            _logger    = logger;
-            _modName   = modName;
-            _itemToast = itemToast;
+        public function GoalManager(logger:Logger, modName:String, systemToast:SystemToast) {
+            _logger      = logger;
+            _modName     = modName;
+            _systemToast = systemToast;
         }
 
         /**
@@ -72,7 +73,7 @@ package goals {
 
             _goalSent = true;
             _logger.log(_modName, "GOAL REACHED — " + _goal.goalName);
-            _itemToast.addItem("Goal Complete! " + _goal.goalName + "!", 0xFFDD00);
+            _systemToast.addMessage("Goal Complete! " + _goal.goalName + "!", 0xFFDD00);
             if (onGoalReached != null) onGoalReached();
         }
 

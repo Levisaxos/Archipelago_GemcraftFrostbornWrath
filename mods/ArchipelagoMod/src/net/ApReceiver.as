@@ -2,8 +2,8 @@ package net {
     import Bezel.Logger;
     import data.AV;
     import data.PlayerData;
-    import ui.ToastPanel;
-    import ui.ItemToastPanel;
+    import ui.SystemToast;
+    import ui.ReceivedToast;
     import ui.MessageLog;
 
     /**
@@ -22,8 +22,8 @@ package net {
         private var _logger:Logger;
         private var _modName:String;
         private var _sender:ApSender;
-        private var _toast:ToastPanel;
-        private var _itemToast:ItemToastPanel;
+        private var _toast:SystemToast;
+        private var _receivedToast:ReceivedToast;
         private var _messageLog:MessageLog;
 
         // AP slot data — populated by handleConnected
@@ -38,8 +38,6 @@ package net {
         private var _missingLocations:Object = {};
         private var _requestedGames:Object   = {};   // gameName → true (prevents duplicate DataPackage requests)
         private var _pendingChecks:Object    = {};   // locationId(int) → {id, player, item}
-        private var _itemsSentThisLevel:Object = {}; // locationId(int) → {itemId, itemName, receivingSlot, receivingName}
-
         // -----------------------------------------------------------------------
         // Callbacks — set by ConnectionManager
 
@@ -51,20 +49,20 @@ package net {
         public var onItemReceived:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we send an item from a location. Signature: (locId:int, itemName:String, receivingName:String):void */
-        public var onItemSentFromLocation:Function;
+        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
+        public var onItemSent:Function;
 
         // -----------------------------------------------------------------------
 
-        public function ApReceiver(logger:Logger, modName:String, sender:ApSender, toast:ToastPanel) {
+        public function ApReceiver(logger:Logger, modName:String, sender:ApSender, toast:SystemToast) {
             _logger  = logger;
             _modName = modName;
             _sender  = sender;
             _toast   = toast;
         }
 
-        /** Provide the item-notification panel. */
-        public function setItemToast(panel:ItemToastPanel):void { _itemToast = panel; }
+        /** Provide the panel used for received-item toasts. */
+        public function setReceivedToast(panel:ReceivedToast):void { _receivedToast = panel; }
 
         /** Provide the message log so item send/receive events are recorded. */
         public function setMessageLog(log:MessageLog):void { _messageLog = log; }
@@ -81,29 +79,6 @@ package net {
         public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
         public function get wizStashTalData():Object   { return _wizStashTalData; }
         public function get missingLocations():Object  { return _missingLocations; }
-        public function get itemsSentThisLevel():Object { return _itemsSentThisLevel; }
-
-        // -----------------------------------------------------------------------
-        // Level reset
-
-        /**
-         * Reset the items-sent tracking at the start of a new battle check.
-         * When preserveAchievements is true, entries with IDs 2000-2636 are kept
-         * so hover lookups on achievement icons remain available after the reset.
-         */
-        public function resetItemsSentThisLevel(preserveAchievements:Boolean):void {
-            if (!preserveAchievements) {
-                _itemsSentThisLevel = {};
-                return;
-            }
-            var preserved:Object = {};
-            for (var key:String in _itemsSentThisLevel) {
-                var id:int = int(key);
-                if (id >= 2000 && id <= 2636)
-                    preserved[key] = _itemsSentThisLevel[key];
-            }
-            _itemsSentThisLevel = preserved;
-        }
 
         // -----------------------------------------------------------------------
         // Packet handlers — called by ConnectionManager._dispatchPacket
@@ -200,6 +175,9 @@ package net {
                 for each (var locId:int in missing)
                     _missingLocations[locId] = true;
             }
+            // Mirror into AV so StageTinter, ModButtons, and AchievementLogicEvaluator
+            // all read from a single shared reference without needing ConnectionManager.
+            AV.saveData.missingLocations = _missingLocations;
 
             _sender.sendLocationScouts(_missingLocations);
 
@@ -247,21 +225,9 @@ package net {
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
                     var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
-
-                    _itemsSentThisLevel[sentLocId] = {
-                        itemId:        sentItemId,
-                        itemName:      sentItemName,
-                        receivingSlot: receiving,
-                        receivingName: recvName
-                    };
-
-                    if (onItemSentFromLocation != null)
-                        onItemSentFromLocation(sentLocId, sentItemName, recvName);
-
-                    if (_itemToast != null) {
-                        var toastMsg:String = AV.archipelagoData.getCheckName(sentLocId, null);
-                        _itemToast.addItem(toastMsg != null ? toastMsg : "Unknown item", 0xCC99FF);
-                    }
+                    _toast.addMessage("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
+                    var isForMe:Boolean = (receiving == _mySlot);
+                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe);
                 }
                 return;
             }
@@ -416,8 +382,8 @@ package net {
         private function resolveLocationName(locId:int):String {
             var suffix:String = "";
             var baseId:int = locId;
-            if (baseId >= 1000)     { baseId -= 1000; suffix = " Stash"; }
-            else if (baseId >= 500) { baseId -= 500;  suffix = " Bonus"; }
+            if (baseId >= 400)      { baseId -= 399;  suffix = " Stash"; }
+            else if (baseId >= 200) { baseId -= 199;  suffix = " Bonus"; }
             var stageLocIds:Object = ConnectionManager.stageLocIds;
             for (var strId:String in stageLocIds) {
                 if (int(stageLocIds[strId]) == baseId) return strId + suffix;

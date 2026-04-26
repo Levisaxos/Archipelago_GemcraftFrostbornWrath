@@ -1,7 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
 
     /**
      * Handles unlocking battle traits by Archipelago item ID.
@@ -17,7 +17,7 @@ package unlockers {
             "Giant Domination", "Strength in Numbers", "Ritual"
         ];
 
-        public function TraitUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function TraitUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
         }
 
@@ -38,7 +38,7 @@ package unlockers {
             GV.ppd.selectedBattleTraitLevels[gameId].s(Math.max(GV.ppd.selectedBattleTraitLevels[gameId].g(), 0));
             var traitName:String = BATTLE_TRAIT_NAMES[gameId];
             logAction("Unlocked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
-            showToast("Trait Unlocked: " + traitName, 0xFFAA44);
+            showToast("Received " + traitName, 0xFFAA44);
         }
 
         /** Returns the human-readable trait name for an AP ID (800-814), or null if out of range. */

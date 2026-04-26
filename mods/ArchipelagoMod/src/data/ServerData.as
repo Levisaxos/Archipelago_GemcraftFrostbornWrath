@@ -169,6 +169,16 @@ package data {
                     }
                 }
 
+                // Build talismanMap (apId str → talData str) from talismansByApId.
+                for (var talApId:String in talismansByApId)
+                {
+                    var talEntry:Object = talismansByApId[talApId];
+                    if (talEntry != null && talEntry.talData != null)
+                    {
+                        talismanMap[talApId] = String(talEntry.talData);
+                    }
+                }
+
                 // Shadow core stashes: item AP ID 800-868 → {str_id, amounts, total}
                 if (itemData.shadowCoreStashes)
                 {

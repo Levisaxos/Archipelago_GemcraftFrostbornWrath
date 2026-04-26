@@ -5,7 +5,7 @@ package ui {
     /**
      * Shared message store for all Archipelago toast messages.
      *
-     * Both ToastPanel (system) and ItemToastPanel (collection) push entries
+     * SystemToast and ReceivedToast push entries
      * here so the MessageLogPanel can display full history.
      *
      * Messages are persisted to slot_N_log.jsonl and reloaded on slot open,

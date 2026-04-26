@@ -156,7 +156,11 @@ game_level_elements = {
     "Swarm Queen": {"levels": ["K4"]},
     "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
-    "Wizard Tower": {"levels": ["L5", "W1", "Y3"]},
+    "Wizard Tower": {"levels": ["L5"]},
+    # Hidden Codes: not supported by the mod — empty levels marks it as excluded.
+    "Hidden Codes": {"levels": []},
+    # Sealed gem: gem locked in a map socket that can be freed. Fill in levels once confirmed.
+    "Sealed gem": {"levels": []},
 }
 
 # =====================================================================
@@ -204,6 +208,13 @@ game_skills_categories = {
             "Vital Link",
         ],
     },
+    "Skills": {
+        "description": "Gem-related abilities (basic gem types)",
+        "members": [
+            "GemSkills",
+            "OtherSkills"
+        ]
+    },    
     "GemSkills": {
         "description": "Gem-related abilities (basic gem types)",
         "members": [
@@ -250,7 +261,7 @@ skill_groups = {
         "description": "Enhancement spells (Bolt, Beam, Barrage)",
         "members": ["Bolt", "Beam", "Barrage"],
     },
-    "gemTypes": {
+    "gemSkills": {
         "description": "Gem skill types (all gem types)",
         "members": ["Critical Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"],
     },

@@ -1,7 +1,7 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import ui.ItemToastPanel;
+    import ui.ReceivedToast;
 
     /**
      * Base class for all unlocker types.
@@ -11,9 +11,9 @@ package unlockers {
 
         protected var _logger:Logger;
         protected var _modName:String;
-        protected var _itemToast:ItemToastPanel;
+        protected var _itemToast:ReceivedToast;
 
-        public function BaseUnlocker(logger:Logger, modName:String, itemToast:ItemToastPanel) {
+        public function BaseUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             _logger    = logger;
             _modName   = modName;
             _itemToast = itemToast;
@@ -27,7 +27,7 @@ package unlockers {
         }
 
         /**
-         * Show a toast notification via ItemToastPanel.
+         * Show a toast notification via ReceivedToast.
          */
         protected function showToast(message:String, color:uint):void {
             _itemToast.addItem(message, color);

@@ -6,6 +6,7 @@ package tracker {
 
     import data.AV;
     import net.ConnectionManager;
+    import tracker.FieldLogicEvaluator;
 
     /**
      * Drives the existing McFieldToken completion-light MovieClips
@@ -44,13 +45,13 @@ package tracker {
         private var _logger:Logger;
         private var _modName:String;
         private var _cm:ConnectionManager;
-        private var _evaluator:LogicEvaluator;
+        private var _evaluator:FieldLogicEvaluator;
 
         private var _enabled:Boolean = true;
         private var _loggedError:Boolean = false;
 
         public function StageTinter(logger:Logger, modName:String,
-                                    cm:ConnectionManager, evaluator:LogicEvaluator) {
+                                    cm:ConnectionManager, evaluator:FieldLogicEvaluator) {
             _logger    = logger;
             _modName   = modName;
             _cm        = cm;
@@ -99,8 +100,8 @@ package tracker {
                     if (base <= 0) continue;
 
                     var journeyMissing:Boolean = missing[base] == true;
-                    var bonusMissing:Boolean   = missing[base + 500] == true;
-                    var stashMissing:Boolean   = missing[base + 1000] == true;
+                    var bonusMissing:Boolean   = missing[base + 199] == true;
+                    var stashMissing:Boolean   = missing[base + 399] == true;
                     var missingCount:int = 0;
                     if (journeyMissing) missingCount++;
                     if (bonusMissing)   missingCount++;

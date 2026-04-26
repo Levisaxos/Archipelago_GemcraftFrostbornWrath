@@ -21,42 +21,43 @@ SKILL_CATEGORIES: Dict[str, List[str]] = {
     "wrath":     ["Mana Stream", "Demolition", "Fury", "Seeker Sense"]  # <- all of these suck except mana stream LMAO
 }
 
-# Which skill category rows must have at least one skill collected before
-# accessing each tier.  Tiers not listed have no skill gate.
+# Tier skill gating removed — achievement locations spread skills naturally.
+# Per-stage gemSkills requirements in game_data.json required_skills handle gem gates.
+# Code kept below in case it needs to be re-enabled.
 #
-# Tier 1: spells + focus            Tier 7:  spells + focus
-# Tier 2: gems + buildings          Tier 8:  gems + buildings
-# Tier 3: spells + wrath            Tier 9:  spells + wrath
-# Tier 4: gems + focus              Tier 10: gems + focus
-# Tier 5: spells + buildings        Tier 11: spells + buildings
-# Tier 6: gems + wrath              Tier 12: gems + wrath
-TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
-    1:  ["spells", "focus"],
-    2:  ["gems", "buildings"],
-    3:  ["spells", "wrath"],
-    4:  ["gems", "focus"],
-    5:  ["spells", "buildings"],
-    6:  ["gems", "wrath"],
-    7:  ["spells", "focus"],
-    8:  ["gems", "buildings"],
-    9:  ["spells", "wrath"],
-    10: ["gems", "focus"],
-    11: ["spells", "buildings"],
-    12: ["gems", "wrath"],
-}
+# TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
+#     0:  ["gems", "gems"],
+#     1:  ["spells", "focus"],
+#     2:  ["gems", "buildings"],
+#     3:  ["spells", "wrath"],
+#     4:  ["gems", "focus"],
+#     5:  ["spells", "buildings"],
+#     6:  ["gems", "wrath"],
+#     7:  ["spells", "focus"],
+#     8:  ["gems", "buildings"],
+#     9:  ["spells", "wrath"],
+#     10: ["gems", "focus"],
+#     11: ["spells", "buildings"],
+#     12: ["gems", "wrath"],
+# }
+#
+# CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
+# CUMULATIVE_SKILL_REQUIREMENTS[0] = {
+#     skill_name: TIER_SKILL_REQUIREMENTS.get(0, []).count(skill_name)
+#     for skill_name in SKILL_CATEGORIES.keys()
+# }
+# for tier in range(1, 12+1):
+#     this_tier_skills: Dict[str, int] = {
+#         skill_name: (
+#             CUMULATIVE_SKILL_REQUIREMENTS[tier-1][skill_name] if tier > 1
+#             else 0
+#         ) for skill_name in SKILL_CATEGORIES.keys()
+#     }
+#     for tier_req in TIER_SKILL_REQUIREMENTS.get(tier, []):
+#         this_tier_skills[tier_req] += 1
+#     CUMULATIVE_SKILL_REQUIREMENTS[tier] = this_tier_skills
 
 CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
-# TODO: make not hard coded to 12 tiers
-for tier in range(1,12+1):
-    this_tier_skills: Dict[str, int] = {
-        skill_name: (
-            CUMULATIVE_SKILL_REQUIREMENTS[tier-1][skill_name] if tier > 1
-            else 0
-        ) for skill_name in SKILL_CATEGORIES.keys()
-    }
-    for tier_req in TIER_SKILL_REQUIREMENTS[tier]:
-        this_tier_skills[tier_req] += 1
-    CUMULATIVE_SKILL_REQUIREMENTS[tier] = this_tier_skills
 
 
 

@@ -12,14 +12,17 @@ package ui {
     import ui.MessageLog;
 
     /**
-     * Persistent HUD panel for Archipelago messages.
+     * Persistent HUD panel for Archipelago system messages.
+     *
+     * Shows sent-item confirmations, connection status, DeathLink events,
+     * chat from the AP server, and other non-item notifications.
      *
      * Holds up to MAX_SLOTS visible rows; extras wait in a queue.
      * Each row fades in, stays visible, then fades out independently.
      * The panel background resizes to fit the current rows and hides
      * automatically when no rows remain.
      */
-    public class ToastPanel extends Sprite {
+    public class SystemToast extends Sprite {
 
         private static const FONT:String      = "Celtic Garamond for GemCraft";
         private static const TEXT_SIZE:int    = 17;
@@ -44,7 +47,7 @@ package ui {
         private var _queue:Array;  // { text:String, color:uint }
         private var _messageLog:MessageLog;
 
-        public function ToastPanel() {
+        public function SystemToast() {
             super();
             mouseEnabled  = false;
             mouseChildren = false;

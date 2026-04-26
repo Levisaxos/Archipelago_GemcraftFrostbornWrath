@@ -13,6 +13,11 @@ package data {
         public static var currentSlot:String = "";
 
         // -----------------------------------------------------------------------
+        // Per-session collected state + cached logic results
+
+        public static var sessionData:SessionData = new SessionData();
+
+        // -----------------------------------------------------------------------
         // Archipelago server data (immutable after connection)
 
         public static var serverData:ServerData = new ServerData();

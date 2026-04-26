@@ -3,7 +3,7 @@ package patch {
     import flash.filters.GlowFilter;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import tracker.LogicEvaluator;
+    import tracker.FieldLogicEvaluator;
 
     /**
      * When enforce_logic is enabled in the YAML, prevents starting out-of-logic
@@ -20,7 +20,7 @@ package patch {
 
         private var _logger:Logger;
         private var _modName:String;
-        private var _logicEval:LogicEvaluator;
+        private var _logicEval:FieldLogicEvaluator;
         private var _enforceLogic:Boolean        = false;
         private var _blockListenersAdded:Boolean = false;
         private var _tooltipFor:String           = null; // "start" or null
@@ -40,7 +40,7 @@ package patch {
          * Feed the logic evaluator and the enforce_logic flag from slot_data.
          * Call once after the Connected packet is received.
          */
-        public function configure(logicEval:LogicEvaluator, enforceLogic:Boolean):void {
+        public function configure(logicEval:FieldLogicEvaluator, enforceLogic:Boolean):void {
             _logicEval    = logicEval;
             _enforceLogic = enforceLogic;
             _logger.log(_modName, "LogicEnforcer configured — enforceLogic=" + enforceLogic);
