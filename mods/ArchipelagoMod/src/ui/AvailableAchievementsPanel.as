@@ -418,15 +418,15 @@ package ui {
                 cell.addChild(icon);
             }
 
-            // In-logic dot — mirrors the green dot AchievementPanelPatcher draws on
-            // the vanilla achievement panel. Every entry shown here is in-logic for
-            // the current battle by construction, so dots are always green; we draw
-            // them ourselves so they appear regardless of whether the player has
-            // ever opened the achievements menu (the patcher only paints onto live
-            // ach.mc objects, which our cached BitmapData snapshots don't include).
+            // Status dot — mirrors AchievementPanelPatcher's per-icon dot.
+            //   green  — globally in logic (all reqs met against world state)
+            //   yellow — only earnable here because the current level hosts the
+            //            required element, but no in-logic level does, so the
+            //            achievement is technically out-of-logic right now.
+            var inLogic:Boolean = entry.inLogic == true;
             var dot:Shape = new Shape();
             dot.graphics.lineStyle(1, 0x000000, 0.7);
-            dot.graphics.beginFill(0x44FF44, 0.95);
+            dot.graphics.beginFill(inLogic ? 0x44FF44 : 0xFFCC00, 0.95);
             dot.graphics.drawCircle(0, 0, 4);
             dot.graphics.endFill();
             dot.x = CELL_SIZE - 6;

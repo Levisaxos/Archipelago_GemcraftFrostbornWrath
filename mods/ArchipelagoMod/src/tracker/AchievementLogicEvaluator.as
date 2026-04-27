@@ -283,11 +283,19 @@ package tracker {
                         || _logicEvaluator.evaluateInLevelRequirements(reqs, currentStrId);
                     if (!passes) continue;
 
+                    // Globally in logic = the achievement's requirements are met
+                    // against world-state (not just the current level).  If the
+                    // achievement only matches because the current level happens
+                    // to host the required element while no in-logic stage does,
+                    // this is false — the dot should be yellow, not green.
+                    var globallyInLogic:Boolean = isAchievementInLogic(achName, achData);
+
                     out.push({
                         apId:        apId,
                         gameId:      achData.game_id != null ? int(achData.game_id) : -1,
                         name:        achName,
-                        description: achData.description || ""
+                        description: achData.description || "",
+                        inLogic:     globallyInLogic
                     });
                 }
             } catch (e: Error) {

@@ -40,6 +40,8 @@ package tracker {
         private var _reachableTier:int = -1;
         private var _inLogicByStrId:Object = {};
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
+        private var _stageElements:Object = {};  // strId -> Array<String>
+        private var _stageMonsters:Object = {};  // strId -> Array<String>
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
@@ -151,6 +153,22 @@ package tracker {
         /** Load per-level monster stat data from achievement_logic.json. */
         public function setLevelStats(stats:Object):void {
             _levelStats = stats || {};
+        }
+
+        /** Per-stage element/monster lists from slot_data (for UI tooltips). */
+        public function setStageElements(elements:Object, monsters:Object):void {
+            _stageElements = elements != null ? elements : {};
+            _stageMonsters = monsters != null ? monsters : {};
+        }
+
+        public function getStageElements(strId:String):Array {
+            var a:Array = _stageElements[strId] as Array;
+            return a != null ? a : [];
+        }
+
+        public function getStageMonsters(strId:String):Array {
+            var a:Array = _stageMonsters[strId] as Array;
+            return a != null ? a : [];
         }
 
         /** True if any in-logic field has max(GiantMaxHP, ReaverMaxHP) >= threshold. */

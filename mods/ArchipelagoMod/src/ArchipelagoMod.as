@@ -1040,6 +1040,10 @@ package {
                     int(p.slot_data.token_requirement_percent),
                     p.slot_data.free_stages as Array
                 );
+                _fieldLogicEvaluator.setStageElements(
+                    p.slot_data.stage_elements,
+                    p.slot_data.stage_monsters
+                );
                 _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);

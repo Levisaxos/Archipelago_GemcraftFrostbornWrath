@@ -3,6 +3,9 @@ package patch {
     import com.giab.games.gcfw.GV;
     import flash.display.Bitmap;
     import flash.geom.Rectangle;
+    import flash.text.AntiAliasType;
+    import flash.text.TextField;
+    import flash.text.TextFieldAutoSize;
 
     import data.AV;
     import net.ConnectionManager;
@@ -12,10 +15,13 @@ package patch {
      * Appends Archipelago check-status lines into the game's field hover tooltip
      * (McInfoPanel) using the same intercept pattern as AchievementTooltipOverlay.
      *
-     * Shows per-check status for Journey, Bonus, and Stash locations:
-     *   ✓  grey  — already checked
-     *   in logic     green — missing and reachable
-     *   not in logic red   — missing and blocked
+     * Shows per-check status for Journey, Bonus, and Stash locations on a
+     * single combined line, with each label coloured by its state:
+     *   grey + ✓  — already checked
+     *   green     — missing and reachable
+     *   red       — missing and blocked
+     * Also lists the level's elements (Monster Nest, Tomb, Beacon, …) and any
+     * special-monster spawns (Shadow, Apparition, …) for at-a-glance scanning.
      *
      * Also removes the "Available gems" section for levels that are not W1-W4,
      * since those gems reflect the original game state rather than the
@@ -166,7 +172,11 @@ package patch {
                     vIp.addExtraHeight(7);
                     vIp.addSeparator(-2);
                     for each (var pair:Array in lines) {
-                        vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
+                        if (pair[0] == "__LOGIC_HTML__") {
+                            _appendHtmlLine(vIp, String(pair[1]));
+                        } else {
+                            vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
+                        }
                     }
                 } catch (e3:Error) {
                     _logger.log(_modName, "FieldTooltipOverlay: addTextfield error: " + e3.message);
@@ -266,6 +276,13 @@ package patch {
             var lines:Array = [["Archipelago", 0xE5AD0A]];
             if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
+            var elems:Array = _evaluator.getStageElements(strId);
+            if (elems.length > 0)
+                lines.push(["Elements: " + elems.join(", "), 0x888888]);
+            var monsters:Array = _evaluator.getStageMonsters(strId);
+            if (monsters.length > 0)
+                lines.push(["Monsters: " + monsters.join(", "), 0x888888]);
+
             var journeyExists:Boolean  = journeyMissing || journeyDone;
             var bonusExists:Boolean    = bonusMissing   || bonusDone;
             var stashExists:Boolean    = stashMissing   || stashDone;
@@ -277,9 +294,14 @@ package patch {
             var stashInLogic:Boolean   = stashMissing   &&
                     _evaluator.stageHasInLogicMissing(strId, false, false, true);
 
-            if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
-            if (bonusExists)   lines.push(_checkLine("Bonus",   bonusDone,   bonusInLogic));
-            if (stashExists)   lines.push(_checkLine("Stash",   stashDone,   stashInLogic));
+            // Combined per-word color-coded logic line, e.g.
+            //   "Journey, Bonus, Stash ✓"  with each label coloured independently.
+            var logicHtml:String = _buildLogicHtml(
+                    journeyExists, journeyDone, journeyInLogic,
+                    bonusExists,   bonusDone,   bonusInLogic,
+                    stashExists,   stashDone,   stashInLogic);
+            if (logicHtml != null && logicHtml.length > 0)
+                lines.push(["__LOGIC_HTML__", logicHtml]);
 
             // Append requirements for any checks that are blocked (missing + not in logic).
             var anyBlocked:Boolean =
@@ -317,10 +339,58 @@ package patch {
             return lines;
         }
 
-        private function _checkLine(label:String, done:Boolean, inLogic:Boolean):Array {
-            if (done)         return [label + ": \u2713",         0x888888];
-            if (inLogic)      return [label + ": in logic",       0x44FF44];
-            return                   [label + ": not in logic",   0xFF4444];
+        private function _buildLogicHtml(journeyExists:Boolean, journeyDone:Boolean, journeyInLogic:Boolean,
+                                         bonusExists:Boolean,   bonusDone:Boolean,   bonusInLogic:Boolean,
+                                         stashExists:Boolean,   stashDone:Boolean,   stashInLogic:Boolean):String {
+            var parts:Array = [];
+            if (journeyExists) parts.push(_logicSpan("Journey", journeyDone, journeyInLogic));
+            if (bonusExists)   parts.push(_logicSpan("Bonus",   bonusDone,   bonusInLogic));
+            if (stashExists)   parts.push(_logicSpan("Stash",   stashDone,   stashInLogic));
+            if (parts.length == 0) return "";
+            return parts.join(", ");
+        }
+
+        private function _logicSpan(label:String, done:Boolean, inLogic:Boolean):String {
+            var color:String;
+            var text:String = label;
+            if (done) {
+                color = "#888888";
+                text  = label + " \u2713";
+            } else if (inLogic) {
+                color = "#44FF44";
+            } else {
+                color = "#FF4444";
+            }
+            return "<font color='" + color + "'>" + text + "</font>";
+        }
+
+        /**
+         * Append a per-word color-coded line to the McInfoPanel.  Mirrors what
+         * McInfoPanel.addTextfield() does internally (see McInfoPanel.as:199),
+         * but uses htmlText so individual labels can have different colors.
+         */
+        private function _appendHtmlLine(vIp:*, html:String):void {
+            try {
+                var fmt:* = vIp.tFormat;
+                fmt.size = 12; // matches addTextfield's pSize=10 + 2
+                var tf:TextField = new TextField();
+                tf.selectable = false;
+                tf.embedFonts = true;
+                tf.antiAliasType = AntiAliasType.ADVANCED;
+                tf.defaultTextFormat = fmt;
+                tf.multiline = true;
+                tf.wordWrap = true;
+                tf.autoSize = TextFieldAutoSize.CENTER;
+                tf.x = 10;
+                tf.width = vIp.w - 20;
+                tf.y = vIp.nextTfPos;
+                tf.htmlText = html;
+                vIp.nextTfPos += tf.height + 9;
+                vIp.h = vIp.nextTfPos + 8;
+                (vIp.textfields as Array).push(tf);
+            } catch (e:Error) {
+                _logger.log(_modName, "FieldTooltipOverlay: _appendHtmlLine error: " + e.message);
+            }
         }
 
         /**

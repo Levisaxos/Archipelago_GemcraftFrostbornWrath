@@ -753,6 +753,28 @@ class GemcraftFrostbornWrathWorld(World):
                 if requirements:
                     achievement_requirements_map[ach_name] = requirements
 
+        # Per-stage element/monster lists for the in-game field tooltip.
+        # Inverted from rulesdata_settings.{game_level_elements, non_monster_elements}.
+        # Tower / Wall / Wizard Stash are universal basics — omitted from the UI
+        # to keep the tooltip scannable.
+        SKIP_ELEMENTS = {"Tower", "Wall", "Wizard Stash"}
+        stage_elements: Dict[str, List[str]] = {}
+        stage_monsters: Dict[str, List[str]] = {}
+        for elem_name, data in game_level_elements.items():
+            if elem_name in SKIP_ELEMENTS:
+                continue
+            if data.get("unsupported"):
+                continue
+            for sid in data.get("levels", []):
+                stage_elements.setdefault(sid, []).append(elem_name)
+        for elem_name, data in non_monster_elements.items():
+            for sid in data.get("levels", []):
+                stage_monsters.setdefault(sid, []).append(elem_name)
+        for v in stage_elements.values():
+            v.sort()
+        for v in stage_monsters.values():
+            v.sort()
+
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,
@@ -768,6 +790,8 @@ class GemcraftFrostbornWrathWorld(World):
             "stage_tier":            stage_tier_map,
             "stage_skills":          stage_skills_map,
             "tier_stage_counts":     tier_stage_counts,
+            "stage_elements":        stage_elements,
+            "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
