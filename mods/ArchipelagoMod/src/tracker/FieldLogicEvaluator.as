@@ -116,7 +116,7 @@ package tracker {
                                                stashMissing:Boolean):Boolean {
             if (!(journeyMissing || bonusMissing || stashMissing)) return false;
             if (_stageTier == null) return true;
-            if (!_canCompleteStage(strId)) return false;
+            if (!canCompleteStage(strId)) return false;
 
             // A4-only: Journey/Bonus additionally need all 24 skills; stash does
             // not (matches apworld, which has no all-skills rule on stash).
@@ -129,9 +129,9 @@ package tracker {
         }
 
         /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
-         *  Mirrors apworld's location access_rule, which now applies the same
-         *  skill conditions to Journey, Bonus, and Wizard stash. */
-        private function _canCompleteStage(strId:String):Boolean {
+         *  Mirrors apworld's location access_rule, which applies the same skill
+         *  conditions to Journey, Bonus, and Wizard stash on a given stage. */
+        public function canCompleteStage(strId:String):Boolean {
             if (_dirty) recompute();
             if (_inLogicByStrId[strId] != true) return false;
             return _skillGateMet(strId);
@@ -180,27 +180,27 @@ package tracker {
             return a != null ? a : [];
         }
 
-        /** True if at least one stage that has this element is in logic.
-         *  Mirrors apworld _eval_req for game_level_elements. */
+        /** True if at least one stage that has this element can be completed
+         *  (tier + skill gate met).  Mirrors apworld _eval_req for
+         *  game_level_elements via _can_reach_any_stage, which now requires
+         *  the stage's WIZLOCK skills on Journey/Bonus/Wizard stash alike. */
         public function isElementInLogic(elemName:String):Boolean {
-            if (_dirty) recompute();
             var stages:Array = _elementToStages[elemName] as Array;
             if (stages == null || stages.length == 0) return true;
             for each (var sid:String in stages) {
-                if (_inLogicByStrId[sid] == true) return true;
+                if (canCompleteStage(sid)) return true;
             }
             return false;
         }
 
         /** True if Ritual is held AND at least one stage that has this monster
-         *  is in logic. Mirrors apworld _eval_req for non_monster_elements. */
+         *  can be completed. Mirrors apworld _eval_req for non_monster_elements. */
         public function isMonsterInLogic(monName:String):Boolean {
             if (!AV.sessionData.hasItem(RITUAL_TRAIT_AP_ID)) return false;
-            if (_dirty) recompute();
             var stages:Array = _monsterToStages[monName] as Array;
             if (stages == null || stages.length == 0) return true;
             for each (var sid:String in stages) {
-                if (_inLogicByStrId[sid] == true) return true;
+                if (canCompleteStage(sid)) return true;
             }
             return false;
         }

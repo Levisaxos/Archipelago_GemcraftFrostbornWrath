@@ -271,11 +271,15 @@ package patch {
             if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
             // One colour-coded line per element / monster on this stage.
+            // Per-stage view: green iff THIS stage is completable (tier + WIZLOCK).
+            // Monsters additionally require the Ritual Battle Trait.
+            var stageReachable:Boolean = _evaluator.canCompleteStage(strId);
+            var hasRitual:Boolean = AV.sessionData.hasItem(FieldLogicEvaluator.RITUAL_TRAIT_AP_ID);
             for each (var elem:String in _evaluator.getStageElements(strId)) {
-                lines.push(_checkLine(elem, false, _evaluator.isElementInLogic(elem)));
+                lines.push(_checkLine(elem, false, stageReachable));
             }
             for each (var mon:String in _evaluator.getStageMonsters(strId)) {
-                lines.push(_checkLine(mon, false, _evaluator.isMonsterInLogic(mon)));
+                lines.push(_checkLine(mon, false, stageReachable && hasRitual));
             }
 
             var journeyExists:Boolean  = journeyMissing || journeyDone;
