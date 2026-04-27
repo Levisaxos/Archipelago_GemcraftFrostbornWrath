@@ -3,9 +3,6 @@ package patch {
     import com.giab.games.gcfw.GV;
     import flash.display.Bitmap;
     import flash.geom.Rectangle;
-    import flash.text.AntiAliasType;
-    import flash.text.TextField;
-    import flash.text.TextFieldAutoSize;
 
     import data.AV;
     import net.ConnectionManager;
@@ -15,13 +12,14 @@ package patch {
      * Appends Archipelago check-status lines into the game's field hover tooltip
      * (McInfoPanel) using the same intercept pattern as AchievementTooltipOverlay.
      *
-     * Shows per-check status for Journey, Bonus, and Stash locations on a
-     * single combined line, with each label coloured by its state:
-     *   grey + ✓  — already checked
-     *   green     — missing and reachable
-     *   red       — missing and blocked
-     * Also lists the level's elements (Monster Nest, Tomb, Beacon, …) and any
-     * special-monster spawns (Shadow, Apparition, …) for at-a-glance scanning.
+     * Shows per-check status for Journey, Bonus, and Stash locations as
+     * one line each:
+     *   ✓  grey  — already checked
+     *   in logic     green — missing and reachable
+     *   not in logic red   — missing and blocked
+     * Also lists each element / special-monster spawn on its own colour-coded
+     * line (green = in logic, red = not yet reachable), and stage skill /
+     * tier prerequisites colour-coded the same way.
      *
      * Also removes the "Available gems" section for levels that are not W1-W4,
      * since those gems reflect the original game state rather than the
@@ -172,11 +170,7 @@ package patch {
                     vIp.addExtraHeight(7);
                     vIp.addSeparator(-2);
                     for each (var pair:Array in lines) {
-                        if (pair[0] == "__LOGIC_HTML__") {
-                            _appendHtmlLine(vIp, String(pair[1]));
-                        } else {
-                            vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
-                        }
+                        vIp.addTextfield(uint(pair[1]), String(pair[0]), false, 10);
                     }
                 } catch (e3:Error) {
                     _logger.log(_modName, "FieldTooltipOverlay: addTextfield error: " + e3.message);
@@ -276,12 +270,13 @@ package patch {
             var lines:Array = [["Archipelago", 0xE5AD0A]];
             if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
-            var elems:Array = _evaluator.getStageElements(strId);
-            if (elems.length > 0)
-                lines.push(["Elements: " + elems.join(", "), 0x888888]);
-            var monsters:Array = _evaluator.getStageMonsters(strId);
-            if (monsters.length > 0)
-                lines.push(["Monsters: " + monsters.join(", "), 0x888888]);
+            // One colour-coded line per element / monster on this stage.
+            for each (var elem:String in _evaluator.getStageElements(strId)) {
+                lines.push(_checkLine(elem, false, _evaluator.isElementInLogic(elem)));
+            }
+            for each (var mon:String in _evaluator.getStageMonsters(strId)) {
+                lines.push(_checkLine(mon, false, _evaluator.isMonsterInLogic(mon)));
+            }
 
             var journeyExists:Boolean  = journeyMissing || journeyDone;
             var bonusExists:Boolean    = bonusMissing   || bonusDone;
@@ -294,103 +289,44 @@ package patch {
             var stashInLogic:Boolean   = stashMissing   &&
                     _evaluator.stageHasInLogicMissing(strId, false, false, true);
 
-            // Combined per-word color-coded logic line, e.g.
-            //   "Journey, Bonus, Stash ✓"  with each label coloured independently.
-            var logicHtml:String = _buildLogicHtml(
-                    journeyExists, journeyDone, journeyInLogic,
-                    bonusExists,   bonusDone,   bonusInLogic,
-                    stashExists,   stashDone,   stashInLogic);
-            if (logicHtml != null && logicHtml.length > 0)
-                lines.push(["__LOGIC_HTML__", logicHtml]);
+            // One line per check, each coloured by its state.
+            if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
+            if (bonusExists)   lines.push(_checkLine("Bonus",   bonusDone,   bonusInLogic));
+            if (stashExists)   lines.push(_checkLine("Stash",   stashDone,   stashInLogic));
 
-            // Append requirements for any checks that are blocked (missing + not in logic).
-            var anyBlocked:Boolean =
-                (journeyExists && journeyMissing && !journeyInLogic) ||
-                (bonusExists   && bonusMissing   && !bonusInLogic)   ||
-                (stashExists   && stashMissing   && !stashInLogic);
+            // Stage skill requirements: always shown when present, coloured
+            // green when met, red when not. Mirrors apworld _eval_req for
+            // the WIZLOCK skill gate on Journey/Bonus locations.
+            for each (var skillReq:Array in _evaluator.getStageSkillsStatus(strId)) {
+                var met:Boolean = skillReq[1] == true;
+                lines.push(["Needs: " + String(skillReq[0]),
+                            met ? 0x44FF44 : 0xFF4444]);
+            }
 
-            if (anyBlocked) {
-                var stageReachable:Boolean = _evaluator.isStageInLogic(strId);
-                if (!stageReachable) {
-                    // Tier-blocked: show token requirement.
-                    var req:Object = _evaluator.getBlockingTokenReq(strId);
-                    if (req != null && (req.strIds as Array).length > 0) {
-                        lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0x888888]);
-                        lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
-                    }
-                    // Show stage skill requirements (e.g. gemSkills: N) even when tier-blocked.
-                    var stageSkillsBlocked:Array = _evaluator.getMissingStageSkills(strId);
-                    if (stageSkillsBlocked.length > 0)
-                        lines.push(["Needs: " + stageSkillsBlocked.join(", "), 0x888888]);
-                } else if ((journeyMissing && !journeyInLogic) ||
-                           (bonusMissing   && !bonusInLogic)) {
-                    // Skill-gated: stage is tier-reachable but journey/bonus blocked by skills.
-                    var skills:Array = _evaluator.getMissingStageSkills(strId);
-                    if (skills.length > 0)
-                        lines.push(["Needs: " + skills.join(", "), 0x888888]);
-                    if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
-                        var have:int = AV.sessionData.totalSkillsCollected;
-                        if (have < 24)
-                            lines.push(["All 24 skills (" + have + "/24)", 0x888888]);
-                    }
+            // A4-only: "All 24 skills" gate on Journey/Bonus.
+            if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
+                var have24:int = AV.sessionData.totalSkillsCollected;
+                lines.push(["All 24 skills (" + have24 + "/24)",
+                            have24 >= 24 ? 0x44FF44 : 0xFF4444]);
+            }
+
+            // Tier-token gate: only shown when this stage isn't yet
+            // tier-reachable. Token list itself is informational (gray).
+            if (!_evaluator.isStageInLogic(strId)) {
+                var req:Object = _evaluator.getBlockingTokenReq(strId);
+                if (req != null && (req.strIds as Array).length > 0) {
+                    lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0xFF4444]);
+                    lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
                 }
             }
 
             return lines;
         }
 
-        private function _buildLogicHtml(journeyExists:Boolean, journeyDone:Boolean, journeyInLogic:Boolean,
-                                         bonusExists:Boolean,   bonusDone:Boolean,   bonusInLogic:Boolean,
-                                         stashExists:Boolean,   stashDone:Boolean,   stashInLogic:Boolean):String {
-            var parts:Array = [];
-            if (journeyExists) parts.push(_logicSpan("Journey", journeyDone, journeyInLogic));
-            if (bonusExists)   parts.push(_logicSpan("Bonus",   bonusDone,   bonusInLogic));
-            if (stashExists)   parts.push(_logicSpan("Stash",   stashDone,   stashInLogic));
-            if (parts.length == 0) return "";
-            return parts.join(", ");
-        }
-
-        private function _logicSpan(label:String, done:Boolean, inLogic:Boolean):String {
-            var color:String;
-            var text:String = label;
-            if (done) {
-                color = "#888888";
-                text  = label + " \u2713";
-            } else if (inLogic) {
-                color = "#44FF44";
-            } else {
-                color = "#FF4444";
-            }
-            return "<font color='" + color + "'>" + text + "</font>";
-        }
-
-        /**
-         * Append a per-word color-coded line to the McInfoPanel.  Mirrors what
-         * McInfoPanel.addTextfield() does internally (see McInfoPanel.as:199),
-         * but uses htmlText so individual labels can have different colors.
-         */
-        private function _appendHtmlLine(vIp:*, html:String):void {
-            try {
-                var fmt:* = vIp.tFormat;
-                fmt.size = 12; // matches addTextfield's pSize=10 + 2
-                var tf:TextField = new TextField();
-                tf.selectable = false;
-                tf.embedFonts = true;
-                tf.antiAliasType = AntiAliasType.ADVANCED;
-                tf.defaultTextFormat = fmt;
-                tf.multiline = true;
-                tf.wordWrap = true;
-                tf.autoSize = TextFieldAutoSize.CENTER;
-                tf.x = 10;
-                tf.width = vIp.w - 20;
-                tf.y = vIp.nextTfPos;
-                tf.htmlText = html;
-                vIp.nextTfPos += tf.height + 9;
-                vIp.h = vIp.nextTfPos + 8;
-                (vIp.textfields as Array).push(tf);
-            } catch (e:Error) {
-                _logger.log(_modName, "FieldTooltipOverlay: _appendHtmlLine error: " + e.message);
-            }
+        private function _checkLine(label:String, done:Boolean, inLogic:Boolean):Array {
+            if (done)    return [label + ": \u2713",         0x888888];
+            if (inLogic) return [label + ": in logic",       0x44FF44];
+            return              [label + ": not in logic",   0xFF4444];
         }
 
         /**

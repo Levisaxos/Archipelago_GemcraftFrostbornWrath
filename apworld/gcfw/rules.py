@@ -41,6 +41,17 @@ def _build_shadow_core_names() -> List[str]:
 
 SHADOW_CORE_ITEM_NAMES: List[str] = _build_shadow_core_names()
 
+
+# Union of original-vanilla levels for every Ritual-gated creature.
+# Used to bar the Ritual trait itself behind reachability of at least one
+# of its creatures, mirroring the mod-side RitualSpawnPatcher gate.
+RITUAL_CREATURE_LEVELS: List[str] = sorted({
+    lvl
+    for elem in non_monster_elements.values()
+    if elem.get("requires_trait") == "Ritual"
+    for lvl in elem.get("levels", [])
+})
+
 XP_ITEM_NAMES: List[str] = (
     [f"Tattered Scroll #{i+1}" for i in range(32)]
     + [f"Worn Tome #{i+1}" for i in range(6)]
@@ -83,11 +94,25 @@ def _normalize_requirements(requirements: list) -> list:
 
 def _simplify_requirements(normalized: list) -> list:
     """If any AND-group contains a trait requirement, strip element reqs from all groups.
-    Prevents circular dependencies where trait items may sit behind element-locked locations."""
+    Prevents circular dependencies where trait items may sit behind element-locked locations.
+
+    Exception: non_monster_elements with a non-empty `levels` list are preserved.
+    Their access rule (have-trait AND any-original-level-reachable) is strictly
+    stronger than the trait alone — matching the mod-side RitualSpawnPatcher
+    gate — so stripping them would lose the level constraint."""
     has_trait = any(" trait" in req.lower() for group in normalized for req in group)
     if not has_trait:
         return normalized
-    return [[req for req in group if not req.endswith(" element")] for group in normalized]
+
+    def keep(req: str) -> bool:
+        if not req.endswith(" element"):
+            return True
+        elem_name = req[:-8]
+        if elem_name in non_monster_elements and non_monster_elements[elem_name].get("levels"):
+            return True
+        return False
+
+    return [[req for req in group if keep(req)] for group in normalized]
 
 
 def _can_reach_any_stage(state, player: int, stages: list) -> bool:
@@ -136,10 +161,18 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     if req.endswith(" element"):
         elem_name = req[:-8]
         if elem_name in non_monster_elements:
-            trait = non_monster_elements[elem_name].get("requires_trait")
+            elem_data = non_monster_elements[elem_name]
+            trait = elem_data.get("requires_trait")
+            levels = elem_data.get("levels", [])
+            # Mod-side RitualSpawnPatcher only allows a creature type to spawn
+            # when at least one of its original-vanilla levels is in logic.
+            # Mirror that gate here so AP doesn't consider creature-kill checks
+            # reachable when the player can't actually trigger spawns yet.
             if trait:
-                return state.has(f"{trait} Battle Trait", player)
-            return _can_reach_any_stage(state, player, non_monster_elements[elem_name].get("levels", []))
+                if not state.has(f"{trait} Battle Trait", player):
+                    return False
+                return not levels or _can_reach_any_stage(state, player, levels)
+            return _can_reach_any_stage(state, player, levels)
         if elem_name in game_level_elements:
             stages = game_level_elements[elem_name].get("levels", [])
             if stages:
@@ -214,7 +247,16 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         for category, category_data in game_skills_categories.items():
             if skill_name in category_data.get("members", []):
                 suffix = " Battle Trait" if category == "BattleTraits" else " Skill"
-                return state.has(f"{skill_name}{suffix}", player)
+                if not state.has(f"{skill_name}{suffix}", player):
+                    return False
+                # Ritual is mod-gated: it spawns nothing until at least one of
+                # its creatures' original-vanilla levels is in logic. Treat
+                # the trait as not-yet-in-logic before that threshold so
+                # achievements requiring just "Ritual trait" don't appear
+                # satisfiable on a sphere where the trait is inert.
+                if skill_name == "Ritual":
+                    return _can_reach_any_stage(state, player, RITUAL_CREATURE_LEVELS)
+                return True
 
     return True  # Metadata requirement (gemCount, minWave, etc.) — not gated
 
@@ -292,7 +334,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         def make_rule(conds):
             return lambda state: all(c(state) for c in conds)
 
-        for suffix in ("Journey", "Bonus"):
+        for suffix in ("Journey", "Bonus", "Wizard stash"):
             loc_name = f"Complete {str_id} - {suffix}"
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)

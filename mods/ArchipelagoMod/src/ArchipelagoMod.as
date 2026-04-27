@@ -53,6 +53,7 @@ package {
     import patch.FirstPlayBypass;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
+    import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
 
@@ -141,6 +142,7 @@ package {
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
+        private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
         private var _achievementLogicEvaluator:AchievementLogicEvaluator;
@@ -213,6 +215,7 @@ package {
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
+                _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
@@ -552,6 +555,7 @@ package {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
                     _wavePrePatcher.resetForNewStage();
+                    _ritualSpawnPatcher.resetForNewStage();
                 }
 
                 // Recompute the available-achievements list when entering battle so
@@ -626,6 +630,7 @@ package {
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
                 _wavePrePatcher.applyIfReady();
+                _ritualSpawnPatcher.applyIfReady();
             }
 
 
@@ -1048,6 +1053,7 @@ package {
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
+                _ritualSpawnPatcher.configure(_fieldLogicEvaluator);
             }
             _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial, AV.serverData.freeStages);
             _wavePrePatcher.configure(

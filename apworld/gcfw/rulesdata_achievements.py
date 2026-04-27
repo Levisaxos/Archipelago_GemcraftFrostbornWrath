@@ -3974,7 +3974,7 @@ achievement_requirements = {
         "ap_id": 2403,
         "game_id": 357,
         "description": "Have 1.000 shadow cores at the start of the battle.",
-        "requirements": ["shadowCore: 5"],
+        "requirements": ["shadowCore: 1000"],
         "reward": "skillPoints:1",
         "required_effort": "Minor",
     },

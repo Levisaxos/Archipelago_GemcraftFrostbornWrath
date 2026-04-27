@@ -4261,7 +4261,7 @@
       "reward": "skillPoints:1",
       "description": "Have 1.000 shadow cores at the start of the battle.",
       "requirements": [
-        "shadowCore: 5"
+        "shadowCore: 1000"
       ]
     },
     "Pointed Pain": {
