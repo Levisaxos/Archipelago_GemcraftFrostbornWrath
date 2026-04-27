@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import Dict, List
 
-from BaseClasses import ItemClassification, LocationProgressType, Region
+from BaseClasses import ItemClassification, Region
 from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
@@ -31,10 +31,8 @@ from .options import (
 from .rules import set_rules
 from .rulesdata import (
     TIERS,
-    TIER_REQUIREMENTS,
     GAME_DATA,
     SKILL_CATEGORIES,
-    CUMULATIVE_SKILL_REQUIREMENTS,
     STAGE_RULES,
 )
 from .rulesdata_settings import (
@@ -51,17 +49,35 @@ def _load_stages():
     return _load_game_data()["stages"]
 
 
-def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
+def _requirements_contain(reqs: list, target: str) -> bool:
+    """Recursively check whether `target` appears as a requirement string
+    anywhere in a (possibly nested) requirements list."""
+    for r in reqs:
+        if isinstance(r, list):
+            if _requirements_contain(r, target):
+                return True
+        elif r == target:
+            return True
+    return False
+
+
+def _should_skip_achievement(ach_data: dict, options) -> bool:
     """
-    Return True if this achievement should be excluded from logic and always
-    receive a filler item.  Excluded achievements still have a location (so the
-    player gets something when they complete it), but the location is marked
-    EXCLUDED so it can only hold filler.
+    Return True if this achievement should be omitted entirely from AP gen —
+    no item in the pool, no location created. The player still earns vanilla
+    skill points when triggering it in-game; the mod simply doesn't intercept.
 
     Triggers:
-      - Achievement has `"untrackable": True` in its data
+      - Achievement has `"untrackable": True` (RNG-dependent, hidden mods, etc.).
+      - Requires Trial mode (Archipelago has no hooks into Trial mode).
+      - Requires Endurance mode AND the player disabled Endurance.
     """
-    if ach_data and ach_data.get("untrackable", False):
+    if ach_data.get("untrackable", False):
+        return True
+    requirements = ach_data.get("requirements", [])
+    if _requirements_contain(requirements, "Trial"):
+        return True
+    if options.disable_endurance.value and _requirements_contain(requirements, "Endurance"):
         return True
     return False
 
@@ -400,19 +416,21 @@ class GemcraftFrostbornWrathWorld(World):
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
                         continue  # Skip achievements above selected effort level
 
+                # Untrackable / Trial / disabled-Endurance achievements aren't
+                # part of AP at all — vanilla skill points only.
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
+
                 total_achievements += 1
                 requirements = ach_data.get("requirements", [])
 
-                # Excluded achievements (Hidden Codes etc.) still contribute an item
-                # to the pool — it ends up at a non-excluded location elsewhere.
-                if not _is_achievement_excluded(requirements, ach_data):
-                    # Validate that non-excluded achievement requirements can be met
-                    if not _can_achievement_be_met(requirements):
-                        filter_reason = _get_filter_reason(requirements)
-                        if filter_reason not in filtered_achievements:
-                            filtered_achievements[filter_reason] = []
-                        filtered_achievements[filter_reason].append(ach_name)
-                        continue  # Skip achievements with unavailable requirements
+                # Validate that achievement requirements can be met by AP logic
+                if not _can_achievement_be_met(requirements):
+                    filter_reason = _get_filter_reason(requirements)
+                    if filter_reason not in filtered_achievements:
+                        filtered_achievements[filter_reason] = []
+                    filtered_achievements[filter_reason].append(ach_name)
+                    continue  # Skip achievements with unavailable requirements
 
                 item_name = f"Achievement: {ach_name}"
                 if item_name in item_table:
@@ -479,18 +497,18 @@ class GemcraftFrostbornWrathWorld(World):
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
                         continue  # Skip achievements above selected effort level
 
-                requirements = ach_data.get("requirements", [])
-                excluded = _is_achievement_excluded(requirements, ach_data)
+                # Untrackable / Trial / disabled-Endurance — no AP location.
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
 
-                if not excluded and not _can_achievement_be_met(requirements):
+                requirements = ach_data.get("requirements", [])
+                if not _can_achievement_be_met(requirements):
                     continue  # Skip achievements with truly unavailable requirements
 
                 loc_name = f"Achievement: {ach_name}"
                 if loc_name in location_table:
                     loc_data = location_table[loc_name]
                     loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
-                    if excluded:
-                        loc.progress_type = LocationProgressType.EXCLUDED
                     achievements_region.locations.append(loc)
 
             self.multiworld.regions.append(achievements_region)

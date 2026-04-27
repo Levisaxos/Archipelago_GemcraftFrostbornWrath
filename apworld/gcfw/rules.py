@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
+from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS
 from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements, skill_groups
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
@@ -169,32 +169,24 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             # beforeWave is the same gen-time gate as minWave: a stage exists with
             # at least N waves so wave N is actually reached. Kept distinct in data
             # because the in-game semantic is "must happen before wave N".
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("wave_count", 0) >= count_needed]
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("WaveCount", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsters":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("estMonsters", 0) >= count_needed]
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("MonsterCount", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsterHP":
             qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("maxGiantHP", 0), d.get("maxReaverHP", 0)) >= count_needed]
+                          if max(d.get("GiantMaxHP", 0), d.get("ReaverMaxHP", 0)) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsterArmor":
             qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("maxGiantArmor", 0), d.get("maxReaverArmor", 0)) >= count_needed]
+                          if max(d.get("GiantMaxArmor", 0), d.get("ReaverMaxArmor", 0)) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minSwarmlingArmor":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("maxSwarmlingArmor", 0) >= count_needed]
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingMaxArmor", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minSwarmlings":
-            # Estimated swarmling count per stage: swarmlingWaves * (estMonsters / wave_count).
-            qualifying = []
-            for sid, d in LEVEL_DATA.items():
-                wave_count = d.get("wave_count", 0)
-                if wave_count <= 0:
-                    continue
-                est = d.get("swarmlingWaves", 0) * d.get("estMonsters", 0) / wave_count
-                if est >= count_needed:
-                    qualifying.append(sid)
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingCount", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "fieldToken":
             collected = sum(
@@ -357,6 +349,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         max_effort_index = min(max_effort_level - 1, len(effort_hierarchy) - 1)
         max_effort_str = effort_hierarchy[max_effort_index] if max_effort_level > 0 else None
 
+        from . import _should_skip_achievement
+
         for ach_name, ach_data in all_achievements.items():
             ach_effort = ach_data.get("required_effort", "Trivial")
             if max_effort_str:
@@ -365,7 +359,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
-            if ach_data.get("untrackable", False):
+            # Untrackable / Trial / disabled-Endurance achievements have no AP
+            # location, so there's nothing to attach an access rule to.
+            if _should_skip_achievement(ach_data, world.options):
                 continue
 
             try:

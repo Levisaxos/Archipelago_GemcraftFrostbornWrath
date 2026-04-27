@@ -157,7 +157,7 @@ game_level_elements = {
     "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
     "Wizard Tower": {"levels": ["L5"]},
-    "Jar of Wasps": {"levels": ["X2"]},
+    "Jar of Wasps": {"levels": ["X1", "X2"]},
     # Hidden Codes: not supported by the mod — explicitly marked unsupported so
     # _can_achievement_be_met (in __init__.py) treats achievements requiring it
     # as unreachable. Today no achievements reference it.
@@ -173,13 +173,32 @@ game_level_elements = {
     "Tower": {"levels": []},
     "Wall": {"levels": []},
     "Wizard Stash": {"levels": []},
-    # Monster property variants. Universal for now; once the data team confirms
-    # which stages spawn each variant, populate `levels`.
-    "Possessed Monster": {"levels": []},
-    "Marked Monster": {"levels": []},
-    "Twisted Monster": {"levels": []},
-    # Water: present on a subset of stages — placeholder until the level list is confirmed.
-    "Water": {"levels": []},
+    # Weather. Per-stage rainChance/snowChance is probabilistic per battle.
+    # Listed stages are those where the chance is >= 50% (reliable enough that
+    # a player can expect the weather to fire within a couple of attempts).
+    # Source: extracted from `rainChance`/`snowChance` in StageCollection1.as.
+    "Rain": {"levels": ["F2", "F3", "F4", "F5", "I4", "J1", "J2", "J3", "J4",
+                        "L1", "L2", "L3", "M1", "M2", "M3", "M4",
+                        "N1", "N2", "N3", "N4", "N5",
+                        "O1", "O2", "O3", "O4",
+                        "P1", "P2", "P3", "P4", "P5", "P6",
+                        "Q4", "R3", "R6"]},
+    "Snow": {"levels": ["Q4", "T1", "T2", "T3", "T4", "T5",
+                        "U1", "U2", "U3", "U4",
+                        "X1", "X2", "X3", "X4",
+                        "Y1", "Y2", "Y3", "Y4",
+                        "Z1", "Z2", "Z3"]},
+    # Monster property variants — assigned by IngamePopulator based on per-stage
+    # buffPower. Marked (1 attribute) appears naturally; Twisted (2) and
+    # Possessed (3) require buffPower >= 20 / 35, which no Journey stage reaches
+    # (global max buffPower is 16.8). Both are flagged `unsupported` so any
+    # achievement requiring them is pruned at gen time. Today the only Twisted/
+    # Possessed achievements (147 "Hint of Darkness", 148 "Exorcism") are
+    # already `untrackable`, so this is documentation more than enforcement.
+    # Impossible to reach in current state (without mod-side wave manipulation).
+    "Marked Monster":    {"levels": []},
+    "Twisted Monster":   {"levels": [], "unsupported": True},
+    "Possessed Monster": {"levels": [], "unsupported": True},
 }
 
 # =====================================================================
@@ -197,10 +216,10 @@ non_monster_elements = {
     "Spire": {"requires_trait": "Ritual", "levels": ["E2"]},
     "Wizard Hunter": {"requires_trait": "Ritual", "levels": ["L4"]},
     "Wraith": {"requires_trait": "Ritual", "levels": ["A4", "X4"]},
-    # Apparition is a Ritual-trait spawn. Levels TBD — the trait alone is the
-    # gate for now; rules.py returns has(Ritual Battle Trait) when levels is empty
-    # because the trait check runs first.
-    "Apparition": {"requires_trait": "Ritual", "levels": []},
+    # Apparition: scripted spawns on Q1 and R6 (extracted from StageCollection1
+    # epicCreatures). On any other stage, requires the Ritual battle trait
+    # (which enables random demonic-meter spawns).
+    "Apparition": {"requires_trait": "Ritual", "levels": ["Q1", "R6"]},
 }
 
 # =====================================================================

@@ -3,7 +3,7 @@ import json
 from importlib.resources import files
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 
 # global bc json loads are costly
@@ -21,44 +21,10 @@ SKILL_CATEGORIES: Dict[str, List[str]] = {
     "wrath":     ["Mana Stream", "Demolition", "Fury", "Seeker Sense"]  # <- all of these suck except mana stream LMAO
 }
 
-# Tier skill gating removed — achievement locations spread skills naturally.
-# Per-stage gemSkills requirements in game_data.json required_skills handle gem gates.
-# Code kept below in case it needs to be re-enabled.
-#
-# TIER_SKILL_REQUIREMENTS: Dict[int, List[str]] = {
-#     0:  ["gems", "gems"],
-#     1:  ["spells", "focus"],
-#     2:  ["gems", "buildings"],
-#     3:  ["spells", "wrath"],
-#     4:  ["gems", "focus"],
-#     5:  ["spells", "buildings"],
-#     6:  ["gems", "wrath"],
-#     7:  ["spells", "focus"],
-#     8:  ["gems", "buildings"],
-#     9:  ["spells", "wrath"],
-#     10: ["gems", "focus"],
-#     11: ["spells", "buildings"],
-#     12: ["gems", "wrath"],
-# }
-#
-# CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
-# CUMULATIVE_SKILL_REQUIREMENTS[0] = {
-#     skill_name: TIER_SKILL_REQUIREMENTS.get(0, []).count(skill_name)
-#     for skill_name in SKILL_CATEGORIES.keys()
-# }
-# for tier in range(1, 12+1):
-#     this_tier_skills: Dict[str, int] = {
-#         skill_name: (
-#             CUMULATIVE_SKILL_REQUIREMENTS[tier-1][skill_name] if tier > 1
-#             else 0
-#         ) for skill_name in SKILL_CATEGORIES.keys()
-#     }
-#     for tier_req in TIER_SKILL_REQUIREMENTS.get(tier, []):
-#         this_tier_skills[tier_req] += 1
-#     CUMULATIVE_SKILL_REQUIREMENTS[tier] = this_tier_skills
-
-CUMULATIVE_SKILL_REQUIREMENTS: Dict[int, Dict[str, int]] = {}
-
+# Tier skill gating was removed — achievement locations spread skills naturally,
+# and per-stage gemSkills requirements in game_data.json `required_skills` handle
+# gem gates. The TIER_SKILL_REQUIREMENTS / CUMULATIVE_SKILL_REQUIREMENTS tables
+# that previously lived here are gone; reinstate from git history if needed.
 
 
 @dataclass
@@ -90,48 +56,30 @@ class StageRule:
 # W2/W3/W4 have no field token item; they are always unlocked on connect.
 FREE_STAGES: set = {"W2", "W3", "W4"}
 
+# Wave-count thresholds defining tier 0..12 boundaries. A stage's tier is the
+# highest t whose threshold[t] <= wave_count. Same table used by
+# `do not commit/py-scripts/generate_rulesdata_split.py`.
+_TIER_WAVE_THRESHOLDS: List[int] = [14, 22, 28, 33, 40, 48, 54, 60, 70, 72, 78, 84, 96]
+
+
+def _tier_from_wave_count(wave_count: int) -> int:
+    for t in range(len(_TIER_WAVE_THRESHOLDS) - 1, -1, -1):
+        if wave_count >= _TIER_WAVE_THRESHOLDS[t]:
+            return t
+    return 0
+
+
 # Tier definitions: tier_number → list of stage str_ids in that tier.
-# TODO: refactor to be programatically generated using game_data.json.
-#       also rebalance tiers - t4 is too big and t8 is too small. t0 and t12 are probably fine being small.
-# W2/W3/W4 are excluded from TIERS because they have no token items and
-# cannot contribute to any tier gate count.
-
-TIERS: Dict[int, List[str]] = {
-    0:  ["S1", "S2", "S3", "S4", "V1"],
-    1:  ["V2", "V3", "V4", "R1", "R2", "Q1", "Q2", "Q3", "Q4", "Q5", "T1"],
-    2:  ["R3", "R4", "R5", "T2", "T3", "T4", "U1", "U2", "U3", "U4", "Y1", "Y3", "O3"],
-    3:  ["R6", "Y2", "O1", "O2", "O4", "N1", "N2", "N3", "P1"],
-    4:  ["T5", "Y4", "X1", "X3", "X4", "Z1", "Z2", "Z3",
-         "P2", "P3", "P4", "P5", "P6", "L1", "L2", "L3", "K1", "K2", "K4"],
-    5:  ["X2", "Z4", "Z5", "G1", "G2", "K3", "L4"],
-    6:  ["G3", "G4", "J1", "J2", "J3", "J4", "K5"],
-    7:  ["H1", "H2", "H3", "H5", "M1", "M2", "M3", "M4", "F1", "F2", "E2", "N5", "L5"],
-    8:  ["H4", "N4", "E1", "D4"],
-    9:  ["D1", "D2", "D3", "B1", "E3", "E4", "I1"],
-    10: ["E5", "D5", "B2", "B4", "C1", "C2", "I2", "I3", "I4"],
-    11: ["F3", "F4", "F5", "B3", "B5", "C3", "C4", "C5", "A1", "A2", "A3"],
-    12: ["A4", "A5", "A6"],
-}
-
-# Tier requirements: tier_number → (previous_tier, tokens_needed_from_prev).
-# Tier 0 has no entry (it is free).
-
-# deprecated - every tier T needs tier T-1, and tokens needed from prev is determined by an option.
-
-TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
-    1:  (0,  2),
-    2:  (1,  2),
-    3:  (2,  3),
-    4:  (3,  3),
-    5:  (4,  4),
-    6:  (5,  3),
-    7:  (6,  3),
-    8:  (7,  4),
-    9:  (8,  2),
-    10: (9,  3),
-    11: (10, 4),
-    12: (11, 5),
-}
+# Derived from each stage's wave_count in game_data.json; W1 (entry stage)
+# and FREE_STAGES (W2-W4, no token items) are excluded.
+# TODO: rebalance tiers - t4 is too big and t8 is too small.
+TIERS: Dict[int, List[str]] = {t: [] for t in range(len(_TIER_WAVE_THRESHOLDS))}
+for _stage in GAME_DATA["stages"]:
+    _sid = _stage["str_id"]
+    if _sid == "W1" or _sid in FREE_STAGES:
+        continue
+    TIERS[_tier_from_wave_count(int(_stage["wave_count"]))].append(_sid)
+del _stage, _sid
 
 
 # ---------------------------------------------------------------------------
@@ -144,203 +92,16 @@ TIER_REQUIREMENTS: Dict[int, Tuple[int, int]] = {
 # Tier assignments derived from wave counts via the former wizard-level table.
 # Explicit WIZLOCK data taken from game_data.json required_skills fields.
 
-# deprecated
 
-# STAGE_RULES_OLD: dict[str, StageRule] = {
-#
-#     # ── Zone W — starting zone ────────────────────────────────────────────
-#     "W1": StageRule(),                              # free (starting stage, no token)
-#     "W2": StageRule(),                              # free (starting stage, no token)
-#     "W3": StageRule(),                              # free (starting stage, no token)
-#     "W4": StageRule(),                              # free (starting stage, no token)
-#
-#     # ── Zone S ────────────────────────────────────────────────────────────
-#     "S1": StageRule(),                              # tier 0
-#     "S2": StageRule(),                              # tier 0
-#     "S3": StageRule(),                              # tier 0
-#     "S4": StageRule(),                              # tier 0
-#
-#     # ── Zone V ────────────────────────────────────────────────────────────
-#     "V1": StageRule(),                              # tier 0
-#     "V2": StageRule(tier=1),                        # tier 1
-#     "V3": StageRule(tier=1),                        # tier 1
-#     "V4": StageRule(tier=1),                        # tier 1
-#
-#     # ── Zone R ────────────────────────────────────────────────────────────
-#     "R1": StageRule(tier=1),                        # tier 1
-#     "R2": StageRule(tier=1),                        # tier 1
-#     "R3": StageRule(tier=2),                        # tier 2
-#     "R4": StageRule(tier=2),                        # tier 2
-#     "R5": StageRule(tier=2),                        # tier 2
-#     "R6": StageRule(tier=3),                        # tier 3
-#
-#     # ── Zone Q ────────────────────────────────────────────────────────────
-#     "Q1": StageRule(tier=1),                        # tier 1
-#     "Q2": StageRule(tier=1),                        # tier 1
-#     "Q3": StageRule(tier=1),                        # tier 1
-#     "Q4": StageRule(tier=1),                        # tier 1
-#     "Q5": StageRule(tier=1),                        # tier 1
-#
-#     # ── Zone T ────────────────────────────────────────────────────────────
-#     "T1": StageRule(tier=1),                        # tier 1
-#     "T2": StageRule(tier=2),                        # tier 2
-#     "T3": StageRule(tier=2),                        # tier 2
-#     "T4": StageRule(tier=2),                        # tier 2
-#     "T5": StageRule(tier=4),                        # tier 4
-#
-#     # ── Zone U ────────────────────────────────────────────────────────────
-#     "U1": StageRule(tier=2),                        # tier 2
-#     "U2": StageRule(tier=2),                        # tier 2
-#     "U3": StageRule(tier=2),                        # tier 2
-#     "U4": StageRule(tier=2),                        # tier 2
-#
-#     # ── Zone Y ────────────────────────────────────────────────────────────
-#     "Y1": StageRule(tier=2),                        # tier 2
-#     "Y2": StageRule(tier=3),                        # tier 3
-#     "Y3": StageRule(tier=2),                        # tier 2
-#     "Y4": StageRule(tier=4),                        # tier 4
-#
-#     # ── Zone X ────────────────────────────────────────────────────────────
-#     "X1": StageRule(tier=4),                        # tier 4
-#     "X2": StageRule(tier=5),                        # tier 5
-#     "X3": StageRule(tier=4),                        # tier 4
-#     "X4": StageRule(tier=4),                        # tier 4
-#
-#     # ── Zone Z ────────────────────────────────────────────────────────────
-#     "Z1": StageRule(tier=4),                        # tier 4
-#     "Z2": StageRule(tier=4),                        # tier 4
-#     "Z3": StageRule(tier=4),                        # tier 4
-#     "Z4": StageRule(tier=5),                        # tier 5
-#     "Z5": StageRule(tier=5),                        # tier 5
-#
-#     # ── Zone O ────────────────────────────────────────────────────────────
-#     "O1": StageRule(tier=3),                        # tier 3
-#     "O2": StageRule(tier=3),                        # tier 3
-#     "O3": StageRule(tier=2),                        # tier 2
-#     "O4": StageRule(tier=3),                        # tier 3
-#
-#     # ── Zone N ────────────────────────────────────────────────────────────
-#     "N1": StageRule(tier=3),                        # tier 3
-#     "N2": StageRule(tier=3),                        # tier 3
-#     "N3": StageRule(tier=3),                        # tier 3
-#     "N4": StageRule(tier=8),                        # tier 8 — significantly harder than N1-N3
-#     "N5": StageRule(tier=7),                        # tier 7
-#
-#     # ── Zone P ────────────────────────────────────────────────────────────
-#     "P1": StageRule(tier=3),                        # tier 3
-#     "P2": StageRule(tier=4),                        # tier 4
-#     "P3": StageRule(tier=4),                        # tier 4
-#     "P4": StageRule(tier=4),                        # tier 4
-#     "P5": StageRule(                                # tier 4 — WIZLOCK: trap & poison gem required
-#         tier=4,
-#         skills=["Traps", "Poison"],
-#     ),
-#     "P6": StageRule(tier=4),                        # tier 4
-#
-#     # ── Zone L ────────────────────────────────────────────────────────────
-#     "L1": StageRule(tier=4),                        # tier 4
-#     "L2": StageRule(tier=4),                        # tier 4
-#     "L3": StageRule(tier=4),                        # tier 4
-#     "L4": StageRule(tier=5),                        # tier 5
-#     "L5": StageRule(                                # tier 7 — WIZLOCK: requires 4 skills
-#         tier=7,
-#         skills=["Freeze", "Bolt", "Beam", "Barrage"],
-#     ),
-#
-#     # ── Zone K ────────────────────────────────────────────────────────────
-#     "K1": StageRule(tier=4),                        # tier 4
-#     "K2": StageRule(tier=4),                        # tier 4
-#     "K3": StageRule(tier=5),                        # tier 5
-#     "K4": StageRule(tier=4),                        # tier 4
-#     "K5": StageRule(tier=6),                        # tier 6
-#
-#     # ── Zone H ────────────────────────────────────────────────────────────
-#     "H1": StageRule(tier=7),                        # tier 7
-#     "H2": StageRule(tier=7),                        # tier 7
-#     "H3": StageRule(tier=7),                        # tier 7
-#     "H4": StageRule(tier=8),                        # tier 8
-#     "H5": StageRule(tier=7),                        # tier 7
-#
-#     # ── Zone G ────────────────────────────────────────────────────────────
-#     "G1": StageRule(tier=5),                        # tier 5
-#     "G2": StageRule(tier=5),                        # tier 5
-#     "G3": StageRule(tier=6),                        # tier 6
-#     "G4": StageRule(tier=6),                        # tier 6
-#
-#     # ── Zone J ────────────────────────────────────────────────────────────
-#     "J1": StageRule(tier=6),                        # tier 6
-#     "J2": StageRule(tier=6),                        # tier 6
-#     "J3": StageRule(tier=6),                        # tier 6
-#     "J4": StageRule(tier=6),                        # tier 6
-#
-#     # ── Zone M ────────────────────────────────────────────────────────────
-#     "M1": StageRule(tier=7),                        # tier 7
-#     "M2": StageRule(tier=7),                        # tier 7
-#     "M3": StageRule(tier=7),                        # tier 7
-#     "M4": StageRule(tier=7),                        # tier 7
-#
-#     # ── Zone F ────────────────────────────────────────────────────────────
-#     "F1": StageRule(tier=7),                        # tier 7
-#     "F2": StageRule(tier=7),                        # tier 7
-#     "F3": StageRule(tier=11),                       # tier 11 — significantly harder than F1/F2
-#     "F4": StageRule(tier=11),                       # tier 11
-#     "F5": StageRule(tier=11),                       # tier 11
-#
-#     # ── Zone E ────────────────────────────────────────────────────────────
-#     "E1": StageRule(tier=8),                        # tier 8
-#     "E2": StageRule(tier=7),                        # tier 7
-#     "E3": StageRule(tier=9),                        # tier 9
-#     "E4": StageRule(tier=9),                        # tier 9
-#     "E5": StageRule(tier=10),                       # tier 10
-#
-#     # ── Zone D ────────────────────────────────────────────────────────────
-#     "D1": StageRule(tier=9),                        # tier 9
-#     "D2": StageRule(tier=9),                        # tier 9
-#     "D3": StageRule(tier=9),                        # tier 9
-#     "D4": StageRule(tier=8),                        # tier 8
-#     "D5": StageRule(tier=10),                       # tier 10
-#
-#     # ── Zone B ────────────────────────────────────────────────────────────
-#     "B1": StageRule(tier=9),                        # tier 9
-#     "B2": StageRule(tier=10),                       # tier 10
-#     "B3": StageRule(tier=11),                       # tier 11
-#     "B4": StageRule(tier=10),                       # tier 10
-#     "B5": StageRule(tier=11),                       # tier 11
-#
-#     # ── Zone C ────────────────────────────────────────────────────────────
-#     "C1": StageRule(tier=10),                       # tier 10
-#     "C2": StageRule(tier=10),                       # tier 10
-#     "C3": StageRule(tier=11),                       # tier 11
-#     "C4": StageRule(tier=11),                       # tier 11
-#     "C5": StageRule(tier=11),                       # tier 11
-#
-#     # ── Zone A — endgame ──────────────────────────────────────────────────
-#     "A1": StageRule(tier=11),                       # tier 11
-#     "A2": StageRule(tier=11),                       # tier 11
-#     "A3": StageRule(tier=11),                       # tier 11
-#     "A4": StageRule(tier=12),                       # tier 12 — final boss stage
-#     "A5": StageRule(tier=12),                       # tier 12
-#     "A6": StageRule(tier=12),                       # tier 12
-#
-#     # ── Zone I ────────────────────────────────────────────────────────────
-#     "I1": StageRule(tier=9),                        # tier 9
-#     "I2": StageRule(tier=10),                       # tier 10
-#     "I3": StageRule(tier=10),                       # tier 10
-#     "I4": StageRule(tier=10),                       # tier 10
-# }
-
-STAGE_RULES: dict[str, StageRule] = {}
+STAGE_RULES: Dict[str, StageRule] = {}
 for stage in GAME_DATA["stages"]:
     sid = stage["str_id"]
-    req_skills = stage["required_skills"]
-    # find tier of stage
-    # (i think this is more efficient than finding the stage in game_data for each stage in the tier...)
-    stage_tier = -1
-    # print(sid)
-    for t, stages in TIERS.items():
-        # print(f"Checking T{t}")
-        if sid in stages:
-            # print("Found!")
-            stage_tier = t
-            break
-    STAGE_RULES[sid] = StageRule(tier=stage_tier, skills=req_skills)
+    if sid == "W1" or sid in FREE_STAGES:
+        # Free / entry stages don't belong to any tier (no token item).
+        STAGE_RULES[sid] = StageRule(tier=-1, skills=stage["required_skills"])
+    else:
+        STAGE_RULES[sid] = StageRule(
+            tier=_tier_from_wave_count(int(stage["wave_count"])),
+            skills=stage["required_skills"],
+        )
+del stage, sid

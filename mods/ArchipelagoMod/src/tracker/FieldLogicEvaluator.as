@@ -39,7 +39,7 @@ package tracker {
         private var _dirty:Boolean = true;
         private var _reachableTier:int = -1;
         private var _inLogicByStrId:Object = {};
-        private var _levelStats:Object = {};  // strId -> {maxGiantHP, maxReaverHP, ...}
+        private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
@@ -162,63 +162,53 @@ package tracker {
             _levelStats = stats || {};
         }
 
-        /** True if any in-logic field has max(maxGiantHP, maxReaverHP) >= threshold. */
+        /** True if any in-logic field has max(GiantMaxHP, ReaverMaxHP) >= threshold. */
         public function hasInLogicFieldWithMinMonsterHP(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
-                    if (Math.max(int(s.maxGiantHP), int(s.maxReaverHP)) >= threshold) return true;
+                    if (Math.max(int(s.GiantMaxHP), int(s.ReaverMaxHP)) >= threshold) return true;
                 }
             }
             return false;
         }
 
-        /** True if any in-logic field has max(maxGiantArmor, maxReaverArmor) >= threshold. */
+        /** True if any in-logic field has max(GiantMaxArmor, ReaverMaxArmor) >= threshold. */
         public function hasInLogicFieldWithMinMonsterArmor(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
-                    if (Math.max(int(s.maxGiantArmor), int(s.maxReaverArmor)) >= threshold) return true;
+                    if (Math.max(int(s.GiantMaxArmor), int(s.ReaverMaxArmor)) >= threshold) return true;
                 }
             }
             return false;
         }
 
-        /** True if any in-logic field has estMonsters >= threshold. */
+        /** True if any in-logic field has MonsterCount >= threshold. */
         public function hasInLogicFieldWithMinMonsters(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
-                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].estMonsters) >= threshold) return true;
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonsterCount) >= threshold) return true;
             }
             return false;
         }
 
-        /** True if any in-logic field has maxSwarmlingArmor >= threshold. */
+        /** True if any in-logic field has SwarmlingMaxArmor >= threshold. */
         public function hasInLogicFieldWithMinSwarmlingArmor(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
-                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].maxSwarmlingArmor) >= threshold) return true;
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingMaxArmor) >= threshold) return true;
             }
             return false;
         }
 
-        /**
-         * True if any in-logic field can spawn at least `threshold` swarmlings.
-         * Estimate per stage = swarmlingWaves * (estMonsters / wave_count).
-         * Mirrors rules.py minSwarmlings evaluator.
-         */
+        /** True if any in-logic field has SwarmlingCount >= threshold. */
         public function hasInLogicFieldWithMinSwarmlings(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
-                if (_inLogicByStrId[sid] != true) continue;
-                var s:Object = _levelStats[sid];
-                var waveCount:int = int(s.wave_count);
-                if (waveCount <= 0) continue;
-                var swWaves:int = int(s.swarmlingWaves);
-                var est:int     = int(s.estMonsters);
-                if (swWaves * est / waveCount >= threshold) return true;
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingCount) >= threshold) return true;
             }
             return false;
         }
