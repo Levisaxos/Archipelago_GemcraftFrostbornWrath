@@ -10,6 +10,7 @@ package {
     import Bezel.Logger;
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.constants.ScreenId;
 
     import data.AV;
@@ -555,8 +556,12 @@ package {
 
                 // Recompute the available-achievements list when entering battle so
                 // the panel reflects the player's current loadout for the new field.
+                // Also refresh the vanilla achievement panel's logic dots so they're
+                // up-to-date the next time the player opens the achievements menu —
+                // not stale from before this battle started.
                 if (screen == ScreenId.INGAME) {
                     refreshAvailableAchievementsPanel();
+                    _refreshAchievementPanel();
                 }
                 // Reset first-play gem patch when leaving ingame so it re-runs on
                 // the next ingame entry for the same stage (after initializer resets
@@ -750,8 +755,26 @@ package {
         private function updateAvailableAchievementsPanel():void {
             if (_availableAchievementsPanel == null || this.stage == null) return;
             var inBattle:Boolean = (int(GV.main.currentScreen) == ScreenId.INGAME);
-            _availableAchievementsPanel.visible = inBattle;
-            if (!inBattle) return;
+            // Hide as soon as the gameover panel is appearing — same range covers
+            // appearing/stats-rolling/drops-listing/idle/disappearing (IngameStatus
+            // 9-13). PLAYING is 5, PLAYING_SHRINE_ACTIVE is 14, so the simple
+            // 9..13 range cleanly isolates the post-battle window.
+            var inGameover:Boolean = false;
+            try {
+                if (GV.ingameController != null && GV.ingameController.core != null) {
+                    var status:int = int(GV.ingameController.core.ingameStatus);
+                    inGameover = (status >= IngameStatus.GAMEOVER_PANEL_APPEARING
+                               && status <= IngameStatus.GAMEOVER_PANEL_DISAPPEARING);
+                }
+            } catch (e:Error) {}
+            var show:Boolean = inBattle && !inGameover;
+            _availableAchievementsPanel.visible = show;
+            if (!show) {
+                // Force the panel back to its small button so re-entering the next
+                // battle starts collapsed instead of restoring an open grid.
+                if (_availableAchievementsPanel.isExpanded) _availableAchievementsPanel.collapse();
+                return;
+            }
 
             var gameRoot:* = this.stage.getChildAt(0);
             var scaleX:Number = gameRoot.scaleX;

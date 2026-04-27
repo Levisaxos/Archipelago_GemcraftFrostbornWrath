@@ -130,27 +130,18 @@ package tracker {
 
         /**
          * True if any in-logic stage has at least minWaveCount waves.
-         * Wave tier thresholds match rulesdata_settings.py WAVE_TIERS.
+         *
+         * Reads WaveCount directly from _levelStats so the check sees free
+         * stages (W1-W4) too — they aren't in _stageTier but are in _levelStats
+         * and _inLogicByStrId, so a tier-table-driven version would miss them
+         * (e.g. "Short Tempered" needs only minWave: 5, which W1 satisfies).
          */
         public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
-            var waveTiers:Array = [14, 22, 28, 33, 40, 48, 54, 60, 70, 72, 78, 84, 96];
-
-            if (minWaveCount > 96) return false; // endurance/trial only
-
-            var requiredTier:int = -1;
-            for (var i:int = 0; i < waveTiers.length; i++) {
-                if (int(waveTiers[i]) >= minWaveCount) {
-                    requiredTier = i;
-                    break;
-                }
-            }
-
-            if (_stageTier == null) return true;
-            if (_dirty) recompute(); // was incorrectly "return false" before fix
-
-            for (var strId:String in _stageTier) {
-                if (int(_stageTier[strId]) >= requiredTier
-                        && _inLogicByStrId[strId] == true) {
+            if (_dirty) recompute();
+            if (_levelStats == null) return false;
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true
+                        && int(_levelStats[sid].WaveCount) >= minWaveCount) {
                     return true;
                 }
             }

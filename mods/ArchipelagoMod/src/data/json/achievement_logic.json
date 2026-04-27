@@ -1103,7 +1103,7 @@
       "reward": "skillPoints:1",
       "description": "Have 100 shadow cores at the start of the battle.",
       "requirements": [
-        "shadowCore: 5"
+        "shadowCore: 100"
       ]
     },
     "Corrosive Stings": {
@@ -5537,10 +5537,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Demolish one of your structures.",
-      "details": "Demolish your own structure once.",
-      "requirements": [
-        "Demolition skill"
-      ]
+      "details": "Demolish your own structure once."
     },
     "Stormbringer": {
       "apId": 2525,

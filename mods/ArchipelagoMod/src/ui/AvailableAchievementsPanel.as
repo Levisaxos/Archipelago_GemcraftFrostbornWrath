@@ -41,15 +41,28 @@ package ui {
         private static const PAD_X:int         = 8;
         private static const PAD_Y:int         = 8;
         private static const COLLAPSED_SIZE:int = 32;
+        private static const TOOLTIP_W:int      = 220;
+        private static const TOOLTIP_PAD:int    = 8;
 
-        // Visual style
-        private static const BG_COLOR:uint     = 0x0C0818;
-        private static const BG_ALPHA:Number   = 0.92;
-        private static const BORDER_COLOR:uint = 0x9966CC;
-        private static const HEADER_COLOR:uint = 0xCC99FF;
-        private static const COUNT_COLOR:uint  = 0xFFE066;
-        private static const PLACEHOLDER_BG:uint = 0x332244;
-        private static const PLACEHOLDER_TXT:uint = 0xCCBBEE;
+        // Visual style — matches the in-game gem tooltip (near-solid black panel
+        // with a thin light-grey border, white headers, magenta accent line, soft
+        // grey body text). No gradient, no glowing rim, no gold.
+        private static const BG_COLOR:uint      = 0x050505; // near-black panel fill
+        private static const BG_ALPHA:Number    = 0.94;
+        private static const BORDER_COLOR:uint  = 0xCFCFCF; // thin light-grey rim
+        private static const BORDER_ALPHA:Number = 0.95;
+        private static const ACCENT_COLOR:uint  = 0xCC66CC; // magenta — the same hue
+                                                            // GCFW uses for trait /
+                                                            // special-stat callouts
+        private static const HEADER_COLOR:uint  = 0xFFFFFF; // crisp white title
+        private static const COUNT_COLOR:uint   = 0xFFFFFF;
+        private static const SUBTLE_COLOR:uint  = 0xB8B8B8; // body / scroll hint
+        private static const DIM_COLOR:uint     = 0x808080;
+        private static const CELL_BG:uint       = 0x0A0A0A;
+        private static const CELL_BORDER:uint   = 0x6E6E6E;
+        private static const CELL_HOVER_BORDER:uint = 0xFFFFFF;
+        private static const PLACEHOLDER_BG:uint = 0x101010;
+        private static const CORNER_R:Number    = 4;
         private static const FONT:String       = "Celtic Garamond for GemCraft";
 
         // Scroll
@@ -66,6 +79,7 @@ package ui {
         private var _grid:Sprite;
         private var _gridMask:Shape;
         private var _emptyLabel:TextField;
+        private var _tooltipBg:Shape;
         private var _tooltip:TextField;
 
         private var _entries:Array = []; // [{apId, gameId, name, description}]
@@ -144,13 +158,10 @@ package ui {
             _collapsed.mouseChildren = false;
 
             var s:Shape = new Shape();
-            s.graphics.beginFill(BG_COLOR, BG_ALPHA);
-            s.graphics.lineStyle(1.5, BORDER_COLOR, 0.85);
-            s.graphics.drawRoundRect(0, 0, COLLAPSED_SIZE, COLLAPSED_SIZE, 6, 6);
-            s.graphics.endFill();
+            _drawTooltipBg(s, COLLAPSED_SIZE, COLLAPSED_SIZE);
             _collapsed.addChild(s);
 
-            var fmt:TextFormat = new TextFormat(FONT, 14);
+            var fmt:TextFormat = new TextFormat(FONT, 15);
             fmt.bold = true;
             fmt.align = TextFormatAlign.CENTER;
             var label:TextField = new TextField();
@@ -201,7 +212,7 @@ package ui {
             _bg = new Shape();
             _expanded.addChild(_bg);
 
-            // Header text
+            // Header text — uses HTML so the count can render in AP gold
             var fmt:TextFormat = new TextFormat(FONT, 14);
             fmt.bold = true;
             fmt.align = TextFormatAlign.LEFT;
@@ -213,27 +224,26 @@ package ui {
             _header.defaultTextFormat = fmt;
             _header.autoSize = TextFieldAutoSize.LEFT;
             _header.textColor = HEADER_COLOR;
-            _header.text = "Available achievements";
+            _header.htmlText = "Available achievements";
             _header.x = PAD_X;
             _header.y = 6;
             _expanded.addChild(_header);
 
-            // Close (collapse) button — small ✕ in top-right
+            // Close (collapse) button — light grey ✕ that brightens to white on hover.
             _closeBtn = new Sprite();
             _closeBtn.buttonMode = true;
             _closeBtn.useHandCursor = true;
             _closeBtn.mouseChildren = false;
-            var close:Shape = new Shape();
-            close.graphics.beginFill(0x000000, 0);
-            close.graphics.drawRect(0, 0, 22, 22);
-            close.graphics.endFill();
-            close.graphics.lineStyle(2, HEADER_COLOR, 0.9);
-            close.graphics.moveTo(5, 5);  close.graphics.lineTo(17, 17);
-            close.graphics.moveTo(17, 5); close.graphics.lineTo(5, 17);
-            _closeBtn.addChild(close);
+            _drawCloseGlyph(_closeBtn, SUBTLE_COLOR);
             _closeBtn.x = _panelW - 22 - 4;
             _closeBtn.y = 3;
             _closeBtn.addEventListener(MouseEvent.CLICK, _onCloseClick, false, 0, true);
+            _closeBtn.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
+                _drawCloseGlyph(_closeBtn, HEADER_COLOR);
+            }, false, 0, true);
+            _closeBtn.addEventListener(MouseEvent.MOUSE_OUT, function(e:MouseEvent):void {
+                _drawCloseGlyph(_closeBtn, SUBTLE_COLOR);
+            }, false, 0, true);
             _expanded.addChild(_closeBtn);
 
             // Grid container
@@ -257,7 +267,7 @@ package ui {
             _emptyLabel.antiAliasType = AntiAliasType.ADVANCED;
             _emptyLabel.defaultTextFormat = emptyFmt;
             _emptyLabel.autoSize = TextFieldAutoSize.CENTER;
-            _emptyLabel.textColor = 0x887799;
+            _emptyLabel.textColor = SUBTLE_COLOR;
             _emptyLabel.text = "No achievements available with current loadout.";
             _emptyLabel.width = _panelW - PAD_X * 2;
             _emptyLabel.x = PAD_X;
@@ -265,9 +275,13 @@ package ui {
             _emptyLabel.visible = false;
             _expanded.addChild(_emptyLabel);
 
-            // Tooltip (single shared TextField shown on hover)
-            var tipFmt:TextFormat = new TextFormat(FONT, 11);
-            tipFmt.bold = true;
+            // Tooltip (game-style: gradient panel + gold header on top of an HTML
+            // body, mimicking the in-game info-panel tooltip aesthetic)
+            _tooltipBg = new Shape();
+            _tooltipBg.visible = false;
+            _expanded.addChild(_tooltipBg);
+
+            var tipFmt:TextFormat = new TextFormat(FONT, 12);
             tipFmt.align = TextFormatAlign.LEFT;
             _tooltip = new TextField();
             _tooltip.mouseEnabled = false;
@@ -276,11 +290,10 @@ package ui {
             _tooltip.antiAliasType = AntiAliasType.ADVANCED;
             _tooltip.defaultTextFormat = tipFmt;
             _tooltip.autoSize = TextFieldAutoSize.LEFT;
-            _tooltip.background = true;
-            _tooltip.backgroundColor = 0x000000;
-            _tooltip.border = true;
-            _tooltip.borderColor = BORDER_COLOR;
-            _tooltip.textColor = 0xFFE0FF;
+            _tooltip.multiline = true;
+            _tooltip.wordWrap = true;
+            _tooltip.width = TOOLTIP_W;
+            _tooltip.textColor = 0xFFFFFF;
             _tooltip.visible = false;
             _expanded.addChild(_tooltip);
 
@@ -298,14 +311,36 @@ package ui {
 
         private function _drawBackground():void {
             _bg.graphics.clear();
-            _bg.graphics.beginFill(BG_COLOR, BG_ALPHA);
-            _bg.graphics.lineStyle(1.5, BORDER_COLOR, 0.85);
-            _bg.graphics.drawRoundRect(0, 0, _panelW, _panelH, 8, 8);
-            _bg.graphics.endFill();
-            // Header divider
-            _bg.graphics.lineStyle(1, BORDER_COLOR, 0.5);
+            _drawTooltipBg(_bg, _panelW, _panelH);
+            // Thin magenta accent line under the header — matches the magenta
+            // separator the in-game gem tooltip draws under its title.
+            _bg.graphics.lineStyle(1, ACCENT_COLOR, 0.85);
             _bg.graphics.moveTo(PAD_X, HEADER_H);
             _bg.graphics.lineTo(_panelW - PAD_X, HEADER_H);
+        }
+
+        /**
+         * Game-style tooltip backing — near-solid black with a thin light-grey
+         * rim. Matches the in-game gem tooltip visual.
+         */
+        private function _drawTooltipBg(target:Shape, w:Number, h:Number):void {
+            target.graphics.clear();
+            target.graphics.lineStyle(1, BORDER_COLOR, BORDER_ALPHA);
+            target.graphics.beginFill(BG_COLOR, BG_ALPHA);
+            target.graphics.drawRoundRect(0, 0, w, h, CORNER_R * 2, CORNER_R * 2);
+            target.graphics.endFill();
+        }
+
+        private function _drawCloseGlyph(host:Sprite, color:uint):void {
+            while (host.numChildren > 0) host.removeChildAt(0);
+            var g:Shape = new Shape();
+            g.graphics.beginFill(0x000000, 0);
+            g.graphics.drawRect(0, 0, 22, 22);
+            g.graphics.endFill();
+            g.graphics.lineStyle(2, color, 0.95);
+            g.graphics.moveTo(5, 5);  g.graphics.lineTo(17, 17);
+            g.graphics.moveTo(17, 5); g.graphics.lineTo(5, 17);
+            host.addChild(g);
         }
 
         private function _drawGridMask():void {
@@ -322,13 +357,21 @@ package ui {
             var maxRow:int = Math.max(0, rows - VISIBLE_ROWS);
             if (_scrollRow > maxRow) _scrollRow = maxRow;
 
-            var label:String = "Available  [" + _entries.length + "]";
+            var accentHex:String = "#" + _hex6(ACCENT_COLOR);
+            var subtleHex:String = "#" + _hex6(SUBTLE_COLOR);
+            var html:String = "Available <font color='" + accentHex + "'>"
+                + _entries.length + "</font>";
             if (rows > VISIBLE_ROWS) {
-                label += "  scroll ↕";
+                html += " <font color='" + subtleHex + "'>· scroll</font>";
             }
-            _header.text = label;
-            // Re-anchor close button after width may have changed (safe to leave fixed though)
+            _header.htmlText = html;
             _closeBtn.x = _panelW - 22 - 4;
+        }
+
+        private static function _hex6(color:uint):String {
+            var s:String = color.toString(16);
+            while (s.length < 6) s = "0" + s;
+            return s.toUpperCase();
         }
 
         // -----------------------------------------------------------------------
@@ -365,13 +408,9 @@ package ui {
             cell.mouseChildren = false;
             cell.buttonMode = false;
 
-            // Cell background
             var bg:Shape = new Shape();
-            bg.graphics.beginFill(0x1A1230, 0.85);
-            bg.graphics.lineStyle(1, BORDER_COLOR, 0.4);
-            bg.graphics.drawRoundRect(0, 0, CELL_SIZE, CELL_SIZE, 4, 4);
-            bg.graphics.endFill();
             cell.addChild(bg);
+            _drawCellBg(bg, false);
 
             // Icon (snapshot of game's achievement MovieClip, or placeholder)
             var icon:DisplayObject = _getIconFor(entry);
@@ -379,17 +418,42 @@ package ui {
                 cell.addChild(icon);
             }
 
+            // In-logic dot — mirrors the green dot AchievementPanelPatcher draws on
+            // the vanilla achievement panel. Every entry shown here is in-logic for
+            // the current battle by construction, so dots are always green; we draw
+            // them ourselves so they appear regardless of whether the player has
+            // ever opened the achievements menu (the patcher only paints onto live
+            // ach.mc objects, which our cached BitmapData snapshots don't include).
+            var dot:Shape = new Shape();
+            dot.graphics.lineStyle(1, 0x000000, 0.7);
+            dot.graphics.beginFill(0x44FF44, 0.95);
+            dot.graphics.drawCircle(0, 0, 4);
+            dot.graphics.endFill();
+            dot.x = CELL_SIZE - 6;
+            dot.y = CELL_SIZE - 6;
+            cell.addChild(dot);
+
             // Hover handlers — use entry data captured via closure
             var capName:String = entry.name;
             var capDesc:String = entry.description;
             cell.addEventListener(MouseEvent.MOUSE_OVER, function(e:MouseEvent):void {
+                _drawCellBg(bg, true);
                 _showTooltip(capName, capDesc, cell.x, cell.y);
             }, false, 0, true);
             cell.addEventListener(MouseEvent.MOUSE_OUT, function(e:MouseEvent):void {
+                _drawCellBg(bg, false);
                 _hideTooltip();
             }, false, 0, true);
 
             return cell;
+        }
+
+        private function _drawCellBg(bg:Shape, hovered:Boolean):void {
+            bg.graphics.clear();
+            bg.graphics.lineStyle(1, hovered ? CELL_HOVER_BORDER : CELL_BORDER, hovered ? 0.95 : 0.55);
+            bg.graphics.beginFill(CELL_BG, 0.95);
+            bg.graphics.drawRoundRect(0, 0, CELL_SIZE, CELL_SIZE, 4, 4);
+            bg.graphics.endFill();
         }
 
         private function _getIconFor(entry:Object):DisplayObject {
@@ -460,8 +524,9 @@ package ui {
             s.mouseEnabled = false;
             s.mouseChildren = false;
             var bg:Shape = new Shape();
-            bg.graphics.beginFill(PLACEHOLDER_BG, 0.9);
-            bg.graphics.drawRoundRect(4, 4, CELL_SIZE - 8, CELL_SIZE - 8, 4, 4);
+            bg.graphics.lineStyle(1, DIM_COLOR, 0.45);
+            bg.graphics.beginFill(PLACEHOLDER_BG, 0.95);
+            bg.graphics.drawRoundRect(4, 4, CELL_SIZE - 8, CELL_SIZE - 8, 3, 3);
             bg.graphics.endFill();
             s.addChild(bg);
 
@@ -475,12 +540,19 @@ package ui {
             tf.antiAliasType = AntiAliasType.ADVANCED;
             tf.defaultTextFormat = fmt;
             tf.autoSize = TextFieldAutoSize.CENTER;
-            tf.textColor = PLACEHOLDER_TXT;
+            tf.textColor = SUBTLE_COLOR;
             tf.text = _initials(name);
             tf.x = (CELL_SIZE - tf.width) * 0.5;
             tf.y = (CELL_SIZE - tf.height) * 0.5;
             s.addChild(tf);
             return s;
+        }
+
+        private static function _escape(s:String):String {
+            if (s == null) return "";
+            return s.split("&").join("&amp;")
+                    .split("<").join("&lt;")
+                    .split(">").join("&gt;");
         }
 
         private function _initials(name:String):String {
@@ -496,26 +568,49 @@ package ui {
         // Tooltip + scroll
 
         private function _showTooltip(name:String, description:String, gridX:Number, gridY:Number):void {
-            var text:String = name;
+            // Header line in white + magenta accent (gem-tooltip style), body in
+            // light grey.
+            var headerHex:String = "#" + _hex6(HEADER_COLOR);
+            var bodyHex:String   = "#" + _hex6(SUBTLE_COLOR);
+            var html:String = "<font face='" + FONT + "' size='13' color='" + headerHex
+                + "'><b>" + _escape(name) + "</b></font>";
             if (description != null && description.length > 0) {
-                text += "\n" + description;
+                html += "\n<font face='" + FONT + "' size='12' color='" + bodyHex + "'>"
+                    + _escape(description) + "</font>";
             }
-            _tooltip.text = text;
-            // Anchor below the hovered cell, clamped inside the panel
+            _tooltip.htmlText = html;
+            _tooltip.width = TOOLTIP_W;
+
+            var tipW:Number = _tooltip.width + TOOLTIP_PAD * 2;
+            var tipH:Number = _tooltip.height + TOOLTIP_PAD * 2;
+
+            // Anchor below the hovered cell, clamped inside the panel; flip above if it overflows.
             var px:Number = _grid.x + gridX;
-            var py:Number = _grid.y + gridY + CELL_SIZE + 2;
-            if (px + _tooltip.width > _panelW - 4) px = _panelW - _tooltip.width - 4;
+            var py:Number = _grid.y + gridY + CELL_SIZE + 4;
+            if (px + tipW > _panelW - 4) px = _panelW - tipW - 4;
             if (px < 4) px = 4;
-            if (py + _tooltip.height > _panelH - 2) {
-                // Flip above the cell
-                py = _grid.y + gridY - _tooltip.height - 2;
+            if (py + tipH > _panelH - 2) {
+                py = _grid.y + gridY - tipH - 4;
             }
-            _tooltip.x = px;
-            _tooltip.y = py;
+
+            _drawTooltipBg(_tooltipBg, tipW, tipH);
+            _tooltipBg.x = px;
+            _tooltipBg.y = py;
+            _tooltipBg.visible = true;
+
+            _tooltip.x = px + TOOLTIP_PAD;
+            _tooltip.y = py + TOOLTIP_PAD;
             _tooltip.visible = true;
+
+            // Make sure the tooltip renders above the cells.
+            try {
+                _expanded.setChildIndex(_tooltipBg, _expanded.numChildren - 2);
+                _expanded.setChildIndex(_tooltip,   _expanded.numChildren - 1);
+            } catch (err:Error) {}
         }
 
         private function _hideTooltip():void {
+            _tooltipBg.visible = false;
             _tooltip.visible = false;
         }
 
