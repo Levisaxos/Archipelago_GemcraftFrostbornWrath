@@ -27,6 +27,36 @@ TIER_SKILL_NAMES: dict[str, List[str]] = {
 }
 
 
+# Pre-build Shadow Core / XP item name lists. Names mirror items.py exactly.
+def _build_shadow_core_names() -> List[str]:
+    names: List[str] = []
+    stashes = GAME_DATA.get("shadow_core_stashes", [])
+    for sc in stashes:
+        names.append(f"{sc['str_id']} Shadow Cores")
+    extras = GAME_DATA.get("extra_shadow_core_stashes", [])
+    for sc in extras:
+        names.append(sc["name"])
+    return names
+
+
+SHADOW_CORE_ITEM_NAMES: List[str] = _build_shadow_core_names()
+
+XP_ITEM_NAMES: List[str] = (
+    [f"Tattered Scroll #{i+1}" for i in range(32)]
+    + [f"Worn Tome #{i+1}" for i in range(6)]
+    + [f"Ancient Grimoire #{i+1}" for i in range(2)]
+    + [f"Extra XP Item #{i+1}" for i in range(60)]
+)
+
+
+def _count_shadow_core_items(state, player: int) -> int:
+    return sum(1 for n in SHADOW_CORE_ITEM_NAMES if state.has(n, player))
+
+
+def _count_xp_items(state, player: int) -> int:
+    return sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
+
+
 def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
     """Check whether the player has collected enough field tokens from the
     previous tier (and all lower tiers, recursively)."""
@@ -174,6 +204,17 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
                 if state.has(name, player)
             )
             return collected >= count_needed
+        if group_name == "shadowCore":
+            # Counts AP-distributed Shadow Core stash items (specific + extra).
+            # In-game core drops still happen and contribute to the achievement,
+            # but for AP gating we measure only the items we can place.
+            return _count_shadow_core_items(state, player) >= count_needed
+        if group_name == "wizardLevel":
+            # Wizard level is reached half from AP-distributed XP items (tomes/
+            # scrolls/grimoires/extras) and half from natural play, so the gate
+            # requires ceil(N/2) XP items collected.
+            needed_items = (count_needed + 1) // 2
+            return _count_xp_items(state, player) >= needed_items
         return True  # Unknown counter (minGemGrade, etc.) — metadata only
 
     if " trait" in req.lower() or " skill" in req.lower():

@@ -205,6 +205,25 @@ package tracker {
         }
 
         /**
+         * True if any in-logic field can spawn at least `threshold` swarmlings.
+         * Estimate per stage = swarmlingWaves * (estMonsters / wave_count).
+         * Mirrors rules.py minSwarmlings evaluator.
+         */
+        public function hasInLogicFieldWithMinSwarmlings(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] != true) continue;
+                var s:Object = _levelStats[sid];
+                var waveCount:int = int(s.wave_count);
+                if (waveCount <= 0) continue;
+                var swWaves:int = int(s.swarmlingWaves);
+                var est:int     = int(s.estMonsters);
+                if (swWaves * est / waveCount >= threshold) return true;
+            }
+            return false;
+        }
+
+        /**
          * Returns [text, color] line pairs for any unmet tier skill requirements
          * blocking this stage.  Empty array when skill reqs are disabled or all met.
          */

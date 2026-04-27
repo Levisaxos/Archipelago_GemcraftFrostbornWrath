@@ -108,9 +108,10 @@ package tracker {
         }
 
         /**
-         * Return apId->true for every achievement that has no requirements
-         * (i.e. always receives a filler item and is excluded from logic).
-         * The set is static — call once after loadData().
+         * Return apId->true for every achievement marked `untrackable` in the
+         * data file (RNG-dependent, hidden-mod-only, or otherwise not gateable
+         * at gen time). These always receive a filler item and are excluded
+         * from logic. The set is static — call once after loadData().
          */
         public
         function getExcludedAchApIds(): Object {
@@ -118,7 +119,7 @@ package tracker {
             for (var achName: String in _achievementData) {
                 var achData: Object = _achievementData[achName];
                 if (!achData || !achData.apId) continue;
-                if (achData.always_as_filler === true) {
+                if (achData.untrackable === true) {
                     result[int(achData.apId)] = true;
                 }
             }
@@ -128,7 +129,7 @@ package tracker {
         /**
          * Return apId->true for every achievement filtered out by the yaml
          * achievement_required_effort setting (effort exceeds the threshold).
-         * Excludes always_as_filler achievements (they are in getExcludedAchApIds).
+         * Excludes untrackable achievements (they are in getExcludedAchApIds).
          */
         public
         function getEffortExcludedAchApIds(): Object {
@@ -139,7 +140,7 @@ package tracker {
             for (var achName: String in _achievementData) {
                 var achData: Object = _achievementData[achName];
                 if (!achData || !achData.apId) continue;
-                if (achData.always_as_filler === true) continue;
+                if (achData.untrackable === true) continue;
                 var modes: Array = achData.modes as Array;
                 if (modes != null && modes.indexOf("journey") < 0) continue;
                 var achEffort: String = achData.required_effort || "Trivial";
@@ -194,7 +195,7 @@ package tracker {
                     var achData: Object = _achievementData[achName];
                     if (!achData || !achData.apId) continue;
 
-                    if (achData.always_as_filler === true) continue;
+                    if (achData.untrackable === true) continue;
 
                     var modes: Array = achData.modes as Array;
                     if (modes != null && modes.indexOf("journey") < 0) continue;
@@ -262,8 +263,8 @@ package tracker {
 
                 var apId: int = int(achData.apId);
 
-                // Always-filler achievements are design-excluded, never in logic
-                if (achData.always_as_filler === true) continue;
+                // Untrackable achievements are design-excluded, never in logic
+                if (achData.untrackable === true) continue;
 
                 // Journey-only check
                 var modes: Array = achData.modes as Array;

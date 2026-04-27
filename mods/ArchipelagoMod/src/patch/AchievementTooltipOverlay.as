@@ -33,7 +33,7 @@ package patch {
 
         // Data kept in sync by AchievementPanelPatcher
         private var _gameIdToApId:Object       = {}; // game ach.id (int) -> apId (int)
-        private var _excludedApIds:Object      = {}; // apId -> true (always_as_filler)
+        private var _excludedApIds:Object      = {}; // apId -> true (untrackable)
         private var _effortExcludedApIds:Object = {}; // apId -> true (effort > threshold)
         private var _maxEffortLabel:String      = "Trivial";
         private var _reqMetApIds:Object        = {}; // apId -> true

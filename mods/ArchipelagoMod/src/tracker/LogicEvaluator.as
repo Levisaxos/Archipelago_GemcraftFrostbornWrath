@@ -32,6 +32,10 @@ package tracker {
      *   "minMonsterArmor: N"    — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterArmor(N)
      *   "minMonsters: N"        — FieldLogicEvaluator.hasInLogicFieldWithMinMonsters(N)
      *   "minSwarmlingArmor: N"  — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlingArmor(N)
+     *   "minSwarmlings: N"      — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlings(N)
+     *   "beforeWave: N"         — same gate as minWave (a stage with N+ waves exists)
+     *   "shadowCore: N"         — count(1000-1016) + count(1300-1351) >= N
+     *   "wizardLevel: N"        — count(1100-1199) >= ceil(N/2) — half from XP items, half from natural play
      */
     public class LogicEvaluator {
 
@@ -178,11 +182,15 @@ package tracker {
             if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
             if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
+            if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+            if (lower.indexOf("shadowcore")        == 0) return "Requires " + n + "+ Shadow Core stash items";
+            if (lower.indexOf("wizardlevel")       == 0) return "Requires " + ((n + 1) >> 1) + "+ XP items (toward wizard level " + n + ")";
             if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
             if (lower.indexOf("minmonsterarmor")   == 0) return "Requires stage with monster armor " + n + "+";
             if (lower.indexOf("minmonsters")       == 0) return "Requires stage with " + n + "+ monsters";
             if (lower.indexOf("minswarmlingarmor") == 0) return "Requires stage with swarmling armor " + n + "+";
+            if (lower.indexOf("minswarmlings")     == 0) return "Requires stage that spawns " + n + "+ swarmlings";
 
             return "Requires " + req;
         }
@@ -284,8 +292,11 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N"
-            if (lower.indexOf("minwave") == 0) {
+            // "minWave: N" / "beforeWave: N" — same gate (a stage with N+ waves
+            // exists). beforeWave is kept distinct in data because its semantic
+            // is "must happen before wave N", but the gen-time reachability gate
+            // is identical.
+            if (lower.indexOf("minwave") == 0 || lower.indexOf("beforewave") == 0) {
                 var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithMinWaves(wNeed);
@@ -295,6 +306,23 @@ package tracker {
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
+            }
+
+            // "shadowCore: N" — counts AP-distributed Shadow Core stash items.
+            // Specific stashes 1000-1016, extras 1300-1351 (ranges per items.py).
+            if (lower.indexOf("shadowcore") == 0) {
+                var scNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                var scHave:int = AV.sessionData.countItemsInRange(1000, 1016)
+                               + AV.sessionData.countItemsInRange(1300, 1351);
+                return scHave >= scNeed;
+            }
+
+            // "wizardLevel: N" — half from AP-distributed XP items (1100-1199),
+            // half assumed from natural play. Gate at ceil(N/2) items collected.
+            if (lower.indexOf("wizardlevel") == 0) {
+                var wlNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                var itemsNeeded:int = (wlNeed + 1) >> 1; // ceil(N/2)
+                return AV.sessionData.countItemsInRange(1100, 1199) >= itemsNeeded;
             }
 
             // Level monster stat requirements
@@ -313,6 +341,12 @@ package tracker {
             if (lower.indexOf("minswarmlingarmor") == 0) {
                 var sarmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlingArmor(sarmNeed);
+            }
+            // "minSwarmlings: N" — checked AFTER minSwarmlingArmor because the
+            // shorter name is a prefix of the longer one.
+            if (lower.indexOf("minswarmlings") == 0) {
+                var swNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlings(swNeed);
             }
 
             // Unknown requirement — don't block

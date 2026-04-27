@@ -157,10 +157,29 @@ game_level_elements = {
     "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
     "Wizard Tower": {"levels": ["L5"]},
-    # Hidden Codes: not supported by the mod — empty levels marks it as excluded.
-    "Hidden Codes": {"levels": []},
-    # Sealed gem: gem locked in a map socket that can be freed. Fill in levels once confirmed.
-    "Sealed gem": {"levels": []},
+    "Jar of Wasps": {"levels": ["X2"]},
+    # Hidden Codes: not supported by the mod — explicitly marked unsupported so
+    # _can_achievement_be_met (in __init__.py) treats achievements requiring it
+    # as unreachable. Today no achievements reference it.
+    "Hidden Codes": {"levels": [], "unsupported": True},
+    # Sealed gem: gem locked in a map socket that can be freed. Mod doesn't
+    # surface this yet, so achievements using it are kept untrackable until the
+    # mechanic is wired up. Set `unsupported` to keep `_can_achievement_be_met`
+    # consistent with the empty-levels-means-always-reachable rule used elsewhere.
+    "Sealed gem": {"levels": [], "unsupported": True},
+    # Always-available basics. Empty levels → rules.py returns True (no gate),
+    # so the token is recognized but doesn't constrain reachability. These are
+    # universal building/structure types that exist on every relevant stage.
+    "Tower": {"levels": []},
+    "Wall": {"levels": []},
+    "Wizard Stash": {"levels": []},
+    # Monster property variants. Universal for now; once the data team confirms
+    # which stages spawn each variant, populate `levels`.
+    "Possessed Monster": {"levels": []},
+    "Marked Monster": {"levels": []},
+    "Twisted Monster": {"levels": []},
+    # Water: present on a subset of stages — placeholder until the level list is confirmed.
+    "Water": {"levels": []},
 }
 
 # =====================================================================
@@ -178,6 +197,10 @@ non_monster_elements = {
     "Spire": {"requires_trait": "Ritual", "levels": ["E2"]},
     "Wizard Hunter": {"requires_trait": "Ritual", "levels": ["L4"]},
     "Wraith": {"requires_trait": "Ritual", "levels": ["A4", "X4"]},
+    # Apparition is a Ritual-trait spawn. Levels TBD — the trait alone is the
+    # gate for now; rules.py returns has(Ritual Battle Trait) when levels is empty
+    # because the trait check runs first.
+    "Apparition": {"requires_trait": "Ritual", "levels": []},
 }
 
 # =====================================================================
@@ -208,13 +231,6 @@ game_skills_categories = {
             "Vital Link",
         ],
     },
-    "Skills": {
-        "description": "Gem-related abilities (basic gem types)",
-        "members": [
-            "GemSkills",
-            "OtherSkills"
-        ]
-    },    
     "GemSkills": {
         "description": "Gem-related abilities (basic gem types)",
         "members": [

@@ -70,6 +70,16 @@ def _can_achievement_be_met(requirements: list) -> bool:
     """
     Check if an achievement can be met based on its requirements (DNF format).
     Returns True if any AND-group can be met, False only if all groups are blocked.
+
+    Element-handling convention (mirrors rules.py `_eval_req`):
+      - game_level_elements with `levels: []` → always available (e.g. Tower, Wall,
+        Wizard Stash — basic mechanics that exist on every stage). Token is
+        recognized but doesn't gate. To explicitly mark an element as unreachable,
+        set `unsupported: True` on the element entry; then this function returns
+        False so the achievement gets pruned at gen time. (Today no achievements
+        use such elements — Broken Seal previously did, and is now `untrackable`.)
+      - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
+        non-empty. Empty-levels-and-no-trait → unreachable.
     """
     def _group_can_be_met(group: list) -> bool:
         for req in group:
@@ -82,7 +92,9 @@ def _can_achievement_be_met(requirements: list) -> bool:
                 continue
             elem_name = req.replace(" element", "").strip()
             if elem_name in game_level_elements:
-                if not game_level_elements[elem_name].get("levels", []):
+                # Empty levels = always available (basic mechanic). Only flag as
+                # unreachable when the entry explicitly opts out via `unsupported`.
+                if game_level_elements[elem_name].get("unsupported", False):
                     return False
             elif elem_name in non_monster_elements:
                 elem_data = non_monster_elements[elem_name]
@@ -281,33 +293,32 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
         # All four are free stages; the mod unlocks them on connect.
-        # W1 Field Token is intentionally absent; Extra XP Item #1 fills its slot.
+        # No placeholder is added: the 118 token items + skills/traits/talismans/
+        # cores/XP-tomes already match the 366 stage locations (since W1-W4 each
+        # contribute 3 locations but 0 token items, the difference is filled by
+        # the always-on items below).
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue
             pool.append(self.create_item(f"{stage['str_id']} Field Token"))
-        pool.append(self.create_item("Extra XP Item #1"))  # W1 token removed; keep item count balanced
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
             if name.endswith(" Skill"):
                 pool.append(self.create_item(name))
 
-        # Battle traits — Overcrowd is precollected instead if starting_overcrowd is on.
-        # A Tattered Scroll is added to keep item count == location count.
-        # Count total GCFW players in multiworld to add traits per-player
-        gcfw_player_count = sum(1 for world in self.multiworld.worlds.values()
-                                if isinstance(world, GemcraftFrostbornWrathWorld))
-
+        # Battle traits — one copy per player. Each GCFW player needs 15 traits
+        # in their own pool; AP routes ownership and cross-player drops automatically.
+        # When `starting_overcrowd` is on, Overcrowd is precollected (removed from
+        # this player's pool) and an Extra XP Item is added in its place to keep
+        # the item count == location count.
         battle_trait_items = [name for name in item_table if name.endswith(" Battle Trait")]
         for name in battle_trait_items:
             if name == "Overcrowd Battle Trait" and self.options.starting_overcrowd:
                 self.multiworld.push_precollected(self.create_item(name))
-                pool.append(self.create_item("Tattered Scroll"))
+                pool.append(self.create_item("Extra XP Item #1"))
             else:
-                # Add one copy per GCFW player so multiworld trades work correctly
-                for _ in range(gcfw_player_count):
-                    pool.append(self.create_item(name))
+                pool.append(self.create_item(name))
 
         # Location-specific talisman fragments (53) and shadow core stashes (17)
         for name in item_table:

@@ -49,7 +49,7 @@ package patch {
         // Data sets — populated by update*() calls from ArchipelagoMod
         private var _reqMetApIds:Object         = {}; // apId -> true: req currently met (for dots)
         private var _inLogicApIds:Object        = {}; // apId -> true: req met AND still missing (for grouping/counts)
-        private var _excludedApIds:Object       = {}; // apId -> true: always_as_filler
+        private var _excludedApIds:Object       = {}; // apId -> true: untrackable
         private var _effortExcludedApIds:Object = {}; // apId -> true: effort > threshold
         private var _maxEffortLabel:String      = "Trivial";
 
