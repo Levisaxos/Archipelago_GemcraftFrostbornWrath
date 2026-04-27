@@ -15,6 +15,9 @@ package data {
         [Embed(source="json/achievement_logic.json", mimeType="application/octet-stream")]
         private static var AchievementLogicBytes:Class;
 
+        [Embed(source="json/level_stats.json", mimeType="application/octet-stream")]
+        private static var LevelStatsBytes:Class;
+
         /**
          * Get the itemdata.json content as a string.
          */
@@ -38,6 +41,16 @@ package data {
          */
         public static function getAchievementLogicJSON():String {
             var bytes:* = new AchievementLogicBytes();
+            return bytes.readUTFBytes(bytes.length);
+        }
+
+        /**
+         * Get the level_stats.json content as a string.
+         * Per-stage monster stat caps (HP, armor, swarmling count, wave count) used to
+         * determine whether threshold-style achievements are reachable in a given field.
+         */
+        public static function getLevelStatsJSON():String {
+            var bytes:* = new LevelStatsBytes();
             return bytes.readUTFBytes(bytes.length);
         }
     }

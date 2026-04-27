@@ -24,6 +24,7 @@ package {
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
+    import ui.AvailableAchievementsPanel;
 
     import ui.MainMenuUI;
 
@@ -106,6 +107,18 @@ package {
         private var _messageLogPanel:MessageLogPanel;
         private var _messageLogOnStage:Boolean = false;
 
+        private var _availableAchievementsPanel:AvailableAchievementsPanel;
+        private var _availableAchievementsOnStage:Boolean = false;
+        // Anchor relative to the stage's right edge (stable — gameRoot.width
+        // fluctuates whenever sub-MovieClips like the options menu animate open).
+        // ACH_PANEL_RIGHT_INSET is in canvas (game) pixels and represents the gap
+        // between the right edge of the play area and the right edge of the stage,
+        // i.e. the width of the in-game UI sidebar (pause/play/wavestone/score)
+        // plus a small margin. Tune this if the panel overlaps the sidebar at
+        // the player's resolution.
+        private static const ACH_PANEL_RIGHT_INSET:Number = 190;
+        private static const ACH_PANEL_TOP_INSET:Number   = 8;
+
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
@@ -187,6 +200,8 @@ package {
                 _receivedToast = new ReceivedToast();
                 _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
+                _availableAchievementsPanel = new AvailableAchievementsPanel(_logger, MOD_NAME);
+                _availableAchievementsPanel.onExpandRequested = refreshAvailableAchievementsPanel;
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
                 _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
@@ -404,6 +419,11 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
+            if (!_availableAchievementsOnStage && _availableAchievementsPanel != null && this.stage != null) {
+                this.stage.addChild(_availableAchievementsPanel);
+                _availableAchievementsOnStage = true;
+                _availableAchievementsPanel.visible = false;
+            }
             if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
                 this.stage.addChild(_disconnectPanel);
                 _disconnectPanelOnStage = true;
@@ -414,6 +434,10 @@ package {
             if (_receivedToastOnStage && _receivedToast != null && _receivedToast.alpha > 0) {
                 positionReceivedToast();
             }
+
+            // Available-achievements panel: show only in-battle, anchor top-right
+            // of play area, keep on top.
+            updateAvailableAchievementsPanel();
 
             // Main menu overlay — show/tick/hide driven by screen state.
             var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
@@ -527,6 +551,12 @@ package {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
                     _wavePrePatcher.resetForNewStage();
+                }
+
+                // Recompute the available-achievements list when entering battle so
+                // the panel reflects the player's current loadout for the new field.
+                if (screen == ScreenId.INGAME) {
+                    refreshAvailableAchievementsPanel();
                 }
                 // Reset first-play gem patch when leaving ingame so it re-runs on
                 // the next ingame entry for the same stage (after initializer resets
@@ -704,6 +734,61 @@ package {
             // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
             _receivedToast.x = this.stage.stageWidth * 0.5 - _receivedToast.panelWidth * 0.5;
             _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
+        }
+
+        /**
+         * Per-frame upkeep for the in-battle available-achievements HUD:
+         *   - visible only on the INGAME screen
+         *   - anchored to the top-right of the visible game canvas (gameRoot's right
+         *     edge), so it stays at the right of the playfield at any resolution /
+         *     letterbox setting
+         *   - re-raised to the top of the display list so it sits above the game canvas
+         *
+         * The panel sprite is also scaled to match gameRoot, so insets and panel
+         * dimensions are interpreted in canvas (game-pixel) coordinates.
+         */
+        private function updateAvailableAchievementsPanel():void {
+            if (_availableAchievementsPanel == null || this.stage == null) return;
+            var inBattle:Boolean = (int(GV.main.currentScreen) == ScreenId.INGAME);
+            _availableAchievementsPanel.visible = inBattle;
+            if (!inBattle) return;
+
+            var gameRoot:* = this.stage.getChildAt(0);
+            var scaleX:Number = gameRoot.scaleX;
+            var scaleY:Number = gameRoot.scaleY;
+
+            var panelGameW:Number = _availableAchievementsPanel.isExpanded
+                ? _availableAchievementsPanel.panelWidth
+                : 32;
+            // Anchor to the stage's right edge (stable across menu animations),
+            // then walk leftward by the sidebar inset + panel width, all in canvas
+            // pixels scaled to stage. Right edge of the panel always sits at the
+            // same place; expanded panel grows leftward and downward from there.
+            _availableAchievementsPanel.x = this.stage.stageWidth - (ACH_PANEL_RIGHT_INSET + panelGameW) * scaleX;
+            _availableAchievementsPanel.y = gameRoot.y + ACH_PANEL_TOP_INSET * scaleY;
+            _availableAchievementsPanel.scaleX = scaleX;
+            _availableAchievementsPanel.scaleY = scaleY;
+
+            if (_availableAchievementsPanel.parent == this.stage) {
+                this.stage.setChildIndex(_availableAchievementsPanel, this.stage.numChildren - 1);
+            }
+        }
+
+        /** Recompute the available-achievements list for the current field. */
+        private function refreshAvailableAchievementsPanel():void {
+            if (_availableAchievementsPanel == null || _achievementLogicEvaluator == null) return;
+            var strId:String = null;
+            try {
+                if (GV.ingameCore != null && GV.ingameCore.stageMeta != null) {
+                    strId = String(GV.ingameCore.stageMeta.strId);
+                }
+            } catch (e:Error) {}
+            if (strId == null || strId.length == 0) {
+                _availableAchievementsPanel.setAchievements([]);
+                return;
+            }
+            var entries:Array = _achievementLogicEvaluator.getAvailableInCurrentLevel(strId);
+            _availableAchievementsPanel.setAchievements(entries);
         }
 
         private function onStageResize(e:Event):void {

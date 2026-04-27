@@ -19,6 +19,7 @@ package data {
         public var shadowCoreStashes:Array;      // shadow core stash definitions
         public var extraShadowCoreStashes:Array; // extra shadow core stashes
         public var skillCategories:Object;       // skill name → category (populated from slot_data)
+        public var levelStats:Object;            // strId → { WaveCount, ReaverMaxHP, ReaverMaxArmor, SwarmlingCount, SwarmlingMaxHP, SwarmlingMaxArmor, GiantMaxHP, GiantMaxArmor }
 
         // ID Mappings
         public var stageLocIds:Object;           // stage str_id → base Journey location AP ID
@@ -43,6 +44,7 @@ package data {
             shadowCoreStashes = [];
             extraShadowCoreStashes = [];
             skillCategories = {};
+            levelStats = {};
             stageLocIds = {};
             apIdRanges = {
                 skills: [700, 723],
@@ -148,6 +150,33 @@ package data {
             if (_logger)
             {
                 _logger.log("GameData", "Populated from game — " + skills.length + " skills, " + battleTraits.length + " traits, " + mapTiles.length + " map tiles");
+            }
+
+            loadLevelStatsFromJSON();
+        }
+
+        /**
+         * Load per-stage monster stat caps from the embedded level_stats.json.
+         * Used by LogicEvaluator.evaluateInLevel to decide if threshold-style
+         * achievements (minMonsterHP, minSwarmlings, ...) are reachable in a field.
+         */
+        public function loadLevelStatsFromJSON():void
+        {
+            try
+            {
+                var raw:String = EmbeddedData.getLevelStatsJSON();
+                levelStats = JSON.parse(raw);
+                if (_logger)
+                {
+                    var n:int = 0;
+                    for (var k:String in levelStats) n++;
+                    _logger.log("GameData", "Loaded level_stats.json — " + n + " stages");
+                }
+            }
+            catch (e:Error)
+            {
+                levelStats = {};
+                if (_logger) _logger.log("GameData", "Failed to load level_stats.json: " + e.message);
             }
         }
 

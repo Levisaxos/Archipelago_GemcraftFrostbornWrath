@@ -1920,8 +1920,7 @@
       "game_id": 364,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Find a talisman fragment.",
-      "untrackable": true
+      "description": "Find a talisman fragment."
     },
     "Flip Flop": {
       "apId": 2184,
@@ -1994,8 +1993,7 @@
       "game_id": 365,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Find 2 talisman fragments.",
-      "untrackable": true
+      "description": "Find 2 talisman fragments."
     },
     "Frag Rain": {
       "apId": 2192,
@@ -2357,8 +2355,7 @@
       "game_id": 366,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Find 3 talisman fragments.",
-      "untrackable": true
+      "description": "Find 3 talisman fragments."
     },
     "Groundfill": {
       "apId": 2227,

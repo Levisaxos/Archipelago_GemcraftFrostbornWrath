@@ -235,6 +235,69 @@ package tracker {
             return [];
         }
 
+        /**
+         * Return achievements still missing AND realistically earnable on the
+         * current battle in `currentStrId`, given the player's current loadout
+         * (trait levels > 0, skill levels > 0) and the field's design data
+         * (elements, monster HP/armor caps, swarmling counts, wave count).
+         *
+         * Returns Array of { apId:int, gameId:int, name:String, description:String }
+         * sorted alphabetically by name. Skips earned, untrackable, effort-excluded,
+         * non-journey achievements. Used by AvailableAchievementsPanel.
+         */
+        public
+        function getAvailableInCurrentLevel(currentStrId: String): Array {
+            var out: Array = [];
+            if (_logicEvaluator == null || _achievementData == null) return out;
+            if (currentStrId == null || currentStrId.length == 0) return out;
+
+            // missingLocations is populated by AP on connect/sync. Without it we
+            // can't tell what's still missing, so the panel stays empty.
+            var missing: Object = AV.saveData != null ? AV.saveData.missingLocations : null;
+            if (missing == null) return out;
+            var requiredEffort: int = (AV.serverData != null && AV.serverData.serverOptions != null) ?
+                AV.serverData.serverOptions.achievementRequiredEffort : 0;
+            var effortHierarchy: Array = ["Trivial", "Minor", "Major", "Extreme"];
+            var maxEffortStr: String = (requiredEffort > 0 && requiredEffort <= 4) ?
+                effortHierarchy[requiredEffort - 1] :
+                "Trivial";
+
+            try {
+                for (var achName: String in _achievementData) {
+                    var achData: Object = _achievementData[achName];
+                    if (!achData || !achData.apId) continue;
+
+                    var apId: int = int(achData.apId);
+                    if (achData.untrackable === true) continue;
+
+                    var modes: Array = achData.modes as Array;
+                    if (modes != null && modes.indexOf("journey") < 0) continue;
+
+                    var achEffort: String = achData.required_effort || "Trivial";
+                    if (effortHierarchy.indexOf(achEffort) > effortHierarchy.indexOf(maxEffortStr)) continue;
+
+                    if (missing != null && missing[apId] != true) continue;
+
+                    var reqs: Array = achData.requirements as Array;
+                    var passes: Boolean = (reqs == null || reqs.length == 0)
+                        || _logicEvaluator.evaluateInLevelRequirements(reqs, currentStrId);
+                    if (!passes) continue;
+
+                    out.push({
+                        apId:        apId,
+                        gameId:      achData.game_id != null ? int(achData.game_id) : -1,
+                        name:        achName,
+                        description: achData.description || ""
+                    });
+                }
+            } catch (e: Error) {
+                _logger.log(_modName, "getAvailableInCurrentLevel error: " + e.message);
+            }
+
+            out.sortOn("name", Array.CASEINSENSITIVE);
+            return out;
+        }
+
         // -----------------------------------------------------------------------
         // Private
 
