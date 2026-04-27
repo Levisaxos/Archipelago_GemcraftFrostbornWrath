@@ -2985,7 +2985,7 @@ achievement_requirements = {
         "game_id": 583,
         "description": "Demolish 20 or more walls with falling spires.",
         "details": "Demolish 20+ walls using falling spires (the spire crash kills the wall).",
-        "requirements": ["Ritual trait", "Spire element", "Wall element", "Demolition skill"],
+        "requirements": ["Ritual trait", "Spire element", "Wall element"],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
     },

@@ -226,17 +226,18 @@ package tracker {
                 var eEnd:int     = lower.indexOf(" element");
                 var elemName:String = _trim(req.substring(0, eEnd));                
                 if (_elementStages != null) {
-                    var stages:Array = _elementStages[elemName] as Array;                    
-                    if (stages != null) {
-                        for each (var stId:String in stages) {                               
-                            if (AV.sessionData.fieldsInLogic[stId] == true){                                
+                    var stages:Array = _elementStages[elemName] as Array;
+                    // Empty list = always available (e.g. Tower, Wall — never shuffled).
+                    if (stages != null && stages.length > 0) {
+                        for each (var stId:String in stages) {
+                            if (AV.sessionData.fieldsInLogic[stId] == true){
                                  return true;
                             }
                         }
                         return false;
                     }
                 }
-                return true; // no mapping = don't block
+                return true; // no mapping or empty mapping = don't block
             }
 
             // "X trait" — includes "Any Battle trait"

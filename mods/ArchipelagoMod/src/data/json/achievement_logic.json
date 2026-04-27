@@ -49,7 +49,8 @@
       "description": "Kill 85 poisoned monsters while it's raining.",
       "details": "Kill 85 poisoned monsters during rain weather.",
       "requirements": [
-        "Poison skill"
+        "Poison skill",
+        "Rain element"
       ]
     },
     "Added Protection": {
@@ -2068,7 +2069,8 @@
       "requirements": [
         "Freeze skill",
         "Ritual trait",
-        "Specter element"
+        "Specter element",
+        "Snow element"
       ]
     },
     "Frozen Crowd": {
@@ -2090,7 +2092,10 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Kill 220 monsters while it's snowing.",
-      "details": "Kill 220 monsters during snow weather."
+      "details": "Kill 220 monsters during snow weather.",
+      "requirements": [
+        "Snow element"
+      ]
     },
     "Frozen Over": {
       "apId": 2201,
@@ -3157,8 +3162,7 @@
       "requirements": [
         "Ritual trait",
         "Spire element",
-        "Wall element",
-        "Demolition skill"
+        "Wall element"
       ]
     },
     "Laser Slicer": {
@@ -4599,7 +4603,10 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Drop 18 gem bombs while it's raining.",
-      "details": "Throw 18 gem bombs during rain weather."
+      "details": "Throw 18 gem bombs during rain weather.",
+      "requirements": [
+        "Rain element"
+      ]
     },
     "Razor Path": {
       "apId": 2437,
@@ -5249,7 +5256,8 @@
       "description": "Kill 95 frozen monsters while it's snowing.",
       "details": "Kill 95 frozen monsters during snow weather.",
       "requirements": [
-        "Freeze skill"
+        "Freeze skill",
+        "Snow element"
       ]
     },
     "Snowball": {
@@ -5258,7 +5266,10 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Drop 27 gem bombs while it's snowing.",
-      "details": "Throw 27 gem bombs during snow weather."
+      "details": "Throw 27 gem bombs during snow weather.",
+      "requirements": [
+        "Snow element"
+      ]
     },
     "Snowdust Blindness": {
       "apId": 2498,
@@ -5372,11 +5383,8 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Full of oxygen",
-      "details": "Reference: 'Full of oxygen' (Pokemon). Win while raining for the entire battle.",
-      "untrackable": true,
-      "requirements": [
-        "Water element"
-      ]
+      "details": "Pokemon Magikarp reference. In-game trigger (IngameAchiChecker6.as case 615): fill all 9 inventory slots with pure Slowing gems. Inventory state isn't reliably gateable by AP logic, so kept untrackable.",
+      "untrackable": true
     },
     "Starter Pack": {
       "apId": 2509,
@@ -6330,7 +6338,10 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Kill 110 monsters while it's raining.",
-      "details": "Kill 110 monsters during rain weather."
+      "details": "Kill 110 monsters during rain weather.",
+      "requirements": [
+        "Rain element"
+      ]
     },
     "Wasp Defense": {
       "apId": 2599,
@@ -6424,7 +6435,8 @@
       "description": "Activate a shrine while raining.",
       "details": "Activate a shrine during rain weather.",
       "requirements": [
-        "Shrine element"
+        "Shrine element",
+        "Rain element"
       ]
     },
     "Weather of Wasps": {
@@ -6894,6 +6906,7 @@
       "L5"
     ],
     "Jar of Wasps": [
+      "X1",
       "X2"
     ],
     "Hidden Codes": [],
@@ -6901,10 +6914,68 @@
     "Tower": [],
     "Wall": [],
     "Wizard Stash": [],
-    "Possessed Monster": [],
+    "Rain": [
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "I4",
+      "J1",
+      "J2",
+      "J3",
+      "J4",
+      "L1",
+      "L2",
+      "L3",
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "N1",
+      "N2",
+      "N3",
+      "N4",
+      "N5",
+      "O1",
+      "O2",
+      "O3",
+      "O4",
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "Q4",
+      "R3",
+      "R6"
+    ],
+    "Snow": [
+      "Q4",
+      "T1",
+      "T2",
+      "T3",
+      "T4",
+      "T5",
+      "U1",
+      "U2",
+      "U3",
+      "U4",
+      "X1",
+      "X2",
+      "X3",
+      "X4",
+      "Y1",
+      "Y2",
+      "Y3",
+      "Y4",
+      "Z1",
+      "Z2",
+      "Z3"
+    ],
     "Marked Monster": [],
     "Twisted Monster": [],
-    "Water": [],
+    "Possessed Monster": [],
     "Shadow": [
       "A4",
       "C5",
@@ -6924,6 +6995,10 @@
     "Wraith": [
       "A4",
       "X4"
+    ],
+    "Apparition": [
+      "Q1",
+      "R6"
     ]
   },
   "stage_properties": {},
