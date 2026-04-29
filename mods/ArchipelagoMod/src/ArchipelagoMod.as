@@ -469,6 +469,10 @@ package {
             // a padlock above each one until the unlock item arrives.
             WizStashes.tickEnforceStashLock(_logger, MOD_NAME);
 
+            // Append "Locked — requires Wizard Stash {strId} Key" to the
+            // hover tooltip when the player is hovering a locked stash.
+            WizStashes.tickStashLockTooltip(_logger, MOD_NAME);
+
             // Suppress all dropicons mid-battle. When drops are cleared, start a
             // short countdown so late-arriving async PrintJSON packets are included.
             if (_progressionBlocker != null && _progressionBlocker.tickDropIcons()) {
@@ -1398,7 +1402,7 @@ package {
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {
-                    // Wizard Stash unlock — gates the per-level stash AP check.
+                    // Wizard Stash key — gates the per-level stash AP check.
                     var stashLocId:int = apId - 1400 + 1;
                     var stashStrId:String = null;
                     var stageLocIdMap:Object = ConnectionManager.stageLocIds;
@@ -1410,10 +1414,10 @@ package {
                     }
                     if (stashStrId != null) {
                         AV.sessionData.markStashUnlocked(stashStrId);
-                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Unlock", 0x55AAFF);
-                        _logger.log(MOD_NAME, "  → Wizard stash unlock for " + stashStrId);
+                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", 0x55AAFF);
+                        _logger.log(MOD_NAME, "  → Wizard stash key for " + stashStrId);
                     } else {
-                        _logger.log(MOD_NAME, "  grantItem: stash unlock apId=" + apId + " — no matching stage");
+                        _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
                     }
                     return;
                 }

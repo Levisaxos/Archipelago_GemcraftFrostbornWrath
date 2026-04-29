@@ -1,6 +1,7 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.entity.WizardStash;
     import data.AV;
     import flash.display.Bitmap;
@@ -19,9 +20,11 @@ package patch {
      * Call apply() once from ArchipelagoMod.bind(), after GV.stageCollection is ready.
      *
      * Per-frame in-level enforcement:
-     *   - tickClearOpened()      — clean up matrix cells of opened stashes
-     *   - tickEnforceStashLock() — shield-spike locked stashes (AP-side per-stage
-     *                              gating) and overlay a padlock bitmap above each
+     *   - tickClearOpened()         — clean up matrix cells of opened stashes
+     *   - tickEnforceStashLock()    — shield-spike locked stashes (AP-side per-stage
+     *                                 gating) and overlay a padlock bitmap above each
+     *   - tickStashLockTooltip()    — append a "Locked - requires key" line to the
+     *                                 hover tooltip when the player hovers a locked stash
      */
     public class WizStashes {
 
@@ -195,6 +198,15 @@ package patch {
                     return;
                 }
 
+                // Hide the padlock overlay during the ending screen and any
+                // non-PLAYING state. Vanilla switches ingameStatus to
+                // GAMEOVER_PANEL_* once the battle ends; the player no longer
+                // needs the lock indicator at that point.
+                if (int(core.ingameStatus) != IngameStatus.PLAYING) {
+                    _disposeLockOverlay();
+                    return;
+                }
+
                 var strId:String = String(core.stageMeta.strId);
                 var stageId:int  = int(core.stageMeta.id);
                 var unlocked:Boolean = AV.sessionData != null && AV.sessionData.isStashUnlocked(strId);
@@ -346,6 +358,100 @@ package patch {
             }
             _hiddenStashes.length = 0;
             _hiddenStashesStageId = -1;
+        }
+
+        /**
+         * Per-frame: append "Locked — requires Wizard Stash {strId} Key" to the
+         * in-level hover tooltip when the player is hovering a locked stash.
+         *
+         * Pattern matches FieldTooltipOverlay: detect a freshly-rendered panel
+         * (vIp.isImageRendered), append textfields, dispose the bitmap, and let
+         * vanilla's doEnterFrame re-render. A marker text guards against
+         * appending twice for the same hovered cell.
+         */
+        public static function tickStashLockTooltip(logger:Logger, modName:String):void {
+            try {
+                var core:* = GV.ingameCore;
+                if (core == null || core.stageMeta == null)
+                    return;
+
+                var strId:String = String(core.stageMeta.strId);
+                if (AV.sessionData == null)
+                    return;
+                if (AV.sessionData.isStashUnlocked(strId))
+                    return;
+
+                var vIp:* = GV.mcInfoPanel;
+                if (vIp == null || vIp.parent == null || !vIp.isImageRendered)
+                    return;
+
+                // Identify the hovered cell — same math vanilla uses in
+                // IngameInfoPanelRenderer (mouseX-50, mouseY-8, /28).
+                var rt:* = (core.cnt != null) ? core.cnt.root : null;
+                if (rt == null)
+                    return;
+                var vX:int = Math.floor((rt.mouseX - 50) / 28);
+                var vY:int = Math.floor((rt.mouseY - 8) / 28);
+
+                var areaM:* = core.buildingAreaMatrix;
+                if (areaM == null)
+                    return;
+                if (vY < 0 || vY >= areaM.length)
+                    return;
+                var row:* = areaM[vY];
+                if (row == null || vX < 0 || vX >= row.length)
+                    return;
+
+                var cell:* = row[vX];
+                if (!(cell is WizardStash))
+                    return;
+                var w:WizardStash = cell as WizardStash;
+                if (w.isDestroyed || w.startedAsOpen)
+                    return;
+
+                var keyName:String = "Wizard Stash " + strId + " Key";
+                var marker:String  = "Requires " + keyName;
+
+                var tfs:Array = vIp.textfields as Array;
+                if (tfs == null)
+                    return;
+
+                // Idempotency: if we already appended on this render, skip.
+                for (var i:int = 0; i < tfs.length; i++) {
+                    var tf:* = tfs[i];
+                    if (tf == null)
+                        continue;
+                    var txt:String = null;
+                    try {
+                        txt = String(tf.text);
+                    } catch (eText:Error) {
+                        continue;
+                    }
+                    if (txt == marker)
+                        return;
+                }
+
+                // Append our two-line block and force a re-render.
+                try {
+                    vIp.addExtraHeight(5);
+                    vIp.addSeparator(-2);
+                    vIp.addTextfield(0xFF6666, "Locked", true, 12);
+                    vIp.addTextfield(0xCCCCCC, marker, false, 11);
+                } catch (eAdd:Error) {
+                    logger.log(modName, "WizStashes.tickStashLockTooltip addTextfield error: " + eAdd.message);
+                    return;
+                }
+
+                try {
+                    var oldBmp:Bitmap = vIp.bmp as Bitmap;
+                    if (oldBmp != null && oldBmp.bitmapData != null)
+                        oldBmp.bitmapData.dispose();
+                    vIp.bmp = null;
+                    vIp.isImageRendered = false;
+                } catch (eRender:Error) {}
+            } catch (err:Error) {
+                logger.log(modName, "WizStashes.tickStashLockTooltip ERROR: " + err.message);
+            }
         }
 
         /**

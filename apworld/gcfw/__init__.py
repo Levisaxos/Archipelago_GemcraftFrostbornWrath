@@ -427,10 +427,10 @@ class GemcraftFrostbornWrathWorld(World):
                         ach_data = all_achievements[ach_name]
                         ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
-        # Per-stage Wizard Stash unlock items (122 items, IDs 1400–1521).
+        # Per-stage Wizard Stash key items (122 items, IDs 1400–1521).
         # Progression: each gates its matching stash location in rules.py.
         for stage in stages:
-            pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Unlock"))
+            pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
 
         # SP bundle filler — fills all remaining unfilled location slots.
         # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see

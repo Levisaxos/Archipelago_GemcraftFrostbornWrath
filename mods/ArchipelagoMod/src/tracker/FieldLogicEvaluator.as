@@ -109,22 +109,31 @@ package tracker {
         /**
          * True if the stage is reachable AND at least one of the provided missing
          * locations is reachable.  Used by StageTinter (per-frame) and ModButtons.
+         *
+         * Per-check reachability:
+         *   - Journey: stage tier + WIZLOCK skill gate (+ all 24 skills on A4)
+         *   - Stash:   stage tier + WIZLOCK skill gate + Wizard Stash key item
          */
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || stashMissing)) return false;
-            if (_stageTier == null) return true;
-            if (!canCompleteStage(strId)) return false;
-
-            // A4-only: Journey additionally needs all 24 skills; stash does
-            // not (matches apworld, which has no all-skills rule on stash).
-            if (journeyMissing
-                    && ALL_SKILLS_STAGES[strId] == true
-                    && AV.sessionData.totalSkillsCollected < 24) {
+            if (!(journeyMissing || stashMissing))
                 return false;
+            if (_stageTier == null)
+                return true;
+            if (!canCompleteStage(strId))
+                return false;
+
+            if (journeyMissing) {
+                // A4-only: Journey additionally needs all 24 skills.
+                var journeyOk:Boolean = !(ALL_SKILLS_STAGES[strId] == true
+                        && AV.sessionData.totalSkillsCollected < 24);
+                if (journeyOk)
+                    return true;
             }
-            return true;
+            if (stashMissing && AV.sessionData.isStashUnlocked(strId))
+                return true;
+            return false;
         }
 
         /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
@@ -420,10 +429,21 @@ package tracker {
                 }
             }
 
-            // Mark each stage by tier.
+            // Mark each stage by tier AND token possession. The apworld access
+            // rule for any non-free stage is "own field token AND prev-tier
+            // tokens", so a stage isn't truly in logic just because its tier
+            // is reachable — the player also needs that stage's own token.
+            // (Free stages bypass token; they're added unconditionally below.)
+            var tokens:Object = AV.sessionData.tokensByStrId;
             for (var strId:String in _stageTier) {
                 var tier:int = int(_stageTier[strId]);
-                _inLogicByStrId[strId] = _freeStages[strId] == true || tier <= _reachableTier;
+                if (_freeStages[strId] == true) {
+                    _inLogicByStrId[strId] = true;
+                } else {
+                    _inLogicByStrId[strId] = tier <= _reachableTier
+                            && tokens != null
+                            && tokens[strId] == true;
+                }
             }
             // Free stages (W1-W4) are not in _stageTier but are always reachable.
             for (var freeSid:String in _freeStages) {

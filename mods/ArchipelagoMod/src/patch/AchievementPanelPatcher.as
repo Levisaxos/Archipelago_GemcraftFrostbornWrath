@@ -335,6 +335,10 @@ package patch {
          */
         public function updateLogicFlags(inLogicApIds:Object):void {
             _inLogicApIds = inLogicApIds || {};
+            // Push the same set to the per-achievement tooltip so its
+            // "In logic" / "Out of logic" line agrees with the dots and the
+            // panel's group counts.
+            if (_tooltipOverlay != null) _tooltipOverlay.inLogicApIds = _inLogicApIds;
             if (!_patched || _ourFilterIndex < 0) return;
             if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
             try {
@@ -373,7 +377,6 @@ package patch {
         public function updateDots(reqMetApIds:Object):void {
             _reqMetApIds = reqMetApIds || {};
             _dotsDirty   = true;
-            if (_tooltipOverlay != null) _tooltipOverlay.reqMetApIds = _reqMetApIds;
             _applySortedOrder();
             _applyGroupFilter();
             _updateGroupCounts();
@@ -491,7 +494,12 @@ package patch {
 
                 var apIdInt:int      = int(apId);
                 var excluded:Boolean = (_excludedApIds[apIdInt] === true || _effortExcludedApIds[apIdInt] === true);
-                var inLogic:Boolean  = (!excluded && _reqMetApIds[apIdInt] === true);
+                // Match the button label and the panel's "In Logic" group count:
+                // an achievement is "in logic" iff it is uncollected on AP AND its
+                // requirements are currently met. _reqMetApIds (requirements only,
+                // ignores AP-collected status) caused green dots to appear on
+                // achievements the AP server already considered checked.
+                var inLogic:Boolean  = (!excluded && _inLogicApIds[apIdInt] === true);
                 var isEarned:Boolean = (int(ach.status) >= 2);
 
                 if (isEarned) {

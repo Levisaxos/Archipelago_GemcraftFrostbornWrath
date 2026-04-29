@@ -109,14 +109,17 @@ package tracker {
                     if (missingCount == 0) {
                         // All checks done — let game render its completed lights.
                         desired = STATE_NONE;
-                    } else if (missingCount < 2) {
-                        // Partial progress — yellow.
-                        desired = STATE_YELLOW;
-                    } else if (_evaluator.stageHasInLogicMissing(
+                    } else if (!_evaluator.stageHasInLogicMissing(
                                    strId, journeyMissing, stashMissing)) {
-                        desired = STATE_GREEN;
-                    } else {
+                        // No remaining check is reachable — stuck. Includes the
+                        // case "journey done, stash missing, no key collected".
                         desired = STATE_RED;
+                    } else if (missingCount < 2) {
+                        // Some progress, remaining checks reachable.
+                        desired = STATE_YELLOW;
+                    } else {
+                        // Nothing done yet, but at least one check reachable.
+                        desired = STATE_GREEN;
                     }
 
                     paint(tok, desired);

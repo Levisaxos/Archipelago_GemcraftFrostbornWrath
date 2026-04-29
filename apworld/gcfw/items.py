@@ -86,13 +86,13 @@ def _load_item_table() -> Dict[str, ItemData]:
     for sc in data["extra_shadow_core_stashes"]:
         table[sc["name"]] = ItemData(sc["item_ap_id"], ItemClassification.filler)
 
-    # Per-stage Wizard Stash unlock items (IDs 1400–1521). Progression: each
+    # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
     # gates its matching "Complete {strId} - Wizard stash" location. All 122
-    # stages including W1-W4 get an unlock — there's no off mode.
+    # stages including W1-W4 get a key — there's no off mode.
     for stage in data["stages"]:
-        unlock_id = 1400 + stage["loc_ap_id"] - 1
-        table[f"Wizard Stash {stage['str_id']} Unlock"] = ItemData(
-            unlock_id, ItemClassification.progression)
+        key_id = 1400 + stage["loc_ap_id"] - 1
+        table[f"Wizard Stash {stage['str_id']} Key"] = ItemData(
+            key_id, ItemClassification.progression)
 
     return table
 

@@ -347,16 +347,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
 
-    # --- Wizard stash gating: each stash also requires its unlock item ---
+    # --- Wizard stash gating: each stash also requires its key item ---
     # The WIZLOCK rule above attaches to the stash too, but for stages without
-    # WIZLOCK we still need the unlock-item gate. add_rule() ANDs conditions
+    # WIZLOCK we still need the key-item gate. add_rule() ANDs conditions
     # so we can layer this on cleanly.
     from worlds.generic.Rules import add_rule
     for stage in stages:
         loc_name = f"Complete {stage['str_id']} - Wizard stash"
-        unlock_name = f"Wizard Stash {stage['str_id']} Unlock"
+        key_name = f"Wizard Stash {stage['str_id']} Key"
         location = multiworld.get_location(loc_name, player)
-        add_rule(location, lambda state, n=unlock_name: state.has(n, player))
+        add_rule(location, lambda state, n=key_name: state.has(n, player))
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
