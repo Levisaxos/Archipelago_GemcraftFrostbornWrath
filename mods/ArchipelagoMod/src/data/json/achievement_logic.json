@@ -215,6 +215,7 @@
       "reward": "skillPoints:1",
       "description": "Spend 18.000 mana on amplifiers.",
       "details": "Spend 18,000 mana on amplifiers in one battle.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -226,6 +227,7 @@
       "reward": "skillPoints:1",
       "description": "Build 45 amplifiers.",
       "details": "Build 45 amplifiers in one battle.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -245,6 +247,7 @@
       "reward": "skillPoints:1",
       "description": "Kill 460 banished monsters with shrines.",
       "details": "Kill 460 banished monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -335,6 +338,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:2",
       "description": "Deliver 1.200 banishments with your orb.",
+      "untrackable": true,
       "requirements": [
         "minMonsters:1200"
       ]
@@ -406,6 +410,7 @@
       "reward": "skillPoints:1",
       "description": "Kill 790 banished monsters.",
       "details": "Kill 790 banished monsters.",
+      "untrackable": true,
       "requirements": [
         "minMonsters:790"
       ]
@@ -513,6 +518,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Reach 1.000 shrine kills through all the battles.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -591,7 +597,8 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Gain 1.200 xp with kill chains.",
-      "details": "Gain 1,200 xp from kill chains in one battle."
+      "details": "Gain 1,200 xp from kill chains in one battle.",
+      "untrackable": true
     },
     "Bloodrush": {
       "apId": 2056,
@@ -638,6 +645,7 @@
       "reward": "skillPoints:2",
       "description": "Reach a kill chain of 2400.",
       "details": "Reach a kill chain of 2,400 in one battle.",
+      "untrackable": true,
       "requirements": [
         "minMonsters:2400"
       ]
@@ -815,6 +823,7 @@
       "reward": "skillPoints:1",
       "description": "Reach a kill chain of 900.",
       "details": "Reach a kill chain of 900 in one battle.",
+      "untrackable": true,
       "requirements": [
         "minMonsters:900"
       ]
@@ -848,6 +857,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Reach a kill chain of 600.",
+      "untrackable": true,
       "requirements": [
         "minMonsters:600"
       ]
@@ -898,7 +908,8 @@
       "game_id": 272,
       "required_effort": "Major",
       "reward": "skillPoints:1",
-      "description": "Gain 3.200 xp with kill chains."
+      "description": "Gain 3.200 xp with kill chains.",
+      "untrackable": true
     },
     "Charge Fire Repeat": {
       "apId": 2087,
@@ -993,6 +1004,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Reach -12% decreased banishment cost with your orb.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -1012,7 +1024,8 @@
       "game_id": 549,
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
-      "description": "Kill 190 banished monsters."
+      "description": "Kill 190 banished monsters.",
+      "untrackable": true
     },
     "Come Out": {
       "apId": 2098,
@@ -1265,6 +1278,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Reach -16% decreased banishment cost with your orb.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -1312,7 +1326,8 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Spend 90.000 mana on banishment.",
-      "details": "Spend a cumulative total of 90,000 mana on banishments."
+      "details": "Spend a cumulative total of 90,000 mana on banishments.",
+      "untrackable": true
     },
     "Don't Look at the Light": {
       "apId": 2128,
@@ -1321,6 +1336,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 10.000 shrine kills through all the battles.",
       "details": "Cumulative across all battles: kill 10,000 monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -1464,6 +1480,7 @@
       "reward": "skillPoints:1",
       "description": "Reach an amplified gem range of 18.",
       "details": "Have a gem reach 18+ range while inside an amplifier.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -1817,7 +1834,8 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Reach -8% decreased banishment cost with your orb.",
-      "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers)."
+      "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers).",
+      "untrackable": true
     },
     "Fifth Grader": {
       "apId": 2174,
@@ -1957,7 +1975,8 @@
       "game_id": 550,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Kill 390 banished monsters."
+      "description": "Kill 390 banished monsters.",
+      "untrackable": true
     },
     "Forces Within my Comprehension": {
       "apId": 2188,
@@ -2418,6 +2437,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 5.000 shrine kills through all the battles.",
       "details": "Cumulative across all battles: kill 5,000 monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -2858,6 +2878,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Amplify a gem with 8 other gems.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -2900,6 +2921,7 @@
       "reward": "skillPoints:1",
       "description": "Reach -20% decreased banishment cost with your orb.",
       "details": "Reach -20% banishment cost on the orb.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -2961,7 +2983,8 @@
       "game_id": 236,
       "required_effort": "Minor",
       "reward": "skillPoints:1",
-      "description": "Spend 9.000 mana on banishment."
+      "description": "Spend 9.000 mana on banishment.",
+      "untrackable": true
     },
     "It was Abandoned Anyway": {
       "apId": 2283,
@@ -2997,7 +3020,8 @@
       "game_id": 230,
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
-      "description": "Deliver 3.600 banishments with your orb."
+      "description": "Deliver 3.600 banishments with your orb.",
+      "untrackable": true
     },
     "Jewel Box": {
       "apId": 2287,
@@ -3080,7 +3104,8 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:2",
       "description": "Spend 900.000 mana on banishment.",
-      "details": "Spend a cumulative total of 900,000 mana on banishments."
+      "details": "Spend a cumulative total of 900,000 mana on banishments.",
+      "untrackable": true
     },
     "Keep Losing Keep Harvesting": {
       "apId": 2295,
@@ -3128,7 +3153,8 @@
       "required_effort": "Extreme",
       "reward": "skillPoints:1",
       "description": "Gain 7.200 xp with kill chains.",
-      "details": "Gain 7,200 xp from kill chains across all battles."
+      "details": "Gain 7,200 xp from kill chains across all battles.",
+      "untrackable": true
     },
     "Knowledge Seeker": {
       "apId": 2299,
@@ -3590,6 +3616,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Hit 75 frozen monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Freeze skill",
         "Shrine element"
@@ -3863,6 +3890,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Kill 60 banished monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -4310,6 +4338,7 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Build 25 amplifiers.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -4320,6 +4349,7 @@
       "required_effort": "Minor",
       "reward": "skillPoints:1",
       "description": "Build 15 amplifiers.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -4331,6 +4361,7 @@
       "reward": "skillPoints:1",
       "description": "Activate the same shrine 5 times.",
       "details": "Activate the same shrine 5 times in one battle.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -4349,6 +4380,7 @@
       "reward": "skillPoints:1",
       "description": "Build 5 amplifiers.",
       "details": "Build 5 amplifiers in one battle.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -4719,6 +4751,7 @@
       "reward": "skillPoints:1",
       "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
       "details": "Banish 150 monsters with at least 2 wraiths alive.",
+      "untrackable": true,
       "requirements": [
         "Ritual trait"
       ]
@@ -4837,6 +4870,7 @@
       "reward": "skillPoints:1",
       "description": "Strengthen your orb with 7 gems in amplifiers.",
       "details": "Have 7 gems in amplifiers connected to the orb.",
+      "untrackable": true,
       "requirements": [
         "Amplifiers skill"
       ]
@@ -4848,6 +4882,7 @@
       "reward": "skillPoints:1",
       "description": "Hit 150 whited out monsters with shrines.",
       "details": "Hit 150 whited-out monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Whiteout skill",
         "Shrine element"
@@ -4871,6 +4906,7 @@
       "reward": "skillPoints:1",
       "description": "Kill 660 banished monsters with shrines.",
       "details": "Kill 660 banished monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -4916,6 +4952,7 @@
       "reward": "skillPoints:2",
       "description": "Hit 475 frozen monsters with shrines.",
       "details": "Hit 475 frozen monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Freeze skill",
         "Shrine element"
@@ -5002,6 +5039,7 @@
       "reward": "skillPoints:1",
       "description": "Hit 225 frozen monsters with shrines.",
       "details": "Hit 225 frozen monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Freeze skill",
         "Shrine element",
@@ -5102,6 +5140,7 @@
       "reward": "skillPoints:1",
       "description": "Reach 20.000 shrine kills through all the battles.",
       "details": "Cumulative across all battles: kill 20,000 monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]
@@ -5472,7 +5511,8 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Deliver 100 banishments with your orb.",
-      "details": "Banish 100 monsters using the orb (orb gem with banishment effect)."
+      "details": "Banish 100 monsters using the orb (orb gem with banishment effect).",
+      "untrackable": true
     },
     "Stingy Cloud": {
       "apId": 2518,
@@ -5833,7 +5873,8 @@
       "required_effort": "Major",
       "reward": "skillPoints:1",
       "description": "Kill 590 banished monsters.",
-      "details": "Kill 590 banished monsters."
+      "details": "Kill 590 banished monsters.",
+      "untrackable": true
     },
     "There it is!": {
       "apId": 2553,
@@ -5925,7 +5966,8 @@
       "required_effort": "Minor",
       "reward": "skillPoints:2",
       "description": "Deliver 400 banishments with your orb.",
-      "details": "Banish 400 monsters using the orb."
+      "details": "Banish 400 monsters using the orb.",
+      "untrackable": true
     },
     "Through All Layers": {
       "apId": 2562,
@@ -6642,6 +6684,7 @@
       "reward": "skillPoints:1",
       "description": "Kill 260 banished monsters with shrines.",
       "details": "Kill 260 banished monsters with shrines.",
+      "untrackable": true,
       "requirements": [
         "Shrine element"
       ]

@@ -118,7 +118,7 @@ def _simplify_requirements(normalized: list) -> list:
 def _can_reach_any_stage(state, player: int, stages: list) -> bool:
     """Return True if the player can reach any completion location across the given stages."""
     for stage in stages:
-        for suffix in ("Journey", "Bonus", "Wizard stash"):
+        for suffix in ("Journey", "Wizard stash"):
             try:
                 if state.can_reach(f"Complete {stage} - {suffix}", "Location", player):
                     return True
@@ -156,7 +156,15 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     req = req.strip()
 
     if req.startswith("Achievement:"):
-        return state.has(req, player) if is_progressive else True
+        if not is_progressive:
+            return True
+        # Achievement items no longer exist (SP is filler instead). For
+        # progressive chains, check that the parent achievement's LOCATION
+        # is reachable — equivalent to "the player could have collected it".
+        try:
+            return state.can_reach(req, "Location", player)
+        except KeyError:
+            return False
 
     if req.endswith(" element"):
         elem_name = req[:-8]
@@ -334,10 +342,21 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         def make_rule(conds):
             return lambda state: all(c(state) for c in conds)
 
-        for suffix in ("Journey", "Bonus", "Wizard stash"):
+        for suffix in ("Journey", "Wizard stash"):
             loc_name = f"Complete {str_id} - {suffix}"
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
+
+    # --- Wizard stash gating: each stash also requires its unlock item ---
+    # The WIZLOCK rule above attaches to the stash too, but for stages without
+    # WIZLOCK we still need the unlock-item gate. add_rule() ANDs conditions
+    # so we can layer this on cleanly.
+    from worlds.generic.Rules import add_rule
+    for stage in stages:
+        loc_name = f"Complete {stage['str_id']} - Wizard stash"
+        unlock_name = f"Wizard Stash {stage['str_id']} Unlock"
+        location = multiworld.get_location(loc_name, player)
+        add_rule(location, lambda state, n=unlock_name: state.has(n, player))
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions

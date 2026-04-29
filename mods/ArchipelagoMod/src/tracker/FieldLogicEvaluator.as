@@ -22,7 +22,7 @@ package tracker {
      */
     public class FieldLogicEvaluator {
 
-        // Stages whose Journey/Bonus locations require ALL 24 skills.
+        // Stages whose Journey location requires ALL 24 skills.
         public static const ALL_SKILLS_STAGES:Object = { "A4": true };
 
         private var _logger:Logger;
@@ -112,15 +112,14 @@ package tracker {
          */
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
-                                               bonusMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || bonusMissing || stashMissing)) return false;
+            if (!(journeyMissing || stashMissing)) return false;
             if (_stageTier == null) return true;
             if (!canCompleteStage(strId)) return false;
 
-            // A4-only: Journey/Bonus additionally need all 24 skills; stash does
+            // A4-only: Journey additionally needs all 24 skills; stash does
             // not (matches apworld, which has no all-skills rule on stash).
-            if ((journeyMissing || bonusMissing)
+            if (journeyMissing
                     && ALL_SKILLS_STAGES[strId] == true
                     && AV.sessionData.totalSkillsCollected < 24) {
                 return false;
@@ -130,7 +129,7 @@ package tracker {
 
         /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
          *  Mirrors apworld's location access_rule, which applies the same skill
-         *  conditions to Journey, Bonus, and Wizard stash on a given stage. */
+         *  conditions to Journey and Wizard stash on a given stage. */
         public function canCompleteStage(strId:String):Boolean {
             if (_dirty) recompute();
             if (_inLogicByStrId[strId] != true) return false;
@@ -183,7 +182,7 @@ package tracker {
         /** True if at least one stage that has this element can be completed
          *  (tier + skill gate met).  Mirrors apworld _eval_req for
          *  game_level_elements via _can_reach_any_stage, which now requires
-         *  the stage's WIZLOCK skills on Journey/Bonus/Wizard stash alike. */
+         *  the stage's WIZLOCK skills on Journey/Wizard stash alike. */
         public function isElementInLogic(elemName:String):Boolean {
             var stages:Array = _elementToStages[elemName] as Array;
             if (stages == null || stages.length == 0) return true;
@@ -369,7 +368,7 @@ package tracker {
         }
 
         /**
-         * Returns skill names required for this stage's Journey/Bonus that
+         * Returns skill names required for this stage's Journey that
          * the player has not yet collected.
          */
         public function getMissingStageSkills(strId:String):Array {

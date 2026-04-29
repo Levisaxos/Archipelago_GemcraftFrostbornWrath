@@ -465,6 +465,10 @@ package {
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
 
+            // Per-stage stash gating: shield-spike locked stashes and overlay
+            // a padlock above each one until the unlock item arrives.
+            WizStashes.tickEnforceStashLock(_logger, MOD_NAME);
+
             // Suppress all dropicons mid-battle. When drops are cleared, start a
             // short countdown so late-arriving async PrintJSON packets are included.
             if (_progressionBlocker != null && _progressionBlocker.tickDropIcons()) {
@@ -1393,17 +1397,39 @@ package {
                     _saveManager.saveSlotData();
                     return;
                 }
-                if (apId >= 2000 && apId <= 2636) {
-                    _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
-                    var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
-                    _logger.log(MOD_NAME, "     Found achievement name: " + achName);
-                    if (achName != null) {
-                        _achievementUnlocker.receiveAchievementReward(achName, apId);
-                        _receivedToast.addItem("Received " + achName, 0xAA55FF);
-                    } else {
-                        _receivedToast.addItem("Received Achievement #" + apId, 0xAA55FF);
-                        _logger.log(MOD_NAME, "  grantItem: achievement apId=" + apId + " not found in data map");
+                if (apId >= 1400 && apId <= 1521) {
+                    // Wizard Stash unlock — gates the per-level stash AP check.
+                    var stashLocId:int = apId - 1400 + 1;
+                    var stashStrId:String = null;
+                    var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+                    for (var sid:String in stageLocIdMap) {
+                        if (int(stageLocIdMap[sid]) == stashLocId) {
+                            stashStrId = sid;
+                            break;
+                        }
                     }
+                    if (stashStrId != null) {
+                        AV.sessionData.markStashUnlocked(stashStrId);
+                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Unlock", 0x55AAFF);
+                        _logger.log(MOD_NAME, "  → Wizard stash unlock for " + stashStrId);
+                    } else {
+                        _logger.log(MOD_NAME, "  grantItem: stash unlock apId=" + apId + " — no matching stage");
+                    }
+                    return;
+                }
+                if (apId >= 1700 && apId <= 1709) {
+                    // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
+                    var spAmount:int = apId - 1699;
+                    _achievementUnlocker.awardSkillPoints(spAmount);
+                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", 0xFFCC44);
+                    _logger.log(MOD_NAME, "  → Skillpoint bundle: +" + spAmount + " SP");
+                    return;
+                }
+                if (apId >= 2000 && apId <= 2636) {
+                    // Achievement IDs are now location-only (no items live in this range).
+                    // If one ever arrives, it's a stale seed — log and ignore.
+                    _logger.log(MOD_NAME, "  grantItem: stale achievement-as-item apId=" + apId
+                        + " (achievement items removed; ignoring)");
                     return;
                 }
                 _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);

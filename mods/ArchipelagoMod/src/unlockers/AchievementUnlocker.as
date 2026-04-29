@@ -251,16 +251,6 @@ package unlockers {
             if (onChecked != null) onChecked();
         }
 
-        /**
-         * Receive an achievement reward from another player.
-         * Awards skill points only — does not mark collected or send a check.
-         */
-        public function receiveAchievementReward(achievementName:String, apId:int):void {
-            if (!achievementName || apId < 2000 || apId > 2636) return;
-            _awardSkillPointsForAchievement(achievementName);
-            _logger.log(_modName, "Received achievement reward: " + achievementName + " (AP ID " + apId + ")");
-        }
-
         // -----------------------------------------------------------------------
         // Lookups
 
@@ -293,20 +283,13 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
-        // Private helpers
+        // Skill-point grants
 
-        private function _awardSkillPointsForAchievement(achievementName:String):void {
-            if (!_achievementData) return;
-            var achInfo:Object = _achievementData[achievementName];
-            if (achInfo && achInfo.reward) {
-                var reward:String = String(achInfo.reward);
-                if (reward.indexOf("skillPoints:") == 0) {
-                    _awardSkillPoints(int(reward.substring(12)));
-                }
-            }
-        }
-
-        private function _awardSkillPoints(points:int):void {
+        /**
+         * Add `points` to the player's wizard skill-point pool.
+         * Used by Skillpoint Bundle items (apId 1700–1709).
+         */
+        public function awardSkillPoints(points:int):void {
             if (points <= 0 || GV.ppd == null) return;
             try {
                 var current:int = int(GV.ppd.skillPtsFromLoot.g());

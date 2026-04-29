@@ -10,7 +10,7 @@ Everything here is designed to be readable by non-programmers.
 # WAVE-BASED TIER DEFINITIONS
 # =====================================================================
 # Maps stage progression tiers (0-12) to wave count thresholds.
-# Used by levels, bonuses, and achievements to define gates.
+# Used by levels and achievements to define gates.
 #
 # Format: "tier_N": {"minWaveCount": X}
 # Usage: Write "of_tier_11" instead of "minWave: 84" in requirements
@@ -61,8 +61,7 @@ GRINDINESS_TIERS = {
 #
 # Once a level is unlocked by reaching its tier, all checks are accessible:
 # - Journey completion
-# - Bonus completion
-# - Wizard Stash location
+# - Wizard Stash location (additionally gated behind a per-stage unlock item)
 #
 tier_progression_requirements = {
     "Tier_0": {

@@ -33,6 +33,8 @@ package data {
         public var collectedAchievements:Object = {};  // achievement AP ID (2000-2636) -> true
         // strId -> true — field tokens received (one entry per stage with a token)
         public var tokensByStrId:Object = {};
+        // strId -> true — Wizard Stash unlock items received (per-stage gating).
+        public var unlockedStashesByStrId:Object = {};
         // category name -> int — skill count per category (for tier skill gates)
         public var skillCountByCategory:Object = {};
 
@@ -74,10 +76,21 @@ package data {
             collectedTraits       = {};
             collectedAchievements = {};
             tokensByStrId         = {};
+            unlockedStashesByStrId = {};
             skillCountByCategory  = {};
             fieldsInLogic            = {};
             achievementsInLogic      = {};
             achievementNamesInLogic  = [];
+        }
+
+        /** Mark a stage's Wizard Stash unlock item as received. */
+        public function markStashUnlocked(strId:String):void {
+            if (strId != null) unlockedStashesByStrId[strId] = true;
+        }
+
+        /** True if the player has received the Wizard Stash unlock item for this stage. */
+        public function isStashUnlocked(strId:String):Boolean {
+            return unlockedStashesByStrId[strId] == true;
         }
 
         // -----------------------------------------------------------------------

@@ -42,7 +42,7 @@ package net {
             return host.toLowerCase() == "archipelago.gg";
         }
 
-        // Stage str_id → AP location ID (Journey).  Bonus = locId + 199.  Stash = locId + 399.
+        // Stage str_id → AP location ID (Journey).  Stash = locId + 399.
         private static const STAGE_LOC_AP_IDS:Object = {
             "W1":1,  "W2":2,  "W3":3,  "W4":4,
             "S1":5,  "S2":6,  "S3":7,  "S4":8,
@@ -401,25 +401,18 @@ package net {
                     var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
                     if (xp <= 0) continue;
                     var locId:int        = int(STAGE_LOC_AP_IDS[meta.strId]);
-                    var bonusLocId:int   = locId + 199;
                     var wizStashLocId:int = locId + 399;
                     var journeyNew:Boolean = missing[locId] == true;
-                    var bonusNew:Boolean   = missing[bonusLocId] == true;
                     _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
                         + "  xp=" + xp + "  locId=" + locId
-                        + "  bonusLocId=" + bonusLocId + "  wizStashLocId=" + wizStashLocId
-                        + "  journeyNew=" + journeyNew + "  bonusNew=" + bonusNew
+                        + "  wizStashLocId=" + wizStashLocId
+                        + "  journeyNew=" + journeyNew
                         + "  stashNew=" + (missing[wizStashLocId] == true));
                     if (locId <= 0) continue;
                     if (journeyNew) {
                         toSend.push(locId);
                         _lastCheckedLocations.push({strId: meta.strId, locType: "journey"});
                         _logger.log(_modName, "Pending: " + meta.strId + " (field journey)  locId=" + locId);
-                    }
-                    if (bonusNew) {
-                        toSend.push(bonusLocId);
-                        _lastCheckedLocations.push({strId: meta.strId, locType: "bonus"});
-                        _logger.log(_modName, "Pending: " + meta.strId + " (field bonus)  locId=" + bonusLocId);
                     }
                     if (missing[wizStashLocId] == true) {
                         var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);

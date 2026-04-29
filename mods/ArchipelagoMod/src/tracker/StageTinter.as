@@ -100,22 +100,20 @@ package tracker {
                     if (base <= 0) continue;
 
                     var journeyMissing:Boolean = missing[base] == true;
-                    var bonusMissing:Boolean   = missing[base + 199] == true;
                     var stashMissing:Boolean   = missing[base + 399] == true;
                     var missingCount:int = 0;
                     if (journeyMissing) missingCount++;
-                    if (bonusMissing)   missingCount++;
                     if (stashMissing)   missingCount++;
 
                     var desired:int;
                     if (missingCount == 0) {
                         // All checks done — let game render its completed lights.
                         desired = STATE_NONE;
-                    } else if (missingCount < 3) {
+                    } else if (missingCount < 2) {
                         // Partial progress — yellow.
                         desired = STATE_YELLOW;
                     } else if (_evaluator.stageHasInLogicMissing(
-                                   strId, journeyMissing, bonusMissing, stashMissing)) {
+                                   strId, journeyMissing, stashMissing)) {
                         desired = STATE_GREEN;
                     } else {
                         desired = STATE_RED;

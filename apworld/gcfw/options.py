@@ -300,6 +300,24 @@ class AchievementProgression(Choice):
     default = 0
 
 
+class SkillpointMultiplier(Range):
+    """Total skill points distributed via Skillpoint Bundle filler items, as a
+    percentage of the 2000 SP baseline.
+
+    Bundles are sized 1-10 SP each (skewed small), and the count of bundles is
+    determined by the remaining filler slots after all real items are placed.
+
+    Default 50: ~1000 SP. Vanilla GCFW still awards skill points locally on
+    achievement completion, so 50% (1000 SP via bundles) keeps the total SP
+    economy roughly in line with vanilla. Raise to 100 once mod-side vanilla
+    SP suppression ships.
+    """
+    display_name = "Skillpoint Multiplier"
+    range_start = 50
+    range_end   = 200
+    default     = 50
+
+
 @dataclass
 class GCFWOptions(PerGameCommonOptions):
     goal:                        Goal
@@ -315,6 +333,7 @@ class GCFWOptions(PerGameCommonOptions):
     starting_overcrowd:        StartingOvercrowd
     achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
+    skillpoint_multiplier:     SkillpointMultiplier
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier
     enemy_shield_multiplier:     EnemyShieldMultiplier

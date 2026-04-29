@@ -12,7 +12,7 @@ package patch {
      * Appends Archipelago check-status lines into the game's field hover tooltip
      * (McInfoPanel) using the same intercept pattern as AchievementTooltipOverlay.
      *
-     * Shows per-check status for Journey, Bonus, and Stash locations as
+     * Shows per-check status for Journey and Stash locations as
      * one line each:
      *   ✓  grey  — already checked
      *   in logic     green — missing and reachable
@@ -153,17 +153,12 @@ package patch {
                 var journeyMissing:Boolean = missing[base]       == true;
                 var journeyDone:Boolean    = checked[base]       == true;
 
-                var bonusId:int            = base + 199;
-                var bonusMissing:Boolean   = missing[bonusId]    == true;
-                var bonusDone:Boolean      = checked[bonusId]    == true;
-
                 var stashId:int            = base + 399;
                 var stashMissing:Boolean   = missing[stashId]    == true;
                 var stashDone:Boolean      = checked[stashId]    == true;
 
                 var lines:Array = _buildLines(strId,
                         journeyMissing, journeyDone,
-                        bonusMissing,   bonusDone,
                         stashMissing,   stashDone);
 
                 try {
@@ -263,7 +258,6 @@ package patch {
 
         private function _buildLines(strId:String,
                                      journeyMissing:Boolean, journeyDone:Boolean,
-                                     bonusMissing:Boolean,   bonusDone:Boolean,
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
             var stageTier:int = _evaluator.getStageTier(strId);
             var tierLabel:String = (stageTier >= 0) ? ("Tier: " + stageTier) : "";
@@ -283,31 +277,36 @@ package patch {
             }
 
             var journeyExists:Boolean  = journeyMissing || journeyDone;
-            var bonusExists:Boolean    = bonusMissing   || bonusDone;
             var stashExists:Boolean    = stashMissing   || stashDone;
 
             var journeyInLogic:Boolean = journeyMissing &&
-                    _evaluator.stageHasInLogicMissing(strId, true,  false, false);
-            var bonusInLogic:Boolean   = bonusMissing   &&
-                    _evaluator.stageHasInLogicMissing(strId, false, true,  false);
-            var stashInLogic:Boolean   = stashMissing   &&
-                    _evaluator.stageHasInLogicMissing(strId, false, false, true);
+                    _evaluator.stageHasInLogicMissing(strId, true, false);
+            var stashUnlocked:Boolean  = AV.sessionData.isStashUnlocked(strId);
+            var stashInLogic:Boolean   = stashMissing && stashUnlocked &&
+                    _evaluator.stageHasInLogicMissing(strId, false, true);
 
             // One line per check, each coloured by its state.
             if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
-            if (bonusExists)   lines.push(_checkLine("Bonus",   bonusDone,   bonusInLogic));
-            if (stashExists)   lines.push(_checkLine("Stash",   stashDone,   stashInLogic));
+            if (stashExists) {
+                if (stashDone) {
+                    lines.push(["Stash: ✓", 0x888888]);
+                } else if (!stashUnlocked) {
+                    lines.push(["Stash: locked", 0xFF4444]);
+                } else {
+                    lines.push(_checkLine("Stash", false, stashInLogic));
+                }
+            }
 
             // Stage skill requirements: always shown when present, coloured
             // green when met, red when not. Mirrors apworld _eval_req for
-            // the WIZLOCK skill gate on Journey/Bonus locations.
+            // the WIZLOCK skill gate on Journey/Stash locations.
             for each (var skillReq:Array in _evaluator.getStageSkillsStatus(strId)) {
                 var met:Boolean = skillReq[1] == true;
                 lines.push(["Needs: " + String(skillReq[0]),
                             met ? 0x44FF44 : 0xFF4444]);
             }
 
-            // A4-only: "All 24 skills" gate on Journey/Bonus.
+            // A4-only: "All 24 skills" gate on Journey.
             if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
                 var have24:int = AV.sessionData.totalSkillsCollected;
                 lines.push(["All 24 skills (" + have24 + "/24)",

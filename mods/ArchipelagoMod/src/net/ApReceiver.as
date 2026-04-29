@@ -382,8 +382,7 @@ package net {
         private function resolveLocationName(locId:int):String {
             var suffix:String = "";
             var baseId:int = locId;
-            if (baseId >= 400)      { baseId -= 399;  suffix = " Stash"; }
-            else if (baseId >= 200) { baseId -= 199;  suffix = " Bonus"; }
+            if (baseId >= 400) { baseId -= 399;  suffix = " Stash"; }
             var stageLocIds:Object = ConnectionManager.stageLocIds;
             for (var strId:String in stageLocIds) {
                 if (int(stageLocIds[strId]) == baseId) return strId + suffix;

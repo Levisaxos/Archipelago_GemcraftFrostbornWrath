@@ -86,27 +86,19 @@ def _load_item_table() -> Dict[str, ItemData]:
     for sc in data["extra_shadow_core_stashes"]:
         table[sc["name"]] = ItemData(sc["item_ap_id"], ItemClassification.filler)
 
-    return table
-
-
-def _generate_achievement_items() -> Dict[str, ItemData]:
-    """Load achievement items (IDs 2000-2636) from rulesdata packs with hardcoded ap_ids."""
-    from .rulesdata_achievements import achievement_requirements as all_achievements
-
-    table: Dict[str, ItemData] = {}
-
-    # Use hardcoded ap_id from each achievement, sorted by name for consistency
-    for ach_name in sorted(all_achievements.keys()):
-        ach_data = all_achievements[ach_name]
-        if "ap_id" in ach_data:
-            item_id = ach_data["ap_id"]
-            table[f"Achievement: {ach_name}"] = ItemData(item_id, ItemClassification.useful)
+    # Per-stage Wizard Stash unlock items (IDs 1400–1521). Progression: each
+    # gates its matching "Complete {strId} - Wizard stash" location. All 122
+    # stages including W1-W4 get an unlock — there's no off mode.
+    for stage in data["stages"]:
+        unlock_id = 1400 + stage["loc_ap_id"] - 1
+        table[f"Wizard Stash {stage['str_id']} Unlock"] = ItemData(
+            unlock_id, ItemClassification.progression)
 
     return table
 
 
 item_table: Dict[str, ItemData] = _load_item_table()
-achievement_item_table: Dict[str, ItemData] = _generate_achievement_items()
 
-# Merge achievement items into main item table
-item_table.update(achievement_item_table)
+# SP bundle items (IDs 1700–1709) — filler that grants 1..10 skill points each.
+from .items_skillpoints import sp_bundle_item_table
+item_table.update(sp_bundle_item_table())
