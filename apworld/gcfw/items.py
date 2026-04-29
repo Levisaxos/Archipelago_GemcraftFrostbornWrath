@@ -71,8 +71,16 @@ def _load_item_table() -> Dict[str, ItemData]:
         xp_id += 1
 
     # Specific talisman fragments — named by original field (IDs 900–952).
+    # The 9 highest-rarity INNER fragments are promoted to progression: they
+    # are the "matching set" that gates talismanRow:N / talismanColumn:N
+    # achievement and stage requirements (see power.MATCHING_TALISMAN_NAMES).
+    from .power import MATCHING_TALISMAN_NAMES
     for frag in data["talisman_fragments"]:
-        table[f"{frag['str_id']} Talisman Fragment"] = ItemData(frag["item_ap_id"], ItemClassification.useful)
+        name = f"{frag['str_id']} Talisman Fragment"
+        cls = (ItemClassification.progression
+               if name in MATCHING_TALISMAN_NAMES
+               else ItemClassification.useful)
+        table[name] = ItemData(frag["item_ap_id"], cls)
 
     # Extra talisman fragments — named "Extra Talisman Fragment #N" (IDs 1200–1299).
     for frag in data["extra_talisman_fragments"]:

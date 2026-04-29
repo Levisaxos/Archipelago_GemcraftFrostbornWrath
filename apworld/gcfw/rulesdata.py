@@ -42,9 +42,9 @@ class StageRule:
 # wizard-level thresholds).  Each tier requires the player to have collected
 # a minimum number of field tokens from the *immediately previous* tier.
 #
-# FREE_STAGES (W2-W4) are accessible from W1 without any token — they are
-# the tutorial zone and mirror the real game's natural map progression.
-# They have no field token item and are not counted in any tier gate.
+# FREE_STAGES (W1-W4) have no field token item. W1 is the entry stage; W2-W4
+# are the tutorial trio reachable from W1 without a token, mirroring the real
+# game's natural map progression. None of them are counted in any tier gate.
 #
 # Other Tier 0 stages (S1-S4, V1) require their own field token but
 # have no tier requirement on top.
@@ -52,9 +52,11 @@ class StageRule:
 # Tier 1+ stages require their own field token AND N tokens from the
 # previous tier, where N scales with difficulty.
 
-# Stages accessible from W1 without needing their field token.
-# W2/W3/W4 have no field token item; they are always unlocked on connect.
-FREE_STAGES: set = {"W2", "W3", "W4"}
+# Stages with no field token item. Empty now: W1-W4 each have their own
+# Field Token (item_ap_ids 1-4) and gate normally. W1 stays the entry
+# stage via the explicit `if str_id == "W1": continue` check in rules.py —
+# its region is reachable from Menu without needing the W1 token.
+FREE_STAGES: set = set()
 
 # Wave-count thresholds defining tier 0..12 boundaries. A stage's tier is the
 # highest t whose threshold[t] <= wave_count. Same table used by
@@ -70,13 +72,13 @@ def _tier_from_wave_count(wave_count: int) -> int:
 
 
 # Tier definitions: tier_number → list of stage str_ids in that tier.
-# Derived from each stage's wave_count in game_data.json; W1 (entry stage)
-# and FREE_STAGES (W2-W4, no token items) are excluded.
+# Derived from each stage's wave_count in game_data.json; FREE_STAGES
+# (W1-W4, no token items) are excluded.
 # TODO: rebalance tiers - t4 is too big and t8 is too small.
 TIERS: Dict[int, List[str]] = {t: [] for t in range(len(_TIER_WAVE_THRESHOLDS))}
 for _stage in GAME_DATA["stages"]:
     _sid = _stage["str_id"]
-    if _sid == "W1" or _sid in FREE_STAGES:
+    if _sid in FREE_STAGES:
         continue
     TIERS[_tier_from_wave_count(int(_stage["wave_count"]))].append(_sid)
 del _stage, _sid
@@ -96,7 +98,7 @@ del _stage, _sid
 STAGE_RULES: Dict[str, StageRule] = {}
 for stage in GAME_DATA["stages"]:
     sid = stage["str_id"]
-    if sid == "W1" or sid in FREE_STAGES:
+    if sid in FREE_STAGES:
         # Free / entry stages don't belong to any tier (no token item).
         STAGE_RULES[sid] = StageRule(tier=-1, skills=stage["required_skills"])
     else:

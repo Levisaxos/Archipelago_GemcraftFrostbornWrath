@@ -106,6 +106,7 @@ package patch {
         public function setAchievementLogicEvaluator(evaluator:AchievementLogicEvaluator):void {
             if (_tooltipOverlay == null || evaluator == null) return;
             var ev:AchievementLogicEvaluator = evaluator;
+            _tooltipOverlay.achievementLogicEvaluator = ev;  // for power-line lookup
             _tooltipOverlay.registerProvider(
                 function(ach:*, achName:String, apId:int,
                          isExcluded:Boolean, isInLogic:Boolean):Array {

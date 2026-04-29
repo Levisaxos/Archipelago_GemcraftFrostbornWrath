@@ -87,15 +87,26 @@ class XpTomeBonus(Range):
     default     = 150
 
 
-class TierRequirementsPercentage(Range):
-    """Logic is currently determined by grouping stages into tiers based on difficulty, then requiring a percentage of the
-    stages in all previous tiers to be accessible in order to consider the next tier accessible.
-    This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
+class PowerScale(Range):
+    """Multiplier (percent) applied to required-power thresholds when AP fill
+    decides which locations are reachable.
+
+    The mod computes a "player power" score from collected items (skill
+    points, skills, traits, talismans, etc.) — see apworld/gcfw/power.py.
+    Locations such as wizard stash keys and achievements gate against tier-
+    based or per-achievement power thresholds. PowerScale tunes those
+    thresholds:
+
+      50  → thresholds halved, easier seed (gates open with less power)
+     100  → baseline
+     200  → thresholds doubled, harder seed (gates demand more power)
+
+    Mirrors the EnemyHpMultiplier convention: higher number = harder.
     """
-    display_name = "Tier Completion Percentage"
-    range_start = 40
-    range_end = 100
-    default = 75
+    display_name = "Power Scale"
+    range_start = 50
+    range_end   = 200
+    default     = 100
 
 
 class DeathLinkPunishment(Choice):
@@ -307,15 +318,16 @@ class SkillpointMultiplier(Range):
     Bundles are sized 1-10 SP each (skewed small), and the count of bundles is
     determined by the remaining filler slots after all real items are placed.
 
-    Default 50: ~1000 SP. Vanilla GCFW still awards skill points locally on
-    achievement completion, so 50% (1000 SP via bundles) keeps the total SP
-    economy roughly in line with vanilla. Raise to 100 once mod-side vanilla
-    SP suppression ships.
+    Mod-side suppresses vanilla per-achievement SP rewards (see
+    AchievementUnlocker.suppressVanillaAchievementSp), so AP bundles are the
+    primary source of skill points. 100 = ~2000 SP from bundles, in the same
+    order of magnitude as vanilla's full achievement payout. Lower for tighter
+    SP economies, higher for abundance.
     """
     display_name = "Skillpoint Multiplier"
     range_start = 50
     range_end   = 200
-    default     = 50
+    default     = 100
 
 
 @dataclass
@@ -324,8 +336,8 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
-    tier_requirements_percent: TierRequirementsPercentage
     xp_tome_bonus:             XpTomeBonus
+    power_scale:               PowerScale
     enforce_logic:             EnforceLogic
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial

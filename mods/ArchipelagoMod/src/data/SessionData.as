@@ -42,6 +42,7 @@ package data {
         public var fieldsInLogic:Object = {};              // strId -> true
         public var achievementsInLogic:Object = {};        // apId (int) -> true
         public var achievementNamesInLogic:Array = [];     // sorted achievement names
+        public var playerPower:Number = 0;                 // current power score (FieldLogicEvaluator)
 
         // -----------------------------------------------------------------------
         // Setup

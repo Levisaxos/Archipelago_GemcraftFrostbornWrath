@@ -333,6 +333,27 @@ package tracker {
                 return AV.sessionData.countItemsInRange(1100, 1199) >= itemsNeeded;
             }
 
+            // "talismanRow: N" — at least N complete matching-icon rows from
+            // the 3x3 grid of progression talisman fragments. Row membership
+            // is hardcoded apworld-side; the AP IDs ship in slot_data /
+            // logic.json's matchingTalismans block.
+            if (lower.indexOf("talismanrow") == 0) {
+                var trNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countMatchingTalismanSets(true) >= trNeed;
+            }
+            // "talismanColumn: N" — at least N complete columns of the same
+            // grid (cross-icon position groups).
+            if (lower.indexOf("talismancolumn") == 0) {
+                var tcNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countMatchingTalismanSets(false) >= tcNeed;
+            }
+            // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
+            // items (1700..1709, bundle apId-1699 = SP value).
+            if (lower.indexOf("skillpoints") == 0) {
+                var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countSkillPoints() >= spNeed;
+            }
+
             // Level monster stat requirements
             if (lower.indexOf("minmonsterhp") == 0) {
                 var mhpNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
@@ -542,6 +563,45 @@ package tracker {
 
         private function _trim(s:String):String {
             return s.replace(/^\s+|\s+$/g, "");
+        }
+
+        /**
+         * Count complete matching-talisman sets (rows or columns) the player
+         * holds. Both row and column groupings come from
+         * AV.serverData.matchingTalismans (loaded from logic.json), each as
+         * a 3-element array of arrays of AP IDs.
+         */
+        private function _countMatchingTalismanSets(rows:Boolean):int {
+            var mt:Object = AV.serverData != null ? AV.serverData.matchingTalismans : null;
+            if (mt == null) return 0;
+            var sets:Array = (rows ? mt.rows : mt.columns) as Array;
+            if (sets == null) return 0;
+            var n:int = 0;
+            for each (var set:Array in sets) {
+                if (set == null) continue;
+                var ok:Boolean = true;
+                for each (var apId:* in set) {
+                    if (!AV.sessionData.hasItem(int(apId))) { ok = false; break; }
+                }
+                if (ok) n++;
+            }
+            return n;
+        }
+
+        /**
+         * Sum SP across collected Skillpoint Bundle items. Bundle apId-1699
+         * is the bundle's SP value (1..10). state.has equivalent is
+         * AV.sessionData.hasItem; we don't track per-AP-id duplicates, so
+         * each held bundle counts once. Mirrors apworld's _count_skill_points
+         * with the same approximation.
+         */
+        private function _countSkillPoints():int {
+            var total:int = 0;
+            for (var size:int = 1; size <= 10; size++) {
+                if (AV.sessionData.hasItem(1699 + size))
+                    total += size;
+            }
+            return total;
         }
     }
 }

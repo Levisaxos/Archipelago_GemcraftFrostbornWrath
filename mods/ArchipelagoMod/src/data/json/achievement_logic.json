@@ -1834,8 +1834,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Reach -8% decreased banishment cost with your orb.",
-      "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers).",
-      "untrackable": true
+      "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers)."
     },
     "Fifth Grader": {
       "apId": 2174,
@@ -2353,10 +2352,7 @@
       "required_effort": "Trivial",
       "reward": "skillPoints:1",
       "description": "Have more than 75% of the monster kills caused by poison.",
-      "details": "In one battle, at least 75% of kills are from poison damage.",
-      "requirements": [
-        "Poison skill"
-      ]
+      "details": "In one battle, at least 75% of kills are from poison damage."
     },
     "Green Wand": {
       "apId": 2225,

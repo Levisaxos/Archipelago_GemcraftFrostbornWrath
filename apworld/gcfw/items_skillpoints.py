@@ -23,7 +23,12 @@ def sp_bundle_item_table() -> Dict[str, ItemData]:
     table: Dict[str, ItemData] = {}
     for size in SP_BUNDLE_SIZES:
         ap_id = SP_BUNDLE_BASE_ID + (size - 1)
-        table[sp_bundle_item_name(size)] = ItemData(ap_id, ItemClassification.useful)
+        # progression_skip_balancing: counts toward reachability state during
+        # fill (so power-gates can resolve as bundles are placed in spheres)
+        # but skips cross-player balancing (we have ~200 copies — balancing
+        # them would just churn).
+        table[sp_bundle_item_name(size)] = ItemData(
+            ap_id, ItemClassification.progression_skip_balancing)
     return table
 
 

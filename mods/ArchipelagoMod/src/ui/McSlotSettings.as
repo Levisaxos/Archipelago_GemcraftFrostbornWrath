@@ -73,7 +73,6 @@ package ui {
             addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
             addRow("Talisman Min Rarity",     opts.talismanMinRarity.toString(), vY);                         vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
-            addRow("Tier Requirement",        AV.serverData.tokenRequirementPercent + "%", vY);               vY += ROW_HEIGHT;
             addRow("Enforce Logic",           opts.enforce_logic    ? "Yes" : "No", vY);                      vY += ROW_HEIGHT;
             addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Trial Mode",              opts.disable_trial     ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;

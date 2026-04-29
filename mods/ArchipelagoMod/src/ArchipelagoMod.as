@@ -223,6 +223,11 @@ package {
                 _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
                 _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
 
+                // WizStashes uses the field evaluator to read per-stage stash
+                // power thresholds + the player's current power when deciding
+                // whether to keep the stash locked / show the hover tooltip.
+                WizStashes.setEvaluator(_fieldLogicEvaluator);
+
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
 
@@ -1046,18 +1051,24 @@ package {
                     p.slot_data.skill_categories
                 );
                 _fieldLogicEvaluator.configure(
-                    p.slot_data.stage_tier,
-                    p.slot_data.stage_skills,
-                    p.slot_data.cumulative_skill_reqs,
-                    p.slot_data.tier_stage_counts,
-                    int(p.slot_data.token_requirement_percent),
-                    p.slot_data.free_stages as Array
+                    AV.serverData.stageSkills,
+                    AV.serverData.stageRequirements,
+                    AV.serverData.matchingTalismans,
+                    AV.serverData.freeStages,
+                    int(p.slot_data.power_scale),
+                    p.slot_data.power_weights
                 );
                 _fieldLogicEvaluator.setStageElements(
                     p.slot_data.stage_elements,
                     p.slot_data.stage_monsters
                 );
                 _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
+                _achievementLogicEvaluator.setAchievementRequiredPower(
+                    p.slot_data.achievement_required_power);
+                // Diagnostic: AchievementUnlocker uses this to toast on
+                // achievement unlocks that AP didn't consider in logic, so
+                // the player can spot mis-calibrated requirements / power.
+                _achievementUnlocker.setAchievementLogicEvaluator(_achievementLogicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);

@@ -23,6 +23,11 @@ Fields per achievement:
   requirements     - List of requirement strings for logic checks. See
                      rules.py for the supported vocabulary.
   reward           - Reward string, e.g. "skillPoints:2"
+  required_power   - (optional) Integer mechanical-build power threshold
+                     (matches STAGE_TIER_POWER curve in power.py). Set on
+                     achievements that need real player loadout strength
+                     (mana pool, wizard level, raw damage, HP/armor walls).
+                     Omit for time-only / element-only achievements.
   required_effort  - Effort level: "Trivial", "Minor", "Major", "Extreme"
 """
 
@@ -153,6 +158,7 @@ achievement_requirements = {
         "details": "Call 70 waves early in one battle.",
         "requirements": ["minWave: 70"],
         "reward": "skillPoints:2",
+        "required_power": 80,
         "required_effort": "Major",
     },
     # AP ID: 2013
@@ -377,6 +383,7 @@ achievement_requirements = {
         "details": "Build 90 towers in one battle.",
         "requirements": ["Tower element"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Extreme",
     },
     # AP ID: 2035
@@ -407,6 +414,7 @@ achievement_requirements = {
         "details": "Have 30 gems on the field at once.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 30,
         "required_effort": "Minor",
     },
     # AP ID: 2038
@@ -448,6 +456,7 @@ achievement_requirements = {
         "details": "Kill a single monster with at least 100,000 HP and 1,000 armor.",
         "requirements": ["minMonsterHP:100000", "minMonsterArmor:1000"],
         "reward": "skillPoints:1",
+        "required_power": 450,
         "required_effort": "Extreme",
     },
     # AP ID: 2042
@@ -479,6 +488,7 @@ achievement_requirements = {
         "description": "Deal 5.000 poison damage to a shadow.",
         "requirements": ["Poison skill", ["Ritual trait", "Shadow element"], "Shadow element"],
         "reward": "skillPoints:2",
+        "required_power": 30,
         "required_effort": "Trivial",
     },
     # AP ID: 2045
@@ -605,6 +615,7 @@ achievement_requirements = {
         "details": "Kill 4,000 monsters in one battle.",
         "requirements": [],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Minor",
     },
     # AP ID: 2058
@@ -615,6 +626,7 @@ achievement_requirements = {
         "details": "Reach wizard level 100.",
         "requirements": ["wizardLevel: 100"],
         "reward": "skillPoints:1",
+        "required_power": 160,
         "required_effort": "Major",
     },
     # AP ID: 2059
@@ -646,6 +658,7 @@ achievement_requirements = {
         "details": "Kill 600 monsters before wave 12 starts. Pick a monster-dense stage with at least 12 waves.",
         "requirements": ["minMonsters:600", "beforeWave:12"],
         "reward": "skillPoints:2",
+        "required_power": 30,
         "required_effort": "Trivial",
     },
     # AP ID: 2062
@@ -725,6 +738,7 @@ achievement_requirements = {
         "details": "Have at least 5,000 starting mana.",
         "requirements": [],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Trivial",
     },
     # AP ID: 2070
@@ -1131,6 +1145,7 @@ achievement_requirements = {
         "description": "Have 600 monsters on the battlefield at the same time.",
         "requirements": [],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Minor",
     },
     # AP ID: 2112
@@ -1739,7 +1754,6 @@ achievement_requirements = {
         "game_id": 251,
         "description": "Reach -8% decreased banishment cost with your orb.",
         "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers).",
-        "untrackable": True,
         "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
@@ -1858,6 +1872,7 @@ achievement_requirements = {
         "description": "Reach mana pool level 10.",
         "requirements": [],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Minor",
     },
     # AP ID: 2186
@@ -1907,6 +1922,7 @@ achievement_requirements = {
         "details": "Build 30 towers in one battle.",
         "requirements": ["Tower element"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Major",
     },
     # AP ID: 2191
@@ -2045,6 +2061,7 @@ achievement_requirements = {
         "details": "Have 60 gems on the field at once.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 80,
         "required_effort": "Major",
     },
     # AP ID: 2205
@@ -2240,7 +2257,7 @@ achievement_requirements = {
         "game_id": 204,
         "description": "Have more than 75% of the monster kills caused by poison.",
         "details": "In one battle, at least 75% of kills are from poison damage.",
-        "requirements": ["Poison skill"],
+        "requirements": [],
         "reward": "skillPoints:1",
         "required_effort": "Trivial",
     },
@@ -2252,6 +2269,7 @@ achievement_requirements = {
         "details": "Reach wizard level 60.",
         "requirements": ["wizardLevel: 60"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Minor",
     },
     # AP ID: 2226
@@ -2402,6 +2420,7 @@ achievement_requirements = {
         "details": "Kill a swarmling that has at least 100 armor.",
         "requirements": ["minSwarmlingArmor:100"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Trivial",
     },
     # AP ID: 2241
@@ -2797,6 +2816,7 @@ achievement_requirements = {
         "details": "Have 90 gems on the field at once.",
         "requirements": [],
         "reward": "skillPoints:3",
+        "required_power": 160,
         "required_effort": "Extreme",
     },
     # AP ID: 2281
@@ -2836,6 +2856,7 @@ achievement_requirements = {
         "details": "Have 1,200 monsters on the field at the same time.",
         "requirements": [],
         "reward": "skillPoints:1",
+        "required_power": 300,
         "required_effort": "Extreme",
     },
     # AP ID: 2285
@@ -2846,6 +2867,7 @@ achievement_requirements = {
         "details": "Survive 120 consecutive waves without any monster reaching the orb.",
         "requirements": ["minWave: 120"],
         "reward": "skillPoints:1",
+        "required_power": 160,
         "required_effort": "Major",
     },
     # AP ID: 2286
@@ -3000,6 +3022,7 @@ achievement_requirements = {
         "details": "Have 900 monsters on the field at the same time.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 160,
         "required_effort": "Major",
     },
     # AP ID: 2301
@@ -3038,6 +3061,7 @@ achievement_requirements = {
         "details": "Create a gem with at least 30,000 minimum raw damage.",
         "requirements": ["gemSkills: 1"],
         "reward": "skillPoints:2",
+        "required_power": 160,
         "required_effort": "Extreme",
     },
     # AP ID: 2305
@@ -3239,6 +3263,7 @@ achievement_requirements = {
         "details": "Have at least 80,000 starting mana.",
         "requirements": [],
         "reward": "skillPoints:3",
+        "required_power": 600,
         "required_effort": "Extreme",
     },
     # AP ID: 2326
@@ -3269,6 +3294,7 @@ achievement_requirements = {
         "details": "Reach mana pool level 20.",
         "requirements": [],
         "reward": "skillPoints:3",
+        "required_power": 300,
         "required_effort": "Extreme",
     },
     # AP ID: 2329
@@ -3298,6 +3324,7 @@ achievement_requirements = {
         "details": "Have at least 40,000 starting mana.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 450,
         "required_effort": "Major",
     },
     # AP ID: 2332
@@ -3426,6 +3453,7 @@ achievement_requirements = {
         "description": "Create a gem with a raw minimum damage of 3.000 or higher.",
         "requirements": ["gemSkills: 1"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Major",
     },
     # AP ID: 2345
@@ -3466,6 +3494,7 @@ achievement_requirements = {
         "details": "Beat 50 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
         "requirements": ["Swarmling Domination trait", "Giant Domination trait", "minWave: 50"],
         "reward": "skillPoints:2",
+        "required_power": 160,
         "required_effort": "Extreme",
     },
     # AP ID: 2349
@@ -3533,6 +3562,7 @@ achievement_requirements = {
         "details": "Create a gem with at least 300,000 minimum raw damage.",
         "requirements": ["gemSkills: 1"],
         "reward": "skillPoints:2",
+        "required_power": 300,
         "required_effort": "Extreme",
     },
     # AP ID: 2356
@@ -3716,6 +3746,7 @@ achievement_requirements = {
         "description": "Kill a monster having at least 20.000 hit points.",
         "requirements": ["minMonsterHP:20000"],
         "reward": "skillPoints:1",
+        "required_power": 160,
         "required_effort": "Trivial",
     },
     # AP ID: 2375
@@ -3877,6 +3908,7 @@ achievement_requirements = {
         "details": "Reach wizard level 40.",
         "requirements": ["wizardLevel: 40"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Minor",
     },
     # AP ID: 2391
@@ -4082,6 +4114,7 @@ achievement_requirements = {
         "description": "Reach mana pool level 15.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 160,
         "required_effort": "Major",
     },
     # AP ID: 2412
@@ -4344,6 +4377,7 @@ achievement_requirements = {
         "details": "Build 60 traps in one battle.",
         "requirements": ["Traps skill"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Extreme",
     },
     # AP ID: 2438
@@ -4812,6 +4846,7 @@ achievement_requirements = {
         "description": "Beat 100 waves on max Swarmling and Giant domination traits.",
         "requirements": ["Swarmling Domination trait", "Giant Domination trait", "minWave: 100"],
         "reward": "skillPoints:2",
+        "required_power": 300,
         "required_effort": "Extreme",
     },
     # AP ID: 2485
@@ -4871,6 +4906,7 @@ achievement_requirements = {
         "description": "Deal 10.000 poison damage to a monster.",
         "requirements": ["Poison skill"],
         "reward": "skillPoints:2",
+        "required_power": 30,
         "required_effort": "Trivial",
     },
     # AP ID: 2491
@@ -5194,6 +5230,7 @@ achievement_requirements = {
         "description": "Build 240 walls.",
         "requirements": ["Wall element"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Extreme",
     },
     # AP ID: 2524
@@ -5283,6 +5320,7 @@ achievement_requirements = {
         "details": "Kill 999 swarmlings in one battle.",
         "requirements": ["minSwarmlings:999"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Major",
     },
     # AP ID: 2533
@@ -5533,6 +5571,7 @@ achievement_requirements = {
         "details": "Kill 12,000 monsters in one battle.",
         "requirements": [],
         "reward": "skillPoints:2",
+        "required_power": 80,
         "required_effort": "Major",
     },
     # AP ID: 2558
@@ -5585,6 +5624,7 @@ achievement_requirements = {
         "details": "Kill a monster that has at least 200 armor.",
         "requirements": ["minMonsterArmor:200"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Trivial",
     },
     # AP ID: 2563
@@ -5604,6 +5644,7 @@ achievement_requirements = {
         "details": "60 consecutive waves with no monster touching the orb.",
         "requirements": ["minWave: 60"],
         "reward": "skillPoints:1",
+        "required_power": 80,
         "required_effort": "Minor",
     },
     # AP ID: 2565
@@ -5843,6 +5884,7 @@ achievement_requirements = {
         "details": "Kill 24,000 monsters in one battle.",
         "requirements": ["minMonsters:24000"],
         "reward": "skillPoints:3",
+        "required_power": 160,
         "required_effort": "Extreme",
     },
     # AP ID: 2589
@@ -5976,6 +6018,7 @@ achievement_requirements = {
         "description": "Build 40 traps.",
         "requirements": ["Traps skill"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Major",
     },
     # AP ID: 2603
@@ -6219,6 +6262,7 @@ achievement_requirements = {
         "details": "Reach wizard level 20.",
         "requirements": ["wizardLevel: 20"],
         "reward": "skillPoints:1",
+        "required_power": 30,
         "required_effort": "Minor",
     },
     # AP ID: 2628
@@ -6250,6 +6294,7 @@ achievement_requirements = {
         "details": "Survive 240 consecutive waves without any monster reaching the orb.",
         "requirements": ["minWave: 240", "Endurance"],
         "reward": "skillPoints:3",
+        "required_power": 300,
         "required_effort": "Extreme",
     },
     # AP ID: 2631

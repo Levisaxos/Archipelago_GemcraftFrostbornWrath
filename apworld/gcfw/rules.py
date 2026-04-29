@@ -9,6 +9,61 @@ from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_catego
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
 from .options import AchievementProgression
+from .power import (
+    has_power,
+    required_achievement_power,
+    build_weight_map_for_world,
+    EDGE_TALISMAN_NAMES,
+    CORNER_TALISMAN_NAMES,
+)
+
+
+# Prereq stage ids per stage, derived from each stage's `requirements` field
+# in rulesdata_levels.py. Items there are written as "Field_<sid>" — strip
+# the prefix to recover stage str_ids. OR semantics: any one tokenable
+# prereq satisfies the gate. Free-stage prereqs (W1-W4 lack Field Tokens)
+# are filtered out at use-site so they don't break has_any().
+def _extract_prereq_sids(requirements: list) -> list[str]:
+    return [r[len("Field_"):] for r in requirements if isinstance(r, str) and r.startswith("Field_")]
+
+
+STAGE_PREREQS: dict[str, list[str]] = {
+    sid: _extract_prereq_sids(data.get("requirements", []))
+    for sid, data in LEVEL_DATA.items()
+}
+
+
+# Full requirements list per stage (raw strings as written in
+# rulesdata_levels.py). Field_<sid> entries are OR-combined (handled by
+# STAGE_PREREQS); everything else is AND-evaluated through _eval_req at
+# rule time. Used by the per-stage gate loop in set_rules().
+STAGE_REQUIREMENTS: dict[str, list[str]] = {
+    sid: list(data.get("requirements", []))
+    for sid, data in LEVEL_DATA.items()
+}
+
+
+def _stage_non_field_reqs(sid: str) -> list[str]:
+    return [r for r in STAGE_REQUIREMENTS.get(sid, [])
+            if not (isinstance(r, str) and r.startswith("Field_"))]
+
+
+def _restrict_talisman_shapes(loc, exclude_edge: bool, exclude_corner: bool) -> None:
+    """Layer an item_rule that excludes EDGE and/or CORNER talisman fragments
+    by name. Composes with whatever item_rule was already on the location.
+    """
+    if not exclude_edge and not exclude_corner:
+        return
+    prev = loc.item_rule  # default is `lambda i: True`
+
+    def new_rule(item, p=prev, ee=exclude_edge, ec=exclude_corner):
+        if ee and item.name in EDGE_TALISMAN_NAMES:
+            return False
+        if ec and item.name in CORNER_TALISMAN_NAMES:
+            return False
+        return p(item)
+
+    loc.item_rule = new_rule
 
 if TYPE_CHECKING:
     from . import GemcraftFrostbornWrathWorld
@@ -68,18 +123,41 @@ def _count_xp_items(state, player: int) -> int:
     return sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
 
 
-def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
-    """Check whether the player has collected enough field tokens from the
-    previous tier (and all lower tiers, recursively)."""
-    prev = tier-1
-    count = len(TIERS[prev]) * token_percent // 100
-    # Check token requirement from previous tier.
-    if sum(1 for name in TIER_TOKEN_NAMES[prev] if state.has(name, player)) < count:
-        return False
-    # Recurse to ensure all lower tiers are also satisfied.
-    if prev == 0:
-        return True
-    return _has_tier_tokens(state, player, prev, token_percent)
+def _count_complete_talisman_rows(state, player: int) -> int:
+    """Count complete rows of the matching 3x3 grid the player owns.
+
+    A row = all 3 fragments of one icon group. With 9 progression fragments
+    split into 3 fixed icon groups (see power.MATCHING_TALISMAN_ROWS),
+    the player can have 0..3 complete rows.
+    """
+    from .power import MATCHING_TALISMAN_ROWS
+    return sum(
+        1 for row in MATCHING_TALISMAN_ROWS
+        if all(state.has(n, player) for n in row)
+    )
+
+
+def _count_complete_talisman_columns(state, player: int) -> int:
+    """Count complete columns of the matching 3x3 grid the player owns.
+
+    A column = one specific fragment from each icon group (positions
+    {1,4,7}, {2,5,8}, or {3,6,9}). See power.MATCHING_TALISMAN_COLUMNS.
+    """
+    from .power import MATCHING_TALISMAN_COLUMNS
+    return sum(
+        1 for col in MATCHING_TALISMAN_COLUMNS
+        if all(state.has(n, player) for n in col)
+    )
+
+
+def _count_skill_points(state, player: int) -> int:
+    """Sum SP across all collected Skillpoint Bundle items.
+    Each 'Skillpoint Bundle N' contributes N skill points; the pool may
+    contain multiple copies of the same bundle size."""
+    total = 0
+    for size in range(1, 11):
+        total += size * state.count(f"Skillpoint Bundle {size}", player)
+    return total
 
 
 def _normalize_requirements(requirements: list) -> list:
@@ -248,6 +326,18 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             # requires ceil(N/2) XP items collected.
             needed_items = (count_needed + 1) // 2
             return _count_xp_items(state, player) >= needed_items
+        if group_name == "talismanRow":
+            # A complete row = all 3 fragments of one icon group (positions
+            # 1-3 / 4-6 / 7-9). Need at least N complete rows.
+            return _count_complete_talisman_rows(state, player) >= count_needed
+        if group_name == "talismanColumn":
+            # A complete column = one specific fragment from each icon group
+            # (positions {1,4,7} / {2,5,8} / {3,6,9}). Need at least N complete
+            # columns. NOTE: rows and columns share the same 9 fragments, so
+            # talismanRow:3 + talismanColumn:3 both reduce to "all 9 owned."
+            return _count_complete_talisman_columns(state, player) >= count_needed
+        if group_name == "skillPoints":
+            return _count_skill_points(state, player) >= count_needed
         return True  # Unknown counter (minGemGrade, etc.) — metadata only
 
     if " trait" in req.lower() or " skill" in req.lower():
@@ -274,23 +364,37 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     Apply access rules to all regions and locations.
 
     Region connections (from W1 hub):
-      - FREE_STAGES (W2-W4): no token or tier requirement (tutorial zone).
-      - Other Tier 0 stages: own field token only (no tier gate).
-      - Tier 1+ stages: own field token AND N tokens from previous tier. (AND prev tier unlocked)
-    Location rules: WIZLOCK skill requirements only (L5).
-    Victory: A4 reachable AND all 24 skills collected.
+      - FREE_STAGES (W2-W4): no token requirement (tutorial zone).
+      - All other stages:    require their own field token only.
+
+    Location rules:
+      - Journey:        WIZLOCK skills (where applicable) + tier-power gate.
+      - Wizard stash:   WIZLOCK skills (where applicable) + key item +
+                        stash-power gate (≈ 65% of tier-power).
+      - Achievements:   per-achievement requirements + per-achievement power
+                        gate (default from required_effort, optional override
+                        via the `required_power` field).
+
+    Victory: A4 reachable AND all 24 skills collected (handled below).
     """
+    from worlds.generic.Rules import add_rule
+
     player = world.player
     multiworld = world.multiworld
 
     stages = GAME_DATA["stages"]
-    stage_map = {s["str_id"]: s for s in stages}
 
-    token_percent = world.options.tier_requirements_percent.value
+    # Build the per-world power weight map ONCE — every has_power(...) call
+    # below reuses it. Walking state.prog_items[player] with a precomputed
+    # weight map is ~10x cheaper per fill check than iterating master lists.
+    weight_map = build_weight_map_for_world(world)
 
     w1_region = multiworld.get_region("W1", player)
 
     # --- Region connections: W1 → every non-W1 stage ---
+    # A stage's own Field Token is still required to physically enter the
+    # stage. Stage-to-stage progression order is enforced separately by the
+    # prerequisite gates further down (STAGE_PREREQS).
     for stage in stages:
         str_id = stage["str_id"]
         if str_id == "W1":
@@ -298,27 +402,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         child_region = multiworld.get_region(str_id, player)
         connection = w1_region.connect(child_region, f"W1 -> {str_id}")
 
-        rule = STAGE_RULES.get(str_id)
-        tier = rule.tier if rule else 0
-        token_name = f"{str_id} Field Token"
-
-        # print(f"{token_name}: tier {tier}")
         if str_id in FREE_STAGES:
             # Free stages (W2-W4): accessible from W1 with no requirements.
             # They have no token items; the mod unlocks them on connect.
-            pass
-        elif tier == 0:
-            # Other Tier 0: require own field token only (no tier gate).
-            connection.access_rule = (
-                lambda state, tok=token_name: state.has(tok, player)
-            )
-        else:
-            # Tier 1+: require own field token + N tokens from previous tier.
-            connection.access_rule = (
-                lambda state, tok=token_name, ti=tier, tper=token_percent: (
-                    state.has(tok, player) and _has_tier_tokens(state, player, ti, tper)
-                )
-            )
+            continue
+        token_name = f"{str_id} Field Token"
+        connection.access_rule = (
+            lambda state, tok=token_name: state.has(tok, player)
+        )
 
     # --- Location rules: WIZLOCK skill requirements only ---
     for str_id, rule in STAGE_RULES.items():
@@ -347,16 +438,44 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
 
-    # --- Wizard stash gating: each stash also requires its key item ---
-    # The WIZLOCK rule above attaches to the stash too, but for stages without
-    # WIZLOCK we still need the key-item gate. add_rule() ANDs conditions
-    # so we can layer this on cleanly.
-    from worlds.generic.Rules import add_rule
+    # --- Per-stage prerequisite gates (Journey + Wizard stash) ---
+    # Each stage requires AT LEAST ONE prereq stage's Field Token to have been
+    # collected. Free stages (W1-W4) have no Field Tokens, so a prereq list
+    # consisting entirely of free stages is auto-satisfied — no rule added.
+    # Mixed prereq lists (some free, some tokened) reduce to the tokened
+    # subset since OR with an always-true free option is just "true."
     for stage in stages:
-        loc_name = f"Complete {stage['str_id']} - Wizard stash"
-        key_name = f"Wizard Stash {stage['str_id']} Key"
-        location = multiworld.get_location(loc_name, player)
-        add_rule(location, lambda state, n=key_name: state.has(n, player))
+        sid = stage["str_id"]
+        journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
+        stash_loc   = multiworld.get_location(f"Complete {sid} - Wizard stash", player)
+
+        prereq_sids = STAGE_PREREQS.get(sid, [])
+        free_in_prereqs = any(p in FREE_STAGES for p in prereq_sids)
+        tokenable = [p for p in prereq_sids if p not in FREE_STAGES]
+        non_field_reqs = _stage_non_field_reqs(sid)
+
+        # OR-combined Field token requirement (skipped if any prereq is free,
+        # since the OR is then trivially satisfied by an always-reachable stage).
+        if prereq_sids and not free_in_prereqs and tokenable:
+            token_names = frozenset(f"{p} Field Token" for p in tokenable)
+            add_rule(journey_loc,
+                lambda state, names=token_names: state.has_any(names, player))
+            add_rule(stash_loc,
+                lambda state, names=token_names: state.has_any(names, player))
+
+        # AND-combined counter requirements (talismanRow:N, talismanColumn:N,
+        # skillPoints:N, etc.). Each evaluated independently via _eval_req;
+        # all must be satisfied. is_progressive=False — these aren't
+        # achievement chain references.
+        for req in non_field_reqs:
+            add_rule(journey_loc,
+                lambda state, r=req: _eval_req(r, state, player, is_progressive=False))
+            add_rule(stash_loc,
+                lambda state, r=req: _eval_req(r, state, player, is_progressive=False))
+
+        # Wizard-stash key item is always required (no off mode).
+        key_name = f"Wizard Stash {sid} Key"
+        add_rule(stash_loc, lambda state, n=key_name: state.has(n, player))
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
@@ -442,6 +561,20 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                             for group in groups
                         )
                     location.access_rule = make_rule(normalized, is_progressive)
+
+                # Power gate — independent of element/skill requirements.
+                # Defaults to ACHIEVEMENT_EFFORT_POWER[required_effort] unless
+                # the achievement has an explicit `required_power` override.
+                ach_power = required_achievement_power(ach_data)
+                if ach_power > 0:
+                    add_rule(location,
+                        lambda state, p=ach_power, wm=weight_map:
+                            has_power(state, world, p, wm))
+
+                # Achievements are filler-quality and reachable across the
+                # spectrum. Exclude edge/corner talismans so they end up at
+                # higher-tier stage locations (where the player has cores).
+                _restrict_talisman_shapes(location, True, True)
 
             except Exception:
                 pass
