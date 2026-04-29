@@ -51,7 +51,7 @@ package patch {
             {label: "In Logic",     dotColor: 0x44EE44, bit: 1},
             {label: "Out of Logic", dotColor: 0xFF4444, bit: 2},
             {label: "Excl. Effort", dotColor: 0x888888, bit: 4},
-            {label: "Excl. Design", dotColor: 0xBB7700, bit: 8}
+            {label: "Untrackable",  dotColor: 0xBB7700, bit: 8}
         ];
 
         public function AchievementGroupPanel() {

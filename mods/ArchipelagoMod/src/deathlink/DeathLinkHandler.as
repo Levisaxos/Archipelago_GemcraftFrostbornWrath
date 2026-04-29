@@ -14,10 +14,13 @@ package deathlink {
      *   gem_loss    (0) — destroy Math.ceil(occupiedBuildings * gemLossPercent / 100) random
      *                     buildings (tower/trap) that contain a gem, along with their gem.
      *   wave_surge  (1) — boost the enrage slot gem's grade by waveSurgeGemLevel for
-     *                     waveSurgeCount wave activations, then restore.
+     *                     waveSurgeCount wave activations, then restore. Count, HP, armor,
+     *                     and XP all scale together via vanilla enrage mechanics.
      *                     If the slot is empty, no gem is created; instead the enrage formulas
-     *                     are applied directly to each monster as it spawns (monster-patch mode).
-     *   instant_fail(2) — fail the current level immediately (TODO: confirm API).
+     *                     are applied directly to each monster as it spawns (monster-patch mode),
+     *                     and upcoming wave numOfMonsters is pre-boosted to match.
+     *   instant_fail(2) — fail the current level immediately (Endurance ends with victory
+     *                     since it has no proper defeat path).
      *
      * Queuing:
      *   - Incoming DeathLinks are queued and applied one at a time.
@@ -66,6 +69,11 @@ package deathlink {
         private var _surgeStartWave:int = -1;   // core.currentWave value when surge began
         private var _surgeActive:Boolean = false; // true while monster-patch mode is running
 
+        // Waves whose numOfMonsters was pre-boosted in monster-patch mode.
+        // Each entry: { wave: Wave, orig: int }. Restored on endWaveSurge so a
+        // second surge starting before a wave activates doesn't double-stack.
+        private var _boostedCountWaves:Array = [];
+
         /** Fired when the player's orb is destroyed. ():void */
         public var onPlayerDied:Function;
         /** Fired when a DeathLink is received and queued. (source:String):void */
@@ -109,6 +117,7 @@ package deathlink {
             _pendingQueue       = [];
             _savedGrade         = -1;
             _surgeActive        = false;
+            _boostedCountWaves  = [];
         }
 
         // -----------------------------------------------------------------------
@@ -159,12 +168,13 @@ package deathlink {
          * Called every frame while on INGAME screen.
          *
          * Boost mode:       ends the surge if the player sold/moved their gem, or after N waves.
+         *                   Vanilla enrage handles count via `getMonsterNumRatio()` reading the
+         *                   boosted gem grade — no extra work needed here.
          * Monster-patch mode: applies the enrage formulas to any monster that has just spawned
          *                     (isFromEnragedWave == false).  Once flagged, a monster is never
-         *                     touched again, so the per-frame cost is minimal.
+         *                     touched again, so the per-frame cost is minimal.  Wave.numOfMonsters
+         *                     for the upcoming surge waves was pre-boosted in applyWaveSurge.
          *                     Ends after N waves.
-         *
-         * TODO: pre-boost Wave.numOfMonsters for the count portion of enrage.
          */
         public function checkWaveSurge():void {
             if (_surgeGem == null && !_surgeActive) return;
@@ -336,9 +346,12 @@ package deathlink {
             } else {
                 // ── Monster-patch mode ───────────────────────────────────────────
                 // Slot is empty.  No gem is created.  Instead, checkWaveSurge() applies
-                // the enrage formulas directly to each monster as it spawns.
+                // the enrage formulas directly to each monster as it spawns, and we
+                // pre-boost the upcoming waves' numOfMonsters here (since vanilla's
+                // line-672 path multiplies by getMonsterNumRatio()=1 with no gem).
                 _surgeActive = true;
                 _savedGrade  = -1;
+                boostUpcomingWaveCounts(core);
                 _logger.log(_modName, "  waveSurge patch: monster-patch mode, grade="
                     + _waveSurgeGemLevel + " for " + _waveSurgeCount + " waves");
             }
@@ -346,6 +359,32 @@ package deathlink {
             _toast.addMessage("DeathLink! Wave enrage +" + _waveSurgeGemLevel
                 + " for " + _waveSurgeCount + " wave" + (_waveSurgeCount == 1 ? "" : "s") + "!",
                 0xFFFF4444);
+        }
+
+        /**
+         * Monster-patch mode count boost. Multiplies the upcoming surge waves'
+         * numOfMonsters by the same ratio vanilla enrage uses when a gem is
+         * present (`min(2, 1 + (grade+1) * 0.05)`). Originals are recorded so
+         * endWaveSurge can restore any waves that haven't yet activated.
+         */
+        private function boostUpcomingWaveCounts(core:*):void {
+            var grade:int = _waveSurgeGemLevel - 1;
+            var countRatio:Number = Math.min(2.0, 1.0 + (grade + 1) * 0.05);
+            if (countRatio <= 1.0) return;
+
+            var waves:Array = core.waves as Array;
+            if (waves == null) return;
+            var startIdx:int = core.currentWave.g() + 1;
+            var endIdx:int   = Math.min(waves.length, startIdx + _waveSurgeCount);
+            for (var i:int = startIdx; i < endIdx; i++) {
+                var w:* = waves[i];
+                if (w == null) continue;
+                var orig:int    = int(w.numOfMonsters.g());
+                var boosted:int = Math.ceil(orig * countRatio);
+                if (boosted <= orig) continue;
+                w.numOfMonsters.s(boosted);
+                _boostedCountWaves.push({ wave: w, orig: orig });
+            }
         }
 
         private function applyInstantFail():void {
@@ -387,16 +426,23 @@ package deathlink {
                     _logger.log(_modName, "  waveSurge ended: restored grade to " + (_savedGrade + 1));
                 } else if (_surgeActive) {
                     // Monster-patch mode: boosted monsters keep their stats (nothing to undo).
-                    _logger.log(_modName, "  waveSurge ended: monster-patch mode complete");
+                    // Restore numOfMonsters on any upcoming wave that hasn't activated yet,
+                    // so a follow-up surge starts from the original counts.
+                    for each (var rec:* in _boostedCountWaves) {
+                        try { rec.wave.numOfMonsters.s(rec.orig); } catch (e:Error) {}
+                    }
+                    _logger.log(_modName, "  waveSurge ended: monster-patch mode complete"
+                        + " (restored " + _boostedCountWaves.length + " wave count(s))");
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "endWaveSurge cleanup error: " + err.message);
             }
-            _surgeGem       = null;
-            _savedEnrageGem = null;
-            _surgeStartWave = -1;
-            _savedGrade     = -1;
-            _surgeActive    = false;
+            _surgeGem          = null;
+            _savedEnrageGem    = null;
+            _surgeStartWave    = -1;
+            _savedGrade        = -1;
+            _surgeActive       = false;
+            _boostedCountWaves = [];
         }
 
         // -----------------------------------------------------------------------

@@ -22,7 +22,7 @@ package tracker {
      */
     public class FieldLogicEvaluator {
 
-        // Stages whose Journey/Bonus locations require ALL 24 skills.
+        // Stages whose Journey location requires ALL 24 skills.
         public static const ALL_SKILLS_STAGES:Object = { "A4": true };
 
         private var _logger:Logger;
@@ -39,7 +39,16 @@ package tracker {
         private var _dirty:Boolean = true;
         private var _reachableTier:int = -1;
         private var _inLogicByStrId:Object = {};
-        private var _levelStats:Object = {};  // strId -> {maxGiantHP, maxReaverHP, ...}
+        private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
+        private var _stageElements:Object = {};  // strId -> Array<String>
+        private var _stageMonsters:Object = {};  // strId -> Array<String>
+        private var _elementToStages:Object = {}; // element name -> Array<String>
+        private var _monsterToStages:Object = {}; // monster name -> Array<String>
+
+        // Ritual Battle Trait AP id (matches apworld). All current
+        // non_monster_elements (Shadow / Specter / Spire / Wraith / Wizard
+        // Hunter / Apparition) require this trait per rulesdata_settings.py.
+        public static const RITUAL_TRAIT_AP_ID:int = 814;
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
@@ -100,57 +109,56 @@ package tracker {
         /**
          * True if the stage is reachable AND at least one of the provided missing
          * locations is reachable.  Used by StageTinter (per-frame) and ModButtons.
+         *
+         * Per-check reachability:
+         *   - Journey: stage tier + WIZLOCK skill gate (+ all 24 skills on A4)
+         *   - Stash:   stage tier + WIZLOCK skill gate + Wizard Stash key item
          */
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
-                                               bonusMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || bonusMissing || stashMissing)) return false;
-            if (_stageTier == null) return true;
-            if (_dirty) recompute();
-
-            var stageReachable:Boolean = _inLogicByStrId[strId] == true;
-            if (!stageReachable) return false;
-
-            // Stash only needs the tier gate — no skill requirement.
-            if (stashMissing) return true;
-
-            // Journey / Bonus are additionally gated by stage_skills (WIZLOCK)
-            // and, for A4, by the full 24-skill requirement.
-            if (journeyMissing || bonusMissing) {
-                if (!_skillGateMet(strId)) return false;
-                if (ALL_SKILLS_STAGES[strId] == true
-                        && AV.sessionData.totalSkillsCollected < 24) {
-                    return false;
-                }
+            if (!(journeyMissing || stashMissing))
+                return false;
+            if (_stageTier == null)
                 return true;
+            if (!canCompleteStage(strId))
+                return false;
+
+            if (journeyMissing) {
+                // A4-only: Journey additionally needs all 24 skills.
+                var journeyOk:Boolean = !(ALL_SKILLS_STAGES[strId] == true
+                        && AV.sessionData.totalSkillsCollected < 24);
+                if (journeyOk)
+                    return true;
             }
+            if (stashMissing && AV.sessionData.isStashUnlocked(strId))
+                return true;
             return false;
+        }
+
+        /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
+         *  Mirrors apworld's location access_rule, which applies the same skill
+         *  conditions to Journey and Wizard stash on a given stage. */
+        public function canCompleteStage(strId:String):Boolean {
+            if (_dirty) recompute();
+            if (_inLogicByStrId[strId] != true) return false;
+            return _skillGateMet(strId);
         }
 
         /**
          * True if any in-logic stage has at least minWaveCount waves.
-         * Wave tier thresholds match rulesdata_settings.py WAVE_TIERS.
+         *
+         * Reads WaveCount directly from _levelStats so the check sees free
+         * stages (W1-W4) too — they aren't in _stageTier but are in _levelStats
+         * and _inLogicByStrId, so a tier-table-driven version would miss them
+         * (e.g. "Short Tempered" needs only minWave: 5, which W1 satisfies).
          */
         public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
-            var waveTiers:Array = [14, 22, 28, 33, 40, 48, 54, 60, 70, 72, 78, 84, 96];
-
-            if (minWaveCount > 96) return false; // endurance/trial only
-
-            var requiredTier:int = -1;
-            for (var i:int = 0; i < waveTiers.length; i++) {
-                if (int(waveTiers[i]) >= minWaveCount) {
-                    requiredTier = i;
-                    break;
-                }
-            }
-
-            if (_stageTier == null) return true;
-            if (_dirty) recompute(); // was incorrectly "return false" before fix
-
-            for (var strId:String in _stageTier) {
-                if (int(_stageTier[strId]) >= requiredTier
-                        && _inLogicByStrId[strId] == true) {
+            if (_dirty) recompute();
+            if (_levelStats == null) return false;
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true
+                        && int(_levelStats[sid].WaveCount) >= minWaveCount) {
                     return true;
                 }
             }
@@ -162,44 +170,136 @@ package tracker {
             _levelStats = stats || {};
         }
 
-        /** True if any in-logic field has max(maxGiantHP, maxReaverHP) >= threshold. */
+        /** Per-stage element/monster lists from slot_data (for UI tooltips). */
+        public function setStageElements(elements:Object, monsters:Object):void {
+            _stageElements = elements != null ? elements : {};
+            _stageMonsters = monsters != null ? monsters : {};
+            _elementToStages = _buildInverse(_stageElements);
+            _monsterToStages = _buildInverse(_stageMonsters);
+        }
+
+        public function getStageElements(strId:String):Array {
+            var a:Array = _stageElements[strId] as Array;
+            return a != null ? a : [];
+        }
+
+        public function getStageMonsters(strId:String):Array {
+            var a:Array = _stageMonsters[strId] as Array;
+            return a != null ? a : [];
+        }
+
+        /** True if at least one stage that has this element can be completed
+         *  (tier + skill gate met).  Mirrors apworld _eval_req for
+         *  game_level_elements via _can_reach_any_stage, which now requires
+         *  the stage's WIZLOCK skills on Journey/Wizard stash alike. */
+        public function isElementInLogic(elemName:String):Boolean {
+            var stages:Array = _elementToStages[elemName] as Array;
+            if (stages == null || stages.length == 0) return true;
+            for each (var sid:String in stages) {
+                if (canCompleteStage(sid)) return true;
+            }
+            return false;
+        }
+
+        /** True if Ritual is held AND at least one stage that has this monster
+         *  can be completed. Mirrors apworld _eval_req for non_monster_elements. */
+        public function isMonsterInLogic(monName:String):Boolean {
+            if (!AV.sessionData.hasItem(RITUAL_TRAIT_AP_ID)) return false;
+            var stages:Array = _monsterToStages[monName] as Array;
+            if (stages == null || stages.length == 0) return true;
+            for each (var sid:String in stages) {
+                if (canCompleteStage(sid)) return true;
+            }
+            return false;
+        }
+
+        /**
+         * Returns one entry per skill requirement on this stage as
+         * [text:String, met:Boolean].  Empty array if the stage has no skill
+         * requirements (or rules haven't loaded yet).
+         */
+        public function getStageSkillsStatus(strId:String):Array {
+            if (_stageSkills == null) return [];
+            var required:Array = _stageSkills[strId] as Array;
+            if (required == null || required.length == 0) return [];
+
+            var out:Array = [];
+            for each (var skillName:String in required) {
+                var lower:String = skillName.toLowerCase().split(" ").join("");
+                if (lower.indexOf("gemskills:") == 0) {
+                    var need:int = int(skillName.split(":")[1]);
+                    var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
+                    out.push([need + " gem skills (" + have + "/" + need + ")", have >= need]);
+                    continue;
+                }
+                var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (idx >= 0) {
+                    out.push([skillName, AV.sessionData.hasItem(700 + idx)]);
+                }
+            }
+            return out;
+        }
+
+        private function _buildInverse(perStage:Object):Object {
+            var out:Object = {};
+            for (var sid:String in perStage) {
+                var arr:Array = perStage[sid] as Array;
+                if (arr == null) continue;
+                for each (var name:String in arr) {
+                    if (out[name] == null) out[name] = [];
+                    (out[name] as Array).push(sid);
+                }
+            }
+            return out;
+        }
+
+        /** True if any in-logic field has max(GiantMaxHP, ReaverMaxHP) >= threshold. */
         public function hasInLogicFieldWithMinMonsterHP(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
-                    if (Math.max(int(s.maxGiantHP), int(s.maxReaverHP)) >= threshold) return true;
+                    if (Math.max(int(s.GiantMaxHP), int(s.ReaverMaxHP)) >= threshold) return true;
                 }
             }
             return false;
         }
 
-        /** True if any in-logic field has max(maxGiantArmor, maxReaverArmor) >= threshold. */
+        /** True if any in-logic field has max(GiantMaxArmor, ReaverMaxArmor) >= threshold. */
         public function hasInLogicFieldWithMinMonsterArmor(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
-                    if (Math.max(int(s.maxGiantArmor), int(s.maxReaverArmor)) >= threshold) return true;
+                    if (Math.max(int(s.GiantMaxArmor), int(s.ReaverMaxArmor)) >= threshold) return true;
                 }
             }
             return false;
         }
 
-        /** True if any in-logic field has estMonsters >= threshold. */
+        /** True if any in-logic field has MonsterCount >= threshold. */
         public function hasInLogicFieldWithMinMonsters(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
-                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].estMonsters) >= threshold) return true;
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonsterCount) >= threshold) return true;
             }
             return false;
         }
 
-        /** True if any in-logic field has maxSwarmlingArmor >= threshold. */
+        /** True if any in-logic field has SwarmlingMaxArmor >= threshold. */
         public function hasInLogicFieldWithMinSwarmlingArmor(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats) {
-                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].maxSwarmlingArmor) >= threshold) return true;
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingMaxArmor) >= threshold) return true;
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has SwarmlingCount >= threshold. */
+        public function hasInLogicFieldWithMinSwarmlings(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingCount) >= threshold) return true;
             }
             return false;
         }
@@ -277,7 +377,7 @@ package tracker {
         }
 
         /**
-         * Returns skill names required for this stage's Journey/Bonus that
+         * Returns skill names required for this stage's Journey that
          * the player has not yet collected.
          */
         public function getMissingStageSkills(strId:String):Array {
@@ -329,11 +429,22 @@ package tracker {
                 }
             }
 
-            // Mark each stage by tier.
-            // for (var strId:String in _stageTier) {
-            //     var tier:int = int(_stageTier[strId]);
-            //     _inLogicByStrId[strId] = _freeStages[strId] == true || tier <= _reachableTier;
-            // }
+            // Mark each stage by tier AND token possession. The apworld access
+            // rule for any non-free stage is "own field token AND prev-tier
+            // tokens", so a stage isn't truly in logic just because its tier
+            // is reachable — the player also needs that stage's own token.
+            // (Free stages bypass token; they're added unconditionally below.)
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            for (var strId:String in _stageTier) {
+                var tier:int = int(_stageTier[strId]);
+                if (_freeStages[strId] == true) {
+                    _inLogicByStrId[strId] = true;
+                } else {
+                    _inLogicByStrId[strId] = tier <= _reachableTier
+                            && tokens != null
+                            && tokens[strId] == true;
+                }
+            }
             // Free stages (W1-W4) are not in _stageTier but are always reachable.
             for (var freeSid:String in _freeStages) {
                 _inLogicByStrId[freeSid] = true;

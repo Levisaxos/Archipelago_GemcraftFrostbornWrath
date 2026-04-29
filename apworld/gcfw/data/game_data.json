@@ -1,7 +1,7 @@
 {
   "_notes": {
-    "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 200-299 | Skills: 300-399 | Battle Traits: 400-499 | XP: 500-599 | Talisman Fragments (specific): 700-752 | Talisman Fragments (extra): 753-799 | Shadow Core Stashes (specific): 800-816 | Shadow Core Stashes (extra): 817-868",
-    "location_id_buckets": "Stages (Journey): 1-122 | Stages (Bonus): 200-321 | Map Tiles: 600-625 | Wiz Stash: 400-521",
+    "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 600-625 | Skills: 700-723 | Battle Traits: 800-814 | Talismans: 900-952 | Shadow Cores: 1000-1016 | XP: 1100-1199 | Extra Talismans: 1200-1246 | Extra Shadow Cores: 1300-1351 | Wizard Stash Keys: 1400-1521 | Skillpoint Bundles: 1700-1709 | Achievements: 2000-2636",
+    "location_id_buckets": "Stages (Journey): 1-122 | Wiz Stash: 400-521 | Achievements: 2000-2636",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
     "scope_note": "All 122 stages are in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 do not exist in the game and have been removed. W1-W4 are all free (no field token item). W2-W4 changed from pre-collected to always-free like W1."
   },

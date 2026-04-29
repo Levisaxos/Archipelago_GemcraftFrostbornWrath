@@ -101,6 +101,66 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
+        // Exclusion predicate (mirrors apworld _should_skip_achievement)
+
+        /**
+         * True if the achievement was omitted from AP gen and should be left to
+         * vanilla in-game behavior. Triggers:
+         *   - required_effort is above the player's slot threshold
+         *   - untrackable: True (RNG-dependent, hidden mods, etc.)
+         *   - "Trial" in requirements (Trial mode has no AP hooks)
+         *   - "Endurance" in requirements AND Endurance is disabled in the slot
+         */
+        private function shouldSkipAchievement(achData:Object):Boolean {
+            if (!achData)
+                return true;
+
+            var serverOptions:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            if (!serverOptions)
+                return false;  // No slot data yet — be permissive.
+
+            var threshold:int = int(serverOptions.achievementRequiredEffort);
+            if (threshold > 0) {
+                var rank:int = effortRank(String(achData.required_effort));
+                if (rank > threshold)
+                    return true;
+            }
+
+            if (achData.untrackable === true)
+                return true;
+
+            var reqs:Array = (achData.requirements is Array) ? (achData.requirements as Array) : null;
+            if (reqs != null) {
+                if (requirementsContain(reqs, "Trial"))
+                    return true;
+                if (Boolean(serverOptions.disable_endurance) && requirementsContain(reqs, "Endurance"))
+                    return true;
+            }
+            return false;
+        }
+
+        private function effortRank(effort:String):int {
+            if (effort == "Trivial") return 1;
+            if (effort == "Minor")   return 2;
+            if (effort == "Major")   return 3;
+            if (effort == "Extreme") return 4;
+            return 1;  // unknown -> treat as Trivial (always included)
+        }
+
+        private function requirementsContain(reqs:Array, target:String):Boolean {
+            for (var i:int = 0; i < reqs.length; i++) {
+                var r:* = reqs[i];
+                if (r is Array) {
+                    if (requirementsContain(r as Array, target))
+                        return true;
+                } else if (String(r) == target) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // -----------------------------------------------------------------------
         // Detection
 
         /**
@@ -151,6 +211,15 @@ package unlockers {
                         continue;
                     }
 
+                    // Achievement filtered out at AP gen time (untrackable / Trial /
+                    // disabled-Endurance / above effort threshold). The AP server
+                    // has no location for it — let the game's vanilla skill-point
+                    // reward flow as if the mod weren't loaded for this one.
+                    if (shouldSkipAchievement(achData)) {
+                        _reportedAchievements[gameId] = true;  // don't re-check every frame
+                        continue;
+                    }
+
                     _reportedAchievements[gameId] = true;
                     _logger.log(_modName, "Sending achievement: " + ach.title + "  apId=" + apId + "  gameId=" + gameId);
                     unlockAchievement(String(ach.title), apId, gameId);
@@ -180,16 +249,6 @@ package unlockers {
             }
             _logger.log(_modName, "Sent achievement check: " + achievementName + "  apId=" + apId + "  gameId=" + gameId);
             if (onChecked != null) onChecked();
-        }
-
-        /**
-         * Receive an achievement reward from another player.
-         * Awards skill points only — does not mark collected or send a check.
-         */
-        public function receiveAchievementReward(achievementName:String, apId:int):void {
-            if (!achievementName || apId < 2000 || apId > 2636) return;
-            _awardSkillPointsForAchievement(achievementName);
-            _logger.log(_modName, "Received achievement reward: " + achievementName + " (AP ID " + apId + ")");
         }
 
         // -----------------------------------------------------------------------
@@ -224,20 +283,13 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
-        // Private helpers
+        // Skill-point grants
 
-        private function _awardSkillPointsForAchievement(achievementName:String):void {
-            if (!_achievementData) return;
-            var achInfo:Object = _achievementData[achievementName];
-            if (achInfo && achInfo.reward) {
-                var reward:String = String(achInfo.reward);
-                if (reward.indexOf("skillPoints:") == 0) {
-                    _awardSkillPoints(int(reward.substring(12)));
-                }
-            }
-        }
-
-        private function _awardSkillPoints(points:int):void {
+        /**
+         * Add `points` to the player's wizard skill-point pool.
+         * Used by Skillpoint Bundle items (apId 1700–1709).
+         */
+        public function awardSkillPoints(points:int):void {
             if (points <= 0 || GV.ppd == null) return;
             try {
                 var current:int = int(GV.ppd.skillPtsFromLoot.g());

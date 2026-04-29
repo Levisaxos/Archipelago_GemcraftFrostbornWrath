@@ -10,7 +10,7 @@ Everything here is designed to be readable by non-programmers.
 # WAVE-BASED TIER DEFINITIONS
 # =====================================================================
 # Maps stage progression tiers (0-12) to wave count thresholds.
-# Used by levels, bonuses, and achievements to define gates.
+# Used by levels and achievements to define gates.
 #
 # Format: "tier_N": {"minWaveCount": X}
 # Usage: Write "of_tier_11" instead of "minWave: 84" in requirements
@@ -61,8 +61,7 @@ GRINDINESS_TIERS = {
 #
 # Once a level is unlocked by reaching its tier, all checks are accessible:
 # - Journey completion
-# - Bonus completion
-# - Wizard Stash location
+# - Wizard Stash location (additionally gated behind a per-stage unlock item)
 #
 tier_progression_requirements = {
     "Tier_0": {
@@ -157,10 +156,48 @@ game_level_elements = {
     "Tomb": {"levels": ["B1", "E5", "F3", "I2", "J3", "M3"]},
     "Watchtower": {"levels": ["K1"]},
     "Wizard Tower": {"levels": ["L5"]},
-    # Hidden Codes: not supported by the mod — empty levels marks it as excluded.
-    "Hidden Codes": {"levels": []},
-    # Sealed gem: gem locked in a map socket that can be freed. Fill in levels once confirmed.
-    "Sealed gem": {"levels": []},
+    "Jar of Wasps": {"levels": ["X1", "X2"]},
+    # Hidden Codes: not supported by the mod — explicitly marked unsupported so
+    # _can_achievement_be_met (in __init__.py) treats achievements requiring it
+    # as unreachable. Today no achievements reference it.
+    "Hidden Codes": {"levels": [], "unsupported": True},
+    # Sealed gem: gem locked in a map socket that can be freed. Mod doesn't
+    # surface this yet, so achievements using it are kept untrackable until the
+    # mechanic is wired up. Set `unsupported` to keep `_can_achievement_be_met`
+    # consistent with the empty-levels-means-always-reachable rule used elsewhere.
+    "Sealed gem": {"levels": [], "unsupported": True},
+    # Always-available basics. Empty levels → rules.py returns True (no gate),
+    # so the token is recognized but doesn't constrain reachability. These are
+    # universal building/structure types that exist on every relevant stage.
+    "Tower": {"levels": []},
+    "Wall": {"levels": []},
+    "Wizard Stash": {"levels": []},
+    # Weather. Per-stage rainChance/snowChance is probabilistic per battle.
+    # Listed stages are those where the chance is >= 50% (reliable enough that
+    # a player can expect the weather to fire within a couple of attempts).
+    # Source: extracted from `rainChance`/`snowChance` in StageCollection1.as.
+    "Rain": {"levels": ["F2", "F3", "F4", "F5", "I4", "J1", "J2", "J3", "J4",
+                        "L1", "L2", "L3", "M1", "M2", "M3", "M4",
+                        "N1", "N2", "N3", "N4", "N5",
+                        "O1", "O2", "O3", "O4",
+                        "P1", "P2", "P3", "P4", "P5", "P6",
+                        "Q4", "R3", "R6"]},
+    "Snow": {"levels": ["Q4", "T1", "T2", "T3", "T4", "T5",
+                        "U1", "U2", "U3", "U4",
+                        "X1", "X2", "X3", "X4",
+                        "Y1", "Y2", "Y3", "Y4",
+                        "Z1", "Z2", "Z3"]},
+    # Monster property variants — assigned by IngamePopulator based on per-stage
+    # buffPower. Marked (1 attribute) appears naturally; Twisted (2) and
+    # Possessed (3) require buffPower >= 20 / 35, which no Journey stage reaches
+    # (global max buffPower is 16.8). Both are flagged `unsupported` so any
+    # achievement requiring them is pruned at gen time. Today the only Twisted/
+    # Possessed achievements (147 "Hint of Darkness", 148 "Exorcism") are
+    # already `untrackable`, so this is documentation more than enforcement.
+    # Impossible to reach in current state (without mod-side wave manipulation).
+    "Marked Monster":    {"levels": []},
+    "Twisted Monster":   {"levels": [], "unsupported": True},
+    "Possessed Monster": {"levels": [], "unsupported": True},
 }
 
 # =====================================================================
@@ -178,6 +215,10 @@ non_monster_elements = {
     "Spire": {"requires_trait": "Ritual", "levels": ["E2"]},
     "Wizard Hunter": {"requires_trait": "Ritual", "levels": ["L4"]},
     "Wraith": {"requires_trait": "Ritual", "levels": ["A4", "X4"]},
+    # Apparition: scripted spawns on Q1 and R6 (extracted from StageCollection1
+    # epicCreatures). On any other stage, requires the Ritual battle trait
+    # (which enables random demonic-meter spawns).
+    "Apparition": {"requires_trait": "Ritual", "levels": ["Q1", "R6"]},
 }
 
 # =====================================================================
@@ -208,13 +249,6 @@ game_skills_categories = {
             "Vital Link",
         ],
     },
-    "Skills": {
-        "description": "Gem-related abilities (basic gem types)",
-        "members": [
-            "GemSkills",
-            "OtherSkills"
-        ]
-    },    
     "GemSkills": {
         "description": "Gem-related abilities (basic gem types)",
         "members": [

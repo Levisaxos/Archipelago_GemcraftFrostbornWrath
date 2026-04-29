@@ -12,10 +12,14 @@ package patch {
      * Appends Archipelago check-status lines into the game's field hover tooltip
      * (McInfoPanel) using the same intercept pattern as AchievementTooltipOverlay.
      *
-     * Shows per-check status for Journey, Bonus, and Stash locations:
+     * Shows per-check status for Journey and Stash locations as
+     * one line each:
      *   ✓  grey  — already checked
      *   in logic     green — missing and reachable
      *   not in logic red   — missing and blocked
+     * Also lists each element / special-monster spawn on its own colour-coded
+     * line (green = in logic, red = not yet reachable), and stage skill /
+     * tier prerequisites colour-coded the same way.
      *
      * Also removes the "Available gems" section for levels that are not W1-W4,
      * since those gems reflect the original game state rather than the
@@ -149,17 +153,12 @@ package patch {
                 var journeyMissing:Boolean = missing[base]       == true;
                 var journeyDone:Boolean    = checked[base]       == true;
 
-                var bonusId:int            = base + 199;
-                var bonusMissing:Boolean   = missing[bonusId]    == true;
-                var bonusDone:Boolean      = checked[bonusId]    == true;
-
                 var stashId:int            = base + 399;
                 var stashMissing:Boolean   = missing[stashId]    == true;
                 var stashDone:Boolean      = checked[stashId]    == true;
 
                 var lines:Array = _buildLines(strId,
                         journeyMissing, journeyDone,
-                        bonusMissing,   bonusDone,
                         stashMissing,   stashDone);
 
                 try {
@@ -259,58 +258,68 @@ package patch {
 
         private function _buildLines(strId:String,
                                      journeyMissing:Boolean, journeyDone:Boolean,
-                                     bonusMissing:Boolean,   bonusDone:Boolean,
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
             var stageTier:int = _evaluator.getStageTier(strId);
             var tierLabel:String = (stageTier >= 0) ? ("Tier: " + stageTier) : "";
             var lines:Array = [["Archipelago", 0xE5AD0A]];
             if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
+            // One colour-coded line per element / monster on this stage.
+            // Per-stage view: green iff THIS stage is completable (tier + WIZLOCK).
+            // Monsters additionally require the Ritual Battle Trait.
+            var stageReachable:Boolean = _evaluator.canCompleteStage(strId);
+            var hasRitual:Boolean = AV.sessionData.hasItem(FieldLogicEvaluator.RITUAL_TRAIT_AP_ID);
+            for each (var elem:String in _evaluator.getStageElements(strId)) {
+                lines.push(_checkLine(elem, false, stageReachable));
+            }
+            for each (var mon:String in _evaluator.getStageMonsters(strId)) {
+                lines.push(_checkLine(mon, false, stageReachable && hasRitual));
+            }
+
             var journeyExists:Boolean  = journeyMissing || journeyDone;
-            var bonusExists:Boolean    = bonusMissing   || bonusDone;
             var stashExists:Boolean    = stashMissing   || stashDone;
 
             var journeyInLogic:Boolean = journeyMissing &&
-                    _evaluator.stageHasInLogicMissing(strId, true,  false, false);
-            var bonusInLogic:Boolean   = bonusMissing   &&
-                    _evaluator.stageHasInLogicMissing(strId, false, true,  false);
-            var stashInLogic:Boolean   = stashMissing   &&
-                    _evaluator.stageHasInLogicMissing(strId, false, false, true);
+                    _evaluator.stageHasInLogicMissing(strId, true, false);
+            var stashUnlocked:Boolean  = AV.sessionData.isStashUnlocked(strId);
+            var stashInLogic:Boolean   = stashMissing && stashUnlocked &&
+                    _evaluator.stageHasInLogicMissing(strId, false, true);
 
+            // One line per check, each coloured by its state.
             if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
-            if (bonusExists)   lines.push(_checkLine("Bonus",   bonusDone,   bonusInLogic));
-            if (stashExists)   lines.push(_checkLine("Stash",   stashDone,   stashInLogic));
+            if (stashExists) {
+                if (stashDone) {
+                    lines.push(["Stash: ✓", 0x888888]);
+                } else if (!stashUnlocked) {
+                    lines.push(["Stash: locked", 0xFF4444]);
+                } else {
+                    lines.push(_checkLine("Stash", false, stashInLogic));
+                }
+            }
 
-            // Append requirements for any checks that are blocked (missing + not in logic).
-            var anyBlocked:Boolean =
-                (journeyExists && journeyMissing && !journeyInLogic) ||
-                (bonusExists   && bonusMissing   && !bonusInLogic)   ||
-                (stashExists   && stashMissing   && !stashInLogic);
+            // Stage skill requirements: always shown when present, coloured
+            // green when met, red when not. Mirrors apworld _eval_req for
+            // the WIZLOCK skill gate on Journey/Stash locations.
+            for each (var skillReq:Array in _evaluator.getStageSkillsStatus(strId)) {
+                var met:Boolean = skillReq[1] == true;
+                lines.push(["Needs: " + String(skillReq[0]),
+                            met ? 0x44FF44 : 0xFF4444]);
+            }
 
-            if (anyBlocked) {
-                var stageReachable:Boolean = _evaluator.isStageInLogic(strId);
-                if (!stageReachable) {
-                    // Tier-blocked: show token requirement.
-                    var req:Object = _evaluator.getBlockingTokenReq(strId);
-                    if (req != null && (req.strIds as Array).length > 0) {
-                        lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0x888888]);
-                        lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
-                    }
-                    // Show stage skill requirements (e.g. gemSkills: N) even when tier-blocked.
-                    var stageSkillsBlocked:Array = _evaluator.getMissingStageSkills(strId);
-                    if (stageSkillsBlocked.length > 0)
-                        lines.push(["Needs: " + stageSkillsBlocked.join(", "), 0x888888]);
-                } else if ((journeyMissing && !journeyInLogic) ||
-                           (bonusMissing   && !bonusInLogic)) {
-                    // Skill-gated: stage is tier-reachable but journey/bonus blocked by skills.
-                    var skills:Array = _evaluator.getMissingStageSkills(strId);
-                    if (skills.length > 0)
-                        lines.push(["Needs: " + skills.join(", "), 0x888888]);
-                    if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
-                        var have:int = AV.sessionData.totalSkillsCollected;
-                        if (have < 24)
-                            lines.push(["All 24 skills (" + have + "/24)", 0x888888]);
-                    }
+            // A4-only: "All 24 skills" gate on Journey.
+            if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
+                var have24:int = AV.sessionData.totalSkillsCollected;
+                lines.push(["All 24 skills (" + have24 + "/24)",
+                            have24 >= 24 ? 0x44FF44 : 0xFF4444]);
+            }
+
+            // Tier-token gate: only shown when this stage isn't yet
+            // tier-reachable. Token list itself is informational (gray).
+            if (!_evaluator.isStageInLogic(strId)) {
+                var req:Object = _evaluator.getBlockingTokenReq(strId);
+                if (req != null && (req.strIds as Array).length > 0) {
+                    lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0xFF4444]);
+                    lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
                 }
             }
 
@@ -318,9 +327,9 @@ package patch {
         }
 
         private function _checkLine(label:String, done:Boolean, inLogic:Boolean):Array {
-            if (done)         return [label + ": \u2713",         0x888888];
-            if (inLogic)      return [label + ": in logic",       0x44FF44];
-            return                   [label + ": not in logic",   0xFF4444];
+            if (done)    return [label + ": \u2713",         0x888888];
+            if (inLogic) return [label + ": in logic",       0x44FF44];
+            return              [label + ": not in logic",   0xFF4444];
         }
 
         /**

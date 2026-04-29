@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import Dict, List
 
-from BaseClasses import ItemClassification, LocationProgressType, Region
+from BaseClasses import ItemClassification, Region
 from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
@@ -27,14 +27,14 @@ from .options import (
     FieldsRequired,
     FieldsRequiredPercentage,
     AchievementRequiredEffort,
+    SkillpointMultiplier,
 )
+from .items_skillpoints import generate_sp_bundles
 from .rules import set_rules
 from .rulesdata import (
     TIERS,
-    TIER_REQUIREMENTS,
     GAME_DATA,
     SKILL_CATEGORIES,
-    CUMULATIVE_SKILL_REQUIREMENTS,
     STAGE_RULES,
 )
 from .rulesdata_settings import (
@@ -51,17 +51,35 @@ def _load_stages():
     return _load_game_data()["stages"]
 
 
-def _is_achievement_excluded(requirements: list, ach_data: dict = None) -> bool:
+def _requirements_contain(reqs: list, target: str) -> bool:
+    """Recursively check whether `target` appears as a requirement string
+    anywhere in a (possibly nested) requirements list."""
+    for r in reqs:
+        if isinstance(r, list):
+            if _requirements_contain(r, target):
+                return True
+        elif r == target:
+            return True
+    return False
+
+
+def _should_skip_achievement(ach_data: dict, options) -> bool:
     """
-    Return True if this achievement should be excluded from logic and always
-    receive a filler item.  Excluded achievements still have a location (so the
-    player gets something when they complete it), but the location is marked
-    EXCLUDED so it can only hold filler.
+    Return True if this achievement should be omitted entirely from AP gen —
+    no item in the pool, no location created. The player still earns vanilla
+    skill points when triggering it in-game; the mod simply doesn't intercept.
 
     Triggers:
-      - Achievement has `"always_as_filler": True` in its data
+      - Achievement has `"untrackable": True` (RNG-dependent, hidden mods, etc.).
+      - Requires Trial mode (Archipelago has no hooks into Trial mode).
+      - Requires Endurance mode AND the player disabled Endurance.
     """
-    if ach_data and ach_data.get("always_as_filler", False):
+    if ach_data.get("untrackable", False):
+        return True
+    requirements = ach_data.get("requirements", [])
+    if _requirements_contain(requirements, "Trial"):
+        return True
+    if options.disable_endurance.value and _requirements_contain(requirements, "Endurance"):
         return True
     return False
 
@@ -70,6 +88,16 @@ def _can_achievement_be_met(requirements: list) -> bool:
     """
     Check if an achievement can be met based on its requirements (DNF format).
     Returns True if any AND-group can be met, False only if all groups are blocked.
+
+    Element-handling convention (mirrors rules.py `_eval_req`):
+      - game_level_elements with `levels: []` → always available (e.g. Tower, Wall,
+        Wizard Stash — basic mechanics that exist on every stage). Token is
+        recognized but doesn't gate. To explicitly mark an element as unreachable,
+        set `unsupported: True` on the element entry; then this function returns
+        False so the achievement gets pruned at gen time. (Today no achievements
+        use such elements — Broken Seal previously did, and is now `untrackable`.)
+      - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
+        non-empty. Empty-levels-and-no-trait → unreachable.
     """
     def _group_can_be_met(group: list) -> bool:
         for req in group:
@@ -82,7 +110,9 @@ def _can_achievement_be_met(requirements: list) -> bool:
                 continue
             elem_name = req.replace(" element", "").strip()
             if elem_name in game_level_elements:
-                if not game_level_elements[elem_name].get("levels", []):
+                # Empty levels = always available (basic mechanic). Only flag as
+                # unreachable when the entry explicitly opts out via `unsupported`.
+                if game_level_elements[elem_name].get("unsupported", False):
                     return False
             elif elem_name in non_monster_elements:
                 elem_data = non_monster_elements[elem_name]
@@ -202,6 +232,7 @@ class GemcraftFrostbornWrathWorld(World):
             FieldTokenPlacement,
             XpTomeBonus,
             AchievementRequiredEffort,
+            SkillpointMultiplier,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -281,33 +312,32 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
         # All four are free stages; the mod unlocks them on connect.
-        # W1 Field Token is intentionally absent; Extra XP Item #1 fills its slot.
+        # No placeholder is added: the 118 token items + skills/traits/talismans/
+        # cores/XP-tomes already match the 366 stage locations (since W1-W4 each
+        # contribute 3 locations but 0 token items, the difference is filled by
+        # the always-on items below).
         for stage in stages:
             if stage["item_ap_id"] is None:
                 continue
             pool.append(self.create_item(f"{stage['str_id']} Field Token"))
-        pool.append(self.create_item("Extra XP Item #1"))  # W1 token removed; keep item count balanced
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
             if name.endswith(" Skill"):
                 pool.append(self.create_item(name))
 
-        # Battle traits — Overcrowd is precollected instead if starting_overcrowd is on.
-        # A Tattered Scroll is added to keep item count == location count.
-        # Count total GCFW players in multiworld to add traits per-player
-        gcfw_player_count = sum(1 for world in self.multiworld.worlds.values()
-                                if isinstance(world, GemcraftFrostbornWrathWorld))
-
+        # Battle traits — one copy per player. Each GCFW player needs 15 traits
+        # in their own pool; AP routes ownership and cross-player drops automatically.
+        # When `starting_overcrowd` is on, Overcrowd is precollected (removed from
+        # this player's pool) and an Extra XP Item is added in its place to keep
+        # the item count == location count.
         battle_trait_items = [name for name in item_table if name.endswith(" Battle Trait")]
         for name in battle_trait_items:
             if name == "Overcrowd Battle Trait" and self.options.starting_overcrowd:
                 self.multiworld.push_precollected(self.create_item(name))
-                pool.append(self.create_item("Tattered Scroll"))
+                pool.append(self.create_item("Extra XP Item #1"))
             else:
-                # Add one copy per GCFW player so multiworld trades work correctly
-                for _ in range(gcfw_player_count):
-                    pool.append(self.create_item(name))
+                pool.append(self.create_item(name))
 
         # Location-specific talisman fragments (53) and shadow core stashes (17)
         for name in item_table:
@@ -332,7 +362,10 @@ class GemcraftFrostbornWrathWorld(World):
             for i in range(count):
                 pool.append(self.create_item(f"{name} #{i+1}"))
 
-        # Achievements — based on required_effort option
+        # Achievements — locations only (no longer 1:1 items). SP is filler now,
+        # so achievement *locations* still get checks but the items at those
+        # locations come from the general pool. Still need to mutate
+        # achievement requirements here because rules.py reads them at set_rules time.
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
@@ -366,61 +399,53 @@ class GemcraftFrostbornWrathWorld(World):
                 if requirements and _reqs_have_trait(requirements):
                     ach_data["requirements"] = _strip_elements(requirements)
 
-            # Add achievements filtered by required_effort level
-            total_achievements = 0
-            filtered_achievements = {}
-            added_achievements = 0
-            added_achievement_names = set()  # Track which achievements were actually added
-
-            # Detect achievement chains if progressive mode is enabled
-            achievement_chains = {}
-            if self.options.achievement_progression.value == 0:  # 0 = progressive
-                achievement_chains = _detect_achievement_chains(all_achievements)
-
-            # Effort hierarchy for filtering
+            # Track which achievements get an actual AP location for the chain
+            # injection step. Mirror the filters create_regions uses so the two
+            # stay in sync.
+            included_achievements = set()
             effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
-            max_effort_str = effort_hierarchy[min(required_effort - 1, len(effort_hierarchy) - 1)] if required_effort > 0 else "Trivial"
-
-            # First pass: validate and add achievements
+            max_effort_str = effort_hierarchy[min(required_effort - 1, len(effort_hierarchy) - 1)]
             for ach_name, ach_data in all_achievements.items():
-                # Filter by required_effort level
                 ach_effort = ach_data.get("required_effort", "Trivial")
                 if ach_effort in effort_hierarchy:
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
-                        continue  # Skip achievements above selected effort level
+                        continue
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
+                if not _can_achievement_be_met(ach_data.get("requirements", [])):
+                    continue
+                included_achievements.add(ach_name)
 
-                total_achievements += 1
-                requirements = ach_data.get("requirements", [])
+            # Progressive chains: each chained achievement requires its parent's
+            # location to be reachable. rules.py:_eval_req checks via state.can_reach
+            # for "Achievement:" requirements when in progressive mode.
+            if self.options.achievement_progression.value == 0:  # 0 = progressive
+                achievement_chains = _detect_achievement_chains(all_achievements)
+                for ach_name in included_achievements:
+                    parent_ach = achievement_chains.get(ach_name)
+                    if parent_ach and parent_ach in included_achievements:
+                        ach_data = all_achievements[ach_name]
+                        ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
-                # Excluded achievements (Hidden Codes etc.) still contribute an item
-                # to the pool — it ends up at a non-excluded location elsewhere.
-                if not _is_achievement_excluded(requirements, ach_data):
-                    # Validate that non-excluded achievement requirements can be met
-                    if not _can_achievement_be_met(requirements):
-                        filter_reason = _get_filter_reason(requirements)
-                        if filter_reason not in filtered_achievements:
-                            filtered_achievements[filter_reason] = []
-                        filtered_achievements[filter_reason].append(ach_name)
-                        continue  # Skip achievements with unavailable requirements
+        # Per-stage Wizard Stash key items (122 items, IDs 1400–1521).
+        # Progression: each gates its matching stash location in rules.py.
+        for stage in stages:
+            pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
 
-                item_name = f"Achievement: {ach_name}"
-                if item_name in item_table:
-                    pool.append(self.create_item(item_name))
-                    added_achievements += 1
-                    added_achievement_names.add(ach_name)
-
-            # Second pass: add parent achievement requirements (only for achievements that were added)
-            if achievement_chains:
-                for ach_name in added_achievement_names:
-                    if ach_name in achievement_chains:
-                        parent_ach = achievement_chains[ach_name]
-                        # Only add parent requirement if parent was also added
-                        if parent_ach in added_achievement_names:
-                            # Add parent requirement to the achievement
-                            if ach_name in all_achievements:
-                                ach_data = all_achievements[ach_name]
-                                ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
-
+        # SP bundle filler — fills all remaining unfilled location slots.
+        # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
+        # SkillpointMultiplier docstring for why default is 50%).
+        # The -1 is for the Victory event location (filled by place_locked_item
+        # in generate_basic — outside the regular pool).
+        total_locations = sum(1 for region in self.multiworld.regions
+                              if region.player == self.player
+                              for _ in region.locations)
+        remaining = total_locations - len(pool) - 1
+        if remaining > 0:
+            total_sp = 2000 * self.options.skillpoint_multiplier.value // 100
+            bundles = generate_sp_bundles(self.random, total_sp, remaining)
+            for name in bundles:
+                pool.append(self.create_item(name))
 
         self.multiworld.itempool += pool
 
@@ -433,19 +458,19 @@ class GemcraftFrostbornWrathWorld(World):
         menu_region = Region("Menu", self.player, self.multiworld)
         self.multiworld.regions.append(menu_region)
 
-        # Create one region per stage — every stage has AP locations (Journey + Bonus).
+        # Create one region per stage — every stage has AP locations (Journey + Wizard stash).
         # All locations are normal progress type; XP and token gates are on region connections.
+        # Wizard stash is additionally gated behind a per-stage "Wizard Stash {str_id} Unlock" item
+        # (see _gate_wizard_stash_locations in rules.py).
         stage_regions: Dict[str, Region] = {}
         for str_id, stage in all_stage_map.items():
             region = Region(str_id, self.player, self.multiworld)
-            for suffix in ("Journey", "Bonus"):
-                loc_name = f"Complete {str_id} - {suffix}"
-                loc_data = location_table[loc_name]
-                loc = GCFWLocation(self.player, loc_name, loc_data.id, region)
-                region.locations.append(loc)
+            journey_name = f"Complete {str_id} - Journey"
+            journey_data = location_table[journey_name]
+            region.locations.append(GCFWLocation(self.player, journey_name, journey_data.id, region))
             wiz_loc_name = f"Complete {str_id} - Wizard stash"
             wiz_loc_data = location_table[wiz_loc_name]
-            region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))                        
+            region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
@@ -468,18 +493,18 @@ class GemcraftFrostbornWrathWorld(World):
                     if effort_hierarchy.index(ach_effort) > effort_hierarchy.index(max_effort_str):
                         continue  # Skip achievements above selected effort level
 
-                requirements = ach_data.get("requirements", [])
-                excluded = _is_achievement_excluded(requirements, ach_data)
+                # Untrackable / Trial / disabled-Endurance — no AP location.
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
 
-                if not excluded and not _can_achievement_be_met(requirements):
+                requirements = ach_data.get("requirements", [])
+                if not _can_achievement_be_met(requirements):
                     continue  # Skip achievements with truly unavailable requirements
 
                 loc_name = f"Achievement: {ach_name}"
                 if loc_name in location_table:
                     loc_data = location_table[loc_name]
                     loc = GCFWLocation(self.player, loc_name, loc_data.id, achievements_region)
-                    if excluded:
-                        loc.progress_type = LocationProgressType.EXCLUDED
                     achievements_region.locations.append(loc)
 
             self.multiworld.regions.append(achievements_region)
@@ -724,6 +749,28 @@ class GemcraftFrostbornWrathWorld(World):
                 if requirements:
                     achievement_requirements_map[ach_name] = requirements
 
+        # Per-stage element/monster lists for the in-game field tooltip.
+        # Inverted from rulesdata_settings.{game_level_elements, non_monster_elements}.
+        # Tower / Wall / Wizard Stash are universal basics — omitted from the UI
+        # to keep the tooltip scannable.
+        SKIP_ELEMENTS = {"Tower", "Wall", "Wizard Stash"}
+        stage_elements: Dict[str, List[str]] = {}
+        stage_monsters: Dict[str, List[str]] = {}
+        for elem_name, data in game_level_elements.items():
+            if elem_name in SKIP_ELEMENTS:
+                continue
+            if data.get("unsupported"):
+                continue
+            for sid in data.get("levels", []):
+                stage_elements.setdefault(sid, []).append(elem_name)
+        for elem_name, data in non_monster_elements.items():
+            for sid in data.get("levels", []):
+                stage_monsters.setdefault(sid, []).append(elem_name)
+        for v in stage_elements.values():
+            v.sort()
+        for v in stage_monsters.values():
+            v.sort()
+
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,
@@ -739,6 +786,8 @@ class GemcraftFrostbornWrathWorld(World):
             "stage_tier":            stage_tier_map,
             "stage_skills":          stage_skills_map,
             "tier_stage_counts":     tier_stage_counts,
+            "stage_elements":        stage_elements,
+            "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,

@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS, CUMULATIVE_SKILL_REQUIREMENTS
+from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS
 from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements, skill_groups
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
@@ -25,6 +25,47 @@ TIER_SKILL_NAMES: dict[str, List[str]] = {
     cat: [f"{s} Skill" for s in skills]
     for cat, skills in SKILL_CATEGORIES.items()
 }
+
+
+# Pre-build Shadow Core / XP item name lists. Names mirror items.py exactly.
+def _build_shadow_core_names() -> List[str]:
+    names: List[str] = []
+    stashes = GAME_DATA.get("shadow_core_stashes", [])
+    for sc in stashes:
+        names.append(f"{sc['str_id']} Shadow Cores")
+    extras = GAME_DATA.get("extra_shadow_core_stashes", [])
+    for sc in extras:
+        names.append(sc["name"])
+    return names
+
+
+SHADOW_CORE_ITEM_NAMES: List[str] = _build_shadow_core_names()
+
+
+# Union of original-vanilla levels for every Ritual-gated creature.
+# Used to bar the Ritual trait itself behind reachability of at least one
+# of its creatures, mirroring the mod-side RitualSpawnPatcher gate.
+RITUAL_CREATURE_LEVELS: List[str] = sorted({
+    lvl
+    for elem in non_monster_elements.values()
+    if elem.get("requires_trait") == "Ritual"
+    for lvl in elem.get("levels", [])
+})
+
+XP_ITEM_NAMES: List[str] = (
+    [f"Tattered Scroll #{i+1}" for i in range(32)]
+    + [f"Worn Tome #{i+1}" for i in range(6)]
+    + [f"Ancient Grimoire #{i+1}" for i in range(2)]
+    + [f"Extra XP Item #{i+1}" for i in range(60)]
+)
+
+
+def _count_shadow_core_items(state, player: int) -> int:
+    return sum(1 for n in SHADOW_CORE_ITEM_NAMES if state.has(n, player))
+
+
+def _count_xp_items(state, player: int) -> int:
+    return sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
 
 
 def _has_tier_tokens(state, player: int, tier: int, token_percent: int) -> bool:
@@ -53,17 +94,31 @@ def _normalize_requirements(requirements: list) -> list:
 
 def _simplify_requirements(normalized: list) -> list:
     """If any AND-group contains a trait requirement, strip element reqs from all groups.
-    Prevents circular dependencies where trait items may sit behind element-locked locations."""
+    Prevents circular dependencies where trait items may sit behind element-locked locations.
+
+    Exception: non_monster_elements with a non-empty `levels` list are preserved.
+    Their access rule (have-trait AND any-original-level-reachable) is strictly
+    stronger than the trait alone — matching the mod-side RitualSpawnPatcher
+    gate — so stripping them would lose the level constraint."""
     has_trait = any(" trait" in req.lower() for group in normalized for req in group)
     if not has_trait:
         return normalized
-    return [[req for req in group if not req.endswith(" element")] for group in normalized]
+
+    def keep(req: str) -> bool:
+        if not req.endswith(" element"):
+            return True
+        elem_name = req[:-8]
+        if elem_name in non_monster_elements and non_monster_elements[elem_name].get("levels"):
+            return True
+        return False
+
+    return [[req for req in group if keep(req)] for group in normalized]
 
 
 def _can_reach_any_stage(state, player: int, stages: list) -> bool:
     """Return True if the player can reach any completion location across the given stages."""
     for stage in stages:
-        for suffix in ("Journey", "Bonus", "Wizard stash"):
+        for suffix in ("Journey", "Wizard stash"):
             try:
                 if state.can_reach(f"Complete {stage} - {suffix}", "Location", player):
                     return True
@@ -85,7 +140,11 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
         group_name = req.split(":")[0].strip()
         if group_name in skill_groups or group_name in game_skills_categories:
             return True
-        return group_name in ("minWave", "minMonsters", "minMonsterHP", "minMonsterArmor", "minSwarmlingArmor", "Skills")
+        return group_name in (
+            "minWave", "beforeWave", "minMonsters", "minMonsterHP",
+            "minMonsterArmor", "minSwarmlingArmor", "minSwarmlings",
+            "fieldToken", "Skills",
+        )
     if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
         return any(skill_name in cat.get("members", []) for cat in game_skills_categories.values())
@@ -97,15 +156,31 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     req = req.strip()
 
     if req.startswith("Achievement:"):
-        return state.has(req, player) if is_progressive else True
+        if not is_progressive:
+            return True
+        # Achievement items no longer exist (SP is filler instead). For
+        # progressive chains, check that the parent achievement's LOCATION
+        # is reachable — equivalent to "the player could have collected it".
+        try:
+            return state.can_reach(req, "Location", player)
+        except KeyError:
+            return False
 
     if req.endswith(" element"):
         elem_name = req[:-8]
         if elem_name in non_monster_elements:
-            trait = non_monster_elements[elem_name].get("requires_trait")
+            elem_data = non_monster_elements[elem_name]
+            trait = elem_data.get("requires_trait")
+            levels = elem_data.get("levels", [])
+            # Mod-side RitualSpawnPatcher only allows a creature type to spawn
+            # when at least one of its original-vanilla levels is in logic.
+            # Mirror that gate here so AP doesn't consider creature-kill checks
+            # reachable when the player can't actually trigger spawns yet.
             if trait:
-                return state.has(f"{trait} Battle Trait", player)
-            return _can_reach_any_stage(state, player, non_monster_elements[elem_name].get("levels", []))
+                if not state.has(f"{trait} Battle Trait", player):
+                    return False
+                return not levels or _can_reach_any_stage(state, player, levels)
+            return _can_reach_any_stage(state, player, levels)
         if elem_name in game_level_elements:
             stages = game_level_elements[elem_name].get("levels", [])
             if stages:
@@ -131,31 +206,65 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             suffix_map = {m: (" Battle Trait" if cat == "BattleTraits" else " Skill")
                           for cat, data in game_skills_categories.items() for m in data.get("members", [])}
             return sum(1 for m in all_skill_names if state.has(f"{m}{suffix_map[m]}", player)) >= count_needed
-        if group_name == "minWave":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("wave_count", 0) >= count_needed]
+        if group_name in ("minWave", "beforeWave"):
+            # beforeWave is the same gen-time gate as minWave: a stage exists with
+            # at least N waves so wave N is actually reached. Kept distinct in data
+            # because the in-game semantic is "must happen before wave N".
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("WaveCount", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsters":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("estMonsters", 0) >= count_needed]
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("MonsterCount", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsterHP":
             qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("maxGiantHP", 0), d.get("maxReaverHP", 0)) >= count_needed]
+                          if max(d.get("GiantMaxHP", 0), d.get("ReaverMaxHP", 0)) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minMonsterArmor":
             qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("maxGiantArmor", 0), d.get("maxReaverArmor", 0)) >= count_needed]
+                          if max(d.get("GiantMaxArmor", 0), d.get("ReaverMaxArmor", 0)) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
         if group_name == "minSwarmlingArmor":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("maxSwarmlingArmor", 0) >= count_needed]
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingMaxArmor", 0) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
-        return True  # Unknown counter (fieldToken, gemCount, etc.) — metadata only
+        if group_name == "minSwarmlings":
+            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingCount", 0) >= count_needed]
+            return _can_reach_any_stage(state, player, qualifying)
+        if group_name == "fieldToken":
+            collected = sum(
+                1
+                for tier_tokens in TIER_TOKEN_NAMES.values()
+                for name in tier_tokens
+                if state.has(name, player)
+            )
+            return collected >= count_needed
+        if group_name == "shadowCore":
+            # Counts AP-distributed Shadow Core stash items (specific + extra).
+            # In-game core drops still happen and contribute to the achievement,
+            # but for AP gating we measure only the items we can place.
+            return _count_shadow_core_items(state, player) >= count_needed
+        if group_name == "wizardLevel":
+            # Wizard level is reached half from AP-distributed XP items (tomes/
+            # scrolls/grimoires/extras) and half from natural play, so the gate
+            # requires ceil(N/2) XP items collected.
+            needed_items = (count_needed + 1) // 2
+            return _count_xp_items(state, player) >= needed_items
+        return True  # Unknown counter (minGemGrade, etc.) — metadata only
 
     if " trait" in req.lower() or " skill" in req.lower():
         skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
         for category, category_data in game_skills_categories.items():
             if skill_name in category_data.get("members", []):
                 suffix = " Battle Trait" if category == "BattleTraits" else " Skill"
-                return state.has(f"{skill_name}{suffix}", player)
+                if not state.has(f"{skill_name}{suffix}", player):
+                    return False
+                # Ritual is mod-gated: it spawns nothing until at least one of
+                # its creatures' original-vanilla levels is in logic. Treat
+                # the trait as not-yet-in-logic before that threshold so
+                # achievements requiring just "Ritual trait" don't appear
+                # satisfiable on a sphere where the trait is inert.
+                if skill_name == "Ritual":
+                    return _can_reach_any_stage(state, player, RITUAL_CREATURE_LEVELS)
+                return True
 
     return True  # Metadata requirement (gemCount, minWave, etc.) — not gated
 
@@ -233,10 +342,21 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         def make_rule(conds):
             return lambda state: all(c(state) for c in conds)
 
-        for suffix in ("Journey", "Bonus"):
+        for suffix in ("Journey", "Wizard stash"):
             loc_name = f"Complete {str_id} - {suffix}"
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
+
+    # --- Wizard stash gating: each stash also requires its key item ---
+    # The WIZLOCK rule above attaches to the stash too, but for stages without
+    # WIZLOCK we still need the key-item gate. add_rule() ANDs conditions
+    # so we can layer this on cleanly.
+    from worlds.generic.Rules import add_rule
+    for stage in stages:
+        loc_name = f"Complete {stage['str_id']} - Wizard stash"
+        key_name = f"Wizard Stash {stage['str_id']} Key"
+        location = multiworld.get_location(loc_name, player)
+        add_rule(location, lambda state, n=key_name: state.has(n, player))
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
@@ -290,6 +410,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         max_effort_index = min(max_effort_level - 1, len(effort_hierarchy) - 1)
         max_effort_str = effort_hierarchy[max_effort_index] if max_effort_level > 0 else None
 
+        from . import _should_skip_achievement
+
         for ach_name, ach_data in all_achievements.items():
             ach_effort = ach_data.get("required_effort", "Trivial")
             if max_effort_str:
@@ -298,7 +420,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if effort_index > max_index:
                     continue
 
-            if ach_data.get("always_as_filler", False):
+            # Untrackable / Trial / disabled-Endurance achievements have no AP
+            # location, so there's nothing to attach an access rule to.
+            if _should_skip_achievement(ach_data, world.options):
                 continue
 
             try:

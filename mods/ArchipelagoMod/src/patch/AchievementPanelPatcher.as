@@ -49,7 +49,7 @@ package patch {
         // Data sets — populated by update*() calls from ArchipelagoMod
         private var _reqMetApIds:Object         = {}; // apId -> true: req currently met (for dots)
         private var _inLogicApIds:Object        = {}; // apId -> true: req met AND still missing (for grouping/counts)
-        private var _excludedApIds:Object       = {}; // apId -> true: always_as_filler
+        private var _excludedApIds:Object       = {}; // apId -> true: untrackable
         private var _effortExcludedApIds:Object = {}; // apId -> true: effort > threshold
         private var _maxEffortLabel:String      = "Trivial";
 
@@ -58,6 +58,7 @@ package patch {
 
         private var _tooltipOverlay:AchievementTooltipOverlay;
         private var _groupPanel:AchievementGroupPanel;
+        private var _searchField:AchievementSearchField;
 
         // -----------------------------------------------------------------------
 
@@ -169,8 +170,33 @@ package patch {
                 return false;
             }
 
-            // Apply default group selection to filterFlags immediately
+            // Search field — top-right of the panel content area.
+            _searchField = new AchievementSearchField();
+            _searchField.onChange = _onSearchChange;
+            try {
+                var panelW:Number = 0;
+                try { panelW = Number(panel.mc.width); } catch (eW:Error) { panelW = 0; }
+                var sx:Number;
+                if (panelW > AchievementSearchField.FIELD_W + 20) {
+                    sx = panelW - AchievementSearchField.FIELD_W - 10;
+                } else {
+                    // Fallback: anchor to the right edge of the hidden reset button.
+                    sx = resetBtn.x + 116 - AchievementSearchField.FIELD_W;
+                }
+                _searchField.x = sx;
+                _searchField.y = 60;
+                panel.mc.addChild(_searchField);
+            } catch (eS:Error) {
+                _logger.log(_modName, "patchResetButton: search field addChild error: " + eS.message);
+            }
+
+            // Apply default group selection to filterFlags + push counts now that
+            // _groupPanel exists.  updateDots() may have run earlier (before the panel
+            // was created) and short-circuited inside _updateGroupCounts because
+            // _groupPanel was still null; refresh here so the buttons start with the
+            // correct numbers (in particular Untrackable, whose set is static).
             _applyGroupFilter();
+            _updateGroupCounts();
 
             _resetButtonPatched = true;
             _logger.log(_modName, "AchievementPanelPatcher: group panel injected");
@@ -184,11 +210,29 @@ package patch {
          * Recomputes filterFlags (OR union of selected groups) and refreshes the panel.
          */
         private function _onGroupToggle():void {
+            _refreshFiltered();
+        }
+
+        /**
+         * Called when the search query changes.  Same refresh path as the group toggle —
+         * the search query is consumed inside _applyGroupFilter().
+         */
+        private function _onSearchChange():void {
+            _refreshFiltered();
+        }
+
+        /**
+         * Re-apply the combined filter (groups AND search) and refresh the panel.
+         */
+        private function _refreshFiltered():void {
             _applyGroupFilter();
 
-            // Keep the hidden BtnAchiFilter in sync (isSelected drives the game filter)
+            // Keep the hidden BtnAchiFilter in sync (isSelected drives the game filter).
+            // Stay "selected" while either a group or a search query is active.
             if (_ourFilterButton != null) {
-                var any:Boolean = (_groupPanel != null && _groupPanel.selectedGroups != 0);
+                var hasGroup:Boolean  = (_groupPanel != null && _groupPanel.selectedGroups != 0);
+                var hasSearch:Boolean = (_searchField != null && _searchField.query.length > 0);
+                var any:Boolean = hasGroup || hasSearch;
                 _ourFilterButton.isSelected = any;
                 try { _ourFilterButton.plate.gotoAndStop(any ? 3 : 1); } catch (e:Error) {}
             }
@@ -201,7 +245,7 @@ package patch {
                     _applyLogicDots();
                 }
             } catch (e2:Error) {
-                _logger.log(_modName, "_onGroupToggle error: " + e2.message);
+                _logger.log(_modName, "_refreshFiltered error: " + e2.message);
             }
         }
 
@@ -215,6 +259,7 @@ package patch {
             if (GV.achiCollection == null) return;
 
             var sel:uint = (_groupPanel != null) ? _groupPanel.selectedGroups : 0;
+            var q:String = (_searchField != null) ? _searchField.query : "";
             var achis:Array = GV.achiCollection.achisByOrder;
             if (achis == null) return;
 
@@ -240,6 +285,11 @@ package patch {
                         } else {
                             passes = (sel & AchievementGroupPanel.GROUP_OUT_LOGIC) != 0;
                         }
+                    }
+
+                    if (passes && q.length > 0) {
+                        var title:String = (ach.title != null) ? String(ach.title).toLowerCase() : "";
+                        if (title.indexOf(q) < 0) passes = false;
                     }
 
                     while (ach.filterFlags.length <= _ourFilterIndex) ach.filterFlags.push(false);
@@ -285,6 +335,10 @@ package patch {
          */
         public function updateLogicFlags(inLogicApIds:Object):void {
             _inLogicApIds = inLogicApIds || {};
+            // Push the same set to the per-achievement tooltip so its
+            // "In logic" / "Out of logic" line agrees with the dots and the
+            // panel's group counts.
+            if (_tooltipOverlay != null) _tooltipOverlay.inLogicApIds = _inLogicApIds;
             if (!_patched || _ourFilterIndex < 0) return;
             if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
             try {
@@ -323,7 +377,6 @@ package patch {
         public function updateDots(reqMetApIds:Object):void {
             _reqMetApIds = reqMetApIds || {};
             _dotsDirty   = true;
-            if (_tooltipOverlay != null) _tooltipOverlay.reqMetApIds = _reqMetApIds;
             _applySortedOrder();
             _applyGroupFilter();
             _updateGroupCounts();
@@ -414,7 +467,7 @@ package patch {
                     g3.push(ach);
             }
 
-            GV.achiCollection.achisByOrder = g1.sortOn("title").concat(g2.sortOn("title"), g3.sortOn("title"), g4.sortOn("title"), gRest.sortOn("title"));
+            GV.achiCollection.achisByOrder = g1.sortOn("title").concat(g2.sortOn("title"), g3.sortOn("title"), g4.sortOn("title"), g5.sortOn("title"), gRest.sortOn("title"));
         }
 
         // -----------------------------------------------------------------------
@@ -441,7 +494,12 @@ package patch {
 
                 var apIdInt:int      = int(apId);
                 var excluded:Boolean = (_excludedApIds[apIdInt] === true || _effortExcludedApIds[apIdInt] === true);
-                var inLogic:Boolean  = (!excluded && _reqMetApIds[apIdInt] === true);
+                // Match the button label and the panel's "In Logic" group count:
+                // an achievement is "in logic" iff it is uncollected on AP AND its
+                // requirements are currently met. _reqMetApIds (requirements only,
+                // ignores AP-collected status) caused green dots to appear on
+                // achievements the AP server already considered checked.
+                var inLogic:Boolean  = (!excluded && _inLogicApIds[apIdInt] === true);
                 var isEarned:Boolean = (int(ach.status) >= 2);
 
                 if (isEarned) {

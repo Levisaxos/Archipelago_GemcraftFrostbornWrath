@@ -1,5 +1,6 @@
 package tracker {
     import Bezel.Logger;
+    import com.giab.games.gcfw.GV;
     import data.AV;
     import data.SessionData;
     import unlockers.TraitUnlocker;
@@ -32,6 +33,10 @@ package tracker {
      *   "minMonsterArmor: N"    — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterArmor(N)
      *   "minMonsters: N"        — FieldLogicEvaluator.hasInLogicFieldWithMinMonsters(N)
      *   "minSwarmlingArmor: N"  — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlingArmor(N)
+     *   "minSwarmlings: N"      — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlings(N)
+     *   "beforeWave: N"         — same gate as minWave (a stage with N+ waves exists)
+     *   "shadowCore: N"         — count(1000-1016) + count(1300-1351) >= N
+     *   "wizardLevel: N"        — count(1100-1199) >= ceil(N/2) — half from XP items, half from natural play
      */
     public class LogicEvaluator {
 
@@ -53,6 +58,12 @@ package tracker {
                                   elementStages:Object):void {
             _fieldEvaluator = fieldEvaluator;
             _elementStages  = elementStages;
+        }
+
+        /** Read access to the element → stage strIds map (for in-level evaluator,
+         *  panel rendering, etc.). May be null if configure() hasn't run yet. */
+        public function get elementStages():Object {
+            return _elementStages;
         }
 
         // -----------------------------------------------------------------------
@@ -178,11 +189,15 @@ package tracker {
             if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
             if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
+            if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+            if (lower.indexOf("shadowcore")        == 0) return "Requires " + n + "+ Shadow Core stash items";
+            if (lower.indexOf("wizardlevel")       == 0) return "Requires " + ((n + 1) >> 1) + "+ XP items (toward wizard level " + n + ")";
             if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
             if (lower.indexOf("minmonsterarmor")   == 0) return "Requires stage with monster armor " + n + "+";
             if (lower.indexOf("minmonsters")       == 0) return "Requires stage with " + n + "+ monsters";
             if (lower.indexOf("minswarmlingarmor") == 0) return "Requires stage with swarmling armor " + n + "+";
+            if (lower.indexOf("minswarmlings")     == 0) return "Requires stage that spawns " + n + "+ swarmlings";
 
             return "Requires " + req;
         }
@@ -218,17 +233,18 @@ package tracker {
                 var eEnd:int     = lower.indexOf(" element");
                 var elemName:String = _trim(req.substring(0, eEnd));                
                 if (_elementStages != null) {
-                    var stages:Array = _elementStages[elemName] as Array;                    
-                    if (stages != null) {
-                        for each (var stId:String in stages) {                               
-                            if (AV.sessionData.fieldsInLogic[stId] == true){                                
+                    var stages:Array = _elementStages[elemName] as Array;
+                    // Empty list = always available (e.g. Tower, Wall — never shuffled).
+                    if (stages != null && stages.length > 0) {
+                        for each (var stId:String in stages) {
+                            if (AV.sessionData.fieldsInLogic[stId] == true){
                                  return true;
                             }
                         }
                         return false;
                     }
                 }
-                return true; // no mapping = don't block
+                return true; // no mapping or empty mapping = don't block
             }
 
             // "X trait" — includes "Any Battle trait"
@@ -284,8 +300,11 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N"
-            if (lower.indexOf("minwave") == 0) {
+            // "minWave: N" / "beforeWave: N" — same gate (a stage with N+ waves
+            // exists). beforeWave is kept distinct in data because its semantic
+            // is "must happen before wave N", but the gen-time reachability gate
+            // is identical.
+            if (lower.indexOf("minwave") == 0 || lower.indexOf("beforewave") == 0) {
                 var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithMinWaves(wNeed);
@@ -295,6 +314,23 @@ package tracker {
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
+            }
+
+            // "shadowCore: N" — counts AP-distributed Shadow Core stash items.
+            // Specific stashes 1000-1016, extras 1300-1351 (ranges per items.py).
+            if (lower.indexOf("shadowcore") == 0) {
+                var scNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                var scHave:int = AV.sessionData.countItemsInRange(1000, 1016)
+                               + AV.sessionData.countItemsInRange(1300, 1351);
+                return scHave >= scNeed;
+            }
+
+            // "wizardLevel: N" — half from AP-distributed XP items (1100-1199),
+            // half assumed from natural play. Gate at ceil(N/2) items collected.
+            if (lower.indexOf("wizardlevel") == 0) {
+                var wlNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                var itemsNeeded:int = (wlNeed + 1) >> 1; // ceil(N/2)
+                return AV.sessionData.countItemsInRange(1100, 1199) >= itemsNeeded;
             }
 
             // Level monster stat requirements
@@ -314,9 +350,194 @@ package tracker {
                 var sarmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlingArmor(sarmNeed);
             }
+            // "minSwarmlings: N" — checked AFTER minSwarmlingArmor because the
+            // shorter name is a prefix of the longer one.
+            if (lower.indexOf("minswarmlings") == 0) {
+                var swNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlings(swNeed);
+            }
 
             // Unknown requirement — don't block
             return true;
+        }
+
+        // -----------------------------------------------------------------------
+        // In-level evaluation: filter achievements by the player's CURRENT loadout
+        // and the CURRENT field's static design data, rather than AP-logic state.
+        // Powers the "Available achievements this run" HUD panel.
+        // -----------------------------------------------------------------------
+
+        /** Returns true iff every requirement passes against the current in-level
+         *  state described by `currentStrId` (e.g. "A4"). DNF-aware. */
+        public function evaluateInLevelRequirements(requirements:Array,
+                                                    currentStrId:String):Boolean {
+            if (requirements == null || requirements.length == 0) return true;
+            if (requirements[0] is Array) {
+                for each (var group:* in requirements) {
+                    var andGroup:Array = group as Array;
+                    if (andGroup == null) continue;
+                    var groupPasses:Boolean = true;
+                    for each (var groupReq:* in andGroup) {
+                        if (!evaluateInLevelRequirement(_trim(String(groupReq)), currentStrId)) {
+                            groupPasses = false;
+                            break;
+                        }
+                    }
+                    if (groupPasses) return true;
+                }
+                return false;
+            }
+            for each (var req:* in requirements) {
+                if (!evaluateInLevelRequirement(_trim(String(req)), currentStrId)) return false;
+            }
+            return true;
+        }
+
+        /** Single-requirement in-level evaluator. Falls back to the AP-logic
+         *  check (`evaluateRequirement`) for loadout-independent counters. */
+        public function evaluateInLevelRequirement(req:String, currentStrId:String):Boolean {
+            var lower:String = req.toLowerCase();
+
+            // "X skill" / "X skill | Y skill" — must be unlocked AND have level > 0
+            if (lower.indexOf(" skill") >= 0) {
+                if (req.indexOf("|") >= 0) {
+                    var opts:Array = req.split("|");
+                    for each (var opt:String in opts) {
+                        opt = _trim(opt);
+                        var ol:String = opt.toLowerCase();
+                        if (ol.indexOf(" skill") >= 0) {
+                            var sn:String = _trim(opt.substring(0, ol.indexOf(" skill")));
+                            if (_isSkillActive(sn)) return true;
+                        }
+                    }
+                    return false;
+                }
+                var sEnd:int = lower.indexOf(" skill");
+                return _isSkillActive(_trim(req.substring(0, sEnd)));
+            }
+
+            // "X element" — current field's strId must appear in elementStages[X]
+            if (lower.indexOf(" element") >= 0) {
+                var eEnd:int = lower.indexOf(" element");
+                var elemName:String = _trim(req.substring(0, eEnd));
+                if (_elementStages != null) {
+                    var stages:Array = _elementStages[elemName] as Array;
+                    if (stages != null && stages.length > 0) {
+                        for each (var stId:String in stages) {
+                            if (stId == currentStrId) return true;
+                        }
+                        return false;
+                    }
+                }
+                return true; // no/empty mapping = element always present
+            }
+
+            // "X trait" / "Any Battle trait" — must be unlocked AND level > 0
+            if (lower.indexOf(" trait") >= 0) {
+                var tEnd:int = lower.indexOf(" trait");
+                var traitName:String = _trim(req.substring(0, tEnd));
+                if (traitName.toLowerCase() == "any battle") {
+                    for (var t:int = 0; t < 15; t++) {
+                        if (AV.sessionData.hasItem(800 + t) && _traitLevel(t) > 0) return true;
+                    }
+                    return false;
+                }
+                var traitIdx:int = TraitUnlocker.BATTLE_TRAIT_NAMES.indexOf(traitName);
+                if (traitIdx < 0) return true;
+                return AV.sessionData.hasItem(800 + traitIdx) && _traitLevel(traitIdx) > 0;
+            }
+
+            // "Field A4" / "Field N1, U1 or R5" — current strId must match
+            if (lower.indexOf("field ") == 0) {
+                var fieldPart:String = _trim(req.substring(6));
+                var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
+                for each (var fid:String in fieldTokens) {
+                    fid = _trim(fid);
+                    if (fid.length > 0 && fid == currentStrId) return true;
+                }
+                return false;
+            }
+
+            // Mode gates — mod is journey-only
+            if (lower == "trial" || lower == "endurance" || lower == "endurance and trial") {
+                return false;
+            }
+
+            // Threshold-style requirements — evaluated against the current field's
+            // static design data from level_stats.json.
+            if (lower.indexOf("minwave") == 0 || lower.indexOf("beforewave") == 0) {
+                var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "WaveCount") >= wNeed;
+            }
+            if (lower.indexOf("minmonsterhp") == 0) {
+                var mhpNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _maxStat(currentStrId, "ReaverMaxHP", "SwarmlingMaxHP", "GiantMaxHP") >= mhpNeed;
+            }
+            if (lower.indexOf("minmonsterarmor") == 0) {
+                var marmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _maxStat(currentStrId, "ReaverMaxArmor", "SwarmlingMaxArmor", "GiantMaxArmor") >= marmNeed;
+            }
+            if (lower.indexOf("minmonsters") == 0) {
+                var monsNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "MonsterCount") >= monsNeed;
+            }
+            if (lower.indexOf("minswarmlingarmor") == 0) {
+                var sarmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "SwarmlingMaxArmor") >= sarmNeed;
+            }
+            if (lower.indexOf("minswarmlings") == 0) {
+                var swNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "SwarmlingCount") >= swNeed;
+            }
+
+            // Loadout-independent counters (skillsPoints, strikeSpells, fieldToken,
+            // shadowCore, wizardLevel, BattleTraits, gemSkills, ...) — same gate as
+            // AP-logic mode.
+            return evaluateRequirement(req);
+        }
+
+        // -----------------------------------------------------------------------
+        // In-level helpers
+
+        private function _traitLevel(traitGameId:int):int {
+            try {
+                if (GV.ppd != null && GV.ppd.selectedBattleTraitLevels != null) {
+                    var slot:* = GV.ppd.selectedBattleTraitLevels[traitGameId];
+                    if (slot != null) return int(slot.g());
+                }
+            } catch (e:Error) {}
+            return 0;
+        }
+
+        private function _skillLevel(skillGameId:int):int {
+            try {
+                if (GV.ppd != null) return int(GV.ppd.getSkillLevel(skillGameId));
+            } catch (e:Error) {}
+            return -1;
+        }
+
+        private function _isSkillActive(skillName:String):Boolean {
+            var skillIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+            if (skillIdx < 0) return false;
+            if (!AV.sessionData.hasItem(700 + skillIdx)) return false;
+            return _skillLevel(skillIdx) > 0;
+        }
+
+        private function _stat(strId:String, key:String):int {
+            if (strId == null) return 0;
+            var stats:Object = AV.gameData.levelStats != null ? AV.gameData.levelStats[strId] : null;
+            if (stats == null || stats[key] == null) return 0;
+            return int(stats[key]);
+        }
+
+        private function _maxStat(strId:String, k1:String, k2:String, k3:String):int {
+            var a:int = _stat(strId, k1);
+            var b:int = _stat(strId, k2);
+            var c:int = _stat(strId, k3);
+            var m:int = a;
+            if (b > m) m = b;
+            if (c > m) m = c;
+            return m;
         }
 
         private function _trim(s:String):String {

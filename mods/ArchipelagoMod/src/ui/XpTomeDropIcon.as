@@ -46,10 +46,7 @@ package ui {
         private static const TatteredAsset:Class;
         [Embed(source='../../resources/WornTome.png')]
         private static const WornAsset:Class;
-        // TODO: replace with AncientGrimoire.png once the asset is added.
-        // For now, Ancient Grimoires fall back to the Worn Tome bitmap so the
-        // mod compiles and the icon at least appears.
-        [Embed(source='../../resources/WornTome.png')]
+        [Embed(source='../../resources/AncientGrimoire.png')]
         private static const AncientAsset:Class;
 
         public function XpTomeDropIcon(apId:int, levels:int = 0) {

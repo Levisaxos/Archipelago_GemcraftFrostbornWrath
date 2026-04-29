@@ -33,10 +33,13 @@ package patch {
 
         // Data kept in sync by AchievementPanelPatcher
         private var _gameIdToApId:Object       = {}; // game ach.id (int) -> apId (int)
-        private var _excludedApIds:Object      = {}; // apId -> true (always_as_filler)
+        private var _excludedApIds:Object      = {}; // apId -> true (untrackable)
         private var _effortExcludedApIds:Object = {}; // apId -> true (effort > threshold)
         private var _maxEffortLabel:String      = "Trivial";
-        private var _reqMetApIds:Object        = {}; // apId -> true
+        // apId -> true: requirements met AND still missing on AP server.
+        // Drives the tooltip's "In logic" / "Out of logic" line so it matches
+        // the button label and the panel group count (which use the same set).
+        private var _inLogicApIds:Object       = {}; // apId -> true
 
         // Array of Function(ach:*, achName:String, apId:int, isExcluded:Boolean, isInLogic:Boolean):Array
         private var _providers:Array = [];
@@ -56,7 +59,7 @@ package patch {
         public function set excludedApIds(v:Object):void       { _excludedApIds        = v || {}; }
         public function set effortExcludedApIds(v:Object):void { _effortExcludedApIds  = v || {}; }
         public function set maxEffortLabel(v:String):void      { _maxEffortLabel       = v || "Trivial"; }
-        public function set reqMetApIds(v:Object):void         { _reqMetApIds          = v || {}; }
+        public function set inLogicApIds(v:Object):void        { _inLogicApIds         = v || {}; }
 
         /**
          * Register an additional tooltip content provider.
@@ -98,7 +101,7 @@ package patch {
 
             var apId:int           = int(rawApId);
             var isExcluded:Boolean = (_excludedApIds[apId] === true || _effortExcludedApIds[apId] === true);
-            var isInLogic:Boolean  = (!isExcluded && _reqMetApIds[apId] === true);
+            var isInLogic:Boolean  = (!isExcluded && _inLogicApIds[apId] === true);
             var achName:String     = String(hoveredAch.title);
 
             // Collect lines from all registered providers.

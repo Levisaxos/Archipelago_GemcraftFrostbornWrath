@@ -10,6 +10,7 @@ package {
     import Bezel.Logger;
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.constants.ScreenId;
 
     import data.AV;
@@ -24,6 +25,7 @@ package {
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
+    import ui.AvailableAchievementsPanel;
 
     import ui.MainMenuUI;
 
@@ -51,6 +53,7 @@ package {
     import patch.FirstPlayBypass;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
+    import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
 
@@ -106,6 +109,18 @@ package {
         private var _messageLogPanel:MessageLogPanel;
         private var _messageLogOnStage:Boolean = false;
 
+        private var _availableAchievementsPanel:AvailableAchievementsPanel;
+        private var _availableAchievementsOnStage:Boolean = false;
+        // Anchor relative to the stage's right edge (stable — gameRoot.width
+        // fluctuates whenever sub-MovieClips like the options menu animate open).
+        // ACH_PANEL_RIGHT_INSET is in canvas (game) pixels and represents the gap
+        // between the right edge of the play area and the right edge of the stage,
+        // i.e. the width of the in-game UI sidebar (pause/play/wavestone/score)
+        // plus a small margin. Tune this if the panel overlaps the sidebar at
+        // the player's resolution.
+        private static const ACH_PANEL_RIGHT_INSET:Number = 190;
+        private static const ACH_PANEL_TOP_INSET:Number   = 8;
+
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
@@ -127,6 +142,7 @@ package {
         private var _firstPlayBypass:FirstPlayBypass;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
+        private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
         private var _achievementLogicEvaluator:AchievementLogicEvaluator;
@@ -187,6 +203,8 @@ package {
                 _receivedToast = new ReceivedToast();
                 _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
+                _availableAchievementsPanel = new AvailableAchievementsPanel(_logger, MOD_NAME);
+                _availableAchievementsPanel.onExpandRequested = refreshAvailableAchievementsPanel;
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
                 _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
@@ -197,6 +215,7 @@ package {
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
+                _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
@@ -404,6 +423,11 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
+            if (!_availableAchievementsOnStage && _availableAchievementsPanel != null && this.stage != null) {
+                this.stage.addChild(_availableAchievementsPanel);
+                _availableAchievementsOnStage = true;
+                _availableAchievementsPanel.visible = false;
+            }
             if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
                 this.stage.addChild(_disconnectPanel);
                 _disconnectPanelOnStage = true;
@@ -414,6 +438,10 @@ package {
             if (_receivedToastOnStage && _receivedToast != null && _receivedToast.alpha > 0) {
                 positionReceivedToast();
             }
+
+            // Available-achievements panel: show only in-battle, anchor top-right
+            // of play area, keep on top.
+            updateAvailableAchievementsPanel();
 
             // Main menu overlay — show/tick/hide driven by screen state.
             var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
@@ -436,6 +464,14 @@ package {
             // Sweep opened wizard stashes so gems stop targeting their tile
             // after the AP check is collected. See WizStashes.tickClearOpened.
             WizStashes.tickClearOpened(_logger, MOD_NAME);
+
+            // Per-stage stash gating: shield-spike locked stashes and overlay
+            // a padlock above each one until the unlock item arrives.
+            WizStashes.tickEnforceStashLock(_logger, MOD_NAME);
+
+            // Append "Locked — requires Wizard Stash {strId} Key" to the
+            // hover tooltip when the player is hovering a locked stash.
+            WizStashes.tickStashLockTooltip(_logger, MOD_NAME);
 
             // Suppress all dropicons mid-battle. When drops are cleared, start a
             // short countdown so late-arriving async PrintJSON packets are included.
@@ -527,6 +563,17 @@ package {
                     skipAllTutorials();
                     _deathLinkHandler.resetForNewStage();
                     _wavePrePatcher.resetForNewStage();
+                    _ritualSpawnPatcher.resetForNewStage();
+                }
+
+                // Recompute the available-achievements list when entering battle so
+                // the panel reflects the player's current loadout for the new field.
+                // Also refresh the vanilla achievement panel's logic dots so they're
+                // up-to-date the next time the player opens the achievements menu —
+                // not stale from before this battle started.
+                if (screen == ScreenId.INGAME) {
+                    refreshAvailableAchievementsPanel();
+                    _refreshAchievementPanel();
                 }
                 // Reset first-play gem patch when leaving ingame so it re-runs on
                 // the next ingame entry for the same stage (after initializer resets
@@ -591,6 +638,7 @@ package {
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
                 _wavePrePatcher.applyIfReady();
+                _ritualSpawnPatcher.applyIfReady();
             }
 
 
@@ -704,6 +752,79 @@ package {
             // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
             _receivedToast.x = this.stage.stageWidth * 0.5 - _receivedToast.panelWidth * 0.5;
             _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
+        }
+
+        /**
+         * Per-frame upkeep for the in-battle available-achievements HUD:
+         *   - visible only on the INGAME screen
+         *   - anchored to the top-right of the visible game canvas (gameRoot's right
+         *     edge), so it stays at the right of the playfield at any resolution /
+         *     letterbox setting
+         *   - re-raised to the top of the display list so it sits above the game canvas
+         *
+         * The panel sprite is also scaled to match gameRoot, so insets and panel
+         * dimensions are interpreted in canvas (game-pixel) coordinates.
+         */
+        private function updateAvailableAchievementsPanel():void {
+            if (_availableAchievementsPanel == null || this.stage == null) return;
+            var inBattle:Boolean = (int(GV.main.currentScreen) == ScreenId.INGAME);
+            // Hide as soon as the gameover panel is appearing — same range covers
+            // appearing/stats-rolling/drops-listing/idle/disappearing (IngameStatus
+            // 9-13). PLAYING is 5, PLAYING_SHRINE_ACTIVE is 14, so the simple
+            // 9..13 range cleanly isolates the post-battle window.
+            var inGameover:Boolean = false;
+            try {
+                if (GV.ingameController != null && GV.ingameController.core != null) {
+                    var status:int = int(GV.ingameController.core.ingameStatus);
+                    inGameover = (status >= IngameStatus.GAMEOVER_PANEL_APPEARING
+                               && status <= IngameStatus.GAMEOVER_PANEL_DISAPPEARING);
+                }
+            } catch (e:Error) {}
+            var show:Boolean = inBattle && !inGameover;
+            _availableAchievementsPanel.visible = show;
+            if (!show) {
+                // Force the panel back to its small button so re-entering the next
+                // battle starts collapsed instead of restoring an open grid.
+                if (_availableAchievementsPanel.isExpanded) _availableAchievementsPanel.collapse();
+                return;
+            }
+
+            var gameRoot:* = this.stage.getChildAt(0);
+            var scaleX:Number = gameRoot.scaleX;
+            var scaleY:Number = gameRoot.scaleY;
+
+            var panelGameW:Number = _availableAchievementsPanel.isExpanded
+                ? _availableAchievementsPanel.panelWidth
+                : 32;
+            // Anchor to the stage's right edge (stable across menu animations),
+            // then walk leftward by the sidebar inset + panel width, all in canvas
+            // pixels scaled to stage. Right edge of the panel always sits at the
+            // same place; expanded panel grows leftward and downward from there.
+            _availableAchievementsPanel.x = this.stage.stageWidth - (ACH_PANEL_RIGHT_INSET + panelGameW) * scaleX;
+            _availableAchievementsPanel.y = gameRoot.y + ACH_PANEL_TOP_INSET * scaleY;
+            _availableAchievementsPanel.scaleX = scaleX;
+            _availableAchievementsPanel.scaleY = scaleY;
+
+            if (_availableAchievementsPanel.parent == this.stage) {
+                this.stage.setChildIndex(_availableAchievementsPanel, this.stage.numChildren - 1);
+            }
+        }
+
+        /** Recompute the available-achievements list for the current field. */
+        private function refreshAvailableAchievementsPanel():void {
+            if (_availableAchievementsPanel == null || _achievementLogicEvaluator == null) return;
+            var strId:String = null;
+            try {
+                if (GV.ingameCore != null && GV.ingameCore.stageMeta != null) {
+                    strId = String(GV.ingameCore.stageMeta.strId);
+                }
+            } catch (e:Error) {}
+            if (strId == null || strId.length == 0) {
+                _availableAchievementsPanel.setAchievements([]);
+                return;
+            }
+            var entries:Array = _achievementLogicEvaluator.getAvailableInCurrentLevel(strId);
+            _availableAchievementsPanel.setAchievements(entries);
         }
 
         private function onStageResize(e:Event):void {
@@ -932,10 +1053,15 @@ package {
                     int(p.slot_data.token_requirement_percent),
                     p.slot_data.free_stages as Array
                 );
+                _fieldLogicEvaluator.setStageElements(
+                    p.slot_data.stage_elements,
+                    p.slot_data.stage_monsters
+                );
                 _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
+                _ritualSpawnPatcher.configure(_fieldLogicEvaluator);
             }
             _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial, AV.serverData.freeStages);
             _wavePrePatcher.configure(
@@ -1275,17 +1401,39 @@ package {
                     _saveManager.saveSlotData();
                     return;
                 }
-                if (apId >= 2000 && apId <= 2636) {
-                    _logger.log(MOD_NAME, "  → Achievement reward apId: " + apId);
-                    var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
-                    _logger.log(MOD_NAME, "     Found achievement name: " + achName);
-                    if (achName != null) {
-                        _achievementUnlocker.receiveAchievementReward(achName, apId);
-                        _receivedToast.addItem("Received " + achName, 0xAA55FF);
-                    } else {
-                        _receivedToast.addItem("Received Achievement #" + apId, 0xAA55FF);
-                        _logger.log(MOD_NAME, "  grantItem: achievement apId=" + apId + " not found in data map");
+                if (apId >= 1400 && apId <= 1521) {
+                    // Wizard Stash key — gates the per-level stash AP check.
+                    var stashLocId:int = apId - 1400 + 1;
+                    var stashStrId:String = null;
+                    var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+                    for (var sid:String in stageLocIdMap) {
+                        if (int(stageLocIdMap[sid]) == stashLocId) {
+                            stashStrId = sid;
+                            break;
+                        }
                     }
+                    if (stashStrId != null) {
+                        AV.sessionData.markStashUnlocked(stashStrId);
+                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", 0x55AAFF);
+                        _logger.log(MOD_NAME, "  → Wizard stash key for " + stashStrId);
+                    } else {
+                        _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
+                    }
+                    return;
+                }
+                if (apId >= 1700 && apId <= 1709) {
+                    // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
+                    var spAmount:int = apId - 1699;
+                    _achievementUnlocker.awardSkillPoints(spAmount);
+                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", 0xFFCC44);
+                    _logger.log(MOD_NAME, "  → Skillpoint bundle: +" + spAmount + " SP");
+                    return;
+                }
+                if (apId >= 2000 && apId <= 2636) {
+                    // Achievement IDs are now location-only (no items live in this range).
+                    // If one ever arrives, it's a stale seed — log and ignore.
+                    _logger.log(MOD_NAME, "  grantItem: stale achievement-as-item apId=" + apId
+                        + " (achievement items removed; ignoring)");
                     return;
                 }
                 _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);

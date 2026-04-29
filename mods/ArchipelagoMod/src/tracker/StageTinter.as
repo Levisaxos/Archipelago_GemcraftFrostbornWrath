@@ -100,25 +100,26 @@ package tracker {
                     if (base <= 0) continue;
 
                     var journeyMissing:Boolean = missing[base] == true;
-                    var bonusMissing:Boolean   = missing[base + 199] == true;
                     var stashMissing:Boolean   = missing[base + 399] == true;
                     var missingCount:int = 0;
                     if (journeyMissing) missingCount++;
-                    if (bonusMissing)   missingCount++;
                     if (stashMissing)   missingCount++;
 
                     var desired:int;
                     if (missingCount == 0) {
                         // All checks done — let game render its completed lights.
                         desired = STATE_NONE;
-                    } else if (missingCount < 3) {
-                        // Partial progress — yellow.
-                        desired = STATE_YELLOW;
-                    } else if (_evaluator.stageHasInLogicMissing(
-                                   strId, journeyMissing, bonusMissing, stashMissing)) {
-                        desired = STATE_GREEN;
-                    } else {
+                    } else if (!_evaluator.stageHasInLogicMissing(
+                                   strId, journeyMissing, stashMissing)) {
+                        // No remaining check is reachable — stuck. Includes the
+                        // case "journey done, stash missing, no key collected".
                         desired = STATE_RED;
+                    } else if (missingCount < 2) {
+                        // Some progress, remaining checks reachable.
+                        desired = STATE_YELLOW;
+                    } else {
+                        // Nothing done yet, but at least one check reachable.
+                        desired = STATE_GREEN;
                     }
 
                     paint(tok, desired);
