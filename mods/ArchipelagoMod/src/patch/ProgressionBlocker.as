@@ -13,6 +13,7 @@ package patch {
     import flash.events.MouseEvent;
 
     import ui.XpTomeDropIcon;
+    import ui.GempouchDropIcon;
     import ui.RemoteItemDropIcon;
 
     /**
@@ -277,6 +278,18 @@ package patch {
             if (apId < 1100 || apId > 1199) return;
             _addDropIcon(new XpTomeDropIcon(apId, levels),
                 "XP_TOME apId=" + apId + " levels=" + levels,
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a Gempouch drop icon. Distinct mode: ap id 626..651 maps to
+         * a single prefix letter; progressive mode: ap id 652 (one icon per
+         * received copy). Uses its own MOUSE_OVER tooltip handler.
+         */
+        public function addGempouchDropIcon(apId:int):void {
+            if (apId < 626 || apId > 652) return;
+            _addDropIcon(new GempouchDropIcon(apId),
+                "GEMPOUCH apId=" + apId,
                 false /* useVanillaHover */);
         }
 

@@ -22,6 +22,15 @@ package data {
         public var startingWizardLevel:int;
         public var startingOvercrowd:Boolean;
 
+        // Gem-pouch gating: 0=off, 1=distinct, 2=progressive.
+        // playOrder is the alphabetised stage-prefix list shipped from the
+        // apworld; for distinct mode, item AP id = 626 + index in this list.
+        // progressiveId is the AP id used for the single Progressive Gempouch
+        // item (multiple copies arrive with the same id).
+        public var gemPouchGating:int;
+        public var gemPouchPlayOrder:Array;
+        public var gemPouchProgressiveId:int;
+
         // Goal-Specific Settings
         public var fieldsRequired:int;           // for fields_count goal
         public var fieldsRequiredPercentage:int; // for fields_percentage goal
@@ -57,6 +66,10 @@ package data {
 
             startingWizardLevel = 1;
             startingOvercrowd = false;
+
+            gemPouchGating = 0;
+            gemPouchPlayOrder = [];
+            gemPouchProgressiveId = 0;
 
             fieldsRequired = 0;
             fieldsRequiredPercentage = 0;

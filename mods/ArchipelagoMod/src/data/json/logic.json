@@ -5,27 +5,73 @@
       "unlocks": [
         "W2"
       ],
-      "requiredSkills": [],
+      "requiredSkills": [
+        "gemPouch:W"
+      ],
       "availableGems": [
         "Armor Tear",
         "Slow"
       ],
       "waveCount": 6,
-      "requirements": []
+      "requirements": [
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
+      ]
     },
     {
       "strId": "W2",
       "unlocks": [
         "W3"
       ],
-      "requiredSkills": [],
+      "requiredSkills": [
+        "gemPouch:W"
+      ],
       "availableGems": [
         "Armor Tear",
         "Poison"
       ],
       "waveCount": 8,
       "requirements": [
-        "Field_W1"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
@@ -33,14 +79,36 @@
       "unlocks": [
         "W4"
       ],
-      "requiredSkills": [],
+      "requiredSkills": [
+        "gemPouch:W"
+      ],
       "availableGems": [
         "Leech",
         "Slow"
       ],
       "waveCount": 12,
       "requirements": [
-        "Field_W1"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
@@ -48,13 +116,35 @@
       "unlocks": [
         "S1"
       ],
-      "requiredSkills": [],
+      "requiredSkills": [
+        "gemPouch:W"
+      ],
       "availableGems": [
         "Poison"
       ],
       "waveCount": 14,
       "requirements": [
-        "Field_W1"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
@@ -64,7 +154,8 @@
         "S3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:S"
       ],
       "availableGems": [
         "Leech",
@@ -72,16 +163,35 @@
       ],
       "waveCount": 14,
       "requirements": [
-        "Field_W3",
-        "Field_W4",
-        "Field_W2"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
       "strId": "S2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:S"
       ],
       "availableGems": [
         "Leech",
@@ -90,9 +200,27 @@
       ],
       "waveCount": 16,
       "requirements": [
-        "Field_W4",
-        "Field_W2",
-        "Field_W3"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
@@ -101,7 +229,8 @@
         "S4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:S"
       ],
       "availableGems": [
         "Crit",
@@ -109,9 +238,27 @@
       ],
       "waveCount": 14,
       "requirements": [
-        "Field_W4",
-        "Field_W2",
-        "Field_W3"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S4"
+        ]
       ]
     },
     {
@@ -120,7 +267,8 @@
         "V1"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:S"
       ],
       "availableGems": [
         "Crit",
@@ -129,10 +277,27 @@
       ],
       "waveCount": 20,
       "requirements": [
-        "Field_S3",
-        "Field_V1",
-        "Field_S2",
-        "Field_S1"
+        [
+          "Field_W1"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ],
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_S1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S3"
+        ]
       ]
     },
     {
@@ -141,7 +306,8 @@
         "V2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "availableGems": [
         "Armor Tear",
@@ -149,9 +315,15 @@
       ],
       "waveCount": 20,
       "requirements": [
-        "Field_W4",
-        "Field_W2",
-        "Field_W3"
+        [
+          "Field_W4"
+        ],
+        [
+          "Field_W2"
+        ],
+        [
+          "Field_W3"
+        ]
       ]
     },
     {
@@ -161,7 +333,8 @@
         "V4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "availableGems": [
         "Crit",
@@ -169,16 +342,23 @@
       ],
       "waveCount": 22,
       "requirements": [
-        "Field_V1",
-        "Field_S3",
-        "Field_S1"
+        [
+          "Field_V1"
+        ],
+        [
+          "Field_S3"
+        ],
+        [
+          "Field_S1"
+        ]
       ]
     },
     {
       "strId": "V3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "availableGems": [
         "Poison",
@@ -186,9 +366,15 @@
       ],
       "waveCount": 24,
       "requirements": [
-        "Field_V2",
-        "Field_S4",
-        "Field_R1"
+        [
+          "Field_V2"
+        ],
+        [
+          "Field_S4"
+        ],
+        [
+          "Field_R1"
+        ]
       ]
     },
     {
@@ -197,7 +383,8 @@
         "R1"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:V"
       ],
       "availableGems": [
         "Crit",
@@ -206,9 +393,15 @@
       ],
       "waveCount": 24,
       "requirements": [
-        "Field_V3",
-        "Field_Q2",
-        "Field_R2"
+        [
+          "Field_V3"
+        ],
+        [
+          "Field_Q2"
+        ],
+        [
+          "Field_R2"
+        ]
       ]
     },
     {
@@ -217,7 +410,8 @@
         "R2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Leech",
@@ -225,9 +419,15 @@
       ],
       "waveCount": 22,
       "requirements": [
-        "Field_V1",
-        "Field_S2",
-        "Field_S1"
+        [
+          "Field_V1"
+        ],
+        [
+          "Field_S2"
+        ],
+        [
+          "Field_S1"
+        ]
       ]
     },
     {
@@ -236,7 +436,8 @@
         "Q1"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Bleed",
@@ -244,9 +445,15 @@
       ],
       "waveCount": 22,
       "requirements": [
-        "Field_S4",
-        "Field_V2",
-        "Field_R1"
+        [
+          "Field_S4"
+        ],
+        [
+          "Field_V2"
+        ],
+        [
+          "Field_R1"
+        ]
       ]
     },
     {
@@ -255,7 +462,8 @@
         "R4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Leech",
@@ -263,10 +471,18 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_T3",
-        "Field_Q5",
-        "Field_U2",
-        "Field_T2"
+        [
+          "Field_T3"
+        ],
+        [
+          "Field_Q5"
+        ],
+        [
+          "Field_U2"
+        ],
+        [
+          "Field_T2"
+        ]
       ]
     },
     {
@@ -275,7 +491,8 @@
         "R5"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Armor Tear",
@@ -283,10 +500,18 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_Q5",
-        "Field_U2",
-        "Field_T3",
-        "Field_T2"
+        [
+          "Field_Q5"
+        ],
+        [
+          "Field_U2"
+        ],
+        [
+          "Field_T3"
+        ],
+        [
+          "Field_T2"
+        ]
       ]
     },
     {
@@ -296,7 +521,8 @@
         "N1"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Crit",
@@ -304,11 +530,21 @@
       ],
       "waveCount": 32,
       "requirements": [
-        "Field_Y3",
-        "Field_R4",
-        "Field_R3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Y3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -317,7 +553,8 @@
         "Q2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "availableGems": [
         "Crit",
@@ -325,9 +562,15 @@
       ],
       "waveCount": 24,
       "requirements": [
-        "Field_R2",
-        "Field_V3",
-        "Field_Q2"
+        [
+          "Field_R2"
+        ],
+        [
+          "Field_V3"
+        ],
+        [
+          "Field_Q2"
+        ]
       ]
     },
     {
@@ -336,7 +579,8 @@
         "Q3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "availableGems": [
         "Crit",
@@ -344,9 +588,15 @@
       ],
       "waveCount": 22,
       "requirements": [
-        "Field_S4",
-        "Field_V2",
-        "Field_R1"
+        [
+          "Field_S4"
+        ],
+        [
+          "Field_V2"
+        ],
+        [
+          "Field_R1"
+        ]
       ]
     },
     {
@@ -356,7 +606,8 @@
         "Q5"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "availableGems": [
         "Armor Tear",
@@ -364,9 +615,15 @@
       ],
       "waveCount": 24,
       "requirements": [
-        "Field_T1",
-        "Field_V4",
-        "Field_Q1"
+        [
+          "Field_T1"
+        ],
+        [
+          "Field_V4"
+        ],
+        [
+          "Field_Q1"
+        ]
       ]
     },
     {
@@ -375,7 +632,8 @@
         "T1"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "availableGems": [
         "Bleed",
@@ -383,9 +641,15 @@
       ],
       "waveCount": 26,
       "requirements": [
-        "Field_T4",
-        "Field_U3",
-        "Field_Q3"
+        [
+          "Field_T4"
+        ],
+        [
+          "Field_U3"
+        ],
+        [
+          "Field_Q3"
+        ]
       ]
     },
     {
@@ -394,7 +658,8 @@
         "R3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Q"
       ],
       "availableGems": [
         "Crit",
@@ -403,9 +668,15 @@
       ],
       "waveCount": 26,
       "requirements": [
-        "Field_Q4",
-        "Field_U1",
-        "Field_U4"
+        [
+          "Field_Q4"
+        ],
+        [
+          "Field_U1"
+        ],
+        [
+          "Field_U4"
+        ]
       ]
     },
     {
@@ -414,7 +685,8 @@
         "T2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "availableGems": [
         "Bleed",
@@ -422,9 +694,15 @@
       ],
       "waveCount": 26,
       "requirements": [
-        "Field_V3",
-        "Field_Q2",
-        "Field_R2"
+        [
+          "Field_V3"
+        ],
+        [
+          "Field_Q2"
+        ],
+        [
+          "Field_R2"
+        ]
       ]
     },
     {
@@ -433,7 +711,8 @@
         "T3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "availableGems": [
         "Crit",
@@ -441,9 +720,15 @@
       ],
       "waveCount": 28,
       "requirements": [
-        "Field_U1",
-        "Field_U4",
-        "Field_Q4"
+        [
+          "Field_U1"
+        ],
+        [
+          "Field_U4"
+        ],
+        [
+          "Field_Q4"
+        ]
       ]
     },
     {
@@ -452,7 +737,8 @@
         "T4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "availableGems": [
         "Poison",
@@ -460,9 +746,15 @@
       ],
       "waveCount": 28,
       "requirements": [
-        "Field_U4",
-        "Field_Q4",
-        "Field_U1"
+        [
+          "Field_U4"
+        ],
+        [
+          "Field_Q4"
+        ],
+        [
+          "Field_U1"
+        ]
       ]
     },
     {
@@ -471,7 +763,8 @@
         "U1"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:T"
       ],
       "availableGems": [
         "Crit",
@@ -480,9 +773,15 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_T1",
-        "Field_V4",
-        "Field_Q1"
+        [
+          "Field_T1"
+        ],
+        [
+          "Field_V4"
+        ],
+        [
+          "Field_Q1"
+        ]
       ]
     },
     {
@@ -492,7 +791,8 @@
         "U3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "availableGems": [
         "Bleed",
@@ -500,9 +800,15 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_T4",
-        "Field_Q3",
-        "Field_U3"
+        [
+          "Field_T4"
+        ],
+        [
+          "Field_Q3"
+        ],
+        [
+          "Field_U3"
+        ]
       ]
     },
     {
@@ -511,7 +817,8 @@
         "U4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "availableGems": [
         "Armor Tear",
@@ -519,16 +826,23 @@
       ],
       "waveCount": 32,
       "requirements": [
-        "Field_U1",
-        "Field_Q4",
-        "Field_U4"
+        [
+          "Field_U1"
+        ],
+        [
+          "Field_Q4"
+        ],
+        [
+          "Field_U4"
+        ]
       ]
     },
     {
       "strId": "U3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "availableGems": [
         "Crit",
@@ -536,9 +850,15 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_V4",
-        "Field_T1",
-        "Field_Q1"
+        [
+          "Field_V4"
+        ],
+        [
+          "Field_T1"
+        ],
+        [
+          "Field_Q1"
+        ]
       ]
     },
     {
@@ -547,7 +867,8 @@
         "Y1"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:U"
       ],
       "availableGems": [
         "Crit",
@@ -556,9 +877,15 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_Q3",
-        "Field_T4",
-        "Field_U3"
+        [
+          "Field_Q3"
+        ],
+        [
+          "Field_T4"
+        ],
+        [
+          "Field_U3"
+        ]
       ]
     },
     {
@@ -567,7 +894,8 @@
         "Y2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Y"
       ],
       "availableGems": [
         "Bleed",
@@ -575,11 +903,21 @@
       ],
       "waveCount": 32,
       "requirements": [
-        "Field_Y3",
-        "Field_R4",
-        "Field_R3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Y3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -588,7 +926,8 @@
         "Y3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Y"
       ],
       "availableGems": [
         "Crit",
@@ -596,11 +935,21 @@
       ],
       "waveCount": 35,
       "requirements": [
-        "Field_N2",
-        "Field_O4",
-        "Field_N1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_N2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_N1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -609,7 +958,8 @@
         "Y4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Y"
       ],
       "availableGems": [
         "Crit",
@@ -618,9 +968,15 @@
       ],
       "waveCount": 30,
       "requirements": [
-        "Field_Q5",
-        "Field_T2",
-        "Field_U2"
+        [
+          "Field_Q5"
+        ],
+        [
+          "Field_T2"
+        ],
+        [
+          "Field_U2"
+        ]
       ]
     },
     {
@@ -629,7 +985,8 @@
         "X1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:Y"
       ],
       "availableGems": [
         "Crit",
@@ -639,11 +996,21 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_O2",
-        "Field_P1",
-        "Field_R6",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_O2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -653,7 +1020,8 @@
         "X3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:X"
       ],
       "availableGems": [
         "Armor Tear",
@@ -661,18 +1029,29 @@
       ],
       "waveCount": 42,
       "requirements": [
-        "Field_P6",
-        "Field_P4",
-        "Field_P2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "X2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:X"
       ],
       "availableGems": [
         "Leech",
@@ -681,11 +1060,21 @@
       ],
       "waveCount": 48,
       "requirements": [
-        "Field_L3",
-        "Field_Z3",
-        "Field_L2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_L3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -694,7 +1083,8 @@
         "X4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:X"
       ],
       "availableGems": [
         "Bleed",
@@ -702,18 +1092,29 @@
       ],
       "waveCount": 44,
       "requirements": [
-        "Field_P6",
-        "Field_P2",
-        "Field_P4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "X4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:X"
       ],
       "availableGems": [
         "Crit",
@@ -723,11 +1124,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_Z1",
-        "Field_X3",
-        "Field_X1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Z1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -738,7 +1149,8 @@
         "Z4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "availableGems": [
         "Crit",
@@ -747,18 +1159,29 @@
       ],
       "waveCount": 44,
       "requirements": [
-        "Field_P2",
-        "Field_P6",
-        "Field_P4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "Z2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "availableGems": [
         "Armor Tear",
@@ -767,18 +1190,29 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_L1",
-        "Field_X4",
-        "Field_K4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_L1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "Z3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "availableGems": [
         "Crit",
@@ -787,18 +1221,29 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_K1",
-        "Field_K2",
-        "Field_Z2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_K1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Z2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "Z4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Z"
       ],
       "availableGems": [
         "Leech",
@@ -806,11 +1251,21 @@
       ],
       "waveCount": 48,
       "requirements": [
-        "Field_Z3",
-        "Field_L3",
-        "Field_L2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_Z3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -820,7 +1275,8 @@
         "O3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "availableGems": [
         "Leech",
@@ -828,18 +1284,29 @@
       ],
       "waveCount": 34,
       "requirements": [
-        "Field_N1",
-        "Field_N2",
-        "Field_O4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_N1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_N2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "O2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "availableGems": [
         "Crit",
@@ -847,11 +1314,21 @@
       ],
       "waveCount": 35,
       "requirements": [
-        "Field_O1",
-        "Field_T5",
-        "Field_Y2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_O1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_T5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -860,7 +1337,8 @@
         "O4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "availableGems": [
         "Bleed",
@@ -868,11 +1346,21 @@
       ],
       "waveCount": 32,
       "requirements": [
-        "Field_R3",
-        "Field_R4",
-        "Field_Y3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_R3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -881,7 +1369,8 @@
         "P1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:O"
       ],
       "availableGems": [
         "Leech",
@@ -891,11 +1380,21 @@
       ],
       "waveCount": 33,
       "requirements": [
-        "Field_O3",
-        "Field_Y1",
-        "Field_R5",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_O3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -905,7 +1404,8 @@
         "N3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "availableGems": [
         "Leech",
@@ -913,18 +1413,29 @@
       ],
       "waveCount": 35,
       "requirements": [
-        "Field_R5",
-        "Field_O3",
-        "Field_Y1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_R5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "N2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "availableGems": [
         "Bleed",
@@ -932,18 +1443,29 @@
       ],
       "waveCount": 36,
       "requirements": [
-        "Field_Y1",
-        "Field_R5",
-        "Field_O3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Y1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "N3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "availableGems": [
         "Crit",
@@ -951,18 +1473,29 @@
       ],
       "waveCount": 38,
       "requirements": [
-        "Field_R6",
-        "Field_P1",
-        "Field_O2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_R6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "N4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:N"
       ],
       "availableGems": [
         "Bleed",
@@ -971,18 +1504,29 @@
       ],
       "waveCount": 70,
       "requirements": [
-        "Field_H5",
-        "Field_M4",
-        "Field_H2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_H5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "N5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:N"
       ],
       "availableGems": [
         "Crit",
@@ -991,11 +1535,21 @@
       ],
       "waveCount": 68,
       "requirements": [
-        "Field_M4",
-        "Field_H2",
-        "Field_H5",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_M4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1005,7 +1559,8 @@
         "P3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Leech",
@@ -1013,18 +1568,29 @@
       ],
       "waveCount": 38,
       "requirements": [
-        "Field_T5",
-        "Field_O1",
-        "Field_Y2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_T5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "P2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Armor Tear",
@@ -1032,11 +1598,21 @@
       ],
       "waveCount": 42,
       "requirements": [
-        "Field_P3",
-        "Field_N3",
-        "Field_Y4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_N3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1046,7 +1622,8 @@
         "P5"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Crit",
@@ -1054,11 +1631,21 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_O2",
-        "Field_R6",
-        "Field_P1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_O2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1067,7 +1654,8 @@
         "L1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Crit",
@@ -1077,19 +1665,34 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_N3",
-        "Field_Y4",
-        "Field_P5",
-        "Field_P3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_N3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "P5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Leech",
@@ -1097,11 +1700,21 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_P1",
-        "Field_R6",
-        "Field_O2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_R6",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1110,7 +1723,8 @@
         "L2"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "availableGems": [
         "Crit",
@@ -1118,11 +1732,21 @@
       ],
       "waveCount": 44,
       "requirements": [
-        "Field_X1",
-        "Field_Z1",
-        "Field_X3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_X1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Z1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1131,7 +1755,8 @@
         "L3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "availableGems": [
         "Poison",
@@ -1139,11 +1764,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_K2",
-        "Field_K1",
-        "Field_Z2",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_K2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Z2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1153,7 +1788,8 @@
         "L5"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "availableGems": [
         "Leech",
@@ -1161,11 +1797,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_Z2",
-        "Field_K2",
-        "Field_K1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Z2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1174,7 +1820,8 @@
         "K1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:L"
       ],
       "availableGems": [
         "Crit",
@@ -1184,11 +1831,21 @@
       ],
       "waveCount": 50,
       "requirements": [
-        "Field_Z3",
-        "Field_L2",
-        "Field_L3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_Z3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1197,7 +1854,8 @@
         "H1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:L"
       ],
       "availableGems": [
         "Crit",
@@ -1207,11 +1865,21 @@
       ],
       "waveCount": 64,
       "requirements": [
-        "Field_E2",
-        "Field_M3",
-        "Field_M2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_E2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1220,7 +1888,8 @@
         "K2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:K"
       ],
       "availableGems": [
         "Crit",
@@ -1229,11 +1898,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_L1",
-        "Field_X4",
-        "Field_K4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_L1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1242,7 +1921,8 @@
         "K3"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "availableGems": [
         "Leech",
@@ -1250,11 +1930,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_X4",
-        "Field_L1",
-        "Field_K4",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_X4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_L1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_K4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1263,7 +1953,8 @@
         "K4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "availableGems": [
         "Bleed",
@@ -1271,12 +1962,26 @@
       ],
       "waveCount": 50,
       "requirements": [
-        "Field_K5",
-        "Field_Z4",
-        "Field_L4",
-        "Field_X2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_K5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_X2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1285,7 +1990,8 @@
         "G1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:K"
       ],
       "availableGems": [
         "Leech",
@@ -1295,11 +2001,21 @@
       ],
       "waveCount": 46,
       "requirements": [
-        "Field_Z1",
-        "Field_X3",
-        "Field_X1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_Z1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_X1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
@@ -1308,7 +2024,8 @@
         "H2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:H"
       ],
       "availableGems": [
         "Crit",
@@ -1317,11 +2034,21 @@
       ],
       "waveCount": 64,
       "requirements": [
-        "Field_E2",
-        "Field_M3",
-        "Field_M2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_E2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1330,7 +2057,8 @@
         "H3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:H"
       ],
       "availableGems": [
         "Leech",
@@ -1339,11 +2067,21 @@
       ],
       "waveCount": 66,
       "requirements": [
-        "Field_L5",
-        "Field_F2",
-        "Field_H1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_L5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_F2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1352,7 +2090,8 @@
         "H4"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:H"
       ],
       "availableGems": [
         "Armor Tear",
@@ -1360,11 +2099,21 @@
       ],
       "waveCount": 64,
       "requirements": [
-        "Field_E2",
-        "Field_M3",
-        "Field_M2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_E2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1373,7 +2122,8 @@
         "E1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:H"
       ],
       "availableGems": [
         "Crit",
@@ -1383,11 +2133,21 @@
       ],
       "waveCount": 70,
       "requirements": [
-        "Field_N4",
-        "Field_N5",
-        "Field_E1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_N4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_N5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_E1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1398,7 +2158,8 @@
         "J1"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:G"
       ],
       "availableGems": [
         "Crit",
@@ -1407,19 +2168,34 @@
       ],
       "waveCount": 50,
       "requirements": [
-        "Field_L4",
-        "Field_X2",
-        "Field_Z4",
-        "Field_K5",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_L4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_X2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_K5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "G2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:G"
       ],
       "availableGems": [
         "Leech",
@@ -1428,12 +2204,26 @@
       ],
       "waveCount": 52,
       "requirements": [
-        "Field_X2",
-        "Field_Z4",
-        "Field_K5",
-        "Field_L4",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_X2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_K5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1443,7 +2233,8 @@
         "G4"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:G"
       ],
       "availableGems": [
         "Crit",
@@ -1453,11 +2244,21 @@
       ],
       "waveCount": 55,
       "requirements": [
-        "Field_J1",
-        "Field_J2",
-        "Field_Z5",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1466,7 +2267,8 @@
         "F1"
       ],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:G"
       ],
       "availableGems": [
         "Crit",
@@ -1474,11 +2276,21 @@
       ],
       "waveCount": 56,
       "requirements": [
-        "Field_J1",
-        "Field_J2",
-        "Field_Z5",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1488,7 +2300,8 @@
         "J3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "availableGems": [
         "Leech",
@@ -1497,18 +2310,29 @@
       ],
       "waveCount": 55,
       "requirements": [
-        "Field_K3",
-        "Field_G2",
-        "Field_G1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_K3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "J2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:J"
       ],
       "availableGems": [
         "Crit",
@@ -1516,11 +2340,21 @@
       ],
       "waveCount": 54,
       "requirements": [
-        "Field_G2",
-        "Field_K3",
-        "Field_G1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_G2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_K3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1529,7 +2363,8 @@
         "J4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "availableGems": [
         "Armor Tear",
@@ -1538,18 +2373,29 @@
       ],
       "waveCount": 56,
       "requirements": [
-        "Field_J1",
-        "Field_Z5",
-        "Field_J2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "J4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "availableGems": [
         "Crit",
@@ -1558,11 +2404,21 @@
       ],
       "waveCount": 58,
       "requirements": [
-        "Field_J3",
-        "Field_G4",
-        "Field_G3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1571,7 +2427,8 @@
         "M2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "availableGems": [
         "Leech",
@@ -1580,11 +2437,21 @@
       ],
       "waveCount": 60,
       "requirements": [
-        "Field_J3",
-        "Field_G3",
-        "Field_G4",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1593,7 +2460,8 @@
         "M3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "availableGems": [
         "Crit",
@@ -1602,11 +2470,21 @@
       ],
       "waveCount": 62,
       "requirements": [
-        "Field_F1",
-        "Field_J4",
-        "Field_M1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_F1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1616,7 +2494,8 @@
         "N5"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "availableGems": [
         "Leech",
@@ -1625,11 +2504,21 @@
       ],
       "waveCount": 64,
       "requirements": [
-        "Field_J4",
-        "Field_F1",
-        "Field_M1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_J4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_F1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1638,7 +2527,8 @@
         "N4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "availableGems": [
         "Bleed",
@@ -1647,12 +2537,26 @@
       ],
       "waveCount": 66,
       "requirements": [
-        "Field_L5",
-        "Field_H1",
-        "Field_F2",
-        "Field_H3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_L5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_F2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1661,7 +2565,8 @@
         "F2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "availableGems": [
         "Leech",
@@ -1670,18 +2575,29 @@
       ],
       "waveCount": 60,
       "requirements": [
-        "Field_G3",
-        "Field_J3",
-        "Field_G4",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_G3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "F2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "availableGems": [
         "Crit",
@@ -1690,11 +2606,21 @@
       ],
       "waveCount": 64,
       "requirements": [
-        "Field_E2",
-        "Field_M2",
-        "Field_M3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_E2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1703,7 +2629,8 @@
         "F4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "availableGems": [
         "Crit",
@@ -1712,18 +2639,29 @@
       ],
       "waveCount": 85,
       "requirements": [
-        "Field_B5",
-        "Field_I4",
-        "Field_C1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_B5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "F4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "availableGems": [
         "Crit",
@@ -1732,11 +2670,21 @@
       ],
       "waveCount": 88,
       "requirements": [
-        "Field_F3",
-        "Field_C3",
-        "Field_B3",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_F3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -1745,7 +2693,8 @@
         "E2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "availableGems": [
         "Crit",
@@ -1754,11 +2703,21 @@
       ],
       "waveCount": 70,
       "requirements": [
-        "Field_H5",
-        "Field_M4",
-        "Field_H2",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_H5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_M4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1767,7 +2726,8 @@
         "E3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "availableGems": [
         "Leech",
@@ -1776,11 +2736,21 @@
       ],
       "waveCount": 62,
       "requirements": [
-        "Field_M1",
-        "Field_J4",
-        "Field_F1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_M1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_J4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_F1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1789,7 +2759,8 @@
         "E4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "availableGems": [
         "Leech",
@@ -1798,11 +2769,21 @@
       ],
       "waveCount": 74,
       "requirements": [
-        "Field_D4",
-        "Field_D1",
-        "Field_H4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_D4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_H4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -1812,7 +2793,8 @@
         "B1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:E"
       ],
       "availableGems": [
         "Bleed",
@@ -1822,11 +2804,21 @@
       ],
       "waveCount": 74,
       "requirements": [
-        "Field_D4",
-        "Field_H4",
-        "Field_D1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_D4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_H4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -1835,7 +2827,8 @@
         "D2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "availableGems": [
         "Leech",
@@ -1844,11 +2837,21 @@
       ],
       "waveCount": 72,
       "requirements": [
-        "Field_N5",
-        "Field_E1",
-        "Field_N4",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_N5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_E1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_N4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1858,7 +2861,8 @@
         "D4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "availableGems": [
         "Crit",
@@ -1867,11 +2871,21 @@
       ],
       "waveCount": 75,
       "requirements": [
-        "Field_H4",
-        "Field_D4",
-        "Field_D1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_H4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -1880,7 +2894,8 @@
         "C1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:D"
       ],
       "availableGems": [
         "Crit",
@@ -1890,18 +2905,29 @@
       ],
       "waveCount": 77,
       "requirements": [
-        "Field_E3",
-        "Field_E4",
-        "Field_D2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_E3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_E4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "D4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "availableGems": [
         "Crit",
@@ -1910,11 +2936,21 @@
       ],
       "waveCount": 70,
       "requirements": [
-        "Field_N4",
-        "Field_N5",
-        "Field_E1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_N4",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_N5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_E1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
@@ -1923,7 +2959,8 @@
         "B2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "availableGems": [
         "Crit",
@@ -1932,11 +2969,21 @@
       ],
       "waveCount": 76,
       "requirements": [
-        "Field_E4",
-        "Field_E3",
-        "Field_D2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_E4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_E3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -1946,7 +2993,8 @@
         "B4"
       ],
       "requiredSkills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:B"
       ],
       "availableGems": [
         "Leech",
@@ -1957,18 +3005,29 @@
       ],
       "waveCount": 80,
       "requirements": [
-        "Field_I1",
-        "Field_D3",
-        "Field_B1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_I1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "B3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "availableGems": [
         "Bleed",
@@ -1977,18 +3036,29 @@
       ],
       "waveCount": 86,
       "requirements": [
-        "Field_C1",
-        "Field_I4",
-        "Field_B5",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_C1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "B4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "availableGems": [
         "Leech",
@@ -1997,12 +3067,26 @@
       ],
       "waveCount": 80,
       "requirements": [
-        "Field_I2",
-        "Field_D5",
-        "Field_E5",
-        "Field_B2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_I2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_E5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2012,7 +3096,8 @@
         "C3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "availableGems": [
         "Leech",
@@ -2021,18 +3106,29 @@
       ],
       "waveCount": 82,
       "requirements": [
-        "Field_C2",
-        "Field_I3",
-        "Field_B4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_C2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "C2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "availableGems": [
         "Crit",
@@ -2041,11 +3137,21 @@
       ],
       "waveCount": 80,
       "requirements": [
-        "Field_E5",
-        "Field_B2",
-        "Field_I2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_E5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2054,7 +3160,8 @@
         "C4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "availableGems": [
         "Crit",
@@ -2063,11 +3170,21 @@
       ],
       "waveCount": 84,
       "requirements": [
-        "Field_I4",
-        "Field_B5",
-        "Field_C1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_I4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2076,7 +3193,8 @@
         "C5"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "availableGems": [
         "Leech",
@@ -2085,11 +3203,21 @@
       ],
       "waveCount": 87,
       "requirements": [
-        "Field_C3",
-        "Field_B3",
-        "Field_F3",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_C3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_F3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2098,7 +3226,8 @@
         "A1"
       ],
       "requiredSkills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:C"
       ],
       "availableGems": [
         "Crit",
@@ -2108,11 +3237,21 @@
       ],
       "waveCount": 90,
       "requirements": [
-        "Field_F3",
-        "Field_B3",
-        "Field_C3",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_F3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2121,7 +3260,8 @@
         "A2"
       ],
       "requiredSkills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Crit",
@@ -2132,11 +3272,21 @@
       ],
       "waveCount": 90,
       "requirements": [
-        "Field_F4",
-        "Field_C5",
-        "Field_C4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_F4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2145,7 +3295,8 @@
         "A3"
       ],
       "requiredSkills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Crit",
@@ -2156,11 +3307,21 @@
       ],
       "waveCount": 90,
       "requirements": [
-        "Field_F4",
-        "Field_C5",
-        "Field_C4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_F4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2169,7 +3330,8 @@
         "A4"
       ],
       "requiredSkills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Crit",
@@ -2180,18 +3342,29 @@
       ],
       "waveCount": 90,
       "requirements": [
-        "Field_A1",
-        "Field_F5",
-        "Field_A2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_A1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_F5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "A4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Crit",
@@ -2203,11 +3376,21 @@
       ],
       "waveCount": 100,
       "requirements": [
-        "Field_A3",
-        "Field_A6",
-        "Field_A5",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_A3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A6",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2216,7 +3399,8 @@
         "I3"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "availableGems": [
         "Bleed",
@@ -2225,11 +3409,21 @@
       ],
       "waveCount": 78,
       "requirements": [
-        "Field_I1",
-        "Field_B1",
-        "Field_D3",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_I1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2238,7 +3432,8 @@
         "I4"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "availableGems": [
         "Bleed",
@@ -2247,54 +3442,87 @@
       ],
       "waveCount": 80,
       "requirements": [
-        "Field_D5",
-        "Field_E5",
-        "Field_B2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_D5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_E5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "I4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 1"
+        "gemSkills: 1",
+        "gemPouch:I"
       ],
       "availableGems": [
         "Bleed"
       ],
       "waveCount": 82,
       "requirements": [
-        "Field_C2",
-        "Field_B4",
-        "Field_I3",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_C2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "Z5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 1"
+        "gemSkills: 1",
+        "gemPouch:Z"
       ],
       "availableGems": [
         "Leech"
       ],
       "waveCount": 50,
       "requirements": [
-        "Field_K3",
-        "Field_G2",
-        "Field_G1",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_K3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_G1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "T5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:T"
       ],
       "availableGems": [
         "Armor Tear",
@@ -2303,18 +3531,29 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_N2",
-        "Field_O4",
-        "Field_N1",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_N2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_O4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_N1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "R6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:R"
       ],
       "availableGems": [
         "Crit",
@@ -2323,18 +3562,29 @@
       ],
       "waveCount": 36,
       "requirements": [
-        "Field_O1",
-        "Field_Y2",
-        "Field_T5",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_O1",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y2",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_T5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "P6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:P"
       ],
       "availableGems": [
         "Crit",
@@ -2346,19 +3596,34 @@
       ],
       "waveCount": 40,
       "requirements": [
-        "Field_P5",
-        "Field_Y4",
-        "Field_N3",
-        "Field_P3",
-        "talismanRow:1",
-        "talismanColumn:1"
+        [
+          "Field_P5",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_Y4",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_N3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ],
+        [
+          "Field_P3",
+          "talismanRow:1",
+          "talismanColumn:1"
+        ]
       ]
     },
     {
       "strId": "K5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "availableGems": [
         "Crit",
@@ -2366,18 +3631,29 @@
       ],
       "waveCount": 54,
       "requirements": [
-        "Field_L2",
-        "Field_Z3",
-        "Field_L3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_L2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_Z3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "H5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:H"
       ],
       "availableGems": [
         "Crit",
@@ -2389,19 +3665,34 @@
       ],
       "waveCount": 68,
       "requirements": [
-        "Field_H1",
-        "Field_L5",
-        "Field_F2",
-        "Field_H3",
-        "talismanRow:2",
-        "talismanColumn:2"
+        [
+          "Field_H1",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_L5",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_F2",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ],
+        [
+          "Field_H3",
+          "talismanRow:2",
+          "talismanColumn:2"
+        ]
       ]
     },
     {
       "strId": "F5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:F"
       ],
       "availableGems": [
         "Crit",
@@ -2413,18 +3704,29 @@
       ],
       "waveCount": 90,
       "requirements": [
-        "Field_C4",
-        "Field_C5",
-        "Field_F4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_C4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_F4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "E5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:E"
       ],
       "availableGems": [
         "Crit",
@@ -2432,18 +3734,29 @@
       ],
       "waveCount": 78,
       "requirements": [
-        "Field_D3",
-        "Field_I1",
-        "Field_B1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_D3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "B5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:B"
       ],
       "availableGems": [
         "Crit",
@@ -2455,18 +3768,29 @@
       ],
       "waveCount": 84,
       "requirements": [
-        "Field_I3",
-        "Field_C2",
-        "Field_B4",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_I3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_C2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "A5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Armor Tear",
@@ -2475,18 +3799,29 @@
       ],
       "waveCount": 96,
       "requirements": [
-        "Field_F5",
-        "Field_A1",
-        "Field_A2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_F5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "A6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:A"
       ],
       "availableGems": [
         "Crit",
@@ -2495,11 +3830,21 @@
       ],
       "waveCount": 99,
       "requirements": [
-        "Field_A1",
-        "Field_F5",
-        "Field_A2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_A1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_F5",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_A2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
@@ -2508,7 +3853,8 @@
         "I2"
       ],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "availableGems": [
         "Bleed",
@@ -2517,18 +3863,29 @@
       ],
       "waveCount": 76,
       "requirements": [
-        "Field_E4",
-        "Field_E3",
-        "Field_D2",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_E4",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_E3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_D2",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     },
     {
       "strId": "D5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "availableGems": [
         "Crit",
@@ -2537,11 +3894,21 @@
       ],
       "waveCount": 78,
       "requirements": [
-        "Field_D3",
-        "Field_I1",
-        "Field_B1",
-        "talismanRow:3",
-        "talismanColumn:3"
+        [
+          "Field_D3",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_I1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ],
+        [
+          "Field_B1",
+          "talismanRow:3",
+          "talismanColumn:3"
+        ]
       ]
     }
   ],

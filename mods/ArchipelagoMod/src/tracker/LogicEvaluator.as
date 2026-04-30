@@ -187,6 +187,10 @@ package tracker {
             if (lower.indexOf("strikespells")      == 0) return "Requires " + n + " strike spells";
             if (lower.indexOf("enhancementspells") == 0) return "Requires " + n + " enhancement spells";
             if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
+            if (lower.indexOf("gempouch:")         == 0) {
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                return "Requires Gempouch (" + pouchPrefix + ")";
+            }
             if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
@@ -292,9 +296,35 @@ package tracker {
                 return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
             }
             if (lower.indexOf("gemskills") == 0) {
+                // When pouch gating is active, gemSkills:N is replaced by
+                // gemPouch:<prefix> on every stage. The N-skills count is
+                // still meaningful for achievements (gem skills 706-711 are
+                // still in the pool), so leave this gate alone.
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
             }
+
+            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Inactive in
+            // off mode (returns true); in distinct mode requires the named
+            // pouch item; in progressive mode requires enough Progressive
+            // Gempouch copies for that prefix's position in the play order.
+            if (lower.indexOf("gempouch:") == 0) {
+                var mode:int = AV.serverData.serverOptions.gemPouchGating;
+                if (mode == 0) return true;
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                if (order == null) return true;
+                var idx:int = order.indexOf(pouchPrefix);
+                if (idx < 0) return true; // unknown prefix — don't block
+                if (mode == 1) {
+                    return AV.sessionData.hasItem(626 + idx);
+                }
+                // mode == 2: progressive
+                var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
+            }
+
             if (lower.indexOf("battletraits") == 0) {
                 var btNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;

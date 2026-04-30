@@ -102,6 +102,20 @@ def _load_item_table() -> Dict[str, ItemData]:
         table[f"Wizard Stash {stage['str_id']} Key"] = ItemData(
             key_id, ItemClassification.progression)
 
+    # Gempouches (IDs 626–652). Always declared so name→id resolution works
+    # regardless of the gem_pouch_gating option; create_items() decides which
+    # subset actually goes into the pool.
+    #   - Distinct: 26 named pouches (one per stage-prefix letter, in play
+    #     order from game_data.json) at IDs 626..651.
+    #   - Progressive: a single "Progressive Gempouch" item at ID 652, added
+    #     to the pool 26 times.
+    from .rulesdata import GEM_POUCH_PLAY_ORDER
+    for i, prefix in enumerate(GEM_POUCH_PLAY_ORDER):
+        table[f"Gempouch ({prefix})"] = ItemData(
+            626 + i, ItemClassification.progression)
+    table["Progressive Gempouch"] = ItemData(
+        652, ItemClassification.progression)
+
     return table
 
 

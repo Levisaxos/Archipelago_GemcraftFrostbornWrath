@@ -27,6 +27,10 @@ package data {
 
         // apId (String) -> true — all received AP items, single source of truth
         public var collectedItems:Object = {};
+        // apId (String) -> int — count of times this AP id has been received.
+        // Same id can arrive multiple times for items the apworld places as
+        // duplicates (Progressive Gempouch, future Progressive items, etc.).
+        public var itemCounts:Object = {};
         // sub-sets by type (convenience)
         public var collectedSkills:Object = {};        // skill AP ID (700-723) -> true
         public var collectedTraits:Object = {};        // trait AP ID (800-814) -> true
@@ -73,6 +77,7 @@ package data {
         /** Clear all tracked state.  Call on disconnect or before full sync. */
         public function reset():void {
             collectedItems        = {};
+            itemCounts            = {};
             collectedSkills       = {};
             collectedTraits       = {};
             collectedAchievements = {};
@@ -102,9 +107,19 @@ package data {
             return collectedItems[String(apId)] == true;
         }
 
-        /** Classify an incoming AP item and update all relevant collections.  Idempotent. */
+        /** Count of times this AP id has been received. 0 if never. */
+        public function getItemCount(apId:int):int {
+            var v:* = itemCounts[String(apId)];
+            return (v == null) ? 0 : int(v);
+        }
+
+        /** Classify an incoming AP item and update all relevant collections.
+         *  Increments itemCounts every call (Progressive items receive the
+         *  same id N times); collectedItems / per-type subsets are idempotent. */
         public function onItem(apId:int):void {
-            collectedItems[String(apId)] = true;
+            var key:String = String(apId);
+            collectedItems[key] = true;
+            itemCounts[key] = getItemCount(apId) + 1;
 
             // Field token -> stage strId
             if (_tokenMap != null) {

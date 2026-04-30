@@ -478,13 +478,16 @@
       "reward": "skillPoints:2",
       "description": "Deal 5.000 poison damage to a shadow.",
       "requirements": [
-        "Poison skill",
         [
+          "Poison skill",
           "Ritual trait",
           "Shadow element"
         ],
-        "Shadow element",
-        "Ritual trait"
+        [
+          "Poison skill",
+          "Shadow element",
+          "Ritual trait"
+        ]
       ]
     },
     "Black Wand": {
@@ -976,13 +979,21 @@
       "details": "Cumulative across all battles: 50,000 kills on monsters with special properties.",
       "untrackable": true,
       "requirements": [
-        "Endurance",
         [
+          "Endurance",
           "Possessed Monster element",
-          "Twisted Monster element",
-          "Marked Monster element"
+          "minWave: 70"
         ],
-        "minWave: 70"
+        [
+          "Endurance",
+          "Twisted Monster element",
+          "minWave: 70"
+        ],
+        [
+          "Endurance",
+          "Marked Monster element",
+          "minWave: 70"
+        ]
       ]
     },
     "Clear Sky": {
@@ -5359,13 +5370,21 @@
       "description": "Reach 2.000 monsters with special properties killed through all the battles.",
       "untrackable": true,
       "requirements": [
-        "Endurance",
         [
+          "Endurance",
           "Possessed Monster element",
-          "Twisted Monster element",
-          "Marked Monster element"
+          "minWave: 70"
         ],
-        "minWave: 70"
+        [
+          "Endurance",
+          "Twisted Monster element",
+          "minWave: 70"
+        ],
+        [
+          "Endurance",
+          "Marked Monster element",
+          "minWave: 70"
+        ]
       ]
     },
     "Sparse Snares": {
@@ -6278,13 +6297,21 @@
       "details": "Cumulative across all battles: 20,000 kills on monsters with special properties.",
       "untrackable": true,
       "requirements": [
-        "Endurance",
         [
+          "Endurance",
           "Possessed Monster element",
-          "Twisted Monster element",
-          "Marked Monster element"
+          "minWave: 70"
         ],
-        "minWave: 70"
+        [
+          "Endurance",
+          "Twisted Monster element",
+          "minWave: 70"
+        ],
+        [
+          "Endurance",
+          "Marked Monster element",
+          "minWave: 70"
+        ]
       ]
     },
     "Uninvited": {
@@ -6302,10 +6329,8 @@
       "reward": "skillPoints:1",
       "description": "Reach 100 beacons destroyed through all the battles.",
       "requirements": [
-        [
-          "Dark Masonry trait",
-          "Beacon element"
-        ]
+        "Dark Masonry trait",
+        "Beacon element"
       ]
     },
     "Uraj and Khalis": {

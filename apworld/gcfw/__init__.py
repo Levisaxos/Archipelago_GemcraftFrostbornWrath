@@ -28,6 +28,9 @@ from .options import (
     FieldsRequiredPercentage,
     AchievementRequiredEffort,
     SkillpointMultiplier,
+    GemPouchGating,
+    StartingStage,
+    STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
 from .power import (
@@ -38,6 +41,7 @@ from .power import (
     WEIGHT_XP_TOME_LEVEL,
     WEIGHT_SHADOW_CORE_ITEM,
     WEIGHT_TALISMAN_DIVISOR,
+    WEIGHT_GEMPOUCH,
 )
 from .rules import set_rules
 from .rulesdata import (
@@ -45,6 +49,7 @@ from .rulesdata import (
     GAME_DATA,
     SKILL_CATEGORIES,
     STAGE_RULES,
+    GEM_POUCH_PLAY_ORDER,
 )
 from .rulesdata_settings import (
     game_level_elements,
@@ -242,6 +247,7 @@ class GemcraftFrostbornWrathWorld(World):
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
+            GemPouchGating,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -441,6 +447,21 @@ class GemcraftFrostbornWrathWorld(World):
         for stage in stages:
             pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
 
+        # Gempouches — added based on gem_pouch_gating option.
+        # The W (tutorial) pouch is precollected so the seed is solvable from
+        # frame zero; only 25 of 26 pouches go into the pool.
+        pouch_mode = self.options.gem_pouch_gating.value
+        if pouch_mode == 1:  # distinct
+            for prefix in GEM_POUCH_PLAY_ORDER:
+                if prefix == "W":
+                    self.multiworld.push_precollected(self.create_item(f"Gempouch ({prefix})"))
+                else:
+                    pool.append(self.create_item(f"Gempouch ({prefix})"))
+        elif pouch_mode == 2:  # progressive
+            self.multiworld.push_precollected(self.create_item("Progressive Gempouch"))
+            for _ in range(len(GEM_POUCH_PLAY_ORDER) - 1):
+                pool.append(self.create_item("Progressive Gempouch"))
+
         # SP bundle filler — fills all remaining unfilled location slots.
         # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
         # SkillpointMultiplier docstring for why default is 50%).
@@ -459,6 +480,11 @@ class GemcraftFrostbornWrathWorld(World):
         self.multiworld.itempool += pool
 
     def create_regions(self) -> None:
+        # Resolve the chosen start stage. Its baked `requirements` in
+        # rulesdata_levels.py are intentionally ignored at rule-time
+        # (see rules.set_rules); Menu connects directly to its region.
+        self.start_sid = STARTING_STAGE_BY_VALUE[self.options.starting_stage.value]
+
         stages = _load_stages()
         # All stages get a region (needed for the region graph).
         # W1 has no AP item/locations but is the world entry point.
@@ -551,8 +577,9 @@ class GemcraftFrostbornWrathWorld(World):
             self.multiworld.regions.append(fields_pct_region)
             menu_region.connect(fields_pct_region, "Fields Percentage")
 
-        # Connect Menu → W1 (starting stage — all other stages connect from W1 in set_rules)
-        menu_region.connect(stage_regions["W1"], "Start")
+        # Connect Menu → starting stage. All other stages connect from the
+        # starting stage in set_rules.
+        menu_region.connect(stage_regions[self.start_sid], "Start")
 
     def set_rules(self) -> None:
         set_rules(self)
@@ -671,8 +698,12 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Free stages: W1/W2/W3/W4 all have item_ap_id=None → mod unlocks them on connect.
-        free_stages = [s["str_id"] for s in stages if s["item_ap_id"] is None]
+        # The chosen starting stage is "free" — accessible from the menu with
+        # no token, and its baked `requirements` are skipped both in apworld
+        # set_rules and in the mod's FieldLogicEvaluator (which treats this
+        # list as the auto-unlocked / no-requirements set). All other stages
+        # (including the W/S stages not picked) gate normally.
+        free_stages = [self.start_sid]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -799,6 +830,7 @@ class GemcraftFrostbornWrathWorld(World):
                 "xp_tome_level":   WEIGHT_XP_TOME_LEVEL,
                 "shadow_core":     WEIGHT_SHADOW_CORE_ITEM,
                 "talisman_divisor": WEIGHT_TALISMAN_DIVISOR,
+                "gempouch":        WEIGHT_GEMPOUCH,
             },
             "stage_elements":        stage_elements,
             "stage_monsters":        stage_monsters,
@@ -813,6 +845,17 @@ class GemcraftFrostbornWrathWorld(World):
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
+            # Gem-pouch gating: per-prefix gem-orb suppression. Mod uses these
+            # to decide whether to spawn gem orbs on level start, and to
+            # display "needs Gempouch X" in tooltips.
+            #   gem_pouch_gating: 0=off, 1=distinct, 2=progressive
+            #   gem_pouch_play_order: list of prefix letters in play order;
+            #     for distinct, item AP id = 626 + index in this list;
+            #     for progressive, the Nth Progressive Gempouch covers the
+            #     first N prefixes in this list.
+            "gem_pouch_gating":        self.options.gem_pouch_gating.value,
+            "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
+            "gem_pouch_progressive_id": item_table["Progressive Gempouch"].id,
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,

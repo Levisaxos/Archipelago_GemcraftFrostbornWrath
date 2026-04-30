@@ -42,20 +42,17 @@ class StageRule:
 # wizard-level thresholds).  Each tier requires the player to have collected
 # a minimum number of field tokens from the *immediately previous* tier.
 #
-# FREE_STAGES (W1-W4) have no field token item. W1 is the entry stage; W2-W4
-# are the tutorial trio reachable from W1 without a token, mirroring the real
-# game's natural map progression. None of them are counted in any tier gate.
-#
-# Other Tier 0 stages (S1-S4, V1) require their own field token but
+# Tier 0 stages (S1-S4, V1, W1-W4) require their own field token but
 # have no tier requirement on top.
 #
 # Tier 1+ stages require their own field token AND N tokens from the
 # previous tier, where N scales with difficulty.
 
-# Stages with no field token item. Empty now: W1-W4 each have their own
-# Field Token (item_ap_ids 1-4) and gate normally. W1 stays the entry
-# stage via the explicit `if str_id == "W1": continue` check in rules.py —
-# its region is reachable from Menu without needing the W1 token.
+# Stages with no field token item. Empty: every stage including W1-W4
+# now has its own Field Token (item_ap_ids 1-4 / 5-8). The chosen
+# starting stage (see options.StartingStage) is the only stage without
+# a token gate, and it's reached directly from Menu in
+# __init__.create_regions — no FREE_STAGES entry needed.
 FREE_STAGES: set = set()
 
 # Wave-count thresholds defining tier 0..12 boundaries. A stage's tier is the
@@ -107,3 +104,22 @@ for stage in GAME_DATA["stages"]:
             skills=stage["required_skills"],
         )
 del stage, sid
+
+
+# ---------------------------------------------------------------------------
+# Gem-pouch ordering — first-letter prefixes of stage str_ids in the order
+# stages appear in game_data.json. This is the natural play order:
+# W (tutorial) → S → V → R → ... → A (final). Used for:
+#   - Distinct-mode item naming: `Gempouch (W)`, `Gempouch (S)`, ...
+#   - Progressive-mode item count gating: the Nth Progressive Gempouch
+#     unlocks the Nth prefix in this list.
+#   - Item-id assignment: 626 + index in this list.
+# ---------------------------------------------------------------------------
+GEM_POUCH_PLAY_ORDER: List[str] = []
+_seen_pouch_prefixes: set = set()
+for _stage in GAME_DATA["stages"]:
+    _p = _stage["str_id"][0]
+    if _p not in _seen_pouch_prefixes:
+        _seen_pouch_prefixes.add(_p)
+        GEM_POUCH_PLAY_ORDER.append(_p)
+del _stage, _p, _seen_pouch_prefixes

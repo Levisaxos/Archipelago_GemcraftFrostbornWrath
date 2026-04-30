@@ -3,16 +3,22 @@ gen_prereqs.py — one-shot generator for stage prerequisite requirements.
 
 Reads stage difficulty from rulesdata_levels.py, distributes the 122 stages
 into 40 difficulty buckets, picks 3-4 prerequisite stages per stage so that
-the longest chain W1 -> A4 is at most 39, and writes the result back into
-rulesdata_levels.py — replacing each stage's `required_skills` field with a
-`requirements` field containing Field_<sid> tokens (OR-semantics).
+the longest chain root -> A4 is at most 39, and writes the result back into
+rulesdata_levels.py as DNF requirement lists.
 
 Run from the repo root:
     python apworld/gcfw/gen_prereqs.py
 
-The selection is deterministic — same input always produces the same graph.
-Re-run after editing combat data in rulesdata_levels.py if you want the
-prereq layout updated.
+WARNING: rulesdata_levels.py is now the hand-tuned source of truth at
+runtime. The 8 starting stages (W1-W4, S1-S4) carry SYMMETRIC OR-prereqs
+(every starting stage lists the other 7) so any of them can be chosen as
+start. This script does NOT produce that symmetric pattern — it would
+overwrite it with single-prereq chains rooted at the default W1. If you
+re-run it you will need to re-apply the symmetric-W/S edit afterwards.
+
+Prefer editing rulesdata_levels.py directly. The selection here is
+deterministic (same input → same graph), but the script's main use today
+is bootstrapping a fresh DAG, not maintaining the live one.
 """
 from __future__ import annotations
 
@@ -29,14 +35,13 @@ from collections import defaultdict
 NUM_BUCKETS = 40
 PREREQ_COUNT_MIN = 3
 PREREQ_COUNT_MAX = 4
-ROOT_STAGE = "W1"     # bucket 0, no prereqs, never used as a prereq exclusion
-TERMINAL_STAGE = "A4" # bucket 39, never appears in any other stage's prereq list
-FREE_STAGES = {"W1", "W2", "W3", "W4"}  # tutorials — pinned to bucket 0/1
-# Generator-internal grouping of the W-prefix tutorial stages.
-# Bucketed adjacent so W1 sits alone in bucket 0 and W2-W4 share bucket 1
-# (each receiving Field_W1 as their sole prereq via pick_prereqs). All four
-# DO have Field Token items now — see rulesdata.py FREE_STAGES (empty) and
-# game_data.json item_ap_ids 1-4.
+DEFAULT_ROOT_STAGE = "W1"  # baseline anchor for the standalone __main__ run
+TERMINAL_STAGE = "A4"      # bucket 39, never appears in any other stage's prereq list
+# Default early-tier pool (bucket 0 + bucket 1). The chosen root sits alone in
+# bucket 0; the remaining seven occupy bucket 1, ensuring bucket 1 is non-empty
+# for any root choice. All eight DO have Field Token items — see rulesdata.py
+# FREE_STAGES (empty) and game_data.json item_ap_ids 1-4 / 5-8.
+DEFAULT_EARLY_TIER = frozenset({"W1", "W2", "W3", "W4", "S1", "S2", "S3", "S4"})
 
 
 # --------------------------------------------------------------------------- #
@@ -92,24 +97,33 @@ def family_prefix(sid: str) -> str:
 # --------------------------------------------------------------------------- #
 # Prereq selection
 # --------------------------------------------------------------------------- #
-def assign_buckets(level_requirements: dict) -> list[list[str]]:
+def assign_buckets(
+    level_requirements: dict,
+    root_stage: str = DEFAULT_ROOT_STAGE,
+    early_tier: frozenset = DEFAULT_EARLY_TIER,
+) -> list[list[str]]:
     """Return a list of NUM_BUCKETS buckets.
 
-    Bucket 0: W1 (sole entry point, no prereqs).
-    Bucket 1: W2, W3, W4 (other free tutorials — each gets [W1] as prereq).
-    Buckets 2..NUM_BUCKETS-2: non-free non-A4 stages spread by difficulty.
+    Bucket 0: root_stage (sole entry point, no prereqs).
+    Bucket 1: the rest of early_tier (each gets [root_stage] as prereq).
+    Buckets 2..NUM_BUCKETS-2: remaining non-A4 stages spread by difficulty.
     Bucket NUM_BUCKETS-1: A4.
+
+    `root_stage` must be in `early_tier`. Raises if not.
     """
+    if root_stage not in early_tier:
+        raise ValueError(f"root_stage {root_stage!r} must be in early_tier {sorted(early_tier)}")
+
     others = [
         sid for sid in level_requirements
-        if sid not in FREE_STAGES and sid != TERMINAL_STAGE
+        if sid not in early_tier and sid != TERMINAL_STAGE
     ]
     others.sort(key=lambda s: (difficulty(level_requirements[s]), s))
 
     buckets: list[list[str]] = [[] for _ in range(NUM_BUCKETS)]
-    buckets[0].append(ROOT_STAGE)
-    other_free = sorted(s for s in FREE_STAGES if s != ROOT_STAGE)
-    buckets[1].extend(other_free)
+    buckets[0].append(root_stage)
+    other_early = sorted(s for s in early_tier if s != root_stage)
+    buckets[1].extend(other_early)
     buckets[NUM_BUCKETS - 1].append(TERMINAL_STAGE)
 
     n_middle_buckets = NUM_BUCKETS - 3  # 37 (skip 0, 1, last)
@@ -192,11 +206,11 @@ def pick_prereqs(
 # --------------------------------------------------------------------------- #
 # Validation
 # --------------------------------------------------------------------------- #
-def compute_depth(prereqs: dict[str, list[str]]) -> dict[str, int]:
+def compute_depth(prereqs: dict[str, list[str]], root_stage: str = DEFAULT_ROOT_STAGE) -> dict[str, int]:
     """Depth via OR-prereq semantics: depth(s) = 1 + min(depth(p) for p in prereqs(s)).
-    W1 has depth 0. Stages with no prereqs (only W1) also get depth 0.
+    root_stage has depth 0. Stages with no prereqs also get depth 0.
     """
-    depth: dict[str, int] = {ROOT_STAGE: 0}
+    depth: dict[str, int] = {root_stage: 0}
 
     def resolve(sid: str, visiting: set[str]) -> int:
         if sid in depth:
@@ -217,14 +231,18 @@ def compute_depth(prereqs: dict[str, list[str]]) -> dict[str, int]:
     return depth
 
 
-def validate(prereqs: dict[str, list[str]], all_stages: list[str]) -> None:
-    # 1. W1 has no prereqs. Every other stage has at least one prereq, and at
-    #    most PREREQ_COUNT_MAX. Min count is 1 — small early buckets can't
-    #    always fill 3 candidates and that's expected (e.g. W2-W4 just need W1).
+def validate(
+    prereqs: dict[str, list[str]],
+    all_stages: list[str],
+    root_stage: str = DEFAULT_ROOT_STAGE,
+) -> None:
+    # 1. root_stage has no prereqs. Every other stage has at least one prereq,
+    #    and at most PREREQ_COUNT_MAX. Min count is 1 — small early buckets
+    #    can't always fill 3 candidates and that's expected.
     for sid in all_stages:
-        if sid == ROOT_STAGE:
+        if sid == root_stage:
             assert sid not in prereqs or not prereqs[sid], \
-                f"{ROOT_STAGE} should have no prereqs"
+                f"{root_stage} should have no prereqs"
             continue
         assert sid in prereqs and prereqs[sid], \
             f"{sid} has no prereqs"
@@ -237,10 +255,43 @@ def validate(prereqs: dict[str, list[str]], all_stages: list[str]) -> None:
             f"{sid} has {TERMINAL_STAGE} as prereq"
 
     # 3. Depth bound.
-    depth = compute_depth(prereqs)
+    depth = compute_depth(prereqs, root_stage)
     max_depth = max(depth.values())
     assert max_depth <= NUM_BUCKETS - 1, \
         f"max depth {max_depth} exceeds bound {NUM_BUCKETS - 1}"
+
+
+# --------------------------------------------------------------------------- #
+# Public API: derive prereq DAG + buckets in-memory (no file writes).
+# --------------------------------------------------------------------------- #
+def build_dag(
+    level_requirements: dict,
+    root_stage: str = DEFAULT_ROOT_STAGE,
+    early_tier: frozenset = DEFAULT_EARLY_TIER,
+) -> tuple[dict[str, list[str]], dict[str, int]]:
+    """Derive the prereq DAG anchored at `root_stage`.
+
+    Returns (prereqs_per_stage, bucket_of_stage):
+      - prereqs_per_stage: {sid -> [prereq_sid, ...]}, OR-semantics. The root
+        is absent from this mapping (it has no prereqs).
+      - bucket_of_stage: {sid -> bucket_index in [0, NUM_BUCKETS-1]}.
+
+    Calls validate() before returning so any cycle/depth violation surfaces
+    immediately rather than at fill time.
+    """
+    buckets = assign_buckets(level_requirements, root_stage, early_tier)
+    bucket_of: dict[str, int] = {}
+    for b_idx, bucket in enumerate(buckets):
+        for sid in bucket:
+            bucket_of[sid] = b_idx
+
+    prereqs: dict[str, list[str]] = {}
+    for bucket_idx in range(1, NUM_BUCKETS):
+        for sid in buckets[bucket_idx]:
+            prereqs[sid] = pick_prereqs(sid, bucket_idx, buckets)
+
+    validate(prereqs, list(level_requirements.keys()), root_stage)
+    return prereqs, bucket_of
 
 
 # --------------------------------------------------------------------------- #
@@ -279,11 +330,23 @@ def talisman_reqs_for_part(part: int) -> list[str]:
 
 
 def format_requirements(field_prereqs: list[str], extra_reqs: list[str]) -> str:
-    """Return a one-liner literal like '["Field_W1", "talismanRow:1"]'."""
-    parts = [f'"Field_{p}"' for p in field_prereqs] + [f'"{r}"' for r in extra_reqs]
-    if not parts:
-        return "[]"
-    return "[" + ", ".join(parts) + "]"
+    """Return a DNF literal: outer-OR of inner AND-groups.
+
+    Each Field prereq becomes its own AND-group containing the field plus
+    all extra_reqs (talismanRow:N etc.). With no Field prereqs and no extras
+    we return `[]`; with no Field prereqs but talismans, a single AND-group.
+    Matches the runtime parser shape (rules._normalize_requirements).
+    """
+    extras_quoted = [f'"{r}"' for r in extra_reqs]
+    if not field_prereqs:
+        if not extra_reqs:
+            return "[]"
+        return "[[" + ", ".join(extras_quoted) + "]]"
+    groups = [
+        "[" + ", ".join([f'"Field_{p}"'] + extras_quoted) + "]"
+        for p in field_prereqs
+    ]
+    return "[" + ", ".join(groups) + "]"
 
 
 def rewrite_levels_file(
@@ -339,9 +402,9 @@ def main() -> None:
     level_requirements = load_level_requirements()
     all_stages = list(level_requirements.keys())
     assert len(all_stages) == 122, f"Expected 122 stages, got {len(all_stages)}"
-    assert ROOT_STAGE in all_stages and TERMINAL_STAGE in all_stages
+    assert DEFAULT_ROOT_STAGE in all_stages and TERMINAL_STAGE in all_stages
 
-    buckets = assign_buckets(level_requirements)
+    buckets = assign_buckets(level_requirements, DEFAULT_ROOT_STAGE, DEFAULT_EARLY_TIER)
 
     # Audit bucket sizes
     print("Bucket sizes:")
@@ -359,8 +422,8 @@ def main() -> None:
         for sid in buckets[bucket_idx]:
             prereqs[sid] = pick_prereqs(sid, bucket_idx, buckets)
 
-    validate(prereqs, all_stages)
-    depth = compute_depth(prereqs)
+    validate(prereqs, all_stages, DEFAULT_ROOT_STAGE)
+    depth = compute_depth(prereqs, DEFAULT_ROOT_STAGE)
     max_depth = max(depth.values())
 
     print(f"Generated {len(prereqs)} stage prereq entries")

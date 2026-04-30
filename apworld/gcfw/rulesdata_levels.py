@@ -33,7 +33,11 @@ level_requirements = {
         "GiantCount": 113,
         "GiantMaxHP": 1153349,
         "GiantMaxArmor": 4239,
-        "requirements": ["Field_F4", "Field_C5", "Field_C4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "A2": {
         "type": "NORMAL",
@@ -51,7 +55,11 @@ level_requirements = {
         "GiantCount": 115,
         "GiantMaxHP": 1397710,
         "GiantMaxArmor": 3083,
-        "requirements": ["Field_F4", "Field_C5", "Field_C4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "A3": {
         "type": "NORMAL",
@@ -69,7 +77,11 @@ level_requirements = {
         "GiantCount": 118,
         "GiantMaxHP": 1586008,
         "GiantMaxArmor": 3282,
-        "requirements": ["Field_A1", "Field_F5", "Field_A2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "A4": {
         "type": "NORMAL",
@@ -87,7 +99,11 @@ level_requirements = {
         "GiantCount": 114,
         "GiantMaxHP": 2178948,
         "GiantMaxArmor": 7763,
-        "requirements": ["Field_A3", "Field_A6", "Field_A5", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_A3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A6", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A5", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "A5": {
         "type": "NORMAL",
@@ -105,7 +121,11 @@ level_requirements = {
         "GiantCount": 101,
         "GiantMaxHP": 3075848,
         "GiantMaxArmor": 3722,
-        "requirements": ["Field_F5", "Field_A1", "Field_A2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "A6": {
         "type": "NORMAL",
@@ -123,7 +143,11 @@ level_requirements = {
         "GiantCount": 120,
         "GiantMaxHP": 4777689,
         "GiantMaxArmor": 7952,
-        "requirements": ["Field_A1", "Field_F5", "Field_A2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "B1": {
         "type": "NORMAL",
@@ -141,7 +165,11 @@ level_requirements = {
         "GiantCount": 63,
         "GiantMaxHP": 382131,
         "GiantMaxArmor": 964,
-        "requirements": ["Field_E4", "Field_E3", "Field_D2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "B2": {
         "type": "NORMAL",
@@ -159,7 +187,11 @@ level_requirements = {
         "GiantCount": 16,
         "GiantMaxHP": 104147,
         "GiantMaxArmor": 378,
-        "requirements": ["Field_I1", "Field_D3", "Field_B1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "B3": {
         "type": "NORMAL",
@@ -177,7 +209,11 @@ level_requirements = {
         "GiantCount": 28,
         "GiantMaxHP": 574626,
         "GiantMaxArmor": 1721,
-        "requirements": ["Field_C1", "Field_I4", "Field_B5", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "B4": {
         "type": "NORMAL",
@@ -195,7 +231,12 @@ level_requirements = {
         "GiantCount": 42,
         "GiantMaxHP": 304994,
         "GiantMaxArmor": 964,
-        "requirements": ["Field_I2", "Field_D5", "Field_E5", "Field_B2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_I2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "B5": {
         "type": "SECRET",
@@ -213,7 +254,11 @@ level_requirements = {
         "GiantCount": 32,
         "GiantMaxHP": 278832,
         "GiantMaxArmor": 888,
-        "requirements": ["Field_I3", "Field_C2", "Field_B4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "C1": {
         "type": "NORMAL",
@@ -231,7 +276,11 @@ level_requirements = {
         "GiantCount": 94,
         "GiantMaxHP": 208035,
         "GiantMaxArmor": 612,
-        "requirements": ["Field_C2", "Field_I3", "Field_B4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "C2": {
         "type": "NORMAL",
@@ -249,7 +298,11 @@ level_requirements = {
         "GiantCount": 95,
         "GiantMaxHP": 344267,
         "GiantMaxArmor": 1082,
-        "requirements": ["Field_E5", "Field_B2", "Field_I2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "C3": {
         "type": "NORMAL",
@@ -267,7 +320,11 @@ level_requirements = {
         "GiantCount": 105,
         "GiantMaxHP": 371996,
         "GiantMaxArmor": 1042,
-        "requirements": ["Field_I4", "Field_B5", "Field_C1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "C4": {
         "type": "TILE_GIVING",
@@ -285,7 +342,11 @@ level_requirements = {
         "GiantCount": 108,
         "GiantMaxHP": 497964,
         "GiantMaxArmor": 1289,
-        "requirements": ["Field_C3", "Field_B3", "Field_F3", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "C5": {
         "type": "EPIC",
@@ -303,7 +364,11 @@ level_requirements = {
         "GiantCount": 115,
         "GiantMaxHP": 586802,
         "GiantMaxArmor": 2171,
-        "requirements": ["Field_F3", "Field_B3", "Field_C3", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "D1": {
         "type": "NORMAL",
@@ -321,7 +386,11 @@ level_requirements = {
         "GiantCount": 103,
         "GiantMaxHP": 101904,
         "GiantMaxArmor": 474,
-        "requirements": ["Field_N5", "Field_E1", "Field_N4", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "D2": {
         "type": "NORMAL",
@@ -339,7 +408,11 @@ level_requirements = {
         "GiantCount": 95,
         "GiantMaxHP": 167368,
         "GiantMaxArmor": 734,
-        "requirements": ["Field_H4", "Field_D4", "Field_D1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "D3": {
         "type": "EPIC",
@@ -357,7 +430,11 @@ level_requirements = {
         "GiantCount": 97,
         "GiantMaxHP": 156601,
         "GiantMaxArmor": 633,
-        "requirements": ["Field_E3", "Field_E4", "Field_D2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "D4": {
         "type": "NORMAL",
@@ -375,7 +452,11 @@ level_requirements = {
         "GiantCount": 108,
         "GiantMaxHP": 170013,
         "GiantMaxArmor": 727,
-        "requirements": ["Field_N4", "Field_N5", "Field_E1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "D5": {
         "type": "NORMAL",
@@ -393,7 +474,11 @@ level_requirements = {
         "GiantCount": 97,
         "GiantMaxHP": 245468,
         "GiantMaxArmor": 809,
-        "requirements": ["Field_D3", "Field_I1", "Field_B1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "E1": {
         "type": "NORMAL",
@@ -411,7 +496,11 @@ level_requirements = {
         "GiantCount": 60,
         "GiantMaxHP": 115288,
         "GiantMaxArmor": 721,
-        "requirements": ["Field_H5", "Field_M4", "Field_H2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "E2": {
         "type": "NORMAL",
@@ -429,7 +518,11 @@ level_requirements = {
         "GiantCount": 61,
         "GiantMaxHP": 63782,
         "GiantMaxArmor": 405,
-        "requirements": ["Field_M1", "Field_J4", "Field_F1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "E3": {
         "type": "NORMAL",
@@ -447,7 +540,11 @@ level_requirements = {
         "GiantCount": 58,
         "GiantMaxHP": 89729,
         "GiantMaxArmor": 273,
-        "requirements": ["Field_D4", "Field_D1", "Field_H4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "E4": {
         "type": "EPIC",
@@ -465,7 +562,11 @@ level_requirements = {
         "GiantCount": 67,
         "GiantMaxHP": 155322,
         "GiantMaxArmor": 858,
-        "requirements": ["Field_D4", "Field_H4", "Field_D1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "E5": {
         "type": "SECRET",
@@ -483,7 +584,11 @@ level_requirements = {
         "GiantCount": 66,
         "GiantMaxHP": 295090,
         "GiantMaxArmor": 1298,
-        "requirements": ["Field_D3", "Field_I1", "Field_B1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "F1": {
         "type": "NORMAL",
@@ -501,7 +606,11 @@ level_requirements = {
         "GiantCount": 119,
         "GiantMaxHP": 84051,
         "GiantMaxArmor": 639,
-        "requirements": ["Field_G3", "Field_J3", "Field_G4", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "F2": {
         "type": "NORMAL",
@@ -519,7 +628,11 @@ level_requirements = {
         "GiantCount": 127,
         "GiantMaxHP": 106964,
         "GiantMaxArmor": 770,
-        "requirements": ["Field_E2", "Field_M2", "Field_M3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "F3": {
         "type": "NORMAL",
@@ -537,7 +650,11 @@ level_requirements = {
         "GiantCount": 160,
         "GiantMaxHP": 483503,
         "GiantMaxArmor": 1364,
-        "requirements": ["Field_B5", "Field_I4", "Field_C1", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "F4": {
         "type": "NORMAL",
@@ -555,7 +672,11 @@ level_requirements = {
         "GiantCount": 204,
         "GiantMaxHP": 654896,
         "GiantMaxArmor": 1721,
-        "requirements": ["Field_F3", "Field_C3", "Field_B3", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "F5": {
         "type": "SECRET",
@@ -573,7 +694,11 @@ level_requirements = {
         "GiantCount": 254,
         "GiantMaxHP": 948161,
         "GiantMaxArmor": 2301,
-        "requirements": ["Field_C4", "Field_C5", "Field_F4", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "G1": {
         "type": "NORMAL",
@@ -591,7 +716,12 @@ level_requirements = {
         "GiantCount": 55,
         "GiantMaxHP": 34701,
         "GiantMaxArmor": 323,
-        "requirements": ["Field_L4", "Field_X2", "Field_Z4", "Field_K5", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "G2": {
         "type": "NORMAL",
@@ -609,7 +739,12 @@ level_requirements = {
         "GiantCount": 95,
         "GiantMaxHP": 20125,
         "GiantMaxArmor": 183,
-        "requirements": ["Field_X2", "Field_Z4", "Field_K5", "Field_L4", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "G3": {
         "type": "EPIC",
@@ -627,7 +762,11 @@ level_requirements = {
         "GiantCount": 94,
         "GiantMaxHP": 34486,
         "GiantMaxArmor": 237,
-        "requirements": ["Field_J1", "Field_J2", "Field_Z5", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "G4": {
         "type": "TILE_GIVING",
@@ -645,7 +784,11 @@ level_requirements = {
         "GiantCount": 59,
         "GiantMaxHP": 59858,
         "GiantMaxArmor": 415,
-        "requirements": ["Field_J1", "Field_J2", "Field_Z5", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "H1": {
         "type": "NORMAL",
@@ -663,7 +806,11 @@ level_requirements = {
         "GiantCount": 69,
         "GiantMaxHP": 127334,
         "GiantMaxArmor": 642,
-        "requirements": ["Field_E2", "Field_M3", "Field_M2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "H2": {
         "type": "NORMAL",
@@ -681,7 +828,11 @@ level_requirements = {
         "GiantCount": 75,
         "GiantMaxHP": 107482,
         "GiantMaxArmor": 572,
-        "requirements": ["Field_L5", "Field_F2", "Field_H1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "H3": {
         "type": "TILE_GIVING",
@@ -699,7 +850,11 @@ level_requirements = {
         "GiantCount": 77,
         "GiantMaxHP": 91554,
         "GiantMaxArmor": 482,
-        "requirements": ["Field_E2", "Field_M3", "Field_M2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "H4": {
         "type": "NORMAL",
@@ -717,7 +872,11 @@ level_requirements = {
         "GiantCount": 78,
         "GiantMaxHP": 143118,
         "GiantMaxArmor": 935,
-        "requirements": ["Field_N4", "Field_N5", "Field_E1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "H5": {
         "type": "SECRET",
@@ -735,7 +894,12 @@ level_requirements = {
         "GiantCount": 74,
         "GiantMaxHP": 107008,
         "GiantMaxArmor": 540,
-        "requirements": ["Field_H1", "Field_L5", "Field_F2", "Field_H3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "I1": {
         "type": "NORMAL",
@@ -753,7 +917,11 @@ level_requirements = {
         "GiantCount": 117,
         "GiantMaxHP": 234499,
         "GiantMaxArmor": 1029,
-        "requirements": ["Field_E4", "Field_E3", "Field_D2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "I2": {
         "type": "NORMAL",
@@ -771,7 +939,11 @@ level_requirements = {
         "GiantCount": 167,
         "GiantMaxHP": 342053,
         "GiantMaxArmor": 1146,
-        "requirements": ["Field_I1", "Field_B1", "Field_D3", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "I3": {
         "type": "NORMAL",
@@ -789,7 +961,11 @@ level_requirements = {
         "GiantCount": 223,
         "GiantMaxHP": 380075,
         "GiantMaxArmor": 1457,
-        "requirements": ["Field_D5", "Field_E5", "Field_B2", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_D5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "I4": {
         "type": "NORMAL",
@@ -807,7 +983,11 @@ level_requirements = {
         "GiantCount": 298,
         "GiantMaxHP": 482856,
         "GiantMaxArmor": 1445,
-        "requirements": ["Field_C2", "Field_B4", "Field_I3", "talismanRow:3", "talismanColumn:3"],
+        "requirements": [
+            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
+        ],
     },
     "J1": {
         "type": "NORMAL",
@@ -825,7 +1005,11 @@ level_requirements = {
         "GiantCount": 37,
         "GiantMaxHP": 33623,
         "GiantMaxArmor": 220,
-        "requirements": ["Field_K3", "Field_G2", "Field_G1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "J2": {
         "type": "NORMAL",
@@ -843,7 +1027,11 @@ level_requirements = {
         "GiantCount": 33,
         "GiantMaxHP": 31869,
         "GiantMaxArmor": 309,
-        "requirements": ["Field_G2", "Field_K3", "Field_G1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "J3": {
         "type": "NORMAL",
@@ -861,7 +1049,11 @@ level_requirements = {
         "GiantCount": 46,
         "GiantMaxHP": 73384,
         "GiantMaxArmor": 600,
-        "requirements": ["Field_J1", "Field_Z5", "Field_J2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "J4": {
         "type": "TILE_GIVING",
@@ -879,7 +1071,11 @@ level_requirements = {
         "GiantCount": 44,
         "GiantMaxHP": 75210,
         "GiantMaxArmor": 771,
-        "requirements": ["Field_J3", "Field_G4", "Field_G3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "K1": {
         "type": "STORY_RELATED",
@@ -897,7 +1093,11 @@ level_requirements = {
         "GiantCount": 56,
         "GiantMaxHP": 21131,
         "GiantMaxArmor": 267,
-        "requirements": ["Field_L1", "Field_X4", "Field_K4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "K2": {
         "type": "NORMAL",
@@ -915,7 +1115,11 @@ level_requirements = {
         "GiantCount": 76,
         "GiantMaxHP": 17609,
         "GiantMaxArmor": 183,
-        "requirements": ["Field_X4", "Field_L1", "Field_K4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "K3": {
         "type": "NORMAL",
@@ -933,7 +1137,12 @@ level_requirements = {
         "GiantCount": 72,
         "GiantMaxHP": 37303,
         "GiantMaxArmor": 429,
-        "requirements": ["Field_K5", "Field_Z4", "Field_L4", "Field_X2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "K4": {
         "type": "EPIC",
@@ -951,7 +1160,11 @@ level_requirements = {
         "GiantCount": 84,
         "GiantMaxHP": 14562,
         "GiantMaxArmor": 169,
-        "requirements": ["Field_Z1", "Field_X3", "Field_X1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "K5": {
         "type": "SECRET",
@@ -969,7 +1182,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_L2", "Field_Z3", "Field_L3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "L1": {
         "type": "NORMAL",
@@ -987,7 +1204,11 @@ level_requirements = {
         "GiantCount": 81,
         "GiantMaxHP": 19334,
         "GiantMaxArmor": 160,
-        "requirements": ["Field_X1", "Field_Z1", "Field_X3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "L2": {
         "type": "NORMAL",
@@ -1005,7 +1226,11 @@ level_requirements = {
         "GiantCount": 120,
         "GiantMaxHP": 23834,
         "GiantMaxArmor": 221,
-        "requirements": ["Field_K2", "Field_K1", "Field_Z2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "L3": {
         "type": "NORMAL",
@@ -1023,7 +1248,11 @@ level_requirements = {
         "GiantCount": 58,
         "GiantMaxHP": 28046,
         "GiantMaxArmor": 257,
-        "requirements": ["Field_Z2", "Field_K2", "Field_K1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "L4": {
         "type": "EPIC",
@@ -1041,7 +1270,11 @@ level_requirements = {
         "GiantCount": 88,
         "GiantMaxHP": 33810,
         "GiantMaxArmor": 359,
-        "requirements": ["Field_Z3", "Field_L2", "Field_L3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "L5": {
         "type": "EPIC",
@@ -1059,7 +1292,11 @@ level_requirements = {
         "GiantCount": 82,
         "GiantMaxHP": 110184,
         "GiantMaxArmor": 567,
-        "requirements": ["Field_E2", "Field_M3", "Field_M2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "M1": {
         "type": "NORMAL",
@@ -1077,7 +1314,11 @@ level_requirements = {
         "GiantCount": 79,
         "GiantMaxHP": 65392,
         "GiantMaxArmor": 405,
-        "requirements": ["Field_J3", "Field_G3", "Field_G4", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "M2": {
         "type": "NORMAL",
@@ -1095,7 +1336,11 @@ level_requirements = {
         "GiantCount": 73,
         "GiantMaxHP": 69963,
         "GiantMaxArmor": 429,
-        "requirements": ["Field_F1", "Field_J4", "Field_M1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "M3": {
         "type": "NORMAL",
@@ -1113,7 +1358,11 @@ level_requirements = {
         "GiantCount": 88,
         "GiantMaxHP": 73298,
         "GiantMaxArmor": 429,
-        "requirements": ["Field_J4", "Field_F1", "Field_M1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "M4": {
         "type": "NORMAL",
@@ -1131,7 +1380,12 @@ level_requirements = {
         "GiantCount": 72,
         "GiantMaxHP": 105153,
         "GiantMaxArmor": 572,
-        "requirements": ["Field_L5", "Field_H1", "Field_F2", "Field_H3", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H3", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "N1": {
         "type": "NORMAL",
@@ -1149,7 +1403,11 @@ level_requirements = {
         "GiantCount": 5,
         "GiantMaxHP": 5046,
         "GiantMaxArmor": 85,
-        "requirements": ["Field_R5", "Field_O3", "Field_Y1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "N2": {
         "type": "NORMAL",
@@ -1167,7 +1425,11 @@ level_requirements = {
         "GiantCount": 11,
         "GiantMaxHP": 3220,
         "GiantMaxArmor": 55,
-        "requirements": ["Field_Y1", "Field_R5", "Field_O3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "N3": {
         "type": "NORMAL",
@@ -1185,7 +1447,11 @@ level_requirements = {
         "GiantCount": 21,
         "GiantMaxHP": 10623,
         "GiantMaxArmor": 143,
-        "requirements": ["Field_R6", "Field_P1", "Field_O2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "N4": {
         "type": "NORMAL",
@@ -1203,7 +1469,11 @@ level_requirements = {
         "GiantCount": 87,
         "GiantMaxHP": 123064,
         "GiantMaxArmor": 642,
-        "requirements": ["Field_H5", "Field_M4", "Field_H2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "N5": {
         "type": "NORMAL",
@@ -1221,7 +1491,11 @@ level_requirements = {
         "GiantCount": 78,
         "GiantMaxHP": 117501,
         "GiantMaxArmor": 606,
-        "requirements": ["Field_M4", "Field_H2", "Field_H5", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "O1": {
         "type": "NORMAL",
@@ -1239,7 +1513,11 @@ level_requirements = {
         "GiantCount": 10,
         "GiantMaxHP": 8611,
         "GiantMaxArmor": 109,
-        "requirements": ["Field_N1", "Field_N2", "Field_O4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "O2": {
         "type": "NORMAL",
@@ -1257,7 +1535,11 @@ level_requirements = {
         "GiantCount": 15,
         "GiantMaxHP": 8294,
         "GiantMaxArmor": 102,
-        "requirements": ["Field_O1", "Field_T5", "Field_Y2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "O3": {
         "type": "NORMAL",
@@ -1275,7 +1557,11 @@ level_requirements = {
         "GiantCount": 8,
         "GiantMaxHP": 5462,
         "GiantMaxArmor": 84,
-        "requirements": ["Field_R3", "Field_R4", "Field_Y3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "O4": {
         "type": "EPIC",
@@ -1293,7 +1579,11 @@ level_requirements = {
         "GiantCount": 23,
         "GiantMaxHP": 7590,
         "GiantMaxArmor": 95,
-        "requirements": ["Field_O3", "Field_Y1", "Field_R5", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P1": {
         "type": "NORMAL",
@@ -1311,7 +1601,11 @@ level_requirements = {
         "GiantCount": 29,
         "GiantMaxHP": 9056,
         "GiantMaxArmor": 134,
-        "requirements": ["Field_T5", "Field_O1", "Field_Y2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P2": {
         "type": "NORMAL",
@@ -1329,7 +1623,11 @@ level_requirements = {
         "GiantCount": 43,
         "GiantMaxHP": 11011,
         "GiantMaxArmor": 152,
-        "requirements": ["Field_P3", "Field_N3", "Field_Y4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P3": {
         "type": "NORMAL",
@@ -1347,7 +1645,11 @@ level_requirements = {
         "GiantCount": 38,
         "GiantMaxHP": 13383,
         "GiantMaxArmor": 174,
-        "requirements": ["Field_O2", "Field_R6", "Field_P1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P4": {
         "type": "EPIC",
@@ -1365,7 +1667,12 @@ level_requirements = {
         "GiantCount": 54,
         "GiantMaxHP": 14993,
         "GiantMaxArmor": 174,
-        "requirements": ["Field_N3", "Field_Y4", "Field_P5", "Field_P3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P5": {
         "type": "NORMAL",
@@ -1383,7 +1690,11 @@ level_requirements = {
         "GiantCount": 10,
         "GiantMaxHP": 9430,
         "GiantMaxArmor": 174,
-        "requirements": ["Field_P1", "Field_R6", "Field_O2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "P6": {
         "type": "SECRET",
@@ -1401,7 +1712,12 @@ level_requirements = {
         "GiantCount": 149,
         "GiantMaxHP": 14461,
         "GiantMaxArmor": 185,
-        "requirements": ["Field_P5", "Field_Y4", "Field_N3", "Field_P3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Q1": {
         "type": "NORMAL",
@@ -1419,7 +1735,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_R2", "Field_V3", "Field_Q2"],
+        "requirements": [
+            ["Field_R2"],
+            ["Field_V3"],
+            ["Field_Q2"],
+        ],
     },
     "Q2": {
         "type": "NORMAL",
@@ -1437,7 +1757,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_S4", "Field_V2", "Field_R1"],
+        "requirements": [
+            ["Field_S4"],
+            ["Field_V2"],
+            ["Field_R1"],
+        ],
     },
     "Q3": {
         "type": "NORMAL",
@@ -1455,7 +1779,11 @@ level_requirements = {
         "GiantCount": 5,
         "GiantMaxHP": 2530,
         "GiantMaxArmor": 54,
-        "requirements": ["Field_T1", "Field_V4", "Field_Q1"],
+        "requirements": [
+            ["Field_T1"],
+            ["Field_V4"],
+            ["Field_Q1"],
+        ],
     },
     "Q4": {
         "type": "EPIC",
@@ -1473,7 +1801,11 @@ level_requirements = {
         "GiantCount": 4,
         "GiantMaxHP": 2286,
         "GiantMaxArmor": 58,
-        "requirements": ["Field_T4", "Field_U3", "Field_Q3"],
+        "requirements": [
+            ["Field_T4"],
+            ["Field_U3"],
+            ["Field_Q3"],
+        ],
     },
     "Q5": {
         "type": "NORMAL",
@@ -1491,7 +1823,11 @@ level_requirements = {
         "GiantCount": 3,
         "GiantMaxHP": 2559,
         "GiantMaxArmor": 44,
-        "requirements": ["Field_Q4", "Field_U1", "Field_U4"],
+        "requirements": [
+            ["Field_Q4"],
+            ["Field_U1"],
+            ["Field_U4"],
+        ],
     },
     "R1": {
         "type": "NORMAL",
@@ -1509,7 +1845,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V1", "Field_S2", "Field_S1"],
+        "requirements": [
+            ["Field_V1"],
+            ["Field_S2"],
+            ["Field_S1"],
+        ],
     },
     "R2": {
         "type": "EPIC",
@@ -1527,7 +1867,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_S4", "Field_V2", "Field_R1"],
+        "requirements": [
+            ["Field_S4"],
+            ["Field_V2"],
+            ["Field_R1"],
+        ],
     },
     "R3": {
         "type": "NORMAL",
@@ -1545,7 +1889,12 @@ level_requirements = {
         "GiantCount": 4,
         "GiantMaxHP": 3249,
         "GiantMaxArmor": 43,
-        "requirements": ["Field_T3", "Field_Q5", "Field_U2", "Field_T2"],
+        "requirements": [
+            ["Field_T3"],
+            ["Field_Q5"],
+            ["Field_U2"],
+            ["Field_T2"],
+        ],
     },
     "R4": {
         "type": "NORMAL",
@@ -1563,7 +1912,12 @@ level_requirements = {
         "GiantCount": 4,
         "GiantMaxHP": 4140,
         "GiantMaxArmor": 70,
-        "requirements": ["Field_Q5", "Field_U2", "Field_T3", "Field_T2"],
+        "requirements": [
+            ["Field_Q5"],
+            ["Field_U2"],
+            ["Field_T3"],
+            ["Field_T2"],
+        ],
     },
     "R5": {
         "type": "EPIC",
@@ -1581,7 +1935,11 @@ level_requirements = {
         "GiantCount": 15,
         "GiantMaxHP": 6253,
         "GiantMaxArmor": 89,
-        "requirements": ["Field_Y3", "Field_R4", "Field_R3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "R6": {
         "type": "SECRET",
@@ -1599,7 +1957,11 @@ level_requirements = {
         "GiantCount": 68,
         "GiantMaxHP": 9991,
         "GiantMaxArmor": 167,
-        "requirements": ["Field_O1", "Field_Y2", "Field_T5", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "S1": {
         "type": "NORMAL",
@@ -1617,7 +1979,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W3", "Field_W4", "Field_W2"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S2"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "S2": {
         "type": "NORMAL",
@@ -1635,7 +2005,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W4", "Field_W2", "Field_W3"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "S3": {
         "type": "NORMAL",
@@ -1653,7 +2031,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W4", "Field_W2", "Field_W3"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S4"],
+        ],
     },
     "S4": {
         "type": "EPIC",
@@ -1671,7 +2057,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_S3", "Field_V1", "Field_S2", "Field_S1"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S3"],
+        ],
     },
     "T1": {
         "type": "NORMAL",
@@ -1689,7 +2083,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V3", "Field_Q2", "Field_R2"],
+        "requirements": [
+            ["Field_V3"],
+            ["Field_Q2"],
+            ["Field_R2"],
+        ],
     },
     "T2": {
         "type": "STORY_RELATED",
@@ -1707,7 +2105,11 @@ level_requirements = {
         "GiantCount": 3,
         "GiantMaxHP": 3910,
         "GiantMaxArmor": 55,
-        "requirements": ["Field_U1", "Field_U4", "Field_Q4"],
+        "requirements": [
+            ["Field_U1"],
+            ["Field_U4"],
+            ["Field_Q4"],
+        ],
     },
     "T3": {
         "type": "NORMAL",
@@ -1725,7 +2127,11 @@ level_requirements = {
         "GiantCount": 4,
         "GiantMaxHP": 4140,
         "GiantMaxArmor": 70,
-        "requirements": ["Field_U4", "Field_Q4", "Field_U1"],
+        "requirements": [
+            ["Field_U4"],
+            ["Field_Q4"],
+            ["Field_U1"],
+        ],
     },
     "T4": {
         "type": "EPIC",
@@ -1743,7 +2149,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_T1", "Field_V4", "Field_Q1"],
+        "requirements": [
+            ["Field_T1"],
+            ["Field_V4"],
+            ["Field_Q1"],
+        ],
     },
     "T5": {
         "type": "SECRET",
@@ -1761,7 +2171,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_N2", "Field_O4", "Field_N1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "U1": {
         "type": "NORMAL",
@@ -1779,7 +2193,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_T4", "Field_Q3", "Field_U3"],
+        "requirements": [
+            ["Field_T4"],
+            ["Field_Q3"],
+            ["Field_U3"],
+        ],
     },
     "U2": {
         "type": "NORMAL",
@@ -1797,7 +2215,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_U1", "Field_Q4", "Field_U4"],
+        "requirements": [
+            ["Field_U1"],
+            ["Field_Q4"],
+            ["Field_U4"],
+        ],
     },
     "U3": {
         "type": "NORMAL",
@@ -1815,7 +2237,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V4", "Field_T1", "Field_Q1"],
+        "requirements": [
+            ["Field_V4"],
+            ["Field_T1"],
+            ["Field_Q1"],
+        ],
     },
     "U4": {
         "type": "EPIC",
@@ -1833,7 +2259,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_Q3", "Field_T4", "Field_U3"],
+        "requirements": [
+            ["Field_Q3"],
+            ["Field_T4"],
+            ["Field_U3"],
+        ],
     },
     "V1": {
         "type": "NORMAL",
@@ -1851,7 +2281,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W4", "Field_W2", "Field_W3"],
+        "requirements": [
+            ["Field_W4"],
+            ["Field_W2"],
+            ["Field_W3"],
+        ],
     },
     "V2": {
         "type": "NORMAL",
@@ -1869,7 +2303,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V1", "Field_S3", "Field_S1"],
+        "requirements": [
+            ["Field_V1"],
+            ["Field_S3"],
+            ["Field_S1"],
+        ],
     },
     "V3": {
         "type": "NORMAL",
@@ -1887,7 +2325,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V2", "Field_S4", "Field_R1"],
+        "requirements": [
+            ["Field_V2"],
+            ["Field_S4"],
+            ["Field_R1"],
+        ],
     },
     "V4": {
         "type": "EPIC",
@@ -1905,7 +2347,11 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_V3", "Field_Q2", "Field_R2"],
+        "requirements": [
+            ["Field_V3"],
+            ["Field_Q2"],
+            ["Field_R2"],
+        ],
     },
     "W1": {
         "type": "NORMAL",
@@ -1923,7 +2369,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": [],
+        "requirements": [
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "W2": {
         "type": "NORMAL",
@@ -1941,7 +2395,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W1"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W3"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "W3": {
         "type": "STORY_RELATED",
@@ -1959,7 +2421,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W1"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W4"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "W4": {
         "type": "EPIC",
@@ -1977,7 +2447,15 @@ level_requirements = {
         "GiantCount": 0,
         "GiantMaxHP": 0,
         "GiantMaxArmor": 0,
-        "requirements": ["Field_W1"],
+        "requirements": [
+            ["Field_W1"],
+            ["Field_W2"],
+            ["Field_W3"],
+            ["Field_S1"],
+            ["Field_S2"],
+            ["Field_S3"],
+            ["Field_S4"],
+        ],
     },
     "X1": {
         "type": "NORMAL",
@@ -1995,7 +2473,11 @@ level_requirements = {
         "GiantCount": 17,
         "GiantMaxHP": 12348,
         "GiantMaxArmor": 140,
-        "requirements": ["Field_P6", "Field_P4", "Field_P2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "X2": {
         "type": "NORMAL",
@@ -2013,7 +2495,11 @@ level_requirements = {
         "GiantCount": 54,
         "GiantMaxHP": 24021,
         "GiantMaxArmor": 294,
-        "requirements": ["Field_L3", "Field_Z3", "Field_L2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "X3": {
         "type": "NORMAL",
@@ -2031,7 +2517,11 @@ level_requirements = {
         "GiantCount": 35,
         "GiantMaxHP": 16172,
         "GiantMaxArmor": 211,
-        "requirements": ["Field_P6", "Field_P2", "Field_P4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "X4": {
         "type": "EPIC",
@@ -2049,7 +2539,11 @@ level_requirements = {
         "GiantCount": 39,
         "GiantMaxHP": 15698,
         "GiantMaxArmor": 180,
-        "requirements": ["Field_Z1", "Field_X3", "Field_X1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Y1": {
         "type": "NORMAL",
@@ -2067,7 +2561,11 @@ level_requirements = {
         "GiantCount": 6,
         "GiantMaxHP": 5462,
         "GiantMaxArmor": 71,
-        "requirements": ["Field_Y3", "Field_R4", "Field_R3", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Y2": {
         "type": "NORMAL",
@@ -2085,7 +2583,11 @@ level_requirements = {
         "GiantCount": 6,
         "GiantMaxHP": 5290,
         "GiantMaxArmor": 64,
-        "requirements": ["Field_N2", "Field_O4", "Field_N1", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Y3": {
         "type": "STORY_RELATED",
@@ -2103,7 +2605,11 @@ level_requirements = {
         "GiantCount": 9,
         "GiantMaxHP": 5046,
         "GiantMaxArmor": 85,
-        "requirements": ["Field_Q5", "Field_T2", "Field_U2"],
+        "requirements": [
+            ["Field_Q5"],
+            ["Field_T2"],
+            ["Field_U2"],
+        ],
     },
     "Y4": {
         "type": "EPIC",
@@ -2121,7 +2627,11 @@ level_requirements = {
         "GiantCount": 17,
         "GiantMaxHP": 12851,
         "GiantMaxArmor": 174,
-        "requirements": ["Field_O2", "Field_P1", "Field_R6", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Z1": {
         "type": "NORMAL",
@@ -2139,7 +2649,11 @@ level_requirements = {
         "GiantCount": 22,
         "GiantMaxHP": 12348,
         "GiantMaxArmor": 140,
-        "requirements": ["Field_P2", "Field_P6", "Field_P4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Z2": {
         "type": "NORMAL",
@@ -2157,7 +2671,11 @@ level_requirements = {
         "GiantCount": 26,
         "GiantMaxHP": 21591,
         "GiantMaxArmor": 221,
-        "requirements": ["Field_L1", "Field_X4", "Field_K4", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Z3": {
         "type": "NORMAL",
@@ -2175,7 +2693,11 @@ level_requirements = {
         "GiantCount": 139,
         "GiantMaxHP": 45195,
         "GiantMaxArmor": 271,
-        "requirements": ["Field_K1", "Field_K2", "Field_Z2", "talismanRow:1", "talismanColumn:1"],
+        "requirements": [
+            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
+        ],
     },
     "Z4": {
         "type": "NORMAL",
@@ -2193,7 +2715,11 @@ level_requirements = {
         "GiantCount": 88,
         "GiantMaxHP": 27111,
         "GiantMaxArmor": 252,
-        "requirements": ["Field_Z3", "Field_L3", "Field_L2", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
     "Z5": {
         "type": "SECRET",
@@ -2211,6 +2737,10 @@ level_requirements = {
         "GiantCount": 180,
         "GiantMaxHP": 62632,
         "GiantMaxArmor": 288,
-        "requirements": ["Field_K3", "Field_G2", "Field_G1", "talismanRow:2", "talismanColumn:2"],
+        "requirements": [
+            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+        ],
     },
 }

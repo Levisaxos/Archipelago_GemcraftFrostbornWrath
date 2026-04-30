@@ -4,7 +4,7 @@ import json
 from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import GAME_DATA, FREE_STAGES, SKILL_CATEGORIES, STAGE_RULES, TIERS
+from .rulesdata import GAME_DATA, SKILL_CATEGORIES, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
 from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements, skill_groups
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
@@ -18,34 +18,12 @@ from .power import (
 )
 
 
-# Prereq stage ids per stage, derived from each stage's `requirements` field
-# in rulesdata_levels.py. Items there are written as "Field_<sid>" — strip
-# the prefix to recover stage str_ids. OR semantics: any one tokenable
-# prereq satisfies the gate. Free-stage prereqs (W1-W4 lack Field Tokens)
-# are filtered out at use-site so they don't break has_any().
-def _extract_prereq_sids(requirements: list) -> list[str]:
-    return [r[len("Field_"):] for r in requirements if isinstance(r, str) and r.startswith("Field_")]
-
-
-STAGE_PREREQS: dict[str, list[str]] = {
-    sid: _extract_prereq_sids(data.get("requirements", []))
-    for sid, data in LEVEL_DATA.items()
-}
-
-
-# Full requirements list per stage (raw strings as written in
-# rulesdata_levels.py). Field_<sid> entries are OR-combined (handled by
-# STAGE_PREREQS); everything else is AND-evaluated through _eval_req at
-# rule time. Used by the per-stage gate loop in set_rules().
-STAGE_REQUIREMENTS: dict[str, list[str]] = {
-    sid: list(data.get("requirements", []))
-    for sid, data in LEVEL_DATA.items()
-}
-
-
-def _stage_non_field_reqs(sid: str) -> list[str]:
-    return [r for r in STAGE_REQUIREMENTS.get(sid, [])
-            if not (isinstance(r, str) and r.startswith("Field_"))]
+# Stage prereqs and the talisman requirement ramp are now derived per-world at
+# generation time from the chosen `starting_stage` option (see __init__.py:
+# create_regions builds world._stage_prereqs and world._stage_buckets via
+# gen_prereqs.build_dag). This module reads those off the world inside
+# set_rules. The baked `requirements` lists in rulesdata_levels.py are no
+# longer consulted at runtime — they remain for inspection only.
 
 
 def _restrict_talisman_shapes(loc, exclude_edge: bool, exclude_corner: bool) -> None:
@@ -205,9 +183,65 @@ def _can_reach_any_stage(state, player: int, stages: list) -> bool:
     return False
 
 
+def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
+    """Return True if the player can clear (reach Journey for) `sid`.
+
+    Memoised on the state via a signature derived from prog_items (length +
+    sum of counts). The signature changes whenever AP collects or removes
+    any item, so cached values from a previous fill state are invalidated
+    automatically.
+
+    The recursive can_reach chain triggered by per-stage prereq rules is
+    O(chain_depth) deep with up to 4 fanout per level — without memoisation
+    each top-level access_rule call re-evaluates ancestors many times. The
+    cache turns the cumulative cost over a fill sweep from ~depth^fanout to
+    O(num_stages).
+    """
+    items = state.prog_items.get(player)
+    if items is None:
+        sig = (player, 0, 0)
+    else:
+        sig = (player, len(items), sum(items.values()))
+
+    cache = getattr(state, "_gcfw_clear_cache", None)
+    if cache is None or cache[0] != sig:
+        cache = (sig, {})
+        state._gcfw_clear_cache = cache
+    data = cache[1]
+
+    if sid in data:
+        return data[sid]
+    # Cycle guard — our prereq DAG is acyclic by construction, but if a
+    # broken edit ever introduces a cycle this prevents infinite recursion.
+    data[sid] = False
+    try:
+        ok = state.can_reach(f"Complete {sid} - Journey", "Location", player)
+    except KeyError:
+        ok = False
+    data[sid] = ok
+    return ok
+
+
+def _can_clear_any_stage(state, player: int, stages) -> bool:
+    """Return True if the player can clear (reach Journey) any of the given
+    stages. Stricter than `_can_reach_any_stage` — stash reachability does
+    not count, only Journey clears.
+
+    Used by the per-stage prereq gate so that satisfying a prereq forces
+    an actual stage clear, not just possession of the prereq's Field Token.
+    Backed by `_can_clear_stage_cached` for speed.
+    """
+    for sid in stages:
+        if _can_clear_stage_cached(state, player, sid):
+            return True
+    return False
+
+
 def _is_gating_req(req: str, is_progressive: bool) -> bool:
     """Return True if this requirement string actually gates access to something."""
     req = req.strip()
+    if req.startswith("Field_"):
+        return True
     if req.startswith("Achievement:"):
         return is_progressive
     if req.endswith(" element"):
@@ -232,6 +266,13 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
 def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     """Evaluate a single requirement string against the current collection state."""
     req = req.strip()
+
+    # Field_<sid> means "stage <sid>'s Journey is reachable" (i.e. the player
+    # can clear it in-logic). NOT just "has Field Token <sid>" — token
+    # possession alone doesn't guarantee the prereq stage is beatable. Cached
+    # via _can_clear_stage_cached so deeper chains don't re-evaluate ancestors.
+    if req.startswith("Field_"):
+        return _can_clear_stage_cached(state, player, req[len("Field_"):])
 
     if req.startswith("Achievement:"):
         if not is_progressive:
@@ -363,9 +404,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     """
     Apply access rules to all regions and locations.
 
-    Region connections (from W1 hub):
-      - FREE_STAGES (W2-W4): no token requirement (tutorial zone).
-      - All other stages:    require their own field token only.
+    Region connections (from the chosen starting stage):
+      - All other stages: require their own field token to enter.
+      - The starting stage itself has no token requirement (Menu connects
+        directly to it in __init__.create_regions).
 
     Location rules:
       - Journey:        WIZLOCK skills (where applicable) + tier-power gate.
@@ -384,34 +426,45 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     stages = GAME_DATA["stages"]
 
+    # The chosen starting stage (from world.options.starting_stage) is the
+    # one stage whose Field prereqs we ignore — it's the menu connection,
+    # so its `requirements` list in rulesdata_levels.py shouldn't gate it.
+    start_sid = world.start_sid
+
     # Build the per-world power weight map ONCE — every has_power(...) call
     # below reuses it. Walking state.prog_items[player] with a precomputed
     # weight map is ~10x cheaper per fill check than iterating master lists.
     weight_map = build_weight_map_for_world(world)
 
-    w1_region = multiworld.get_region("W1", player)
+    start_region = multiworld.get_region(start_sid, player)
 
-    # --- Region connections: W1 → every non-W1 stage ---
-    # A stage's own Field Token is still required to physically enter the
-    # stage. Stage-to-stage progression order is enforced separately by the
-    # prerequisite gates further down (STAGE_PREREQS).
+    # --- Region connections: starting stage → every other stage ---
+    # A stage's own Field Token is required to physically enter the stage.
+    # Stage-to-stage progression order is enforced separately by the
+    # prerequisite gates further down (per-world stage_prereqs).
     for stage in stages:
         str_id = stage["str_id"]
-        if str_id == "W1":
+        if str_id == start_sid:
             continue
         child_region = multiworld.get_region(str_id, player)
-        connection = w1_region.connect(child_region, f"W1 -> {str_id}")
+        connection = start_region.connect(child_region, f"{start_sid} -> {str_id}")
 
-        if str_id in FREE_STAGES:
-            # Free stages (W2-W4): accessible from W1 with no requirements.
-            # They have no token items; the mod unlocks them on connect.
-            continue
         token_name = f"{str_id} Field Token"
         connection.access_rule = (
             lambda state, tok=token_name: state.has(tok, player)
         )
 
     # --- Location rules: WIZLOCK skill requirements only ---
+    # gem_pouch_gating selects which gem-related requirements actually gate:
+    #   off         → gemSkills:N is active, gemPouch:<prefix> is a no-op
+    #   distinct    → gemSkills:N is a no-op, gemPouch:<prefix> requires the
+    #                 named pouch item
+    #   progressive → gemSkills:N is a no-op, gemPouch:<prefix> requires
+    #                 enough Progressive Gempouch copies for that prefix's
+    #                 position in GEM_POUCH_PLAY_ORDER.
+    pouch_mode = world.options.gem_pouch_gating.value
+    pouch_index = {p: i for i, p in enumerate(GEM_POUCH_PLAY_ORDER)}
+
     for str_id, rule in STAGE_RULES.items():
         if not rule.skills:
             continue
@@ -421,6 +474,22 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             if ":" in skill:
                 group_name, count_str = skill.split(":", 1)
                 group_name = group_name.strip()
+                if group_name == "gemPouch":
+                    if pouch_mode == 0:
+                        continue  # off — pouches don't gate
+                    prefix = count_str.strip()
+                    if pouch_mode == 1:  # distinct
+                        item_name = f"Gempouch ({prefix})"
+                        conditions.append(lambda state, i=item_name: state.has(i, player))
+                    else:  # progressive
+                        needed = pouch_index.get(prefix, -1) + 1
+                        if needed > 0:
+                            conditions.append(
+                                lambda state, n=needed: state.count("Progressive Gempouch", player) >= n
+                            )
+                    continue
+                if group_name == "gemSkills" and pouch_mode != 0:
+                    continue  # pouches replace the gem-skill gate
                 count_needed = int(count_str.strip())
                 if group_name in skill_groups:
                     group_members = skill_groups[group_name].get("members", [])
@@ -430,6 +499,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 item_name = f"{skill} Skill"
                 conditions.append(lambda state, i=item_name: state.has(i, player))
 
+        if not conditions:
+            continue
+
         def make_rule(conds):
             return lambda state: all(c(state) for c in conds)
 
@@ -438,40 +510,34 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             location = multiworld.get_location(loc_name, player)
             location.access_rule = make_rule(conditions)
 
-    # --- Per-stage prerequisite gates (Journey + Wizard stash) ---
-    # Each stage requires AT LEAST ONE prereq stage's Field Token to have been
-    # collected. Free stages (W1-W4) have no Field Tokens, so a prereq list
-    # consisting entirely of free stages is auto-satisfied — no rule added.
-    # Mixed prereq lists (some free, some tokened) reduce to the tokened
-    # subset since OR with an always-true free option is just "true."
+    # --- Per-stage requirement gates (Journey + Wizard stash) ---
+    # Each non-start stage's `requirements` list in rulesdata_levels.py is
+    # written in DNF (outer-OR over inner AND-groups). Field_<sid> entries
+    # resolve to "stage <sid>'s Journey is clearable in-logic" via _eval_req,
+    # so token possession alone isn't enough — the prereq stage must actually
+    # be beatable through the chain.
+    #
+    # The chosen starting stage skips this gate entirely (it's the menu
+    # connection; its own listed prereqs are intentionally ignored).
     for stage in stages:
         sid = stage["str_id"]
         journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
         stash_loc   = multiworld.get_location(f"Complete {sid} - Wizard stash", player)
 
-        prereq_sids = STAGE_PREREQS.get(sid, [])
-        free_in_prereqs = any(p in FREE_STAGES for p in prereq_sids)
-        tokenable = [p for p in prereq_sids if p not in FREE_STAGES]
-        non_field_reqs = _stage_non_field_reqs(sid)
+        if sid != start_sid:
+            requirements = LEVEL_DATA[sid].get("requirements", [])
+            if requirements:
+                normalized = _normalize_requirements(requirements)
 
-        # OR-combined Field token requirement (skipped if any prereq is free,
-        # since the OR is then trivially satisfied by an always-reachable stage).
-        if prereq_sids and not free_in_prereqs and tokenable:
-            token_names = frozenset(f"{p} Field Token" for p in tokenable)
-            add_rule(journey_loc,
-                lambda state, names=token_names: state.has_any(names, player))
-            add_rule(stash_loc,
-                lambda state, names=token_names: state.has_any(names, player))
+                def make_stage_rule(groups):
+                    return lambda state: any(
+                        all(_eval_req(r, state, player, is_progressive=False) for r in group)
+                        for group in groups
+                    )
 
-        # AND-combined counter requirements (talismanRow:N, talismanColumn:N,
-        # skillPoints:N, etc.). Each evaluated independently via _eval_req;
-        # all must be satisfied. is_progressive=False — these aren't
-        # achievement chain references.
-        for req in non_field_reqs:
-            add_rule(journey_loc,
-                lambda state, r=req: _eval_req(r, state, player, is_progressive=False))
-            add_rule(stash_loc,
-                lambda state, r=req: _eval_req(r, state, player, is_progressive=False))
+                rule = make_stage_rule(normalized)
+                add_rule(journey_loc, rule)
+                add_rule(stash_loc, rule)
 
         # Wizard-stash key item is always required (no off mode).
         key_name = f"Wizard Stash {sid} Key"

@@ -43,6 +43,9 @@ WEIGHT_BATTLE_TRAIT      = 0.0   # neutral — traits make battles harder too
 WEIGHT_XP_TOME_LEVEL     = 0.35  # per wizard level granted by an XP tome
 WEIGHT_SHADOW_CORE_ITEM  = 0.1   # per Shadow Cores stash item received
 WEIGHT_TALISMAN_DIVISOR  = 25.0  # per fragment: rarity / 25 (rarity-100 → 4)
+WEIGHT_GEMPOUCH          = 6.0   # per pouch (distinct or progressive copy) —
+                                  # unlocks gem orbs for an entire prefix,
+                                  # comparable to a gem skill
 
 # ---------------------------------------------------------------------------
 # Required-power thresholds per stage tier (0..12).
@@ -279,6 +282,15 @@ def build_weight_map(xp_per_tome_average: float = 1.0) -> dict[str, float]:
     if WEIGHT_TALISMAN_DIVISOR > 0:
         for name, rarity in _TALISMAN_RARITY.items():
             weights[name] = rarity / WEIGHT_TALISMAN_DIVISOR
+
+    # Gempouches — both forms get the same weight. Items are always declared
+    # in the table (see items.py); only ones in the actual pool will appear in
+    # state.prog_items, so we can list them all unconditionally.
+    if WEIGHT_GEMPOUCH != 0.0:
+        from .rulesdata import GEM_POUCH_PLAY_ORDER
+        for prefix in GEM_POUCH_PLAY_ORDER:
+            weights[f"Gempouch ({prefix})"] = WEIGHT_GEMPOUCH
+        weights["Progressive Gempouch"] = WEIGHT_GEMPOUCH
 
     return weights
 

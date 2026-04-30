@@ -16,6 +16,46 @@ class EnforceLogic(Toggle):
     default = 0
 
 
+class StartingStage(Choice):
+    """Which early-game stage you start the run on.
+
+    The chosen stage is accessible from the menu without a Field Token; all
+    other stages (including the W/S stages you didn't pick) require their
+    own token plus a clearable prereq stage.
+
+    Default 'random' picks one of W1-W4 / S1-S4 each generation.
+    """
+    display_name = "Starting Stage"
+    option_w1 = 0
+    option_w2 = 1
+    option_w3 = 2
+    option_w4 = 3
+    option_s1 = 4
+    option_s2 = 5
+    option_s3 = 6
+    option_s4 = 7
+    default = "random"
+
+
+# Map StartingStage option int -> stage str_id. Order matches the option_* values
+# above. Imported by __init__.py and rules.py to resolve the chosen start.
+STARTING_STAGE_BY_VALUE = {
+    StartingStage.option_w1: "W1",
+    StartingStage.option_w2: "W2",
+    StartingStage.option_w3: "W3",
+    StartingStage.option_w4: "W4",
+    StartingStage.option_s1: "S1",
+    StartingStage.option_s2: "S2",
+    StartingStage.option_s3: "S3",
+    StartingStage.option_s4: "S4",
+}
+
+# Eligible early-tier stages for the prereq DAG. The chosen start sits alone in
+# bucket 0; the remaining seven occupy bucket 1, regardless of their natural
+# difficulty, so any W/S start has a populated bucket-1 prereq pool.
+EARLY_TIER_STAGES = frozenset(STARTING_STAGE_BY_VALUE.values())
+
+
 class FieldTokenPlacement(Choice):
     """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
 
@@ -261,6 +301,31 @@ class ExtraWaveCount(Range):
     default     = 0
 
 
+class GemPouchGating(Choice):
+    """How gem availability per stage is gated by Archipelago items.
+
+    off:         No gempouches. Stages keep their original `gemSkills: N` gate
+                 (collect N of the 6 gem-skill items); gem orbs spawn freely
+                 in every level.
+    distinct:    26 named pouches (one per stage-prefix letter). A stage in
+                 prefix X spawns no gem orbs at all until you collect
+                 `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
+    progressive: 26 copies of `Progressive Gempouch` in play order
+                 (W, S, V, R, Q, P, O, N, M, L, K, J, I, H, G, F, E, D, C, B,
+                 A, Z, Y, X, U, T). The Nth copy unlocks the Nth world in that
+                 order. Spoiler log shows fungible items but fill is more
+                 forgiving.
+
+    distinct and progressive both pre-collect the W (tutorial) pouch so the
+    seed is solvable from frame zero.
+    """
+    display_name = "Gem Pouch Gating"
+    option_off         = 0
+    option_distinct    = 1
+    option_progressive = 2
+    default = 0
+
+
 class StartingOvercrowd(Toggle):
     """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
 
@@ -336,6 +401,7 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
+    starting_stage:              StartingStage
     xp_tome_bonus:             XpTomeBonus
     power_scale:               PowerScale
     enforce_logic:             EnforceLogic
@@ -343,6 +409,7 @@ class GCFWOptions(PerGameCommonOptions):
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
+    gem_pouch_gating:          GemPouchGating
     achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
     skillpoint_multiplier:     SkillpointMultiplier

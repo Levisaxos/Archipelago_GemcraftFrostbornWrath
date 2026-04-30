@@ -234,13 +234,26 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return [];
 
+            var pouchMode:int = _pouchMode();
             var out:Array = [];
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate — hide
                     var need:int = int(skillName.split(":")[1]);
                     var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
                     out.push([need + " gem skills (" + have + "/" + need + ")", have >= need]);
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off — pouch line is meaningless
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    out.push(["Gempouch (" + pouchPrefix + ")", _pouchHeld(pouchPrefix)]);
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -327,6 +340,28 @@ package tracker {
             var reqs:Array = _stageRequirements[strId] as Array;
             if (reqs == null || reqs.length == 0) return [];
 
+            // Flatten DNF (outer-OR over inner-AND groups) into the union of
+            // entries across all groups for tooltip display. Loses precision
+            // for complex multi-group cases but matches the simpler "what
+            // are you missing" intent. Backward compat: a flat list is its
+            // own union.
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
+            var flat:Array = [];
+            var seen:Object = {};
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                for each (var entry:String in group) {
+                    if (entry == null || seen[entry]) continue;
+                    seen[entry] = true;
+                    flat.push(entry);
+                }
+            }
+
             var lines:Array = [];
 
             // Field_ prereqs — show as a single OR line if any are missing.
@@ -334,7 +369,7 @@ package tracker {
             var anyFieldHeld:Boolean = false;
             var anyFreePrereq:Boolean = false;
             var tokens:Object = AV.sessionData.tokensByStrId;
-            for each (var req:String in reqs) {
+            for each (var req:String in flat) {
                 if (req == null || req.indexOf("Field_") != 0) continue;
                 var sid:String = req.substr(6);
                 if (_freeStages[sid] == true) {
@@ -350,7 +385,7 @@ package tracker {
             }
 
             // Counter requirements that aren't met — one line each.
-            for each (var creq:String in reqs) {
+            for each (var creq:String in flat) {
                 if (creq == null || creq.indexOf("Field_") == 0) continue;
                 if (_evalCounterReq(creq)) continue;
                 var colon:int = creq.indexOf(":");
@@ -399,13 +434,27 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return [];
 
+            var pouchMode:int = _pouchMode();
             var missing:Array = [];
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate
                     var need:int = int(skillName.split(":")[1]);
                     var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
                     if (have < need) missing.push(need + " gem skills (" + have + "/" + need + ")");
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    if (!_pouchHeld(pouchPrefix))
+                        missing.push("Gempouch (" + pouchPrefix + ")");
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -456,12 +505,15 @@ package tracker {
 
         /** Run the four-clause stage gate for one stage. */
         private function _stageReachable(strId:String):Boolean {
-            // Clause 1: token (or free).
-            if (!(_freeStages[strId] == true)) {
-                var tokens:Object = AV.sessionData.tokensByStrId;
-                if (tokens == null || tokens[strId] != true)
-                    return false;
-            }
+            // Free stage = the chosen starting stage. Mirrors apworld
+            // set_rules, which skips the requirements + token gate for the
+            // start (Menu connects directly to it).
+            if (_freeStages[strId] == true)
+                return true;
+            // Clause 1: own Field Token required.
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            if (tokens == null || tokens[strId] != true)
+                return false;
             // Clause 2: WIZLOCK skill gate.
             if (!_skillGateMet(strId))
                 return false;
@@ -470,10 +522,17 @@ package tracker {
         }
 
         /**
-         * Evaluate stageRequirements[strId]. Field_<sid> entries are
-         * OR-combined (any one held passes; or auto-pass if any Field_
-         * names a free stage). Other entries are AND-combined and must
-         * all pass through _evalCounterReq.
+         * Evaluate stageRequirements[strId] in DNF: outer-OR of inner
+         * AND-groups. The stage passes if any one AND-group passes; an
+         * AND-group passes when every entry inside it does. Within a group:
+         *   - Field_<sid>: token <sid> held (or <sid> is a free stage).
+         *   - everything else: routed through _evalCounterReq.
+         * Empty / missing requirements pass automatically (used by the
+         * starting stage upstream, plus W1-style stages from older data).
+         *
+         * Backward compat: a flat list of strings (no inner Arrays) is
+         * treated as a single AND-group, matching apworld's
+         * _normalize_requirements.
          */
         private function _requirementsGateMet(strId:String):Boolean {
             var reqs:Array = _stageRequirements != null
@@ -482,31 +541,34 @@ package tracker {
             if (reqs == null || reqs.length == 0)
                 return true;
 
-            var fieldSatisfied:Boolean = true;   // true when no Field_ entries
-            var sawField:Boolean       = false;
-            var freeSeen:Boolean       = false;
-            var fieldHeld:Boolean      = false;
-            var tokens:Object = AV.sessionData.tokensByStrId;
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
 
-            for each (var req:String in reqs) {
-                if (req == null) continue;
-                if (req.indexOf("Field_") == 0) {
-                    sawField = true;
-                    var sid:String = req.substr(6);
-                    if (_freeStages[sid] == true) {
-                        freeSeen = true;
-                    } else if (tokens != null && tokens[sid] == true) {
-                        fieldHeld = true;
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                var groupOk:Boolean = true;
+                for each (var req:String in group) {
+                    if (req == null) continue;
+                    if (req.indexOf("Field_") == 0) {
+                        var sid:String = req.substr(6);
+                        if (_freeStages[sid] != true
+                            && !(tokens != null && tokens[sid] == true)) {
+                            groupOk = false;
+                            break;
+                        }
+                    } else if (!_evalCounterReq(req)) {
+                        groupOk = false;
+                        break;
                     }
-                    continue;
                 }
-                if (!_evalCounterReq(req))
-                    return false;
+                if (groupOk) return true;
             }
-            if (sawField) {
-                fieldSatisfied = freeSeen || fieldHeld;
-            }
-            return fieldSatisfied;
+            return false;
         }
 
         /**
@@ -668,11 +730,24 @@ package tracker {
             if (_stageSkills == null) return true;
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return true;
+            var pouchMode:int = _pouchMode();
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate
                     var need:int = int(skillName.split(":")[1]);
                     if (int(AV.sessionData.skillCountByCategory["gems"]) < need) return false;
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off — pouch is no-op
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    if (!_pouchHeld(pouchPrefix)) return false;
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -680,6 +755,40 @@ package tracker {
                 if (!AV.sessionData.hasItem(700 + idx)) return false;
             }
             return true;
+        }
+
+        // Active gem-pouch gating mode (0=off, 1=distinct, 2=progressive).
+        // Read from slot_data via ServerOptions; returns 0 if not set.
+        private function _pouchMode():int {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            return int(AV.serverData.serverOptions.gemPouchGating);
+        }
+
+        // True when the player owns the pouch for the given stage-prefix
+        // letter under the current mode (distinct: hasItem; progressive:
+        // count >= prefix index + 1). Fails open on unknown prefixes.
+        private function _pouchHeld(prefix:String):Boolean {
+            if (prefix == null || prefix.length == 0) return true;
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (opts == null) return true;
+            var order:Array = opts.gemPouchPlayOrder as Array;
+            if (order == null || order.length == 0) return true;
+            var idx:int = order.indexOf(prefix);
+            if (idx < 0) return true;
+            if (int(opts.gemPouchGating) == 1) {
+                return AV.sessionData.hasItem(626 + idx);
+            }
+            // progressive
+            var progId:int = int(opts.gemPouchProgressiveId);
+            if (progId <= 0) progId = 652;
+            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        }
+
+        // Local trim to avoid pulling in a tracker dependency.
+        private function _trimAS(s:String):String {
+            if (s == null) return "";
+            return s.replace(/^\s+|\s+$/g, "");
         }
 
     }

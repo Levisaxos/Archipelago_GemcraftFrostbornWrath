@@ -51,6 +51,8 @@ package {
 
     import patch.WizStashes;
     import patch.FirstPlayBypass;
+    import patch.GemPouchSuppressor;
+    import patch.StartingGemSuppressor;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
     import patch.RitualSpawnPatcher;
@@ -140,6 +142,8 @@ package {
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _achievementUnlocker:AchievementUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
+        private var _gemPouchSuppressor:GemPouchSuppressor;
+        private var _startingGemSuppressor:StartingGemSuppressor;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
@@ -217,6 +221,8 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
+                _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
+                _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
@@ -569,6 +575,7 @@ package {
                     _deathLinkHandler.resetForNewStage();
                     _wavePrePatcher.resetForNewStage();
                     _ritualSpawnPatcher.resetForNewStage();
+                    _startingGemSuppressor.applyIfReady();
                 }
 
                 // Recompute the available-achievements list when entering battle so
@@ -585,6 +592,8 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                    _gemPouchSuppressor.resetIngame();
+                    _startingGemSuppressor.resetForNewStage();
                     _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
                     _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
                     for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
@@ -640,8 +649,12 @@ package {
             }
 
             // Inject skill gems for first-play stages (every frame until done once).
+            // GemPouchSuppressor MUST run after FirstPlayBypass — the latter
+            // adds skill-unlock gems back, the former wipes them when the
+            // current stage's Gempouch is missing.
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
+                _gemPouchSuppressor.onIngameFrame();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
             }
@@ -1221,6 +1234,15 @@ package {
                 apId = int(entry.apId);
                 if (apId < 1100 || apId > 1199) continue;
                 _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
+            }
+
+            // 4b. Gempouches (distinct 626-651, progressive 652).
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 626 || apId > 652) continue;
+                _progressionBlocker.addGempouchDropIcon(apId);
             }
 
             // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).

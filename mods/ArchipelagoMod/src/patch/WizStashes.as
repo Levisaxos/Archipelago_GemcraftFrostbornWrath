@@ -1,12 +1,14 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import com.giab.games.gcfw.constants.IngameStatus;
+    import com.giab.common.utils.ColorToolbox;
     import com.giab.games.gcfw.entity.WizardStash;
     import data.AV;
     import tracker.FieldLogicEvaluator;
     import flash.display.Bitmap;
-    import flash.display.Sprite;
+    import flash.display.BitmapData;
+    import flash.geom.Matrix;
+    import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
 
@@ -23,17 +25,18 @@ package patch {
      * Per-frame in-level enforcement:
      *   - tickClearOpened()         — clean up matrix cells of opened stashes
      *   - tickEnforceStashLock()    — shield-spike locked stashes (AP-side per-stage
-     *                                 gating) and overlay a padlock bitmap above each
+     *                                 gating) and overdraw the locked-stash sprite
+     *                                 directly into core.cnt.bmpdBuildings so the
+     *                                 chained-chest art replaces the vanilla stash
      *   - tickStashLockTooltip()    — append a "Locked - requires key" line to the
      *                                 hover tooltip when the player hovers a locked stash
      */
     public class WizStashes {
 
-        // Per-level overlay container: live Sprite added to GV.ingameCore.cnt
-        // holding one padlock Bitmap per locked stash. Reset when the stage
-        // changes (different stageMeta.id) or when leaving INGAME.
-        private static var _lockOverlay:Sprite = null;
-        private static var _lockOverlayStageId:int = -1;
+        // True while we have our locked-stash artwork stamped into bmpdBuildings.
+        // Used so the unlock transition triggers exactly one redrawHighBuildings()
+        // call (which repaints the vanilla stash sprite over our overdraw).
+        private static var _hasLockedDrawn:Boolean = false;
 
         // Original shield value per locked stash, captured the first frame we
         // see it. Restored when the unlock arrives so the stash becomes breakable
@@ -59,10 +62,87 @@ package patch {
             _evaluator = evaluator;
         }
 
-        // Embedded copper padlock graphic (~64x64). Path is relative to this
-        // .as file: src/patch/ → ../../resources/Padlock.png.
-        [Embed(source='../../resources/Padlock.png')]
-        private static const PadlockAsset:Class;
+        // Embedded chained-chest art used to replace the vanilla stash sprite
+        // while the stash is locked. Path is relative to this .as file:
+        // src/patch/ → ../../resources/WizStashLocked.png.
+        [Embed(source='../../resources/WizStashLocked.png')]
+        private static const LockedStashAsset:Class;
+
+        // Stash collision footprint is 3 cells × 2 cells = 84×56 px, but the
+        // vanilla stash sprite bleeds beyond that with shadow/depth. We render
+        // larger than the footprint and center on the visual anchor at
+        // ((fx+1.5)·28, (fy+1)·28) so the chained-chest covers the full vanilla
+        // silhouette. Adjust these two consts (keeping ~3:2 ratio) if the art
+        // needs to grow/shrink.
+        private static const LOCKED_W:int = 96;
+        private static const LOCKED_H:int = 64;
+        private static var _lockedStashBmd:BitmapData = null;
+
+        // Cached per-stage tinted variant. Vanilla applies a level-specific
+        // HSBC color transform to every building (ColorToolbox.adjustHsbc in
+        // IngameRenderer2.as:807); we replicate it here so the chained chest
+        // matches the stage's palette instead of staying gold-yellow on a
+        // bluish level. Keyed by hsbc fingerprint — rebuilt only when the
+        // tint actually changes (stage transitions, mostly).
+        private static var _tintedLockedBmd:BitmapData = null;
+        private static var _tintedLockedKey:String = null;
+
+        private static function _getLockedStashBmd():BitmapData {
+            if (_lockedStashBmd != null) return _lockedStashBmd;
+            try {
+                var src:Bitmap = new LockedStashAsset() as Bitmap;
+                if (src == null || src.bitmapData == null) return null;
+
+                // Trim transparent padding so a generously-bordered PNG still
+                // fills the stash footprint. getColorBoundsRect with mask
+                // 0xFF000000 finds the tight bbox of non-transparent pixels.
+                var srcBmd:BitmapData = src.bitmapData;
+                var trim:Rectangle = srcBmd.getColorBoundsRect(0xFF000000, 0x00000000, false);
+                if (trim == null || trim.width <= 0 || trim.height <= 0) {
+                    trim = new Rectangle(0, 0, srcBmd.width, srcBmd.height);
+                }
+
+                var bmd:BitmapData = new BitmapData(LOCKED_W, LOCKED_H, true, 0);
+                var m:Matrix = new Matrix();
+                m.translate(-trim.x, -trim.y);
+                m.scale(LOCKED_W / trim.width, LOCKED_H / trim.height);
+                bmd.draw(srcBmd, m, null, null, new Rectangle(0, 0, LOCKED_W, LOCKED_H), true);
+                _lockedStashBmd = bmd;
+            } catch (e:Error) {}
+            return _lockedStashBmd;
+        }
+
+        private static function _getTintedLockedBmd(hsbc:Array):BitmapData {
+            var key:String = hsbc != null ? hsbc.join(",") : "";
+            if (_tintedLockedBmd != null && _tintedLockedKey == key)
+                return _tintedLockedBmd;
+
+            var base:BitmapData = _getLockedStashBmd();
+            if (base == null)
+                return null;
+
+            if (_tintedLockedBmd != null) {
+                try { _tintedLockedBmd.dispose(); } catch (eDisp:Error) {}
+                _tintedLockedBmd = null;
+            }
+
+            var tinted:BitmapData = base.clone();
+            if (hsbc != null) {
+                try {
+                    var arr:Array = ColorToolbox.calculateColorMatrixFilter(hsbc);
+                    if (arr != null && arr.length > 0 && arr[0] != null) {
+                        tinted.applyFilter(tinted,
+                            new Rectangle(0, 0, tinted.width, tinted.height),
+                            new Point(0, 0),
+                            arr[0]);
+                    }
+                } catch (eFilter:Error) {}
+            }
+
+            _tintedLockedBmd = tinted;
+            _tintedLockedKey = key;
+            return _tintedLockedBmd;
+        }
 
         public static function apply(logger:Logger, modName:String):void {
             try {
@@ -191,30 +271,34 @@ package patch {
          *     the stash, which reads buildingAreaMatrix instead of wizardStashes
          *     (IngameSpellCaster.as:627). 1000 is enough to absorb any plausible
          *     burst within a frame, and the per-frame refresh keeps it topped up.
-         *   - Maintain a padlock-bitmap overlay above each locked stash so the
-         *     player sees a copper padlock on top of it.
+         *   - Overdraw the locked-stash sprite into core.cnt.bmpdBuildings so
+         *     the chained-chest art visually replaces the vanilla stash. The
+         *     overdraw is reapplied each frame: cheap (one copyPixels per
+         *     stash), and robust to any vanilla call to redrawHighBuildings()
+         *     (input handler clicks, destroyer events, etc.) that would
+         *     otherwise wipe it.
          *
-         * Once the unlock arrives the overlay is torn down, hidden stashes are
-         * pushed back into core.wizardStashes, original shield is restored, and
-         * normal stash damage resumes.
+         * Once the unlock arrives, hidden stashes are pushed back into
+         * core.wizardStashes, original shield is restored, and a single
+         * redrawHighBuildings() call repaints the vanilla stash over our
+         * overdraw.
          */
         public static function tickEnforceStashLock(logger:Logger, modName:String):void {
             try {
                 var core:* = GV.ingameCore;
                 if (core == null || core.stageMeta == null) {
-                    _disposeLockOverlay();
                     return;
                 }
 
-                // Hide the padlock overlay during the ending screen and any
-                // non-PLAYING state. Vanilla switches ingameStatus to
-                // GAMEOVER_PANEL_* once the battle ends; the player no longer
-                // needs the lock indicator at that point.
-                if (int(core.ingameStatus) != IngameStatus.PLAYING) {
-                    _disposeLockOverlay();
-                    return;
-                }
-
+                // Run regardless of ingameStatus. Vanilla doesn't flip to
+                // PLAYING until well after setScene2 paints buildings into
+                // bmpdBuildings (DISABLED → PLAYING happens in
+                // IngameInitializer.as:1655, well after :1518's
+                // redrawHighBuildings). Gating on PLAYING here would let the
+                // vanilla stash flash visibly while the engine is still in
+                // DISABLED. Locked stashes stay locked through the ending too
+                // (their shield is pinned, so vanilla won't try to open them),
+                // so it's safe to keep overdrawing during GAMEOVER_PANEL_*.
                 var strId:String = String(core.stageMeta.strId);
                 var stageId:int  = int(core.stageMeta.id);
 
@@ -233,25 +317,25 @@ package patch {
 
                 if (unlocked) {
                     // Both gates pass — restore any shields we spiked, push
-                    // hidden stashes back to the targeting array, drop the
-                    // padlock overlay.
+                    // hidden stashes back to the targeting array. If we had
+                    // overdrawn locked sprites, trigger one redrawHighBuildings
+                    // so vanilla repaints the unlocked stash sprite.
                     _restoreSpikedShields(core);
                     _restoreHiddenStashes(core);
-                    _disposeLockOverlay();
+                    if (_hasLockedDrawn) {
+                        _hasLockedDrawn = false;
+                        try { core.renderer2.redrawHighBuildings(); } catch (eRedraw:Error) {}
+                    }
                     return;
                 }
 
                 // Stage changed (entered a new level). Vanilla rebuilt
-                // core.wizardStashes from scratch, so our cache is stale —
-                // forget it (the new stashes are about to be re-hidden below).
+                // core.wizardStashes and bmpdBuildings from scratch, so our
+                // hidden-stash cache and locked-overdraw flag are stale.
                 if (_hiddenStashesStageId != -1 && _hiddenStashesStageId != stageId) {
                     _hiddenStashes.length = 0;
                     _hiddenStashesStageId = -1;
-                }
-
-                // Re-mount overlay container if stage changed (entered a new level).
-                if (_lockOverlay != null && _lockOverlayStageId != stageId) {
-                    _disposeLockOverlay();
+                    _hasLockedDrawn = false;
                 }
 
                 var areaM:* = core.buildingAreaMatrix;
@@ -273,9 +357,13 @@ package patch {
                 }
 
                 // Walk the building matrix once: shield-spike locked stashes and
-                // collect their (fieldX, fieldY) so we can overlay padlocks.
+                // collect their (fieldX, fieldY) so we can overdraw the locked
+                // chest sprite at each position. Also capture the first stash's
+                // hsbc tint array — used to apply the same per-stage color
+                // transform vanilla applies to the building sprites.
                 var seen:Object = {};
                 var stashCoords:Array = [];
+                var stashHsbc:Array = null;
                 for (var y:int = 0; y < areaM.length; y++) {
                     var row:* = areaM[y];
                     if (row == null) continue;
@@ -297,66 +385,46 @@ package patch {
                         }
                         w.shield.s(LOCK_SHIELD);
 
+                        if (stashHsbc == null) stashHsbc = w.hsbc;
                         stashCoords.push({fx: w.fieldX, fy: w.fieldY});
                     }
                 }
 
-                if (stashCoords.length == 0) {
-                    _disposeLockOverlay();
-                    return;
-                }
+                if (stashCoords.length == 0) return;
 
-                // Lazily build the overlay container once per stage.
-                if (_lockOverlay == null) {
-                    _lockOverlay = new Sprite();
-                    _lockOverlay.mouseEnabled = false;
-                    _lockOverlay.mouseChildren = false;
-                    // Match bmpOrbTreesBuildings's offset inside cnt (CntIngame
-                    // sets this bitmap at x=50, y=8) so our cell-space coords
-                    // line up with the rendered buildings layer.
-                    _lockOverlay.x = 50;
-                    _lockOverlay.y = 8;
-                    _lockOverlayStageId = stageId;
-
+                // Overdraw: stamp the chained-chest art directly into
+                // bmpdBuildings at each stash's footprint. We clear the
+                // footprint first (fillRect → transparent) so vanilla stash
+                // pixels don't bleed through any transparent edges of our PNG.
+                var bmd:BitmapData = _getTintedLockedBmd(stashHsbc);
+                if (bmd != null && core.cnt != null && core.cnt.bmpdBuildings != null) {
+                    var dest:BitmapData = core.cnt.bmpdBuildings;
+                    var srcRect:Rectangle = new Rectangle(0, 0, bmd.width, bmd.height);
+                    var dstPt:Point = new Point();
+                    var clearRect:Rectangle = new Rectangle(0, 0, bmd.width, bmd.height);
+                    var wasFirstDraw:Boolean = !_hasLockedDrawn;
                     for (var s:int = 0; s < stashCoords.length; s++) {
                         var c:Object = stashCoords[s];
-                        var padlock:Bitmap = new PadlockAsset() as Bitmap;
-                        if (padlock == null) continue;
-                        padlock.smoothing = true;
-                        // Native size, centered over the 3x2 stash footprint
-                        // with a small offset (right + down) to land visually
-                        // dead-center on the stone-block art.
-                        // Stash center pixel: ((fx+1.5)*28, (fy+1)*28).
-                        padlock.x = int((int(c.fx) + 1.5) * 28 - padlock.width  * 0.5) + 6;
-                        padlock.y = int((int(c.fy) + 1)   * 28 - padlock.height * 0.5) + 6;
-                        _lockOverlay.addChild(padlock);
+                        // Center the locked sprite on the stash visual anchor:
+                        // ((fx+1.5)·28, (fy+1)·28). Footprint is 84×56 cells,
+                        // bitmap is LOCKED_W×LOCKED_H, so the offset is
+                        // (footprint − bitmap)/2 from the cell origin.
+                        dstPt.x = int(c.fx) * 28 + ((84 - LOCKED_W) >> 1);
+                        dstPt.y = int(c.fy) * 28 + ((56 - LOCKED_H) >> 1);
+                        clearRect.x = dstPt.x;
+                        clearRect.y = dstPt.y;
+                        dest.fillRect(clearRect, 0);
+                        dest.copyPixels(bmd, srcRect, dstPt, null, null, true);
                     }
-
-                    try {
-                        if (core.cnt != null) {
-                            core.cnt.addChild(_lockOverlay);
-                        }
-                    } catch (eAttach:Error) {
-                        logger.log(modName, "WizStashes.tickEnforceStashLock: addChild failed: " + eAttach.message);
+                    _hasLockedDrawn = true;
+                    if (wasFirstDraw) {
+                        logger.log(modName, "WizStashes: locked stash overdraw applied for "
+                            + strId + " (" + stashCoords.length + " stash(es))");
                     }
-                    logger.log(modName, "WizStashes: locked stash overlay attached for "
-                        + strId + " (" + stashCoords.length + " stash(es))");
                 }
             } catch (err:Error) {
                 logger.log(modName, "WizStashes.tickEnforceStashLock ERROR: " + err.message);
             }
-        }
-
-        /** Remove the lock overlay container and forget which stage it belonged to. */
-        private static function _disposeLockOverlay():void {
-            if (_lockOverlay == null) return;
-            try {
-                if (_lockOverlay.parent != null) {
-                    _lockOverlay.parent.removeChild(_lockOverlay);
-                }
-            } catch (e:Error) {}
-            _lockOverlay = null;
-            _lockOverlayStageId = -1;
         }
 
         /**
