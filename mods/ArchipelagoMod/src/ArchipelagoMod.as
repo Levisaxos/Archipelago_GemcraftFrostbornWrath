@@ -316,6 +316,13 @@ package {
                 _progressionBlocker.enable(_bezel);
 
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+                // EXIT_FRAME fires after every ENTER_FRAME handler on the
+                // stage has completed, so vanilla's redrawHighBuildings (which
+                // can run inside Main.doEnterFrame on level-load frames) is
+                // guaranteed to be done before our handler. Used to re-apply
+                // the locked-stash overdraw without a single-frame flash of
+                // the unmodified stash sprite.
+                addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
                 patchWizStashModes();
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
             } catch (err:Error) {
@@ -325,6 +332,7 @@ package {
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            removeEventListener(Event.EXIT_FRAME, onExitFrame);
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -409,6 +417,26 @@ package {
 
         // -----------------------------------------------------------------------
         // Frame loop
+
+        /**
+         * EXIT_FRAME runs after every ENTER_FRAME handler on the display list
+         * has completed (and after frame scripts), but BEFORE Flash renders
+         * the frame to screen. Vanilla's redrawHighBuildings can fire inside
+         * Main.doEnterFrame on level-load frames; if our ENTER_FRAME handler
+         * happened to dispatch before Main's, our locked-stash overdraw would
+         * be wiped by the subsequent vanilla redraw and the player would see
+         * one frame of the unmodified stash. Re-applying the overdraw here
+         * closes that race — we are guaranteed to run after every painter
+         * but before the frame renders.
+         */
+        private function onExitFrame(e:Event):void
+        {
+            try {
+                WizStashes.tickEnforceStashLock(_logger, MOD_NAME);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "onExitFrame ERROR: " + err.message);
+            }
+        }
 
         private function onEnterFrame(e:Event):void
         {
