@@ -370,7 +370,7 @@
     {
       "str_id": "W1",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 1,
       "loc_ap_id": 1,
       "note": "Starting stage â€” no field token needed",
       "unlocks": [
@@ -380,14 +380,16 @@
         "Armor Tear",
         "Slow"
       ],
-      "required_skills": [],
+      "required_skills": [
+        "gemPouch:W"
+      ],
       "wave_count": 6,
       "wiz_stash_loc_ap_id": 400
     },
     {
       "str_id": "W2",
       "type": "NORMAL",
-      "item_ap_id": null,
+      "item_ap_id": 2,
       "loc_ap_id": 2,
       "unlocks": [
         "W3"
@@ -396,14 +398,16 @@
         "Armor Tear",
         "Poison"
       ],
-      "required_skills": [],
+      "required_skills": [
+        "gemPouch:W"
+      ],
       "wave_count": 8,
       "wiz_stash_loc_ap_id": 401
     },
     {
       "str_id": "W3",
       "type": "STORY_RELATED",
-      "item_ap_id": null,
+      "item_ap_id": 3,
       "loc_ap_id": 3,
       "unlocks": [
         "W4"
@@ -412,14 +416,16 @@
         "Leech",
         "Slow"
       ],
-      "required_skills": [],
+      "required_skills": [
+        "gemPouch:W"
+      ],
       "wave_count": 12,
       "wiz_stash_loc_ap_id": 402
     },
     {
       "str_id": "W4",
       "type": "EPIC",
-      "item_ap_id": null,
+      "item_ap_id": 4,
       "loc_ap_id": 4,
       "unlocks": [
         "S1"
@@ -427,7 +433,9 @@
       "available_gems": [
         "Poison"
       ],
-      "required_skills": [],
+      "required_skills": [
+        "gemPouch:W"
+      ],
       "wave_count": 14,
       "wiz_stash_loc_ap_id": 403
     },
@@ -445,7 +453,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:S"
       ],
       "wave_count": 14,
       "wiz_stash_loc_ap_id": 404
@@ -462,7 +471,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:S"
       ],
       "wave_count": 16,
       "wiz_stash_loc_ap_id": 405
@@ -480,7 +490,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:S"
       ],
       "wave_count": 14,
       "wiz_stash_loc_ap_id": 406
@@ -499,7 +510,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:S"
       ],
       "wave_count": 20,
       "wiz_stash_loc_ap_id": 407
@@ -517,7 +529,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "wave_count": 20,
       "wiz_stash_loc_ap_id": 408
@@ -536,7 +549,8 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "wave_count": 22,
       "wiz_stash_loc_ap_id": 409
@@ -552,7 +566,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:V"
       ],
       "wave_count": 24,
       "wiz_stash_loc_ap_id": 410
@@ -571,7 +586,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:V"
       ],
       "wave_count": 24,
       "wiz_stash_loc_ap_id": 411
@@ -589,7 +605,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "wave_count": 22,
       "wiz_stash_loc_ap_id": 412
@@ -607,7 +624,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "wave_count": 22,
       "wiz_stash_loc_ap_id": 413
@@ -625,7 +643,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 414
@@ -643,7 +662,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 415
@@ -662,7 +682,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:R"
       ],
       "wave_count": 32,
       "wiz_stash_loc_ap_id": 416
@@ -680,7 +701,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "wave_count": 24,
       "wiz_stash_loc_ap_id": 417
@@ -698,7 +720,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "wave_count": 22,
       "wiz_stash_loc_ap_id": 418
@@ -717,7 +740,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "wave_count": 24,
       "wiz_stash_loc_ap_id": 419
@@ -735,7 +759,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Q"
       ],
       "wave_count": 26,
       "wiz_stash_loc_ap_id": 420
@@ -754,7 +779,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Q"
       ],
       "wave_count": 26,
       "wiz_stash_loc_ap_id": 421
@@ -772,7 +798,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "wave_count": 26,
       "wiz_stash_loc_ap_id": 422
@@ -790,7 +817,8 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "wave_count": 28,
       "wiz_stash_loc_ap_id": 423
@@ -808,7 +836,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:T"
       ],
       "wave_count": 28,
       "wiz_stash_loc_ap_id": 424
@@ -827,7 +856,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:T"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 425
@@ -846,7 +876,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 426
@@ -864,7 +895,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "wave_count": 32,
       "wiz_stash_loc_ap_id": 427
@@ -880,7 +912,8 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:U"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 428
@@ -899,7 +932,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:U"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 429
@@ -917,7 +951,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Y"
       ],
       "wave_count": 32,
       "wiz_stash_loc_ap_id": 430
@@ -935,7 +970,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Y"
       ],
       "wave_count": 35,
       "wiz_stash_loc_ap_id": 431
@@ -954,7 +990,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Y"
       ],
       "wave_count": 30,
       "wiz_stash_loc_ap_id": 432
@@ -974,7 +1011,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:Y"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 433
@@ -993,7 +1031,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:X"
       ],
       "wave_count": 42,
       "wiz_stash_loc_ap_id": 434
@@ -1010,7 +1049,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:X"
       ],
       "wave_count": 48,
       "wiz_stash_loc_ap_id": 435
@@ -1028,7 +1068,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:X"
       ],
       "wave_count": 44,
       "wiz_stash_loc_ap_id": 436
@@ -1046,7 +1087,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:X"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 437
@@ -1067,7 +1109,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "wave_count": 44,
       "wiz_stash_loc_ap_id": 438
@@ -1084,7 +1127,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 439
@@ -1101,7 +1145,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:Z"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 440
@@ -1117,7 +1162,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:Z"
       ],
       "wave_count": 48,
       "wiz_stash_loc_ap_id": 441
@@ -1136,7 +1182,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "wave_count": 34,
       "wiz_stash_loc_ap_id": 442
@@ -1152,7 +1199,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "wave_count": 35,
       "wiz_stash_loc_ap_id": 443
@@ -1170,7 +1218,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:O"
       ],
       "wave_count": 32,
       "wiz_stash_loc_ap_id": 444
@@ -1190,7 +1239,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:O"
       ],
       "wave_count": 33,
       "wiz_stash_loc_ap_id": 445
@@ -1209,7 +1259,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "wave_count": 35,
       "wiz_stash_loc_ap_id": 446
@@ -1225,7 +1276,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "wave_count": 36,
       "wiz_stash_loc_ap_id": 447
@@ -1241,7 +1293,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:N"
       ],
       "wave_count": 38,
       "wiz_stash_loc_ap_id": 448
@@ -1258,7 +1311,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:N"
       ],
       "wave_count": 70,
       "wiz_stash_loc_ap_id": 449
@@ -1275,7 +1329,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:N"
       ],
       "wave_count": 68,
       "wiz_stash_loc_ap_id": 450
@@ -1294,7 +1349,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "wave_count": 38,
       "wiz_stash_loc_ap_id": 451
@@ -1310,7 +1366,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "wave_count": 42,
       "wiz_stash_loc_ap_id": 452
@@ -1329,7 +1386,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 453
@@ -1349,7 +1407,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:P"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 454
@@ -1366,7 +1425,8 @@
       ],
       "note": "towers can't be placed, therefore,",
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:P"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 455
@@ -1384,7 +1444,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "wave_count": 44,
       "wiz_stash_loc_ap_id": 456
@@ -1402,7 +1463,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 457
@@ -1421,7 +1483,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:L"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 458
@@ -1441,7 +1504,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:L"
       ],
       "wave_count": 50,
       "wiz_stash_loc_ap_id": 459
@@ -1461,7 +1525,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:L"
       ],
       "wave_count": 64,
       "wiz_stash_loc_ap_id": 460
@@ -1480,7 +1545,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:K"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 461
@@ -1498,7 +1564,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 462
@@ -1516,7 +1583,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "wave_count": 50,
       "wiz_stash_loc_ap_id": 463
@@ -1536,7 +1604,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:K"
       ],
       "wave_count": 46,
       "wiz_stash_loc_ap_id": 464
@@ -1555,7 +1624,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:H"
       ],
       "wave_count": 64,
       "wiz_stash_loc_ap_id": 465
@@ -1574,7 +1644,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:H"
       ],
       "wave_count": 66,
       "wiz_stash_loc_ap_id": 466
@@ -1592,7 +1663,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:H"
       ],
       "wave_count": 64,
       "wiz_stash_loc_ap_id": 467
@@ -1612,7 +1684,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:H"
       ],
       "wave_count": 70,
       "wiz_stash_loc_ap_id": 468
@@ -1633,7 +1706,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:G"
       ],
       "wave_count": 50,
       "wiz_stash_loc_ap_id": 469
@@ -1650,7 +1724,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:G"
       ],
       "wave_count": 52,
       "wiz_stash_loc_ap_id": 470
@@ -1671,7 +1746,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:G"
       ],
       "wave_count": 55,
       "wiz_stash_loc_ap_id": 471
@@ -1689,7 +1765,8 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:G"
       ],
       "wave_count": 56,
       "wiz_stash_loc_ap_id": 472
@@ -1709,7 +1786,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "wave_count": 55,
       "wiz_stash_loc_ap_id": 473
@@ -1725,7 +1803,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:J"
       ],
       "wave_count": 54,
       "wiz_stash_loc_ap_id": 474
@@ -1744,7 +1823,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "wave_count": 56,
       "wiz_stash_loc_ap_id": 475
@@ -1761,7 +1841,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:J"
       ],
       "wave_count": 58,
       "wiz_stash_loc_ap_id": 476
@@ -1780,7 +1861,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "wave_count": 60,
       "wiz_stash_loc_ap_id": 477
@@ -1799,7 +1881,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "wave_count": 62,
       "wiz_stash_loc_ap_id": 478
@@ -1819,7 +1902,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "wave_count": 64,
       "wiz_stash_loc_ap_id": 479
@@ -1838,7 +1922,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:M"
       ],
       "wave_count": 66,
       "wiz_stash_loc_ap_id": 480
@@ -1857,7 +1942,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "wave_count": 60,
       "wiz_stash_loc_ap_id": 481
@@ -1874,7 +1960,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "wave_count": 64,
       "wiz_stash_loc_ap_id": 482
@@ -1893,7 +1980,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "wave_count": 85,
       "wiz_stash_loc_ap_id": 483
@@ -1910,7 +1998,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:F"
       ],
       "wave_count": 88,
       "wiz_stash_loc_ap_id": 484
@@ -1929,7 +2018,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "wave_count": 70,
       "wiz_stash_loc_ap_id": 485
@@ -1948,7 +2038,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "wave_count": 62,
       "wiz_stash_loc_ap_id": 486
@@ -1967,7 +2058,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:E"
       ],
       "wave_count": 74,
       "wiz_stash_loc_ap_id": 487
@@ -1988,7 +2080,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:E"
       ],
       "wave_count": 74,
       "wiz_stash_loc_ap_id": 488
@@ -2007,7 +2100,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "wave_count": 72,
       "wiz_stash_loc_ap_id": 489
@@ -2027,7 +2121,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "wave_count": 75,
       "wiz_stash_loc_ap_id": 490
@@ -2047,7 +2142,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:D"
       ],
       "wave_count": 77,
       "wiz_stash_loc_ap_id": 491
@@ -2064,7 +2160,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "wave_count": 70,
       "wiz_stash_loc_ap_id": 492
@@ -2083,7 +2180,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "wave_count": 76,
       "wiz_stash_loc_ap_id": 493
@@ -2105,7 +2203,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:B"
       ],
       "wave_count": 80,
       "wiz_stash_loc_ap_id": 494
@@ -2122,7 +2221,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "wave_count": 86,
       "wiz_stash_loc_ap_id": 495
@@ -2139,7 +2239,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:B"
       ],
       "wave_count": 80,
       "wiz_stash_loc_ap_id": 496
@@ -2159,7 +2260,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "wave_count": 82,
       "wiz_stash_loc_ap_id": 497
@@ -2176,7 +2278,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "wave_count": 80,
       "wiz_stash_loc_ap_id": 498
@@ -2195,7 +2298,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "wave_count": 84,
       "wiz_stash_loc_ap_id": 499
@@ -2214,7 +2318,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:C"
       ],
       "wave_count": 87,
       "wiz_stash_loc_ap_id": 500
@@ -2234,7 +2339,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4"
+        "gemSkills: 4",
+        "gemPouch:C"
       ],
       "wave_count": 90,
       "wiz_stash_loc_ap_id": 501
@@ -2255,7 +2361,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "wave_count": 90,
       "wiz_stash_loc_ap_id": 502
@@ -2276,7 +2383,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "wave_count": 90,
       "wiz_stash_loc_ap_id": 503
@@ -2297,7 +2405,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 5"
+        "gemSkills: 5",
+        "gemPouch:A"
       ],
       "wave_count": 90,
       "wiz_stash_loc_ap_id": 504
@@ -2317,7 +2426,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:A"
       ],
       "wave_count": 100,
       "wiz_stash_loc_ap_id": 505
@@ -2336,7 +2446,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "wave_count": 78,
       "wiz_stash_loc_ap_id": 506
@@ -2355,7 +2466,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "wave_count": 80,
       "wiz_stash_loc_ap_id": 507
@@ -2370,7 +2482,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 1"
+        "gemSkills: 1",
+        "gemPouch:I"
       ],
       "wave_count": 82,
       "wiz_stash_loc_ap_id": 508
@@ -2385,7 +2498,8 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 1"
+        "gemSkills: 1",
+        "gemPouch:Z"
       ],
       "wave_count": 50,
       "wiz_stash_loc_ap_id": 509
@@ -2402,7 +2516,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:T"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 510
@@ -2419,7 +2534,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:R"
       ],
       "wave_count": 36,
       "wiz_stash_loc_ap_id": 511
@@ -2439,7 +2555,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:P"
       ],
       "wave_count": 40,
       "wiz_stash_loc_ap_id": 512
@@ -2455,7 +2572,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:K"
       ],
       "wave_count": 54,
       "wiz_stash_loc_ap_id": 513
@@ -2475,7 +2593,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:H"
       ],
       "wave_count": 68,
       "wiz_stash_loc_ap_id": 514
@@ -2495,7 +2614,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:F"
       ],
       "wave_count": 90,
       "wiz_stash_loc_ap_id": 515
@@ -2511,7 +2631,8 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2"
+        "gemSkills: 2",
+        "gemPouch:E"
       ],
       "wave_count": 78,
       "wiz_stash_loc_ap_id": 516
@@ -2531,7 +2652,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6"
+        "gemSkills: 6",
+        "gemPouch:B"
       ],
       "wave_count": 84,
       "wiz_stash_loc_ap_id": 517
@@ -2548,7 +2670,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:A"
       ],
       "wave_count": 96,
       "wiz_stash_loc_ap_id": 518
@@ -2565,7 +2688,8 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:A"
       ],
       "wave_count": 99,
       "wiz_stash_loc_ap_id": 519
@@ -2585,7 +2709,8 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:I"
       ],
       "wave_count": 76,
       "wiz_stash_loc_ap_id": 520
@@ -2603,7 +2728,8 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3"
+        "gemSkills: 3",
+        "gemPouch:D"
       ],
       "wave_count": 78,
       "wiz_stash_loc_ap_id": 521

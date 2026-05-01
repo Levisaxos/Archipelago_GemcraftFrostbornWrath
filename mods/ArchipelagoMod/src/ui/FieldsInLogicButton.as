@@ -2,6 +2,7 @@ package ui {
     import flash.events.MouseEvent;
 
     import com.giab.games.gcfw.GV;
+    import data.AV;
 
     /**
      * Selector-screen button showing "Fields in logic: N" — the number of
@@ -36,8 +37,12 @@ package ui {
         private var _panTargetY:Number = 0;
         private var _isPanning:Boolean = false;
 
+        // Tracks the most recent power so we only re-render the label when it
+        // changes by more than a small delta (avoids per-frame string churn).
+        private var _currentPower:int = -1;
+
         public function FieldsInLogicButton(btnTemplate:*) {
-            super(btnTemplate, "In Logic F:0 A:0");
+            super(btnTemplate, "In Logic F:0 A:0 P:0");
             onClick = _cycleAndPan;
         }
 
@@ -57,10 +62,13 @@ package ui {
             if (_cycleIndex >= _inLogicStrIds.length) _cycleIndex = 0;
             var fc:int = _inLogicStrIds.length;
             var ac:int = _inLogicAchievements.length;
-            if (fc == _currentFieldCount && ac == _currentAchCount) return;
+            var pw:int = int(Math.round(Number(AV.sessionData.playerPower)));
+            if (fc == _currentFieldCount && ac == _currentAchCount && pw == _currentPower)
+                return;
             _currentFieldCount = fc;
             _currentAchCount   = ac;
-            _rebuild("In Logic F:" + fc + " A:" + ac);
+            _currentPower      = pw;
+            _rebuild("In Logic F:" + fc + " A:" + ac + " P:" + pw);
         }
 
         /**
@@ -131,6 +139,14 @@ package ui {
             GV.mcInfoPanel.addTextfield(COLOR_TITLE, "In Logic", false, 13);
             GV.mcInfoPanel.addExtraHeight(5);
             GV.mcInfoPanel.addSeparator(-2);
+
+            // Player power section — current score, drives all power gates.
+            var pwr:int = int(Math.round(Number(AV.sessionData.playerPower)));
+            GV.mcInfoPanel.addTextfield(COLOR_TITLE, "Power: " + pwr, false, 12);
+            GV.mcInfoPanel.addExtraHeight(2);
+            GV.mcInfoPanel.addTextfield(COLOR_NONE,
+                "Talismans, skills and skillpoints add the most power.", false, 10);
+            GV.mcInfoPanel.addExtraHeight(8);
 
             // Fields section
             GV.mcInfoPanel.addTextfield(COLOR_TITLE, "Fields", false, 12);

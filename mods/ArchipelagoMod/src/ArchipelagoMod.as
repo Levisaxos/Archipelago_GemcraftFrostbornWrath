@@ -51,6 +51,11 @@ package {
 
     import patch.WizStashes;
     import patch.FirstPlayBypass;
+    import patch.EarlyExitOutcome;
+    import patch.FrostbornFreeBuildings;
+    import patch.GemPouchSuppressor;
+    import patch.HollowGemInjector;
+    import patch.StartingGemSuppressor;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
     import patch.RitualSpawnPatcher;
@@ -140,6 +145,11 @@ package {
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _achievementUnlocker:AchievementUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
+        private var _earlyExitOutcome:EarlyExitOutcome;
+        private var _frostbornFreeBuildings:FrostbornFreeBuildings;
+        private var _gemPouchSuppressor:GemPouchSuppressor;
+        private var _hollowGemInjector:HollowGemInjector;
+        private var _startingGemSuppressor:StartingGemSuppressor;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
@@ -217,11 +227,21 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
+                _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
+                _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
+                _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
+                _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
+                _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
                 _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
                 _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
+
+                // WizStashes uses the field evaluator to read per-stage stash
+                // power thresholds + the player's current power when deciding
+                // whether to keep the stash locked / show the hover tooltip.
+                WizStashes.setEvaluator(_fieldLogicEvaluator);
 
                 _debugOptions  = new ScrDebugOptions(this);
                 _slotSettings  = new ScrSlotSettings();
@@ -305,6 +325,13 @@ package {
                 _progressionBlocker.enable(_bezel);
 
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
+                // EXIT_FRAME fires after every ENTER_FRAME handler on the
+                // stage has completed, so vanilla's redrawHighBuildings (which
+                // can run inside Main.doEnterFrame on level-load frames) is
+                // guaranteed to be done before our handler. Used to re-apply
+                // the locked-stash overdraw without a single-frame flash of
+                // the unmodified stash sprite.
+                addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
                 patchWizStashModes();
                 _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
             } catch (err:Error) {
@@ -314,6 +341,7 @@ package {
 
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+            removeEventListener(Event.EXIT_FRAME, onExitFrame);
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -398,6 +426,26 @@ package {
 
         // -----------------------------------------------------------------------
         // Frame loop
+
+        /**
+         * EXIT_FRAME runs after every ENTER_FRAME handler on the display list
+         * has completed (and after frame scripts), but BEFORE Flash renders
+         * the frame to screen. Vanilla's redrawHighBuildings can fire inside
+         * Main.doEnterFrame on level-load frames; if our ENTER_FRAME handler
+         * happened to dispatch before Main's, our locked-stash overdraw would
+         * be wiped by the subsequent vanilla redraw and the player would see
+         * one frame of the unmodified stash. Re-applying the overdraw here
+         * closes that race — we are guaranteed to run after every painter
+         * but before the frame renders.
+         */
+        private function onExitFrame(e:Event):void
+        {
+            try {
+                WizStashes.tickEnforceStashLock(_logger, MOD_NAME);
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "onExitFrame ERROR: " + err.message);
+            }
+        }
 
         private function onEnterFrame(e:Event):void
         {
@@ -564,6 +612,7 @@ package {
                     _deathLinkHandler.resetForNewStage();
                     _wavePrePatcher.resetForNewStage();
                     _ritualSpawnPatcher.resetForNewStage();
+                    _startingGemSuppressor.applyIfReady();
                 }
 
                 // Recompute the available-achievements list when entering battle so
@@ -580,10 +629,16 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                    _frostbornFreeBuildings.resetIngame();
+                    _gemPouchSuppressor.resetIngame();
+                    _hollowGemInjector.resetIngame();
+                    _startingGemSuppressor.resetForNewStage();
                     _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
                     _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
-                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
-                        var sdEntry:Object = _sessionDrops[sd];
+                    // sd / sdEntry are already function-scope-declared in the
+                    // earlier _sessionDrops loop above; reuse them here.
+                    for (sd = 0; sd < _sessionDrops.length; sd++) {
+                        sdEntry = _sessionDrops[sd];
                         _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
                     }
                     _logger.log(MOD_NAME, "=== end of AP items list ===");
@@ -635,8 +690,15 @@ package {
             }
 
             // Inject skill gems for first-play stages (every frame until done once).
+            // GemPouchSuppressor MUST run after FirstPlayBypass — the latter
+            // adds skill-unlock gems back, the former wipes them when the
+            // current stage's Gempouch is missing.
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
+                _gemPouchSuppressor.onIngameFrame();
+                _hollowGemInjector.onIngameFrame();
+                _frostbornFreeBuildings.onIngameFrame();
+                _earlyExitOutcome.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
             }
@@ -647,23 +709,20 @@ package {
                 syncWithAP(_pendingSyncItems);
             }
 
-            // Unlock free stages whenever a new ppd is detected (new game or slot change).
-            // syncWithAP only runs once at connect time; if a new ppd is created after that
-            // (e.g. connecting while an old slot was still loaded, then loading a new slot),
-            // _pendingSyncItems is already null and free stages would never get applied.
+            // Reconcile stage lock state whenever a new ppd is detected
+            // (new game or slot change).  syncWithAP only runs once at
+            // connect time; if a new ppd is created after that the game
+            // pre-unlocks W1 (PlayerProgressData.as:155) and we need to
+            // lock it again if W1 isn't the chosen starting stage.
             if (_connectionManager.isConnected
                     && GV.ppd != null
                     && GV.stageCollection != null
                     && GV.ppd !== _lastPpd) {
                 _lastPpd = GV.ppd;
-                var freeStages:Array = AV.serverData.freeStages;
-                if (freeStages != null) {
-                    for each (var freeStrId:String in freeStages) {
-                        if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
-                            _stageUnlocker.unlockStage(freeStrId);
-                            _logger.log(MOD_NAME, "free stage unlocked on ppd change: " + freeStrId);
-                        }
-                    }
+                var stageChanges:int = _syncStageLockState();
+                if (stageChanges > 0) {
+                    _logger.log(MOD_NAME, "stage lock state reconciled on ppd change: "
+                        + stageChanges + " changes");
                 }
             }
 
@@ -1046,18 +1105,24 @@ package {
                     p.slot_data.skill_categories
                 );
                 _fieldLogicEvaluator.configure(
-                    p.slot_data.stage_tier,
-                    p.slot_data.stage_skills,
-                    p.slot_data.cumulative_skill_reqs,
-                    p.slot_data.tier_stage_counts,
-                    int(p.slot_data.token_requirement_percent),
-                    p.slot_data.free_stages as Array
+                    AV.serverData.stageSkills,
+                    AV.serverData.stageRequirements,
+                    AV.serverData.matchingTalismans,
+                    AV.serverData.freeStages,
+                    int(p.slot_data.power_scale),
+                    p.slot_data.power_weights
                 );
                 _fieldLogicEvaluator.setStageElements(
                     p.slot_data.stage_elements,
                     p.slot_data.stage_monsters
                 );
                 _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
+                _achievementLogicEvaluator.setAchievementRequiredPower(
+                    p.slot_data.achievement_required_power);
+                // Diagnostic: AchievementUnlocker uses this to toast on
+                // achievement unlocks that AP didn't consider in logic, so
+                // the player can spot mis-calibrated requirements / power.
+                _achievementUnlocker.setAchievementLogicEvaluator(_achievementLogicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
                 _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
@@ -1210,6 +1275,15 @@ package {
                 apId = int(entry.apId);
                 if (apId < 1100 || apId > 1199) continue;
                 _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
+            }
+
+            // 4b. Gempouches (distinct 626-651, progressive 652).
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 626 || apId > 652) continue;
+                _progressionBlocker.addGempouchDropIcon(apId);
             }
 
             // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).
@@ -1443,6 +1517,56 @@ package {
             }
         }
 
+        /**
+         * Reconcile every stage's lock state against the current AP
+         * collection (free stages + collected field tokens).  Vanilla PPD
+         * construction always pre-unlocks W1 (PlayerProgressData.as:155),
+         * so without this we'd leave W1 unlocked even when the player
+         * chose a different starting stage.  Called from syncWithAP and
+         * from the ppd-change handler — both points where the game might
+         * have just pre-unlocked W1 on us.
+         *
+         * Logic per stage:
+         *   - in freeStages OR token collected → unlock (xp=0) if locked
+         *   - otherwise                        → lock (xp=-1) if currently
+         *                                         unlocked-but-not-completed
+         *   - already completed (xp>0)        → leave alone
+         */
+        private function _syncStageLockState():int {
+            if (GV.ppd == null || GV.stageCollection == null || AV.serverData == null) return 0;
+
+            var freeSet:Object = {};
+            var freeArr:Array = AV.serverData.freeStages;
+            if (freeArr != null) {
+                for each (var fsId:String in freeArr) freeSet[fsId] = true;
+            }
+            var hasToken:Object = {};
+            var tokenMap:Object = AV.serverData.tokenMap;
+            if (tokenMap != null) {
+                for (var apIdStr:String in tokenMap) {
+                    if (AV.sessionData.hasItem(int(apIdStr))) hasToken[tokenMap[apIdStr]] = true;
+                }
+            }
+
+            var changes:int = 0;
+            var metas:Array = GV.stageCollection.stageMetas;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null) continue;
+                var sid:String = meta.strId;
+                var shouldUnlock:Boolean = (freeSet[sid] == true) || (hasToken[sid] == true);
+                var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
+                if (shouldUnlock && xp < 0) {
+                    _stageUnlocker.unlockStage(sid);
+                    changes++;
+                } else if (!shouldUnlock && xp == 0) {
+                    _stageUnlocker.lockStage(sid);
+                    changes++;
+                }
+            }
+            return changes;
+        }
+
         private function syncWithAP(items:Array):void {
             if (GV.ppd == null) {
                 _pendingSyncItems = items;
@@ -1455,14 +1579,13 @@ package {
 
             var apSkills:Object = {};
             var apTraits:Object = {};
-            var apTokens:Object = {};
             var apXpTotal:int   = 0;
             var apTalismans:Array  = [];
             var apShadowCores:Array = [];
-            var tokenMap:Object    = AV.serverData.tokenMap;
-            var tokenStages:Object = AV.serverData.tokenStages;
 
-            // Rebuild tracker state from the full item list.
+            // Rebuild tracker state from the full item list.  Stage tokens
+            // are reflected via AV.sessionData.hasItem now (used by
+            // _syncStageLockState below); no need to track them separately.
             AV.sessionData.reset();
 
             for each (var item:Object in items) {
@@ -1473,8 +1596,6 @@ package {
                     apSkills[apId - 700] = true;
                 } else if (apId >= 800 && apId <= 814) {
                     apTraits[apId - 800] = true;
-                } else if (tokenMap[String(apId)] != null) {
-                    apTokens[tokenMap[String(apId)]] = true;
                 } else if (apId >= 1100 && apId <= 1199) {
                     apXpTotal += _levelUnlocker.levelsForApId(apId);
                 } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
@@ -1482,6 +1603,7 @@ package {
                 } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     apShadowCores.push(apId);
                 }
+                // Stage tokens fall through — they're tracked via AV.sessionData.
             }
 
             // --- Skills ---
@@ -1517,31 +1639,8 @@ package {
                 }
             }
 
-            // --- Stages ---
-            var stageChanges:int = 0;
-            if (GV.stageCollection != null) {
-                var metas:Array = GV.stageCollection.stageMetas;
-                for (var k:int = 0; k < metas.length; k++) {
-                    var meta:* = metas[k];
-                    if (meta == null) continue;
-                    var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
-                    if (xp == 0) {
-                        _logger.log(MOD_NAME, "  stage=" + meta.strId
-                            + " xp=" + xp
-                            + " inTokenStages=" + (tokenStages[meta.strId] == true)
-                            + " shouldHave=" + (apTokens[meta.strId] == true));
-                    }
-                    if (!tokenStages[meta.strId]) continue;
-                    var shouldHave:Boolean = apTokens[meta.strId] == true;
-                    if (shouldHave && xp < 0) {
-                        _stageUnlocker.unlockStage(meta.strId);
-                        stageChanges++;
-                    } else if (!shouldHave && xp == 0) {
-                        _stageUnlocker.lockStage(meta.strId);
-                        stageChanges++;
-                    }
-                }
-            }
+            // --- Stages --- (unified lock/unlock logic, also handles free stages)
+            var stageChanges:int = _syncStageLockState();
 
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
@@ -1553,17 +1652,7 @@ package {
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
-            // --- Free stages (W1, W2, W3, W4) — always unlock on sync ---
-            var freeStages:Array = AV.serverData.freeStages;
-            if (freeStages != null) {
-                for each (var freeStrId:String in freeStages) {
-                    if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
-                        _stageUnlocker.unlockStage(freeStrId);
-                        _logger.log(MOD_NAME, "  free stage unlocked: " + freeStrId);
-                    }
-                }
-            }
-
+            // (Free-stage unlocking is handled by _syncStageLockState above.)
             _saveManager.saveSlotData();
 
             if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();

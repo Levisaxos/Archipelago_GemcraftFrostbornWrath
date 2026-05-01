@@ -13,7 +13,7 @@ package patch {
         public static const GROUP_EFFORT:uint    = 4;
         public static const GROUP_DESIGN:uint    = 8;
 
-        private static const DEFAULT_SELECTED:uint = GROUP_IN_LOGIC | GROUP_EFFORT;
+        private static const DEFAULT_SELECTED:uint = GROUP_IN_LOGIC | GROUP_OUT_LOGIC | GROUP_EFFORT;
 
         public var onChange:Function;
 

@@ -1,11 +1,11 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.entity.WizardStash;
     import data.AV;
+    import tracker.FieldLogicEvaluator;
     import flash.display.Bitmap;
-    import flash.display.Sprite;
+    import flash.display.BitmapData;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
 
@@ -22,17 +22,13 @@ package patch {
      * Per-frame in-level enforcement:
      *   - tickClearOpened()         — clean up matrix cells of opened stashes
      *   - tickEnforceStashLock()    — shield-spike locked stashes (AP-side per-stage
-     *                                 gating) and overlay a padlock bitmap above each
+     *                                 gating) and hide them from the
+     *                                 core.wizardStashes targeting list so towers
+     *                                 don't waste shots
      *   - tickStashLockTooltip()    — append a "Locked - requires key" line to the
      *                                 hover tooltip when the player hovers a locked stash
      */
     public class WizStashes {
-
-        // Per-level overlay container: live Sprite added to GV.ingameCore.cnt
-        // holding one padlock Bitmap per locked stash. Reset when the stage
-        // changes (different stageMeta.id) or when leaving INGAME.
-        private static var _lockOverlay:Sprite = null;
-        private static var _lockOverlayStageId:int = -1;
 
         // Original shield value per locked stash, captured the first frame we
         // see it. Restored when the unlock arrives so the stash becomes breakable
@@ -51,10 +47,12 @@ package patch {
         // ("Shield: 1000") in the hover tooltip.
         private static const LOCK_SHIELD:Number = 1000;
 
-        // Embedded copper padlock graphic (~64x64). Path is relative to this
-        // .as file: src/patch/ → ../../resources/Padlock.png.
-        [Embed(source='../../resources/Padlock.png')]
-        private static const PadlockAsset:Class;
+        // Set once at bind time by ArchipelagoMod so the locked-stash tooltip
+        // can read per-stage power thresholds + current player power.
+        private static var _evaluator:FieldLogicEvaluator = null;
+        public static function setEvaluator(evaluator:FieldLogicEvaluator):void {
+            _evaluator = evaluator;
+        }
 
         public static function apply(logger:Logger, modName:String):void {
             try {
@@ -183,55 +181,58 @@ package patch {
          *     the stash, which reads buildingAreaMatrix instead of wizardStashes
          *     (IngameSpellCaster.as:627). 1000 is enough to absorb any plausible
          *     burst within a frame, and the per-frame refresh keeps it topped up.
-         *   - Maintain a padlock-bitmap overlay above each locked stash so the
-         *     player sees a copper padlock on top of it.
          *
-         * Once the unlock arrives the overlay is torn down, hidden stashes are
-         * pushed back into core.wizardStashes, original shield is restored, and
-         * normal stash damage resumes.
+         * Once the unlock arrives, hidden stashes are pushed back into
+         * core.wizardStashes and the original shield is restored. The vanilla
+         * stash sprite stays as-is throughout — only behavior is gated, not
+         * appearance — so no redraw call is needed on the unlock transition.
          */
         public static function tickEnforceStashLock(logger:Logger, modName:String):void {
             try {
                 var core:* = GV.ingameCore;
                 if (core == null || core.stageMeta == null) {
-                    _disposeLockOverlay();
                     return;
                 }
 
-                // Hide the padlock overlay during the ending screen and any
-                // non-PLAYING state. Vanilla switches ingameStatus to
-                // GAMEOVER_PANEL_* once the battle ends; the player no longer
-                // needs the lock indicator at that point.
-                if (int(core.ingameStatus) != IngameStatus.PLAYING) {
-                    _disposeLockOverlay();
-                    return;
-                }
-
+                // Run regardless of ingameStatus. Vanilla doesn't flip to
+                // PLAYING until well after setScene2 paints buildings into
+                // bmpdBuildings (DISABLED → PLAYING happens in
+                // IngameInitializer.as:1655, well after :1518's
+                // redrawHighBuildings). Gating on PLAYING here would let the
+                // vanilla stash flash visibly while the engine is still in
+                // DISABLED. Locked stashes stay locked through the ending too
+                // (their shield is pinned, so vanilla won't try to open them),
+                // so it's safe to keep overdrawing during GAMEOVER_PANEL_*.
                 var strId:String = String(core.stageMeta.strId);
                 var stageId:int  = int(core.stageMeta.id);
-                var unlocked:Boolean = AV.sessionData != null && AV.sessionData.isStashUnlocked(strId);
+
+                // Stash is "unlocked" only when both gates pass: key collected
+                // AND the same per-stage logic gate that governs the stage's
+                // Journey location (prereq stages + WIZLOCK skills + talisman
+                // counter requirements). isStashGateMet() rolls these up.
+                var unlocked:Boolean = false;
+                if (AV.sessionData != null && AV.sessionData.isStashUnlocked(strId)) {
+                    if (_evaluator == null) {
+                        unlocked = true;
+                    } else {
+                        unlocked = _evaluator.isStashGateMet(strId);
+                    }
+                }
 
                 if (unlocked) {
-                    // Unlock just arrived (or was already held) — restore any
-                    // shields we spiked, push hidden stashes back to the
-                    // targeting array, drop the padlock overlay.
+                    // Both gates pass — restore any shields we spiked, push
+                    // hidden stashes back to the targeting array.
                     _restoreSpikedShields(core);
                     _restoreHiddenStashes(core);
-                    _disposeLockOverlay();
                     return;
                 }
 
                 // Stage changed (entered a new level). Vanilla rebuilt
-                // core.wizardStashes from scratch, so our cache is stale —
-                // forget it (the new stashes are about to be re-hidden below).
+                // core.wizardStashes from scratch, so our hidden-stash cache
+                // is stale.
                 if (_hiddenStashesStageId != -1 && _hiddenStashesStageId != stageId) {
                     _hiddenStashes.length = 0;
                     _hiddenStashesStageId = -1;
-                }
-
-                // Re-mount overlay container if stage changed (entered a new level).
-                if (_lockOverlay != null && _lockOverlayStageId != stageId) {
-                    _disposeLockOverlay();
                 }
 
                 var areaM:* = core.buildingAreaMatrix;
@@ -252,10 +253,11 @@ package patch {
                     }
                 }
 
-                // Walk the building matrix once: shield-spike locked stashes and
-                // collect their (fieldX, fieldY) so we can overlay padlocks.
+                // Walk the building matrix once: shield-spike every locked
+                // stash so vanilla damage paths bail before they ever reach
+                // openWizardStash(). Re-applied each frame so a multi-hit
+                // bomb can't drain it across frames.
                 var seen:Object = {};
-                var stashCoords:Array = [];
                 for (var y:int = 0; y < areaM.length; y++) {
                     var row:* = areaM[y];
                     if (row == null) continue;
@@ -269,74 +271,15 @@ package patch {
                         if (seen[key] == true) continue;
                         seen[key] = true;
 
-                        // Cache original shield once, then spike to ~infinity.
-                        // Vanilla damage paths bail when shield > 0, so HP never
-                        // gets touched and openWizardStash() is never called.
                         if (_originalShield[w] === undefined) {
                             _originalShield[w] = w.shield.g();
                         }
                         w.shield.s(LOCK_SHIELD);
-
-                        stashCoords.push({fx: w.fieldX, fy: w.fieldY});
                     }
-                }
-
-                if (stashCoords.length == 0) {
-                    _disposeLockOverlay();
-                    return;
-                }
-
-                // Lazily build the overlay container once per stage.
-                if (_lockOverlay == null) {
-                    _lockOverlay = new Sprite();
-                    _lockOverlay.mouseEnabled = false;
-                    _lockOverlay.mouseChildren = false;
-                    // Match bmpOrbTreesBuildings's offset inside cnt (CntIngame
-                    // sets this bitmap at x=50, y=8) so our cell-space coords
-                    // line up with the rendered buildings layer.
-                    _lockOverlay.x = 50;
-                    _lockOverlay.y = 8;
-                    _lockOverlayStageId = stageId;
-
-                    for (var s:int = 0; s < stashCoords.length; s++) {
-                        var c:Object = stashCoords[s];
-                        var padlock:Bitmap = new PadlockAsset() as Bitmap;
-                        if (padlock == null) continue;
-                        padlock.smoothing = true;
-                        // Native size, centered over the 3x2 stash footprint
-                        // with a small offset (right + down) to land visually
-                        // dead-center on the stone-block art.
-                        // Stash center pixel: ((fx+1.5)*28, (fy+1)*28).
-                        padlock.x = int((int(c.fx) + 1.5) * 28 - padlock.width  * 0.5) + 6;
-                        padlock.y = int((int(c.fy) + 1)   * 28 - padlock.height * 0.5) + 6;
-                        _lockOverlay.addChild(padlock);
-                    }
-
-                    try {
-                        if (core.cnt != null) {
-                            core.cnt.addChild(_lockOverlay);
-                        }
-                    } catch (eAttach:Error) {
-                        logger.log(modName, "WizStashes.tickEnforceStashLock: addChild failed: " + eAttach.message);
-                    }
-                    logger.log(modName, "WizStashes: locked stash overlay attached for "
-                        + strId + " (" + stashCoords.length + " stash(es))");
                 }
             } catch (err:Error) {
                 logger.log(modName, "WizStashes.tickEnforceStashLock ERROR: " + err.message);
             }
-        }
-
-        /** Remove the lock overlay container and forget which stage it belonged to. */
-        private static function _disposeLockOverlay():void {
-            if (_lockOverlay == null) return;
-            try {
-                if (_lockOverlay.parent != null) {
-                    _lockOverlay.parent.removeChild(_lockOverlay);
-                }
-            } catch (e:Error) {}
-            _lockOverlay = null;
-            _lockOverlayStageId = -1;
         }
 
         /**
@@ -374,12 +317,19 @@ package patch {
                 var core:* = GV.ingameCore;
                 if (core == null || core.stageMeta == null)
                     return;
-
-                var strId:String = String(core.stageMeta.strId);
                 if (AV.sessionData == null)
                     return;
-                if (AV.sessionData.isStashUnlocked(strId))
-                    return;
+
+                var strId:String = String(core.stageMeta.strId);
+
+                // Fire when EITHER the key is missing OR the stage's logic
+                // gate is unmet (prereq stages, WIZLOCK skills, or talisman
+                // requirements). Same gate as the apworld stash access rule.
+                var keyHeld:Boolean   = AV.sessionData.isStashUnlocked(strId);
+                var stageInLogic:Boolean = (_evaluator == null)
+                    || _evaluator.canCompleteStage(strId);
+                if (keyHeld && stageInLogic)
+                    return;  // unlocked — no tooltip line
 
                 var vIp:* = GV.mcInfoPanel;
                 if (vIp == null || vIp.parent == null || !vIp.isImageRendered)
@@ -409,14 +359,25 @@ package patch {
                 if (w.isDestroyed || w.startedAsOpen)
                     return;
 
-                var keyName:String = "Wizard Stash " + strId + " Key";
-                var marker:String  = "Requires " + keyName;
+                // Build the lines we want to show.
+                var lines:Array = [];
+                lines.push(["Locked", 0xFF6666]);
+                if (!keyHeld) {
+                    lines.push(["Requires Wizard Stash " + strId + " Key", 0xCCCCCC]);
+                }
+                if (!stageInLogic && _evaluator != null) {
+                    var blockingLines:Array = _evaluator.getBlockingTierSkillLines(strId);
+                    for each (var bl:Array in blockingLines) {
+                        if (bl != null && bl.length >= 2) lines.push(bl);
+                    }
+                }
+
+                // Marker text used for idempotency — first non-title line.
+                var marker:String = String(lines[1][0]);
 
                 var tfs:Array = vIp.textfields as Array;
                 if (tfs == null)
                     return;
-
-                // Idempotency: if we already appended on this render, skip.
                 for (var i:int = 0; i < tfs.length; i++) {
                     var tf:* = tfs[i];
                     if (tf == null)
@@ -431,12 +392,15 @@ package patch {
                         return;
                 }
 
-                // Append our two-line block and force a re-render.
                 try {
                     vIp.addExtraHeight(5);
                     vIp.addSeparator(-2);
-                    vIp.addTextfield(0xFF6666, "Locked", true, 12);
-                    vIp.addTextfield(0xCCCCCC, marker, false, 11);
+                    for (var li:int = 0; li < lines.length; li++) {
+                        var pair:Array = lines[li] as Array;
+                        var bold:Boolean = (li == 0);
+                        var size:int  = bold ? 12 : 11;
+                        vIp.addTextfield(uint(pair[1]), String(pair[0]), bold, size);
+                    }
                 } catch (eAdd:Error) {
                     logger.log(modName, "WizStashes.tickStashLockTooltip addTextfield error: " + eAdd.message);
                     return;
@@ -449,6 +413,15 @@ package patch {
                     vIp.bmp = null;
                     vIp.isImageRendered = false;
                 } catch (eRender:Error) {}
+
+                // Re-render in the SAME frame so the panel doesn't render
+                // blank/stale for one frame between dispose and vanilla's next
+                // doEnterFrame. Without this the panel flickers periodically
+                // every time vanilla re-runs renderInfoPanel() and we need to
+                // re-append our lines.
+                try {
+                    vIp.doEnterFrame();
+                } catch (eDef:Error) {}
             } catch (err:Error) {
                 logger.log(modName, "WizStashes.tickStashLockTooltip ERROR: " + err.message);
             }

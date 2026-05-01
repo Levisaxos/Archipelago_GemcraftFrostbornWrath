@@ -35,6 +35,14 @@ package unlockers {
         // Achievements already sent to AP this session, keyed by game_id (reset on screen change)
         private var _reportedAchievements:Object = {};
 
+        // Optional reference to AchievementLogicEvaluator. Set after configure
+        // by ArchipelagoMod. Used to toast on unlocks that weren't in logic
+        // — useful for diagnosing "this should not have been reachable yet".
+        private var _achievementLogicEvaluator:Object = null;
+        public function setAchievementLogicEvaluator(evaluator:Object):void {
+            _achievementLogicEvaluator = evaluator;
+        }
+
         private var _detectCallCount:int = 0;
 
         /**
@@ -104,39 +112,44 @@ package unlockers {
         // Exclusion predicate (mirrors apworld _should_skip_achievement)
 
         /**
-         * True if the achievement was omitted from AP gen and should be left to
-         * vanilla in-game behavior. Triggers:
-         *   - required_effort is above the player's slot threshold
-         *   - untrackable: True (RNG-dependent, hidden mods, etc.)
-         *   - "Trial" in requirements (Trial mode has no AP hooks)
-         *   - "Endurance" in requirements AND Endurance is disabled in the slot
+         * Returns the human-readable reason this achievement was omitted from
+         * AP gen, or null if it IS in AP. Reasons:
+         *   - "untrackable"            — flagged untrackable in rulesdata
+         *   - "excluded by effort"     — required_effort above slot threshold
+         *   - "Trial-mode only"        — "Trial" in requirements (no AP hook)
+         *   - "Endurance disabled"     — "Endurance" requirement, mode off
          */
-        private function shouldSkipAchievement(achData:Object):Boolean {
+        public function getSkipReason(achData:Object):String {
             if (!achData)
-                return true;
+                return "no data";
 
             var serverOptions:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
             if (!serverOptions)
-                return false;  // No slot data yet — be permissive.
+                return null;  // No slot data yet — be permissive.
 
             var threshold:int = int(serverOptions.achievementRequiredEffort);
             if (threshold > 0) {
                 var rank:int = effortRank(String(achData.required_effort));
                 if (rank > threshold)
-                    return true;
+                    return "excluded by effort";
             }
 
             if (achData.untrackable === true)
-                return true;
+                return "untrackable";
 
             var reqs:Array = (achData.requirements is Array) ? (achData.requirements as Array) : null;
             if (reqs != null) {
                 if (requirementsContain(reqs, "Trial"))
-                    return true;
+                    return "Trial-mode only";
                 if (Boolean(serverOptions.disable_endurance) && requirementsContain(reqs, "Endurance"))
-                    return true;
+                    return "Endurance disabled";
             }
-            return false;
+            return null;
+        }
+
+        /** Back-compat boolean wrapper around getSkipReason. */
+        private function shouldSkipAchievement(achData:Object):Boolean {
+            return getSkipReason(achData) != null;
         }
 
         private function effortRank(effort:String):int {
@@ -215,14 +228,53 @@ package unlockers {
                     // disabled-Endurance / above effort threshold). The AP server
                     // has no location for it — let the game's vanilla skill-point
                     // reward flow as if the mod weren't loaded for this one.
-                    if (shouldSkipAchievement(achData)) {
+                    var skipReason:String = getSkipReason(achData);
+                    if (skipReason != null) {
                         _reportedAchievements[gameId] = true;  // don't re-check every frame
+                        // Toast it so the player can spot calibration mistakes
+                        // ("I just got this — should it really be excluded?").
+                        if (_receivedToast != null) {
+                            _receivedToast.addItem(
+                                ach.title + " — " + skipReason, 0xFF8844);
+                        }
+                        _logger.log(_modName, "Achievement excluded from AP ('" + ach.title
+                            + "'): " + skipReason);
                         continue;
                     }
 
                     _reportedAchievements[gameId] = true;
                     _logger.log(_modName, "Sending achievement: " + ach.title + "  apId=" + apId + "  gameId=" + gameId);
                     unlockAchievement(String(ach.title), apId, gameId);
+
+                    // Out-of-logic detection — useful for spotting requirements
+                    // that are too lax / power values that are too low. If AP
+                    // didn't think this was reachable yet, toast it.
+                    if (_achievementLogicEvaluator != null) {
+                        try {
+                            var inLogic:Boolean = Boolean(
+                                _achievementLogicEvaluator.isAchievementInLogic(
+                                    String(ach.title), achData));
+                            if (!inLogic && _receivedToast != null) {
+                                _receivedToast.addItem(
+                                    ach.title + " — out of logic", 0xFF8844);
+                                _logger.log(_modName, "Out-of-logic unlock: " + ach.title);
+                            }
+                        } catch (eLogic:Error) {
+                            _logger.log(_modName, "isAchievementInLogic threw for '"
+                                + ach.title + "': " + eLogic.message);
+                        }
+                    }
+
+                    // Vanilla SP suppression: PnlSkills.calculateAvailableSkillPoints
+                    // adds pnlAchievements.calculateSkillPtBonus() — a live walk over
+                    // gainedAchis[i] summing Achievement.skillPtValue — into the total.
+                    // We deduct each newly-completed achievement's SP from
+                    // skillPtsFromLoot here so the bonus exactly cancels in-formula.
+                    // SP-bundle items still write positively to the same field, so
+                    // the visible balance equals (bundles - achievement-bonus) and the
+                    // panel sees (achi + bundles - achi) = bundles. Net: AP controls
+                    // the SP economy via bundles, vanilla achievement SP is hidden.
+                    suppressVanillaAchievementSp(ach);
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "detectAndReport error: " + err.message);
@@ -284,6 +336,28 @@ package unlockers {
 
         // -----------------------------------------------------------------------
         // Skill-point grants
+
+        /**
+         * Deduct an achievement's vanilla skill-point reward from
+         * GV.ppd.skillPtsFromLoot so it exactly offsets the in-formula
+         * contribution from PnlAchievements.calculateSkillPtBonus().
+         * Called once per achievement per session right after AP detection.
+         */
+        public function suppressVanillaAchievementSp(ach:*):void {
+            if (ach == null || GV.ppd == null)
+                return;
+            try {
+                var spValue:int = int(ach.skillPtValue);
+                if (spValue <= 0)
+                    return;
+                var current:int = int(GV.ppd.skillPtsFromLoot.g());
+                GV.ppd.skillPtsFromLoot.s(current - spValue);
+                _logger.log(_modName, "Suppressed vanilla achievement SP: -" + spValue
+                    + " (skillPtsFromLoot now " + (current - spValue) + ")");
+            } catch (err:Error) {
+                _logger.log(_modName, "suppressVanillaAchievementSp error: " + err.message);
+            }
+        }
 
         /**
          * Add `points` to the player's wizard skill-point pool.

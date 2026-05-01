@@ -147,6 +147,12 @@ package net {
                     AV.serverData.serverOptions.startingWizardLevel = int(sd.starting_wizard_level);
                 if (sd.starting_overcrowd !== undefined)
                     AV.serverData.serverOptions.startingOvercrowd = Boolean(sd.starting_overcrowd);
+                if (sd.gem_pouch_gating !== undefined)
+                    AV.serverData.serverOptions.gemPouchGating = int(sd.gem_pouch_gating);
+                if (sd.gem_pouch_play_order !== undefined)
+                    AV.serverData.serverOptions.gemPouchPlayOrder = sd.gem_pouch_play_order as Array;
+                if (sd.gem_pouch_progressive_id !== undefined)
+                    AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
                 if (sd.enemy_hp_multiplier !== undefined)
                     AV.serverData.serverOptions.enemyMultipliers.hp = int(sd.enemy_hp_multiplier);
                 if (sd.enemy_armor_multiplier !== undefined)

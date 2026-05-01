@@ -364,28 +364,28 @@
     {
       "strId": "W1",
       "type": "NORMAL",
-      "itemApId": null,
+      "itemApId": 1,
       "locApId": 1,
       "wizStashLocApId": 400
     },
     {
       "strId": "W2",
       "type": "NORMAL",
-      "itemApId": null,
+      "itemApId": 2,
       "locApId": 2,
       "wizStashLocApId": 401
     },
     {
       "strId": "W3",
       "type": "STORY_RELATED",
-      "itemApId": null,
+      "itemApId": 3,
       "locApId": 3,
       "wizStashLocApId": 402
     },
     {
       "strId": "W4",
       "type": "EPIC",
-      "itemApId": null,
+      "itemApId": 4,
       "locApId": 4,
       "wizStashLocApId": 403
     },

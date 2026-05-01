@@ -5,20 +5,25 @@ package tracker {
 
     /**
      * Mirrors apworld/gcfw/rules.py to determine which stages are currently
-     * in logic based on collected items.  Ships with slot_data-provided rule
-     * tables so the apworld stays the single source of truth.
+     * in logic based on collected items.  Stage rule data ships in
+     * mods/ArchipelagoMod/src/data/json/logic.json — generated from apworld
+     * by do not commit/py-scripts/generate_logic_json.py — so the apworld
+     * stays the single source of truth.
      *
      * Reads item state from AV.sessionData (populated by onItem calls).
      * After every recompute, writes the result to AV.sessionData.fieldsInLogic
      * so UI components can read it without holding a reference to this class.
      *
-     * Algorithm (matches rules._has_tier_tokens + set_rules):
-     *   reachableTier = highest tier T such that for every 0 < t <= T:
-     *     - previous tier has >= floor(len(TIERS[t-1]) * pct / 100) collected tokens
-     *     - per category, cumulativeSkillReqs[t][cat] <= skillCountByCategory[cat]
-     *   Stage is in logic if:
-     *     - stage is a free stage (W1-W4), OR
-     *     - stageTier[strId] <= reachableTier
+     * In-logic algorithm (matches apworld rules.set_rules + _eval_req):
+     *   Stage is in logic iff every condition holds:
+     *     1. Stage is in FREE_STAGES (W1-W4), OR has its own Field Token.
+     *     2. WIZLOCK skill gate (stageSkills[sid]) is satisfied.
+     *     3. Field-token prereq gate: at least one Field_<sid> entry in
+     *        stageRequirements[sid] has its token collected — UNLESS the
+     *        prereq list contains a free stage (then auto-satisfied) or
+     *        contains no Field_ entries at all.
+     *     4. Non-Field requirements (talismanRow:N, talismanColumn:N,
+     *        skillPoints:N, ...) are all satisfied.
      */
     public class FieldLogicEvaluator {
 
@@ -28,16 +33,19 @@ package tracker {
         private var _logger:Logger;
         private var _modName:String;
 
-        // slot_data rule tables
-        private var _stageTier:Object;           // strId -> tier (int)
-        private var _stageSkills:Object;         // strId -> Array<String>
-        private var _cumulativeSkillReqs:Object; // "t" -> { category: count }
-        private var _tierStageCounts:Object;     // "t" -> int
-        private var _tokenPct:int = 100;
+        // Logic data from logic.json (loaded by ServerData.loadLogicFromJSON).
+        private var _stageSkills:Object;         // strId -> Array<WIZLOCK skill string>
+        private var _stageRequirements:Object;   // strId -> Array<requirement string>
+        private var _matchingTalismans:Object;   // { grid, rows, columns } or null
         private var _freeStages:Object = {};     // strId -> true
 
+        // slot_data — power weights for achievement-side power gates only.
+        // Stage in-logic no longer uses power; this is kept for the
+        // achievement evaluator's required_power checks.
+        private var _powerScalePct:int = 100;
+        private var _powerWeights:Object;
+
         private var _dirty:Boolean = true;
-        private var _reachableTier:int = -1;
         private var _inLogicByStrId:Object = {};
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
         private var _stageElements:Object = {};  // strId -> Array<String>
@@ -56,20 +64,20 @@ package tracker {
         }
 
         /**
-         * Feed slot_data rule tables.  Call once after the Connected packet.
-         * Null arguments fall back to "all stages in logic" (older apworld).
+         * Feed logic data from logic.json + slot_data power-scale info.
+         * Call once after the Connected packet (ServerData has loaded JSON).
          */
-        public function configure(stageTier:Object,
-                                  stageSkills:Object,
-                                  cumulativeSkillReqs:Object,
-                                  tierStageCounts:Object,
-                                  tokenPct:int,
-                                  freeStages:Array):void {
-            _stageTier           = stageTier;
-            _stageSkills         = stageSkills;
-            _cumulativeSkillReqs = cumulativeSkillReqs;
-            _tierStageCounts     = tierStageCounts;
-            _tokenPct            = tokenPct > 0 ? tokenPct : 100;
+        public function configure(stageSkills:Object,
+                                  stageRequirements:Object,
+                                  matchingTalismans:Object,
+                                  freeStages:Array,
+                                  powerScalePct:int,
+                                  powerWeights:Object):void {
+            _stageSkills         = stageSkills != null ? stageSkills : {};
+            _stageRequirements   = stageRequirements != null ? stageRequirements : {};
+            _matchingTalismans   = matchingTalismans;
+            _powerScalePct       = powerScalePct > 0 ? powerScalePct : 100;
+            _powerWeights        = powerWeights != null ? powerWeights : {};
             _freeStages          = {};
             if (freeStages != null) {
                 for each (var sid:String in freeStages) {
@@ -81,19 +89,21 @@ package tracker {
 
         public function markDirty():void { _dirty = true; }
 
-        public function get hasRules():Boolean { return _stageTier != null; }
-        public function get reachableTier():int { return _reachableTier; }
+        public function get hasRules():Boolean { return _stageRequirements != null; }
+        public function get powerScalePct():int { return _powerScalePct; }
 
         /** True if this stage is a free/tutorial stage (W1-W4, always reachable). */
         public function isFreeStage(strId:String):Boolean {
             return _freeStages[strId] == true;
         }
 
-        /** Returns the tier of the given stage, or -1 if unknown. */
+        /**
+         * Tier-style label for tooltips. The new prereq-graph logic doesn't
+         * use tiers; return -1 so callers (e.g. FieldTooltipOverlay) hide
+         * the tier line. Kept as a method to avoid breaking call sites.
+         */
         public function getStageTier(strId:String):int {
-            if (_stageTier == null) return -1;
-            var t:* = _stageTier[strId];
-            return (t !== undefined) ? int(t) : -1;
+            return -1;
         }
 
         // -----------------------------------------------------------------------
@@ -101,7 +111,7 @@ package tracker {
 
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
-            if (_stageTier == null) return true;
+            if (_stageRequirements == null) return true;
             if (_dirty) recompute();
             return _inLogicByStrId[strId] == true;
         }
@@ -119,7 +129,7 @@ package tracker {
                                                stashMissing:Boolean):Boolean {
             if (!(journeyMissing || stashMissing))
                 return false;
-            if (_stageTier == null)
+            if (_stageRequirements == null)
                 return true;
             if (!canCompleteStage(strId))
                 return false;
@@ -131,7 +141,8 @@ package tracker {
                 if (journeyOk)
                     return true;
             }
-            if (stashMissing && AV.sessionData.isStashUnlocked(strId))
+            // Stash needs both the key item AND power threshold met.
+            if (stashMissing && isStashGateMet(strId))
                 return true;
             return false;
         }
@@ -149,7 +160,7 @@ package tracker {
          * True if any in-logic stage has at least minWaveCount waves.
          *
          * Reads WaveCount directly from _levelStats so the check sees free
-         * stages (W1-W4) too — they aren't in _stageTier but are in _levelStats
+         * stages (W1-W4) too — they aren't in _stageRequirements but are in _levelStats
          * and _inLogicByStrId, so a tier-table-driven version would miss them
          * (e.g. "Short Tempered" needs only minWave: 5, which W1 satisfies).
          */
@@ -223,13 +234,26 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return [];
 
+            var pouchMode:int = _pouchMode();
             var out:Array = [];
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate — hide
                     var need:int = int(skillName.split(":")[1]);
                     var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
                     out.push([need + " gem skills (" + have + "/" + need + ")", have >= need]);
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off — pouch line is meaningless
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    out.push(["Gempouch (" + pouchPrefix + ")", _pouchHeld(pouchPrefix)]);
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -304,76 +328,173 @@ package tracker {
             return false;
         }
 
+        /** True if any in-logic field has GiantCount >= threshold. */
+        public function hasInLogicFieldWithMinGiants(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].GiantCount) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has ReaverCount >= threshold. */
+        public function hasInLogicFieldWithMinReavers(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].ReaverCount) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has the named element count >= threshold.
+         *  `fieldNamePascal` is the element name in PascalCase without spaces;
+         *  the level-stat key is `<fieldNamePascal>Count`. */
+        public function hasInLogicFieldWithElementCount(fieldNamePascal:String, threshold:int):Boolean {
+            if (_dirty) recompute();
+            var key:String = fieldNamePascal + "Count";
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid][key]) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has MonstersBeforeWave12 >= threshold.
+         *  The dedicated field is populated by a simulator from the
+         *  decompiled stage data; mirrors the apworld gate exactly. */
+        public function hasInLogicFieldWithMinMonstersBeforeWave12(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonstersBeforeWave12) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has MarkedMonsterCount >= threshold.
+         *  Like MonstersBeforeWave12, this is a simulator-derived expected
+         *  value (marked = monsters with 1 attribute, per buffPower). */
+        public function hasInLogicFieldWithMarkedMonsterCount(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MarkedMonsterCount) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /**
-         * Returns [text, color] line pairs for any unmet tier skill requirements
-         * blocking this stage.  Empty array when skill reqs are disabled or all met.
+         * Returns [text, color] line pairs describing why this stage isn't
+         * in logic. Used by FieldTooltipOverlay. Lines cover:
+         *   - Missing prereq stages (Field_<sid>) — "Requires field X / Y / Z"
+         *   - Unmet counter requirements (talismanRow:N etc.) — "Requires N matching rows"
+         * Returns empty array when stage is in logic or has no rules.
          */
         public function getBlockingTierSkillLines(strId:String):Array {
-            if (_cumulativeSkillReqs == null || _stageTier == null) return [];
-            var lines:Array = [];
-            var counts:Object = AV.sessionData.skillCountByCategory;
+            if (_stageRequirements == null) return [];
+            var reqs:Array = _stageRequirements[strId] as Array;
+            if (reqs == null || reqs.length == 0) return [];
 
-            var catLabel:Object = { gems: "gem", spells: "spell", focus: "focus",
-                                    buildings: "building", wrath: "wrath" };
-
-            // tier0 flat gem requirement (not cascaded into higher tiers).
-            var tier0Reqs:Object = _cumulativeSkillReqs["0"];
-            if (tier0Reqs != null) {
-                for (var cat0:String in tier0Reqs) {
-                    var need0:int = int(tier0Reqs[cat0]);
-                    if (need0 <= 0) continue;
-                    var have0:int = int(counts[cat0]);
-                    if (have0 < need0) {
-                        var lbl0:String = catLabel[cat0] != null ? String(catLabel[cat0]) : cat0;
-                        lines.push(["Requires " + need0 + " " + lbl0 + " skill" + (need0 != 1 ? "s" : "") +
-                                    " (" + have0 + "/" + need0 + ")", 0x888888]);
-                    }
+            // Flatten DNF (outer-OR over inner-AND groups) into the union of
+            // entries across all groups for tooltip display. Loses precision
+            // for complex multi-group cases but matches the simpler "what
+            // are you missing" intent. Backward compat: a flat list is its
+            // own union.
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
+            var flat:Array = [];
+            var seen:Object = {};
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                for each (var entry:String in group) {
+                    if (entry == null || seen[entry]) continue;
+                    seen[entry] = true;
+                    flat.push(entry);
                 }
             }
 
-            // Cumulative tier skill requirements for this stage's tier (tier1+).
-            var tier:int = int(_stageTier[strId]);
-            if (tier > 0) {
-                var tierReqs:Object = _cumulativeSkillReqs[String(tier)];
-                if (tierReqs != null) {
-                    for (var cat:String in tierReqs) {
-                        var need:int = int(tierReqs[cat]);
-                        if (need <= 0) continue;
-                        var have:int = int(counts[cat]);
-                        if (have < need) {
-                            var lbl:String = catLabel[cat] != null ? String(catLabel[cat]) : cat;
-                            lines.push(["Requires " + need + " " + lbl + " skill" + (need != 1 ? "s" : "") +
-                                        " (" + have + "/" + need + ")", 0x888888]);
-                        }
-                    }
+            var lines:Array = [];
+
+            // Field_ prereqs — show as a single OR line if any are missing.
+            var missingFields:Array = [];
+            var anyFieldHeld:Boolean = false;
+            var anyFreePrereq:Boolean = false;
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            for each (var req:String in flat) {
+                if (req == null || req.indexOf("Field_") != 0) continue;
+                var sid:String = req.substr(6);
+                if (_freeStages[sid] == true) {
+                    anyFreePrereq = true;
+                } else if (tokens != null && tokens[sid] == true) {
+                    anyFieldHeld = true;
+                } else {
+                    missingFields.push(sid);
+                }
+            }
+            if (!anyFieldHeld && !anyFreePrereq && missingFields.length > 0) {
+                lines.push(["Requires field " + missingFields.join(" / "), 0x888888]);
+            }
+
+            // Counter requirements that aren't met — one line each.
+            for each (var creq:String in flat) {
+                if (creq == null || creq.indexOf("Field_") == 0) continue;
+                if (_evalCounterReq(creq)) continue;
+                var colon:int = creq.indexOf(":");
+                if (colon < 0) continue;
+                var name:String = creq.substring(0, colon);
+                var n:int = int(_trimStr(creq.substring(colon + 1)));
+                if (name == "talismanRow") {
+                    lines.push(["Requires " + n + " matching talisman row" + (n != 1 ? "s" : "")
+                                + " (" + _countCompleteTalismanRows() + "/" + n + ")", 0x888888]);
+                } else if (name == "talismanColumn") {
+                    lines.push(["Requires " + n + " matching talisman column" + (n != 1 ? "s" : "")
+                                + " (" + _countCompleteTalismanColumns() + "/" + n + ")", 0x888888]);
+                } else if (name == "skillPoints") {
+                    lines.push(["Requires " + n + " skill points (" + _countSkillPoints() + "/" + n + ")", 0x888888]);
                 }
             }
             return lines;
         }
 
         /**
-         * For a stage not yet tier-reachable, returns the token count needed from
-         * the current reachable tier and all stage strIds in that tier.
-         * Returns null if the stage is already in logic, a free stage, or no rules loaded.
-         * Result: { needed:int, strIds:Array<String> }
+         * Hint object describing why a stage isn't in logic. Returns null
+         * when the stage is already in logic, free, or has no rules. Used
+         * by tooltips to render quick "missing token" / "missing prereq"
+         * banners.
          */
         public function getBlockingTokenReq(strId:String):Object {
-            if (_stageTier == null || _freeStages[strId] == true) return null;
-            if (_dirty) recompute();
-            if (_inLogicByStrId[strId] == true) return null;
+            if (_stageRequirements == null || _freeStages[strId] == true)
+                return null;
+            if (_dirty)
+                recompute();
+            if (_inLogicByStrId[strId] == true)
+                return null;
 
-            var prevTier:int  = int(_stageTier[strId]) - 1;
-            var prevCount:int = int(_tierStageCounts[String(prevTier)]);
-            if (prevCount <= 0) return null;
-
-            var needed:int = Math.max(1, int((prevCount * _tokenPct) / 100));
-
-            var allStrIds:Array = [];
-            for (var sid:String in _stageTier) {
-                if (int(_stageTier[sid]) == prevTier) allStrIds.push(sid);
-            }
-            allStrIds.sort(Array.CASEINSENSITIVE);
-            return { needed: needed, strIds: allStrIds, tier: prevTier };
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            return {
+                missingToken: !(tokens != null && tokens[strId] == true)
+            };
         }
 
         /**
@@ -385,13 +506,27 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return [];
 
+            var pouchMode:int = _pouchMode();
             var missing:Array = [];
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate
                     var need:int = int(skillName.split(":")[1]);
                     var have:int = int(AV.sessionData.skillCountByCategory["gems"]);
                     if (have < need) missing.push(need + " gem skills (" + have + "/" + need + ")");
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    if (!_pouchHeld(pouchPrefix))
+                        missing.push("Gempouch (" + pouchPrefix + ")");
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -403,55 +538,261 @@ package tracker {
         // -----------------------------------------------------------------------
         // Recompute
 
-        /** Recalculate reachable tiers and in-logic stages; write to AV.sessionData. */
+        /**
+         * Recalculate in-logic stages from current item state; write the
+         * result to AV.sessionData.fieldsInLogic. Call after configure() and
+         * after every relevant onItem.
+         *
+         * Mirrors apworld rules.set_rules per-stage gate:
+         *   in-logic iff
+         *     (free stage OR has own field token)
+         *     AND WIZLOCK skill gate met
+         *     AND (no Field_ prereqs in requirements
+         *          OR a free stage appears in prereq list (auto-satisfied)
+         *          OR at least one Field_<sid> prereq token is held)
+         *     AND every non-Field requirement (talismanRow:N etc.) is met.
+         */
         public function recompute():void {
             _inLogicByStrId = {};
-            _reachableTier  = -1;
 
-            if (_stageTier == null) {
-                _reachableTier = 999;
+            if (_stageRequirements == null) {
                 _dirty = false;
                 AV.sessionData.fieldsInLogic = _inLogicByStrId;
                 return;
             }
 
-            // Find highest contiguously-reachable tier.
-            var t:int = 0;
-            while (true) {
-                var ok:Boolean = t == 0 || (_tierTokensMet(t) && _tierSkillsMet(t));
-                if (!ok) break;
-                _reachableTier = t;
-                t++;
-                if (t > 50) break;
-                if (_tierStageCounts[String(t)] == undefined
-                        && _cumulativeSkillReqs[String(t)] == undefined) {
-                    break;
-                }
-            }
-
-            // Mark each stage by tier AND token possession. The apworld access
-            // rule for any non-free stage is "own field token AND prev-tier
-            // tokens", so a stage isn't truly in logic just because its tier
-            // is reachable — the player also needs that stage's own token.
-            // (Free stages bypass token; they're added unconditionally below.)
-            var tokens:Object = AV.sessionData.tokensByStrId;
-            for (var strId:String in _stageTier) {
-                var tier:int = int(_stageTier[strId]);
-                if (_freeStages[strId] == true) {
-                    _inLogicByStrId[strId] = true;
-                } else {
-                    _inLogicByStrId[strId] = tier <= _reachableTier
-                            && tokens != null
-                            && tokens[strId] == true;
-                }
-            }
-            // Free stages (W1-W4) are not in _stageTier but are always reachable.
+            // Iterate every stage we know about (free + non-free).
             for (var freeSid:String in _freeStages) {
-                _inLogicByStrId[freeSid] = true;
+                _inLogicByStrId[freeSid] = _stageReachable(freeSid);
+            }
+            for (var strId:String in _stageRequirements) {
+                if (_inLogicByStrId[strId] === undefined)
+                    _inLogicByStrId[strId] = _stageReachable(strId);
             }
 
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
+            AV.sessionData.playerPower   = computePlayerPower();
+        }
+
+        /** Run the four-clause stage gate for one stage. */
+        private function _stageReachable(strId:String):Boolean {
+            // Free stage = the chosen starting stage. Mirrors apworld
+            // set_rules, which skips the requirements + token gate for the
+            // start (Menu connects directly to it).
+            if (_freeStages[strId] == true)
+                return true;
+            // Clause 1: own Field Token required.
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            if (tokens == null || tokens[strId] != true)
+                return false;
+            // Clause 2: WIZLOCK skill gate.
+            if (!_skillGateMet(strId))
+                return false;
+            // Clause 3 + 4: per-requirements list.
+            return _requirementsGateMet(strId);
+        }
+
+        /**
+         * Evaluate stageRequirements[strId] in DNF: outer-OR of inner
+         * AND-groups. The stage passes if any one AND-group passes; an
+         * AND-group passes when every entry inside it does. Within a group:
+         *   - Field_<sid>: token <sid> held (or <sid> is a free stage).
+         *   - everything else: routed through _evalCounterReq.
+         * Empty / missing requirements pass automatically (used by the
+         * starting stage upstream, plus W1-style stages from older data).
+         *
+         * Backward compat: a flat list of strings (no inner Arrays) is
+         * treated as a single AND-group, matching apworld's
+         * _normalize_requirements.
+         */
+        private function _requirementsGateMet(strId:String):Boolean {
+            var reqs:Array = _stageRequirements != null
+                ? (_stageRequirements[strId] as Array)
+                : null;
+            if (reqs == null || reqs.length == 0)
+                return true;
+
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
+
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                var groupOk:Boolean = true;
+                for each (var req:String in group) {
+                    if (req == null) continue;
+                    if (req.indexOf("Field_") == 0) {
+                        var sid:String = req.substr(6);
+                        if (_freeStages[sid] != true
+                            && !(tokens != null && tokens[sid] == true)) {
+                            groupOk = false;
+                            break;
+                        }
+                    } else if (!_evalCounterReq(req)) {
+                        groupOk = false;
+                        break;
+                    }
+                }
+                if (groupOk) return true;
+            }
+            return false;
+        }
+
+        /**
+         * Evaluate a single non-Field requirement string.
+         * Currently handles talismanRow:N, talismanColumn:N, skillPoints:N.
+         * Unknown/metadata strings return true (mirrors apworld _eval_req).
+         */
+        private function _evalCounterReq(req:String):Boolean {
+            var colon:int = req.indexOf(":");
+            if (colon < 0) return true;
+            var name:String = req.substring(0, colon);
+            var n:int = int(_trimStr(req.substring(colon + 1)));
+            if (name == "talismanRow")
+                return _countCompleteTalismanRows() >= n;
+            if (name == "talismanColumn")
+                return _countCompleteTalismanColumns() >= n;
+            if (name == "skillPoints")
+                return _countSkillPoints() >= n;
+            return true; // unknown counter — don't block
+        }
+
+        private function _countCompleteTalismanRows():int {
+            return _countCompleteSets(_matchingTalismans != null
+                ? _matchingTalismans.rows as Array : null);
+        }
+
+        private function _countCompleteTalismanColumns():int {
+            return _countCompleteSets(_matchingTalismans != null
+                ? _matchingTalismans.columns as Array : null);
+        }
+
+        private function _countCompleteSets(sets:Array):int {
+            if (sets == null) return 0;
+            var n:int = 0;
+            for each (var set:Array in sets) {
+                if (set == null) continue;
+                var ok:Boolean = true;
+                for each (var apId:* in set) {
+                    if (!AV.sessionData.hasItem(int(apId))) { ok = false; break; }
+                }
+                if (ok) n++;
+            }
+            return n;
+        }
+
+        /** Sum SP across collected Skillpoint Bundle items (1700-1709,
+         *  bundle apId-1699 = SP value). Counts each held bundle once. */
+        private function _countSkillPoints():int {
+            var total:int = 0;
+            for (var size:int = 1; size <= 10; size++) {
+                if (AV.sessionData.hasItem(1699 + size))
+                    total += size;
+            }
+            return total;
+        }
+
+        private static function _trimStr(s:String):String {
+            if (s == null) return "";
+            return s.replace(/^\s+|\s+$/g, "");
+        }
+
+        /** Current player power score from collected items. Mirrors apworld/gcfw/power.py. */
+        public function computePlayerPower():Number {
+            var power:Number = 0;
+            var sd:* = AV.sessionData;
+            if (sd == null || _powerWeights == null)
+                return 0;
+
+            // Skillpoint Bundles 1700-1709 — bundle (apId-1699) SP per item.
+            // We don't track per-item received counts in the mod (only "have"),
+            // so approximate as 1 per AP id received. Good enough for in-logic UI;
+            // exact count lives apworld-side at fill time.
+            var spWeight:Number     = Number(_powerWeights["sp"]);
+            for (var apId:int = 1700; apId <= 1709; apId++) {
+                if (sd.hasItem(apId))
+                    power += spWeight * (apId - 1699);
+            }
+
+            // Skills 700-723.
+            var gemWeight:Number    = Number(_powerWeights["gem_skill"]);
+            var skillWeight:Number  = Number(_powerWeights["other_skill"]);
+            for (var sk:int = 0; sk < 24; sk++) {
+                if (!sd.hasItem(700 + sk))
+                    continue;
+                if (sk >= 6 && sk <= 11)
+                    power += gemWeight;     // gem-type skills (Crit/Leech/Bleed/AT/Poison/Slow)
+                else
+                    power += skillWeight;
+            }
+
+            // Battle traits 800-814.
+            var traitWeight:Number  = Number(_powerWeights["battle_trait"]);
+            if (traitWeight != 0) {
+                for (var tr:int = 0; tr < 15; tr++) {
+                    if (sd.hasItem(800 + tr))
+                        power += traitWeight;
+                }
+            }
+
+            // XP tomes 1100-1199 — exact wizard-level grant per tome lives in
+            // LevelUnlocker.levelsForApId; for power we approximate flat 1 level.
+            var xpWeight:Number     = Number(_powerWeights["xp_tome_level"]);
+            if (xpWeight != 0) {
+                for (var xp:int = 1100; xp <= 1199; xp++) {
+                    if (sd.hasItem(xp))
+                        power += xpWeight;
+                }
+            }
+
+            // Shadow cores: specific 1000-1016 + extras 1300-1351.
+            var coreWeight:Number   = Number(_powerWeights["shadow_core"]);
+            if (coreWeight != 0) {
+                for (var sc:int = 1000; sc <= 1016; sc++) {
+                    if (sd.hasItem(sc))
+                        power += coreWeight;
+                }
+                for (var sce:int = 1300; sce <= 1351; sce++) {
+                    if (sd.hasItem(sce))
+                        power += coreWeight;
+                }
+            }
+
+            // Talisman fragments 900-952 + extras 1200-1246. Power = rarity / divisor.
+            // Per-fragment rarity isn't sent in slot_data right now; we use a flat
+            // average of rarity 50 (mid-pool) until rarity table is wired in.
+            // TODO: forward per-fragment rarities from apworld for accurate count.
+            var talDiv:Number       = Number(_powerWeights["talisman_divisor"]);
+            if (talDiv > 0) {
+                var talPower:Number = 50.0 / talDiv;
+                for (var tf:int = 900; tf <= 952; tf++) {
+                    if (sd.hasItem(tf))
+                        power += talPower;
+                }
+                for (var tfe:int = 1200; tfe <= 1246; tfe++) {
+                    if (sd.hasItem(tfe))
+                        power += talPower;
+                }
+            }
+
+            return power;
+        }
+
+        /**
+         * True if this stage's wizard stash is reachable: stage in logic
+         * (same gate as Journey) AND the wizard stash key is held.
+         * Mirrors apworld rules: stash shares the stage's per-stage gate
+         * plus the per-stage Wizard Stash Key item.
+         */
+        public function isStashGateMet(strId:String):Boolean {
+            if (AV.sessionData == null || !AV.sessionData.isStashUnlocked(strId))
+                return false;
+            return canCompleteStage(strId);
         }
 
         // -----------------------------------------------------------------------
@@ -461,11 +802,34 @@ package tracker {
             if (_stageSkills == null) return true;
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return true;
+            var pouchMode:int = _pouchMode();
+            // Free stage (the seed's starter) without its Gempouch yet: the
+            // player has Hollow Gems available — any WIZLOCK skill listed for
+            // the stage can be brute-forced through. Treat as met so Journey,
+            // elements, and monsters on the starter all show in logic until
+            // the pouch arrives and normal rules take over.
+            if (_freeStages[strId] == true && pouchMode != 0
+                    && strId != null && strId.length > 0
+                    && !_pouchHeld(strId.charAt(0))) {
+                return true;
+            }
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {
+                    if (pouchMode != 0)
+                        continue; // pouches replace the gem-skill gate
                     var need:int = int(skillName.split(":")[1]);
                     if (int(AV.sessionData.skillCountByCategory["gems"]) < need) return false;
+                    continue;
+                }
+                if (lower.indexOf("gempouch:") == 0) {
+                    if (pouchMode == 0)
+                        continue; // gating off — pouch is no-op
+                    var pouchPrefix:String = skillName.split(":")[1];
+                    if (pouchPrefix == null)
+                        continue;
+                    pouchPrefix = _trimAS(pouchPrefix);
+                    if (!_pouchHeld(pouchPrefix)) return false;
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -475,33 +839,39 @@ package tracker {
             return true;
         }
 
-        private function _tierTokensMet(tier:int):Boolean {
-            var prev:int     = tier - 1;
-            var prevCount:int = int(_tierStageCounts[String(prev)]);
-            if (prevCount <= 0) return true;
-            var needed:int = int((prevCount * _tokenPct) / 100);
-            if (needed <= 0) return true;
-
-            var have:int = 0;
-            var tokens:Object = AV.sessionData.tokensByStrId;
-            for (var sid:String in tokens) {
-                if (int(_stageTier[sid]) == prev) {
-                    have++;
-                    if (have >= needed) return true;
-                }
-            }
-            return have >= needed;
+        // Active gem-pouch gating mode (0=off, 1=distinct, 2=progressive).
+        // Read from slot_data via ServerOptions; returns 0 if not set.
+        private function _pouchMode():int {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            return int(AV.serverData.serverOptions.gemPouchGating);
         }
 
-        private function _tierSkillsMet(tier:int):Boolean {
-            if (_cumulativeSkillReqs == null) return true;
-            var reqs:Object = _cumulativeSkillReqs[String(tier)];
-            if (reqs == null) return true;
-            var counts:Object = AV.sessionData.skillCountByCategory;
-            for (var cat:String in reqs) {
-                if (int(counts[cat]) < int(reqs[cat])) return false;
+        // True when the player owns the pouch for the given stage-prefix
+        // letter under the current mode (distinct: hasItem; progressive:
+        // count >= prefix index + 1). Fails open on unknown prefixes.
+        private function _pouchHeld(prefix:String):Boolean {
+            if (prefix == null || prefix.length == 0) return true;
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (opts == null) return true;
+            var order:Array = opts.gemPouchPlayOrder as Array;
+            if (order == null || order.length == 0) return true;
+            var idx:int = order.indexOf(prefix);
+            if (idx < 0) return true;
+            if (int(opts.gemPouchGating) == 1) {
+                return AV.sessionData.hasItem(626 + idx);
             }
-            return true;
+            // progressive
+            var progId:int = int(opts.gemPouchProgressiveId);
+            if (progId <= 0) progId = 652;
+            return AV.sessionData.getItemCount(progId) >= idx + 1;
         }
+
+        // Local trim to avoid pulling in a tracker dependency.
+        private function _trimAS(s:String):String {
+            if (s == null) return "";
+            return s.replace(/^\s+|\s+$/g, "");
+        }
+
     }
 }

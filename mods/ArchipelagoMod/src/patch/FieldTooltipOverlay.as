@@ -259,10 +259,7 @@ package patch {
         private function _buildLines(strId:String,
                                      journeyMissing:Boolean, journeyDone:Boolean,
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
-            var stageTier:int = _evaluator.getStageTier(strId);
-            var tierLabel:String = (stageTier >= 0) ? ("Tier: " + stageTier) : "";
             var lines:Array = [["Archipelago", 0xE5AD0A]];
-            if (tierLabel != "") lines.push([tierLabel, 0x888888]);
 
             // One colour-coded line per element / monster on this stage.
             // Per-stage view: green iff THIS stage is completable (tier + WIZLOCK).
@@ -313,13 +310,17 @@ package patch {
                             have24 >= 24 ? 0x44FF44 : 0xFF4444]);
             }
 
-            // Tier-token gate: only shown when this stage isn't yet
-            // tier-reachable. Token list itself is informational (gray).
+            // Stage out of logic: show why.
             if (!_evaluator.isStageInLogic(strId)) {
                 var req:Object = _evaluator.getBlockingTokenReq(strId);
-                if (req != null && (req.strIds as Array).length > 0) {
-                    lines.push(["Complete at least " + req.needed + " of tier " + int(req.tier) + ":", 0xFF4444]);
-                    lines.push([(req.strIds as Array).join(", "),  0xAAAAAA]);
+                if (req != null && req.missingToken == true) {
+                    lines.push(["Missing field token", 0xFF4444]);
+                }
+                // Prereq stage / talisman / skillPoints requirements that aren't met.
+                for each (var bl:Array in _evaluator.getBlockingTierSkillLines(strId)) {
+                    if (bl != null && bl.length >= 2) {
+                        lines.push([String(bl[0]), 0xFF4444]);
+                    }
                 }
             }
 

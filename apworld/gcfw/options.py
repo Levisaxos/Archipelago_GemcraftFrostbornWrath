@@ -16,6 +16,40 @@ class EnforceLogic(Toggle):
     default = 0
 
 
+class StartingStage(Choice):
+    """Which early-game stage you start the run on.
+
+    The chosen stage is accessible from the menu without a Field Token; all
+    other stages (including the W/S stages you didn't pick) require their
+    own token plus a clearable prereq stage.
+
+    Default 'random' picks one of W1-W4 / S1-S4 each generation.
+    """
+    display_name = "Starting Stage"
+    option_w1 = 0
+    option_w2 = 1
+    option_w3 = 2
+    option_w4 = 3
+    option_s1 = 4
+    option_s2 = 5
+    option_s3 = 6
+    option_s4 = 7
+    default = "random"
+
+
+# Map StartingStage option int -> stage str_id. Order matches the option_* values
+# above. Imported by __init__.py and rules.py to resolve the chosen start.
+STARTING_STAGE_BY_VALUE = {
+    StartingStage.option_w1: "W1",
+    StartingStage.option_w2: "W2",
+    StartingStage.option_w3: "W3",
+    StartingStage.option_w4: "W4",
+    StartingStage.option_s1: "S1",
+    StartingStage.option_s2: "S2",
+    StartingStage.option_s3: "S3",
+    StartingStage.option_s4: "S4",
+}
+
 class FieldTokenPlacement(Choice):
     """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
 
@@ -87,15 +121,26 @@ class XpTomeBonus(Range):
     default     = 150
 
 
-class TierRequirementsPercentage(Range):
-    """Logic is currently determined by grouping stages into tiers based on difficulty, then requiring a percentage of the
-    stages in all previous tiers to be accessible in order to consider the next tier accessible.
-    This setting determines what that percentage is. Lower values may require heavy usage of endurance mode to progress. Rounds down.
+class PowerScale(Range):
+    """Multiplier (percent) applied to required-power thresholds when AP fill
+    decides which locations are reachable.
+
+    The mod computes a "player power" score from collected items (skill
+    points, skills, traits, talismans, etc.) — see apworld/gcfw/power.py.
+    Locations such as wizard stash keys and achievements gate against tier-
+    based or per-achievement power thresholds. PowerScale tunes those
+    thresholds:
+
+      50  → thresholds halved, easier seed (gates open with less power)
+     100  → baseline
+     200  → thresholds doubled, harder seed (gates demand more power)
+
+    Mirrors the EnemyHpMultiplier convention: higher number = harder.
     """
-    display_name = "Tier Completion Percentage"
-    range_start = 40
-    range_end = 100
-    default = 75
+    display_name = "Power Scale"
+    range_start = 50
+    range_end   = 200
+    default     = 100
 
 
 class DeathLinkPunishment(Choice):
@@ -250,6 +295,31 @@ class ExtraWaveCount(Range):
     default     = 0
 
 
+class GemPouchGating(Choice):
+    """How gem availability per stage is gated by Archipelago items.
+
+    off:         No gempouches. Stages keep their original `gemSkills: N` gate
+                 (collect N of the 6 gem-skill items); gem orbs spawn freely
+                 in every level.
+    distinct:    26 named pouches (one per stage-prefix letter). A stage in
+                 prefix X spawns no gem orbs at all until you collect
+                 `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
+    progressive: 26 copies of `Progressive Gempouch` in play order
+                 (W, S, V, R, Q, P, O, N, M, L, K, J, I, H, G, F, E, D, C, B,
+                 A, Z, Y, X, U, T). The Nth copy unlocks the Nth world in that
+                 order. Spoiler log shows fungible items but fill is more
+                 forgiving.
+
+    distinct and progressive both pre-collect the W (tutorial) pouch so the
+    seed is solvable from frame zero.
+    """
+    display_name = "Gem Pouch Gating"
+    option_off         = 0
+    option_distinct    = 1
+    option_progressive = 2
+    default = 0
+
+
 class StartingOvercrowd(Toggle):
     """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
 
@@ -307,15 +377,16 @@ class SkillpointMultiplier(Range):
     Bundles are sized 1-10 SP each (skewed small), and the count of bundles is
     determined by the remaining filler slots after all real items are placed.
 
-    Default 50: ~1000 SP. Vanilla GCFW still awards skill points locally on
-    achievement completion, so 50% (1000 SP via bundles) keeps the total SP
-    economy roughly in line with vanilla. Raise to 100 once mod-side vanilla
-    SP suppression ships.
+    Mod-side suppresses vanilla per-achievement SP rewards (see
+    AchievementUnlocker.suppressVanillaAchievementSp), so AP bundles are the
+    primary source of skill points. 100 = ~2000 SP from bundles, in the same
+    order of magnitude as vanilla's full achievement payout. Lower for tighter
+    SP economies, higher for abundance.
     """
     display_name = "Skillpoint Multiplier"
     range_start = 50
     range_end   = 200
-    default     = 50
+    default     = 100
 
 
 @dataclass
@@ -324,13 +395,15 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
-    tier_requirements_percent: TierRequirementsPercentage
+    starting_stage:              StartingStage
     xp_tome_bonus:             XpTomeBonus
+    power_scale:               PowerScale
     enforce_logic:             EnforceLogic
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
+    gem_pouch_gating:          GemPouchGating
     achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
     skillpoint_multiplier:     SkillpointMultiplier

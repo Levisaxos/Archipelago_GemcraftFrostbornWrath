@@ -20,10 +20,20 @@ def sp_bundle_item_name(size: int) -> str:
 
 
 def sp_bundle_item_table() -> Dict[str, ItemData]:
+    """Skillpoint bundle items.  Half the bundle sizes are state-tracked
+    (`progression_skip_balancing` — counts toward reachability for the
+    skillPoints:N gate, but skips cross-player balancing since we have many
+    copies); the other half are `useful` and just float around in fill.
+    Convention: odd sizes (1, 3, 5, 7, 9) progression; even sizes useful.
+    Skews progression slightly higher than 50% of items by count due to
+    SP_BUNDLE_WEIGHTS favouring small bundles, but well below 50% by SP."""
     table: Dict[str, ItemData] = {}
     for size in SP_BUNDLE_SIZES:
         ap_id = SP_BUNDLE_BASE_ID + (size - 1)
-        table[sp_bundle_item_name(size)] = ItemData(ap_id, ItemClassification.useful)
+        cls = (ItemClassification.progression_skip_balancing
+               if size % 2 == 1
+               else ItemClassification.useful)
+        table[sp_bundle_item_name(size)] = ItemData(ap_id, cls)
     return table
 
 

@@ -42,19 +42,18 @@ class StageRule:
 # wizard-level thresholds).  Each tier requires the player to have collected
 # a minimum number of field tokens from the *immediately previous* tier.
 #
-# FREE_STAGES (W2-W4) are accessible from W1 without any token — they are
-# the tutorial zone and mirror the real game's natural map progression.
-# They have no field token item and are not counted in any tier gate.
-#
-# Other Tier 0 stages (S1-S4, V1) require their own field token but
+# Tier 0 stages (S1-S4, V1, W1-W4) require their own field token but
 # have no tier requirement on top.
 #
 # Tier 1+ stages require their own field token AND N tokens from the
 # previous tier, where N scales with difficulty.
 
-# Stages accessible from W1 without needing their field token.
-# W2/W3/W4 have no field token item; they are always unlocked on connect.
-FREE_STAGES: set = {"W2", "W3", "W4"}
+# Stages with no field token item. Empty: every stage including W1-W4
+# now has its own Field Token (item_ap_ids 1-4 / 5-8). The chosen
+# starting stage (see options.StartingStage) is the only stage without
+# a token gate, and it's reached directly from Menu in
+# __init__.create_regions — no FREE_STAGES entry needed.
+FREE_STAGES: set = set()
 
 # Wave-count thresholds defining tier 0..12 boundaries. A stage's tier is the
 # highest t whose threshold[t] <= wave_count. Same table used by
@@ -70,13 +69,13 @@ def _tier_from_wave_count(wave_count: int) -> int:
 
 
 # Tier definitions: tier_number → list of stage str_ids in that tier.
-# Derived from each stage's wave_count in game_data.json; W1 (entry stage)
-# and FREE_STAGES (W2-W4, no token items) are excluded.
+# Derived from each stage's wave_count in game_data.json; FREE_STAGES
+# (W1-W4, no token items) are excluded.
 # TODO: rebalance tiers - t4 is too big and t8 is too small.
 TIERS: Dict[int, List[str]] = {t: [] for t in range(len(_TIER_WAVE_THRESHOLDS))}
 for _stage in GAME_DATA["stages"]:
     _sid = _stage["str_id"]
-    if _sid == "W1" or _sid in FREE_STAGES:
+    if _sid in FREE_STAGES:
         continue
     TIERS[_tier_from_wave_count(int(_stage["wave_count"]))].append(_sid)
 del _stage, _sid
@@ -96,7 +95,7 @@ del _stage, _sid
 STAGE_RULES: Dict[str, StageRule] = {}
 for stage in GAME_DATA["stages"]:
     sid = stage["str_id"]
-    if sid == "W1" or sid in FREE_STAGES:
+    if sid in FREE_STAGES:
         # Free / entry stages don't belong to any tier (no token item).
         STAGE_RULES[sid] = StageRule(tier=-1, skills=stage["required_skills"])
     else:
@@ -105,3 +104,22 @@ for stage in GAME_DATA["stages"]:
             skills=stage["required_skills"],
         )
 del stage, sid
+
+
+# ---------------------------------------------------------------------------
+# Gem-pouch ordering — first-letter prefixes of stage str_ids in the order
+# stages appear in game_data.json. This is the natural play order:
+# W (tutorial) → S → V → R → ... → A (final). Used for:
+#   - Distinct-mode item naming: `Gempouch (W)`, `Gempouch (S)`, ...
+#   - Progressive-mode item count gating: the Nth Progressive Gempouch
+#     unlocks the Nth prefix in this list.
+#   - Item-id assignment: 626 + index in this list.
+# ---------------------------------------------------------------------------
+GEM_POUCH_PLAY_ORDER: List[str] = []
+_seen_pouch_prefixes: set = set()
+for _stage in GAME_DATA["stages"]:
+    _p = _stage["str_id"][0]
+    if _p not in _seen_pouch_prefixes:
+        _seen_pouch_prefixes.add(_p)
+        GEM_POUCH_PLAY_ORDER.append(_p)
+del _stage, _p, _seen_pouch_prefixes

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-from importlib.resources import files
 from typing import Dict, List
 
 from BaseClasses import ItemClassification, Region
@@ -9,8 +7,8 @@ from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
 
-from .items import GCFWItem, ItemData, item_table
-from .locations import GCFWLocation, LocationData, location_table
+from .items import GCFWItem, item_table
+from .locations import GCFWLocation, location_table
 from .options import (
     GCFWOptions,
     FieldTokenPlacement,
@@ -22,20 +20,27 @@ from .options import (
     WaveSurgeGemLevel,
     DeathLinkGracePeriod,
     DeathLinkCooldown,
-    EnemiesPerWaveMultiplier,
-    ExtraWaveCount,
-    FieldsRequired,
-    FieldsRequiredPercentage,
     AchievementRequiredEffort,
     SkillpointMultiplier,
+    GemPouchGating,
+    STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
+from .power import (
+    WEIGHT_SP,
+    WEIGHT_GEM_SKILL,
+    WEIGHT_OTHER_SKILL,
+    WEIGHT_BATTLE_TRAIT,
+    WEIGHT_XP_TOME_LEVEL,
+    WEIGHT_SHADOW_CORE_ITEM,
+    WEIGHT_TALISMAN_DIVISOR,
+    WEIGHT_GEMPOUCH,
+)
 from .rules import set_rules
 from .rulesdata import (
-    TIERS,
     GAME_DATA,
     SKILL_CATEGORIES,
-    STAGE_RULES,
+    GEM_POUCH_PLAY_ORDER,
 )
 from .rulesdata_settings import (
     game_level_elements,
@@ -77,9 +82,12 @@ def _should_skip_achievement(ach_data: dict, options) -> bool:
     if ach_data.get("untrackable", False):
         return True
     requirements = ach_data.get("requirements", [])
-    if _requirements_contain(requirements, "Trial"):
+    # Both Trial and Endurance are unsupported by AP-side gating — the
+    # mod is journey-only.  Achievements containing either token are
+    # always pruned at gen time so they never appear in the multiworld.
+    if _requirements_contain(requirements, "mTrial"):
         return True
-    if options.disable_endurance.value and _requirements_contain(requirements, "Endurance"):
+    if _requirements_contain(requirements, "mEndurance"):
         return True
     return False
 
@@ -99,6 +107,29 @@ def _can_achievement_be_met(requirements: list) -> bool:
       - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
         non-empty. Empty-levels-and-no-trait → unreachable.
     """
+    # element_prefix_map values are lists of element names.  Single-element
+    # tokens map to ["Beacon"]; group tokens like "eNonMonsters" map to the
+    # full list of members.
+    from .requirement_tokens import element_prefix_map
+
+    def _resolve_element_names(req: str):
+        """Return the list of element names a requirement refers to, or
+        None if the requirement isn't an element-style token."""
+        head = req.split(":", 1)[0].strip()
+        return element_prefix_map.get(head)
+
+    def _element_blocked(elem_name: str) -> bool:
+        """True if this element is structurally unreachable (unsupported
+        in game_level_elements, or non-monster-element with neither trait
+        nor levels)."""
+        if elem_name in game_level_elements:
+            return bool(game_level_elements[elem_name].get("unsupported", False))
+        if elem_name in non_monster_elements:
+            elem_data = non_monster_elements[elem_name]
+            return (not elem_data.get("requires_trait")
+                    and not elem_data.get("levels", []))
+        return False  # Mod-only / unknown — don't block on it.
+
     def _group_can_be_met(group: list) -> bool:
         for req in group:
             if isinstance(req, list):
@@ -106,18 +137,12 @@ def _can_achievement_be_met(requirements: list) -> bool:
                     return False
                 continue
             req = req.strip()
-            if " element" not in req.lower():
+            elem_names = _resolve_element_names(req)
+            if elem_names is None:
                 continue
-            elem_name = req.replace(" element", "").strip()
-            if elem_name in game_level_elements:
-                # Empty levels = always available (basic mechanic). Only flag as
-                # unreachable when the entry explicitly opts out via `unsupported`.
-                if game_level_elements[elem_name].get("unsupported", False):
-                    return False
-            elif elem_name in non_monster_elements:
-                elem_data = non_monster_elements[elem_name]
-                if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                    return False
+            # Group passes if any one member is reachable.  All blocked = fail.
+            if all(_element_blocked(n) for n in elem_names):
+                return False
         return True
 
     if not requirements:
@@ -233,6 +258,7 @@ class GemcraftFrostbornWrathWorld(World):
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
+            GemPouchGating,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -432,6 +458,19 @@ class GemcraftFrostbornWrathWorld(World):
         for stage in stages:
             pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
 
+        # Gempouches — added based on gem_pouch_gating option.
+        # No pouch is precollected: the starter stage (whichever prefix the
+        # seed picks) is bootstrappable via Hollow Gems supplied by the mod's
+        # HollowGemInjector when the matching pouch is missing. So every
+        # pouch goes into the pool and gets randomized.
+        pouch_mode = self.options.gem_pouch_gating.value
+        if pouch_mode == 1:  # distinct
+            for prefix in GEM_POUCH_PLAY_ORDER:
+                pool.append(self.create_item(f"Gempouch ({prefix})"))
+        elif pouch_mode == 2:  # progressive
+            for _ in range(len(GEM_POUCH_PLAY_ORDER)):
+                pool.append(self.create_item("Progressive Gempouch"))
+
         # SP bundle filler — fills all remaining unfilled location slots.
         # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
         # SkillpointMultiplier docstring for why default is 50%).
@@ -450,6 +489,11 @@ class GemcraftFrostbornWrathWorld(World):
         self.multiworld.itempool += pool
 
     def create_regions(self) -> None:
+        # Resolve the chosen start stage. Its baked `requirements` in
+        # rulesdata_levels.py are intentionally ignored at rule-time
+        # (see rules.set_rules); Menu connects directly to its region.
+        self.start_sid = STARTING_STAGE_BY_VALUE[self.options.starting_stage.value]
+
         stages = _load_stages()
         # All stages get a region (needed for the region graph).
         # W1 has no AP item/locations but is the world entry point.
@@ -542,8 +586,9 @@ class GemcraftFrostbornWrathWorld(World):
             self.multiworld.regions.append(fields_pct_region)
             menu_region.connect(fields_pct_region, "Fields Percentage")
 
-        # Connect Menu → W1 (starting stage — all other stages connect from W1 in set_rules)
-        menu_region.connect(stage_regions["W1"], "Start")
+        # Connect Menu → starting stage. All other stages connect from the
+        # starting stage in set_rules.
+        menu_region.connect(stage_regions[self.start_sid], "Start")
 
     def set_rules(self) -> None:
         set_rules(self)
@@ -662,8 +707,12 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Free stages: W1/W2/W3/W4 all have item_ap_id=None → mod unlocks them on connect.
-        free_stages = [s["str_id"] for s in stages if s["item_ap_id"] is None]
+        # The chosen starting stage is "free" — accessible from the menu with
+        # no token, and its baked `requirements` are skipped both in apworld
+        # set_rules and in the mod's FieldLogicEvaluator (which treats this
+        # list as the auto-unlocked / no-requirements set). All other stages
+        # (including the W/S stages not picked) gate normally.
+        free_stages = [self.start_sid]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -721,33 +770,26 @@ class GemcraftFrostbornWrathWorld(World):
         worn_levels     = max(1, round(multiplier * 2))
         ancient_levels  = max(1, round(multiplier * 3))
 
-        # --- In-game tracker: logic rules for client-side reachability eval ---
-        # The mod ships a LogicEvaluator that mirrors rules.py to compute which
-        # stages are currently in logic. Keep this in sync with rules.py.
-        stage_tier_map: Dict[str, int] = {
-            sid: rule.tier
-            for sid, rule in STAGE_RULES.items()
-            if rule.tier >= 0
-        }
-        stage_skills_map: Dict[str, List[str]] = {
-            sid: list(rule.skills)
-            for sid, rule in STAGE_RULES.items()
-            if rule.skills
-        }
-        tier_stage_counts: Dict[str, int] = {
-            str(t): len(stages) for t, stages in TIERS.items()
-        }
+        # --- In-game tracker: per-achievement requirements_power map ---
+        # Stage logic (WIZLOCK skills + prereq tokens + talisman counters)
+        # is shipped via logic.json (generate_logic_json.py); slot_data here
+        # only carries options + the achievement-side power-gate map.
         # Build achievement requirements map: achievement name → [requirements]
+        # AND per-achievement required_power (when set) so the mod's
+        # AchievementLogicEvaluator can apply the same gate for in-logic display.
         achievement_requirements_map: Dict[str, list] = {}
+        achievement_required_power_map: Dict[str, int] = {}
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
 
-            # Extract requirements for each achievement
             for ach_name, ach_data in all_achievements.items():
                 requirements = ach_data.get("requirements", [])
                 if requirements:
                     achievement_requirements_map[ach_name] = requirements
+                explicit_power = ach_data.get("required_power")
+                if explicit_power is not None and int(explicit_power) > 0:
+                    achievement_required_power_map[ach_name] = int(explicit_power)
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Inverted from rulesdata_settings.{game_level_elements, non_monster_elements}.
@@ -778,14 +820,27 @@ class GemcraftFrostbornWrathWorld(World):
             "ancient_grimoire_levels": ancient_levels,
             "token_map":             token_map,
             "free_stages":           free_stages,
-            "token_requirement_percent": self.options.tier_requirements_percent.value,
-            # Tracker logic rules (see LogicEvaluator.as)
-            "logic_rules_version":   1,
+            # Per-stage logic (WIZLOCK skills, prereq Field tokens, talisman
+            # row/column counts, skillPoints, etc.) lives in logic.json —
+            # generated by py-scripts/generate_logic_json.py and embedded in
+            # the mod SWF. slot_data only carries options and goal data now.
+            "logic_rules_version":   2,
             "skill_categories":      SKILL_CATEGORIES,
-            "cumulative_skill_reqs": {},
-            "stage_tier":            stage_tier_map,
-            "stage_skills":          stage_skills_map,
-            "tier_stage_counts":     tier_stage_counts,
+            # Achievement-side power gating still runs through apworld fill
+            # (rules._eval_req → has_power); these fields let the mod display
+            # the same gate in the in-logic UI.
+            "achievement_required_power": achievement_required_power_map,
+            "power_scale":           self.options.power_scale.value,
+            "power_weights":         {
+                "sp":              WEIGHT_SP,
+                "gem_skill":       WEIGHT_GEM_SKILL,
+                "other_skill":     WEIGHT_OTHER_SKILL,
+                "battle_trait":    WEIGHT_BATTLE_TRAIT,
+                "xp_tome_level":   WEIGHT_XP_TOME_LEVEL,
+                "shadow_core":     WEIGHT_SHADOW_CORE_ITEM,
+                "talisman_divisor": WEIGHT_TALISMAN_DIVISOR,
+                "gempouch":        WEIGHT_GEMPOUCH,
+            },
             "stage_elements":        stage_elements,
             "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
@@ -799,6 +854,17 @@ class GemcraftFrostbornWrathWorld(World):
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
+            # Gem-pouch gating: per-prefix gem-orb suppression. Mod uses these
+            # to decide whether to spawn gem orbs on level start, and to
+            # display "needs Gempouch X" in tooltips.
+            #   gem_pouch_gating: 0=off, 1=distinct, 2=progressive
+            #   gem_pouch_play_order: list of prefix letters in play order;
+            #     for distinct, item AP id = 626 + index in this list;
+            #     for progressive, the Nth Progressive Gempouch covers the
+            #     first N prefixes in this list.
+            "gem_pouch_gating":        self.options.gem_pouch_gating.value,
+            "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
+            "gem_pouch_progressive_id": item_table["Progressive Gempouch"].id,
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,

@@ -12,38 +12,52 @@ package tracker {
      * queries to the FieldLogicEvaluator (via AV.sessionData.fieldsInLogic for
      * simple lookups, or directly for wave-count checks).
      *
-     * Handles all 14 requirement string patterns found in achievement_logic.json:
-     *   "X skill"               — hasItem(700 + SKILL_NAMES.indexOf(X))
-     *   "X skill | Y skill"     — pipe-separated OR
-     *   "X element"             — any stage in elementStages[X] is in fieldsInLogic
-     *   "X Battle trait"        — hasItem(800 + TRAIT_NAMES.indexOf(X))
-     *   "Any Battle trait"      — any item 800-814
-     *   "Field A4"              — fieldsInLogic["A4"]
-     *   "Field N1, U1 or R5"   — comma/or-separated OR
-     *   "trial"                 — always false (journey-only mod)
-     *   "endurance"             — always false
-     *   "endurance and trial"   — always false
-     *   "strikeSpells: N"       — count(712-714) >= N
-     *   "enhancementSpells: N"  — count(715-717) >= N
-     *   "gemSkills: N"          — count(706-711) >= N
-     *   "BattleTraits: N"       — count(800-814) >= N
-     *   "minWave: N"            — FieldLogicEvaluator.hasInLogicFieldWithMinWaves(N)
-     *   "fieldToken: N"         — count(1-122) >= N
-     *   "minMonsterHP: N"       — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterHP(N)
-     *   "minMonsterArmor: N"    — FieldLogicEvaluator.hasInLogicFieldWithMinMonsterArmor(N)
-     *   "minMonsters: N"        — FieldLogicEvaluator.hasInLogicFieldWithMinMonsters(N)
-     *   "minSwarmlingArmor: N"  — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlingArmor(N)
-     *   "minSwarmlings: N"      — FieldLogicEvaluator.hasInLogicFieldWithMinSwarmlings(N)
-     *   "beforeWave: N"         — same gate as minWave (a stage with N+ waves exists)
-     *   "shadowCore: N"         — count(1000-1016) + count(1300-1351) >= N
-     *   "wizardLevel: N"        — count(1100-1199) >= ceil(N/2) — half from XP items, half from natural play
+     * Vocabulary (mirrors apworld/gcfw/rules.py):
+     *   sX            — skill check; X is the PascalCase skill name (sBolt, sIceShards…)
+     *   tX            — battle-trait check (tHaste, tRitual, tAdaptiveCarapace…)
+     *   eX            — element-presence check (eBeacon, eMonsterNest…)
+     *   eX:N          — element-with-count check (eBeacon:5 = stage with BeaconCount >= 5)
+     *   wX            — weather (wRain, wSnow) — modelled as elements
+     *   mTrial / mEndurance — mode gates; always-false in journey-only
+     *   Field A4      — legacy stage-in-logic check (apworld emits Field_X4 server-side)
+     *
+     *   Counters (key:N):
+     *     skills:N, strikeSpells:N, enhancementSpells:N, gemSkills:N,
+     *     battleTraits:N (case-insensitive),
+     *     minWave:N / beforeWave:N, fieldToken:N, shadowCore:N, wizardLevel:N,
+     *     skillPoints:N, talismanRow:N, talismanColumn:N,
+     *     talismanCornerFragment:N, talismanEdgeFragment:N,
+     *     talismanCenterFragment:N, talismanFragments:N,
+     *     minMonsters:N, minMonsterHP:N, minMonsterArmor:N,
+     *     minSwarmlings:N, minSwarmlingArmor:N,
+     *     minGiants:N, minReavers:N, markedMonster:N, minMonstersBeforeWave12:N,
+     *     gemPouch:<prefix>
      */
     public class LogicEvaluator {
+
+        // `eNonMonsters` is a group token resolving to "any of these
+        // non-monster creatures is reachable on a stage in logic". Mirrors
+        // the `non_monsters_group` list in apworld/gcfw/rulesdata_settings.py.
+        private static const NON_MONSTERS:Array = [
+            "Apparition", "Shadow", "Specter", "Spire", "Wizard Hunter", "Wraith",
+        ];
 
         private var _logger:Logger;
         private var _modName:String;
         private var _fieldEvaluator:FieldLogicEvaluator;
         private var _elementStages:Object; // element name -> Array<String> of stage strIds
+
+        // Prefix-encoded → game-name lookup tables (built in configure()).
+        private var _skillPrefixMap:Object   = {}; // "sBolt"   -> "Bolt"
+        private var _traitPrefixMap:Object   = {}; // "tHaste"  -> "Haste"
+        private var _elementPrefixMap:Object = {}; // "eBeacon" -> "Beacon"
+
+        // Talisman-fragment AP id buckets by type (built in configure()).
+        // Filled from AV.serverData.talismanMap (apId -> "seed/rarity/type/upgradeLevel").
+        private var _edgeFragIds:Array   = [];
+        private var _cornerFragIds:Array = [];
+        private var _innerFragIds:Array  = [];
+        private var _allFragIds:Array    = [];
 
         public function LogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
@@ -58,6 +72,8 @@ package tracker {
                                   elementStages:Object):void {
             _fieldEvaluator = fieldEvaluator;
             _elementStages  = elementStages;
+            _buildPrefixMaps();
+            _buildTalismanIdBuckets();
         }
 
         /** Read access to the element → stage strIds map (for in-level evaluator,
@@ -143,6 +159,64 @@ package tracker {
         public function describeRequirement(req:String):String {
             var lower:String = req.toLowerCase();
 
+            // ---- New prefix vocabulary descriptions ---------------------
+            if (req == "mTrial" || req == "mEndurance")
+            {
+                return null;
+            }
+            if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
+            {
+                return "Requires any non-monster creature stage (Shadow / Specter / Spire / Wizard Hunter / Wraith / Apparition)";
+            }
+            if (req.length >= 2 && _isUpper(req.charAt(1)) && req.indexOf(":") < 0)
+            {
+                var firstCharD:String = req.charAt(0);
+                if (firstCharD == "s" && _skillPrefixMap[req] != null)
+                {
+                    return "Requires " + _skillPrefixMap[req] + " skill";
+                }
+                if (firstCharD == "t" && _traitPrefixMap[req] != null)
+                {
+                    return "Requires " + _traitPrefixMap[req] + " Battle trait";
+                }
+                if ((firstCharD == "e" || firstCharD == "w"))
+                {
+                    var elemD:String = _elementPrefixMap[req];
+                    if (elemD == null)
+                    {
+                        elemD = req.substring(1);
+                    }
+                    if (_elementStages != null)
+                    {
+                        var stagesD:Array = _elementStages[elemD] as Array;
+                        if (stagesD != null && stagesD.length > 0)
+                        {
+                            var sortedD:Array = stagesD.concat();
+                            sortedD.sort(Array.CASEINSENSITIVE);
+                            if (sortedD.length == 1)
+                            {
+                                return "Requires " + elemD + " on " + sortedD[0];
+                            }
+                            return "Requires " + elemD + " (any of " + sortedD.join(", ") + ")";
+                        }
+                    }
+                    return "Requires " + elemD;
+                }
+            }
+            if (req.length >= 2 && req.charAt(0) == "e" && _isUpper(req.charAt(1)) && req.indexOf(":") > 0)
+            {
+                var ecD:int = req.indexOf(":");
+                var eheadD:String = req.substring(0, ecD);
+                var ecountD:int = int(_trim(req.substring(ecD + 1)));
+                var elemNameD:String = _elementPrefixMap[eheadD];
+                if (elemNameD == null)
+                {
+                    elemNameD = eheadD.substring(1);
+                }
+                return "Requires stage with " + ecountD + "+ " + elemNameD;
+            }
+            // -------------------------------------------------------------
+
             if (lower.indexOf(" skill") >= 0) {
                 if (req.indexOf("|") >= 0) {
                     var parts:Array = req.split("|");
@@ -187,6 +261,10 @@ package tracker {
             if (lower.indexOf("strikespells")      == 0) return "Requires " + n + " strike spells";
             if (lower.indexOf("enhancementspells") == 0) return "Requires " + n + " enhancement spells";
             if (lower.indexOf("gemskills")         == 0) return "Requires " + n + " gem skills";
+            if (lower.indexOf("gempouch:")         == 0) {
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                return "Requires Gempouch (" + pouchPrefix + ")";
+            }
             if (lower.indexOf("battletraits")      == 0) return "Requires " + n + " battle traits";
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
@@ -195,9 +273,17 @@ package tracker {
             if (lower.indexOf("wizardlevel")       == 0) return "Requires " + ((n + 1) >> 1) + "+ XP items (toward wizard level " + n + ")";
             if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
             if (lower.indexOf("minmonsterarmor")   == 0) return "Requires stage with monster armor " + n + "+";
+            if (lower.indexOf("minmonstersbeforewave12") == 0) return "Requires stage with " + n + "+ monsters and 12+ waves";
             if (lower.indexOf("minmonsters")       == 0) return "Requires stage with " + n + "+ monsters";
             if (lower.indexOf("minswarmlingarmor") == 0) return "Requires stage with swarmling armor " + n + "+";
             if (lower.indexOf("minswarmlings")     == 0) return "Requires stage that spawns " + n + "+ swarmlings";
+            if (lower.indexOf("mingiants")         == 0) return "Requires stage that spawns " + n + "+ giants";
+            if (lower.indexOf("minreavers")        == 0) return "Requires stage that spawns " + n + "+ reavers";
+            if (lower.indexOf("markedmonster")     == 0) return "Requires stage that spawns marked monsters";
+            if (lower.indexOf("talismancornerfragment") == 0) return "Requires " + n + "+ corner talisman fragments";
+            if (lower.indexOf("talismanedgefragment")   == 0) return "Requires " + n + "+ edge talisman fragments";
+            if (lower.indexOf("talismancenterfragment") == 0) return "Requires " + n + "+ center talisman fragments";
+            if (lower.indexOf("talismanfragments")      == 0) return "Requires " + n + "+ talisman fragments";
 
             return "Requires " + req;
         }
@@ -205,6 +291,80 @@ package tracker {
         /** Evaluate a single requirement string.  Unknown patterns return true. */
         public function evaluateRequirement(req:String):Boolean {
             var lower:String = req.toLowerCase();
+
+            // ---- New prefix vocabulary -----------------------------------
+            // Mode tokens: journey-only mod, so trial/endurance never satisfy.
+            if (req == "mTrial" || req == "mEndurance")
+            {
+                return false;
+            }
+            // eNonMonsters[:N] — any of the Ritual-spawned creatures is
+            // reachable on a stage in logic.  The count is unused.
+            if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
+            {
+                for each (var nmName:String in NON_MONSTERS)
+                {
+                    if (_elementInLogic(nmName))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            // eWizardStash — every stage has a wizard stash structurally,
+            // but each is locked behind a per-stage key item (AP IDs
+            // 1400..1521).  Pass the gate iff the player holds any key.
+            if (req == "eWizardStash" || req.indexOf("eWizardStash:") == 0)
+            {
+                return AV.sessionData.countItemsInRange(1400, 1521) > 0;
+            }
+            // Prefix tokens (sBolt / tHaste / eBeacon / wRain).  Must take
+            // precedence over the legacy " skill"/" element"/" trait" forms
+            // and over the colon-counter dispatch below.
+            if (req.length >= 2 && _isUpper(req.charAt(1)) && req.indexOf(":") < 0)
+            {
+                var firstChar:String = req.charAt(0);
+                if (firstChar == "s")
+                {
+                    var sName:String = _skillPrefixMap[req];
+                    if (sName != null)
+                    {
+                        var sIdx:int = SessionData.SKILL_NAMES.indexOf(sName);
+                        return sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx);
+                    }
+                }
+                else if (firstChar == "t")
+                {
+                    var tName:String = _traitPrefixMap[req];
+                    if (tName != null)
+                    {
+                        var tIdx:int = TraitUnlocker.BATTLE_TRAIT_NAMES.indexOf(tName);
+                        return tIdx >= 0 && AV.sessionData.hasItem(800 + tIdx);
+                    }
+                }
+                else if (firstChar == "e" || firstChar == "w")
+                {
+                    var elemMapped:String = _elementPrefixMap[req];
+                    if (elemMapped != null)
+                    {
+                        return _elementInLogic(elemMapped);
+                    }
+                    // Mod-only / unmapped element: treat token body as the name.
+                    return _elementInLogic(req.substring(1));
+                }
+            }
+            // eX:N — element with a per-stage count.
+            if (req.length >= 2 && req.charAt(0) == "e" && _isUpper(req.charAt(1)) && req.indexOf(":") > 0)
+            {
+                var ec:int = req.indexOf(":");
+                var ehead:String = req.substring(0, ec);
+                var ecount:int = int(_trim(req.substring(ec + 1)));
+                var enameMapped:String = _elementPrefixMap[ehead];
+                var nameForField:String = (enameMapped != null) ? _pascalNoSpaces(enameMapped) : ehead.substring(1);
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
+            }
+            // -------------------------------------------------------------
 
             // "X skill" or "X skill | Y skill" (pipe = OR)
             if (lower.indexOf(" skill") >= 0) {
@@ -292,9 +452,35 @@ package tracker {
                 return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
             }
             if (lower.indexOf("gemskills") == 0) {
+                // When pouch gating is active, gemSkills:N is replaced by
+                // gemPouch:<prefix> on every stage. The N-skills count is
+                // still meaningful for achievements (gem skills 706-711 are
+                // still in the pool), so leave this gate alone.
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
             }
+
+            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Inactive in
+            // off mode (returns true); in distinct mode requires the named
+            // pouch item; in progressive mode requires enough Progressive
+            // Gempouch copies for that prefix's position in the play order.
+            if (lower.indexOf("gempouch:") == 0) {
+                var mode:int = AV.serverData.serverOptions.gemPouchGating;
+                if (mode == 0) return true;
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                if (order == null) return true;
+                var idx:int = order.indexOf(pouchPrefix);
+                if (idx < 0) return true; // unknown prefix — don't block
+                if (mode == 1) {
+                    return AV.sessionData.hasItem(626 + idx);
+                }
+                // mode == 2: progressive
+                var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
+            }
+
             if (lower.indexOf("battletraits") == 0) {
                 var btNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
@@ -316,13 +502,14 @@ package tracker {
                 return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
             }
 
-            // "shadowCore: N" — counts AP-distributed Shadow Core stash items.
-            // Specific stashes 1000-1016, extras 1300-1351 (ranges per items.py).
+            // "shadowCore: N" — sum core amounts of held shadow-core stash
+            // items.  Mirrors the apworld gate: each stash grants a specific
+            // amount (per slot_data.shadow_core_map: apId -> amount), and we
+            // need the sum of held amounts to reach N.  Only items the player
+            // actually has count.
             if (lower.indexOf("shadowcore") == 0) {
                 var scNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                var scHave:int = AV.sessionData.countItemsInRange(1000, 1016)
-                               + AV.sessionData.countItemsInRange(1300, 1351);
-                return scHave >= scNeed;
+                return _sumShadowCores() >= scNeed;
             }
 
             // "wizardLevel: N" — half from AP-distributed XP items (1100-1199),
@@ -331,6 +518,27 @@ package tracker {
                 var wlNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 var itemsNeeded:int = (wlNeed + 1) >> 1; // ceil(N/2)
                 return AV.sessionData.countItemsInRange(1100, 1199) >= itemsNeeded;
+            }
+
+            // "talismanRow: N" — at least N complete matching-icon rows from
+            // the 3x3 grid of progression talisman fragments. Row membership
+            // is hardcoded apworld-side; the AP IDs ship in slot_data /
+            // logic.json's matchingTalismans block.
+            if (lower.indexOf("talismanrow") == 0) {
+                var trNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countMatchingTalismanSets(true) >= trNeed;
+            }
+            // "talismanColumn: N" — at least N complete columns of the same
+            // grid (cross-icon position groups).
+            if (lower.indexOf("talismancolumn") == 0) {
+                var tcNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countMatchingTalismanSets(false) >= tcNeed;
+            }
+            // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
+            // items (1700..1709, bundle apId-1699 = SP value).
+            if (lower.indexOf("skillpoints") == 0) {
+                var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countSkillPoints() >= spNeed;
             }
 
             // Level monster stat requirements
@@ -355,6 +563,61 @@ package tracker {
             if (lower.indexOf("minswarmlings") == 0) {
                 var swNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinSwarmlings(swNeed);
+            }
+            // "minGiants:N" / "minReavers:N" — stage-with-N-of-monster-type checks.
+            if (lower.indexOf("mingiants") == 0)
+            {
+                var nGiants:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinGiants(nGiants);
+            }
+            if (lower.indexOf("minreavers") == 0)
+            {
+                var nReavers:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null && _fieldEvaluator.hasInLogicFieldWithMinReavers(nReavers);
+            }
+            // "minMonstersBeforeWave12:N" — composite gate (only used by one
+            // achievement). At gen time and runtime we approximate as
+            // "stage with >=N monsters AND >=12 waves is in logic".
+            if (lower.indexOf("minmonstersbeforewave12") == 0)
+            {
+                var mbwNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMinMonstersBeforeWave12(mbwNeed);
+            }
+            // "markedMonster:N" — uses the dedicated MarkedMonsterCount
+            // level-stat field (populated from a simulator that estimates
+            // expected marked monsters per stage).  Passes when any in-logic
+            // stage's expected MarkedMonsterCount >= N.
+            if (lower.indexOf("markedmonster") == 0)
+            {
+                var mmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMarkedMonsterCount(mmNeed);
+            }
+            // Talisman-fragment-by-type counters.  Bucket lists are built
+            // from talismanMap on configure(); each fragment AP id is in
+            // exactly one of edge/corner/inner.
+            if (lower.indexOf("talismancornerfragment") == 0)
+            {
+                var tcfNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countItemsInList(_cornerFragIds) >= tcfNeed;
+            }
+            if (lower.indexOf("talismanedgefragment") == 0)
+            {
+                var tefNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countItemsInList(_edgeFragIds) >= tefNeed;
+            }
+            if (lower.indexOf("talismancenterfragment") == 0)
+            {
+                var tcenNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countItemsInList(_innerFragIds) >= tcenNeed;
+            }
+            // Total fragments (any type).  Checked AFTER the typed ones
+            // because "talismanFragments" is not a prefix of those names.
+            if (lower.indexOf("talismanfragments") == 0)
+            {
+                var tfgNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countItemsInList(_allFragIds) >= tfgNeed;
             }
 
             // Unknown requirement — don't block
@@ -397,6 +660,90 @@ package tracker {
          *  check (`evaluateRequirement`) for loadout-independent counters. */
         public function evaluateInLevelRequirement(req:String, currentStrId:String):Boolean {
             var lower:String = req.toLowerCase();
+
+            // ---- New prefix vocabulary -----------------------------------
+            if (req == "mTrial" || req == "mEndurance")
+            {
+                return false;
+            }
+            // eNonMonsters[:N] in-level: pass if the current stage hosts
+            // any of the Ritual-spawned creatures.
+            if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
+            {
+                for each (var nmNameIL:String in NON_MONSTERS)
+                {
+                    if (_elementStages != null)
+                    {
+                        var nmStages:Array = _elementStages[nmNameIL] as Array;
+                        if (nmStages != null)
+                        {
+                            for each (var nmStId:String in nmStages)
+                            {
+                                if (nmStId == currentStrId)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+            if (req.length >= 2 && _isUpper(req.charAt(1)) && req.indexOf(":") < 0)
+            {
+                var firstCharIL:String = req.charAt(0);
+                if (firstCharIL == "s")
+                {
+                    var sNameIL:String = _skillPrefixMap[req];
+                    if (sNameIL != null)
+                    {
+                        return _isSkillActive(sNameIL);
+                    }
+                }
+                else if (firstCharIL == "t")
+                {
+                    var tNameIL:String = _traitPrefixMap[req];
+                    if (tNameIL != null)
+                    {
+                        var tIdxIL:int = TraitUnlocker.BATTLE_TRAIT_NAMES.indexOf(tNameIL);
+                        return tIdxIL >= 0
+                            && AV.sessionData.hasItem(800 + tIdxIL)
+                            && _traitLevel(tIdxIL) > 0;
+                    }
+                }
+                else if (firstCharIL == "e" || firstCharIL == "w")
+                {
+                    var elemMappedIL:String = _elementPrefixMap[req];
+                    var lookupNameIL:String = (elemMappedIL != null) ? elemMappedIL : req.substring(1);
+                    if (_elementStages != null)
+                    {
+                        var stagesIL:Array = _elementStages[lookupNameIL] as Array;
+                        if (stagesIL != null && stagesIL.length > 0)
+                        {
+                            for each (var stIdIL:String in stagesIL)
+                            {
+                                if (stIdIL == currentStrId)
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+            // eX:N — stage-element count check against the CURRENT stage's stats.
+            if (req.length >= 2 && req.charAt(0) == "e" && _isUpper(req.charAt(1)) && req.indexOf(":") > 0)
+            {
+                var ecIL:int = req.indexOf(":");
+                var eheadIL:String = req.substring(0, ecIL);
+                var ecountIL:int = int(_trim(req.substring(ecIL + 1)));
+                var enameMappedIL:String = _elementPrefixMap[eheadIL];
+                var fieldName:String = ((enameMappedIL != null) ? _pascalNoSpaces(enameMappedIL) : eheadIL.substring(1)) + "Count";
+                return _stat(currentStrId, fieldName) >= ecountIL;
+            }
+            // -------------------------------------------------------------
 
             // "X skill" / "X skill | Y skill" — must be unlocked AND have level > 0
             if (lower.indexOf(" skill") >= 0) {
@@ -458,7 +805,8 @@ package tracker {
                 return false;
             }
 
-            // Mode gates — mod is journey-only
+            // Mode gates — mod is journey-only.  New tokens (mTrial / mEndurance)
+            // are caught up top; legacy lowercase strings are kept for old data.
             if (lower == "trial" || lower == "endurance" || lower == "endurance and trial") {
                 return false;
             }
@@ -468,6 +816,22 @@ package tracker {
             if (lower.indexOf("minwave") == 0 || lower.indexOf("beforewave") == 0) {
                 var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _stat(currentStrId, "WaveCount") >= wNeed;
+            }
+            if (lower.indexOf("mingiants") == 0)
+            {
+                var nGiantsIL:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "GiantCount") >= nGiantsIL;
+            }
+            if (lower.indexOf("minreavers") == 0)
+            {
+                var nReaversIL:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "ReaverCount") >= nReaversIL;
+            }
+            if (lower.indexOf("minmonstersbeforewave12") == 0)
+            {
+                var mbwNeedIL:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _stat(currentStrId, "MonsterCount") >= mbwNeedIL
+                    && _stat(currentStrId, "WaveCount") >= 12;
             }
             if (lower.indexOf("minmonsterhp") == 0) {
                 var mhpNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
@@ -543,5 +907,197 @@ package tracker {
         private function _trim(s:String):String {
             return s.replace(/^\s+|\s+$/g, "");
         }
+
+        /**
+         * Count complete matching-talisman sets (rows or columns) the player
+         * holds. Both row and column groupings come from
+         * AV.serverData.matchingTalismans (loaded from logic.json), each as
+         * a 3-element array of arrays of AP IDs.
+         */
+        private function _countMatchingTalismanSets(rows:Boolean):int {
+            var mt:Object = AV.serverData != null ? AV.serverData.matchingTalismans : null;
+            if (mt == null) return 0;
+            var sets:Array = (rows ? mt.rows : mt.columns) as Array;
+            if (sets == null) return 0;
+            var n:int = 0;
+            for each (var set:Array in sets) {
+                if (set == null) continue;
+                var ok:Boolean = true;
+                for each (var apId:* in set) {
+                    if (!AV.sessionData.hasItem(int(apId))) { ok = false; break; }
+                }
+                if (ok) n++;
+            }
+            return n;
+        }
+
+        /**
+         * Sum SP across collected Skillpoint Bundle items. Bundle apId-1699
+         * is the bundle's SP value (1..10). state.has equivalent is
+         * AV.sessionData.hasItem; we don't track per-AP-id duplicates, so
+         * each held bundle counts once. Mirrors apworld's _count_skill_points
+         * with the same approximation.
+         */
+        private function _countSkillPoints():int {
+            var total:int = 0;
+            for (var size:int = 1; size <= 10; size++) {
+                if (AV.sessionData.hasItem(1699 + size))
+                    total += size;
+            }
+            return total;
+        }
+
+        /**
+         * Sum core amounts of held shadow-core stash items.  shadowCoreMap
+         * maps apId(str) -> amount(int), shipped via slot_data.  Iterates
+         * the map and sums amounts for every item the player currently has.
+         */
+        private function _sumShadowCores():int {
+            if (AV.serverData == null || AV.serverData.shadowCoreMap == null)
+            {
+                return 0;
+            }
+            var total:int = 0;
+            var map:Object = AV.serverData.shadowCoreMap;
+            for (var apIdStr:String in map)
+            {
+                if (AV.sessionData.hasItem(int(apIdStr)))
+                {
+                    total += int(map[apIdStr]);
+                }
+            }
+            return total;
+        }
+
+        // -----------------------------------------------------------------
+        // Prefix vocabulary helpers
+        // -----------------------------------------------------------------
+
+        private function _isUpper(ch:String):Boolean {
+            return ch >= "A" && ch <= "Z";
+        }
+
+        /** Convert a space-separated game name to PascalCase with no spaces.
+         *  e.g. "Strength in Numbers" -> "StrengthInNumbers". */
+        private function _pascalNoSpaces(name:String):String {
+            if (name == null || name.length == 0)
+            {
+                return "";
+            }
+            var parts:Array = name.split(/\s+/);
+            var result:String = "";
+            for each (var p:String in parts)
+            {
+                if (p == null || p.length == 0)
+                {
+                    continue;
+                }
+                result += p.charAt(0).toUpperCase() + p.substring(1);
+            }
+            return result;
+        }
+
+        private function _buildPrefixMaps():void {
+            _skillPrefixMap   = {};
+            _traitPrefixMap   = {};
+            _elementPrefixMap = {};
+            if (_elementStages != null)
+            {
+                for (var elemName:String in _elementStages)
+                {
+                    _elementPrefixMap["e" + _pascalNoSpaces(elemName)] = elemName;
+                }
+            }
+            // Weather entries may not be in elementStages; map them explicitly.
+            if (_elementPrefixMap["wRain"] == null)
+            {
+                _elementPrefixMap["wRain"] = "Rain";
+            }
+            if (_elementPrefixMap["wSnow"] == null)
+            {
+                _elementPrefixMap["wSnow"] = "Snow";
+            }
+            for each (var skillName:String in SessionData.SKILL_NAMES)
+            {
+                _skillPrefixMap["s" + _pascalNoSpaces(skillName)] = skillName;
+            }
+            for each (var traitName:String in TraitUnlocker.BATTLE_TRAIT_NAMES)
+            {
+                _traitPrefixMap["t" + _pascalNoSpaces(traitName)] = traitName;
+            }
+        }
+
+        /** Group every talisman fragment AP id into edge/corner/inner buckets
+         *  by parsing the talismanMap value (slash-separated; index 2 is type:
+         *  0=EDGE, 1=CORNER, 2=INNER). */
+        private function _buildTalismanIdBuckets():void {
+            _edgeFragIds   = [];
+            _cornerFragIds = [];
+            _innerFragIds  = [];
+            _allFragIds    = [];
+            var talMap:Object = (AV.serverData != null) ? AV.serverData.talismanMap : null;
+            if (talMap == null)
+            {
+                return;
+            }
+            for (var apIdStr:String in talMap)
+            {
+                var apId:int = int(apIdStr);
+                var parts:Array = String(talMap[apIdStr]).split("/");
+                if (parts.length < 3)
+                {
+                    continue;
+                }
+                var typeId:int = int(parts[2]);
+                _allFragIds.push(apId);
+                if (typeId == 0)
+                {
+                    _edgeFragIds.push(apId);
+                }
+                else if (typeId == 1)
+                {
+                    _cornerFragIds.push(apId);
+                }
+                else if (typeId == 2)
+                {
+                    _innerFragIds.push(apId);
+                }
+            }
+        }
+
+        private function _countItemsInList(ids:Array):int {
+            var c:int = 0;
+            for each (var apId:int in ids)
+            {
+                if (AV.sessionData.hasItem(apId))
+                {
+                    c++;
+                }
+            }
+            return c;
+        }
+
+        /** Returns true if any reachable in-logic stage hosts the named element. */
+        private function _elementInLogic(elemName:String):Boolean {
+            if (_elementStages == null)
+            {
+                return true;
+            }
+            var stages:Array = _elementStages[elemName] as Array;
+            if (stages == null || stages.length == 0)
+            {
+                // No mapping or empty mapping = always available (Tower / Wall etc.).
+                return true;
+            }
+            for each (var stId:String in stages)
+            {
+                if (AV.sessionData.fieldsInLogic[stId] == true)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }
