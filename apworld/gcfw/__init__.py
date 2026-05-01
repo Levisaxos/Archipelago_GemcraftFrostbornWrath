@@ -42,10 +42,7 @@ from .rulesdata import (
     SKILL_CATEGORIES,
     GEM_POUCH_PLAY_ORDER,
 )
-from .rulesdata_settings import (
-    game_level_elements,
-    non_monster_elements,
-)
+from .rulesdata_levels import level_requirements as LEVEL_DATA
 
 
 def _load_game_data():
@@ -98,19 +95,14 @@ def _can_achievement_be_met(requirements: list) -> bool:
     Returns True if any AND-group can be met, False only if all groups are blocked.
 
     Element-handling convention (mirrors rules.py `_eval_req`):
-      - game_level_elements with `levels: []` → always available (e.g. Tower, Wall,
-        Wizard Stash — basic mechanics that exist on every stage). Token is
-        recognized but doesn't gate. To explicitly mark an element as unreachable,
-        set `unsupported: True` on the element entry; then this function returns
-        False so the achievement gets pruned at gen time. (Today no achievements
-        use such elements — Broken Seal previously did, and is now `untrackable`.)
-      - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
-        non-empty. Empty-levels-and-no-trait → unreachable.
+      An element is structurally reachable iff at least one stage in
+      LEVEL_DATA carries its <Pascal>Count field with a positive value.
+      Universal-presence elements (Tower / Wall / Wizard Stash / Marked
+      Monster — no Count field anywhere) fall through to "always satisfied"
+      and never block.
     """
-    # element_prefix_map values are lists of element names.  Single-element
-    # tokens map to ["Beacon"]; group tokens like "eNonMonsters" map to the
-    # full list of members.
     from .requirement_tokens import element_prefix_map
+    from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
 
     def _resolve_element_names(req: str):
         """Return the list of element names a requirement refers to, or
@@ -119,16 +111,16 @@ def _can_achievement_be_met(requirements: list) -> bool:
         return element_prefix_map.get(head)
 
     def _element_blocked(elem_name: str) -> bool:
-        """True if this element is structurally unreachable (unsupported
-        in game_level_elements, or non-monster-element with neither trait
-        nor levels)."""
-        if elem_name in game_level_elements:
-            return bool(game_level_elements[elem_name].get("unsupported", False))
-        if elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            return (not elem_data.get("requires_trait")
-                    and not elem_data.get("levels", []))
-        return False  # Mod-only / unknown — don't block on it.
+        """True if this element is structurally unreachable — the element is
+        tracked per-stage but no stage actually hosts it.  Universal-presence
+        elements (no Count field anywhere) are never blocked."""
+        if elem_name == "Wizard Stash":
+            return False  # gated by per-stage keys, not by stage presence
+        field = _element_count_field(elem_name)
+        if field not in _PRESENT_COUNT_FIELDS:
+            return False  # universal / untracked — assume reachable
+        # Tracked but no stage carries a positive count -> unreachable.
+        return not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values())
 
     def _group_can_be_met(group: list) -> bool:
         for req in group:
@@ -213,26 +205,27 @@ def _get_filter_reason(requirements: list) -> str:
     Determine why an achievement was filtered out.
     Returns a string describing the reason.
     """
-    for req in requirements:
-        req = req.strip()
+    from .requirement_tokens import element_prefix_map
+    from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
 
-        # Skip non-element requirements
-        if " element" not in req.lower():
+    def _flatten(reqs):
+        for r in reqs:
+            if isinstance(r, list):
+                yield from _flatten(r)
+            else:
+                yield r
+
+    for req in _flatten(requirements):
+        req = str(req).strip()
+        head = req.split(":", 1)[0].strip()
+        elem_names = element_prefix_map.get(head)
+        if elem_names is None:
             continue
-
-        elem_name = req.replace(" element", "").strip()
-
-        # Check game_level_elements
-        if elem_name in game_level_elements:
-            if not game_level_elements[elem_name].get("levels", []):
-                return f"Missing level mapping for '{elem_name}'"
-
-        # Check non_monster_elements
-        elif elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                return f"Trait-gated element without trait: '{elem_name}'"
-
+        for elem_name in elem_names:
+            field = _element_count_field(elem_name)
+            if field in _PRESENT_COUNT_FIELDS:
+                if not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values()):
+                    return f"No stage hosts element '{elem_name}'"
     return "Unknown reason"
 
 
@@ -792,22 +785,28 @@ class GemcraftFrostbornWrathWorld(World):
                     achievement_required_power_map[ach_name] = int(explicit_power)
 
         # Per-stage element/monster lists for the in-game field tooltip.
-        # Inverted from rulesdata_settings.{game_level_elements, non_monster_elements}.
-        # Tower / Wall / Wizard Stash are universal basics — omitted from the UI
-        # to keep the tooltip scannable.
-        SKIP_ELEMENTS = {"Tower", "Wall", "Wizard Stash"}
+        # Derived from per-stage Count fields in rulesdata_levels.py.
+        # Members of eNonMonsters (Shadow / Specter / etc.) feed the
+        # "monsters" tooltip column; everything else feeds "elements".
+        # Tower / Wall / Wizard Stash are universal basics with no Count
+        # field, so they fall out automatically.
+        from .requirement_tokens import element_prefix_map
+        from .rules import _element_count_field
+
+        monster_names = set(element_prefix_map.get("eNonMonsters", []))
         stage_elements: Dict[str, List[str]] = {}
         stage_monsters: Dict[str, List[str]] = {}
-        for elem_name, data in game_level_elements.items():
-            if elem_name in SKIP_ELEMENTS:
+        for token, names in element_prefix_map.items():
+            if len(names) != 1:
+                continue  # group tokens (eNonMonsters) handled via membership above
+            elem_name = names[0]
+            if elem_name == "Wizard Stash":
                 continue
-            if data.get("unsupported"):
-                continue
-            for sid in data.get("levels", []):
-                stage_elements.setdefault(sid, []).append(elem_name)
-        for elem_name, data in non_monster_elements.items():
-            for sid in data.get("levels", []):
-                stage_monsters.setdefault(sid, []).append(elem_name)
+            field = _element_count_field(elem_name)
+            target = stage_monsters if elem_name in monster_names else stage_elements
+            for sid, data in LEVEL_DATA.items():
+                if data.get(field, 0) > 0:
+                    target.setdefault(sid, []).append(elem_name)
         for v in stage_elements.values():
             v.sort()
         for v in stage_monsters.values():

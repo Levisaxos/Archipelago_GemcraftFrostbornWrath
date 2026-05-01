@@ -387,16 +387,24 @@ package patch {
                     return; // inventory full
 
                 var beforeCount:int = (core.gems as Array).length;
+                // Snapshot the leech-stat counter so we can restore it
+                // after castCreateGem.  IngameCreator.createGem adds
+                // gemCreatingBaseManaCosts[0] to spentManaOnManaLeechingGem
+                // for the base gem, and combineGems adds further increments
+                // for grade>0 (Fusion / Pure talisman) — neither matches
+                // the player-paid mana cost, so a fixed subtraction would
+                // miss.  Restoring the pre-cast value zeroes every path.
+                var leechSnapshot:Number = (core.stats != null)
+                    ? Number(core.stats.spentManaOnManaLeechingGem) : 0;
                 var ok:Boolean = core.spellCaster.castCreateGem(slot, HOLLOW_TYPE);
                 if (!ok)
                     return;
 
-                // Reverse the "mana spent on leech" stat increment so achievement
-                // gates that key off this counter aren't polluted by hollow gems.
+                // Reverse the "mana spent on leech" stat increments so the
+                // "win using only mana-leech gems" achievements and the
+                // end-of-level mana-spent breakdown aren't polluted.
                 if (core.stats != null) {
-                    core.stats.spentManaOnManaLeechingGem -= manaCost;
-                    if (core.stats.spentManaOnManaLeechingGem < 0)
-                        core.stats.spentManaOnManaLeechingGem = 0;
+                    core.stats.spentManaOnManaLeechingGem = leechSnapshot;
                 }
 
                 var newGem:Gem = _findNewGem(core, beforeCount);

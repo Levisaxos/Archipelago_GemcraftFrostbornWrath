@@ -108,7 +108,10 @@ level_requirements = {
         "GiantMaxHP": 2178948,
         "GiantMaxArmor": 7763,
         "BeaconCount": 16,
+        "GatekeeperCount": 1,
         "ObeliskCount": 2,
+        "ShadowCount": 1,
+        "WraithCount": 1,
         "MonstersBeforeWave12": 198,
         "MarkedMonsterCount": 200,
         "requirements": [
@@ -339,6 +342,7 @@ level_requirements = {
         "GiantCount": 95,
         "GiantMaxHP": 344267,
         "GiantMaxArmor": 1082,
+        "CorruptedManaShardCount": 1,
         "ManaShardCount": 4,
         "MonstersBeforeWave12": 213,
         "MarkedMonsterCount": 128,
@@ -416,6 +420,7 @@ level_requirements = {
         "GiantCount": 115,
         "GiantMaxHP": 586802,
         "GiantMaxArmor": 2171,
+        "ShadowCount": 1,
         "MonstersBeforeWave12": 228,
         "MarkedMonsterCount": 165,
         "requirements": [
@@ -589,6 +594,7 @@ level_requirements = {
         "GiantMaxHP": 63782,
         "GiantMaxArmor": 405,
         "MonsterNestCount": 1,
+        "SpireCount": 1,
         "MonstersBeforeWave12": 198,
         "MarkedMonsterCount": 58,
         "requirements": [
@@ -639,7 +645,10 @@ level_requirements = {
         "GiantCount": 67,
         "GiantMaxHP": 155322,
         "GiantMaxArmor": 858,
+        "CorruptedManaShardCount": 1,
         "ManaShardCount": 9,
+        "ShadowCount": 1,
+        "SpecterCount": 1,
         "MonstersBeforeWave12": 155,
         "MarkedMonsterCount": 78,
         "requirements": [
@@ -716,6 +725,7 @@ level_requirements = {
         "GiantCount": 127,
         "GiantMaxHP": 106964,
         "GiantMaxArmor": 770,
+        "RainCount": 1,
         "MonstersBeforeWave12": 154,
         "MarkedMonsterCount": 50,
         "requirements": [
@@ -741,6 +751,7 @@ level_requirements = {
         "GiantMaxHP": 483503,
         "GiantMaxArmor": 1364,
         "BarricadeCount": 6,
+        "RainCount": 1,
         "TombCount": 1,
         "MonstersBeforeWave12": 112,
         "MarkedMonsterCount": 97,
@@ -767,6 +778,7 @@ level_requirements = {
         "GiantMaxHP": 654896,
         "GiantMaxArmor": 1721,
         "BarricadeCount": 14,
+        "RainCount": 1,
         "MonstersBeforeWave12": 123,
         "MarkedMonsterCount": 85,
         "requirements": [
@@ -792,6 +804,7 @@ level_requirements = {
         "GiantMaxHP": 948161,
         "GiantMaxArmor": 2301,
         "BarricadeCount": 12,
+        "RainCount": 1,
         "MonstersBeforeWave12": 116,
         "MarkedMonsterCount": 66,
         "requirements": [
@@ -867,6 +880,7 @@ level_requirements = {
         "GiantCount": 94,
         "GiantMaxHP": 34486,
         "GiantMaxArmor": 237,
+        "ShadowCount": 1,
         "MonstersBeforeWave12": 180,
         "MarkedMonsterCount": 27,
         "requirements": [
@@ -1111,6 +1125,7 @@ level_requirements = {
         "GiantMaxHP": 482856,
         "GiantMaxArmor": 1445,
         "BarricadeCount": 12,
+        "RainCount": 1,
         "MonstersBeforeWave12": 44,
         "MarkedMonsterCount": 24,
         "requirements": [
@@ -1136,6 +1151,7 @@ level_requirements = {
         "GiantMaxHP": 33623,
         "GiantMaxArmor": 220,
         "MonsterNestCount": 3,
+        "RainCount": 1,
         "MonstersBeforeWave12": 185,
         "MarkedMonsterCount": 35,
         "requirements": [
@@ -1163,6 +1179,7 @@ level_requirements = {
         "AbandonedDwellingCount": 1,
         "DropHolderCount": 3,
         "ManaShardCount": 4,
+        "RainCount": 1,
         "ShrineCount": 1,
         "MonstersBeforeWave12": 269,
         "MarkedMonsterCount": 42,
@@ -1188,6 +1205,7 @@ level_requirements = {
         "GiantCount": 46,
         "GiantMaxHP": 73384,
         "GiantMaxArmor": 600,
+        "RainCount": 1,
         "TombCount": 1,
         "MonstersBeforeWave12": 266,
         "MarkedMonsterCount": 89,
@@ -1215,6 +1233,7 @@ level_requirements = {
         "GiantMaxArmor": 771,
         "BeaconCount": 10,
         "ManaShardCount": 4,
+        "RainCount": 1,
         "ShrineCount": 1,
         "MonstersBeforeWave12": 224,
         "MarkedMonsterCount": 104,
@@ -1317,6 +1336,7 @@ level_requirements = {
         "GiantCount": 84,
         "GiantMaxHP": 14562,
         "GiantMaxArmor": 169,
+        "SwarmQueenCount": 1,
         "MonstersBeforeWave12": 200,
         "MarkedMonsterCount": 24,
         "requirements": [
@@ -1364,6 +1384,7 @@ level_requirements = {
         "GiantMaxArmor": 160,
         "BeaconCount": 4,
         "MonsterNestCount": 5,
+        "RainCount": 1,
         "MonstersBeforeWave12": 118,
         "MarkedMonsterCount": 17,
         "requirements": [
@@ -1389,6 +1410,7 @@ level_requirements = {
         "GiantMaxHP": 23834,
         "GiantMaxArmor": 221,
         "DropHolderCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 128,
         "MarkedMonsterCount": 19,
         "requirements": [
@@ -1415,6 +1437,7 @@ level_requirements = {
         "GiantMaxArmor": 257,
         "BarricadeCount": 6,
         "ManaShardCount": 3,
+        "RainCount": 1,
         "ShrineCount": 1,
         "MonstersBeforeWave12": 148,
         "MarkedMonsterCount": 26,
@@ -1441,6 +1464,7 @@ level_requirements = {
         "GiantMaxHP": 33810,
         "GiantMaxArmor": 359,
         "BarricadeCount": 4,
+        "WizardHunterCount": 1,
         "MonstersBeforeWave12": 101,
         "MarkedMonsterCount": 37,
         "requirements": [
@@ -1493,6 +1517,7 @@ level_requirements = {
         "GiantMaxArmor": 405,
         "AbandonedDwellingCount": 5,
         "MonsterNestCount": 5,
+        "RainCount": 1,
         "MonstersBeforeWave12": 142,
         "MarkedMonsterCount": 68,
         "requirements": [
@@ -1518,6 +1543,7 @@ level_requirements = {
         "GiantMaxHP": 69963,
         "GiantMaxArmor": 429,
         "MonsterNestCount": 3,
+        "RainCount": 1,
         "MonstersBeforeWave12": 267,
         "MarkedMonsterCount": 80,
         "requirements": [
@@ -1546,6 +1572,7 @@ level_requirements = {
         "BarricadeCount": 7,
         "DropHolderCount": 1,
         "ManaShardCount": 2,
+        "RainCount": 1,
         "TombCount": 2,
         "MonstersBeforeWave12": 238,
         "MarkedMonsterCount": 44,
@@ -1571,6 +1598,7 @@ level_requirements = {
         "GiantCount": 72,
         "GiantMaxHP": 105153,
         "GiantMaxArmor": 572,
+        "RainCount": 1,
         "ShrineCount": 1,
         "MonstersBeforeWave12": 191,
         "MarkedMonsterCount": 48,
@@ -1597,6 +1625,7 @@ level_requirements = {
         "GiantCount": 5,
         "GiantMaxHP": 5046,
         "GiantMaxArmor": 85,
+        "RainCount": 1,
         "MonstersBeforeWave12": 229,
         "MarkedMonsterCount": 24,
         "requirements": [
@@ -1623,6 +1652,7 @@ level_requirements = {
         "GiantMaxArmor": 55,
         "BarricadeCount": 16,
         "ManaShardCount": 2,
+        "RainCount": 1,
         "MonstersBeforeWave12": 194,
         "MarkedMonsterCount": 32,
         "requirements": [
@@ -1649,6 +1679,7 @@ level_requirements = {
         "GiantMaxArmor": 143,
         "ManaShardCount": 2,
         "MonsterNestCount": 2,
+        "RainCount": 1,
         "ShrineCount": 1,
         "MonstersBeforeWave12": 191,
         "MarkedMonsterCount": 22,
@@ -1675,6 +1706,7 @@ level_requirements = {
         "GiantMaxHP": 123064,
         "GiantMaxArmor": 642,
         "MonsterNestCount": 2,
+        "RainCount": 1,
         "MonstersBeforeWave12": 154,
         "MarkedMonsterCount": 54,
         "requirements": [
@@ -1699,6 +1731,7 @@ level_requirements = {
         "GiantCount": 78,
         "GiantMaxHP": 117501,
         "GiantMaxArmor": 606,
+        "RainCount": 1,
         "MonstersBeforeWave12": 232,
         "MarkedMonsterCount": 55,
         "requirements": [
@@ -1723,6 +1756,7 @@ level_requirements = {
         "GiantCount": 10,
         "GiantMaxHP": 8611,
         "GiantMaxArmor": 109,
+        "RainCount": 1,
         "MonstersBeforeWave12": 195,
         "MarkedMonsterCount": 23,
         "requirements": [
@@ -1750,6 +1784,7 @@ level_requirements = {
         "BarricadeCount": 14,
         "BeaconCount": 6,
         "DropHolderCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 185,
         "MarkedMonsterCount": 20,
         "requirements": [
@@ -1775,6 +1810,7 @@ level_requirements = {
         "GiantMaxHP": 5462,
         "GiantMaxArmor": 84,
         "MonsterNestCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 243,
         "MarkedMonsterCount": 14,
         "requirements": [
@@ -1803,6 +1839,7 @@ level_requirements = {
         "BarricadeCount": 9,
         "DropHolderCount": 2,
         "MonsterNestCount": 4,
+        "RainCount": 1,
         "MonstersBeforeWave12": 148,
         "MarkedMonsterCount": 22,
         "requirements": [
@@ -1827,6 +1864,7 @@ level_requirements = {
         "GiantCount": 29,
         "GiantMaxHP": 9056,
         "GiantMaxArmor": 134,
+        "RainCount": 1,
         "MonstersBeforeWave12": 128,
         "MarkedMonsterCount": 28,
         "requirements": [
@@ -1853,6 +1891,7 @@ level_requirements = {
         "GiantMaxArmor": 152,
         "BeaconCount": 1,
         "MonsterNestCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 146,
         "MarkedMonsterCount": 31,
         "requirements": [
@@ -1877,6 +1916,7 @@ level_requirements = {
         "GiantCount": 38,
         "GiantMaxHP": 13383,
         "GiantMaxArmor": 174,
+        "RainCount": 1,
         "MonstersBeforeWave12": 121,
         "MarkedMonsterCount": 29,
         "requirements": [
@@ -1903,6 +1943,7 @@ level_requirements = {
         "GiantMaxArmor": 174,
         "BarricadeCount": 12,
         "MonsterNestCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 126,
         "MarkedMonsterCount": 20,
         "requirements": [
@@ -1929,6 +1970,7 @@ level_requirements = {
         "GiantMaxHP": 9430,
         "GiantMaxArmor": 174,
         "MonsterNestCount": 1,
+        "RainCount": 1,
         "MonstersBeforeWave12": 365,
         "MarkedMonsterCount": 59,
         "requirements": [
@@ -1945,6 +1987,7 @@ level_requirements = {
         "GiantCount": 149,
         "GiantMaxHP": 14461,
         "GiantMaxArmor": 185,
+        "RainCount": 1,
         "MonstersBeforeWave12": 43,
         "MarkedMonsterCount": 7,
         "requirements": [
@@ -1966,6 +2009,7 @@ level_requirements = {
         "SwarmlingCount": 142,
         "SwarmlingMaxHP": 50,
         "SwarmlingMaxArmor": 19,
+        "ApparitionCount": 1,
         "MonstersBeforeWave12": 191,
         "MarkedMonsterCount": 10,
         "requirements": [
@@ -2038,6 +2082,8 @@ level_requirements = {
         "AbandonedDwellingCount": 5,
         "BarricadeCount": 4,
         "DropHolderCount": 3,
+        "RainCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 203,
         "MarkedMonsterCount": 11,
         "requirements": [
@@ -2129,6 +2175,7 @@ level_requirements = {
         "GiantMaxHP": 3249,
         "GiantMaxArmor": 43,
         "BarricadeCount": 16,
+        "RainCount": 1,
         "MonstersBeforeWave12": 174,
         "MarkedMonsterCount": 16,
         "requirements": [
@@ -2206,7 +2253,9 @@ level_requirements = {
         "GiantMaxHP": 9991,
         "GiantMaxArmor": 167,
         "AbandonedDwellingCount": 2,
+        "ApparitionCount": 1,
         "MonsterNestCount": 3,
+        "RainCount": 1,
         "MonstersBeforeWave12": 170,
         "MarkedMonsterCount": 17,
         "requirements": [
@@ -2316,6 +2365,7 @@ level_requirements = {
         "SwarmlingMaxArmor": 33,
         "BeaconCount": 2,
         "MonsterNestCount": 2,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 182,
         "MarkedMonsterCount": 15,
         "requirements": [
@@ -2340,6 +2390,7 @@ level_requirements = {
         "GiantCount": 3,
         "GiantMaxHP": 3910,
         "GiantMaxArmor": 55,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 175,
         "MarkedMonsterCount": 14,
         "requirements": [
@@ -2366,6 +2417,7 @@ level_requirements = {
         "GiantMaxArmor": 70,
         "BeaconCount": 5,
         "MonsterNestCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 249,
         "MarkedMonsterCount": 22,
         "requirements": [
@@ -2387,6 +2439,7 @@ level_requirements = {
         "SwarmlingMaxHP": 126,
         "SwarmlingMaxArmor": 43,
         "AbandonedDwellingCount": 8,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 256,
         "MarkedMonsterCount": 27,
         "requirements": [
@@ -2407,6 +2460,7 @@ level_requirements = {
         "SwarmlingCount": 881,
         "SwarmlingMaxHP": 312,
         "SwarmlingMaxArmor": 84,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 278,
         "MarkedMonsterCount": 56,
         "requirements": [
@@ -2427,6 +2481,7 @@ level_requirements = {
         "SwarmlingCount": 365,
         "SwarmlingMaxHP": 130,
         "SwarmlingMaxArmor": 57,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 201,
         "MarkedMonsterCount": 27,
         "requirements": [
@@ -2447,6 +2502,7 @@ level_requirements = {
         "SwarmlingCount": 537,
         "SwarmlingMaxHP": 148,
         "SwarmlingMaxArmor": 61,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 205,
         "MarkedMonsterCount": 30,
         "requirements": [
@@ -2469,6 +2525,7 @@ level_requirements = {
         "SwarmlingMaxArmor": 43,
         "ManaShardCount": 2,
         "ShrineCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 277,
         "MarkedMonsterCount": 1,
         "requirements": [
@@ -2492,6 +2549,7 @@ level_requirements = {
         "AbandonedDwellingCount": 3,
         "ManaShardCount": 1,
         "MonsterNestCount": 2,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 272,
         "MarkedMonsterCount": 26,
         "requirements": [
@@ -2677,6 +2735,7 @@ level_requirements = {
         "GiantMaxArmor": 140,
         "JarOfWaspsCount": 1,
         "MonsterNestCount": 2,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 295,
         "MarkedMonsterCount": 50,
         "requirements": [
@@ -2704,6 +2763,7 @@ level_requirements = {
         "AbandonedDwellingCount": 6,
         "DropHolderCount": 1,
         "JarOfWaspsCount": 3,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 184,
         "MarkedMonsterCount": 45,
         "requirements": [
@@ -2732,6 +2792,7 @@ level_requirements = {
         "BarricadeCount": 5,
         "ManaShardCount": 1,
         "MonsterNestCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 281,
         "MarkedMonsterCount": 37,
         "requirements": [
@@ -2758,6 +2819,8 @@ level_requirements = {
         "GiantMaxArmor": 180,
         "BeaconCount": 4,
         "ManaShardCount": 3,
+        "SnowCount": 1,
+        "WraithCount": 1,
         "MonstersBeforeWave12": 130,
         "MarkedMonsterCount": 33,
         "requirements": [
@@ -2783,6 +2846,7 @@ level_requirements = {
         "GiantMaxHP": 5462,
         "GiantMaxArmor": 71,
         "SleepingHiveCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 251,
         "MarkedMonsterCount": 30,
         "requirements": [
@@ -2809,6 +2873,7 @@ level_requirements = {
         "GiantMaxArmor": 64,
         "BarricadeCount": 6,
         "ManaShardCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 210,
         "MarkedMonsterCount": 36,
         "requirements": [
@@ -2833,6 +2898,7 @@ level_requirements = {
         "GiantCount": 9,
         "GiantMaxHP": 5046,
         "GiantMaxArmor": 85,
+        "SnowCount": 1,
         "WizardTowerCount": 1,
         "MonstersBeforeWave12": 269,
         "MarkedMonsterCount": 17,
@@ -2860,6 +2926,8 @@ level_requirements = {
         "GiantMaxArmor": 174,
         "BarricadeCount": 4,
         "ManaShardCount": 1,
+        "SnowCount": 1,
+        "SpecterCount": 1,
         "MonstersBeforeWave12": 186,
         "MarkedMonsterCount": 43,
         "requirements": [
@@ -2886,6 +2954,7 @@ level_requirements = {
         "GiantMaxArmor": 140,
         "BeaconCount": 6,
         "MonsterNestCount": 4,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 178,
         "MarkedMonsterCount": 57,
         "requirements": [
@@ -2911,6 +2980,7 @@ level_requirements = {
         "GiantMaxHP": 21591,
         "GiantMaxArmor": 221,
         "MonsterNestCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 211,
         "MarkedMonsterCount": 49,
         "requirements": [
@@ -2937,6 +3007,7 @@ level_requirements = {
         "GiantMaxArmor": 271,
         "ManaShardCount": 4,
         "MonsterNestCount": 1,
+        "SnowCount": 1,
         "MonstersBeforeWave12": 107,
         "MarkedMonsterCount": 19,
         "requirements": [

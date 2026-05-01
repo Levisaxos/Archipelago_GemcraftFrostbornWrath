@@ -53,22 +53,50 @@ def _exec_module(name: str, ns: dict | None = None) -> dict:
 
 
 def load_apworld_data():
-    """Return (achievements, level_requirements, game_level_elements,
-    non_monster_elements) loaded from the apworld source files."""
-    settings_ns = _exec_module("rulesdata_settings")
-    # rulesdata_levels uses `from .rulesdata_settings import WAVE_TIERS` —
-    # we stripped it; the module doesn't actually use WAVE_TIERS so it's safe.
+    """Return (achievements, level_requirements) loaded from the apworld
+    source files."""
     levels_ns = _exec_module("rulesdata_levels")
     ach_ns = _exec_module("rulesdata_achievements")
     return (
         ach_ns["achievement_requirements"],
         levels_ns["level_requirements"],
-        settings_ns["game_level_elements"],
-        settings_ns["non_monster_elements"],
     )
 
 
-# Stat fields to expose to the mod.  Includes the new <Type>Count fields
+# Element Count fields the mod surfaces as eX / wX presence tokens.
+# (Display name -> stage-data Count field.)  Keep in sync with
+# requirement_tokens.element_prefix_map; the mod also derives presence
+# from the Count fields directly via FieldLogicEvaluator.
+_ELEMENT_COUNT_FIELDS = {
+    "Abandoned Dwelling":   "AbandonedDwellingCount",
+    "Apparition":           "ApparitionCount",
+    "Barricade":            "BarricadeCount",
+    "Beacon":               "BeaconCount",
+    "Corrupted Mana Shard": "CorruptedManaShardCount",
+    "Drop Holder":          "DropHolderCount",
+    "Gatekeeper":           "GatekeeperCount",
+    "Jar of Wasps":         "JarOfWaspsCount",
+    "Mana Shard":           "ManaShardCount",
+    "Monster Nest":         "MonsterNestCount",
+    "Obelisk":              "ObeliskCount",
+    "Rain":                 "RainCount",
+    "Sealed gem":           "SealedGemCount",
+    "Shadow":               "ShadowCount",
+    "Shrine":               "ShrineCount",
+    "Sleeping Hive":        "SleepingHiveCount",
+    "Snow":                 "SnowCount",
+    "Specter":              "SpecterCount",
+    "Spire":                "SpireCount",
+    "Swarm Queen":          "SwarmQueenCount",
+    "Tomb":                 "TombCount",
+    "Watchtower":           "WatchtowerCount",
+    "Wizard Hunter":        "WizardHunterCount",
+    "Wizard Tower":         "WizardTowerCount",
+    "Wraith":               "WraithCount",
+}
+
+
+# Stat fields to expose to the mod.  Includes the <Type>Count fields
 # populated from the decompiled stage data plus the simulation-derived
 # MonstersBeforeWave12 / MarkedMonsterCount fields.
 _STAT_FIELDS = (
@@ -77,15 +105,9 @@ _STAT_FIELDS = (
     "ReaverWaves", "ReaverCount", "ReaverMaxHP", "ReaverMaxArmor",
     "SwarmlingWaves", "SwarmlingCount", "SwarmlingMaxHP", "SwarmlingMaxArmor",
     "GiantWaves", "GiantCount", "GiantMaxHP", "GiantMaxArmor",
-    # Element / building counts (per-stage, only present when > 0)
-    "BeaconCount", "MonsterNestCount", "BarricadeCount", "ShrineCount",
-    "TombCount", "ManaShardCount", "DropHolderCount",
-    "WizardTowerCount", "WatchtowerCount", "ObeliskCount",
-    "SleepingHiveCount", "JarOfWaspsCount", "SealedGemCount",
-    "AbandonedDwellingCount",
     # Simulation-derived
     "MonstersBeforeWave12", "MarkedMonsterCount",
-)
+) + tuple(_ELEMENT_COUNT_FIELDS.values())
 
 
 def build_level_stats(level_requirements: Dict[str, dict]) -> Dict[str, dict]:
@@ -108,15 +130,18 @@ def build_level_stats(level_requirements: Dict[str, dict]) -> Dict[str, dict]:
     return out
 
 
-def build_element_stages(game_level_elements: dict, non_monster_elements: dict) -> dict:
-    """element-name -> [stage_id, ...] for everything the mod evaluates as
-    a presence-style element token (eX or wX).  Mirrors apworld's
-    rulesdata_settings.{game_level_elements, non_monster_elements}."""
-    out = {}
-    for name, info in game_level_elements.items():
-        out[name] = list(info.get("levels", []))
-    for name, info in non_monster_elements.items():
-        out[name] = list(info.get("levels", []))
+def build_element_stages(level_requirements: dict) -> dict:
+    """element-name -> [stage_id, ...] derived from per-stage Count fields
+    in rulesdata_levels.py.  An element is "present on" a stage iff the
+    stage has its Count field > 0.  Stage list is sorted for deterministic
+    JSON output."""
+    out: Dict[str, list] = {name: [] for name in _ELEMENT_COUNT_FIELDS}
+    for sid, data in level_requirements.items():
+        for name, field in _ELEMENT_COUNT_FIELDS.items():
+            if data.get(field, 0) > 0:
+                out[name].append(sid)
+    for name in out:
+        out[name].sort()
     return out
 
 
@@ -146,16 +171,16 @@ def build_achievements(achievements: dict) -> dict:
 
 def main():
     print("Loading apworld source data...")
-    achievements, level_reqs, gle, nme = load_apworld_data()
+    achievements, level_reqs = load_apworld_data()
     print(f"  {len(achievements)} achievements, {len(level_reqs)} stages, "
-          f"{len(gle)} game elements, {len(nme)} non-monster elements")
+          f"{len(_ELEMENT_COUNT_FIELDS)} element types")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # achievement_logic.json
     out = {
         "achievements":     build_achievements(achievements),
-        "element_stages":   build_element_stages(gle, nme),
+        "element_stages":   build_element_stages(level_reqs),
         "stage_properties": {},  # reserved for future use
         "levelStats":       build_level_stats(level_reqs),
     }

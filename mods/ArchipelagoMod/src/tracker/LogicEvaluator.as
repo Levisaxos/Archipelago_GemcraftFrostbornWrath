@@ -329,6 +329,10 @@ package tracker {
                     var sName:String = _skillPrefixMap[req];
                     if (sName != null)
                     {
+                        // Gem-skill tokens broaden: also pass when a stage
+                        // with the matching starter pouch is reachable.
+                        if (_GEM_SKILL_TO_GEM_NAME[sName] != null)
+                            return _hasGemSkillBroadenedAP(sName);
                         var sIdx:int = SessionData.SKILL_NAMES.indexOf(sName);
                         return sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx);
                     }
@@ -452,12 +456,13 @@ package tracker {
                 return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
             }
             if (lower.indexOf("gemskills") == 0) {
-                // When pouch gating is active, gemSkills:N is replaced by
-                // gemPouch:<prefix> on every stage. The N-skills count is
-                // still meaningful for achievements (gem skills 706-711 are
-                // still in the pool), so leave this gate alone.
+                // gemSkills:N broadens like the bare gem-skill tokens — a
+                // skill counts as available if held OR a stage with the
+                // matching starter pouch is reachable.  When pouch gating
+                // is active, this gate still works against the gem-skill
+                // items (706-711) that remain in the pool.
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
+                return _countGemSkillsBroadenedAP() >= gNeed;
             }
 
             // "gemPouch:<prefix>" — per-prefix gem-orb gate. Inactive in
@@ -697,6 +702,10 @@ package tracker {
                     var sNameIL:String = _skillPrefixMap[req];
                     if (sNameIL != null)
                     {
+                        // Gem-skill tokens broaden: also pass when the
+                        // current stage's starter pouch contains the gem.
+                        if (_GEM_SKILL_TO_GEM_NAME[sNameIL] != null)
+                            return _hasGemSkillOnStage(sNameIL, currentStrId);
                         return _isSkillActive(sNameIL);
                     }
                 }
@@ -854,8 +863,17 @@ package tracker {
                 return _stat(currentStrId, "SwarmlingCount") >= swNeed;
             }
 
+            // gemSkills:N is in-level-aware: count of held gem-skill items
+            // PLUS gems available on THIS stage's starter pouch.  Falling
+            // through to evaluateRequirement would use the AP-logic
+            // (cross-stage) count which is too lenient for "doable here".
+            if (lower.indexOf("gemskills") == 0) {
+                var gNeedIL:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countGemSkillsOnStage(currentStrId) >= gNeedIL;
+            }
+
             // Loadout-independent counters (skillsPoints, strikeSpells, fieldToken,
-            // shadowCore, wizardLevel, BattleTraits, gemSkills, ...) — same gate as
+            // shadowCore, wizardLevel, BattleTraits, ...) — same gate as
             // AP-logic mode.
             return evaluateRequirement(req);
         }
@@ -1075,6 +1093,95 @@ package tracker {
                 }
             }
             return c;
+        }
+
+        /** Skill name -> in-game gem name (matches `availableGems` entries
+         *  in logic.json).  Used to broaden gem-skill `sX` tokens and the
+         *  gemSkills:N counter so a reachable starter pouch satisfies the
+         *  gate without an item drop.  Mirrors apworld
+         *  rules._GEM_TOKEN_TO_GEM_NAME. */
+        private static const _GEM_SKILL_TO_GEM_NAME:Object = {
+            "Critical Hit":   "Crit",
+            "Mana Leech":     "Leech",
+            "Bleeding":       "Bleed",
+            "Armor Tearing":  "Armor Tear",
+            "Poison":         "Poison",
+            "Slowing":        "Slow"
+        };
+
+        private static const _GEM_SKILL_NAMES:Array = [
+            "Critical Hit", "Mana Leech", "Bleeding",
+            "Armor Tearing", "Poison", "Slowing"
+        ];
+
+        /** True if any in-logic stage's `availableGems` lists `gemName`. */
+        private function _gemReachableInLogic(gemName:String):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return false;
+            var pools:Object = AV.serverData.stageAvailableGems;
+            var fields:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in pools) {
+                if (fields[sid] != true) continue;
+                var arr:Array = pools[sid] as Array;
+                if (arr == null) continue;
+                for each (var g:String in arr) {
+                    if (g == gemName) return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if `stageStrId`'s `availableGems` lists `gemName`. */
+        private function _gemOnStage(stageStrId:String, gemName:String):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            var arr:Array = AV.serverData.stageAvailableGems[stageStrId] as Array;
+            if (arr == null) return false;
+            for each (var g:String in arr) {
+                if (g == gemName) return true;
+            }
+            return false;
+        }
+
+        /** AP-logic broadened check: skill item held OR any reachable stage's
+         *  pouch contains the matching gem. */
+        private function _hasGemSkillBroadenedAP(skillName:String):Boolean {
+            var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+            if (idx >= 0 && AV.sessionData.hasItem(700 + idx)) return true;
+            var gemName:String = _GEM_SKILL_TO_GEM_NAME[skillName];
+            if (gemName == null) return false;
+            return _gemReachableInLogic(gemName);
+        }
+
+        /** In-level broadened check: skill item held OR THIS stage's pouch
+         *  contains the matching gem. */
+        private function _hasGemSkillOnStage(skillName:String, currentStrId:String):Boolean {
+            if (_isSkillActive(skillName)) return true;
+            var gemName:String = _GEM_SKILL_TO_GEM_NAME[skillName];
+            if (gemName == null) return false;
+            return _gemOnStage(currentStrId, gemName);
+        }
+
+        /** Count of gem skills 'available' under the AP-logic broadened
+         *  rule (each one held OR reachable via some pouch). */
+        private function _countGemSkillsBroadenedAP():int {
+            var n:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                if (_hasGemSkillBroadenedAP(skillName)) n++;
+            }
+            return n;
+        }
+
+        /** Count of gem skills 'available' on a specific stage (held OR
+         *  on that stage's pouch). */
+        private function _countGemSkillsOnStage(currentStrId:String):int {
+            var n:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                if (_hasGemSkillOnStage(skillName, currentStrId)) n++;
+            }
+            return n;
         }
 
         /** Returns true if any reachable in-logic stage hosts the named element. */

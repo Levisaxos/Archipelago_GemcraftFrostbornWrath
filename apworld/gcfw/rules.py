@@ -3,10 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
-from .rulesdata_settings import (
-    game_level_elements, non_monster_elements,
-    skill_groups,
-)
+from .rulesdata_settings import skill_groups
 from .requirement_tokens import (
     item_prefix_map, element_prefix_map,
     mode_tokens, level_stat_counters, skill_counter_pools,
@@ -163,35 +160,90 @@ def _count_talisman_fragments(state, player: int, names) -> int:
     return sum(1 for n in names if state.has(n, player))
 
 
+# Count fields that appear on at least one stage in rulesdata_levels.py.
+# Used to distinguish "element tracked per-stage but not on any reachable
+# stage at the requested count" (block) from "element not tracked at all,
+# i.e. universally present like Tower / Wall" (always satisfied).
+_PRESENT_COUNT_FIELDS: frozenset = frozenset(
+    f for d in LEVEL_DATA.values() for f, v in d.items()
+    if f.endswith("Count") and isinstance(v, (int, float)) and v > 0
+)
+
+
+def _element_count_field(elem_name: str) -> str:
+    """Display name -> per-stage Count field name in LEVEL_DATA.
+    "Drop Holder" -> "DropHolderCount", "Sealed gem" -> "SealedGemCount"."""
+    return "".join(p[0].upper() + p[1:] for p in elem_name.split() if p) + "Count"
+
+
 def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
-    """Resolve element-presence reachability. Used by both the legacy
-    'X element' form and the new 'eX' prefix form."""
-    # Wizard Stash — every stage has one structurally, but each is locked
-    # until the player collects its per-stage key.  Pass the gate iff the
-    # player holds at least one wizard-stash key.
+    """Resolve element-presence reachability — equivalent to eX:1."""
     if elem_name == "Wizard Stash":
+        # Every stage structurally has a stash, but each is locked until
+        # the player collects its per-stage key.  Pass iff any key held.
         return any(state.has(n, player) for n in WIZ_STASH_KEY_NAMES)
-    if elem_name in non_monster_elements:
-        elem_data = non_monster_elements[elem_name]
-        trait = elem_data.get("requires_trait")
-        levels = elem_data.get("levels", [])
-        if trait:
-            if not state.has(f"{trait} Battle Trait", player):
-                return False
-            return not levels or _can_reach_any_stage(state, player, levels)
-        return _can_reach_any_stage(state, player, levels)
-    if elem_name in game_level_elements:
-        stages = game_level_elements[elem_name].get("levels", [])
-        if stages:
-            return _can_reach_any_stage(state, player, stages)
-    return True
+    return _eval_element_count(_element_count_field(elem_name)[:-len("Count")], 1, state, player)
+
+
+# Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
+# counter) passes if the player owns the AP skill item OR can reach a stage
+# whose starter pouch lists the matching gem.  Per-stage starter pouches
+# come from `available_gems` in game_data.json (mirrored to the mod as
+# `availableGems` in logic.json).  strikeSpells / enhancementSpells / other
+# skill counters stay strict-item-count.
+_GEM_TOKEN_TO_GEM_NAME: dict = {
+    "sBleeding":     "Bleed",
+    "sCriticalHit":  "Crit",
+    "sManaLeech":    "Leech",
+    "sArmorTearing": "Armor Tear",
+    "sPoison":       "Poison",
+    "sSlowing":      "Slow",
+}
+
+# Gem name -> stage str_ids whose `available_gems` lists that gem.
+_STAGES_BY_GEM: dict = {}
+for _stage in GAME_DATA.get("stages", []):
+    for _gem in _stage.get("available_gems", []):
+        _STAGES_BY_GEM.setdefault(_gem, []).append(_stage["str_id"])
+if "_stage" in dir():
+    del _stage
+if "_gem" in dir():
+    del _gem
+
+
+def _has_gem_token(req: str, state, player: int) -> bool:
+    """Broadened evaluator for gem-skill `s*` tokens."""
+    item_name = item_prefix_map.get(req)
+    if item_name and state.has(item_name, player):
+        return True
+    gem_name = _GEM_TOKEN_TO_GEM_NAME.get(req)
+    if gem_name is None:
+        return False
+    return _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, []))
+
+
+def _count_gem_skills_broadened(state, player: int) -> int:
+    """Count of the 6 gem skills 'available' under the broadened rule —
+    each one counts iff the skill item is held OR a starter-gem stage is
+    reachable.  Used for the `gemSkills:N` counter."""
+    n = 0
+    for token, gem_name in _GEM_TOKEN_TO_GEM_NAME.items():
+        if state.has(item_prefix_map[token], player):
+            n += 1
+            continue
+        if _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, [])):
+            n += 1
+    return n
 
 
 def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
     """Resolve eX:N form: a reachable stage exists where <X>Count >= N.
-    Looked up against LEVEL_DATA's per-element count fields populated in
-    rulesdata_levels.py."""
+    If the element isn't tracked per-stage (no <X>Count field anywhere in
+    LEVEL_DATA), treat it as universally present (Tower / Wall / Marked
+    Monster fall here)."""
     field = elem_pascal + "Count"
+    if field not in _PRESENT_COUNT_FIELDS:
+        return True
     qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
     return _can_reach_any_stage(state, player, qualifying)
 
@@ -207,26 +259,13 @@ def _normalize_requirements(requirements: list) -> list:
 
 
 def _simplify_requirements(normalized: list) -> list:
-    """If any AND-group contains a trait requirement, strip element reqs from all groups.
-    Prevents circular dependencies where trait items may sit behind element-locked locations.
-
-    Exception: non_monster_elements with a non-empty `levels` list are preserved.
-    Their access rule (have-trait AND any-original-level-reachable) is strictly
-    stronger than the trait alone — matching the mod-side RitualSpawnPatcher
-    gate — so stripping them would lose the level constraint."""
-    has_trait = any(" trait" in req.lower() for group in normalized for req in group)
-    if not has_trait:
-        return normalized
-
-    def keep(req: str) -> bool:
-        if not req.endswith(" element"):
-            return True
-        elem_name = req[:-8]
-        if elem_name in non_monster_elements and non_monster_elements[elem_name].get("levels"):
-            return True
-        return False
-
-    return [[req for req in group if keep(req)] for group in normalized]
+    """Pass-through after the element-data refactor.  Previously stripped
+    'X element' reqs when an AND-group also required a trait, with an
+    exception for non-monster elements (Shadow / Specter / Wraith etc.)
+    that had restricted level lists.  Per game behaviour all elements have
+    restricted level sets and elements are independent of trait state, so
+    keeping every requirement matches the mod-side semantics exactly."""
+    return normalized
 
 
 def _can_reach_any_stage(state, player: int, stages: list) -> bool:
@@ -357,6 +396,10 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     if req in item_prefix_map:
         # Direct AP-item check.  Map values are full item names ("Bolt
         # Skill" / "Haste Battle Trait") so no string construction here.
+        # Gem-skill `sX` tokens broaden to also pass when a stage with
+        # the matching starter gem is reachable.
+        if req in _GEM_TOKEN_TO_GEM_NAME:
+            return _has_gem_token(req, state, player)
         return state.has(item_prefix_map[req], player)
     if req in element_prefix_map:
         # Element/group/weather token (single-element lists for `eBeacon`,
@@ -391,6 +434,13 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         # gemSkills, BattleTraits / battleTraits, GemSkills, OtherSkills,
         # skills / Skills.
         if group_name in skill_counter_pools:
+            # `gemSkills:N` / `GemSkills:N` broaden the same way as the
+            # bare `sX` tokens — a gem skill counts as "available" if
+            # held OR a starter-gem stage is reachable.  All other
+            # counter pools (strikeSpells, enhancementSpells,
+            # BattleTraits, OtherSkills, skills) stay strict-item-count.
+            if group_name in ("gemSkills", "GemSkills"):
+                return _count_gem_skills_broadened(state, player) >= count_needed
             pool = skill_counter_pools[group_name]
             return sum(1 for name in pool if state.has(name, player)) >= count_needed
 

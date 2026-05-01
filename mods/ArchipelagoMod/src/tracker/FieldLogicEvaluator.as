@@ -53,9 +53,13 @@ package tracker {
         private var _elementToStages:Object = {}; // element name -> Array<String>
         private var _monsterToStages:Object = {}; // monster name -> Array<String>
 
-        // Ritual Battle Trait AP id (matches apworld). All current
-        // non_monster_elements (Shadow / Specter / Spire / Wraith / Wizard
-        // Hunter / Apparition) require this trait per rulesdata_settings.py.
+        // Ritual Battle Trait AP id (matches apworld). Used by
+        // isMonsterInLogic to gate non-monster creature checks (Shadow /
+        // Specter / Spire / Wraith / Wizard Hunter / Apparition).
+        // NOTE: per current game behaviour these creatures spawn naturally
+        // on their listed stages without Ritual; Ritual only amplifies.
+        // The gate below is a legacy stricter check — review when
+        // refactoring achievement-side logic.
         public static const RITUAL_TRAIT_AP_ID:int = 814;
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
@@ -200,9 +204,9 @@ package tracker {
         }
 
         /** True if at least one stage that has this element can be completed
-         *  (tier + skill gate met).  Mirrors apworld _eval_req for
-         *  game_level_elements via _can_reach_any_stage, which now requires
-         *  the stage's WIZLOCK skills on Journey/Wizard stash alike. */
+         *  (tier + skill gate met).  Mirrors apworld _eval_element_reachable,
+         *  which derives stages from <Pascal>Count fields in
+         *  rulesdata_levels.py and requires WIZLOCK skills for completion. */
         public function isElementInLogic(elemName:String):Boolean {
             var stages:Array = _elementToStages[elemName] as Array;
             if (stages == null || stages.length == 0) return true;
@@ -212,8 +216,11 @@ package tracker {
             return false;
         }
 
-        /** True if Ritual is held AND at least one stage that has this monster
-         *  can be completed. Mirrors apworld _eval_req for non_monster_elements. */
+        /** True if Ritual is held AND at least one stage that hosts this
+         *  non-monster creature can be completed. Legacy stricter check —
+         *  apworld no longer ties these creatures to Ritual (they spawn
+         *  naturally on their listed stages); this gate may need to relax
+         *  when achievement-side logic is refactored. */
         public function isMonsterInLogic(monName:String):Boolean {
             if (!AV.sessionData.hasItem(RITUAL_TRAIT_AP_ID)) return false;
             var stages:Array = _monsterToStages[monName] as Array;

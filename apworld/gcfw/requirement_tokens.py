@@ -72,7 +72,6 @@ element_prefix_map = {
     "eCorruptedManaShard": ["Corrupted Mana Shard"],
     "eDropHolder":         ["Drop Holder"],
     "eGatekeeper":         ["Gatekeeper"],
-    "eHiddenCodes":        ["Hidden Codes"],
     "eJarOfWasps":         ["Jar of Wasps"],
     "eManaShard":          ["Mana Shard"],
     "eMarkedMonster":      ["Marked Monster"],
