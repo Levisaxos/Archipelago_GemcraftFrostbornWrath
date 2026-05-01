@@ -24,14 +24,18 @@ skill_prefix_map = {
     "sCriticalHit":    "Critical Hit Skill",
     "sDemolition":     "Demolition Skill",
     "sFreeze":         "Freeze Skill",
+    "sFusion":         "Fusion Skill",
     "sIceShards":      "Ice Shards Skill",
     "sLanterns":       "Lanterns Skill",
     "sManaLeech":      "Mana Leech Skill",
+    "sManaStream":     "Mana Stream Skill",
     "sOrbOfPresence":  "Orb of Presence Skill",
     "sPoison":         "Poison Skill",
     "sPylons":         "Pylons Skill",
+    "sResonance":      "Resonance Skill",
     "sSlowing":        "Slowing Skill",
     "sTraps":          "Traps Skill",
+    "sTrueColors":     "True Colors Skill",
     "sWhiteout":       "Whiteout Skill",
 }
 
