@@ -25,7 +25,6 @@ from __future__ import annotations
 import hashlib
 import math
 import os
-import sys
 from collections import defaultdict
 
 
@@ -50,17 +49,11 @@ DEFAULT_EARLY_TIER = frozenset({"W1", "W2", "W3", "W4", "S1", "S2", "S3", "S4"})
 # --------------------------------------------------------------------------- #
 def load_level_requirements() -> dict:
     here = os.path.dirname(os.path.abspath(__file__))
-    settings_path = os.path.join(here, "rulesdata_settings.py")
     levels_path = os.path.join(here, "rulesdata_levels.py")
 
-    settings_ns: dict = {}
-    with open(settings_path, encoding="utf-8") as f:
-        exec(compile(f.read(), settings_path, "exec"), settings_ns)
-
-    levels_ns: dict = {"WAVE_TIERS": settings_ns["WAVE_TIERS"]}
+    levels_ns: dict = {}
     with open(levels_path, encoding="utf-8") as f:
-        src = f.read().replace("from .rulesdata_settings", "# from .rulesdata_settings")
-    exec(compile(src, levels_path, "exec"), levels_ns)
+        exec(compile(f.read(), levels_path, "exec"), levels_ns)
     return levels_ns["level_requirements"]
 
 
@@ -259,39 +252,6 @@ def validate(
     max_depth = max(depth.values())
     assert max_depth <= NUM_BUCKETS - 1, \
         f"max depth {max_depth} exceeds bound {NUM_BUCKETS - 1}"
-
-
-# --------------------------------------------------------------------------- #
-# Public API: derive prereq DAG + buckets in-memory (no file writes).
-# --------------------------------------------------------------------------- #
-def build_dag(
-    level_requirements: dict,
-    root_stage: str = DEFAULT_ROOT_STAGE,
-    early_tier: frozenset = DEFAULT_EARLY_TIER,
-) -> tuple[dict[str, list[str]], dict[str, int]]:
-    """Derive the prereq DAG anchored at `root_stage`.
-
-    Returns (prereqs_per_stage, bucket_of_stage):
-      - prereqs_per_stage: {sid -> [prereq_sid, ...]}, OR-semantics. The root
-        is absent from this mapping (it has no prereqs).
-      - bucket_of_stage: {sid -> bucket_index in [0, NUM_BUCKETS-1]}.
-
-    Calls validate() before returning so any cycle/depth violation surfaces
-    immediately rather than at fill time.
-    """
-    buckets = assign_buckets(level_requirements, root_stage, early_tier)
-    bucket_of: dict[str, int] = {}
-    for b_idx, bucket in enumerate(buckets):
-        for sid in bucket:
-            bucket_of[sid] = b_idx
-
-    prereqs: dict[str, list[str]] = {}
-    for bucket_idx in range(1, NUM_BUCKETS):
-        for sid in buckets[bucket_idx]:
-            prereqs[sid] = pick_prereqs(sid, bucket_idx, buckets)
-
-    validate(prereqs, list(level_requirements.keys()), root_stage)
-    return prereqs, bucket_of
 
 
 # --------------------------------------------------------------------------- #

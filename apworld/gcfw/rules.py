@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-import json
-from importlib.resources import files
 from typing import TYPE_CHECKING, List
 
-from .rulesdata import GAME_DATA, SKILL_CATEGORIES, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
-from .rulesdata_settings import WAVE_TIERS, GRINDINESS_TIERS, game_skills_categories, game_level_elements, non_monster_elements, skill_groups
+from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
+from .rulesdata_settings import (
+    game_level_elements, non_monster_elements,
+    skill_groups,
+)
+from .requirement_tokens import (
+    item_prefix_map, element_prefix_map,
+    mode_tokens, level_stat_counters, skill_counter_pools,
+)
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
 from .options import AchievementProgression
@@ -15,15 +20,11 @@ from .power import (
     build_weight_map_for_world,
     EDGE_TALISMAN_NAMES,
     CORNER_TALISMAN_NAMES,
+    PROGRESSION_CORNER_TALISMAN_NAMES,
+    PROGRESSION_EDGE_TALISMAN_NAMES,
+    PROGRESSION_ALL_TALISMAN_NAMES,
+    MATCHING_TALISMAN_NAMES,
 )
-
-
-# Stage prereqs and the talisman requirement ramp are now derived per-world at
-# generation time from the chosen `starting_stage` option (see __init__.py:
-# create_regions builds world._stage_prereqs and world._stage_buckets via
-# gen_prereqs.build_dag). This module reads those off the world inside
-# set_rules. The baked `requirements` lists in rulesdata_levels.py are no
-# longer consulted at runtime — they remain for inspection only.
 
 
 def _restrict_talisman_shapes(loc, exclude_edge: bool, exclude_corner: bool) -> None:
@@ -48,43 +49,24 @@ if TYPE_CHECKING:
 
 
 # Pre-build token name lists per tier for use in access rules.
-# this is never gonna change just make it a global instead of rebuilding it every time set_rules is run
+# Built once at module load — TIERS is immutable after rulesdata.py imports.
 TIER_TOKEN_NAMES: dict[int, List[str]] = {}
 for tier_num, stage_ids in TIERS.items():
     TIER_TOKEN_NAMES[tier_num] = [f"{sid} Field Token" for sid in stage_ids]
 
-# Pre-build skill name lists per category.
-TIER_SKILL_NAMES: dict[str, List[str]] = {
-    cat: [f"{s} Skill" for s in skills]
-    for cat, skills in SKILL_CATEGORIES.items()
-}
+
+# Per-stage wizard-stash key item names. Every stage has a stash; the stash
+# is locked until the player collects its key. Used by the eWizardStash
+# token — pass the gate iff the player holds at least one key.
+WIZ_STASH_KEY_NAMES: List[str] = [
+    f"Wizard Stash {s['str_id']} Key" for s in GAME_DATA.get("stages", [])
+]
 
 
-# Pre-build Shadow Core / XP item name lists. Names mirror items.py exactly.
-def _build_shadow_core_names() -> List[str]:
-    names: List[str] = []
-    stashes = GAME_DATA.get("shadow_core_stashes", [])
-    for sc in stashes:
-        names.append(f"{sc['str_id']} Shadow Cores")
-    extras = GAME_DATA.get("extra_shadow_core_stashes", [])
-    for sc in extras:
-        names.append(sc["name"])
-    return names
-
-
-SHADOW_CORE_ITEM_NAMES: List[str] = _build_shadow_core_names()
-
-
-# Union of original-vanilla levels for every Ritual-gated creature.
-# Used to bar the Ritual trait itself behind reachability of at least one
-# of its creatures, mirroring the mod-side RitualSpawnPatcher gate.
-RITUAL_CREATURE_LEVELS: List[str] = sorted({
-    lvl
-    for elem in non_monster_elements.values()
-    if elem.get("requires_trait") == "Ritual"
-    for lvl in elem.get("levels", [])
-})
-
+# XP item names — every registered XP item, both progression and useful.
+# Half are progression (see items.py _xp_cls); state.has only sees those.
+# The wizardLevel:N gate counts how many progression XP items the player
+# has collected — passes when (N+1)//2 items are in state.
 XP_ITEM_NAMES: List[str] = (
     [f"Tattered Scroll #{i+1}" for i in range(32)]
     + [f"Worn Tome #{i+1}" for i in range(6)]
@@ -93,12 +75,26 @@ XP_ITEM_NAMES: List[str] = (
 )
 
 
-def _count_shadow_core_items(state, player: int) -> int:
-    return sum(1 for n in SHADOW_CORE_ITEM_NAMES if state.has(n, player))
+# Shadow core stash item names → core amount they grant.  Used by the
+# shadowCore:N gate (sums amounts of held progression stashes; useful and
+# filler items are invisible to state.has so contribute 0).
+SHADOW_CORE_AMOUNT_BY_NAME: dict[str, int] = {}
+for _sc in GAME_DATA.get("shadow_core_stashes", []):
+    SHADOW_CORE_AMOUNT_BY_NAME[f"{_sc['str_id']} Shadow Cores"] = int(_sc["total"])
+for _sc in GAME_DATA.get("extra_shadow_core_stashes", []):
+    SHADOW_CORE_AMOUNT_BY_NAME[_sc["name"]] = int(_sc["amount"])
+del _sc
 
 
 def _count_xp_items(state, player: int) -> int:
     return sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
+
+
+def _sum_shadow_cores(state, player: int) -> int:
+    """Sum of core amounts for held shadow-core stash items.  Only items
+    classified as progression count — others don't enter state.prog_items."""
+    return sum(amt for name, amt in SHADOW_CORE_AMOUNT_BY_NAME.items()
+               if state.has(name, player))
 
 
 def _count_complete_talisman_rows(state, player: int) -> int:
@@ -136,6 +132,68 @@ def _count_skill_points(state, player: int) -> int:
     for size in range(1, 11):
         total += size * state.count(f"Skillpoint Bundle {size}", player)
     return total
+
+
+# Prefix-encoded requirement vocabulary + counter dispatch tables live in
+# requirement_tokens.py (skill / trait / element prefix maps,
+# mode_tokens, level_stat_counters).  Adding a new token / counter is
+# a one-line entry there — no evaluator change required.
+
+def _is_prefix_token(token: str, allowed: str) -> bool:
+    """Return True if `token` starts with one of the prefix letters in `allowed`
+    and the second char is uppercase (e.g. 'eBeacon', 'tHaste')."""
+    return len(token) >= 2 and token[0] in allowed and token[1].isupper()
+
+
+# Talisman counter -> name set used to count collected fragments.
+# These all map to the 25 progression talisman fragments (4 corner + 12 edge
+# + 9 inner) — the items that actually mark the talisman's slot layout.
+# Non-progression fragments still drop but don't gate anything: state.has()
+# only sees progression items, so counting useful/filler fragments here would
+# silently always return 0.
+_TALISMAN_FRAGMENT_COUNTERS: dict[str, frozenset] = {
+    "talismanCornerFragment": PROGRESSION_CORNER_TALISMAN_NAMES,  # 4 items
+    "talismanEdgeFragment":   PROGRESSION_EDGE_TALISMAN_NAMES,    # 12 items
+    "talismanCenterFragment": MATCHING_TALISMAN_NAMES,            # 9 items
+    "talismanFragments":      PROGRESSION_ALL_TALISMAN_NAMES,     # 25 items
+}
+
+
+def _count_talisman_fragments(state, player: int, names) -> int:
+    return sum(1 for n in names if state.has(n, player))
+
+
+def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
+    """Resolve element-presence reachability. Used by both the legacy
+    'X element' form and the new 'eX' prefix form."""
+    # Wizard Stash — every stage has one structurally, but each is locked
+    # until the player collects its per-stage key.  Pass the gate iff the
+    # player holds at least one wizard-stash key.
+    if elem_name == "Wizard Stash":
+        return any(state.has(n, player) for n in WIZ_STASH_KEY_NAMES)
+    if elem_name in non_monster_elements:
+        elem_data = non_monster_elements[elem_name]
+        trait = elem_data.get("requires_trait")
+        levels = elem_data.get("levels", [])
+        if trait:
+            if not state.has(f"{trait} Battle Trait", player):
+                return False
+            return not levels or _can_reach_any_stage(state, player, levels)
+        return _can_reach_any_stage(state, player, levels)
+    if elem_name in game_level_elements:
+        stages = game_level_elements[elem_name].get("levels", [])
+        if stages:
+            return _can_reach_any_stage(state, player, stages)
+    return True
+
+
+def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
+    """Resolve eX:N form: a reachable stage exists where <X>Count >= N.
+    Looked up against LEVEL_DATA's per-element count fields populated in
+    rulesdata_levels.py."""
+    field = elem_pascal + "Count"
+    qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
+    return _can_reach_any_stage(state, player, qualifying)
 
 
 def _normalize_requirements(requirements: list) -> list:
@@ -237,6 +295,14 @@ def _can_clear_any_stage(state, player: int, stages) -> bool:
     return False
 
 
+# Item-collection counter heads that aren't covered by any of the
+# requirement_tokens tables.  Each is handled inline in _eval_req.
+_OTHER_COUNTER_HEADS: frozenset = frozenset({
+    "fieldToken", "shadowCore", "wizardLevel",
+    "skillPoints", "talismanRow", "talismanColumn",
+})
+
+
 def _is_gating_req(req: str, is_progressive: bool) -> bool:
     """Return True if this requirement string actually gates access to something."""
     req = req.strip()
@@ -244,22 +310,20 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
         return True
     if req.startswith("Achievement:"):
         return is_progressive
-    if req.endswith(" element"):
-        elem_name = req[:-8]
-        return (elem_name in non_monster_elements or
-                (elem_name in game_level_elements and bool(game_level_elements[elem_name].get("levels"))))
+    # Prefix vocabulary — single lookup across all maps.
+    if (req in mode_tokens
+            or req in item_prefix_map
+            or req in element_prefix_map):
+        return True
     if ":" in req:
-        group_name = req.split(":")[0].strip()
-        if group_name in skill_groups or group_name in game_skills_categories:
+        head = req.split(":", 1)[0].strip()
+        if head in element_prefix_map or _is_prefix_token(head, "e"):
+            return True  # element / weather / group with count
+        if (head in level_stat_counters
+                or head in _TALISMAN_FRAGMENT_COUNTERS
+                or head in skill_counter_pools):
             return True
-        return group_name in (
-            "minWave", "beforeWave", "minMonsters", "minMonsterHP",
-            "minMonsterArmor", "minSwarmlingArmor", "minSwarmlings",
-            "fieldToken", "Skills",
-        )
-    if " trait" in req.lower() or " skill" in req.lower():
-        skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
-        return any(skill_name in cat.get("members", []) for cat in game_skills_categories.values())
+        return head in _OTHER_COUNTER_HEADS
     return False
 
 
@@ -285,26 +349,20 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         except KeyError:
             return False
 
-    if req.endswith(" element"):
-        elem_name = req[:-8]
-        if elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            trait = elem_data.get("requires_trait")
-            levels = elem_data.get("levels", [])
-            # Mod-side RitualSpawnPatcher only allows a creature type to spawn
-            # when at least one of its original-vanilla levels is in logic.
-            # Mirror that gate here so AP doesn't consider creature-kill checks
-            # reachable when the player can't actually trigger spawns yet.
-            if trait:
-                if not state.has(f"{trait} Battle Trait", player):
-                    return False
-                return not levels or _can_reach_any_stage(state, player, levels)
-            return _can_reach_any_stage(state, player, levels)
-        if elem_name in game_level_elements:
-            stages = game_level_elements[elem_name].get("levels", [])
-            if stages:
-                return _can_reach_any_stage(state, player, stages)
-        return True
+    # --- Prefix vocabulary (s/t/e/w/m) -------------------------------
+    # Tokens without a colon are dispatched by the maps in requirement_tokens.
+    # Mode gates always-fail in this journey-only mod.
+    if req in mode_tokens:
+        return False
+    if req in item_prefix_map:
+        # Direct AP-item check.  Map values are full item names ("Bolt
+        # Skill" / "Haste Battle Trait") so no string construction here.
+        return state.has(item_prefix_map[req], player)
+    if req in element_prefix_map:
+        # Element/group/weather token (single-element lists for `eBeacon`,
+        # multi-element list for `eNonMonsters`). Reachable if any member is.
+        return any(_eval_element_reachable(n, state, player)
+                   for n in element_prefix_map[req])
 
     if ":" in req:
         group_name, count_str = req.split(":", 1)
@@ -313,41 +371,48 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             count_needed = int(count_str.strip())
         except ValueError:
             return True
-        if group_name in skill_groups:
-            members = skill_groups[group_name].get("members", [])
-            return sum(1 for m in members if state.has(f"{m} Skill", player)) >= count_needed
-        if group_name in game_skills_categories:
-            members = game_skills_categories[group_name].get("members", [])
-            suffix = " Battle Trait" if group_name == "BattleTraits" else " Skill"
-            return sum(1 for m in members if state.has(f"{m}{suffix}", player)) >= count_needed
-        if group_name == "Skills":
-            all_skill_names = [m for cat in game_skills_categories.values() for m in cat.get("members", [])]
-            suffix_map = {m: (" Battle Trait" if cat == "BattleTraits" else " Skill")
-                          for cat, data in game_skills_categories.items() for m in data.get("members", [])}
-            return sum(1 for m in all_skill_names if state.has(f"{m}{suffix_map[m]}", player)) >= count_needed
-        if group_name in ("minWave", "beforeWave"):
-            # beforeWave is the same gen-time gate as minWave: a stage exists with
-            # at least N waves so wave N is actually reached. Kept distinct in data
-            # because the in-game semantic is "must happen before wave N".
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("WaveCount", 0) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
-        if group_name == "minMonsters":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("MonsterCount", 0) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
-        if group_name == "minMonsterHP":
+
+        # Group token with count (e.g. eNonMonsters:1) — the count is
+        # ignored; we just check whether any group member is reachable.
+        # Has to be checked BEFORE the generic eX:N count branch, since
+        # `eNonMonsters` is also an "e"-prefix token.
+        if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
+            return any(_eval_element_reachable(n, state, player)
+                       for n in element_prefix_map[group_name])
+
+        # eX:N — single-element with count.  The token body is already
+        # PascalCase so the level-data field is just `<body>Count`.
+        if _is_prefix_token(group_name, "e"):
+            return _eval_element_count(group_name[1:], count_needed, state, player)
+
+        # Skill / trait / category / total counters — all unified into
+        # one pool table (built in requirement_tokens.py from skill_groups
+        # + game_skills_categories).  Covers strikeSpells, enhancementSpells,
+        # gemSkills, BattleTraits / battleTraits, GemSkills, OtherSkills,
+        # skills / Skills.
+        if group_name in skill_counter_pools:
+            pool = skill_counter_pools[group_name]
+            return sum(1 for name in pool if state.has(name, player)) >= count_needed
+
+        # Stage-stat gates: "<counter>:N" passes if any reachable stage's
+        # field(s) >= N.  Tuple values are max-aggregated across the fields.
+        # Add new gates by adding entries to level_stat_counters in
+        # requirement_tokens.py — no code change needed.
+        if group_name in level_stat_counters:
+            fields = level_stat_counters[group_name]
+            if isinstance(fields, str):
+                fields = (fields,)
             qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("GiantMaxHP", 0), d.get("ReaverMaxHP", 0)) >= count_needed]
+                          if max(d.get(f, 0) for f in fields) >= count_needed]
             return _can_reach_any_stage(state, player, qualifying)
-        if group_name == "minMonsterArmor":
-            qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get("GiantMaxArmor", 0), d.get("ReaverMaxArmor", 0)) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
-        if group_name == "minSwarmlingArmor":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingMaxArmor", 0) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
-        if group_name == "minSwarmlings":
-            qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get("SwarmlingCount", 0) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
+
+        # Talisman-fragment counters by type.
+        if group_name in _TALISMAN_FRAGMENT_COUNTERS:
+            return _count_talisman_fragments(
+                state, player, _TALISMAN_FRAGMENT_COUNTERS[group_name],
+            ) >= count_needed
+
+        # Other item-collection counters — each counts a different pool.
         if group_name == "fieldToken":
             collected = sum(
                 1
@@ -357,47 +422,26 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             )
             return collected >= count_needed
         if group_name == "shadowCore":
-            # Counts AP-distributed Shadow Core stash items (specific + extra).
-            # In-game core drops still happen and contribute to the achievement,
-            # but for AP gating we measure only the items we can place.
-            return _count_shadow_core_items(state, player) >= count_needed
+            # Sum core amounts of held progression shadow-core stash items.
+            # Half of stashes are progression (see items.py _sc_cls); useful/
+            # filler stashes are invisible to state.has and contribute 0.
+            return _sum_shadow_cores(state, player) >= count_needed
         if group_name == "wizardLevel":
-            # Wizard level is reached half from AP-distributed XP items (tomes/
-            # scrolls/grimoires/extras) and half from natural play, so the gate
-            # requires ceil(N/2) XP items collected.
+            # Half of XP items are progression; player needs ceil(N/2) of
+            # those collected before the wizardLevel:N gate opens.  Max
+            # reachable N at default settings: 40 (20 progression XP items).
             needed_items = (count_needed + 1) // 2
             return _count_xp_items(state, player) >= needed_items
         if group_name == "talismanRow":
-            # A complete row = all 3 fragments of one icon group (positions
-            # 1-3 / 4-6 / 7-9). Need at least N complete rows.
             return _count_complete_talisman_rows(state, player) >= count_needed
         if group_name == "talismanColumn":
-            # A complete column = one specific fragment from each icon group
-            # (positions {1,4,7} / {2,5,8} / {3,6,9}). Need at least N complete
-            # columns. NOTE: rows and columns share the same 9 fragments, so
-            # talismanRow:3 + talismanColumn:3 both reduce to "all 9 owned."
             return _count_complete_talisman_columns(state, player) >= count_needed
         if group_name == "skillPoints":
             return _count_skill_points(state, player) >= count_needed
+
         return True  # Unknown counter (minGemGrade, etc.) — metadata only
 
-    if " trait" in req.lower() or " skill" in req.lower():
-        skill_name = req.replace(" skill", "").replace(" Skill", "").replace(" trait", "").replace(" Trait", "").strip()
-        for category, category_data in game_skills_categories.items():
-            if skill_name in category_data.get("members", []):
-                suffix = " Battle Trait" if category == "BattleTraits" else " Skill"
-                if not state.has(f"{skill_name}{suffix}", player):
-                    return False
-                # Ritual is mod-gated: it spawns nothing until at least one of
-                # its creatures' original-vanilla levels is in logic. Treat
-                # the trait as not-yet-in-logic before that threshold so
-                # achievements requiring just "Ritual trait" don't appear
-                # satisfiable on a sphere where the trait is inert.
-                if skill_name == "Ritual":
-                    return _can_reach_any_stage(state, player, RITUAL_CREATURE_LEVELS)
-                return True
-
-    return True  # Metadata requirement (gemCount, minWave, etc.) — not gated
+    return True  # Metadata requirement — not gated
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:

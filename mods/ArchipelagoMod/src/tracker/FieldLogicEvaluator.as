@@ -328,6 +328,66 @@ package tracker {
             return false;
         }
 
+        /** True if any in-logic field has GiantCount >= threshold. */
+        public function hasInLogicFieldWithMinGiants(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].GiantCount) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has ReaverCount >= threshold. */
+        public function hasInLogicFieldWithMinReavers(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].ReaverCount) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has the named element count >= threshold.
+         *  `fieldNamePascal` is the element name in PascalCase without spaces;
+         *  the level-stat key is `<fieldNamePascal>Count`. */
+        public function hasInLogicFieldWithElementCount(fieldNamePascal:String, threshold:int):Boolean {
+            if (_dirty) recompute();
+            var key:String = fieldNamePascal + "Count";
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid][key]) >= threshold)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has MonsterCount >= threshold AND WaveCount >= 12.
+         *  Approximates the only-existing "minMonstersBeforeWave12:N" composite. */
+        public function hasInLogicFieldWithMinMonstersBeforeWave12(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true)
+                {
+                    var s:Object = _levelStats[sid];
+                    if (int(s.MonsterCount) >= threshold && int(s.WaveCount) >= 12)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         /**
          * Returns [text, color] line pairs describing why this stage isn't
          * in logic. Used by FieldTooltipOverlay. Lines cover:

@@ -50,12 +50,6 @@ STARTING_STAGE_BY_VALUE = {
     StartingStage.option_s4: "S4",
 }
 
-# Eligible early-tier stages for the prereq DAG. The chosen start sits alone in
-# bucket 0; the remaining seven occupy bucket 1, regardless of their natural
-# difficulty, so any W/S start has a populated bucket-1 prereq pool.
-EARLY_TIER_STAGES = frozenset(STARTING_STAGE_BY_VALUE.values())
-
-
 class FieldTokenPlacement(Choice):
     """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-from importlib.resources import files
 from typing import Dict, List
 
 from BaseClasses import ItemClassification, Region
@@ -9,8 +7,8 @@ from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
 
-from .items import GCFWItem, ItemData, item_table
-from .locations import GCFWLocation, LocationData, location_table
+from .items import GCFWItem, item_table
+from .locations import GCFWLocation, location_table
 from .options import (
     GCFWOptions,
     FieldTokenPlacement,
@@ -22,14 +20,9 @@ from .options import (
     WaveSurgeGemLevel,
     DeathLinkGracePeriod,
     DeathLinkCooldown,
-    EnemiesPerWaveMultiplier,
-    ExtraWaveCount,
-    FieldsRequired,
-    FieldsRequiredPercentage,
     AchievementRequiredEffort,
     SkillpointMultiplier,
     GemPouchGating,
-    StartingStage,
     STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
@@ -45,10 +38,8 @@ from .power import (
 )
 from .rules import set_rules
 from .rulesdata import (
-    TIERS,
     GAME_DATA,
     SKILL_CATEGORIES,
-    STAGE_RULES,
     GEM_POUCH_PLAY_ORDER,
 )
 from .rulesdata_settings import (
@@ -91,9 +82,12 @@ def _should_skip_achievement(ach_data: dict, options) -> bool:
     if ach_data.get("untrackable", False):
         return True
     requirements = ach_data.get("requirements", [])
-    if _requirements_contain(requirements, "Trial"):
+    # Both Trial and Endurance are unsupported by AP-side gating — the
+    # mod is journey-only.  Achievements containing either token are
+    # always pruned at gen time so they never appear in the multiworld.
+    if _requirements_contain(requirements, "mTrial"):
         return True
-    if options.disable_endurance.value and _requirements_contain(requirements, "Endurance"):
+    if _requirements_contain(requirements, "mEndurance"):
         return True
     return False
 
@@ -113,6 +107,29 @@ def _can_achievement_be_met(requirements: list) -> bool:
       - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
         non-empty. Empty-levels-and-no-trait → unreachable.
     """
+    # element_prefix_map values are lists of element names.  Single-element
+    # tokens map to ["Beacon"]; group tokens like "eNonMonsters" map to the
+    # full list of members.
+    from .requirement_tokens import element_prefix_map
+
+    def _resolve_element_names(req: str):
+        """Return the list of element names a requirement refers to, or
+        None if the requirement isn't an element-style token."""
+        head = req.split(":", 1)[0].strip()
+        return element_prefix_map.get(head)
+
+    def _element_blocked(elem_name: str) -> bool:
+        """True if this element is structurally unreachable (unsupported
+        in game_level_elements, or non-monster-element with neither trait
+        nor levels)."""
+        if elem_name in game_level_elements:
+            return bool(game_level_elements[elem_name].get("unsupported", False))
+        if elem_name in non_monster_elements:
+            elem_data = non_monster_elements[elem_name]
+            return (not elem_data.get("requires_trait")
+                    and not elem_data.get("levels", []))
+        return False  # Mod-only / unknown — don't block on it.
+
     def _group_can_be_met(group: list) -> bool:
         for req in group:
             if isinstance(req, list):
@@ -120,18 +137,12 @@ def _can_achievement_be_met(requirements: list) -> bool:
                     return False
                 continue
             req = req.strip()
-            if " element" not in req.lower():
+            elem_names = _resolve_element_names(req)
+            if elem_names is None:
                 continue
-            elem_name = req.replace(" element", "").strip()
-            if elem_name in game_level_elements:
-                # Empty levels = always available (basic mechanic). Only flag as
-                # unreachable when the entry explicitly opts out via `unsupported`.
-                if game_level_elements[elem_name].get("unsupported", False):
-                    return False
-            elif elem_name in non_monster_elements:
-                elem_data = non_monster_elements[elem_name]
-                if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                    return False
+            # Group passes if any one member is reachable.  All blocked = fail.
+            if all(_element_blocked(n) for n in elem_names):
+                return False
         return True
 
     if not requirements:

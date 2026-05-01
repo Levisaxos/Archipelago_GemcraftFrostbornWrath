@@ -9,10 +9,9 @@ Concepts:
   - Player power = sum over collected items of (item_type_weight × count).
     Talisman fragments are weighted by rarity, everything else by a flat per-
     item weight.
-  - Required power = the threshold a location/item gates against. Stash keys
-    use the stage's tier power scaled by STASH_KEY_POWER_FRACTION; achievements
-    use either an explicit `required_power` field on the achievement entry or
-    fall back to the effort→power map.
+  - Required power = the threshold an achievement gates against. Each
+    achievement either declares an explicit `required_power` field or falls
+    back to the effort → power map.
   - PowerScale yaml option multiplies the *thresholds* (not the weights):
       50  → halved thresholds, easier seed
      100  → baseline
@@ -60,25 +59,6 @@ WEIGHT_GEMPOUCH          = 6.0   # per pouch (distinct or progressive copy) —
 # way useful items end up at stages too, not concentrated on the (un-gated,
 # always-reachable) achievement locations.
 STAGE_TIER_POWER: list[int] = [0, 3, 7, 15, 27, 42, 60, 84, 114, 150, 192, 246, 312]
-
-# Stash key items require this fraction of the stage's full power. Lets the
-# stash be reachable by competent play without demanding an end-tier build.
-STASH_KEY_POWER_FRACTION: float = 0.65
-
-# ---------------------------------------------------------------------------
-# Talisman shape gating.
-# Edge and corner fragments are useless until the player has unlocked enough
-# board slots — vanilla slot-unlock costs (PnlTalisman.as: talSlotUnlockCosts):
-#   - Cheapest 6 of 12 EDGE slots ≈ 11,800 shadow cores
-#   - Cheapest 2 of 4  CORNER slots ≈ 19,000 shadow cores
-# Per-stage shadow-core grants average ~300 cores; cumulative-by-tier
-# rough estimate: ~12,000 cores by tier 3, ~19,000 by tier 5.
-# So restrict EDGE / CORNER fragment placement to stage locations at or above
-# these tiers (achievements get both restrictions — they're filler-quality
-# anyway and have no inherent tier to gate by).
-# ---------------------------------------------------------------------------
-EDGE_TALISMAN_MIN_STAGE_TIER:   int = 3
-CORNER_TALISMAN_MIN_STAGE_TIER: int = 5
 
 # ---------------------------------------------------------------------------
 # Achievement gating is per-achievement only.
@@ -246,7 +226,48 @@ def _build_matching_talisman_grid() -> tuple:
 _MATCHING_TALISMAN_GRID, MATCHING_TALISMAN_ROWS, MATCHING_TALISMAN_COLUMNS = _build_matching_talisman_grid()
 MATCHING_TALISMAN_NAMES: frozenset = frozenset(_MATCHING_TALISMAN_GRID)
 
-SP_BUNDLE_NAMES: list[str] = [f"Skillpoint Bundle {n}" for n in range(1, 11)]
+
+def _build_progression_corner_edge_names() -> tuple:
+    """Pick the 4 highest-rarity CORNER fragments and the 12 highest-rarity
+    EDGE fragments from talisman_fragments.  These are the progression-class
+    items that gate the talismanCornerFragment / talismanEdgeFragment
+    achievement counters (matching the talisman's 25-slot layout: 4 corners
+    + 12 edges + 9 inner = 25).  Mirrors the inner-grid selection above:
+    sort by descending rarity, name as tiebreak, take the top N."""
+    from .rulesdata import GAME_DATA
+    corner: list[tuple[str, int]] = []
+    edge: list[tuple[str, int]] = []
+    for frag in GAME_DATA.get("talisman_fragments", []):
+        parts = str(frag["tal_data"]).split("/")
+        rarity = int(parts[1])
+        type_id = int(parts[2])
+        name = f"{frag['str_id']} Talisman Fragment"
+        if type_id == 0:
+            edge.append((name, rarity))
+        elif type_id == 1:
+            corner.append((name, rarity))
+    corner.sort(key=lambda x: (-x[1], x[0]))
+    edge.sort(key=lambda x: (-x[1], x[0]))
+    if len(corner) < 4:
+        raise RuntimeError(f"Need 4 CORNER fragments, only found {len(corner)}")
+    if len(edge) < 12:
+        raise RuntimeError(f"Need 12 EDGE fragments, only found {len(edge)}")
+    return (
+        frozenset(name for name, _ in corner[:4]),
+        frozenset(name for name, _ in edge[:12]),
+    )
+
+
+PROGRESSION_CORNER_TALISMAN_NAMES, PROGRESSION_EDGE_TALISMAN_NAMES = _build_progression_corner_edge_names()
+
+# Union of all 25 progression talisman fragments (4 corner + 12 edge + 9 inner).
+# Matches the talisman's full slot layout in the game.  Used by the
+# talismanFragments:N gate.
+PROGRESSION_ALL_TALISMAN_NAMES: frozenset = (
+    PROGRESSION_CORNER_TALISMAN_NAMES
+    | PROGRESSION_EDGE_TALISMAN_NAMES
+    | MATCHING_TALISMAN_NAMES
+)
 
 
 def build_weight_map(xp_per_tome_average: float = 1.0) -> dict[str, float]:
@@ -328,20 +349,6 @@ def compute_player_power(state: "CollectionState", player: int,
 def power_scale(world: "GemcraftFrostbornWrathWorld") -> float:
     """Return the per-world threshold multiplier from the PowerScale option."""
     return world.options.power_scale.value / 100.0
-
-
-def required_stage_power(stage_tier: int) -> int:
-    """Required power to reach a stage's full Journey check at the given tier."""
-    if stage_tier < 0:
-        return 0
-    if stage_tier >= len(STAGE_TIER_POWER):
-        return STAGE_TIER_POWER[-1]
-    return STAGE_TIER_POWER[stage_tier]
-
-
-def required_stash_power(stage_tier: int) -> int:
-    """Required power to obtain (and use) a stage's wizard stash key."""
-    return int(round(required_stage_power(stage_tier) * STASH_KEY_POWER_FRACTION))
 
 
 def required_achievement_power(ach_data: dict) -> int:
