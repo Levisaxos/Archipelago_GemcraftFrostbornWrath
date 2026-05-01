@@ -624,8 +624,10 @@ package {
                     _startingGemSuppressor.resetForNewStage();
                     _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
                     _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
-                    for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
-                        var sdEntry:Object = _sessionDrops[sd];
+                    // sd / sdEntry are already function-scope-declared in the
+                    // earlier _sessionDrops loop above; reuse them here.
+                    for (sd = 0; sd < _sessionDrops.length; sd++) {
+                        sdEntry = _sessionDrops[sd];
                         _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
                     }
                     _logger.log(MOD_NAME, "=== end of AP items list ===");
@@ -693,23 +695,20 @@ package {
                 syncWithAP(_pendingSyncItems);
             }
 
-            // Unlock free stages whenever a new ppd is detected (new game or slot change).
-            // syncWithAP only runs once at connect time; if a new ppd is created after that
-            // (e.g. connecting while an old slot was still loaded, then loading a new slot),
-            // _pendingSyncItems is already null and free stages would never get applied.
+            // Reconcile stage lock state whenever a new ppd is detected
+            // (new game or slot change).  syncWithAP only runs once at
+            // connect time; if a new ppd is created after that the game
+            // pre-unlocks W1 (PlayerProgressData.as:155) and we need to
+            // lock it again if W1 isn't the chosen starting stage.
             if (_connectionManager.isConnected
                     && GV.ppd != null
                     && GV.stageCollection != null
                     && GV.ppd !== _lastPpd) {
                 _lastPpd = GV.ppd;
-                var freeStages:Array = AV.serverData.freeStages;
-                if (freeStages != null) {
-                    for each (var freeStrId:String in freeStages) {
-                        if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
-                            _stageUnlocker.unlockStage(freeStrId);
-                            _logger.log(MOD_NAME, "free stage unlocked on ppd change: " + freeStrId);
-                        }
-                    }
+                var stageChanges:int = _syncStageLockState();
+                if (stageChanges > 0) {
+                    _logger.log(MOD_NAME, "stage lock state reconciled on ppd change: "
+                        + stageChanges + " changes");
                 }
             }
 
@@ -1504,6 +1503,56 @@ package {
             }
         }
 
+        /**
+         * Reconcile every stage's lock state against the current AP
+         * collection (free stages + collected field tokens).  Vanilla PPD
+         * construction always pre-unlocks W1 (PlayerProgressData.as:155),
+         * so without this we'd leave W1 unlocked even when the player
+         * chose a different starting stage.  Called from syncWithAP and
+         * from the ppd-change handler — both points where the game might
+         * have just pre-unlocked W1 on us.
+         *
+         * Logic per stage:
+         *   - in freeStages OR token collected → unlock (xp=0) if locked
+         *   - otherwise                        → lock (xp=-1) if currently
+         *                                         unlocked-but-not-completed
+         *   - already completed (xp>0)        → leave alone
+         */
+        private function _syncStageLockState():int {
+            if (GV.ppd == null || GV.stageCollection == null || AV.serverData == null) return 0;
+
+            var freeSet:Object = {};
+            var freeArr:Array = AV.serverData.freeStages;
+            if (freeArr != null) {
+                for each (var fsId:String in freeArr) freeSet[fsId] = true;
+            }
+            var hasToken:Object = {};
+            var tokenMap:Object = AV.serverData.tokenMap;
+            if (tokenMap != null) {
+                for (var apIdStr:String in tokenMap) {
+                    if (AV.sessionData.hasItem(int(apIdStr))) hasToken[tokenMap[apIdStr]] = true;
+                }
+            }
+
+            var changes:int = 0;
+            var metas:Array = GV.stageCollection.stageMetas;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null) continue;
+                var sid:String = meta.strId;
+                var shouldUnlock:Boolean = (freeSet[sid] == true) || (hasToken[sid] == true);
+                var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
+                if (shouldUnlock && xp < 0) {
+                    _stageUnlocker.unlockStage(sid);
+                    changes++;
+                } else if (!shouldUnlock && xp == 0) {
+                    _stageUnlocker.lockStage(sid);
+                    changes++;
+                }
+            }
+            return changes;
+        }
+
         private function syncWithAP(items:Array):void {
             if (GV.ppd == null) {
                 _pendingSyncItems = items;
@@ -1516,14 +1565,13 @@ package {
 
             var apSkills:Object = {};
             var apTraits:Object = {};
-            var apTokens:Object = {};
             var apXpTotal:int   = 0;
             var apTalismans:Array  = [];
             var apShadowCores:Array = [];
-            var tokenMap:Object    = AV.serverData.tokenMap;
-            var tokenStages:Object = AV.serverData.tokenStages;
 
-            // Rebuild tracker state from the full item list.
+            // Rebuild tracker state from the full item list.  Stage tokens
+            // are reflected via AV.sessionData.hasItem now (used by
+            // _syncStageLockState below); no need to track them separately.
             AV.sessionData.reset();
 
             for each (var item:Object in items) {
@@ -1534,8 +1582,6 @@ package {
                     apSkills[apId - 700] = true;
                 } else if (apId >= 800 && apId <= 814) {
                     apTraits[apId - 800] = true;
-                } else if (tokenMap[String(apId)] != null) {
-                    apTokens[tokenMap[String(apId)]] = true;
                 } else if (apId >= 1100 && apId <= 1199) {
                     apXpTotal += _levelUnlocker.levelsForApId(apId);
                 } else if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
@@ -1543,6 +1589,7 @@ package {
                 } else if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     apShadowCores.push(apId);
                 }
+                // Stage tokens fall through — they're tracked via AV.sessionData.
             }
 
             // --- Skills ---
@@ -1578,31 +1625,8 @@ package {
                 }
             }
 
-            // --- Stages ---
-            var stageChanges:int = 0;
-            if (GV.stageCollection != null) {
-                var metas:Array = GV.stageCollection.stageMetas;
-                for (var k:int = 0; k < metas.length; k++) {
-                    var meta:* = metas[k];
-                    if (meta == null) continue;
-                    var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
-                    if (xp == 0) {
-                        _logger.log(MOD_NAME, "  stage=" + meta.strId
-                            + " xp=" + xp
-                            + " inTokenStages=" + (tokenStages[meta.strId] == true)
-                            + " shouldHave=" + (apTokens[meta.strId] == true));
-                    }
-                    if (!tokenStages[meta.strId]) continue;
-                    var shouldHave:Boolean = apTokens[meta.strId] == true;
-                    if (shouldHave && xp < 0) {
-                        _stageUnlocker.unlockStage(meta.strId);
-                        stageChanges++;
-                    } else if (!shouldHave && xp == 0) {
-                        _stageUnlocker.lockStage(meta.strId);
-                        stageChanges++;
-                    }
-                }
-            }
+            // --- Stages --- (unified lock/unlock logic, also handles free stages)
+            var stageChanges:int = _syncStageLockState();
 
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
@@ -1614,17 +1638,7 @@ package {
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
-            // --- Free stages (W1, W2, W3, W4) — always unlock on sync ---
-            var freeStages:Array = AV.serverData.freeStages;
-            if (freeStages != null) {
-                for each (var freeStrId:String in freeStages) {
-                    if (!_stageUnlocker.isStageUnlocked(freeStrId)) {
-                        _stageUnlocker.unlockStage(freeStrId);
-                        _logger.log(MOD_NAME, "  free stage unlocked: " + freeStrId);
-                    }
-                }
-            }
-
+            // (Free-stage unlocking is handled by _syncStageLockState above.)
             _saveManager.saveSlotData();
 
             if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();

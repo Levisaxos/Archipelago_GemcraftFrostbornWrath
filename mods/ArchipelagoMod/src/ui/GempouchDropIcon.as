@@ -33,7 +33,7 @@ package ui {
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var data:Object;  // { apId:int, prefix:String, isProgressive:Boolean }
+        public var meta:Object;  // { apId:int, prefix:String, isProgressive:Boolean }
 
         // Single shared artwork for all pouch variants. Path is relative to
         // this .as file: src/ui/ → ../../resources/
@@ -47,7 +47,7 @@ package ui {
             var prefix:String = isProgressive ? "" : _prefixForApId(apId);
 
             this.type = DropType.SKILL_TOME; // reuse the tome reveal SFX
-            this.data = {
+            this.meta = {
                 apId: apId,
                 prefix: prefix,
                 isProgressive: isProgressive
@@ -121,16 +121,16 @@ package ui {
                 var title:String;
                 var subtitle:String = "Gem Pouch";
                 var body:String;
-                if (this.data.isProgressive == true) {
+                if (this.meta.isProgressive == true) {
                     title = "Progressive Gempouch";
-                    var copies:int = AV.sessionData.getItemCount(int(this.data.apId));
+                    var copies:int = AV.sessionData.getItemCount(int(this.meta.apId));
                     var unlocked:int = copies; // includes precollected copy
                     var total:int = _orderLength();
                     body = "Unlocks gems on the next world. "
                          + "(" + unlocked + "/" + total + " worlds unlocked)";
                 } else {
-                    title = "Gempouch (" + String(this.data.prefix) + ")";
-                    body = "Unlocks gems on stages of world " + String(this.data.prefix) + ".";
+                    title = "Gempouch (" + String(this.meta.prefix) + ")";
+                    body = "Unlocks gems on stages of world " + String(this.meta.prefix) + ".";
                 }
 
                 vIp.addTextfield(0xFFD700, title, false, 13);

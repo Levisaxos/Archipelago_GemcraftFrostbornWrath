@@ -370,19 +370,31 @@ package tracker {
             return false;
         }
 
-        /** True if any in-logic field has MonsterCount >= threshold AND WaveCount >= 12.
-         *  Approximates the only-existing "minMonstersBeforeWave12:N" composite. */
+        /** True if any in-logic field has MonstersBeforeWave12 >= threshold.
+         *  The dedicated field is populated by a simulator from the
+         *  decompiled stage data; mirrors the apworld gate exactly. */
         public function hasInLogicFieldWithMinMonstersBeforeWave12(threshold:int):Boolean {
             if (_dirty) recompute();
             for (var sid:String in _levelStats)
             {
-                if (_inLogicByStrId[sid] == true)
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonstersBeforeWave12) >= threshold)
                 {
-                    var s:Object = _levelStats[sid];
-                    if (int(s.MonsterCount) >= threshold && int(s.WaveCount) >= 12)
-                    {
-                        return true;
-                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if any in-logic field has MarkedMonsterCount >= threshold.
+         *  Like MonstersBeforeWave12, this is a simulator-derived expected
+         *  value (marked = monsters with 1 attribute, per buffPower). */
+        public function hasInLogicFieldWithMarkedMonsterCount(threshold:int):Boolean {
+            if (_dirty) recompute();
+            for (var sid:String in _levelStats)
+            {
+                if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MarkedMonsterCount) >= threshold)
+                {
+                    return true;
                 }
             }
             return false;

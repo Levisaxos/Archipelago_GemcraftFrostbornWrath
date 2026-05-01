@@ -311,6 +311,13 @@ package tracker {
                 }
                 return false;
             }
+            // eWizardStash — every stage has a wizard stash structurally,
+            // but each is locked behind a per-stage key item (AP IDs
+            // 1400..1521).  Pass the gate iff the player holds any key.
+            if (req == "eWizardStash" || req.indexOf("eWizardStash:") == 0)
+            {
+                return AV.sessionData.countItemsInRange(1400, 1521) > 0;
+            }
             // Prefix tokens (sBolt / tHaste / eBeacon / wRain).  Must take
             // precedence over the legacy " skill"/" element"/" trait" forms
             // and over the colon-counter dispatch below.
@@ -495,13 +502,14 @@ package tracker {
                 return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
             }
 
-            // "shadowCore: N" — counts AP-distributed Shadow Core stash items.
-            // Specific stashes 1000-1016, extras 1300-1351 (ranges per items.py).
+            // "shadowCore: N" — sum core amounts of held shadow-core stash
+            // items.  Mirrors the apworld gate: each stash grants a specific
+            // amount (per slot_data.shadow_core_map: apId -> amount), and we
+            // need the sum of held amounts to reach N.  Only items the player
+            // actually has count.
             if (lower.indexOf("shadowcore") == 0) {
                 var scNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                var scHave:int = AV.sessionData.countItemsInRange(1000, 1016)
-                               + AV.sessionData.countItemsInRange(1300, 1351);
-                return scHave >= scNeed;
+                return _sumShadowCores() >= scNeed;
             }
 
             // "wizardLevel: N" — half from AP-distributed XP items (1100-1199),
@@ -576,12 +584,15 @@ package tracker {
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithMinMonstersBeforeWave12(mbwNeed);
             }
-            // "markedMonster:N" — kill-count counter; mod-tracks the actual
-            // total at runtime.  At AP-logic level we just verify a marked-
-            // monster stage is reachable.
+            // "markedMonster:N" — uses the dedicated MarkedMonsterCount
+            // level-stat field (populated from a simulator that estimates
+            // expected marked monsters per stage).  Passes when any in-logic
+            // stage's expected MarkedMonsterCount >= N.
             if (lower.indexOf("markedmonster") == 0)
             {
-                return _elementInLogic("Marked Monster");
+                var mmNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMarkedMonsterCount(mmNeed);
             }
             // Talisman-fragment-by-type counters.  Bucket lists are built
             // from talismanMap on configure(); each fragment AP id is in
@@ -932,6 +943,28 @@ package tracker {
             for (var size:int = 1; size <= 10; size++) {
                 if (AV.sessionData.hasItem(1699 + size))
                     total += size;
+            }
+            return total;
+        }
+
+        /**
+         * Sum core amounts of held shadow-core stash items.  shadowCoreMap
+         * maps apId(str) -> amount(int), shipped via slot_data.  Iterates
+         * the map and sums amounts for every item the player currently has.
+         */
+        private function _sumShadowCores():int {
+            if (AV.serverData == null || AV.serverData.shadowCoreMap == null)
+            {
+                return 0;
+            }
+            var total:int = 0;
+            var map:Object = AV.serverData.shadowCoreMap;
+            for (var apIdStr:String in map)
+            {
+                if (AV.sessionData.hasItem(int(apIdStr)))
+                {
+                    total += int(map[apIdStr]);
+                }
             }
             return total;
         }
