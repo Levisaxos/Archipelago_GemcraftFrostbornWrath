@@ -51,7 +51,10 @@ package {
 
     import patch.WizStashes;
     import patch.FirstPlayBypass;
+    import patch.EarlyExitOutcome;
+    import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
+    import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
     import patch.LogicEnforcer;
     import patch.WavePrePatcher;
@@ -142,7 +145,10 @@ package {
         private var _shadowCoreUnlocker:ShadowCoreUnlocker;
         private var _achievementUnlocker:AchievementUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
+        private var _earlyExitOutcome:EarlyExitOutcome;
+        private var _frostbornFreeBuildings:FrostbornFreeBuildings;
         private var _gemPouchSuppressor:GemPouchSuppressor;
+        private var _hollowGemInjector:HollowGemInjector;
         private var _startingGemSuppressor:StartingGemSuppressor;
         private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
@@ -221,7 +227,10 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
+                _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
+                _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
+                _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
                 _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
@@ -620,7 +629,9 @@ package {
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
                     _firstPlayBypass.resetIngame();
+                    _frostbornFreeBuildings.resetIngame();
                     _gemPouchSuppressor.resetIngame();
+                    _hollowGemInjector.resetIngame();
                     _startingGemSuppressor.resetForNewStage();
                     _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
                     _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
@@ -685,6 +696,9 @@ package {
             if (screen == ScreenId.INGAME) {
                 _firstPlayBypass.onIngameFrame();
                 _gemPouchSuppressor.onIngameFrame();
+                _hollowGemInjector.onIngameFrame();
+                _frostbornFreeBuildings.onIngameFrame();
+                _earlyExitOutcome.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
             }

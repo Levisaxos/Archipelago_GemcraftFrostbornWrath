@@ -803,6 +803,16 @@ package tracker {
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return true;
             var pouchMode:int = _pouchMode();
+            // Free stage (the seed's starter) without its Gempouch yet: the
+            // player has Hollow Gems available — any WIZLOCK skill listed for
+            // the stage can be brute-forced through. Treat as met so Journey,
+            // elements, and monsters on the starter all show in logic until
+            // the pouch arrives and normal rules take over.
+            if (_freeStages[strId] == true && pouchMode != 0
+                    && strId != null && strId.length > 0
+                    && !_pouchHeld(strId.charAt(0))) {
+                return true;
+            }
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gemskills:") == 0) {

@@ -459,18 +459,16 @@ class GemcraftFrostbornWrathWorld(World):
             pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
 
         # Gempouches — added based on gem_pouch_gating option.
-        # The W (tutorial) pouch is precollected so the seed is solvable from
-        # frame zero; only 25 of 26 pouches go into the pool.
+        # No pouch is precollected: the starter stage (whichever prefix the
+        # seed picks) is bootstrappable via Hollow Gems supplied by the mod's
+        # HollowGemInjector when the matching pouch is missing. So every
+        # pouch goes into the pool and gets randomized.
         pouch_mode = self.options.gem_pouch_gating.value
         if pouch_mode == 1:  # distinct
             for prefix in GEM_POUCH_PLAY_ORDER:
-                if prefix == "W":
-                    self.multiworld.push_precollected(self.create_item(f"Gempouch ({prefix})"))
-                else:
-                    pool.append(self.create_item(f"Gempouch ({prefix})"))
+                pool.append(self.create_item(f"Gempouch ({prefix})"))
         elif pouch_mode == 2:  # progressive
-            self.multiworld.push_precollected(self.create_item("Progressive Gempouch"))
-            for _ in range(len(GEM_POUCH_PLAY_ORDER) - 1):
+            for _ in range(len(GEM_POUCH_PLAY_ORDER)):
                 pool.append(self.create_item("Progressive Gempouch"))
 
         # SP bundle filler — fills all remaining unfilled location slots.

@@ -32,6 +32,16 @@ package patch {
         // when the game rebuilds it the reference changes and we re-scan.
         private var _lastSeenArray:Array = null;
 
+        // Per-stage decision lock: -1 = not yet decided, 0 = let vanilla run
+        // (pouch owned at level start), 1 = suppress (pouch missing at level
+        // start). Set on the first frame with valid state, carried for the
+        // rest of the stage, reset on stage exit. Without this, an AP-granted
+        // Gempouch arriving mid-level would flip the decision: vanilla
+        // mana-leech button would reappear alongside the Hollow Gem button,
+        // and HollowGemInjector's combine-tracked colorless gems would lose
+        // their pairing with the suppressed-state assumptions.
+        private var _lockedSuppress:int = -1;
+
         // arrIsSpellBtnVisible indices for the 6 gem-create button slots.
         // Mirrors IngameInitializer2 lines 1201/1214/1220/1226/1232/1238/1244
         // (gem type 0..5 → spellBtn slot 6..11).
@@ -51,21 +61,8 @@ package patch {
          */
         public function onIngameFrame():void {
             try {
-                if (AV.serverData == null || AV.serverData.serverOptions == null)
+                if (!_shouldSuppressThisStage())
                     return;
-                var mode:int = int(AV.serverData.serverOptions.gemPouchGating);
-                if (mode == 0)
-                    return; // off — no suppression
-
-                if (GV.ingameCore == null || GV.ingameCore.stageMeta == null)
-                    return;
-                var stageStrId:String = String(GV.ingameCore.stageMeta.strId);
-                if (stageStrId == null || stageStrId.length == 0)
-                    return;
-
-                var prefix:String = stageStrId.charAt(0);
-                if (_hasPouchFor(prefix))
-                    return; // pouch owned — let vanilla / FirstPlayBypass run
 
                 var availableGemTypes:Array = GV.ingameCore.availableGemTypes;
                 var cnt:* = GV.ingameCore.cnt;
@@ -80,9 +77,8 @@ package patch {
 
                 if (removed > 0) {
                     _logger.log(_modName,
-                        "GemPouchSuppressor: stage=" + stageStrId
-                        + " prefix=" + prefix
-                        + " removed=" + removed + " gem types (no pouch)");
+                        "GemPouchSuppressor: removed=" + removed
+                        + " gem types (no pouch at level start)");
                 }
             } catch (err:Error) {
                 _logger.log(_modName,
@@ -90,10 +86,39 @@ package patch {
             }
         }
 
-        /** Reset cached array reference on level exit so the next ingame
-         *  entry re-runs suppression against the freshly-built array. */
+        /** Reset cached array reference + decision lock on level exit so the
+         *  next ingame entry re-runs suppression against the freshly-built
+         *  array and re-evaluates pouch ownership for the new stage. */
         public function resetIngame():void {
             _lastSeenArray = null;
+            _lockedSuppress = -1;
+        }
+
+        /** Snapshot the "should we suppress on this stage?" decision on the
+         *  first frame with valid state, then keep returning the same answer
+         *  for the rest of the level. Mid-level Gempouch acquisitions don't
+         *  flip the decision — the next stage entry re-evaluates. */
+        private function _shouldSuppressThisStage():Boolean {
+            if (_lockedSuppress == 1) return true;
+            if (_lockedSuppress == 0) return false;
+
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return false; // pre-init — wait, don't lock.
+            var mode:int = int(AV.serverData.serverOptions.gemPouchGating);
+            if (mode == 0) {
+                _lockedSuppress = 0; // gating off for the seed — stable, lock.
+                return false;
+            }
+            if (GV.ingameCore == null || GV.ingameCore.stageMeta == null)
+                return false; // wait for stage data.
+            var stageStrId:String = String(GV.ingameCore.stageMeta.strId);
+            if (stageStrId == null || stageStrId.length == 0)
+                return false;
+
+            var prefix:String = stageStrId.charAt(0);
+            var suppress:Boolean = !_hasPouchFor(prefix);
+            _lockedSuppress = suppress ? 1 : 0;
+            return suppress;
         }
 
         // -----------------------------------------------------------------------

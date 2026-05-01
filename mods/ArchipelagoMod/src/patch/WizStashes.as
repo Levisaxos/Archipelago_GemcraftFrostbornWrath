@@ -1,14 +1,11 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import com.giab.common.utils.ColorToolbox;
     import com.giab.games.gcfw.entity.WizardStash;
     import data.AV;
     import tracker.FieldLogicEvaluator;
     import flash.display.Bitmap;
     import flash.display.BitmapData;
-    import flash.geom.Matrix;
-    import flash.geom.Point;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
 
@@ -25,18 +22,13 @@ package patch {
      * Per-frame in-level enforcement:
      *   - tickClearOpened()         — clean up matrix cells of opened stashes
      *   - tickEnforceStashLock()    — shield-spike locked stashes (AP-side per-stage
-     *                                 gating) and overdraw the locked-stash sprite
-     *                                 directly into core.cnt.bmpdBuildings so the
-     *                                 chained-chest art replaces the vanilla stash
+     *                                 gating) and hide them from the
+     *                                 core.wizardStashes targeting list so towers
+     *                                 don't waste shots
      *   - tickStashLockTooltip()    — append a "Locked - requires key" line to the
      *                                 hover tooltip when the player hovers a locked stash
      */
     public class WizStashes {
-
-        // True while we have our locked-stash artwork stamped into bmpdBuildings.
-        // Used so the unlock transition triggers exactly one redrawHighBuildings()
-        // call (which repaints the vanilla stash sprite over our overdraw).
-        private static var _hasLockedDrawn:Boolean = false;
 
         // Original shield value per locked stash, captured the first frame we
         // see it. Restored when the unlock arrives so the stash becomes breakable
@@ -60,88 +52,6 @@ package patch {
         private static var _evaluator:FieldLogicEvaluator = null;
         public static function setEvaluator(evaluator:FieldLogicEvaluator):void {
             _evaluator = evaluator;
-        }
-
-        // Embedded chained-chest art used to replace the vanilla stash sprite
-        // while the stash is locked. Path is relative to this .as file:
-        // src/patch/ → ../../resources/WizStashLocked.png.
-        [Embed(source='../../resources/WizStashLocked.png')]
-        private static const LockedStashAsset:Class;
-
-        // Stash collision footprint is 3 cells × 2 cells = 84×56 px, but the
-        // vanilla stash sprite bleeds beyond that with shadow/depth. We render
-        // larger than the footprint and center on the visual anchor at
-        // ((fx+1.5)·28, (fy+1)·28) so the chained-chest covers the full vanilla
-        // silhouette. Adjust these two consts (keeping ~3:2 ratio) if the art
-        // needs to grow/shrink.
-        private static const LOCKED_W:int = 96;
-        private static const LOCKED_H:int = 64;
-        private static var _lockedStashBmd:BitmapData = null;
-
-        // Cached per-stage tinted variant. Vanilla applies a level-specific
-        // HSBC color transform to every building (ColorToolbox.adjustHsbc in
-        // IngameRenderer2.as:807); we replicate it here so the chained chest
-        // matches the stage's palette instead of staying gold-yellow on a
-        // bluish level. Keyed by hsbc fingerprint — rebuilt only when the
-        // tint actually changes (stage transitions, mostly).
-        private static var _tintedLockedBmd:BitmapData = null;
-        private static var _tintedLockedKey:String = null;
-
-        private static function _getLockedStashBmd():BitmapData {
-            if (_lockedStashBmd != null) return _lockedStashBmd;
-            try {
-                var src:Bitmap = new LockedStashAsset() as Bitmap;
-                if (src == null || src.bitmapData == null) return null;
-
-                // Trim transparent padding so a generously-bordered PNG still
-                // fills the stash footprint. getColorBoundsRect with mask
-                // 0xFF000000 finds the tight bbox of non-transparent pixels.
-                var srcBmd:BitmapData = src.bitmapData;
-                var trim:Rectangle = srcBmd.getColorBoundsRect(0xFF000000, 0x00000000, false);
-                if (trim == null || trim.width <= 0 || trim.height <= 0) {
-                    trim = new Rectangle(0, 0, srcBmd.width, srcBmd.height);
-                }
-
-                var bmd:BitmapData = new BitmapData(LOCKED_W, LOCKED_H, true, 0);
-                var m:Matrix = new Matrix();
-                m.translate(-trim.x, -trim.y);
-                m.scale(LOCKED_W / trim.width, LOCKED_H / trim.height);
-                bmd.draw(srcBmd, m, null, null, new Rectangle(0, 0, LOCKED_W, LOCKED_H), true);
-                _lockedStashBmd = bmd;
-            } catch (e:Error) {}
-            return _lockedStashBmd;
-        }
-
-        private static function _getTintedLockedBmd(hsbc:Array):BitmapData {
-            var key:String = hsbc != null ? hsbc.join(",") : "";
-            if (_tintedLockedBmd != null && _tintedLockedKey == key)
-                return _tintedLockedBmd;
-
-            var base:BitmapData = _getLockedStashBmd();
-            if (base == null)
-                return null;
-
-            if (_tintedLockedBmd != null) {
-                try { _tintedLockedBmd.dispose(); } catch (eDisp:Error) {}
-                _tintedLockedBmd = null;
-            }
-
-            var tinted:BitmapData = base.clone();
-            if (hsbc != null) {
-                try {
-                    var arr:Array = ColorToolbox.calculateColorMatrixFilter(hsbc);
-                    if (arr != null && arr.length > 0 && arr[0] != null) {
-                        tinted.applyFilter(tinted,
-                            new Rectangle(0, 0, tinted.width, tinted.height),
-                            new Point(0, 0),
-                            arr[0]);
-                    }
-                } catch (eFilter:Error) {}
-            }
-
-            _tintedLockedBmd = tinted;
-            _tintedLockedKey = key;
-            return _tintedLockedBmd;
         }
 
         public static function apply(logger:Logger, modName:String):void {
@@ -271,17 +181,11 @@ package patch {
          *     the stash, which reads buildingAreaMatrix instead of wizardStashes
          *     (IngameSpellCaster.as:627). 1000 is enough to absorb any plausible
          *     burst within a frame, and the per-frame refresh keeps it topped up.
-         *   - Overdraw the locked-stash sprite into core.cnt.bmpdBuildings so
-         *     the chained-chest art visually replaces the vanilla stash. The
-         *     overdraw is reapplied each frame: cheap (one copyPixels per
-         *     stash), and robust to any vanilla call to redrawHighBuildings()
-         *     (input handler clicks, destroyer events, etc.) that would
-         *     otherwise wipe it.
          *
          * Once the unlock arrives, hidden stashes are pushed back into
-         * core.wizardStashes, original shield is restored, and a single
-         * redrawHighBuildings() call repaints the vanilla stash over our
-         * overdraw.
+         * core.wizardStashes and the original shield is restored. The vanilla
+         * stash sprite stays as-is throughout — only behavior is gated, not
+         * appearance — so no redraw call is needed on the unlock transition.
          */
         public static function tickEnforceStashLock(logger:Logger, modName:String):void {
             try {
@@ -317,25 +221,18 @@ package patch {
 
                 if (unlocked) {
                     // Both gates pass — restore any shields we spiked, push
-                    // hidden stashes back to the targeting array. If we had
-                    // overdrawn locked sprites, trigger one redrawHighBuildings
-                    // so vanilla repaints the unlocked stash sprite.
+                    // hidden stashes back to the targeting array.
                     _restoreSpikedShields(core);
                     _restoreHiddenStashes(core);
-                    if (_hasLockedDrawn) {
-                        _hasLockedDrawn = false;
-                        try { core.renderer2.redrawHighBuildings(); } catch (eRedraw:Error) {}
-                    }
                     return;
                 }
 
                 // Stage changed (entered a new level). Vanilla rebuilt
-                // core.wizardStashes and bmpdBuildings from scratch, so our
-                // hidden-stash cache and locked-overdraw flag are stale.
+                // core.wizardStashes from scratch, so our hidden-stash cache
+                // is stale.
                 if (_hiddenStashesStageId != -1 && _hiddenStashesStageId != stageId) {
                     _hiddenStashes.length = 0;
                     _hiddenStashesStageId = -1;
-                    _hasLockedDrawn = false;
                 }
 
                 var areaM:* = core.buildingAreaMatrix;
@@ -356,14 +253,11 @@ package patch {
                     }
                 }
 
-                // Walk the building matrix once: shield-spike locked stashes and
-                // collect their (fieldX, fieldY) so we can overdraw the locked
-                // chest sprite at each position. Also capture the first stash's
-                // hsbc tint array — used to apply the same per-stage color
-                // transform vanilla applies to the building sprites.
+                // Walk the building matrix once: shield-spike every locked
+                // stash so vanilla damage paths bail before they ever reach
+                // openWizardStash(). Re-applied each frame so a multi-hit
+                // bomb can't drain it across frames.
                 var seen:Object = {};
-                var stashCoords:Array = [];
-                var stashHsbc:Array = null;
                 for (var y:int = 0; y < areaM.length; y++) {
                     var row:* = areaM[y];
                     if (row == null) continue;
@@ -377,49 +271,10 @@ package patch {
                         if (seen[key] == true) continue;
                         seen[key] = true;
 
-                        // Cache original shield once, then spike to ~infinity.
-                        // Vanilla damage paths bail when shield > 0, so HP never
-                        // gets touched and openWizardStash() is never called.
                         if (_originalShield[w] === undefined) {
                             _originalShield[w] = w.shield.g();
                         }
                         w.shield.s(LOCK_SHIELD);
-
-                        if (stashHsbc == null) stashHsbc = w.hsbc;
-                        stashCoords.push({fx: w.fieldX, fy: w.fieldY});
-                    }
-                }
-
-                if (stashCoords.length == 0) return;
-
-                // Overdraw: stamp the chained-chest art directly into
-                // bmpdBuildings at each stash's footprint. We clear the
-                // footprint first (fillRect → transparent) so vanilla stash
-                // pixels don't bleed through any transparent edges of our PNG.
-                var bmd:BitmapData = _getTintedLockedBmd(stashHsbc);
-                if (bmd != null && core.cnt != null && core.cnt.bmpdBuildings != null) {
-                    var dest:BitmapData = core.cnt.bmpdBuildings;
-                    var srcRect:Rectangle = new Rectangle(0, 0, bmd.width, bmd.height);
-                    var dstPt:Point = new Point();
-                    var clearRect:Rectangle = new Rectangle(0, 0, bmd.width, bmd.height);
-                    var wasFirstDraw:Boolean = !_hasLockedDrawn;
-                    for (var s:int = 0; s < stashCoords.length; s++) {
-                        var c:Object = stashCoords[s];
-                        // Center the locked sprite on the stash visual anchor:
-                        // ((fx+1.5)·28, (fy+1)·28). Footprint is 84×56 cells,
-                        // bitmap is LOCKED_W×LOCKED_H, so the offset is
-                        // (footprint − bitmap)/2 from the cell origin.
-                        dstPt.x = int(c.fx) * 28 + ((84 - LOCKED_W) >> 1);
-                        dstPt.y = int(c.fy) * 28 + ((56 - LOCKED_H) >> 1);
-                        clearRect.x = dstPt.x;
-                        clearRect.y = dstPt.y;
-                        dest.fillRect(clearRect, 0);
-                        dest.copyPixels(bmd, srcRect, dstPt, null, null, true);
-                    }
-                    _hasLockedDrawn = true;
-                    if (wasFirstDraw) {
-                        logger.log(modName, "WizStashes: locked stash overdraw applied for "
-                            + strId + " (" + stashCoords.length + " stash(es))");
                     }
                 }
             } catch (err:Error) {

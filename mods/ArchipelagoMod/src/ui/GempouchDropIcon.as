@@ -34,6 +34,11 @@ package ui {
         public var bmpdIcon:BitmapData;
         public var type:int;
         public var meta:Object;  // { apId:int, prefix:String, isProgressive:Boolean }
+        // Vanilla IngameEnding.removeAllDropIcons writes `.data = null` on
+        // every entry in core.ending.dropIcons during cleanup. Sealed Sprite
+        // subclasses reject dynamic property assignment, so the field must
+        // exist or the cleanup throws. Unread by us — mirrors XpTomeDropIcon.
+        public var data:*;
 
         // Single shared artwork for all pouch variants. Path is relative to
         // this .as file: src/ui/ → ../../resources/
