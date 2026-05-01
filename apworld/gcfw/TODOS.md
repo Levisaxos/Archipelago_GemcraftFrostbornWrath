@@ -55,7 +55,7 @@ Re-run the extractor (any future tooling) to refresh this file.
 
 - **AP 2009 — Adept Grade** (line 128): determine how much mana is needed to get to grade 8 and implement accordingly
 
-## Miscellaneous (7)
+## Miscellaneous (8)
 
 - **AP 2010 — Adventurer** (line 138): What battle?
 - **AP 2020 — Amplifinity** (line 240): Check how much mana it takes to build 45 amps
@@ -63,4 +63,5 @@ Re-run the extractor (any future tooling) to refresh this file.
 - **AP 2061 — Bone Shredder** (line 661): Add monstercount before wave 12 to rulesdata_levels and set minMonstersBeforeWave12:600.
 - **AP 2080 — Care to Die Already?** (line 857): needs monster with enough hp to survive 8 ice shards casts.
 - **AP 2086 — Chainsaw** (line 911): Same as other kill chains
+- **AP 2089 — Charm** (line 932): Make a goal out of the Charm achievement (fill all 25 sockets with fully upgraded fragments).
 - **AP 2107 — Corrosive Stings** (line 1114): total wave armor > 5000 ?

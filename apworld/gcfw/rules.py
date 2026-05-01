@@ -160,6 +160,48 @@ def _count_talisman_fragments(state, player: int, names) -> int:
     return sum(1 for n in names if state.has(n, player))
 
 
+# Talisman PROPERTY contribution gates — `tm<Foo>:N` passes when the player
+# owns enough fragments whose summed property values reach N at max upgrade.
+# Used by Max-Charge achievements (Barrage Battery, Freeze Battery) where the
+# in-game effect is `2 + 0.01 * sum(propertyValue)`, so N=100 corresponds to
+# 300% max charge for that spell.
+#
+# The contribution table is built once at module load from the static
+# rulesdata_talisman data — values are bit-identical to what the game
+# computes from the seeds.
+from .rulesdata_talisman import progression_talismans as _PROG_TALISMANS
+
+# property_id -> {fragment_item_name: value_at_max_upgrade}
+_TALISMAN_PROPERTY_CONTRIBUTIONS: dict[int, dict[str, int]] = {}
+for _name, _frag in _PROG_TALISMANS.items():
+    for _pid, _pval in _frag["properties_at_max"]:
+        if _pval > 0:
+            _TALISMAN_PROPERTY_CONTRIBUTIONS.setdefault(_pid, {})[_name] = _pval
+del _name, _frag, _pid, _pval
+
+# Token head -> TalismanPropertyId.  Add new entries here to expose more
+# Max-Charge or other talisman-property gates.  Values match
+# constants/TalismanPropertyId.as in the decompiled game.
+_TALISMAN_PROPERTY_TOKENS: dict[str, int] = {
+    "tmFreezeCharge":    21,  # Max Freeze Charge
+    "tmWhiteoutCharge":  22,  # Max Whiteout Charge
+    "tmIceshardsCharge": 23,  # Max Iceshards Charge
+    "tmBoltCharge":      24,  # Max Bolt Charge
+    "tmBeamCharge":      25,  # Max Beam Charge
+    "tmBarrageCharge":   26,  # Max Barrage Charge
+}
+
+
+def _sum_talisman_property(prop_id: int, state, player: int) -> int:
+    """Sum the value contributions of held progression fragments for a
+    given talisman property ID (assumes the player will fully upgrade the
+    fragments — same assumption talismanFragments:N already makes about
+    socketing).  Only progression fragments are counted; useful/filler
+    fragments are invisible to state.has."""
+    contribs = _TALISMAN_PROPERTY_CONTRIBUTIONS.get(prop_id, {})
+    return sum(v for name, v in contribs.items() if state.has(name, player))
+
+
 # Count fields that appear on at least one stage in rulesdata_levels.py.
 # Used to distinguish "element tracked per-stage but not on any reachable
 # stage at the requested count" (block) from "element not tracked at all,
@@ -360,6 +402,7 @@ def _is_gating_req(req: str, is_progressive: bool) -> bool:
             return True  # element / weather / group with count
         if (head in level_stat_counters
                 or head in _TALISMAN_FRAGMENT_COUNTERS
+                or head in _TALISMAN_PROPERTY_TOKENS
                 or head in skill_counter_pools):
             return True
         return head in _OTHER_COUNTER_HEADS
@@ -460,6 +503,13 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         if group_name in _TALISMAN_FRAGMENT_COUNTERS:
             return _count_talisman_fragments(
                 state, player, _TALISMAN_FRAGMENT_COUNTERS[group_name],
+            ) >= count_needed
+
+        # Talisman-property contribution gates: tm<Foo>:N — sum the property
+        # values of held progression fragments at max upgrade and compare to N.
+        if group_name in _TALISMAN_PROPERTY_TOKENS:
+            return _sum_talisman_property(
+                _TALISMAN_PROPERTY_TOKENS[group_name], state, player,
             ) >= count_needed
 
         # Other item-collection counters — each counts a different pool.
