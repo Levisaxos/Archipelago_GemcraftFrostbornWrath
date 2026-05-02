@@ -48,7 +48,7 @@ package patch {
         private static const LOCK_SHIELD:Number = 1000;
 
         // Set once at bind time by ArchipelagoMod so the locked-stash tooltip
-        // can read per-stage power thresholds + current player power.
+        // can read stage reachability state.
         private static var _evaluator:FieldLogicEvaluator = null;
         public static function setEvaluator(evaluator:FieldLogicEvaluator):void {
             _evaluator = evaluator;

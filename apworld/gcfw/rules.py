@@ -11,10 +11,7 @@ from .requirement_tokens import (
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
 from .options import AchievementProgression
-from .power import (
-    has_power,
-    required_achievement_power,
-    build_weight_map_for_world,
+from .talismans import (
     EDGE_TALISMAN_NAMES,
     CORNER_TALISMAN_NAMES,
     PROGRESSION_CORNER_TALISMAN_NAMES,
@@ -98,10 +95,10 @@ def _count_complete_talisman_rows(state, player: int) -> int:
     """Count complete rows of the matching 3x3 grid the player owns.
 
     A row = all 3 fragments of one icon group. With 9 progression fragments
-    split into 3 fixed icon groups (see power.MATCHING_TALISMAN_ROWS),
+    split into 3 fixed icon groups (see talismans.MATCHING_TALISMAN_ROWS),
     the player can have 0..3 complete rows.
     """
-    from .power import MATCHING_TALISMAN_ROWS
+    from .talismans import MATCHING_TALISMAN_ROWS
     return sum(
         1 for row in MATCHING_TALISMAN_ROWS
         if all(state.has(n, player) for n in row)
@@ -112,9 +109,9 @@ def _count_complete_talisman_columns(state, player: int) -> int:
     """Count complete columns of the matching 3x3 grid the player owns.
 
     A column = one specific fragment from each icon group (positions
-    {1,4,7}, {2,5,8}, or {3,6,9}). See power.MATCHING_TALISMAN_COLUMNS.
+    {1,4,7}, {2,5,8}, or {3,6,9}). See talismans.MATCHING_TALISMAN_COLUMNS.
     """
-    from .power import MATCHING_TALISMAN_COLUMNS
+    from .talismans import MATCHING_TALISMAN_COLUMNS
     return sum(
         1 for col in MATCHING_TALISMAN_COLUMNS
         if all(state.has(n, player) for n in col)
@@ -554,12 +551,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         directly to it in __init__.create_regions).
 
     Location rules:
-      - Journey:        WIZLOCK skills (where applicable) + tier-power gate.
-      - Wizard stash:   WIZLOCK skills (where applicable) + key item +
-                        stash-power gate (≈ 65% of tier-power).
-      - Achievements:   per-achievement requirements + per-achievement power
-                        gate (default from required_effort, optional override
-                        via the `required_power` field).
+      - Journey:        WIZLOCK skills (where applicable).
+      - Wizard stash:   WIZLOCK skills (where applicable) + key item.
+      - Achievements:   per-achievement requirements (skills, elements, etc.).
 
     Victory: A4 reachable AND all 24 skills collected (handled below).
     """
@@ -574,11 +568,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # one stage whose Field prereqs we ignore — it's the menu connection,
     # so its `requirements` list in rulesdata_levels.py shouldn't gate it.
     start_sid = world.start_sid
-
-    # Build the per-world power weight map ONCE — every has_power(...) call
-    # below reuses it. Walking state.prog_items[player] with a precomputed
-    # weight map is ~10x cheaper per fill check than iterating master lists.
-    weight_map = build_weight_map_for_world(world)
 
     start_region = multiworld.get_region(start_sid, player)
 
@@ -771,15 +760,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                             for group in groups
                         )
                     location.access_rule = make_rule(normalized, is_progressive)
-
-                # Power gate — independent of element/skill requirements.
-                # Defaults to ACHIEVEMENT_EFFORT_POWER[required_effort] unless
-                # the achievement has an explicit `required_power` override.
-                ach_power = required_achievement_power(ach_data)
-                if ach_power > 0:
-                    add_rule(location,
-                        lambda state, p=ach_power, wm=weight_map:
-                            has_power(state, world, p, wm))
 
                 # Achievements are filler-quality and reachable across the
                 # spectrum. Exclude edge/corner talismans so they end up at

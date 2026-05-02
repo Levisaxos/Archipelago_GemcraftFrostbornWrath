@@ -121,28 +121,6 @@ class XpTomeBonus(Range):
     default     = 150
 
 
-class PowerScale(Range):
-    """Multiplier (percent) applied to required-power thresholds when AP fill
-    decides which locations are reachable.
-
-    The mod computes a "player power" score from collected items (skill
-    points, skills, traits, talismans, etc.) — see apworld/gcfw/power.py.
-    Locations such as wizard stash keys and achievements gate against tier-
-    based or per-achievement power thresholds. PowerScale tunes those
-    thresholds:
-
-      50  → thresholds halved, easier seed (gates open with less power)
-     100  → baseline
-     200  → thresholds doubled, harder seed (gates demand more power)
-
-    Mirrors the EnemyHpMultiplier convention: higher number = harder.
-    """
-    display_name = "Power Scale"
-    range_start = 50
-    range_end   = 200
-    default     = 100
-
-
 class DeathLinkPunishment(Choice):
     """What happens when a DeathLink signal is received.
 
@@ -397,7 +375,6 @@ class GCFWOptions(PerGameCommonOptions):
     field_token_placement:       FieldTokenPlacement
     starting_stage:              StartingStage
     xp_tome_bonus:             XpTomeBonus
-    power_scale:               PowerScale
     enforce_logic:             EnforceLogic
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial

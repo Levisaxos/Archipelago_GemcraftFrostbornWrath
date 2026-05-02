@@ -26,16 +26,6 @@ from .options import (
     STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
-from .power import (
-    WEIGHT_SP,
-    WEIGHT_GEM_SKILL,
-    WEIGHT_OTHER_SKILL,
-    WEIGHT_BATTLE_TRAIT,
-    WEIGHT_XP_TOME_LEVEL,
-    WEIGHT_SHADOW_CORE_ITEM,
-    WEIGHT_TALISMAN_DIVISOR,
-    WEIGHT_GEMPOUCH,
-)
 from .rules import set_rules
 from .rulesdata import (
     GAME_DATA,
@@ -763,15 +753,12 @@ class GemcraftFrostbornWrathWorld(World):
         worn_levels     = max(1, round(multiplier * 2))
         ancient_levels  = max(1, round(multiplier * 3))
 
-        # --- In-game tracker: per-achievement requirements_power map ---
+        # --- In-game tracker: per-achievement requirements map ---
         # Stage logic (WIZLOCK skills + prereq tokens + talisman counters)
         # is shipped via logic.json (generate_logic_json.py); slot_data here
-        # only carries options + the achievement-side power-gate map.
-        # Build achievement requirements map: achievement name → [requirements]
-        # AND per-achievement required_power (when set) so the mod's
-        # AchievementLogicEvaluator can apply the same gate for in-logic display.
+        # only carries options + the per-achievement requirements list so the
+        # mod's AchievementLogicEvaluator can mirror the in-logic display.
         achievement_requirements_map: Dict[str, list] = {}
-        achievement_required_power_map: Dict[str, int] = {}
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
@@ -780,9 +767,6 @@ class GemcraftFrostbornWrathWorld(World):
                 requirements = ach_data.get("requirements", [])
                 if requirements:
                     achievement_requirements_map[ach_name] = requirements
-                explicit_power = ach_data.get("required_power")
-                if explicit_power is not None and int(explicit_power) > 0:
-                    achievement_required_power_map[ach_name] = int(explicit_power)
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
@@ -825,21 +809,6 @@ class GemcraftFrostbornWrathWorld(World):
             # the mod SWF. slot_data only carries options and goal data now.
             "logic_rules_version":   2,
             "skill_categories":      SKILL_CATEGORIES,
-            # Achievement-side power gating still runs through apworld fill
-            # (rules._eval_req → has_power); these fields let the mod display
-            # the same gate in the in-logic UI.
-            "achievement_required_power": achievement_required_power_map,
-            "power_scale":           self.options.power_scale.value,
-            "power_weights":         {
-                "sp":              WEIGHT_SP,
-                "gem_skill":       WEIGHT_GEM_SKILL,
-                "other_skill":     WEIGHT_OTHER_SKILL,
-                "battle_trait":    WEIGHT_BATTLE_TRAIT,
-                "xp_tome_level":   WEIGHT_XP_TOME_LEVEL,
-                "shadow_core":     WEIGHT_SHADOW_CORE_ITEM,
-                "talisman_divisor": WEIGHT_TALISMAN_DIVISOR,
-                "gempouch":        WEIGHT_GEMPOUCH,
-            },
             "stage_elements":        stage_elements,
             "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,

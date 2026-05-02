@@ -155,7 +155,6 @@ def build_achievements(achievements: dict) -> dict:
             "apId": int(data["ap_id"]),
             "game_id": int(data.get("game_id", -1)),
             "description": data.get("description", ""),
-            "reward": data.get("reward", ""),
             "required_effort": data.get("required_effort", "Trivial"),
             "requirements": data.get("requirements", []),
         }
@@ -163,8 +162,6 @@ def build_achievements(achievements: dict) -> dict:
             entry["details"] = data["details"]
         if data.get("untrackable"):
             entry["untrackable"] = True
-        if "required_power" in data and data["required_power"]:
-            entry["required_power"] = int(data["required_power"])
         out[name] = entry
     return out
 

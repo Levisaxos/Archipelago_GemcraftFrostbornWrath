@@ -33,7 +33,6 @@ package tracker {
         private
         var _logicEvaluator: LogicEvaluator;
         private
-        var _achievementRequiredPower: Object = {}; // ach name -> required_power int
 
         private
         var _dirty: Boolean = true;
@@ -164,41 +163,16 @@ package tracker {
                 "Trivial";
         }
 
-        /** Field evaluator (power computation + scale). Public for tooltip overlays. */
+        /** Field evaluator. Public for tooltip overlays. */
         public
         function get fieldEvaluator(): FieldLogicEvaluator {
             return _fieldEvaluator;
-        }
-
-        /** Per-achievement required power (raw, unscaled). 0 if not gated. */
-        public
-        function getAchievementRequiredPower(achName: String): int {
-            if (_achievementRequiredPower == null)
-                return 0;
-            var v:* = _achievementRequiredPower[achName];
-            return (v !== undefined) ? int(v) : 0;
-        }
-
-        /** Forwarded from slot_data via configure() (or a dedicated setter). */
-        public
-        function setAchievementRequiredPower(map: Object): void {
-            _achievementRequiredPower = map != null ? map : {};
         }
 
         /** Check requirements for a single achievement without using the cache. */
         public
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
-            // Power gate (only if explicit override set on this achievement).
-            if (_fieldEvaluator != null) {
-                var reqPower: int = getAchievementRequiredPower(achName);
-                if (reqPower > 0) {
-                    var have: Number = _fieldEvaluator.computePlayerPower();
-                    var scale: Number = _fieldEvaluator.powerScalePct / 100.0;
-                    if (have < reqPower * scale)
-                        return false;
-                }
-            }
             if (!achData.requirements) return true;
             var reqs: Array = achData.requirements as Array;
             if (!reqs || reqs.length == 0) return true;

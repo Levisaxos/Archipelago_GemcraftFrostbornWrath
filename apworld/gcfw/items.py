@@ -83,9 +83,9 @@ def _load_item_table() -> Dict[str, ItemData]:
     # layout (4 corner + 12 edge + 9 inner): these gate the
     # talismanCornerFragment:N / talismanEdgeFragment:N / talismanCenterFragment:N
     # achievement counters.  Selection: highest-rarity in each type (see
-    # power._build_progression_corner_edge_names + _build_matching_talisman_grid).
+    # talismans._build_progression_corner_edge_names + _build_matching_talisman_grid).
     # The remaining ~28 fragments are useful — they still drop, just don't gate.
-    from .power import (
+    from .talismans import (
         MATCHING_TALISMAN_NAMES,
         PROGRESSION_CORNER_TALISMAN_NAMES,
         PROGRESSION_EDGE_TALISMAN_NAMES,

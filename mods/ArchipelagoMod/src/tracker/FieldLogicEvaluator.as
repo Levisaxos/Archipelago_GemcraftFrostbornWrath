@@ -39,12 +39,6 @@ package tracker {
         private var _matchingTalismans:Object;   // { grid, rows, columns } or null
         private var _freeStages:Object = {};     // strId -> true
 
-        // slot_data — power weights for achievement-side power gates only.
-        // Stage in-logic no longer uses power; this is kept for the
-        // achievement evaluator's required_power checks.
-        private var _powerScalePct:int = 100;
-        private var _powerWeights:Object;
-
         private var _dirty:Boolean = true;
         private var _inLogicByStrId:Object = {};
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
@@ -68,20 +62,16 @@ package tracker {
         }
 
         /**
-         * Feed logic data from logic.json + slot_data power-scale info.
+         * Feed logic data from logic.json.
          * Call once after the Connected packet (ServerData has loaded JSON).
          */
         public function configure(stageSkills:Object,
                                   stageRequirements:Object,
                                   matchingTalismans:Object,
-                                  freeStages:Array,
-                                  powerScalePct:int,
-                                  powerWeights:Object):void {
+                                  freeStages:Array):void {
             _stageSkills         = stageSkills != null ? stageSkills : {};
             _stageRequirements   = stageRequirements != null ? stageRequirements : {};
             _matchingTalismans   = matchingTalismans;
-            _powerScalePct       = powerScalePct > 0 ? powerScalePct : 100;
-            _powerWeights        = powerWeights != null ? powerWeights : {};
             _freeStages          = {};
             if (freeStages != null) {
                 for each (var sid:String in freeStages) {
@@ -94,7 +84,6 @@ package tracker {
         public function markDirty():void { _dirty = true; }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
-        public function get powerScalePct():int { return _powerScalePct; }
 
         /** True if this stage is a free/tutorial stage (W1-W4, always reachable). */
         public function isFreeStage(strId:String):Boolean {
@@ -145,7 +134,7 @@ package tracker {
                 if (journeyOk)
                     return true;
             }
-            // Stash needs both the key item AND power threshold met.
+            // Stash needs the key item AND stage gate met.
             if (stashMissing && isStashGateMet(strId))
                 return true;
             return false;
@@ -579,7 +568,6 @@ package tracker {
 
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
-            AV.sessionData.playerPower   = computePlayerPower();
         }
 
         /** Run the four-clause stage gate for one stage. */
@@ -707,87 +695,6 @@ package tracker {
         private static function _trimStr(s:String):String {
             if (s == null) return "";
             return s.replace(/^\s+|\s+$/g, "");
-        }
-
-        /** Current player power score from collected items. Mirrors apworld/gcfw/power.py. */
-        public function computePlayerPower():Number {
-            var power:Number = 0;
-            var sd:* = AV.sessionData;
-            if (sd == null || _powerWeights == null)
-                return 0;
-
-            // Skillpoint Bundles 1700-1709 — bundle (apId-1699) SP per item.
-            // We don't track per-item received counts in the mod (only "have"),
-            // so approximate as 1 per AP id received. Good enough for in-logic UI;
-            // exact count lives apworld-side at fill time.
-            var spWeight:Number     = Number(_powerWeights["sp"]);
-            for (var apId:int = 1700; apId <= 1709; apId++) {
-                if (sd.hasItem(apId))
-                    power += spWeight * (apId - 1699);
-            }
-
-            // Skills 700-723.
-            var gemWeight:Number    = Number(_powerWeights["gem_skill"]);
-            var skillWeight:Number  = Number(_powerWeights["other_skill"]);
-            for (var sk:int = 0; sk < 24; sk++) {
-                if (!sd.hasItem(700 + sk))
-                    continue;
-                if (sk >= 6 && sk <= 11)
-                    power += gemWeight;     // gem-type skills (Crit/Leech/Bleed/AT/Poison/Slow)
-                else
-                    power += skillWeight;
-            }
-
-            // Battle traits 800-814.
-            var traitWeight:Number  = Number(_powerWeights["battle_trait"]);
-            if (traitWeight != 0) {
-                for (var tr:int = 0; tr < 15; tr++) {
-                    if (sd.hasItem(800 + tr))
-                        power += traitWeight;
-                }
-            }
-
-            // XP tomes 1100-1199 — exact wizard-level grant per tome lives in
-            // LevelUnlocker.levelsForApId; for power we approximate flat 1 level.
-            var xpWeight:Number     = Number(_powerWeights["xp_tome_level"]);
-            if (xpWeight != 0) {
-                for (var xp:int = 1100; xp <= 1199; xp++) {
-                    if (sd.hasItem(xp))
-                        power += xpWeight;
-                }
-            }
-
-            // Shadow cores: specific 1000-1016 + extras 1300-1351.
-            var coreWeight:Number   = Number(_powerWeights["shadow_core"]);
-            if (coreWeight != 0) {
-                for (var sc:int = 1000; sc <= 1016; sc++) {
-                    if (sd.hasItem(sc))
-                        power += coreWeight;
-                }
-                for (var sce:int = 1300; sce <= 1351; sce++) {
-                    if (sd.hasItem(sce))
-                        power += coreWeight;
-                }
-            }
-
-            // Talisman fragments 900-952 + extras 1200-1246. Power = rarity / divisor.
-            // Per-fragment rarity isn't sent in slot_data right now; we use a flat
-            // average of rarity 50 (mid-pool) until rarity table is wired in.
-            // TODO: forward per-fragment rarities from apworld for accurate count.
-            var talDiv:Number       = Number(_powerWeights["talisman_divisor"]);
-            if (talDiv > 0) {
-                var talPower:Number = 50.0 / talDiv;
-                for (var tf:int = 900; tf <= 952; tf++) {
-                    if (sd.hasItem(tf))
-                        power += talPower;
-                }
-                for (var tfe:int = 1200; tfe <= 1246; tfe++) {
-                    if (sd.hasItem(tfe))
-                        power += talPower;
-                }
-            }
-
-            return power;
         }
 
         /**

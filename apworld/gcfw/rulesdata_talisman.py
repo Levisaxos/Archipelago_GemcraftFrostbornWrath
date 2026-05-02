@@ -3,7 +3,7 @@ GemCraft Frostborn Wrath - Progression Talisman Fragments
 
 Static reference data for the 25 progression talisman fragments
 (4 corner + 12 edge + 9 inner).  These are the fragments selected
-by power._build_progression_corner_edge_names + _build_matching_talisman_grid
+by talismans._build_progression_corner_edge_names + _build_matching_talisman_grid
 based on highest rarity per type.
 
 Each entry holds the fragment's deterministic seed-derived stats, computed
