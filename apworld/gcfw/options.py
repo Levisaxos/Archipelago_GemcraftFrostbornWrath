@@ -312,7 +312,6 @@ class StartingOvercrowd(Toggle):
 class AchievementRequiredEffort(Choice):
     """Required effort level of achievements to include in the randomizer.
 
-    off:  No achievements included.
     1:    Trivial achievements only (~362 achievements).
     2:    Trivial + Minor (~453 achievements).
     3:    Trivial + Minor + Major (~537 achievements).
@@ -321,9 +320,11 @@ class AchievementRequiredEffort(Choice):
 
     Selecting level N includes all achievements from levels 1 through N.
     More achievements = more items to find, longer seed.
+
+    Trivial achievements are always included (minimum is 1): the progression
+    item pool requires their locations to fit.
     """
     display_name = "Achievement Required Effort"
-    option_off = 0
     option_1   = 1
     option_2   = 2
     option_3   = 3

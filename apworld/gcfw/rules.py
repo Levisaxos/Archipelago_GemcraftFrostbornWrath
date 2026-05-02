@@ -661,6 +661,48 @@ def _always_false(state) -> bool:
     return False
 
 
+def _compile_gempouch_checker(world, prefix: str):
+    """Return (state) -> bool: True iff the player has access to gems on
+    stages with this prefix letter.
+
+    With gem pouch gating ON, a stage's `available_gems` are only actually
+    usable when the matching prefix gempouch is held. Returns _always_true
+    when gating is off or the prefix isn't in the play order.
+    """
+    mode = world.options.gem_pouch_gating.value
+    if mode == 0:
+        return _always_true
+    try:
+        idx = GEM_POUCH_PLAY_ORDER.index(prefix)
+    except ValueError:
+        return _always_true
+    player = world.player
+    if mode == 1:
+        item_name = f"Gempouch ({prefix})"
+        return lambda state: state.has(item_name, player)
+    needed = idx + 1
+    return lambda state: state.count("Progressive Gempouch", player) >= needed
+
+
+def _compile_gem_broadened(world, gem_name: str):
+    """Compile a broadened gem-availability checker:
+    True iff some stage that hosts `gem_name` in its `available_gems` list
+    is in-logic AND the player owns the prefix's gempouch (when gating is on).
+    Hollow gem on the starter stage doesn't grant other gem types — see
+    HollowGemInjector / GemPouchSuppressor on the mod side; this filter
+    keeps fill-time logic consistent with what the player can actually use.
+    """
+    stages = _STAGES_BY_GEM.get(gem_name, [])
+    pairs = [(sid, _compile_gempouch_checker(world, sid[0])) for sid in stages]
+    player = world.player
+    def _check(state):
+        for sid, pouch_ok in pairs:
+            if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
+                return True
+        return False
+    return _check
+
+
 def _compile_element_or(elem_names, player: int):
     """Compile an "any of these elements is reachable" check.
 
@@ -704,14 +746,20 @@ def _compile_element_or(elem_names, player: int):
     return _multi
 
 
-def _compile_req(req: str, player: int, is_progressive: bool):
+def _compile_req(req: str, world, is_progressive: bool):
     """Compile a single requirement string to a `(state) -> bool` closure.
 
     Mirrors `_eval_req` branch-for-branch — keep them in sync. The returned
     closure binds all per-call constants (item names, qualifying stage lists,
     counter pools) so the only runtime work is the actual state lookups.
+
+    Takes `world` (not just player) so gem-skill broadening can build the
+    per-stage gempouch checker — the broadening must respect the player's
+    actual access (gempouch held) rather than treating every reachable
+    stage's `available_gems` as usable.
     """
     req = req.strip()
+    player = world.player
 
     if req.startswith("Field_"):
         sid = req[len("Field_"):]
@@ -733,14 +781,13 @@ def _compile_req(req: str, player: int, is_progressive: bool):
 
     if req in item_prefix_map:
         if req in _GEM_TOKEN_TO_GEM_NAME:
-            tok = req
             item_name = item_prefix_map[req]
             gem_name = _GEM_TOKEN_TO_GEM_NAME[req]
-            stages = _STAGES_BY_GEM.get(gem_name, [])
+            broaden = _compile_gem_broadened(world, gem_name)
             def _gem_token(state):
                 if state.has(item_name, player):
                     return True
-                return _can_reach_any_stage(state, player, stages)
+                return broaden(state)
             return _gem_token
         name = item_prefix_map[req]
         return lambda state: state.has(name, player)
@@ -770,7 +817,19 @@ def _compile_req(req: str, player: int, is_progressive: bool):
 
         if group_name in skill_counter_pools:
             if group_name in ("gemSkills", "GemSkills"):
-                return lambda state: _count_gem_skills_broadened(state, player) >= count_needed
+                # Gempouch-aware count: each of the 6 gem skills counts iff
+                # the skill item is held OR a stage hosting it in available_gems
+                # is reachable AND the player has that prefix's gempouch.
+                pairs = []
+                for tok, gem_name in _GEM_TOKEN_TO_GEM_NAME.items():
+                    pairs.append((item_prefix_map[tok], _compile_gem_broadened(world, gem_name)))
+                def _gemskills_count_check(state):
+                    n = 0
+                    for item_name, broaden in pairs:
+                        if state.has(item_name, player) or broaden(state):
+                            n += 1
+                    return n >= count_needed
+                return _gemskills_count_check
             pool = tuple(skill_counter_pools[group_name])
             return lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed
 
@@ -806,11 +865,11 @@ def _compile_req(req: str, player: int, is_progressive: bool):
     return _always_true  # Metadata
 
 
-def _compile_dnf(groups: list, player: int, is_progressive: bool):
+def _compile_dnf(groups: list, world, is_progressive: bool):
     """Compile a DNF requirement structure (list of AND-groups, outer OR) into
     a single (state) -> bool closure. Optimises common shapes."""
     compiled_groups = [
-        [_compile_req(r, player, is_progressive) for r in group]
+        [_compile_req(r, world, is_progressive) for r in group]
         for group in groups
     ]
     if not compiled_groups:
@@ -946,7 +1005,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             if requirements:
                 normalized = _normalize_requirements(requirements)
-                rule = _compile_dnf(normalized, player, is_progressive=False)
+                rule = _compile_dnf(normalized, world, is_progressive=False)
                 # Register for direct invocation by _can_clear_stage_cached
                 # (skips state.can_reach round-trip in deep prereq chains).
                 _STAGE_CLEAR_RULES[(player, sid)] = rule
@@ -1042,7 +1101,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 if has_gating:
                     location.access_rule = wrap_rule(
                         f"ach:{ach_name}",
-                        _compile_dnf(normalized, player, is_progressive))
+                        _compile_dnf(normalized, world, is_progressive))
                     _ach_rules_added += 1
 
                 # Achievements are filler-quality and reachable across the

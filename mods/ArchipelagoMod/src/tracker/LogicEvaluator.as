@@ -1132,7 +1132,30 @@ package tracker {
             "Armor Tearing", "Poison", "Slowing"
         ];
 
-        /** True if any in-logic stage's `availableGems` lists `gemName`. */
+        /** True if the player has access to gems on stages of the given
+         *  prefix letter. With gem pouch gating ON, a stage's available_gems
+         *  are only actually usable when the prefix's gempouch is held —
+         *  otherwise the player only has the colorless Hollow Gem. Mirrors
+         *  GemPouchSuppressor / HollowGemInjector decisions on the mod side
+         *  and `_compile_gempouch_checker` in apworld rules.py. */
+        private function _hasPouchForPrefix(prefix:String):Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return true;
+            var opts:* = AV.serverData.serverOptions;
+            var mode:int = int(opts.gemPouchGating);
+            if (mode == 0) return true;
+            var order:Array = opts.gemPouchPlayOrder as Array;
+            if (order == null || order.length == 0) return true;
+            var idx:int = order.indexOf(prefix);
+            if (idx < 0) return true;
+            if (mode == 1) return AV.sessionData.hasItem(626 + idx);
+            var progId:int = int(opts.gemPouchProgressiveId);
+            if (progId <= 0) progId = 652;
+            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        }
+
+        /** True if any in-logic stage's `availableGems` lists `gemName` AND
+         *  the player has the matching prefix's gempouch (when gating is on). */
         private function _gemReachableInLogic(gemName:String):Boolean {
             if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
                 return false;
@@ -1142,6 +1165,7 @@ package tracker {
             var fields:Object = AV.sessionData.fieldsInLogic;
             for (var sid:String in pools) {
                 if (fields[sid] != true) continue;
+                if (sid.length == 0 || !_hasPouchForPrefix(sid.charAt(0))) continue;
                 var arr:Array = pools[sid] as Array;
                 if (arr == null) continue;
                 for each (var g:String in arr) {
@@ -1151,9 +1175,14 @@ package tracker {
             return false;
         }
 
-        /** True if `stageStrId`'s `availableGems` lists `gemName`. */
+        /** True if `stageStrId`'s `availableGems` lists `gemName` AND the
+         *  player has the matching prefix's gempouch. */
         private function _gemOnStage(stageStrId:String, gemName:String):Boolean {
             if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (stageStrId == null || stageStrId.length == 0)
+                return false;
+            if (!_hasPouchForPrefix(stageStrId.charAt(0)))
                 return false;
             var arr:Array = AV.serverData.stageAvailableGems[stageStrId] as Array;
             if (arr == null) return false;

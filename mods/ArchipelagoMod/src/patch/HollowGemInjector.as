@@ -81,6 +81,14 @@ package patch {
         // combineGems / castCloneGem create fresh Bitmap objects (without
         // our filter) and assign them to the new gem.
         private var _filteredBitmaps:Dictionary = new Dictionary(true);
+
+        // Snapshot of `core.stats.spentManaOnManaLeechingGem` at first frame
+        // of an active hollow stage. Restored every subsequent frame so
+        // hollow gems can't pollute the "win using only mana-leech gems"
+        // achievements (game_id 30, 33 — IngameAchiChecker0.as:245-286)
+        // via combineGems:908 / castCloneGem:1770 / createGem:599.
+        // -1 = not yet snapshotted; reset on stage exit.
+        private var _leechStatBaseline:Number = -1;
         private static const _DESAT_FILTER:ColorMatrixFilter = _buildDesatFilter();
 
         private static function _buildDesatFilter():ColorMatrixFilter {
@@ -108,10 +116,28 @@ package patch {
                 }
                 _ensureAttached();
                 _reapplyHollowFilters();
+                _restoreLeechStat();
                 _updateTooltip();
             } catch (err:Error) {
                 _logger.log(_modName,
                     "HollowGemInjector.onIngameFrame ERROR: " + err.message);
+            }
+        }
+
+        /** Snapshot the leech stat on first active frame, then pin it to
+         *  that value every subsequent frame. While hollow mode is active,
+         *  GemPouchSuppressor wipes availableGemTypes so no other gem
+         *  types are creatable — the only thing that can move this stat
+         *  is hollow-gem create / combine / clone, all of which we want
+         *  to suppress. The pin runs every frame because combineGems and
+         *  castCloneGem don't fire any signal we can hook directly. */
+        private function _restoreLeechStat():void {
+            if (GV.ingameCore == null || GV.ingameCore.stats == null) return;
+            var stats:* = GV.ingameCore.stats;
+            if (_leechStatBaseline < 0) {
+                _leechStatBaseline = Number(stats.spentManaOnManaLeechingGem);
+            } else if (Number(stats.spentManaOnManaLeechingGem) != _leechStatBaseline) {
+                stats.spentManaOnManaLeechingGem = _leechStatBaseline;
             }
         }
 
@@ -121,6 +147,7 @@ package patch {
             _filteredBitmaps = new Dictionary(true);
             _wasHovered = false;
             _lockedActive = -1;
+            _leechStatBaseline = -1;
         }
 
         // -----------------------------------------------------------------------
@@ -459,6 +486,15 @@ package patch {
             // "0 color components" instead of "Pure mana leech". Combine of
             // two empty elderComponents arrays stays empty so this propagates.
             gem.elderComponents = [];
+
+            // NOTE: do NOT touch manaValuesByComponent[MANA_LEECHING].
+            // The pie chart in GemBitmapCreator.giveGemBitmaps requires at
+            // least one non-zero slice across all 6 components — for hollow
+            // gems, MANA_LEECHING is the only set slot. Zeroing it crashes
+            // castCloneGem with "Pie chart: no slices given".
+            //
+            // Combine / duplicate stat pollution is instead handled per-frame
+            // by _restoreLeechStat() — see comment there.
 
             try { gem.recalculateSds(); } catch (e:Error) {}
 
