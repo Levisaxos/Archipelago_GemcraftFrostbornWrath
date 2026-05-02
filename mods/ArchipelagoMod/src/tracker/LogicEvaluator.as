@@ -164,6 +164,10 @@ package tracker {
             {
                 return null;
             }
+            if (req.indexOf("Field_") == 0)
+            {
+                return "Requires field " + req.substring(6) + " in logic";
+            }
             if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
             {
                 return "Requires any non-monster creature stage (Shadow / Specter / Spire / Wizard Hunter / Wraith / Apparition)";
@@ -313,10 +317,23 @@ package tracker {
             }
             // eWizardStash — every stage has a wizard stash structurally,
             // but each is locked behind a per-stage key item (AP IDs
-            // 1400..1521).  Pass the gate iff the player holds any key.
+            // 1400..1521).  Pass the gate iff the player holds at least one
+            // key whose stage is also clearable (per-stage tier + WIZLOCK
+            // skills).  Mirrors apworld's _eval_element_reachable: holding a
+            // key for an unbeatable stage doesn't make the stash reachable.
             if (req == "eWizardStash" || req.indexOf("eWizardStash:") == 0)
             {
-                return AV.sessionData.countItemsInRange(1400, 1521) > 0;
+                if (_fieldEvaluator == null) return false;
+                var unlocked:Object = AV.sessionData.unlockedStashesByStrId;
+                for (var stashSid:String in unlocked)
+                {
+                    if (unlocked[stashSid] == true
+                            && _fieldEvaluator.isStashGateMet(stashSid))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
             // Prefix tokens (sBolt / tHaste / eBeacon / wRain).  Must take
             // precedence over the legacy " skill"/" element"/" trait" forms
@@ -329,6 +346,10 @@ package tracker {
                     var sName:String = _skillPrefixMap[req];
                     if (sName != null)
                     {
+                        // Gem-skill tokens broaden: also pass when a stage
+                        // with the matching starter pouch is reachable.
+                        if (_GEM_SKILL_TO_GEM_NAME[sName] != null)
+                            return _hasGemSkillBroadenedAP(sName);
                         var sIdx:int = SessionData.SKILL_NAMES.indexOf(sName);
                         return sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx);
                     }
@@ -361,6 +382,22 @@ package tracker {
                 var ecount:int = int(_trim(req.substring(ec + 1)));
                 var enameMapped:String = _elementPrefixMap[ehead];
                 var nameForField:String = (enameMapped != null) ? _pascalNoSpaces(enameMapped) : ehead.substring(1);
+                // Wizard towers are the visual structure of wizard stashes —
+                // unlocking a wizard tower requires opening its stash. Treat
+                // eWizardTower:N like eWizardStash: needs an unlocked stash on
+                // a clearable stage with the matching tower count.
+                if (ehead == "eWizardTower" || nameForField == "WizardTower") {
+                    if (_fieldEvaluator == null) return false;
+                    var unlocked:Object = AV.sessionData.unlockedStashesByStrId;
+                    for (var stashSid:String in unlocked) {
+                        if (unlocked[stashSid] != true) continue;
+                        if (!_fieldEvaluator.isStashGateMet(stashSid)) continue;
+                        if (_fieldEvaluator.stageHasElementCount(stashSid, "WizardTower", ecount)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
             }
@@ -422,7 +459,14 @@ package tracker {
                 return AV.sessionData.hasItem(800 + traitIdx);
             }
 
-            // "Field A4" or "Field N1, U1 or R5" (comma/or = OR)
+            // Field_<sid> — single stage must be in logic. Apworld emits this
+            // form for per-stage prerequisites (e.g. Zapped requires Field_L5).
+            if (req.indexOf("Field_") == 0) {
+                var fSid:String = req.substring(6);
+                return fSid.length > 0 && AV.sessionData.fieldsInLogic[fSid] == true;
+            }
+
+            // "Field A4" or "Field N1, U1 or R5" (comma/or = OR) — legacy form.
             if (lower.indexOf("field ") == 0) {
                 var fieldPart:String = _trim(req.substring(6));
                 var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
@@ -452,33 +496,62 @@ package tracker {
                 return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
             }
             if (lower.indexOf("gemskills") == 0) {
-                // When pouch gating is active, gemSkills:N is replaced by
-                // gemPouch:<prefix> on every stage. The N-skills count is
-                // still meaningful for achievements (gem skills 706-711 are
-                // still in the pool), so leave this gate alone.
+                // gemSkills:N broadens like the bare gem-skill tokens — a
+                // skill counts as available if held OR a stage with the
+                // matching starter pouch is reachable.  When pouch gating
+                // is active, this gate still works against the gem-skill
+                // items (706-711) that remain in the pool.
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                return AV.sessionData.countItemsInRange(706, 711) >= gNeed;
+                return _countGemSkillsBroadenedAP() >= gNeed;
             }
 
-            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Inactive in
-            // off mode (returns true); in distinct mode requires the named
-            // pouch item; in progressive mode requires enough Progressive
-            // Gempouch copies for that prefix's position in the play order.
+            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Granularity-aware:
+            //   off (0)        → no gating, always true
+            //   per_tile (1)   → state.has("Gempouch (<prefix>)")
+            //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
+            //   per_tier (3)   → state.has("Tier <N> Gempouch") for stage's tier
+            //                    (requires a stage str_id reference; the
+            //                    requirement string only carries prefix, so
+            //                    per_tier is checked at stage-level — here we
+            //                    fall back to "any tier pouch held" which is
+            //                    permissive but safe for tracker preview)
+            //   global (4)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
-                var mode:int = AV.serverData.serverOptions.gemPouchGating;
+                var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
-                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
-                var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
-                if (order == null) return true;
-                var idx:int = order.indexOf(pouchPrefix);
-                if (idx < 0) return true; // unknown prefix — don't block
-                if (mode == 1) {
-                    return AV.sessionData.hasItem(626 + idx);
+                if (mode == 4) {
+                    return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
                 }
-                // mode == 2: progressive
-                var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
-                if (progId <= 0) progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idx + 1;
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                if (mode == 1 || mode == 2) {
+                    var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                    if (order == null) return true;
+                    var idx:int = order.indexOf(pouchPrefix);
+                    if (idx < 0) return true; // unknown prefix — don't block
+                    if (mode == 1) {
+                        return AV.sessionData.hasItem(626 + idx);
+                    }
+                    // mode == 2: progressive
+                    var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
+                    if (progId <= 0) progId = 652;
+                    return AV.sessionData.getItemCount(progId) >= idx + 1;
+                }
+                if (mode == 3) {
+                    // per_tier — without a specific stage in scope, accept if
+                    // ANY tier pouch is held that covers a stage with this
+                    // prefix. This is used by the achievement-tracker UI;
+                    // strict per-stage gating is enforced by GemPouchSuppressor.
+                    var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
+                    if (tierMap == null) return true;
+                    for (var sid:String in tierMap) {
+                        if (sid.charAt(0) == pouchPrefix) {
+                            if (AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                                return true;
+                        }
+                    }
+                    return false;
+                }
+                return true;
             }
 
             if (lower.indexOf("battletraits") == 0) {
@@ -697,6 +770,10 @@ package tracker {
                     var sNameIL:String = _skillPrefixMap[req];
                     if (sNameIL != null)
                     {
+                        // Gem-skill tokens broaden: also pass when the
+                        // current stage's starter pouch contains the gem.
+                        if (_GEM_SKILL_TO_GEM_NAME[sNameIL] != null)
+                            return _hasGemSkillOnStage(sNameIL, currentStrId);
                         return _isSkillActive(sNameIL);
                     }
                 }
@@ -794,7 +871,14 @@ package tracker {
                 return AV.sessionData.hasItem(800 + traitIdx) && _traitLevel(traitIdx) > 0;
             }
 
-            // "Field A4" / "Field N1, U1 or R5" — current strId must match
+            // Field_<sid> — current strId must match the single named stage.
+            // Apworld emits this form for per-stage prerequisites.
+            if (req.indexOf("Field_") == 0) {
+                var fSidIL:String = req.substring(6);
+                return fSidIL == currentStrId;
+            }
+
+            // "Field A4" / "Field N1, U1 or R5" — current strId must match (legacy form).
             if (lower.indexOf("field ") == 0) {
                 var fieldPart:String = _trim(req.substring(6));
                 var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
@@ -854,8 +938,17 @@ package tracker {
                 return _stat(currentStrId, "SwarmlingCount") >= swNeed;
             }
 
+            // gemSkills:N is in-level-aware: count of held gem-skill items
+            // PLUS gems available on THIS stage's starter pouch.  Falling
+            // through to evaluateRequirement would use the AP-logic
+            // (cross-stage) count which is too lenient for "doable here".
+            if (lower.indexOf("gemskills") == 0) {
+                var gNeedIL:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _countGemSkillsOnStage(currentStrId) >= gNeedIL;
+            }
+
             // Loadout-independent counters (skillsPoints, strikeSpells, fieldToken,
-            // shadowCore, wizardLevel, BattleTraits, gemSkills, ...) — same gate as
+            // shadowCore, wizardLevel, BattleTraits, ...) — same gate as
             // AP-logic mode.
             return evaluateRequirement(req);
         }
@@ -1075,6 +1168,138 @@ package tracker {
                 }
             }
             return c;
+        }
+
+        /** Skill name -> in-game gem name (matches `availableGems` entries
+         *  in logic.json).  Used to broaden gem-skill `sX` tokens and the
+         *  gemSkills:N counter so a reachable starter pouch satisfies the
+         *  gate without an item drop.  Mirrors apworld
+         *  rules._GEM_TOKEN_TO_GEM_NAME. */
+        private static const _GEM_SKILL_TO_GEM_NAME:Object = {
+            "Critical Hit":   "Crit",
+            "Mana Leech":     "Leech",
+            "Bleeding":       "Bleed",
+            "Armor Tearing":  "Armor Tear",
+            "Poison":         "Poison",
+            "Slowing":        "Slow"
+        };
+
+        private static const _GEM_SKILL_NAMES:Array = [
+            "Critical Hit", "Mana Leech", "Bleeding",
+            "Armor Tearing", "Poison", "Slowing"
+        ];
+
+        /** True if the player has access to gems on stages of the given
+         *  prefix letter. With gem pouch gating ON, a stage's available_gems
+         *  are only actually usable when the prefix's gempouch is held —
+         *  otherwise the player only has the colorless Hollow Gem. Mirrors
+         *  GemPouchSuppressor / HollowGemInjector decisions on the mod side
+         *  and `_compile_gempouch_checker` in apworld rules.py. */
+        private function _hasPouchForPrefix(prefix:String):Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return true;
+            var opts:* = AV.serverData.serverOptions;
+            var mode:int = int(opts.gemPouchGranularity);
+            if (mode == 0) return true;
+            if (mode == 4) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            if (mode == 3) {
+                // per_tier: any tier-pouch held that covers a stage with this
+                // prefix counts as "this prefix has gems."
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null) return true;
+                for (var sid:String in tierMap) {
+                    if (sid.charAt(0) == prefix
+                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                        return true;
+                }
+                return false;
+            }
+            var order:Array = opts.gemPouchPlayOrder as Array;
+            if (order == null || order.length == 0) return true;
+            var idx:int = order.indexOf(prefix);
+            if (idx < 0) return true;
+            if (mode == 1) return AV.sessionData.hasItem(626 + idx);
+            // mode == 2: progressive
+            var progId:int = int(opts.gemPouchProgressiveId);
+            if (progId <= 0) progId = 652;
+            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        }
+
+        /** True if any in-logic stage's `availableGems` lists `gemName` AND
+         *  the player has the matching prefix's gempouch (when gating is on). */
+        private function _gemReachableInLogic(gemName:String):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return false;
+            var pools:Object = AV.serverData.stageAvailableGems;
+            var fields:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in pools) {
+                if (fields[sid] != true) continue;
+                if (sid.length == 0 || !_hasPouchForPrefix(sid.charAt(0))) continue;
+                var arr:Array = pools[sid] as Array;
+                if (arr == null) continue;
+                for each (var g:String in arr) {
+                    if (g == gemName) return true;
+                }
+            }
+            return false;
+        }
+
+        /** True if `stageStrId`'s `availableGems` lists `gemName` AND the
+         *  player has the matching prefix's gempouch. */
+        private function _gemOnStage(stageStrId:String, gemName:String):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (stageStrId == null || stageStrId.length == 0)
+                return false;
+            if (!_hasPouchForPrefix(stageStrId.charAt(0)))
+                return false;
+            var arr:Array = AV.serverData.stageAvailableGems[stageStrId] as Array;
+            if (arr == null) return false;
+            for each (var g:String in arr) {
+                if (g == gemName) return true;
+            }
+            return false;
+        }
+
+        /** AP-logic broadened check: skill item held OR any reachable stage's
+         *  pouch contains the matching gem. */
+        private function _hasGemSkillBroadenedAP(skillName:String):Boolean {
+            var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+            if (idx >= 0 && AV.sessionData.hasItem(700 + idx)) return true;
+            var gemName:String = _GEM_SKILL_TO_GEM_NAME[skillName];
+            if (gemName == null) return false;
+            return _gemReachableInLogic(gemName);
+        }
+
+        /** In-level broadened check: skill item held OR THIS stage's pouch
+         *  contains the matching gem. */
+        private function _hasGemSkillOnStage(skillName:String, currentStrId:String):Boolean {
+            if (_isSkillActive(skillName)) return true;
+            var gemName:String = _GEM_SKILL_TO_GEM_NAME[skillName];
+            if (gemName == null) return false;
+            return _gemOnStage(currentStrId, gemName);
+        }
+
+        /** Count of gem skills 'available' under the AP-logic broadened
+         *  rule (each one held OR reachable via some pouch). */
+        private function _countGemSkillsBroadenedAP():int {
+            var n:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                if (_hasGemSkillBroadenedAP(skillName)) n++;
+            }
+            return n;
+        }
+
+        /** Count of gem skills 'available' on a specific stage (held OR
+         *  on that stage's pouch). */
+        private function _countGemSkillsOnStage(currentStrId:String):int {
+            var n:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                if (_hasGemSkillOnStage(skillName, currentStrId)) n++;
+            }
+            return n;
         }
 
         /** Returns true if any reachable in-logic stage hosts the named element. */

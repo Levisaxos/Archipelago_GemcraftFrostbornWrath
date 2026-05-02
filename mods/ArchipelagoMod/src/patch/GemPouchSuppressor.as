@@ -20,7 +20,7 @@ package patch {
      * Per-frame guard mirrors FirstPlayBypass: cache the array reference and
      * only re-process when the game replaces it (level restart / new stage).
      *
-     * Inactive when gem_pouch_gating == 0 (off mode) or when the pouch for
+     * Inactive when gem_pouch_granularity == 0 (off mode) or when the pouch for
      * the current stage's prefix is owned.
      */
     public class GemPouchSuppressor {
@@ -104,7 +104,7 @@ package patch {
 
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return false; // pre-init — wait, don't lock.
-            var mode:int = int(AV.serverData.serverOptions.gemPouchGating);
+            var mode:int = int(AV.serverData.serverOptions.gemPouchGranularity);
             if (mode == 0) {
                 _lockedSuppress = 0; // gating off for the seed — stable, lock.
                 return false;
@@ -115,8 +115,7 @@ package patch {
             if (stageStrId == null || stageStrId.length == 0)
                 return false;
 
-            var prefix:String = stageStrId.charAt(0);
-            var suppress:Boolean = !_hasPouchFor(prefix);
+            var suppress:Boolean = !_hasPouchFor(stageStrId);
             _lockedSuppress = suppress ? 1 : 0;
             return suppress;
         }
@@ -125,27 +124,52 @@ package patch {
         // Helpers
 
         /** True when the player owns the pouch (or precollected copy) that
-         *  unlocks gems for the given stage-prefix letter. */
-        private function _hasPouchFor(prefix:String):Boolean {
+         *  unlocks gems for the given stage. Granularity-aware:
+         *    mode 1 (per_tile_distinct):    Gempouch (<prefix>) item present
+         *    mode 2 (per_tile_progressive): N copies of Progressive Gempouch
+         *    mode 3 (per_tier):             Tier <N> Gempouch item present
+         *    mode 4 (global):               Master Gempouch item present
+         */
+        private function _hasPouchFor(stageStrId:String):Boolean {
             var opts:* = AV.serverData.serverOptions;
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0)
-                return true; // no order — fail open, don't strip gems
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0)
-                return true; // unknown prefix — fail open
+            var mode:int = int(opts.gemPouchGranularity);
+            var prefix:String = stageStrId.charAt(0);
 
-            var mode:int = int(opts.gemPouchGating);
-            if (mode == 1) {
-                // Distinct: AP id 626 + index in play order.
-                return AV.sessionData.hasItem(626 + idx);
+            if (mode == 1 || mode == 2) {
+                var order:Array = opts.gemPouchPlayOrder as Array;
+                if (order == null || order.length == 0)
+                    return true; // no order — fail open
+                var idx:int = order.indexOf(prefix);
+                if (idx < 0)
+                    return true;
+                if (mode == 1) {
+                    return AV.sessionData.hasItem(626 + idx);
+                }
+                var progId:int = int(opts.gemPouchProgressiveId);
+                if (progId <= 0)
+                    progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
             }
-            // Progressive (mode == 2): need at least (idx + 1) copies of the
-            // single Progressive Gempouch item.
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0)
-                progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+            if (mode == 3) {
+                // per_tier: AP id 1601 + tier (see gating.py POUCH_TIER_BASE).
+                var tier:int = _tierForStage(stageStrId);
+                if (tier < 0)
+                    return true;
+                return AV.sessionData.hasItem(1601 + tier);
+            }
+            if (mode == 4) {
+                // global: AP id 1614 (see gating.py POUCH_MASTER_ID).
+                return AV.sessionData.hasItem(1614);
+            }
+            return true;
+        }
+
+        /** Look up a stage's tier from slot_data; -1 if unknown. */
+        private function _tierForStage(stageStrId:String):int {
+            var map:Object = AV.serverData.serverOptions.stageTierByStrId;
+            if (map == null || map[stageStrId] == null)
+                return -1;
+            return int(map[stageStrId]);
         }
 
         /** Wipe availableGemTypes and remove all 6 gem-create buttons.

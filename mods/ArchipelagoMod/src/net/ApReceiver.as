@@ -147,12 +147,18 @@ package net {
                     AV.serverData.serverOptions.startingWizardLevel = int(sd.starting_wizard_level);
                 if (sd.starting_overcrowd !== undefined)
                     AV.serverData.serverOptions.startingOvercrowd = Boolean(sd.starting_overcrowd);
-                if (sd.gem_pouch_gating !== undefined)
-                    AV.serverData.serverOptions.gemPouchGating = int(sd.gem_pouch_gating);
+                if (sd.field_token_granularity !== undefined)
+                    AV.serverData.serverOptions.fieldTokenGranularity = int(sd.field_token_granularity);
+                if (sd.stash_key_granularity !== undefined)
+                    AV.serverData.serverOptions.stashKeyGranularity = int(sd.stash_key_granularity);
+                if (sd.gem_pouch_granularity !== undefined)
+                    AV.serverData.serverOptions.gemPouchGranularity = int(sd.gem_pouch_granularity);
                 if (sd.gem_pouch_play_order !== undefined)
                     AV.serverData.serverOptions.gemPouchPlayOrder = sd.gem_pouch_play_order as Array;
                 if (sd.gem_pouch_progressive_id !== undefined)
                     AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
+                if (sd.stage_tier_by_str_id !== undefined)
+                    AV.serverData.serverOptions.stageTierByStrId = sd.stage_tier_by_str_id;
                 if (sd.enemy_hp_multiplier !== undefined)
                     AV.serverData.serverOptions.enemyMultipliers.hp = int(sd.enemy_hp_multiplier);
                 if (sd.enemy_armor_multiplier !== undefined)

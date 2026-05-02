@@ -25,9 +25,9 @@ package {
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
-    import ui.AvailableAchievementsPanel;
 
     import ui.MainMenuUI;
+    import ui.AchievementsInLogicBadge;
 
     import deathlink.DeathLinkHandler;
 
@@ -114,18 +114,6 @@ package {
         private var _messageLogPanel:MessageLogPanel;
         private var _messageLogOnStage:Boolean = false;
 
-        private var _availableAchievementsPanel:AvailableAchievementsPanel;
-        private var _availableAchievementsOnStage:Boolean = false;
-        // Anchor relative to the stage's right edge (stable — gameRoot.width
-        // fluctuates whenever sub-MovieClips like the options menu animate open).
-        // ACH_PANEL_RIGHT_INSET is in canvas (game) pixels and represents the gap
-        // between the right edge of the play area and the right edge of the stage,
-        // i.e. the width of the in-game UI sidebar (pause/play/wavestone/score)
-        // plus a small margin. Tune this if the panel overlaps the sidebar at
-        // the player's resolution.
-        private static const ACH_PANEL_RIGHT_INSET:Number = 190;
-        private static const ACH_PANEL_TOP_INSET:Number   = 8;
-
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
@@ -185,6 +173,12 @@ package {
         private var _sessionGrantedFragments:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
+        // Achievements-in-logic badge — small text label that floats above
+        // the in-level vanilla btnPnlAchis. Attached lazily to mcIngameFrame
+        // per ingame entry, position synced every frame.
+        private var _achLogicBadge:AchievementsInLogicBadge;
+        private var _achLogicBadgeFrame:* = null; // mcIngameFrame we attached to
+
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
         private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
@@ -213,8 +207,6 @@ package {
                 _receivedToast = new ReceivedToast();
                 _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
-                _availableAchievementsPanel = new AvailableAchievementsPanel(_logger, MOD_NAME);
-                _availableAchievementsPanel.onExpandRequested = refreshAvailableAchievementsPanel;
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
                 _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
@@ -238,9 +230,8 @@ package {
                 _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
                 _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
 
-                // WizStashes uses the field evaluator to read per-stage stash
-                // power thresholds + the player's current power when deciding
-                // whether to keep the stash locked / show the hover tooltip.
+                // WizStashes uses the field evaluator to decide whether to
+                // keep the stash locked / show the hover tooltip.
                 WizStashes.setEvaluator(_fieldLogicEvaluator);
 
                 _debugOptions  = new ScrDebugOptions(this);
@@ -471,11 +462,6 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
-            if (!_availableAchievementsOnStage && _availableAchievementsPanel != null && this.stage != null) {
-                this.stage.addChild(_availableAchievementsPanel);
-                _availableAchievementsOnStage = true;
-                _availableAchievementsPanel.visible = false;
-            }
             if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
                 this.stage.addChild(_disconnectPanel);
                 _disconnectPanelOnStage = true;
@@ -486,10 +472,6 @@ package {
             if (_receivedToastOnStage && _receivedToast != null && _receivedToast.alpha > 0) {
                 positionReceivedToast();
             }
-
-            // Available-achievements panel: show only in-battle, anchor top-right
-            // of play area, keep on top.
-            updateAvailableAchievementsPanel();
 
             // Main menu overlay — show/tick/hide driven by screen state.
             var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
@@ -621,7 +603,6 @@ package {
                 // up-to-date the next time the player opens the achievements menu —
                 // not stale from before this battle started.
                 if (screen == ScreenId.INGAME) {
-                    refreshAvailableAchievementsPanel();
                     _refreshAchievementPanel();
                 }
                 // Reset first-play gem patch when leaving ingame so it re-runs on
@@ -701,6 +682,9 @@ package {
                 _earlyExitOutcome.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
+                _updateAchievementsBadge();
+            } else if (_achLogicBadgeFrame != null) {
+                _detachAchievementsBadge();
             }
 
 
@@ -784,6 +768,12 @@ package {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
             }
 
+            // Refresh achievement-in-logic list before the buttons read it.
+            // _recompute is dirty-flag guarded, so this is cheap once stable.
+            if (_achievementLogicEvaluator != null) {
+                _achievementLogicEvaluator.getInLogicAchApIds();
+            }
+
             // Buttons: sync X positions, update fields-in-logic label + hover + pan.
             _modButtons.onSelectorFrame(mc);
 
@@ -814,76 +804,47 @@ package {
         }
 
         /**
-         * Per-frame upkeep for the in-battle available-achievements HUD:
-         *   - visible only on the INGAME screen
-         *   - anchored to the top-right of the visible game canvas (gameRoot's right
-         *     edge), so it stays at the right of the playfield at any resolution /
-         *     letterbox setting
-         *   - re-raised to the top of the display list so it sits above the game canvas
-         *
-         * The panel sprite is also scaled to match gameRoot, so insets and panel
-         * dimensions are interpreted in canvas (game-pixel) coordinates.
+         * Per-frame upkeep for the in-level achievements-in-logic badge.
+         *   - Attach lazily to the current `mcIngameFrame` (vanilla rebuilds
+         *     it whenever a new level loads, so re-attach if the frame
+         *     reference changed).
+         *   - Sync the count from sessionData.achievementNamesInLogic.
+         *   - Position above `btnPnlAchis` (right-aligned to its right edge,
+         *     a few px above the top edge).
+         *   - Visibility tracks btnPnlAchis.
          */
-        private function updateAvailableAchievementsPanel():void {
-            if (_availableAchievementsPanel == null || this.stage == null) return;
-            var inBattle:Boolean = (int(GV.main.currentScreen) == ScreenId.INGAME);
-            // Hide as soon as the gameover panel is appearing — same range covers
-            // appearing/stats-rolling/drops-listing/idle/disappearing (IngameStatus
-            // 9-13). PLAYING is 5, PLAYING_SHRINE_ACTIVE is 14, so the simple
-            // 9..13 range cleanly isolates the post-battle window.
-            var inGameover:Boolean = false;
-            try {
-                if (GV.ingameController != null && GV.ingameController.core != null) {
-                    var status:int = int(GV.ingameController.core.ingameStatus);
-                    inGameover = (status >= IngameStatus.GAMEOVER_PANEL_APPEARING
-                               && status <= IngameStatus.GAMEOVER_PANEL_DISAPPEARING);
-                }
-            } catch (e:Error) {}
-            var show:Boolean = inBattle && !inGameover;
-            _availableAchievementsPanel.visible = show;
-            if (!show) {
-                // Force the panel back to its small button so re-entering the next
-                // battle starts collapsed instead of restoring an open grid.
-                if (_availableAchievementsPanel.isExpanded) _availableAchievementsPanel.collapse();
-                return;
+        private function _updateAchievementsBadge():void {
+            if (GV.ingameCore == null || GV.ingameCore.cnt == null) return;
+            var frame:* = GV.ingameCore.cnt.mcIngameFrame;
+            if (frame == null) return;
+            var btn:* = frame.btnPnlAchis;
+            if (btn == null) return;
+
+            if (_achLogicBadge == null) {
+                _achLogicBadge = new AchievementsInLogicBadge();
+            }
+            if (_achLogicBadgeFrame != frame) {
+                if (_achLogicBadge.parent != null)
+                    _achLogicBadge.parent.removeChild(_achLogicBadge);
+                frame.addChild(_achLogicBadge);
+                _achLogicBadgeFrame = frame;
             }
 
-            var gameRoot:* = this.stage.getChildAt(0);
-            var scaleX:Number = gameRoot.scaleX;
-            var scaleY:Number = gameRoot.scaleY;
-
-            var panelGameW:Number = _availableAchievementsPanel.isExpanded
-                ? _availableAchievementsPanel.panelWidth
-                : 32;
-            // Anchor to the stage's right edge (stable across menu animations),
-            // then walk leftward by the sidebar inset + panel width, all in canvas
-            // pixels scaled to stage. Right edge of the panel always sits at the
-            // same place; expanded panel grows leftward and downward from there.
-            _availableAchievementsPanel.x = this.stage.stageWidth - (ACH_PANEL_RIGHT_INSET + panelGameW) * scaleX;
-            _availableAchievementsPanel.y = gameRoot.y + ACH_PANEL_TOP_INSET * scaleY;
-            _availableAchievementsPanel.scaleX = scaleX;
-            _availableAchievementsPanel.scaleY = scaleY;
-
-            if (_availableAchievementsPanel.parent == this.stage) {
-                this.stage.setChildIndex(_availableAchievementsPanel, this.stage.numChildren - 1);
-            }
+            var achs:Array = AV.sessionData.achievementNamesInLogic;
+            _achLogicBadge.update(achs != null ? achs.length : 0);
+            // Anchor the badge's top-right corner just outside the button's
+            // top-right corner — like a notification dot on an app icon.
+            _achLogicBadge.x = btn.x + btn.width - _achLogicBadge.badgeWidth + 4;
+            _achLogicBadge.y = btn.y - _achLogicBadge.badgeHeight + 4;
+            _achLogicBadge.visible = btn.visible;
         }
 
-        /** Recompute the available-achievements list for the current field. */
-        private function refreshAvailableAchievementsPanel():void {
-            if (_availableAchievementsPanel == null || _achievementLogicEvaluator == null) return;
-            var strId:String = null;
-            try {
-                if (GV.ingameCore != null && GV.ingameCore.stageMeta != null) {
-                    strId = String(GV.ingameCore.stageMeta.strId);
-                }
-            } catch (e:Error) {}
-            if (strId == null || strId.length == 0) {
-                _availableAchievementsPanel.setAchievements([]);
-                return;
+        /** Detach the badge when leaving the in-game screen. */
+        private function _detachAchievementsBadge():void {
+            if (_achLogicBadge != null && _achLogicBadge.parent != null) {
+                _achLogicBadge.parent.removeChild(_achLogicBadge);
             }
-            var entries:Array = _achievementLogicEvaluator.getAvailableInCurrentLevel(strId);
-            _availableAchievementsPanel.setAchievements(entries);
+            _achLogicBadgeFrame = null;
         }
 
         private function onStageResize(e:Event):void {
@@ -1108,20 +1069,16 @@ package {
                     AV.serverData.stageSkills,
                     AV.serverData.stageRequirements,
                     AV.serverData.matchingTalismans,
-                    AV.serverData.freeStages,
-                    int(p.slot_data.power_scale),
-                    p.slot_data.power_weights
+                    AV.serverData.freeStages
                 );
                 _fieldLogicEvaluator.setStageElements(
                     p.slot_data.stage_elements,
                     p.slot_data.stage_monsters
                 );
                 _achievementLogicEvaluator.configure(_fieldLogicEvaluator, _logicEvaluator);
-                _achievementLogicEvaluator.setAchievementRequiredPower(
-                    p.slot_data.achievement_required_power);
                 // Diagnostic: AchievementUnlocker uses this to toast on
                 // achievement unlocks that AP didn't consider in logic, so
-                // the player can spot mis-calibrated requirements / power.
+                // the player can spot mis-calibrated requirements.
                 _achievementUnlocker.setAchievementLogicEvaluator(_achievementLogicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
@@ -1210,15 +1167,18 @@ package {
          * importance so the most progression-critical items appear leftmost
          * in the icon row (and animate in first):
          *
-         *   1. Field tokens
-         *   2. Skill tomes
-         *   3. Battle trait scrolls
-         *   4. XP tomes
-         *   5. Shadow cores  (one combined icon: AP-granted + monster drops)
-         *   6. Talisman fragments  (monster drops + AP-granted)
-         *   7. Endurance wave stones  (vanilla loot, endurance only)
-         *   8. Achievements
-         *   9. Remote items  (anything sent to another player — AP icon)
+         *   1.  Field tokens
+         *   1b. Map tiles  (direct + per-tile/per-tier field token expansion)
+         *   2.  Skill tomes
+         *   3.  Battle trait scrolls
+         *   4.  XP tomes
+         *   4b. Gempouches
+         *   5.  Shadow cores  (one combined icon: AP-granted + monster drops)
+         *   5b. Skillpoint bundles  (cyan-glow icon, summed per run)
+         *   6.  Talisman fragments  (monster drops + AP-granted)
+         *   7.  Endurance wave stones  (vanilla loot, endurance only)
+         *   8.  Achievements
+         *   9.  Remote items  (anything sent to another player — AP icon)
          *
          * Implementation: each priority gets its own pass over _sessionDrops
          * (or its dedicated source like _sessionGrantedFragments). A bit
@@ -1246,6 +1206,39 @@ package {
                 var stageId:int = GV.getFieldId(String(rawStrId));
                 if (stageId >= 0) {
                     _progressionBlocker.addFieldTokenDropIcon(stageId);
+                }
+            }
+
+            // 1b. Map tiles. Three apId ranges contribute:
+            //   600-625    direct map tile items (apIdToGameId resolves the gameId)
+            //   1562-1587  per-tile field tokens (one tile each, via gemPouchPlayOrder)
+            //   1588-1600  per-tier field tokens (one icon per tile in the tier)
+            // Deduped: receiving the same tile twice in a run produces one icon.
+            var seenTileGameIds:Object = {};
+            var tierMap:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
+                ? AV.serverData.serverOptions.stageTierByStrId : null;
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+
+                if (apId >= 600 && apId <= 625) {
+                    if (AV.serverData != null && AV.serverData.apIdToGameId != null) {
+                        var directGid:int = int(AV.serverData.apIdToGameId[apId]);
+                        _emitMapTileIconOnce(directGid, seenTileGameIds);
+                    }
+                } else if (apId >= 1562 && apId <= 1587) {
+                    var tilePrefix:String = _prefixForTileApId(apId, 1562);
+                    if (tilePrefix != null && tilePrefix.length > 0) {
+                        _emitMapTileIconOnce(_tileGameIdForPrefix(tilePrefix), seenTileGameIds);
+                    }
+                } else if (apId >= 1588 && apId <= 1600 && tierMap != null) {
+                    var tier:int = apId - 1588;
+                    for (var tsid:String in tierMap) {
+                        if (int(tierMap[tsid]) != tier) continue;
+                        if (tsid.length == 0) continue;
+                        _emitMapTileIconOnce(_tileGameIdForPrefix(tsid.charAt(0)), seenTileGameIds);
+                    }
                 }
             }
 
@@ -1303,6 +1296,21 @@ package {
             var totalShadowCores:int = apShadowCores + monsterShadowCores;
             if (totalShadowCores > 0) {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
+            }
+
+            // 5b. Skillpoint bundles (apId 1700-1709): sum across all bundles
+            // received this run into one cyan-glow icon. Each bundle grants
+            // (apId - 1699) skill points, i.e. 1700→1 .. 1709→10.
+            var totalSkillPoints:int = 0;
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1700 || apId > 1709) continue;
+                totalSkillPoints += (apId - 1699);
+            }
+            if (totalSkillPoints > 0) {
+                _progressionBlocker.addSkillPointDropIcon(totalSkillPoints);
             }
 
             // 6. Talisman fragments: one icon per fragment we ended up with.
@@ -1476,7 +1484,7 @@ package {
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {
-                    // Wizard Stash key — gates the per-level stash AP check.
+                    // Per-stage Wizard Stash key — gates the per-level stash AP check.
                     var stashLocId:int = apId - 1400 + 1;
                     var stashStrId:String = null;
                     var stageLocIdMap:Object = ConnectionManager.stageLocIds;
@@ -1493,6 +1501,34 @@ package {
                     } else {
                         _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
                     }
+                    return;
+                }
+                if (apId >= 1522 && apId <= 1547) {
+                    // Per-tile stash key (one per stage prefix). Unlocks every
+                    // stash whose stage starts with the matching prefix.
+                    _grantStashKeyByPrefix(apId);
+                    return;
+                }
+                if (apId >= 1548 && apId <= 1560) {
+                    // Per-tier stash key. Unlocks every stash whose stage is
+                    // in the matching tier.
+                    _grantStashKeyByTier(apId - 1548);
+                    return;
+                }
+                if (apId == 1561) {
+                    // Master stash key. Unlocks every stash.
+                    _grantMasterStashKey();
+                    return;
+                }
+                if (apId >= 1562 && apId <= 1587) {
+                    // Per-tile field token. Unlocks every stage whose str_id
+                    // starts with the matching prefix.
+                    _grantFieldTokenByPrefix(apId);
+                    return;
+                }
+                if (apId >= 1588 && apId <= 1600) {
+                    // Per-tier field token. Unlocks every stage in the tier.
+                    _grantFieldTokenByTier(apId - 1588);
                     return;
                 }
                 if (apId >= 1700 && apId <= 1709) {
@@ -1532,6 +1568,208 @@ package {
          *                                         unlocked-but-not-completed
          *   - already completed (xp>0)        → leave alone
          */
+        // -----------------------------------------------------------------------
+        // Coarse-granularity item handlers
+        //
+        // ID layout (mirrors apworld gating.py):
+        //   1522-1547 stash tile keys (one per prefix in gemPouchPlayOrder)
+        //   1548-1560 stash tier keys (one per tier 0..12)
+        //   1561      stash master key
+        //   1562-1587 field tile tokens (one per prefix)
+        //   1588-1600 field tier tokens (one per tier 0..12)
+        // For tile-keyed items, prefix = playOrder[apId - base]. For tier-keyed
+        // items, tier = apId - base. Master keys cover everything.
+
+        // Map a tile prefix letter ("A".."Z") to the integer tile gameId
+        // (0..25) used by GV.selectorCore.mapTiles. Tile letters wrap in
+        // reverse order per WorldMapBuilder: gameId 0 = "Z", gameId 25 = "A",
+        // so gameId = 25 - (letter - 'A').
+        private static function _tileGameIdForPrefix(prefix:String):int {
+            if (prefix == null || prefix.length == 0) return -1;
+            var c:int = prefix.charCodeAt(0);
+            if (c < 65 || c > 90) return -1; // not A-Z
+            return 25 - (c - 65);
+        }
+
+        // Push a MapTileDropIcon for the given gameId, skipping duplicates
+        // already added for this drain pass. seen is a transient {gid:true}
+        // map maintained by the caller.
+        private function _emitMapTileIconOnce(tileGameId:int, seen:Object):void {
+            if (tileGameId < 0 || tileGameId >= 26) return;
+            var key:String = String(tileGameId);
+            if (seen[key] === true) return;
+            seen[key] = true;
+            _progressionBlocker.addMapTileDropIcon(tileGameId);
+        }
+
+        private function _prefixForTileApId(apId:int, base:int):String {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.gemPouchPlayOrder as Array
+                : null;
+            if (order == null || order.length == 0) return null;
+            var idx:int = apId - base;
+            if (idx < 0 || idx >= order.length) return null;
+            return String(order[idx]);
+        }
+
+        private function _grantStashKeyByPrefix(apId:int):void {
+            var prefix:String = _prefixForTileApId(apId, 1522);
+            if (prefix == null) {
+                _logger.log(MOD_NAME, "  grantItem: tile stash key apId=" + apId + " — no prefix mapping");
+                return;
+            }
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    AV.sessionData.markStashUnlocked(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
+        }
+
+        private function _grantStashKeyByTier(tier:int):void {
+            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.stageTierByStrId
+                : null;
+            if (tierMap == null) {
+                _logger.log(MOD_NAME, "  grantItem: tier stash key tier=" + tier + " — no stage->tier map");
+                return;
+            }
+            var count:int = 0;
+            for (var sid:String in tierMap) {
+                if (int(tierMap[sid]) == tier) {
+                    AV.sessionData.markStashUnlocked(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
+        }
+
+        private function _grantMasterStashKey():void {
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            var count:int = 0;
+            for (var sid:String in byStrId) {
+                AV.sessionData.markStashUnlocked(sid);
+                count++;
+            }
+            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Master stash key unlocked " + count + " stashes");
+        }
+
+        private function _grantFieldTokenByPrefix(apId:int):void {
+            var prefix:String = _prefixForTileApId(apId, 1562);
+            if (prefix == null) {
+                _logger.log(MOD_NAME, "  grantItem: tile field token apId=" + apId + " — no prefix mapping");
+                return;
+            }
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    _stageUnlocker.unlockStage(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
+        }
+
+        private function _grantFieldTokenByTier(tier:int):void {
+            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.stageTierByStrId
+                : null;
+            if (tierMap == null) {
+                _logger.log(MOD_NAME, "  grantItem: tier field token tier=" + tier + " — no stage->tier map");
+                return;
+            }
+            var count:int = 0;
+            for (var sid:String in tierMap) {
+                if (int(tierMap[sid]) == tier) {
+                    _stageUnlocker.unlockStage(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
+        }
+
+        /** Re-apply stash unlocks from received items. Called from
+         *  syncWithAP after sessionData.reset() so the unlocked state is
+         *  rebuilt from the full item list at every sync. Handles all four
+         *  stash_key_granularity modes:
+         *    per_stage  → AP id 1400-1521 (one per stage's loc id)
+         *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
+         *    per_tier   → AP id 1548-1560 (one per tier 0..12)
+         *    global     → AP id 1561 (master key)
+         */
+        private function _syncStashLockState():int {
+            if (AV.serverData == null) return 0;
+            var changes:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            var opts:* = AV.serverData.serverOptions;
+
+            _logger.log(MOD_NAME, "_syncStashLockState: stashKeyGranularity="
+                + (opts != null ? String(opts.stashKeyGranularity) : "?"));
+
+            // Per-stage: walk the stageLocIds map, mark each stash whose
+            // matching key item id is held.
+            var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+            if (stageLocIdMap != null) {
+                for (var psid:String in stageLocIdMap) {
+                    var keyApId:int = 1400 + int(stageLocIdMap[psid]) - 1;
+                    if (AV.sessionData.hasItem(keyApId)) {
+                        _logger.log(MOD_NAME, "_syncStashLockState: per-stage match "
+                            + psid + " (apId=" + keyApId + ")");
+                        if (!AV.sessionData.isStashUnlocked(psid)) {
+                            AV.sessionData.markStashUnlocked(psid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Per-tile: AP id 1522 + prefix index
+            var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
+            if (order != null) {
+                for (var pi:int = 0; pi < order.length; pi++) {
+                    if (!AV.sessionData.hasItem(1522 + pi)) continue;
+                    var prefix:String = String(order[pi]);
+                    for (var sid:String in byStrId) {
+                        if (sid.charAt(0) == prefix && !AV.sessionData.isStashUnlocked(sid)) {
+                            AV.sessionData.markStashUnlocked(sid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Per-tier: AP id 1548 + tier
+            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
+            if (tierMap != null) {
+                for (var tt:int = 0; tt <= 12; tt++) {
+                    if (!AV.sessionData.hasItem(1548 + tt)) continue;
+                    for (var tsid:String in tierMap) {
+                        if (int(tierMap[tsid]) == tt && !AV.sessionData.isStashUnlocked(tsid)) {
+                            AV.sessionData.markStashUnlocked(tsid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Global master key
+            if (AV.sessionData.hasItem(1561)) {
+                for (var msid:String in byStrId) {
+                    if (!AV.sessionData.isStashUnlocked(msid)) {
+                        AV.sessionData.markStashUnlocked(msid);
+                        changes++;
+                    }
+                }
+            }
+            return changes;
+        }
+
         private function _syncStageLockState():int {
             if (GV.ppd == null || GV.stageCollection == null || AV.serverData == null) return 0;
 
@@ -1545,6 +1783,31 @@ package {
             if (tokenMap != null) {
                 for (var apIdStr:String in tokenMap) {
                     if (AV.sessionData.hasItem(int(apIdStr))) hasToken[tokenMap[apIdStr]] = true;
+                }
+            }
+            // Coarse field-token coverage: per-tile (1562 + prefix index)
+            // covers all stages with that prefix; per-tier (1588 + tier)
+            // covers all stages in the tier.
+            var opts:* = AV.serverData.serverOptions;
+            var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
+            if (order != null) {
+                for (var pi:int = 0; pi < order.length; pi++) {
+                    if (AV.sessionData.hasItem(1562 + pi)) {
+                        var prefix:String = String(order[pi]);
+                        for (var psid:String in AV.serverData.stagesByStrId) {
+                            if (psid.charAt(0) == prefix) hasToken[psid] = true;
+                        }
+                    }
+                }
+            }
+            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
+            if (tierMap != null) {
+                for (var tt:int = 0; tt <= 12; tt++) {
+                    if (AV.sessionData.hasItem(1588 + tt)) {
+                        for (var tsid:String in tierMap) {
+                            if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
+                        }
+                    }
                 }
             }
 
@@ -1587,6 +1850,14 @@ package {
             // are reflected via AV.sessionData.hasItem now (used by
             // _syncStageLockState below); no need to track them separately.
             AV.sessionData.reset();
+
+            // Diagnostic dump: list every AP item id received in the full sync.
+            var receivedDump:String = "";
+            for each (var dumpItem:Object in items) {
+                receivedDump += String(int(dumpItem.item)) + ",";
+            }
+            _logger.log(MOD_NAME, "syncWithAP: full-sync received items: ["
+                + receivedDump + "]  (count=" + items.length + ")");
 
             for each (var item:Object in items) {
                 var apId:int = item.item;
@@ -1642,6 +1913,18 @@ package {
             // --- Stages --- (unified lock/unlock logic, also handles free stages)
             var stageChanges:int = _syncStageLockState();
 
+            // --- Stashes --- (re-apply unlocks from received key items, all granularities)
+            var stashChanges:int = _syncStashLockState();
+
+            // Diagnostic dump: list every stash currently marked unlocked.
+            var unlockedDump:String = "";
+            for (var dsid:String in AV.sessionData.unlockedStashesByStrId) {
+                if (AV.sessionData.unlockedStashesByStrId[dsid] == true)
+                    unlockedDump += dsid + ",";
+            }
+            _logger.log(MOD_NAME, "syncWithAP: unlockedStashesByStrId after sync: ["
+                + unlockedDump + "]");
+
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
             _levelUnlocker.applyBonusLevels();
@@ -1660,6 +1943,7 @@ package {
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
+                " stashes:" + stashChanges +
                 " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
         }
 

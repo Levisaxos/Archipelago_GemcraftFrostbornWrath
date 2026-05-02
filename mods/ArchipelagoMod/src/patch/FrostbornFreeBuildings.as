@@ -29,8 +29,10 @@ package patch {
      *
      * Activation gates (all must hold):
      *   - GameMode == FROSTBORN  (Chilling already gets its own 3 free)
-     *   - Stage == AV.serverData.freeStages[0] (the seed's starter)
-     *   - Gempouch for that stage's prefix not owned
+     *   - Stage is in AV.serverData.freeStages (any stage in the starter set —
+     *     a single stage at per_stage granularity, an entire tile or tier
+     *     under per_tile / per_tier)
+     *   - Gempouch covering that stage not owned (granularity-aware)
      *
      * Decision is snapshotted on the first frame with valid state (mirrors
      * HollowGemInjector / GemPouchSuppressor). Mid-level pouch arrival does
@@ -105,31 +107,53 @@ package patch {
             var freeStages:Array = AV.serverData.freeStages as Array;
             if (freeStages == null || freeStages.length == 0)
                 return false;
-            if (String(freeStages[0]) != stageStrId)
+            // Starter set may span multiple stages under per_tile / per_tier.
+            var inStarterSet:Boolean = false;
+            for (var fi:int = 0; fi < freeStages.length; fi++) {
+                if (String(freeStages[fi]) == stageStrId) {
+                    inStarterSet = true;
+                    break;
+                }
+            }
+            if (!inStarterSet)
                 return false;
 
             var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGating);
+            var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0)
                 return false; // no gating → no Hollow Gem mode → no bootstrap.
 
-            return !_hasPouchFor(stageStrId.charAt(0), opts);
+            return !_hasPouchFor(stageStrId, opts);
         }
 
-        private function _hasPouchFor(prefix:String, opts:*):Boolean {
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0)
-                return true; // unknown — fail open.
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0)
-                return true;
-            var mode:int = int(opts.gemPouchGating);
-            if (mode == 1)
-                return AV.sessionData.hasItem(626 + idx);
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0)
-                progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        private function _hasPouchFor(stageStrId:String, opts:*):Boolean {
+            var mode:int = int(opts.gemPouchGranularity);
+            var prefix:String = stageStrId.charAt(0);
+
+            if (mode == 1 || mode == 2) {
+                var order:Array = opts.gemPouchPlayOrder as Array;
+                if (order == null || order.length == 0)
+                    return true; // unknown — fail open.
+                var idx:int = order.indexOf(prefix);
+                if (idx < 0)
+                    return true;
+                if (mode == 1)
+                    return AV.sessionData.hasItem(626 + idx);
+                var progId:int = int(opts.gemPouchProgressiveId);
+                if (progId <= 0)
+                    progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
+            }
+            if (mode == 3) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null || tierMap[stageStrId] == null)
+                    return true;
+                return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
+            }
+            if (mode == 4) {
+                return AV.sessionData.hasItem(1614);
+            }
+            return true;
         }
     }
 }

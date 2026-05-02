@@ -42,9 +42,8 @@ package patch {
         // the button label and the panel group count (which use the same set).
         private var _inLogicApIds:Object       = {}; // apId -> true
 
-        // Optional reference to AchievementLogicEvaluator so the default
-        // provider can look up per-achievement required_power and current
-        // player power. Set by AchievementPanelPatcher after configure.
+        // Optional reference to AchievementLogicEvaluator. Set by
+        // AchievementPanelPatcher after configure.
         private var _achievementLogicEvaluator:Object = null;
 
         // Array of Function(ach:*, achName:String, apId:int, isExcluded:Boolean, isInLogic:Boolean):Array
@@ -235,21 +234,6 @@ package patch {
                     ["Archipelago", 0xE5AD0A],
                     [statusText,    statusColor]
                 ];
-                // Power gate: only show when this achievement has an explicit
-                // required_power override. Most achievements don't.
-                try {
-                    var ev:* = self._achievementLogicEvaluator;
-                    if (ev != null) {
-                        var reqPower:int = int(ev.getAchievementRequiredPower(achName));
-                        if (reqPower > 0) {
-                            var have:int = int(Math.round(Number(AV.sessionData.playerPower)));
-                            var scaled:int = int(Math.round(reqPower
-                                * (Number(ev.fieldEvaluator.powerScalePct) / 100.0)));
-                            var pwColor:uint = have >= scaled ? 0x88CC88 : 0xFF8888;
-                            lines.push(["Power: " + have + " / " + scaled, pwColor]);
-                        }
-                    }
-                } catch (epw:Error) {}
                 return lines;
             });
         }

@@ -41,7 +41,10 @@ package patch {
      *   - The "spent on mana-leech" stat increment from castCreateGem is undone
      *     so achievement gates (e.g. "only mana leech gems") aren't polluted.
      *
-     * Activation: AV.serverData.freeStages[0] holds the starter stage str_id
+     * Activation: AV.serverData.freeStages holds the starter stage str_id(s).
+     * Under per_stage granularity that's a single str_id; under per_tile or
+     * per_tier the entire covered set is included — Hollow Gem activates on
+     * any stage in the set when no covering pouch is held.
      * (e.g. "S2"). Active only on that exact stage and only when its prefix
      * letter has no Gempouch. Auto-deactivates once the pouch arrives.
      */
@@ -81,6 +84,14 @@ package patch {
         // combineGems / castCloneGem create fresh Bitmap objects (without
         // our filter) and assign them to the new gem.
         private var _filteredBitmaps:Dictionary = new Dictionary(true);
+
+        // Snapshot of `core.stats.spentManaOnManaLeechingGem` at first frame
+        // of an active hollow stage. Restored every subsequent frame so
+        // hollow gems can't pollute the "win using only mana-leech gems"
+        // achievements (game_id 30, 33 — IngameAchiChecker0.as:245-286)
+        // via combineGems:908 / castCloneGem:1770 / createGem:599.
+        // -1 = not yet snapshotted; reset on stage exit.
+        private var _leechStatBaseline:Number = -1;
         private static const _DESAT_FILTER:ColorMatrixFilter = _buildDesatFilter();
 
         private static function _buildDesatFilter():ColorMatrixFilter {
@@ -108,10 +119,28 @@ package patch {
                 }
                 _ensureAttached();
                 _reapplyHollowFilters();
+                _restoreLeechStat();
                 _updateTooltip();
             } catch (err:Error) {
                 _logger.log(_modName,
                     "HollowGemInjector.onIngameFrame ERROR: " + err.message);
+            }
+        }
+
+        /** Snapshot the leech stat on first active frame, then pin it to
+         *  that value every subsequent frame. While hollow mode is active,
+         *  GemPouchSuppressor wipes availableGemTypes so no other gem
+         *  types are creatable — the only thing that can move this stat
+         *  is hollow-gem create / combine / clone, all of which we want
+         *  to suppress. The pin runs every frame because combineGems and
+         *  castCloneGem don't fire any signal we can hook directly. */
+        private function _restoreLeechStat():void {
+            if (GV.ingameCore == null || GV.ingameCore.stats == null) return;
+            var stats:* = GV.ingameCore.stats;
+            if (_leechStatBaseline < 0) {
+                _leechStatBaseline = Number(stats.spentManaOnManaLeechingGem);
+            } else if (Number(stats.spentManaOnManaLeechingGem) != _leechStatBaseline) {
+                stats.spentManaOnManaLeechingGem = _leechStatBaseline;
             }
         }
 
@@ -121,6 +150,7 @@ package patch {
             _filteredBitmaps = new Dictionary(true);
             _wasHovered = false;
             _lockedActive = -1;
+            _leechStatBaseline = -1;
         }
 
         // -----------------------------------------------------------------------
@@ -151,37 +181,61 @@ package patch {
             }
 
             var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGating);
+            var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0) {
                 _lockedActive = 0; // gating disabled for the seed — stable, lock.
                 return false;
             }
 
-            if (String(freeStages[0]) != stageStrId) {
-                _lockedActive = 0; // not the starter stage — won't change mid-level.
+            // Starter set may be a single stage (per_stage granularity) or an
+            // entire tile / tier worth of stages (per_tile / per_tier).
+            // Activate Hollow Gem bootstrap on any stage in the set.
+            var inStarterSet:Boolean = false;
+            for (var fi:int = 0; fi < freeStages.length; fi++) {
+                if (String(freeStages[fi]) == stageStrId) {
+                    inStarterSet = true;
+                    break;
+                }
+            }
+            if (!inStarterSet) {
+                _lockedActive = 0; // not in starter set — won't change mid-level.
                 return false;
             }
 
-            var prefix:String = stageStrId.charAt(0);
-            var active:Boolean = !_hasPouchFor(prefix, opts);
+            var active:Boolean = !_hasPouchFor(stageStrId, opts);
             _lockedActive = active ? 1 : 0;
             return active;
         }
 
-        private function _hasPouchFor(prefix:String, opts:*):Boolean {
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0)
-                return true; // unknown — fail open
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0)
-                return true;
-            var mode:int = int(opts.gemPouchGating);
-            if (mode == 1)
-                return AV.sessionData.hasItem(626 + idx);
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0)
-                progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        private function _hasPouchFor(stageStrId:String, opts:*):Boolean {
+            var mode:int = int(opts.gemPouchGranularity);
+            var prefix:String = stageStrId.charAt(0);
+
+            if (mode == 1 || mode == 2) {
+                var order:Array = opts.gemPouchPlayOrder as Array;
+                if (order == null || order.length == 0)
+                    return true; // unknown — fail open
+                var idx:int = order.indexOf(prefix);
+                if (idx < 0)
+                    return true;
+                if (mode == 1)
+                    return AV.sessionData.hasItem(626 + idx);
+                var progId:int = int(opts.gemPouchProgressiveId);
+                if (progId <= 0)
+                    progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
+            }
+            if (mode == 3) {
+                // per_tier: AP id 1601 + tier (gating.py POUCH_TIER_BASE).
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null || tierMap[stageStrId] == null)
+                    return true;
+                return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
+            }
+            if (mode == 4) {
+                return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            }
+            return true;
         }
 
         // -----------------------------------------------------------------------
@@ -387,16 +441,24 @@ package patch {
                     return; // inventory full
 
                 var beforeCount:int = (core.gems as Array).length;
+                // Snapshot the leech-stat counter so we can restore it
+                // after castCreateGem.  IngameCreator.createGem adds
+                // gemCreatingBaseManaCosts[0] to spentManaOnManaLeechingGem
+                // for the base gem, and combineGems adds further increments
+                // for grade>0 (Fusion / Pure talisman) — neither matches
+                // the player-paid mana cost, so a fixed subtraction would
+                // miss.  Restoring the pre-cast value zeroes every path.
+                var leechSnapshot:Number = (core.stats != null)
+                    ? Number(core.stats.spentManaOnManaLeechingGem) : 0;
                 var ok:Boolean = core.spellCaster.castCreateGem(slot, HOLLOW_TYPE);
                 if (!ok)
                     return;
 
-                // Reverse the "mana spent on leech" stat increment so achievement
-                // gates that key off this counter aren't polluted by hollow gems.
+                // Reverse the "mana spent on leech" stat increments so the
+                // "win using only mana-leech gems" achievements and the
+                // end-of-level mana-spent breakdown aren't polluted.
                 if (core.stats != null) {
-                    core.stats.spentManaOnManaLeechingGem -= manaCost;
-                    if (core.stats.spentManaOnManaLeechingGem < 0)
-                        core.stats.spentManaOnManaLeechingGem = 0;
+                    core.stats.spentManaOnManaLeechingGem = leechSnapshot;
                 }
 
                 var newGem:Gem = _findNewGem(core, beforeCount);
@@ -451,6 +513,15 @@ package patch {
             // "0 color components" instead of "Pure mana leech". Combine of
             // two empty elderComponents arrays stays empty so this propagates.
             gem.elderComponents = [];
+
+            // NOTE: do NOT touch manaValuesByComponent[MANA_LEECHING].
+            // The pie chart in GemBitmapCreator.giveGemBitmaps requires at
+            // least one non-zero slice across all 6 components — for hollow
+            // gems, MANA_LEECHING is the only set slot. Zeroing it crashes
+            // castCloneGem with "Pie chart: no slices given".
+            //
+            // Combine / duplicate stat pollution is instead handled per-frame
+            // by _restoreLeechStat() — see comment there.
 
             try { gem.recalculateSds(); } catch (e:Error) {}
 

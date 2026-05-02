@@ -15,7 +15,9 @@ package patch {
      * unlocked types to preserve the configured ritual count.
      *
      * Source of truth for the creature -> original-levels map:
-     *   apworld/gcfw/rulesdata_settings.py  (non_monster_elements)
+     *   apworld/gcfw/rulesdata_levels.py  (per-stage <Creature>Count fields:
+     *   ShadowCount / SpecterCount / SpireCount / WraithCount /
+     *   WizardHunterCount / ApparitionCount)
      */
     public class RitualSpawnPatcher {
 

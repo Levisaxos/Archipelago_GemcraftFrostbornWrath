@@ -32,8 +32,6 @@ package tracker {
         var _fieldEvaluator: FieldLogicEvaluator;
         private
         var _logicEvaluator: LogicEvaluator;
-        private
-        var _achievementRequiredPower: Object = {}; // ach name -> required_power int
 
         private
         var _dirty: Boolean = true;
@@ -164,41 +162,16 @@ package tracker {
                 "Trivial";
         }
 
-        /** Field evaluator (power computation + scale). Public for tooltip overlays. */
+        /** Field evaluator. Public for tooltip overlays. */
         public
         function get fieldEvaluator(): FieldLogicEvaluator {
             return _fieldEvaluator;
-        }
-
-        /** Per-achievement required power (raw, unscaled). 0 if not gated. */
-        public
-        function getAchievementRequiredPower(achName: String): int {
-            if (_achievementRequiredPower == null)
-                return 0;
-            var v:* = _achievementRequiredPower[achName];
-            return (v !== undefined) ? int(v) : 0;
-        }
-
-        /** Forwarded from slot_data via configure() (or a dedicated setter). */
-        public
-        function setAchievementRequiredPower(map: Object): void {
-            _achievementRequiredPower = map != null ? map : {};
         }
 
         /** Check requirements for a single achievement without using the cache. */
         public
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
-            // Power gate (only if explicit override set on this achievement).
-            if (_fieldEvaluator != null) {
-                var reqPower: int = getAchievementRequiredPower(achName);
-                if (reqPower > 0) {
-                    var have: Number = _fieldEvaluator.computePlayerPower();
-                    var scale: Number = _fieldEvaluator.powerScalePct / 100.0;
-                    if (have < reqPower * scale)
-                        return false;
-                }
-            }
             if (!achData.requirements) return true;
             var reqs: Array = achData.requirements as Array;
             if (!reqs || reqs.length == 0) return true;
@@ -266,77 +239,6 @@ package tracker {
                 return result;
             }
             return [];
-        }
-
-        /**
-         * Return achievements still missing AND realistically earnable on the
-         * current battle in `currentStrId`, given the player's current loadout
-         * (trait levels > 0, skill levels > 0) and the field's design data
-         * (elements, monster HP/armor caps, swarmling counts, wave count).
-         *
-         * Returns Array of { apId:int, gameId:int, name:String, description:String }
-         * sorted alphabetically by name. Skips earned, untrackable, effort-excluded,
-         * non-journey achievements. Used by AvailableAchievementsPanel.
-         */
-        public
-        function getAvailableInCurrentLevel(currentStrId: String): Array {
-            var out: Array = [];
-            if (_logicEvaluator == null || _achievementData == null) return out;
-            if (currentStrId == null || currentStrId.length == 0) return out;
-
-            // missingLocations is populated by AP on connect/sync. Without it we
-            // can't tell what's still missing, so the panel stays empty.
-            var missing: Object = AV.saveData != null ? AV.saveData.missingLocations : null;
-            if (missing == null) return out;
-            var requiredEffort: int = (AV.serverData != null && AV.serverData.serverOptions != null) ?
-                AV.serverData.serverOptions.achievementRequiredEffort : 0;
-            var effortHierarchy: Array = ["Trivial", "Minor", "Major", "Extreme"];
-            var maxEffortStr: String = (requiredEffort > 0 && requiredEffort <= 4) ?
-                effortHierarchy[requiredEffort - 1] :
-                "Trivial";
-
-            try {
-                for (var achName: String in _achievementData) {
-                    var achData: Object = _achievementData[achName];
-                    if (!achData || !achData.apId) continue;
-
-                    var apId: int = int(achData.apId);
-                    if (achData.untrackable === true) continue;
-
-                    var modes: Array = achData.modes as Array;
-                    if (modes != null && modes.indexOf("journey") < 0) continue;
-
-                    var achEffort: String = achData.required_effort || "Trivial";
-                    if (effortHierarchy.indexOf(achEffort) > effortHierarchy.indexOf(maxEffortStr)) continue;
-
-                    if (missing != null && missing[apId] != true) continue;
-
-                    var reqs: Array = achData.requirements as Array;
-                    var passes: Boolean = (reqs == null || reqs.length == 0)
-                        || _logicEvaluator.evaluateInLevelRequirements(reqs, currentStrId);
-                    if (!passes) continue;
-
-                    // Globally in logic = the achievement's requirements are met
-                    // against world-state (not just the current level).  If the
-                    // achievement only matches because the current level happens
-                    // to host the required element while no in-logic stage does,
-                    // this is false — the dot should be yellow, not green.
-                    var globallyInLogic:Boolean = isAchievementInLogic(achName, achData);
-
-                    out.push({
-                        apId:        apId,
-                        gameId:      achData.game_id != null ? int(achData.game_id) : -1,
-                        name:        achName,
-                        description: achData.description || "",
-                        inLogic:     globallyInLogic
-                    });
-                }
-            } catch (e: Error) {
-                _logger.log(_modName, "getAvailableInCurrentLevel error: " + e.message);
-            }
-
-            out.sortOn("name", Array.CASEINSENSITIVE);
-            return out;
         }
 
         // -----------------------------------------------------------------------

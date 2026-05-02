@@ -11,7 +11,7 @@ package unlockers {
      * Handles achievement detection, reporting, and skill-point rewards.
      *
      * Owns:
-     *   _achievementData      — name → { apId, reward, required_effort, requirements, modes }
+     *   _achievementData      — name → { apId, required_effort, requirements, modes }
      *   _reportedAchievements — which achievements have been sent to AP this session
      *
      * In-logic computation is handled by AchievementLogicEvaluator (separate class).
@@ -247,8 +247,8 @@ package unlockers {
                     unlockAchievement(String(ach.title), apId, gameId);
 
                     // Out-of-logic detection — useful for spotting requirements
-                    // that are too lax / power values that are too low. If AP
-                    // didn't think this was reachable yet, toast it.
+                    // that are too lax. If AP didn't think this was reachable
+                    // yet, toast it.
                     if (_achievementLogicEvaluator != null) {
                         try {
                             var inLogic:Boolean = Boolean(

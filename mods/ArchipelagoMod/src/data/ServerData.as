@@ -267,8 +267,10 @@ package data {
                     }
                 }
 
-                if (logicData.freeStages)
-                    freeStages = logicData.freeStages;
+                // freeStages comes from slot_data.free_stages (per-seed,
+                // depends on the starting_stage yaml option). Set by
+                // ApReceiver.handleConnected before this function runs;
+                // do NOT overwrite it from logic.json.
 
                 if (logicData.matchingTalismans)
                     matchingTalismans = logicData.matchingTalismans;
@@ -279,7 +281,6 @@ package data {
                     for (var s:String in stageRequirements) nReq++;
                     _logger.log("ServerData", "Loaded logic.json — "
                         + nReq + " stages with requirements, "
-                        + freeStages.length + " free stages, "
                         + (matchingTalismans != null ? "matching talismans loaded" : "no matching talismans"));
                 }
             }

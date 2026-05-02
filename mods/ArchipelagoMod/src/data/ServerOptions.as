@@ -22,14 +22,23 @@ package data {
         public var startingWizardLevel:int;
         public var startingOvercrowd:Boolean;
 
-        // Gem-pouch gating: 0=off, 1=distinct, 2=progressive.
-        // playOrder is the alphabetised stage-prefix list shipped from the
-        // apworld; for distinct mode, item AP id = 626 + index in this list.
-        // progressiveId is the AP id used for the single Progressive Gempouch
-        // item (multiple copies arrive with the same id).
-        public var gemPouchGating:int;
+        // Gating granularity for the three gating-item categories.
+        // fieldTokenGranularity: 0=per_stage, 1=per_tile, 2=per_tier
+        // stashKeyGranularity:   0=per_stage, 1=per_tile, 2=per_tier, 3=global
+        // gemPouchGranularity:   0=off, 1=per_tile_distinct,
+        //                        2=per_tile_progressive, 3=per_tier, 4=global
+        // gemPouchPlayOrder is the prefix list (W, S, V, R, ...) used by
+        // per_tile_distinct (item id = 626 + index) and per_tile_progressive
+        // (Nth copy unlocks Nth prefix).
+        public var fieldTokenGranularity:int;
+        public var stashKeyGranularity:int;
+        public var gemPouchGranularity:int;
         public var gemPouchPlayOrder:Array;
         public var gemPouchProgressiveId:int;
+
+        // Per-stage tier number, sent from the apworld so the mod can resolve
+        // coarse tier-keyed items. Map: str_id -> tier int (e.g. {"W1": 0}).
+        public var stageTierByStrId:Object;
 
         // Goal-Specific Settings
         public var fieldsRequired:int;           // for fields_count goal
@@ -67,9 +76,12 @@ package data {
             startingWizardLevel = 1;
             startingOvercrowd = false;
 
-            gemPouchGating = 0;
+            fieldTokenGranularity = 0;
+            stashKeyGranularity = 0;
+            gemPouchGranularity = 0;
             gemPouchPlayOrder = [];
             gemPouchProgressiveId = 0;
+            stageTierByStrId = {};
 
             fieldsRequired = 0;
             fieldsRequiredPercentage = 0;

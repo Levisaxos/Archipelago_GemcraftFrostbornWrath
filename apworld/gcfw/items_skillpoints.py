@@ -20,20 +20,21 @@ def sp_bundle_item_name(size: int) -> str:
 
 
 def sp_bundle_item_table() -> Dict[str, ItemData]:
-    """Skillpoint bundle items.  Half the bundle sizes are state-tracked
-    (`progression_skip_balancing` — counts toward reachability for the
-    skillPoints:N gate, but skips cross-player balancing since we have many
-    copies); the other half are `useful` and just float around in fill.
-    Convention: odd sizes (1, 3, 5, 7, 9) progression; even sizes useful.
-    Skews progression slightly higher than 50% of items by count due to
-    SP_BUNDLE_WEIGHTS favouring small bundles, but well below 50% by SP."""
+    """Skillpoint bundle items, all `progression_skip_balancing` so 100% of
+    generated SP is visible to state.has/state.count and counts toward the
+    skillPoints:N achievement gate. `skip_balancing` keeps Archipelago's
+    cross-player balancing off (we ship many copies; balancing has no value).
+
+    History: previously only odd sizes were progression — that capped the
+    state-visible SP at ~half of generated, which made high-SP gates like
+    Mastery (skillPoints:200) randomly unsatisfiable depending on the
+    bundle-size lottery. Promoting all sizes to progression eliminates that
+    failure class without changing total SP."""
     table: Dict[str, ItemData] = {}
     for size in SP_BUNDLE_SIZES:
         ap_id = SP_BUNDLE_BASE_ID + (size - 1)
-        cls = (ItemClassification.progression_skip_balancing
-               if size % 2 == 1
-               else ItemClassification.useful)
-        table[sp_bundle_item_name(size)] = ItemData(ap_id, cls)
+        table[sp_bundle_item_name(size)] = ItemData(
+            ap_id, ItemClassification.progression_skip_balancing)
     return table
 
 

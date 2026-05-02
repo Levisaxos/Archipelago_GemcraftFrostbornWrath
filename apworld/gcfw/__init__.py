@@ -22,30 +22,21 @@ from .options import (
     DeathLinkCooldown,
     AchievementRequiredEffort,
     SkillpointMultiplier,
-    GemPouchGating,
+    GemPouchGranularity,
+    FieldTokenGranularity,
+    StashKeyGranularity,
     STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
-from .power import (
-    WEIGHT_SP,
-    WEIGHT_GEM_SKILL,
-    WEIGHT_OTHER_SKILL,
-    WEIGHT_BATTLE_TRAIT,
-    WEIGHT_XP_TOME_LEVEL,
-    WEIGHT_SHADOW_CORE_ITEM,
-    WEIGHT_TALISMAN_DIVISOR,
-    WEIGHT_GEMPOUCH,
-)
+from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
 from .rulesdata import (
     GAME_DATA,
     SKILL_CATEGORIES,
     GEM_POUCH_PLAY_ORDER,
+    STAGE_RULES,
 )
-from .rulesdata_settings import (
-    game_level_elements,
-    non_monster_elements,
-)
+from .rulesdata_levels import level_requirements as LEVEL_DATA
 
 
 def _load_game_data():
@@ -98,19 +89,14 @@ def _can_achievement_be_met(requirements: list) -> bool:
     Returns True if any AND-group can be met, False only if all groups are blocked.
 
     Element-handling convention (mirrors rules.py `_eval_req`):
-      - game_level_elements with `levels: []` → always available (e.g. Tower, Wall,
-        Wizard Stash — basic mechanics that exist on every stage). Token is
-        recognized but doesn't gate. To explicitly mark an element as unreachable,
-        set `unsupported: True` on the element entry; then this function returns
-        False so the achievement gets pruned at gen time. (Today no achievements
-        use such elements — Broken Seal previously did, and is now `untrackable`.)
-      - non_monster_elements: reachable iff `requires_trait` is set OR `levels` is
-        non-empty. Empty-levels-and-no-trait → unreachable.
+      An element is structurally reachable iff at least one stage in
+      LEVEL_DATA carries its <Pascal>Count field with a positive value.
+      Universal-presence elements (Tower / Wall / Wizard Stash / Marked
+      Monster — no Count field anywhere) fall through to "always satisfied"
+      and never block.
     """
-    # element_prefix_map values are lists of element names.  Single-element
-    # tokens map to ["Beacon"]; group tokens like "eNonMonsters" map to the
-    # full list of members.
     from .requirement_tokens import element_prefix_map
+    from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
 
     def _resolve_element_names(req: str):
         """Return the list of element names a requirement refers to, or
@@ -119,16 +105,16 @@ def _can_achievement_be_met(requirements: list) -> bool:
         return element_prefix_map.get(head)
 
     def _element_blocked(elem_name: str) -> bool:
-        """True if this element is structurally unreachable (unsupported
-        in game_level_elements, or non-monster-element with neither trait
-        nor levels)."""
-        if elem_name in game_level_elements:
-            return bool(game_level_elements[elem_name].get("unsupported", False))
-        if elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            return (not elem_data.get("requires_trait")
-                    and not elem_data.get("levels", []))
-        return False  # Mod-only / unknown — don't block on it.
+        """True if this element is structurally unreachable — the element is
+        tracked per-stage but no stage actually hosts it.  Universal-presence
+        elements (no Count field anywhere) are never blocked."""
+        if elem_name == "Wizard Stash":
+            return False  # gated by per-stage keys, not by stage presence
+        field = _element_count_field(elem_name)
+        if field not in _PRESENT_COUNT_FIELDS:
+            return False  # universal / untracked — assume reachable
+        # Tracked but no stage carries a positive count -> unreachable.
+        return not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values())
 
     def _group_can_be_met(group: list) -> bool:
         for req in group:
@@ -213,26 +199,27 @@ def _get_filter_reason(requirements: list) -> str:
     Determine why an achievement was filtered out.
     Returns a string describing the reason.
     """
-    for req in requirements:
-        req = req.strip()
+    from .requirement_tokens import element_prefix_map
+    from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
 
-        # Skip non-element requirements
-        if " element" not in req.lower():
+    def _flatten(reqs):
+        for r in reqs:
+            if isinstance(r, list):
+                yield from _flatten(r)
+            else:
+                yield r
+
+    for req in _flatten(requirements):
+        req = str(req).strip()
+        head = req.split(":", 1)[0].strip()
+        elem_names = element_prefix_map.get(head)
+        if elem_names is None:
             continue
-
-        elem_name = req.replace(" element", "").strip()
-
-        # Check game_level_elements
-        if elem_name in game_level_elements:
-            if not game_level_elements[elem_name].get("levels", []):
-                return f"Missing level mapping for '{elem_name}'"
-
-        # Check non_monster_elements
-        elif elem_name in non_monster_elements:
-            elem_data = non_monster_elements[elem_name]
-            if not elem_data.get("requires_trait") and not elem_data.get("levels", []):
-                return f"Trait-gated element without trait: '{elem_name}'"
-
+        for elem_name in elem_names:
+            field = _element_count_field(elem_name)
+            if field in _PRESENT_COUNT_FIELDS:
+                if not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values()):
+                    return f"No stage hosts element '{elem_name}'"
     return "Unknown reason"
 
 
@@ -254,11 +241,13 @@ class GemcraftFrostbornWrathWorld(World):
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldTokenGranularity,
+            StashKeyGranularity,
+            GemPouchGranularity,
             FieldTokenPlacement,
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
-            GemPouchGating,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -275,27 +264,29 @@ class GemcraftFrostbornWrathWorld(World):
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
 
     def generate_early(self) -> None:
-        if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
-            raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
-        if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
-            raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
+        with phase(f"p{self.player} generate_early"):
+            if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
+                raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
+            if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
+                raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
     def pre_fill(self) -> None:
-        from Fill import FillError, fill_restrictive
+        with phase(f"p{self.player} pre_fill"):
+            from Fill import FillError, fill_restrictive
 
-        placement = self.options.field_token_placement.value
-        if placement != FieldTokenPlacement.option_own_world:
-            return  # any_world: nothing to do; different_world: handled in stage_pre_fill
+            placement = self.options.field_token_placement.value
+            if placement != FieldTokenPlacement.option_own_world:
+                return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
-        tokens = [item for item in self.multiworld.itempool
-                  if item.player == self.player and item.name.endswith(" Field Token")]
-        for token in tokens:
-            self.multiworld.itempool.remove(token)
+            tokens = [item for item in self.multiworld.itempool
+                      if item.player == self.player and item.name.endswith(" Field Token")]
+            for token in tokens:
+                self.multiworld.itempool.remove(token)
 
-        target_locations = self.multiworld.get_unfilled_locations(self.player)
-        state = self.multiworld.get_all_state(use_cache=False)
-        fill_restrictive(self.multiworld, state, target_locations, tokens,
-                         lock=True, allow_partial=False)
+            target_locations = self.multiworld.get_unfilled_locations(self.player)
+            state = self.multiworld.get_all_state(use_cache=False)
+            fill_restrictive(self.multiworld, state, target_locations, tokens,
+                             lock=True, allow_partial=False)
 
     @classmethod
     def stage_pre_fill(cls, multiworld: "MultiWorld") -> None:
@@ -333,19 +324,22 @@ class GemcraftFrostbornWrathWorld(World):
         return GCFWItem(name, data.classification, data.id, self.player)
 
     def create_items(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         stages = _load_stages()
         pool: List[GCFWItem] = []
 
-        # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
-        # All four are free stages; the mod unlocks them on connect.
-        # No placeholder is added: the 118 token items + skills/traits/talismans/
-        # cores/XP-tomes already match the 366 stage locations (since W1-W4 each
-        # contribute 3 locations but 0 token items, the difference is filled by
-        # the always-on items below).
-        for stage in stages:
-            if stage["item_ap_id"] is None:
-                continue
-            pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+        # Field tokens — count and names depend on field_token_granularity:
+        #   per_stage: 122 tokens (one per stage), starter's token precollected
+        #   per_tile:  26 tokens (one per stage prefix), starter's tile precollected
+        #   per_tier:  N tokens (one per active tier), starter's tier precollected
+        # The starter's covering token is always pushed to precollected items
+        # so Menu->starter is satisfied without the player having to find it.
+        from . import gating as _gating
+        ft_gran = self.options.field_token_granularity.value
+        starter_token = _gating.starter_field_token(self.start_sid, ft_gran)
+        self.multiworld.push_precollected(self.create_item(starter_token))
+        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sid):
+            pool.append(self.create_item(token_name))
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -453,23 +447,22 @@ class GemcraftFrostbornWrathWorld(World):
                         ach_data = all_achievements[ach_name]
                         ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
-        # Per-stage Wizard Stash key items (122 items, IDs 1400–1521).
-        # Progression: each gates its matching stash location in rules.py.
-        for stage in stages:
-            pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
+        # Wizard Stash keys — count and names depend on stash_key_granularity:
+        #   per_stage: 122 keys (one per stage)
+        #   per_tile:  26 keys (one per stage prefix)
+        #   per_tier:  N keys (one per active tier, N = len(ACTIVE_TIERS))
+        #   global:    1 master key
+        from . import gating as _gating
+        for key_name in _gating.stash_keys_for_pool(self.options.stash_key_granularity.value):
+            pool.append(self.create_item(key_name))
 
-        # Gempouches — added based on gem_pouch_gating option.
+        # Gempouches — added based on gem_pouch_granularity option.
         # No pouch is precollected: the starter stage (whichever prefix the
         # seed picks) is bootstrappable via Hollow Gems supplied by the mod's
         # HollowGemInjector when the matching pouch is missing. So every
         # pouch goes into the pool and gets randomized.
-        pouch_mode = self.options.gem_pouch_gating.value
-        if pouch_mode == 1:  # distinct
-            for prefix in GEM_POUCH_PLAY_ORDER:
-                pool.append(self.create_item(f"Gempouch ({prefix})"))
-        elif pouch_mode == 2:  # progressive
-            for _ in range(len(GEM_POUCH_PLAY_ORDER)):
-                pool.append(self.create_item("Progressive Gempouch"))
+        for pouch_name in _gating.pouches_for_pool(self.options.gem_pouch_granularity.value):
+            pool.append(self.create_item(pouch_name))
 
         # SP bundle filler — fills all remaining unfilled location slots.
         # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
@@ -487,8 +480,10 @@ class GemcraftFrostbornWrathWorld(World):
                 pool.append(self.create_item(name))
 
         self.multiworld.itempool += pool
+        _timing_log(f"p{self.player} create_items: {(_t.perf_counter()-_t0)*1000:.1f} ms (pool={len(pool)})")
 
     def create_regions(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         # Resolve the chosen start stage. Its baked `requirements` in
         # rulesdata_levels.py are intentionally ignored at rule-time
         # (see rules.set_rules); Menu connects directly to its region.
@@ -589,11 +584,14 @@ class GemcraftFrostbornWrathWorld(World):
         # Connect Menu → starting stage. All other stages connect from the
         # starting stage in set_rules.
         menu_region.connect(stage_regions[self.start_sid], "Start")
+        _timing_log(f"p{self.player} create_regions: {(_t.perf_counter()-_t0)*1000:.1f} ms")
 
     def set_rules(self) -> None:
-        set_rules(self)
+        with phase(f"p{self.player} set_rules"):
+            set_rules(self)
 
     def generate_basic(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         # Place the Victory event at the goal-appropriate location.
         if self.options.goal.value == 0:
             victory_name = "Complete A4 - Frostborn Wrath Victory"
@@ -611,6 +609,7 @@ class GemcraftFrostbornWrathWorld(World):
         )
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
+        _timing_log(f"p{self.player} generate_basic: {(_t.perf_counter()-_t0)*1000:.1f} ms")
 
     # def fill_hook(self, progitempool, usefulitempool, filleritempool, fill_locations):
     #     # Reorder progitempool so fill_restrictive (which pops from the end) places items in
@@ -697,6 +696,10 @@ class GemcraftFrostbornWrathWorld(World):
 
 
     def fill_slot_data(self) -> Dict:
+        # Main fill happens between generate_basic and fill_slot_data, so this
+        # is where we dump the per-rule call counters.
+        report_top_rules()
+        import time as _t; _t0 = _t.perf_counter()
         gd = _load_game_data()
         stages = gd["stages"]
 
@@ -707,12 +710,19 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # The chosen starting stage is "free" — accessible from the menu with
-        # no token, and its baked `requirements` are skipped both in apworld
-        # set_rules and in the mod's FieldLogicEvaluator (which treats this
-        # list as the auto-unlocked / no-requirements set). All other stages
-        # (including the W/S stages not picked) gate normally.
-        free_stages = [self.start_sid]
+        # Stages that are immediately playable from session start. Under
+        # field_token_granularity == per_stage this is just the chosen starter.
+        # Under per_tile / per_tier the precollected starter token covers
+        # multiple stages — they're all "free" at start since the token gate
+        # is satisfied immediately. The mod uses this list for the Hollow Gem
+        # bootstrap, FirstPlayBypass, and free-buildings logic.
+        from . import gating as _gating
+        ft_gran = self.options.field_token_granularity.value
+        starter_token_name = _gating.starter_field_token(self.start_sid, ft_gran)
+        free_stages = [
+            s["str_id"] for s in stages
+            if _gating.field_token_for_stage(s["str_id"], ft_gran) == starter_token_name
+        ]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -770,15 +780,12 @@ class GemcraftFrostbornWrathWorld(World):
         worn_levels     = max(1, round(multiplier * 2))
         ancient_levels  = max(1, round(multiplier * 3))
 
-        # --- In-game tracker: per-achievement requirements_power map ---
+        # --- In-game tracker: per-achievement requirements map ---
         # Stage logic (WIZLOCK skills + prereq tokens + talisman counters)
         # is shipped via logic.json (generate_logic_json.py); slot_data here
-        # only carries options + the achievement-side power-gate map.
-        # Build achievement requirements map: achievement name → [requirements]
-        # AND per-achievement required_power (when set) so the mod's
-        # AchievementLogicEvaluator can apply the same gate for in-logic display.
+        # only carries options + the per-achievement requirements list so the
+        # mod's AchievementLogicEvaluator can mirror the in-logic display.
         achievement_requirements_map: Dict[str, list] = {}
-        achievement_required_power_map: Dict[str, int] = {}
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
@@ -787,32 +794,36 @@ class GemcraftFrostbornWrathWorld(World):
                 requirements = ach_data.get("requirements", [])
                 if requirements:
                     achievement_requirements_map[ach_name] = requirements
-                explicit_power = ach_data.get("required_power")
-                if explicit_power is not None and int(explicit_power) > 0:
-                    achievement_required_power_map[ach_name] = int(explicit_power)
 
         # Per-stage element/monster lists for the in-game field tooltip.
-        # Inverted from rulesdata_settings.{game_level_elements, non_monster_elements}.
-        # Tower / Wall / Wizard Stash are universal basics — omitted from the UI
-        # to keep the tooltip scannable.
-        SKIP_ELEMENTS = {"Tower", "Wall", "Wizard Stash"}
+        # Derived from per-stage Count fields in rulesdata_levels.py.
+        # Members of eNonMonsters (Shadow / Specter / etc.) feed the
+        # "monsters" tooltip column; everything else feeds "elements".
+        # Tower / Wall / Wizard Stash are universal basics with no Count
+        # field, so they fall out automatically.
+        from .requirement_tokens import element_prefix_map
+        from .rules import _element_count_field
+
+        monster_names = set(element_prefix_map.get("eNonMonsters", []))
         stage_elements: Dict[str, List[str]] = {}
         stage_monsters: Dict[str, List[str]] = {}
-        for elem_name, data in game_level_elements.items():
-            if elem_name in SKIP_ELEMENTS:
+        for token, names in element_prefix_map.items():
+            if len(names) != 1:
+                continue  # group tokens (eNonMonsters) handled via membership above
+            elem_name = names[0]
+            if elem_name == "Wizard Stash":
                 continue
-            if data.get("unsupported"):
-                continue
-            for sid in data.get("levels", []):
-                stage_elements.setdefault(sid, []).append(elem_name)
-        for elem_name, data in non_monster_elements.items():
-            for sid in data.get("levels", []):
-                stage_monsters.setdefault(sid, []).append(elem_name)
+            field = _element_count_field(elem_name)
+            target = stage_monsters if elem_name in monster_names else stage_elements
+            for sid, data in LEVEL_DATA.items():
+                if data.get(field, 0) > 0:
+                    target.setdefault(sid, []).append(elem_name)
         for v in stage_elements.values():
             v.sort()
         for v in stage_monsters.values():
             v.sort()
 
+        _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,
@@ -826,21 +837,6 @@ class GemcraftFrostbornWrathWorld(World):
             # the mod SWF. slot_data only carries options and goal data now.
             "logic_rules_version":   2,
             "skill_categories":      SKILL_CATEGORIES,
-            # Achievement-side power gating still runs through apworld fill
-            # (rules._eval_req → has_power); these fields let the mod display
-            # the same gate in the in-logic UI.
-            "achievement_required_power": achievement_required_power_map,
-            "power_scale":           self.options.power_scale.value,
-            "power_weights":         {
-                "sp":              WEIGHT_SP,
-                "gem_skill":       WEIGHT_GEM_SKILL,
-                "other_skill":     WEIGHT_OTHER_SKILL,
-                "battle_trait":    WEIGHT_BATTLE_TRAIT,
-                "xp_tome_level":   WEIGHT_XP_TOME_LEVEL,
-                "shadow_core":     WEIGHT_SHADOW_CORE_ITEM,
-                "talisman_divisor": WEIGHT_TALISMAN_DIVISOR,
-                "gempouch":        WEIGHT_GEMPOUCH,
-            },
             "stage_elements":        stage_elements,
             "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
@@ -854,17 +850,24 @@ class GemcraftFrostbornWrathWorld(World):
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
-            # Gem-pouch gating: per-prefix gem-orb suppression. Mod uses these
-            # to decide whether to spawn gem orbs on level start, and to
-            # display "needs Gempouch X" in tooltips.
-            #   gem_pouch_gating: 0=off, 1=distinct, 2=progressive
-            #   gem_pouch_play_order: list of prefix letters in play order;
-            #     for distinct, item AP id = 626 + index in this list;
-            #     for progressive, the Nth Progressive Gempouch covers the
-            #     first N prefixes in this list.
-            "gem_pouch_gating":        self.options.gem_pouch_gating.value,
+            # Granularity settings for the three gating-item categories.
+            # Mod uses these to interpret coarser items (e.g. a per_tile stash
+            # key unlocks every stash with that prefix).
+            #   field_token_granularity: 0=per_stage, 1=per_tile, 2=per_tier
+            #   stash_key_granularity:   0=per_stage, 1=per_tile, 2=per_tier, 3=global
+            #   gem_pouch_granularity:   0=off, 1=per_tile_distinct,
+            #                            2=per_tile_progressive, 3=per_tier, 4=global
+            "field_token_granularity": self.options.field_token_granularity.value,
+            "stash_key_granularity":   self.options.stash_key_granularity.value,
+            "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
             "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
             "gem_pouch_progressive_id": item_table["Progressive Gempouch"].id,
+            # Per-stage tier assignments so the mod can resolve coarse
+            # tier-keyed items (e.g. "Tier 3 Field Token" → all tier-3 stages).
+            "stage_tier_by_str_id": {
+                s["str_id"]: STAGE_RULES[s["str_id"]].tier
+                for s in GAME_DATA["stages"]
+            },
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,

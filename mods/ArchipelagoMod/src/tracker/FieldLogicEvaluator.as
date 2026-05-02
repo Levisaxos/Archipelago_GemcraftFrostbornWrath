@@ -39,12 +39,6 @@ package tracker {
         private var _matchingTalismans:Object;   // { grid, rows, columns } or null
         private var _freeStages:Object = {};     // strId -> true
 
-        // slot_data — power weights for achievement-side power gates only.
-        // Stage in-logic no longer uses power; this is kept for the
-        // achievement evaluator's required_power checks.
-        private var _powerScalePct:int = 100;
-        private var _powerWeights:Object;
-
         private var _dirty:Boolean = true;
         private var _inLogicByStrId:Object = {};
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
@@ -53,9 +47,13 @@ package tracker {
         private var _elementToStages:Object = {}; // element name -> Array<String>
         private var _monsterToStages:Object = {}; // monster name -> Array<String>
 
-        // Ritual Battle Trait AP id (matches apworld). All current
-        // non_monster_elements (Shadow / Specter / Spire / Wraith / Wizard
-        // Hunter / Apparition) require this trait per rulesdata_settings.py.
+        // Ritual Battle Trait AP id (matches apworld). Used by
+        // isMonsterInLogic to gate non-monster creature checks (Shadow /
+        // Specter / Spire / Wraith / Wizard Hunter / Apparition).
+        // NOTE: per current game behaviour these creatures spawn naturally
+        // on their listed stages without Ritual; Ritual only amplifies.
+        // The gate below is a legacy stricter check — review when
+        // refactoring achievement-side logic.
         public static const RITUAL_TRAIT_AP_ID:int = 814;
 
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
@@ -64,20 +62,16 @@ package tracker {
         }
 
         /**
-         * Feed logic data from logic.json + slot_data power-scale info.
+         * Feed logic data from logic.json.
          * Call once after the Connected packet (ServerData has loaded JSON).
          */
         public function configure(stageSkills:Object,
                                   stageRequirements:Object,
                                   matchingTalismans:Object,
-                                  freeStages:Array,
-                                  powerScalePct:int,
-                                  powerWeights:Object):void {
+                                  freeStages:Array):void {
             _stageSkills         = stageSkills != null ? stageSkills : {};
             _stageRequirements   = stageRequirements != null ? stageRequirements : {};
             _matchingTalismans   = matchingTalismans;
-            _powerScalePct       = powerScalePct > 0 ? powerScalePct : 100;
-            _powerWeights        = powerWeights != null ? powerWeights : {};
             _freeStages          = {};
             if (freeStages != null) {
                 for each (var sid:String in freeStages) {
@@ -90,7 +84,6 @@ package tracker {
         public function markDirty():void { _dirty = true; }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
-        public function get powerScalePct():int { return _powerScalePct; }
 
         /** True if this stage is a free/tutorial stage (W1-W4, always reachable). */
         public function isFreeStage(strId:String):Boolean {
@@ -141,7 +134,7 @@ package tracker {
                 if (journeyOk)
                     return true;
             }
-            // Stash needs both the key item AND power threshold met.
+            // Stash needs the key item AND stage gate met.
             if (stashMissing && isStashGateMet(strId))
                 return true;
             return false;
@@ -200,9 +193,9 @@ package tracker {
         }
 
         /** True if at least one stage that has this element can be completed
-         *  (tier + skill gate met).  Mirrors apworld _eval_req for
-         *  game_level_elements via _can_reach_any_stage, which now requires
-         *  the stage's WIZLOCK skills on Journey/Wizard stash alike. */
+         *  (tier + skill gate met).  Mirrors apworld _eval_element_reachable,
+         *  which derives stages from <Pascal>Count fields in
+         *  rulesdata_levels.py and requires WIZLOCK skills for completion. */
         public function isElementInLogic(elemName:String):Boolean {
             var stages:Array = _elementToStages[elemName] as Array;
             if (stages == null || stages.length == 0) return true;
@@ -212,8 +205,11 @@ package tracker {
             return false;
         }
 
-        /** True if Ritual is held AND at least one stage that has this monster
-         *  can be completed. Mirrors apworld _eval_req for non_monster_elements. */
+        /** True if Ritual is held AND at least one stage that hosts this
+         *  non-monster creature can be completed. Legacy stricter check —
+         *  apworld no longer ties these creatures to Ritual (they spawn
+         *  naturally on their listed stages); this gate may need to relax
+         *  when achievement-side logic is refactored. */
         public function isMonsterInLogic(monName:String):Boolean {
             if (!AV.sessionData.hasItem(RITUAL_TRAIT_AP_ID)) return false;
             var stages:Array = _monsterToStages[monName] as Array;
@@ -368,6 +364,16 @@ package tracker {
                 }
             }
             return false;
+        }
+
+        /** True if a SPECIFIC stage has `<fieldNamePascal>Count >= threshold`.
+         *  Used by gates that need to check element availability on a known
+         *  stage (e.g. eWizardTower, which is gated by the stage's stash key
+         *  on top of the count). */
+        public function stageHasElementCount(strId:String, fieldNamePascal:String, threshold:int):Boolean {
+            var stats:Object = _levelStats != null ? _levelStats[strId] : null;
+            if (stats == null) return false;
+            return int(stats[fieldNamePascal + "Count"]) >= threshold;
         }
 
         /** True if any in-logic field has MonstersBeforeWave12 >= threshold.
@@ -572,7 +578,6 @@ package tracker {
 
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
-            AV.sessionData.playerPower   = computePlayerPower();
         }
 
         /** Run the four-clause stage gate for one stage. */
@@ -702,87 +707,6 @@ package tracker {
             return s.replace(/^\s+|\s+$/g, "");
         }
 
-        /** Current player power score from collected items. Mirrors apworld/gcfw/power.py. */
-        public function computePlayerPower():Number {
-            var power:Number = 0;
-            var sd:* = AV.sessionData;
-            if (sd == null || _powerWeights == null)
-                return 0;
-
-            // Skillpoint Bundles 1700-1709 — bundle (apId-1699) SP per item.
-            // We don't track per-item received counts in the mod (only "have"),
-            // so approximate as 1 per AP id received. Good enough for in-logic UI;
-            // exact count lives apworld-side at fill time.
-            var spWeight:Number     = Number(_powerWeights["sp"]);
-            for (var apId:int = 1700; apId <= 1709; apId++) {
-                if (sd.hasItem(apId))
-                    power += spWeight * (apId - 1699);
-            }
-
-            // Skills 700-723.
-            var gemWeight:Number    = Number(_powerWeights["gem_skill"]);
-            var skillWeight:Number  = Number(_powerWeights["other_skill"]);
-            for (var sk:int = 0; sk < 24; sk++) {
-                if (!sd.hasItem(700 + sk))
-                    continue;
-                if (sk >= 6 && sk <= 11)
-                    power += gemWeight;     // gem-type skills (Crit/Leech/Bleed/AT/Poison/Slow)
-                else
-                    power += skillWeight;
-            }
-
-            // Battle traits 800-814.
-            var traitWeight:Number  = Number(_powerWeights["battle_trait"]);
-            if (traitWeight != 0) {
-                for (var tr:int = 0; tr < 15; tr++) {
-                    if (sd.hasItem(800 + tr))
-                        power += traitWeight;
-                }
-            }
-
-            // XP tomes 1100-1199 — exact wizard-level grant per tome lives in
-            // LevelUnlocker.levelsForApId; for power we approximate flat 1 level.
-            var xpWeight:Number     = Number(_powerWeights["xp_tome_level"]);
-            if (xpWeight != 0) {
-                for (var xp:int = 1100; xp <= 1199; xp++) {
-                    if (sd.hasItem(xp))
-                        power += xpWeight;
-                }
-            }
-
-            // Shadow cores: specific 1000-1016 + extras 1300-1351.
-            var coreWeight:Number   = Number(_powerWeights["shadow_core"]);
-            if (coreWeight != 0) {
-                for (var sc:int = 1000; sc <= 1016; sc++) {
-                    if (sd.hasItem(sc))
-                        power += coreWeight;
-                }
-                for (var sce:int = 1300; sce <= 1351; sce++) {
-                    if (sd.hasItem(sce))
-                        power += coreWeight;
-                }
-            }
-
-            // Talisman fragments 900-952 + extras 1200-1246. Power = rarity / divisor.
-            // Per-fragment rarity isn't sent in slot_data right now; we use a flat
-            // average of rarity 50 (mid-pool) until rarity table is wired in.
-            // TODO: forward per-fragment rarities from apworld for accurate count.
-            var talDiv:Number       = Number(_powerWeights["talisman_divisor"]);
-            if (talDiv > 0) {
-                var talPower:Number = 50.0 / talDiv;
-                for (var tf:int = 900; tf <= 952; tf++) {
-                    if (sd.hasItem(tf))
-                        power += talPower;
-                }
-                for (var tfe:int = 1200; tfe <= 1246; tfe++) {
-                    if (sd.hasItem(tfe))
-                        power += talPower;
-                }
-            }
-
-            return power;
-        }
-
         /**
          * True if this stage's wizard stash is reachable: stage in logic
          * (same gate as Journey) AND the wizard stash key is held.
@@ -839,29 +763,42 @@ package tracker {
             return true;
         }
 
-        // Active gem-pouch gating mode (0=off, 1=distinct, 2=progressive).
+        // Active gem-pouch granularity (0=off, 1=per_tile_distinct,
+        // 2=per_tile_progressive, 3=per_tier, 4=global).
         // Read from slot_data via ServerOptions; returns 0 if not set.
         private function _pouchMode():int {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
-            return int(AV.serverData.serverOptions.gemPouchGating);
+            return int(AV.serverData.serverOptions.gemPouchGranularity);
         }
 
-        // True when the player owns the pouch for the given stage-prefix
-        // letter under the current mode (distinct: hasItem; progressive:
-        // count >= prefix index + 1). Fails open on unknown prefixes.
+        // True when the player owns the pouch covering the given stage-prefix
+        // letter under the current granularity. Fails open on unknown prefixes.
         private function _pouchHeld(prefix:String):Boolean {
             if (prefix == null || prefix.length == 0) return true;
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return true;
+            var mode:int = int(opts.gemPouchGranularity);
+            if (mode == 0) return true;
+            if (mode == 4) return AV.sessionData.hasItem(1614);
+            if (mode == 3) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null) return true;
+                for (var sid:String in tierMap) {
+                    if (sid.charAt(0) == prefix
+                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                        return true;
+                }
+                return false;
+            }
             var order:Array = opts.gemPouchPlayOrder as Array;
             if (order == null || order.length == 0) return true;
             var idx:int = order.indexOf(prefix);
             if (idx < 0) return true;
-            if (int(opts.gemPouchGating) == 1) {
+            if (mode == 1) {
                 return AV.sessionData.hasItem(626 + idx);
             }
-            // progressive
+            // mode == 2: per_tile_progressive
             var progId:int = int(opts.gemPouchProgressiveId);
             if (progId <= 0) progId = 652;
             return AV.sessionData.getItemCount(progId) >= idx + 1;

@@ -345,7 +345,7 @@ def rewrite_levels_file(
         updated += 1
 
     # Strip the per-stage `tier` field — no longer used (stage prereqs replace
-    # the old tier-power gating). Keep WaveCount-based tier classification in
+    # it). Keep WaveCount-based tier classification in
     # rulesdata.py / WAVE_TIERS for achievement counter requirements.
     tier_pattern = re.compile(r'\n\s*"tier":\s*-?\d+,', re.MULTILINE)
     src, tier_removed = tier_pattern.subn("", src)

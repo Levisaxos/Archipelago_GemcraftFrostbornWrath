@@ -83,9 +83,9 @@ def _load_item_table() -> Dict[str, ItemData]:
     # layout (4 corner + 12 edge + 9 inner): these gate the
     # talismanCornerFragment:N / talismanEdgeFragment:N / talismanCenterFragment:N
     # achievement counters.  Selection: highest-rarity in each type (see
-    # power._build_progression_corner_edge_names + _build_matching_talisman_grid).
+    # talismans._build_progression_corner_edge_names + _build_matching_talisman_grid).
     # The remaining ~28 fragments are useful — they still drop, just don't gate.
-    from .power import (
+    from .talismans import (
         MATCHING_TALISMAN_NAMES,
         PROGRESSION_CORNER_TALISMAN_NAMES,
         PROGRESSION_EDGE_TALISMAN_NAMES,
@@ -123,26 +123,52 @@ def _load_item_table() -> Dict[str, ItemData]:
         table[sc["name"]] = ItemData(sc["item_ap_id"], _sc_cls(i))
 
     # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
-    # gates its matching "Complete {strId} - Wizard stash" location. All 122
-    # stages including W1-W4 get a key — there's no off mode.
+    # gates its matching "Complete {strId} - Wizard stash" location.
     for stage in data["stages"]:
         key_id = 1400 + stage["loc_ap_id"] - 1
         table[f"Wizard Stash {stage['str_id']} Key"] = ItemData(
             key_id, ItemClassification.progression)
 
-    # Gempouches (IDs 626–652). Always declared so name→id resolution works
-    # regardless of the gem_pouch_gating option; create_items() decides which
-    # subset actually goes into the pool.
-    #   - Distinct: 26 named pouches (one per stage-prefix letter, in play
-    #     order from game_data.json) at IDs 626..651.
-    #   - Progressive: a single "Progressive Gempouch" item at ID 652, added
-    #     to the pool 26 times.
-    from .rulesdata import GEM_POUCH_PLAY_ORDER
-    for i, prefix in enumerate(GEM_POUCH_PLAY_ORDER):
+    # Coarse stash keys (per_tile / per_tier / global). All declared so
+    # name→id lookup works regardless of stash_key_granularity option;
+    # create_items() decides which subset goes into the pool.
+    from . import gating as _g
+    for prefix in _g.TILE_PREFIXES:
+        table[f"Wizard Stash Tile {prefix} Key"] = ItemData(
+            _g.stash_tile_key_id(prefix), ItemClassification.progression)
+    for tier in _g.ACTIVE_TIERS:
+        table[f"Wizard Stash Tier {tier} Key"] = ItemData(
+            _g.stash_tier_key_id(tier), ItemClassification.progression)
+    table["Wizard Stash Master Key"] = ItemData(
+        _g.STASH_MASTER_KEY_ID, ItemClassification.progression)
+
+    # Gempouches. Always declared so name→id resolution works regardless of
+    # gem_pouch_granularity option; create_items() picks which set goes into
+    # the pool.
+    #   - per_tile_distinct: 26 named pouches `Gempouch (X)` at IDs 626..651.
+    #   - per_tile_progressive: single "Progressive Gempouch" at ID 652,
+    #     added 26 times to the pool.
+    #   - per_tier: `Tier <N> Gempouch` (one per active tier).
+    #   - global: "Master Gempouch" (single item).
+    for i, prefix in enumerate(_g.TILE_PREFIXES):
         table[f"Gempouch ({prefix})"] = ItemData(
             626 + i, ItemClassification.progression)
     table["Progressive Gempouch"] = ItemData(
         652, ItemClassification.progression)
+    for tier in _g.ACTIVE_TIERS:
+        table[f"Tier {tier} Gempouch"] = ItemData(
+            _g.pouch_tier_id(tier), ItemClassification.progression)
+    table["Master Gempouch"] = ItemData(
+        _g.POUCH_MASTER_ID, ItemClassification.progression)
+
+    # Coarse field tokens (per_tile / per_tier). Per-stage field tokens are
+    # already added at the top of this function from data["stages"].
+    for prefix in _g.TILE_PREFIXES:
+        table[f"{prefix} Tile Field Token"] = ItemData(
+            _g.field_tile_token_id(prefix), ItemClassification.progression)
+    for tier in _g.ACTIVE_TIERS:
+        table[f"Tier {tier} Field Token"] = ItemData(
+            _g.field_tier_token_id(tier), ItemClassification.progression)
 
     return table
 
