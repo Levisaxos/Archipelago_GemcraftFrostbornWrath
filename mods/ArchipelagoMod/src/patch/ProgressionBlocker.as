@@ -15,6 +15,8 @@ package patch {
     import ui.XpTomeDropIcon;
     import ui.GempouchDropIcon;
     import ui.RemoteItemDropIcon;
+    import ui.MapTileDropIcon;
+    import ui.SkillPointDropIcon;
 
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
@@ -290,6 +292,30 @@ package patch {
             if (apId < 626 || apId > 652) return;
             _addDropIcon(new GempouchDropIcon(apId),
                 "GEMPOUCH apId=" + apId,
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a MAP_TILE drop icon for the given tile gameId (0..25).
+         * Renders the live tile bitmap from GV.selectorCore.mapTiles.
+         * Uses its own MOUSE_OVER tooltip handler — vanilla
+         * renderDropIconInfoPanel doesn't know our wrapper Sprite.
+         */
+        public function addMapTileDropIcon(tileGameId:int):void {
+            if (tileGameId < 0 || tileGameId >= 26) return;
+            _addDropIcon(new MapTileDropIcon(tileGameId),
+                "MAP_TILE gameId=" + tileGameId,
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a SKILLPOINT drop icon (cyan-glowing shadow-core sprite).
+         * Caller is expected to sum bundles for the run and pass one total.
+         */
+        public function addSkillPointDropIcon(amount:int):void {
+            if (amount <= 0) return;
+            _addDropIcon(new SkillPointDropIcon(amount),
+                "SKILLPOINT amount=" + amount,
                 false /* useVanillaHover */);
         }
 

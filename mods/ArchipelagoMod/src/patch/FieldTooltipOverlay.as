@@ -264,10 +264,18 @@ package patch {
             // One colour-coded line per element / monster on this stage.
             // Per-stage view: green iff THIS stage is completable (tier + WIZLOCK).
             // Monsters additionally require the Ritual Battle Trait.
+            // Wizard Tower additionally requires the stash key — it's the
+            // visual structure of the wizard stash and can only be unlocked
+            // by opening the stash.
             var stageReachable:Boolean = _evaluator.canCompleteStage(strId);
             var hasRitual:Boolean = AV.sessionData.hasItem(FieldLogicEvaluator.RITUAL_TRAIT_AP_ID);
+            var stashUnlockedForElems:Boolean = AV.sessionData.isStashUnlocked(strId);
             for each (var elem:String in _evaluator.getStageElements(strId)) {
-                lines.push(_checkLine(elem, false, stageReachable));
+                var elemInLogic:Boolean = stageReachable;
+                if (elem == "Wizard Tower") {
+                    elemInLogic = elemInLogic && stashUnlockedForElems;
+                }
+                lines.push(_checkLine(elem, false, elemInLogic));
             }
             for each (var mon:String in _evaluator.getStageMonsters(strId)) {
                 lines.push(_checkLine(mon, false, stageReachable && hasRitual));

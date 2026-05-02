@@ -366,6 +366,16 @@ package tracker {
             return false;
         }
 
+        /** True if a SPECIFIC stage has `<fieldNamePascal>Count >= threshold`.
+         *  Used by gates that need to check element availability on a known
+         *  stage (e.g. eWizardTower, which is gated by the stage's stash key
+         *  on top of the count). */
+        public function stageHasElementCount(strId:String, fieldNamePascal:String, threshold:int):Boolean {
+            var stats:Object = _levelStats != null ? _levelStats[strId] : null;
+            if (stats == null) return false;
+            return int(stats[fieldNamePascal + "Count"]) >= threshold;
+        }
+
         /** True if any in-logic field has MonstersBeforeWave12 >= threshold.
          *  The dedicated field is populated by a simulator from the
          *  decompiled stage data; mirrors the apworld gate exactly. */

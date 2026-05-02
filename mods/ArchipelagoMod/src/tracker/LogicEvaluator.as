@@ -382,6 +382,22 @@ package tracker {
                 var ecount:int = int(_trim(req.substring(ec + 1)));
                 var enameMapped:String = _elementPrefixMap[ehead];
                 var nameForField:String = (enameMapped != null) ? _pascalNoSpaces(enameMapped) : ehead.substring(1);
+                // Wizard towers are the visual structure of wizard stashes —
+                // unlocking a wizard tower requires opening its stash. Treat
+                // eWizardTower:N like eWizardStash: needs an unlocked stash on
+                // a clearable stage with the matching tower count.
+                if (ehead == "eWizardTower" || nameForField == "WizardTower") {
+                    if (_fieldEvaluator == null) return false;
+                    var unlocked:Object = AV.sessionData.unlockedStashesByStrId;
+                    for (var stashSid:String in unlocked) {
+                        if (unlocked[stashSid] != true) continue;
+                        if (!_fieldEvaluator.isStashGateMet(stashSid)) continue;
+                        if (_fieldEvaluator.stageHasElementCount(stashSid, "WizardTower", ecount)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
             }

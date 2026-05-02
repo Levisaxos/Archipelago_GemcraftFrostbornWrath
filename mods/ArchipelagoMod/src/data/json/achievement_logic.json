@@ -4029,7 +4029,7 @@
       "apId": 2390,
       "game_id": 384,
       "description": "Reach wizard level 40.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:35"
       ],
@@ -4777,7 +4777,7 @@
       "apId": 2463,
       "game_id": 52,
       "description": "Have a grade 1 gem with 500 hits.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minGemGrade:1",
         "sBeam"

@@ -3498,7 +3498,7 @@ achievement_requirements = {
         "description": "Reach wizard level 40.",
         "details": "Reach wizard level 40.",
         "requirements": ["fieldToken:35"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2391
     "Ouch!": {
@@ -3611,7 +3611,7 @@ achievement_requirements = {
         "game_id": 357,
         "description": "Have 1.000 shadow cores at the start of the battle.",
         "requirements": ["shadowCore:1000"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2404
     "Pointed Pain": {
@@ -4140,7 +4140,7 @@ achievement_requirements = {
         "description": "Have a grade 1 gem with 500 hits.",
         "details": "Reach 500 hits on a grade-1 gem.",
         "requirements": ["minGemGrade:1", "sBeam"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2464
     "Settlement": {

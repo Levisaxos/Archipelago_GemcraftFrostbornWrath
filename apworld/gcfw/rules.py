@@ -118,6 +118,32 @@ def _count_skill_points(state, player: int) -> int:
     return total
 
 
+def _count_field_tokens(state, player: int) -> int:
+    """Granularity-aware count of stages effectively beatable.
+    A stage only counts when the player holds BOTH its field token and the
+    gempouch needed to clear it (pouch granularity decides whether that's a
+    per-tile, per-tier, or global pouch; with pouches off the pouch check
+    short-circuits to True). Token granularity decides what 'its field
+    token' means (per-stage / per-tile / per-tier)."""
+    world = state.multiworld.worlds[player]
+    pairs = getattr(world, "_field_token_pouch_pairs", None)
+    if pairs is None:
+        from . import gating as _g
+        ft_gran = world.options.field_token_granularity.value
+        pairs = [
+            (
+                _g.field_token_for_stage(s["str_id"], ft_gran),
+                _compile_gempouch_checker(world, s["str_id"]),
+            )
+            for s in GAME_DATA["stages"]
+        ]
+        world._field_token_pouch_pairs = pairs
+    return sum(
+        1 for tok, pouch_ok in pairs
+        if state.has(tok, player) and pouch_ok(state)
+    )
+
+
 # Prefix-encoded requirement vocabulary + counter dispatch tables live in
 # requirement_tokens.py (skill / trait / element prefix maps,
 # mode_tokens, level_stat_counters).  Adding a new token / counter is
@@ -141,6 +167,15 @@ _TALISMAN_FRAGMENT_COUNTERS: dict[str, frozenset] = {
     "talismanCenterFragment": MATCHING_TALISMAN_NAMES,            # 9 items
     "talismanFragments":      PROGRESSION_ALL_TALISMAN_NAMES,     # 25 items
 }
+
+
+# Field-token floors layered on top of the talisman counter gates so the
+# achievement locations that test these don't open before the player has
+# made enough world progress (talismans were placing too early otherwise).
+# count_needed -> minimum effectively-unlocked stages required.
+_TALISMAN_ROW_TOKEN_FLOOR: dict[int, int] = {1: 20, 2: 40, 3: 60}
+_TALISMAN_COLUMN_TOKEN_FLOOR: dict[int, int] = {1: 10, 2: 30, 3: 50}
+_TALISMAN_FRAGMENTS_TOKEN_FLOOR: dict[int, int] = {25: 75}
 
 
 def _count_talisman_fragments(state, player: int, names) -> int:
@@ -260,9 +295,10 @@ def _any_stash_reachable(state, player: int) -> bool:
 
 def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
     """Resolve element-presence reachability — equivalent to eX:1."""
-    if elem_name == "Wizard Stash":
-        # Every stage structurally has a stash, but each is locked until
-        # the player collects its per-stage key AND can clear the stage.
+    if elem_name == "Wizard Stash" or elem_name == "Wizard Tower":
+        # Wizard towers are the visual structure of wizard stashes — the
+        # player can only interact with a wizard tower by opening its
+        # containing stash, which requires the stash key.
         return _any_stash_reachable(state, player)
     return _eval_element_count(_element_count_field(elem_name)[:-len("Count")], 1, state, player)
 
@@ -327,6 +363,23 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
     if field not in _PRESENT_COUNT_FIELDS:
         return True
     qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
+    if elem_pascal == "WizardTower":
+        # Wizard towers are the visual structure of wizard stashes — even if
+        # the stage is reachable, the player can only "unlock" the tower by
+        # opening its stash, which requires the per-stage stash key. So gate
+        # on both (stage reachable, stash key held) for any qualifying stage.
+        from . import gating as _g
+        sk_gran = state.multiworld.worlds[player].options.stash_key_granularity.value
+        for sid in qualifying:
+            key_name = _g.stash_key_for_stage(sid, sk_gran)
+            if not state.has(key_name, player):
+                continue
+            try:
+                if state.can_reach(f"Complete {sid} - Journey", "Location", player):
+                    return True
+            except KeyError:
+                continue
+        return False
     return _can_reach_any_stage(state, player, qualifying)
 
 
@@ -585,9 +638,15 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
 
         # Talisman-fragment counters by type.
         if group_name in _TALISMAN_FRAGMENT_COUNTERS:
-            return _count_talisman_fragments(
+            if _count_talisman_fragments(
                 state, player, _TALISMAN_FRAGMENT_COUNTERS[group_name],
-            ) >= count_needed
+            ) < count_needed:
+                return False
+            if group_name == "talismanFragments":
+                floor = _TALISMAN_FRAGMENTS_TOKEN_FLOOR.get(count_needed)
+                if floor is not None and _count_field_tokens(state, player) < floor:
+                    return False
+            return True
 
         # Talisman-property contribution gates: tm<Foo>:N — sum the property
         # values of held progression fragments at max upgrade and compare to N.
@@ -598,13 +657,7 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
 
         # Other item-collection counters — each counts a different pool.
         if group_name == "fieldToken":
-            # Counts stages effectively unlocked. At per_stage granularity,
-            # this is one-token-per-stage. At per_tile/per_tier, holding a
-            # single coarse token unlocks multiple stages, so each unlocked
-            # stage is counted (via the per-world sid->token map).
-            sid_to_tok = _get_world_field_token_map(state, player)
-            collected = sum(1 for tok in sid_to_tok.values() if state.has(tok, player))
-            return collected >= count_needed
+            return _count_field_tokens(state, player) >= count_needed
         if group_name == "shadowCore":
             # Sum core amounts of held progression shadow-core stash items.
             # Half of stashes are progression (see items.py _sc_cls); useful/
@@ -617,9 +670,19 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             needed_items = (count_needed + 1) // 2
             return _count_xp_items(state, player) >= needed_items
         if group_name == "talismanRow":
-            return _count_complete_talisman_rows(state, player) >= count_needed
+            if _count_complete_talisman_rows(state, player) < count_needed:
+                return False
+            floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
+            if floor is not None and _count_field_tokens(state, player) < floor:
+                return False
+            return True
         if group_name == "talismanColumn":
-            return _count_complete_talisman_columns(state, player) >= count_needed
+            if _count_complete_talisman_columns(state, player) < count_needed:
+                return False
+            floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
+            if floor is not None and _count_field_tokens(state, player) < floor:
+                return False
+            return True
         if group_name == "skillPoints":
             return _count_skill_points(state, player) >= count_needed
 
@@ -888,29 +951,42 @@ def _compile_req(req: str, world, is_progressive: bool):
 
         if group_name in _TALISMAN_FRAGMENT_COUNTERS:
             names = _TALISMAN_FRAGMENT_COUNTERS[group_name]
-            return lambda state: _count_talisman_fragments(state, player, names) >= count_needed
+            floor = (_TALISMAN_FRAGMENTS_TOKEN_FLOOR.get(count_needed)
+                     if group_name == "talismanFragments" else None)
+            if floor is None:
+                return lambda state: _count_talisman_fragments(state, player, names) >= count_needed
+            return lambda state: (
+                _count_talisman_fragments(state, player, names) >= count_needed
+                and _count_field_tokens(state, player) >= floor
+            )
 
         if group_name in _TALISMAN_PROPERTY_TOKENS:
             prop_id = _TALISMAN_PROPERTY_TOKENS[group_name]
             return lambda state: _sum_talisman_property(prop_id, state, player) >= count_needed
 
         if group_name == "fieldToken":
-            # Granularity-aware: counts effectively-unlocked stages, where
-            # each stage's covering token (per_stage / per_tile / per_tier)
-            # is read from the per-world sid->token map.
-            return lambda state: sum(
-                1 for tok in _get_world_field_token_map(state, player).values()
-                if state.has(tok, player)
-            ) >= count_needed
+            return lambda state: _count_field_tokens(state, player) >= count_needed
         if group_name == "shadowCore":
             return lambda state: _sum_shadow_cores(state, player) >= count_needed
         if group_name == "wizardLevel":
             needed_items = (count_needed + 1) // 2
             return lambda state: _count_xp_items(state, player) >= needed_items
         if group_name == "talismanRow":
-            return lambda state: _count_complete_talisman_rows(state, player) >= count_needed
+            floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
+            if floor is None:
+                return lambda state: _count_complete_talisman_rows(state, player) >= count_needed
+            return lambda state: (
+                _count_complete_talisman_rows(state, player) >= count_needed
+                and _count_field_tokens(state, player) >= floor
+            )
         if group_name == "talismanColumn":
-            return lambda state: _count_complete_talisman_columns(state, player) >= count_needed
+            floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
+            if floor is None:
+                return lambda state: _count_complete_talisman_columns(state, player) >= count_needed
+            return lambda state: (
+                _count_complete_talisman_columns(state, player) >= count_needed
+                and _count_field_tokens(state, player) >= floor
+            )
         if group_name == "skillPoints":
             return lambda state: _count_skill_points(state, player) >= count_needed
 
@@ -1071,6 +1147,12 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         if sid != start_sid:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             token_name = _gating.field_token_for_stage(sid, ft_gran)
+            # Mirror the location access rule: clearing a stage in-logic also
+            # requires the gem pouch needed to play it. Without this term,
+            # Field_<sid> chain prereqs would resolve True from token + DNF
+            # alone, letting fill place items on chains the player can't
+            # actually traverse. Off mode short-circuits to _always_true.
+            pouch_ok = _compile_gempouch_checker(world, sid)
             # The cached rule must require the stage's covering field-token
             # item so chain prereqs (Field_<sid>) only resolve True when the
             # prereq stage is actually clearable. Without this, starter-tier
@@ -1081,13 +1163,15 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 normalized = _normalize_requirements(requirements)
                 dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
                 _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, t=token_name, d=dnf_rule: state.has(t, player) and d(state)
+                    lambda state, t=token_name, d=dnf_rule, p=pouch_ok:
+                        state.has(t, player) and p(state) and d(state)
                 )
                 add_rule(journey_loc, wrap_rule(f"stage:{sid}:journey", dnf_rule))
                 add_rule(stash_loc,   wrap_rule(f"stage:{sid}:stash", dnf_rule))
             else:
                 _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, t=token_name: state.has(t, player)
+                    lambda state, t=token_name, p=pouch_ok:
+                        state.has(t, player) and p(state)
                 )
 
         # Wizard-stash key item is always required (no off mode). The actual
