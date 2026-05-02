@@ -307,16 +307,59 @@ def _simplify_requirements(normalized: list) -> list:
     return normalized
 
 
-def _can_reach_any_stage(state, player: int, stages: list) -> bool:
-    """Return True if the player can reach any completion location across the given stages."""
-    for stage in stages:
-        for suffix in ("Journey", "Wizard stash"):
-            try:
-                if state.can_reach(f"Complete {stage} - {suffix}", "Location", player):
-                    return True
-            except KeyError:
-                pass
-    return False
+def _can_reach_any_stage(state, player: int, stages) -> bool:
+    """Return True if the player can play any of the given stages.
+
+    Routes through `_can_clear_stage_cached` (Journey reachability) — that's
+    the canonical "stage region is unlocked" signal. Stash reachability adds
+    only the per-stage key item check, which is orthogonal: if the player can
+    reach Journey they can play the stage and trigger any element/stat-gated
+    achievement that needs it.
+
+    Two-level memoisation:
+      1. Per-(stages-list, state-sig) OR result — keyed by id() of the
+         compile-time qualifying list, so achievements that share the same
+         list (e.g. all `ePoison:1` users) reuse one OR scan per signature.
+      2. Per-stage `_can_clear_stage_cached` — each stage's clearability is
+         computed once per state-sig and reused across all OR scans.
+    """
+    items = state.prog_items.get(player)
+    sig = (player, len(items), sum(items.values())) if items else (player, 0, 0)
+    cache = getattr(state, "_gcfw_or_cache", None)
+    if cache is None or cache[0] != sig:
+        cache = (sig, {})
+        state._gcfw_or_cache = cache
+    data = cache[1]
+    key = id(stages)
+    if key in data:
+        return data[key]
+    result = False
+    for sid in stages:
+        if _can_clear_stage_cached(state, player, sid):
+            result = True
+            break
+    data[key] = result
+    return result
+
+
+# Compiled stage-clearability rules: (player, sid) -> (state) -> bool.
+# Populated in set_rules at compile time. Stages absent from this dict have
+# no requirements (start stage / unconditional clears) and are always
+# clearable — their region is reached unconditionally from Menu via
+# start_region.
+#
+# This sidesteps `state.can_reach("Complete <sid> - Journey")` which goes
+# through Archipelago's region graph + access_rule lookup machinery — pure
+# overhead in our setup, since every stage region is unconditionally
+# connected from start. Calling the compiled rule directly is ~5-10x cheaper.
+#
+# IMPORTANT: if the region graph ever gains *gated* connections (e.g. region
+# A reachable only after item X), this short-circuit becomes wrong — the
+# rule check alone won't see the region gate. Update accordingly.
+#
+# Keyed by (player, sid) so multi-world generations don't stomp each other —
+# rules bind to a specific player at compile time.
+_STAGE_CLEAR_RULES: dict = {}
 
 
 def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
@@ -327,11 +370,9 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
     any item, so cached values from a previous fill state are invalidated
     automatically.
 
-    The recursive can_reach chain triggered by per-stage prereq rules is
-    O(chain_depth) deep with up to 4 fanout per level — without memoisation
-    each top-level access_rule call re-evaluates ancestors many times. The
-    cache turns the cumulative cost over a fill sweep from ~depth^fanout to
-    O(num_stages).
+    Calls the stage's compiled rule directly from `_STAGE_CLEAR_RULES`,
+    skipping `state.can_reach`. See dict comment above for the assumption
+    this relies on.
     """
     items = state.prog_items.get(player)
     if items is None:
@@ -347,13 +388,16 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
 
     if sid in data:
         return data[sid]
+    rule = _STAGE_CLEAR_RULES.get((player, sid))
+    if rule is None:
+        # No rule registered = stage is unconditionally clearable (start
+        # stage, or stages with empty/missing requirements list).
+        data[sid] = True
+        return True
     # Cycle guard — our prereq DAG is acyclic by construction, but if a
     # broken edit ever introduces a cycle this prevents infinite recursion.
     data[sid] = False
-    try:
-        ok = state.can_reach(f"Complete {sid} - Journey", "Location", player)
-    except KeyError:
-        ok = False
+    ok = rule(state)
     data[sid] = ok
     return ok
 
@@ -541,6 +585,244 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     return True  # Metadata requirement — not gated
 
 
+# ---------------------------------------------------------------------------
+# Pre-compiled requirement closures.
+#
+# `_eval_req` runs the full token-dispatch ladder on every state evaluation —
+# string startswith / dict-membership / split / int-parse / and N more dict
+# checks — just to figure out *what kind* of token the string is. With ~2M
+# rule calls per generation, that dispatch dominates fill time.
+#
+# `_compile_req` runs the dispatch ONCE at set_rules time and returns a
+# closure that does only the work for that specific token. Per-call cost
+# drops from ~150-300 µs (achievement rules) to ~1-5 µs.
+#
+# Pre-computed at compile time (no per-call allocation):
+#   - eX:N qualifying stage list (was rebuilt every call, 122-stage scan)
+#   - level_stat_counters qualifying stage list (same)
+#   - skill_counter_pool list (was iterated every call)
+#   - fieldToken flat name list (was nested-flattened every call)
+#   - SP-bundle name list (was looped every call)
+# ---------------------------------------------------------------------------
+
+# Pre-flatten TIER_TOKEN_NAMES into a single name list at module load time.
+# Stable: tier-token assignment is fixed once rulesdata loads. Used by the
+# `fieldToken:N` counter, which previously rebuilt this nested generator on
+# every call.
+_FIELD_TOKEN_NAMES_FLAT: tuple = tuple(
+    name for tier_tokens in TIER_TOKEN_NAMES.values() for name in tier_tokens
+)
+
+# Cache of (elem_pascal, count_needed) → qualifying-stage list. Reused across
+# achievement-rule compiles so each unique (element, count) pair only scans
+# LEVEL_DATA once.
+_QUALIFYING_STAGES_CACHE: dict = {}
+
+# Pre-built SP-bundle name list, indexed by size 1..10.
+_SP_BUNDLE_NAMES: tuple = tuple(f"Skillpoint Bundle {n}" for n in range(1, 11))
+
+
+def _qualifying_stages_for_element(elem_pascal: str, count_needed: int):
+    """Return cached list of stage str_ids whose <elem>Count >= count_needed.
+    Returns None if the element isn't tracked per-stage (universally present)."""
+    key = ("elem", elem_pascal, count_needed)
+    if key in _QUALIFYING_STAGES_CACHE:
+        return _QUALIFYING_STAGES_CACHE[key]
+    field = elem_pascal + "Count"
+    if field not in _PRESENT_COUNT_FIELDS:
+        result = None  # element is universally present — no gate
+    else:
+        result = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
+    _QUALIFYING_STAGES_CACHE[key] = result
+    return result
+
+
+def _qualifying_stages_for_stat(group_name: str, count_needed: int) -> list:
+    """Return cached list of stage str_ids whose level_stat_counters[group_name]
+    field(s) (max-aggregated) >= count_needed."""
+    key = ("stat", group_name, count_needed)
+    if key in _QUALIFYING_STAGES_CACHE:
+        return _QUALIFYING_STAGES_CACHE[key]
+    fields = level_stat_counters[group_name]
+    if isinstance(fields, str):
+        fields = (fields,)
+    result = [sid for sid, d in LEVEL_DATA.items()
+              if max(d.get(f, 0) for f in fields) >= count_needed]
+    _QUALIFYING_STAGES_CACHE[key] = result
+    return result
+
+
+# Sentinel "always true" closure — singleton to avoid lambda allocation.
+def _always_true(state) -> bool:
+    return True
+
+
+def _always_false(state) -> bool:
+    return False
+
+
+def _compile_element_or(elem_names, player: int):
+    """Compile an "any of these elements is reachable" check.
+
+    Each element is one of:
+      - "Wizard Stash" → any wizard-stash key held
+      - present in level data → reachable iff any qualifying stage reachable
+      - universally present (not in _PRESENT_COUNT_FIELDS) → always True
+    """
+    # Resolution: each member becomes either "STASH" sentinel, an "ALWAYS"
+    # short-circuit, or a precomputed list of qualifying stage str_ids.
+    members: list = []
+    for n in elem_names:
+        if n == "Wizard Stash":
+            members.append(("STASH", None))
+            continue
+        elem_pascal = _element_count_field(n)[:-len("Count")]
+        stages = _qualifying_stages_for_element(elem_pascal, 1)
+        if stages is None:
+            return _always_true  # one universal member → whole disjunction true
+        members.append(("STAGES", stages))
+
+    if not members:
+        return _always_false
+
+    # Specialise common shapes.
+    if len(members) == 1:
+        kind, stages = members[0]
+        if kind == "STASH":
+            keys = WIZ_STASH_KEY_NAMES
+            return lambda state: any(state.has(k, player) for k in keys)
+        return lambda state: _can_reach_any_stage(state, player, stages)
+
+    def _multi(state):
+        for kind, stages in members:
+            if kind == "STASH":
+                if any(state.has(k, player) for k in WIZ_STASH_KEY_NAMES):
+                    return True
+            elif _can_reach_any_stage(state, player, stages):
+                return True
+        return False
+    return _multi
+
+
+def _compile_req(req: str, player: int, is_progressive: bool):
+    """Compile a single requirement string to a `(state) -> bool` closure.
+
+    Mirrors `_eval_req` branch-for-branch — keep them in sync. The returned
+    closure binds all per-call constants (item names, qualifying stage lists,
+    counter pools) so the only runtime work is the actual state lookups.
+    """
+    req = req.strip()
+
+    if req.startswith("Field_"):
+        sid = req[len("Field_"):]
+        return lambda state: _can_clear_stage_cached(state, player, sid)
+
+    if req.startswith("Achievement:"):
+        if not is_progressive:
+            return _always_true
+        loc_name = req
+        def _ach_reachable(state):
+            try:
+                return state.can_reach(loc_name, "Location", player)
+            except KeyError:
+                return False
+        return _ach_reachable
+
+    if req in mode_tokens:
+        return _always_false
+
+    if req in item_prefix_map:
+        if req in _GEM_TOKEN_TO_GEM_NAME:
+            tok = req
+            item_name = item_prefix_map[req]
+            gem_name = _GEM_TOKEN_TO_GEM_NAME[req]
+            stages = _STAGES_BY_GEM.get(gem_name, [])
+            def _gem_token(state):
+                if state.has(item_name, player):
+                    return True
+                return _can_reach_any_stage(state, player, stages)
+            return _gem_token
+        name = item_prefix_map[req]
+        return lambda state: state.has(name, player)
+
+    if req in element_prefix_map:
+        return _compile_element_or(element_prefix_map[req], player)
+
+    if ":" in req:
+        group_name, count_str = req.split(":", 1)
+        group_name = group_name.strip()
+        try:
+            count_needed = int(count_str.strip())
+        except ValueError:
+            return _always_true
+
+        # Group token with count (eNonMonsters:1 etc.) — count is ignored,
+        # mirrors _eval_req. Reachable iff any group member is reachable.
+        if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
+            return _compile_element_or(element_prefix_map[group_name], player)
+
+        if _is_prefix_token(group_name, "e"):
+            elem_pascal = group_name[1:]
+            stages = _qualifying_stages_for_element(elem_pascal, count_needed)
+            if stages is None:
+                return _always_true
+            return lambda state: _can_reach_any_stage(state, player, stages)
+
+        if group_name in skill_counter_pools:
+            if group_name in ("gemSkills", "GemSkills"):
+                return lambda state: _count_gem_skills_broadened(state, player) >= count_needed
+            pool = tuple(skill_counter_pools[group_name])
+            return lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed
+
+        if group_name in level_stat_counters:
+            stages = _qualifying_stages_for_stat(group_name, count_needed)
+            return lambda state: _can_reach_any_stage(state, player, stages)
+
+        if group_name in _TALISMAN_FRAGMENT_COUNTERS:
+            names = _TALISMAN_FRAGMENT_COUNTERS[group_name]
+            return lambda state: _count_talisman_fragments(state, player, names) >= count_needed
+
+        if group_name in _TALISMAN_PROPERTY_TOKENS:
+            prop_id = _TALISMAN_PROPERTY_TOKENS[group_name]
+            return lambda state: _sum_talisman_property(prop_id, state, player) >= count_needed
+
+        if group_name == "fieldToken":
+            names = _FIELD_TOKEN_NAMES_FLAT
+            return lambda state: sum(1 for n in names if state.has(n, player)) >= count_needed
+        if group_name == "shadowCore":
+            return lambda state: _sum_shadow_cores(state, player) >= count_needed
+        if group_name == "wizardLevel":
+            needed_items = (count_needed + 1) // 2
+            return lambda state: _count_xp_items(state, player) >= needed_items
+        if group_name == "talismanRow":
+            return lambda state: _count_complete_talisman_rows(state, player) >= count_needed
+        if group_name == "talismanColumn":
+            return lambda state: _count_complete_talisman_columns(state, player) >= count_needed
+        if group_name == "skillPoints":
+            return lambda state: _count_skill_points(state, player) >= count_needed
+
+        return _always_true  # Unknown counter
+
+    return _always_true  # Metadata
+
+
+def _compile_dnf(groups: list, player: int, is_progressive: bool):
+    """Compile a DNF requirement structure (list of AND-groups, outer OR) into
+    a single (state) -> bool closure. Optimises common shapes."""
+    compiled_groups = [
+        [_compile_req(r, player, is_progressive) for r in group]
+        for group in groups
+    ]
+    if not compiled_groups:
+        return _always_true
+    if len(compiled_groups) == 1:
+        compiled = compiled_groups[0]
+        if len(compiled) == 1:
+            return compiled[0]
+        return lambda state: all(f(state) for f in compiled)
+    return lambda state: any(all(f(state) for f in g) for g in compiled_groups)
+
+
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     """
     Apply access rules to all regions and locations.
@@ -652,6 +934,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     #
     # The chosen starting stage skips this gate entirely (it's the menu
     # connection; its own listed prereqs are intentionally ignored).
+    from ._timing import wrap_rule, phase as _phase
+    import time as _t
+    _t_stages = _t.perf_counter()
     for stage in stages:
         sid = stage["str_id"]
         journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
@@ -661,20 +946,19 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             if requirements:
                 normalized = _normalize_requirements(requirements)
-
-                def make_stage_rule(groups):
-                    return lambda state: any(
-                        all(_eval_req(r, state, player, is_progressive=False) for r in group)
-                        for group in groups
-                    )
-
-                rule = make_stage_rule(normalized)
-                add_rule(journey_loc, rule)
-                add_rule(stash_loc, rule)
+                rule = _compile_dnf(normalized, player, is_progressive=False)
+                # Register for direct invocation by _can_clear_stage_cached
+                # (skips state.can_reach round-trip in deep prereq chains).
+                _STAGE_CLEAR_RULES[(player, sid)] = rule
+                add_rule(journey_loc, wrap_rule(f"stage:{sid}:journey", rule))
+                add_rule(stash_loc,   wrap_rule(f"stage:{sid}:stash", rule))
 
         # Wizard-stash key item is always required (no off mode).
         key_name = f"Wizard Stash {sid} Key"
-        add_rule(stash_loc, lambda state, n=key_name: state.has(n, player))
+        add_rule(stash_loc, wrap_rule(f"stash_key:{sid}",
+                                       lambda state, n=key_name: state.has(n, player)))
+    from ._timing import log as _tlog
+    _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
@@ -719,6 +1003,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
 
     # --- Achievement location access rules ---
+    _t_ach = _t.perf_counter()
+    _ach_rules_added = 0
     try:
         from .rulesdata_achievements import achievement_requirements as all_achievements
 
@@ -754,12 +1040,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                     for req in group
                 )
                 if has_gating:
-                    def make_rule(groups, prog):
-                        return lambda state: any(
-                            all(_eval_req(r, state, player, prog) for r in group)
-                            for group in groups
-                        )
-                    location.access_rule = make_rule(normalized, is_progressive)
+                    location.access_rule = wrap_rule(
+                        f"ach:{ach_name}",
+                        _compile_dnf(normalized, player, is_progressive))
+                    _ach_rules_added += 1
 
                 # Achievements are filler-quality and reachable across the
                 # spectrum. Exclude edge/corner talismans so they end up at
@@ -773,5 +1057,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         print(f"ERROR setting achievement access rules: {e}")
         import traceback
         traceback.print_exc()
+    _tlog(f"  set_rules: achievement rules ({_ach_rules_added} gated): {(_t.perf_counter()-_t_ach)*1000:.1f} ms")
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

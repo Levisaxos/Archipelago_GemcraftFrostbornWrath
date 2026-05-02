@@ -5647,7 +5647,7 @@ achievement_requirements = {
         "ap_id": 2634,
         "game_id": 2,
         "description": "Get your Orb destroyed by a wizard tower.",
-        "requirements": ["eWizardTower"],
+        "requirements": ["Field_L5"],
         "required_effort": "Trivial",
     },
     # AP ID: 2635

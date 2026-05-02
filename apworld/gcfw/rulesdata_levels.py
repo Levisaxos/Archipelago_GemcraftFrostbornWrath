@@ -1494,9 +1494,9 @@ level_requirements = {
         "MonstersBeforeWave12": 160,
         "MarkedMonsterCount": 66,
         "requirements": [
-            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E2", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
+            ["Field_M3", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
+            ["Field_M2", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
         ],
     },
     "M1": {

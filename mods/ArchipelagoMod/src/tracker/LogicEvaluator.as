@@ -164,6 +164,10 @@ package tracker {
             {
                 return null;
             }
+            if (req.indexOf("Field_") == 0)
+            {
+                return "Requires field " + req.substring(6) + " in logic";
+            }
             if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
             {
                 return "Requires any non-monster creature stage (Shadow / Specter / Spire / Wizard Hunter / Wraith / Apparition)";
@@ -426,7 +430,14 @@ package tracker {
                 return AV.sessionData.hasItem(800 + traitIdx);
             }
 
-            // "Field A4" or "Field N1, U1 or R5" (comma/or = OR)
+            // Field_<sid> — single stage must be in logic. Apworld emits this
+            // form for per-stage prerequisites (e.g. Zapped requires Field_L5).
+            if (req.indexOf("Field_") == 0) {
+                var fSid:String = req.substring(6);
+                return fSid.length > 0 && AV.sessionData.fieldsInLogic[fSid] == true;
+            }
+
+            // "Field A4" or "Field N1, U1 or R5" (comma/or = OR) — legacy form.
             if (lower.indexOf("field ") == 0) {
                 var fieldPart:String = _trim(req.substring(6));
                 var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);
@@ -803,7 +814,14 @@ package tracker {
                 return AV.sessionData.hasItem(800 + traitIdx) && _traitLevel(traitIdx) > 0;
             }
 
-            // "Field A4" / "Field N1, U1 or R5" — current strId must match
+            // Field_<sid> — current strId must match the single named stage.
+            // Apworld emits this form for per-stage prerequisites.
+            if (req.indexOf("Field_") == 0) {
+                var fSidIL:String = req.substring(6);
+                return fSidIL == currentStrId;
+            }
+
+            // "Field A4" / "Field N1, U1 or R5" — current strId must match (legacy form).
             if (lower.indexOf("field ") == 0) {
                 var fieldPart:String = _trim(req.substring(6));
                 var fieldTokens:Array = fieldPart.split(/,\s*|\s+or\s+/i);

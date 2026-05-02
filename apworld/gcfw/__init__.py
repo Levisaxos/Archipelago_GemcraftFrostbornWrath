@@ -26,6 +26,7 @@ from .options import (
     STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
+from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
 from .rulesdata import (
     GAME_DATA,
@@ -258,27 +259,29 @@ class GemcraftFrostbornWrathWorld(World):
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
 
     def generate_early(self) -> None:
-        if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
-            raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
-        if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
-            raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
+        with phase(f"p{self.player} generate_early"):
+            if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
+                raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
+            if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
+                raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
     def pre_fill(self) -> None:
-        from Fill import FillError, fill_restrictive
+        with phase(f"p{self.player} pre_fill"):
+            from Fill import FillError, fill_restrictive
 
-        placement = self.options.field_token_placement.value
-        if placement != FieldTokenPlacement.option_own_world:
-            return  # any_world: nothing to do; different_world: handled in stage_pre_fill
+            placement = self.options.field_token_placement.value
+            if placement != FieldTokenPlacement.option_own_world:
+                return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
-        tokens = [item for item in self.multiworld.itempool
-                  if item.player == self.player and item.name.endswith(" Field Token")]
-        for token in tokens:
-            self.multiworld.itempool.remove(token)
+            tokens = [item for item in self.multiworld.itempool
+                      if item.player == self.player and item.name.endswith(" Field Token")]
+            for token in tokens:
+                self.multiworld.itempool.remove(token)
 
-        target_locations = self.multiworld.get_unfilled_locations(self.player)
-        state = self.multiworld.get_all_state(use_cache=False)
-        fill_restrictive(self.multiworld, state, target_locations, tokens,
-                         lock=True, allow_partial=False)
+            target_locations = self.multiworld.get_unfilled_locations(self.player)
+            state = self.multiworld.get_all_state(use_cache=False)
+            fill_restrictive(self.multiworld, state, target_locations, tokens,
+                             lock=True, allow_partial=False)
 
     @classmethod
     def stage_pre_fill(cls, multiworld: "MultiWorld") -> None:
@@ -316,6 +319,7 @@ class GemcraftFrostbornWrathWorld(World):
         return GCFWItem(name, data.classification, data.id, self.player)
 
     def create_items(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         stages = _load_stages()
         pool: List[GCFWItem] = []
 
@@ -470,8 +474,10 @@ class GemcraftFrostbornWrathWorld(World):
                 pool.append(self.create_item(name))
 
         self.multiworld.itempool += pool
+        _timing_log(f"p{self.player} create_items: {(_t.perf_counter()-_t0)*1000:.1f} ms (pool={len(pool)})")
 
     def create_regions(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         # Resolve the chosen start stage. Its baked `requirements` in
         # rulesdata_levels.py are intentionally ignored at rule-time
         # (see rules.set_rules); Menu connects directly to its region.
@@ -572,11 +578,14 @@ class GemcraftFrostbornWrathWorld(World):
         # Connect Menu → starting stage. All other stages connect from the
         # starting stage in set_rules.
         menu_region.connect(stage_regions[self.start_sid], "Start")
+        _timing_log(f"p{self.player} create_regions: {(_t.perf_counter()-_t0)*1000:.1f} ms")
 
     def set_rules(self) -> None:
-        set_rules(self)
+        with phase(f"p{self.player} set_rules"):
+            set_rules(self)
 
     def generate_basic(self) -> None:
+        import time as _t; _t0 = _t.perf_counter()
         # Place the Victory event at the goal-appropriate location.
         if self.options.goal.value == 0:
             victory_name = "Complete A4 - Frostborn Wrath Victory"
@@ -594,6 +603,7 @@ class GemcraftFrostbornWrathWorld(World):
         )
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
+        _timing_log(f"p{self.player} generate_basic: {(_t.perf_counter()-_t0)*1000:.1f} ms")
 
     # def fill_hook(self, progitempool, usefulitempool, filleritempool, fill_locations):
     #     # Reorder progitempool so fill_restrictive (which pops from the end) places items in
@@ -680,6 +690,10 @@ class GemcraftFrostbornWrathWorld(World):
 
 
     def fill_slot_data(self) -> Dict:
+        # Main fill happens between generate_basic and fill_slot_data, so this
+        # is where we dump the per-rule call counters.
+        report_top_rules()
+        import time as _t; _t0 = _t.perf_counter()
         gd = _load_game_data()
         stages = gd["stages"]
 
@@ -796,6 +810,7 @@ class GemcraftFrostbornWrathWorld(World):
         for v in stage_monsters.values():
             v.sort()
 
+        _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
             "tattered_scroll_levels": tattered_levels,

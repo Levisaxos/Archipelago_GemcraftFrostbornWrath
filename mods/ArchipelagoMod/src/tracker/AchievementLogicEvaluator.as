@@ -32,7 +32,6 @@ package tracker {
         var _fieldEvaluator: FieldLogicEvaluator;
         private
         var _logicEvaluator: LogicEvaluator;
-        private
 
         private
         var _dirty: Boolean = true;
