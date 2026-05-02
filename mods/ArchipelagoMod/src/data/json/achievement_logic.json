@@ -4163,7 +4163,7 @@
       "apId": 2403,
       "game_id": 357,
       "description": "Have 1.000 shadow cores at the start of the battle.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "shadowCore:1000"
       ]

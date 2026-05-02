@@ -18,6 +18,8 @@ from .talismans import (
     PROGRESSION_EDGE_TALISMAN_NAMES,
     PROGRESSION_ALL_TALISMAN_NAMES,
     MATCHING_TALISMAN_NAMES,
+    MATCHING_TALISMAN_ROWS,
+    MATCHING_TALISMAN_COLUMNS,
 )
 
 
@@ -71,14 +73,46 @@ del _sc
 
 
 def _count_xp_items(state, player: int) -> int:
-    return sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
+    cache = _get_counter_cache(state, player)
+    val = cache.get("xp")
+    if val is None:
+        val = sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
+        cache["xp"] = val
+    return val
 
 
 def _sum_shadow_cores(state, player: int) -> int:
     """Sum of core amounts for held shadow-core stash items.  Only items
     classified as progression count — others don't enter state.prog_items."""
-    return sum(amt for name, amt in SHADOW_CORE_AMOUNT_BY_NAME.items()
-               if state.has(name, player))
+    cache = _get_counter_cache(state, player)
+    val = cache.get("sc")
+    if val is None:
+        val = sum(amt for name, amt in SHADOW_CORE_AMOUNT_BY_NAME.items()
+                  if state.has(name, player))
+        cache["sc"] = val
+    return val
+
+
+# State-signature + per-state counter cache.
+# All scalar counters used by access rules (talisman row/column, field
+# tokens, XP, shadow cores, SP, talisman fragments, talisman properties)
+# memoise their result against `_gcfw_state_sig`. The signature changes
+# whenever AP collects/removes any progression item, so cached values
+# from a previous fill state are invalidated automatically.
+def _gcfw_state_sig(state, player: int):
+    items = state.prog_items.get(player)
+    if items is None:
+        return (player, 0, 0)
+    return (player, len(items), sum(items.values()))
+
+
+def _get_counter_cache(state, player: int) -> dict:
+    sig = _gcfw_state_sig(state, player)
+    cache = getattr(state, "_gcfw_counter_cache", None)
+    if cache is None or cache[0] != sig:
+        cache = (sig, {})
+        state._gcfw_counter_cache = cache
+    return cache[1]
 
 
 def _count_complete_talisman_rows(state, player: int) -> int:
@@ -88,11 +122,15 @@ def _count_complete_talisman_rows(state, player: int) -> int:
     split into 3 fixed icon groups (see talismans.MATCHING_TALISMAN_ROWS),
     the player can have 0..3 complete rows.
     """
-    from .talismans import MATCHING_TALISMAN_ROWS
-    return sum(
-        1 for row in MATCHING_TALISMAN_ROWS
-        if all(state.has(n, player) for n in row)
-    )
+    cache = _get_counter_cache(state, player)
+    val = cache.get("tr")
+    if val is None:
+        val = sum(
+            1 for row in MATCHING_TALISMAN_ROWS
+            if all(state.has(n, player) for n in row)
+        )
+        cache["tr"] = val
+    return val
 
 
 def _count_complete_talisman_columns(state, player: int) -> int:
@@ -101,21 +139,29 @@ def _count_complete_talisman_columns(state, player: int) -> int:
     A column = one specific fragment from each icon group (positions
     {1,4,7}, {2,5,8}, or {3,6,9}). See talismans.MATCHING_TALISMAN_COLUMNS.
     """
-    from .talismans import MATCHING_TALISMAN_COLUMNS
-    return sum(
-        1 for col in MATCHING_TALISMAN_COLUMNS
-        if all(state.has(n, player) for n in col)
-    )
+    cache = _get_counter_cache(state, player)
+    val = cache.get("tc")
+    if val is None:
+        val = sum(
+            1 for col in MATCHING_TALISMAN_COLUMNS
+            if all(state.has(n, player) for n in col)
+        )
+        cache["tc"] = val
+    return val
 
 
 def _count_skill_points(state, player: int) -> int:
     """Sum SP across all collected Skillpoint Bundle items.
     Each 'Skillpoint Bundle N' contributes N skill points; the pool may
     contain multiple copies of the same bundle size."""
-    total = 0
-    for size in range(1, 11):
-        total += size * state.count(f"Skillpoint Bundle {size}", player)
-    return total
+    cache = _get_counter_cache(state, player)
+    val = cache.get("sp")
+    if val is None:
+        val = 0
+        for size in range(1, 11):
+            val += size * state.count(f"Skillpoint Bundle {size}", player)
+        cache["sp"] = val
+    return val
 
 
 def _count_field_tokens(state, player: int) -> int:
@@ -125,6 +171,10 @@ def _count_field_tokens(state, player: int) -> int:
     per-tile, per-tier, or global pouch; with pouches off the pouch check
     short-circuits to True). Token granularity decides what 'its field
     token' means (per-stage / per-tile / per-tier)."""
+    cache = _get_counter_cache(state, player)
+    val = cache.get("ft")
+    if val is not None:
+        return val
     world = state.multiworld.worlds[player]
     pairs = getattr(world, "_field_token_pouch_pairs", None)
     if pairs is None:
@@ -138,10 +188,12 @@ def _count_field_tokens(state, player: int) -> int:
             for s in GAME_DATA["stages"]
         ]
         world._field_token_pouch_pairs = pairs
-    return sum(
+    val = sum(
         1 for tok, pouch_ok in pairs
         if state.has(tok, player) and pouch_ok(state)
     )
+    cache["ft"] = val
+    return val
 
 
 # Prefix-encoded requirement vocabulary + counter dispatch tables live in
@@ -179,7 +231,13 @@ _TALISMAN_FRAGMENTS_TOKEN_FLOOR: dict[int, int] = {25: 75}
 
 
 def _count_talisman_fragments(state, player: int, names) -> int:
-    return sum(1 for n in names if state.has(n, player))
+    cache = _get_counter_cache(state, player)
+    key = ("tf", id(names))
+    val = cache.get(key)
+    if val is None:
+        val = sum(1 for n in names if state.has(n, player))
+        cache[key] = val
+    return val
 
 
 # Talisman PROPERTY contribution gates — `tm<Foo>:N` passes when the player
@@ -220,8 +278,14 @@ def _sum_talisman_property(prop_id: int, state, player: int) -> int:
     fragments — same assumption talismanFragments:N already makes about
     socketing).  Only progression fragments are counted; useful/filler
     fragments are invisible to state.has."""
-    contribs = _TALISMAN_PROPERTY_CONTRIBUTIONS.get(prop_id, {})
-    return sum(v for name, v in contribs.items() if state.has(name, player))
+    cache = _get_counter_cache(state, player)
+    key = ("tp", prop_id)
+    val = cache.get(key)
+    if val is None:
+        contribs = _TALISMAN_PROPERTY_CONTRIBUTIONS.get(prop_id, {})
+        val = sum(v for name, v in contribs.items() if state.has(name, player))
+        cache[key] = val
+    return val
 
 
 # Count fields that appear on at least one stage in rulesdata_levels.py.
@@ -419,8 +483,7 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
       2. Per-stage `_can_clear_stage_cached` — each stage's clearability is
          computed once per state-sig and reused across all OR scans.
     """
-    items = state.prog_items.get(player)
-    sig = (player, len(items), sum(items.values())) if items else (player, 0, 0)
+    sig = _gcfw_state_sig(state, player)
     cache = getattr(state, "_gcfw_or_cache", None)
     if cache is None or cache[0] != sig:
         cache = (sig, {})
@@ -470,11 +533,7 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
     skipping `state.can_reach`. See dict comment above for the assumption
     this relies on.
     """
-    items = state.prog_items.get(player)
-    if items is None:
-        sig = (player, 0, 0)
-    else:
-        sig = (player, len(items), sum(items.values()))
+    sig = _gcfw_state_sig(state, player)
 
     cache = getattr(state, "_gcfw_clear_cache", None)
     if cache is None or cache[0] != sig:
