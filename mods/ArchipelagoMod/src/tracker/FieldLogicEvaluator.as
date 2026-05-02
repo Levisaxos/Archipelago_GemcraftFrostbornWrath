@@ -753,29 +753,42 @@ package tracker {
             return true;
         }
 
-        // Active gem-pouch gating mode (0=off, 1=distinct, 2=progressive).
+        // Active gem-pouch granularity (0=off, 1=per_tile_distinct,
+        // 2=per_tile_progressive, 3=per_tier, 4=global).
         // Read from slot_data via ServerOptions; returns 0 if not set.
         private function _pouchMode():int {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
-            return int(AV.serverData.serverOptions.gemPouchGating);
+            return int(AV.serverData.serverOptions.gemPouchGranularity);
         }
 
-        // True when the player owns the pouch for the given stage-prefix
-        // letter under the current mode (distinct: hasItem; progressive:
-        // count >= prefix index + 1). Fails open on unknown prefixes.
+        // True when the player owns the pouch covering the given stage-prefix
+        // letter under the current granularity. Fails open on unknown prefixes.
         private function _pouchHeld(prefix:String):Boolean {
             if (prefix == null || prefix.length == 0) return true;
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return true;
+            var mode:int = int(opts.gemPouchGranularity);
+            if (mode == 0) return true;
+            if (mode == 4) return AV.sessionData.hasItem(1614);
+            if (mode == 3) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null) return true;
+                for (var sid:String in tierMap) {
+                    if (sid.charAt(0) == prefix
+                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                        return true;
+                }
+                return false;
+            }
             var order:Array = opts.gemPouchPlayOrder as Array;
             if (order == null || order.length == 0) return true;
             var idx:int = order.indexOf(prefix);
             if (idx < 0) return true;
-            if (int(opts.gemPouchGating) == 1) {
+            if (mode == 1) {
                 return AV.sessionData.hasItem(626 + idx);
             }
-            // progressive
+            // mode == 2: per_tile_progressive
             var progId:int = int(opts.gemPouchProgressiveId);
             if (progId <= 0) progId = 652;
             return AV.sessionData.getItemCount(progId) >= idx + 1;

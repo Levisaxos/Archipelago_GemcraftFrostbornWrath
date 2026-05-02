@@ -317,10 +317,23 @@ package tracker {
             }
             // eWizardStash — every stage has a wizard stash structurally,
             // but each is locked behind a per-stage key item (AP IDs
-            // 1400..1521).  Pass the gate iff the player holds any key.
+            // 1400..1521).  Pass the gate iff the player holds at least one
+            // key whose stage is also clearable (per-stage tier + WIZLOCK
+            // skills).  Mirrors apworld's _eval_element_reachable: holding a
+            // key for an unbeatable stage doesn't make the stash reachable.
             if (req == "eWizardStash" || req.indexOf("eWizardStash:") == 0)
             {
-                return AV.sessionData.countItemsInRange(1400, 1521) > 0;
+                if (_fieldEvaluator == null) return false;
+                var unlocked:Object = AV.sessionData.unlockedStashesByStrId;
+                for (var stashSid:String in unlocked)
+                {
+                    if (unlocked[stashSid] == true
+                            && _fieldEvaluator.isStashGateMet(stashSid))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
             // Prefix tokens (sBolt / tHaste / eBeacon / wRain).  Must take
             // precedence over the legacy " skill"/" element"/" trait" forms
@@ -476,25 +489,53 @@ package tracker {
                 return _countGemSkillsBroadenedAP() >= gNeed;
             }
 
-            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Inactive in
-            // off mode (returns true); in distinct mode requires the named
-            // pouch item; in progressive mode requires enough Progressive
-            // Gempouch copies for that prefix's position in the play order.
+            // "gemPouch:<prefix>" — per-prefix gem-orb gate. Granularity-aware:
+            //   off (0)        → no gating, always true
+            //   per_tile (1)   → state.has("Gempouch (<prefix>)")
+            //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
+            //   per_tier (3)   → state.has("Tier <N> Gempouch") for stage's tier
+            //                    (requires a stage str_id reference; the
+            //                    requirement string only carries prefix, so
+            //                    per_tier is checked at stage-level — here we
+            //                    fall back to "any tier pouch held" which is
+            //                    permissive but safe for tracker preview)
+            //   global (4)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
-                var mode:int = AV.serverData.serverOptions.gemPouchGating;
+                var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
-                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
-                var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
-                if (order == null) return true;
-                var idx:int = order.indexOf(pouchPrefix);
-                if (idx < 0) return true; // unknown prefix — don't block
-                if (mode == 1) {
-                    return AV.sessionData.hasItem(626 + idx);
+                if (mode == 4) {
+                    return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
                 }
-                // mode == 2: progressive
-                var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
-                if (progId <= 0) progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idx + 1;
+                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
+                if (mode == 1 || mode == 2) {
+                    var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                    if (order == null) return true;
+                    var idx:int = order.indexOf(pouchPrefix);
+                    if (idx < 0) return true; // unknown prefix — don't block
+                    if (mode == 1) {
+                        return AV.sessionData.hasItem(626 + idx);
+                    }
+                    // mode == 2: progressive
+                    var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
+                    if (progId <= 0) progId = 652;
+                    return AV.sessionData.getItemCount(progId) >= idx + 1;
+                }
+                if (mode == 3) {
+                    // per_tier — without a specific stage in scope, accept if
+                    // ANY tier pouch is held that covers a stage with this
+                    // prefix. This is used by the achievement-tracker UI;
+                    // strict per-stage gating is enforced by GemPouchSuppressor.
+                    var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
+                    if (tierMap == null) return true;
+                    for (var sid:String in tierMap) {
+                        if (sid.charAt(0) == pouchPrefix) {
+                            if (AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                                return true;
+                        }
+                    }
+                    return false;
+                }
+                return true;
             }
 
             if (lower.indexOf("battletraits") == 0) {
@@ -1142,13 +1183,27 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return true;
             var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGating);
+            var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0) return true;
+            if (mode == 4) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            if (mode == 3) {
+                // per_tier: any tier-pouch held that covers a stage with this
+                // prefix counts as "this prefix has gems."
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null) return true;
+                for (var sid:String in tierMap) {
+                    if (sid.charAt(0) == prefix
+                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                        return true;
+                }
+                return false;
+            }
             var order:Array = opts.gemPouchPlayOrder as Array;
             if (order == null || order.length == 0) return true;
             var idx:int = order.indexOf(prefix);
             if (idx < 0) return true;
             if (mode == 1) return AV.sessionData.hasItem(626 + idx);
+            // mode == 2: progressive
             var progId:int = int(opts.gemPouchProgressiveId);
             if (progId <= 0) progId = 652;
             return AV.sessionData.getItemCount(progId) >= idx + 1;

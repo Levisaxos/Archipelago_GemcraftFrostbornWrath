@@ -32,6 +32,12 @@ package tracker {
         private static const STATE_RED:int     = 2;
         private static const STATE_YELLOW:int  = 3;
 
+        // Wizard-stash pip (wizStashMarker) state. Pip color is independent of
+        // the main light state: it tracks the stash check specifically.
+        private static const PIP_NONE:int   = 0; // leave to game (collected / no stash)
+        private static const PIP_GREEN:int  = 1; // missing & reachable
+        private static const PIP_RED:int    = 2; // missing & not reachable
+
         // Tints applied to the (forced-lit) light MCs.
         private static const CT_GREEN:ColorTransform =
             new ColorTransform(0.35, 1.20, 0.35, 1.0, 0, 60, 0, 0);
@@ -72,7 +78,10 @@ package tracker {
                 if (cnt != null) {
                     for (var j:int = 0; j < cnt.numChildren; j++) {
                         var tok2:* = cnt.getChildAt(j);
-                        if (tok2 != null) paint(tok2, STATE_NONE);
+                        if (tok2 != null) {
+                            paint(tok2, STATE_NONE);
+                            paintPip(tok2, PIP_NONE);
+                        }
                     }
                 }
                 return;
@@ -123,6 +132,19 @@ package tracker {
                     }
 
                     paint(tok, desired);
+
+                    // Pip color is independent of the per-stage state: it
+                    // reflects only whether the stash check is missing &
+                    // reachable. Untouched if the stash is done or absent.
+                    var pip:int;
+                    if (!stashMissing) {
+                        pip = PIP_NONE;
+                    } else if (_evaluator.isStashGateMet(strId)) {
+                        pip = PIP_GREEN;
+                    } else {
+                        pip = PIP_RED;
+                    }
+                    paintPip(tok, pip);
                 }
             } catch (err:Error) {
                 if (!_loggedError) {
@@ -175,6 +197,22 @@ package tracker {
         private function resetLight(light:MovieClip):void {
             if (light == null) return;
             light.transform.colorTransform = CT_IDENTITY;
+        }
+
+        /** Tints the wizStashMarker pip without disturbing its frame
+         *  (the vanilla SelectorCore drives closed/open/collected art via
+         *  gotoAndStop on this same MC, so we leave that alone). */
+        private function paintPip(tok:*, pipState:int):void {
+            var pip:MovieClip = tok.wizStashMarker as MovieClip;
+            if (pip == null) return;
+
+            if (pipState == PIP_GREEN) {
+                pip.transform.colorTransform = CT_GREEN;
+            } else if (pipState == PIP_RED) {
+                pip.transform.colorTransform = CT_RED;
+            } else {
+                pip.transform.colorTransform = CT_IDENTITY;
+            }
         }
     }
 }

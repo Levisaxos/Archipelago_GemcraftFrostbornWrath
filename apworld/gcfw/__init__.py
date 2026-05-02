@@ -22,7 +22,9 @@ from .options import (
     DeathLinkCooldown,
     AchievementRequiredEffort,
     SkillpointMultiplier,
-    GemPouchGating,
+    GemPouchGranularity,
+    FieldTokenGranularity,
+    StashKeyGranularity,
     STARTING_STAGE_BY_VALUE,
 )
 from .items_skillpoints import generate_sp_bundles
@@ -32,6 +34,7 @@ from .rulesdata import (
     GAME_DATA,
     SKILL_CATEGORIES,
     GEM_POUCH_PLAY_ORDER,
+    STAGE_RULES,
 )
 from .rulesdata_levels import level_requirements as LEVEL_DATA
 
@@ -238,11 +241,13 @@ class GemcraftFrostbornWrathWorld(World):
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldTokenGranularity,
+            StashKeyGranularity,
+            GemPouchGranularity,
             FieldTokenPlacement,
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
-            GemPouchGating,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -323,16 +328,18 @@ class GemcraftFrostbornWrathWorld(World):
         stages = _load_stages()
         pool: List[GCFWItem] = []
 
-        # Field tokens — W1/W2/W3/W4 have item_ap_id=None and are skipped.
-        # All four are free stages; the mod unlocks them on connect.
-        # No placeholder is added: the 118 token items + skills/traits/talismans/
-        # cores/XP-tomes already match the 366 stage locations (since W1-W4 each
-        # contribute 3 locations but 0 token items, the difference is filled by
-        # the always-on items below).
-        for stage in stages:
-            if stage["item_ap_id"] is None:
-                continue
-            pool.append(self.create_item(f"{stage['str_id']} Field Token"))
+        # Field tokens — count and names depend on field_token_granularity:
+        #   per_stage: 122 tokens (one per stage), starter's token precollected
+        #   per_tile:  26 tokens (one per stage prefix), starter's tile precollected
+        #   per_tier:  N tokens (one per active tier), starter's tier precollected
+        # The starter's covering token is always pushed to precollected items
+        # so Menu->starter is satisfied without the player having to find it.
+        from . import gating as _gating
+        ft_gran = self.options.field_token_granularity.value
+        starter_token = _gating.starter_field_token(self.start_sid, ft_gran)
+        self.multiworld.push_precollected(self.create_item(starter_token))
+        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sid):
+            pool.append(self.create_item(token_name))
 
         # Skills (includes gem-type unlocks at positions 7–12)
         for name in item_table:
@@ -440,23 +447,22 @@ class GemcraftFrostbornWrathWorld(World):
                         ach_data = all_achievements[ach_name]
                         ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
-        # Per-stage Wizard Stash key items (122 items, IDs 1400–1521).
-        # Progression: each gates its matching stash location in rules.py.
-        for stage in stages:
-            pool.append(self.create_item(f"Wizard Stash {stage['str_id']} Key"))
+        # Wizard Stash keys — count and names depend on stash_key_granularity:
+        #   per_stage: 122 keys (one per stage)
+        #   per_tile:  26 keys (one per stage prefix)
+        #   per_tier:  N keys (one per active tier, N = len(ACTIVE_TIERS))
+        #   global:    1 master key
+        from . import gating as _gating
+        for key_name in _gating.stash_keys_for_pool(self.options.stash_key_granularity.value):
+            pool.append(self.create_item(key_name))
 
-        # Gempouches — added based on gem_pouch_gating option.
+        # Gempouches — added based on gem_pouch_granularity option.
         # No pouch is precollected: the starter stage (whichever prefix the
         # seed picks) is bootstrappable via Hollow Gems supplied by the mod's
         # HollowGemInjector when the matching pouch is missing. So every
         # pouch goes into the pool and gets randomized.
-        pouch_mode = self.options.gem_pouch_gating.value
-        if pouch_mode == 1:  # distinct
-            for prefix in GEM_POUCH_PLAY_ORDER:
-                pool.append(self.create_item(f"Gempouch ({prefix})"))
-        elif pouch_mode == 2:  # progressive
-            for _ in range(len(GEM_POUCH_PLAY_ORDER)):
-                pool.append(self.create_item("Progressive Gempouch"))
+        for pouch_name in _gating.pouches_for_pool(self.options.gem_pouch_granularity.value):
+            pool.append(self.create_item(pouch_name))
 
         # SP bundle filler — fills all remaining unfilled location slots.
         # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
@@ -704,12 +710,19 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # The chosen starting stage is "free" — accessible from the menu with
-        # no token, and its baked `requirements` are skipped both in apworld
-        # set_rules and in the mod's FieldLogicEvaluator (which treats this
-        # list as the auto-unlocked / no-requirements set). All other stages
-        # (including the W/S stages not picked) gate normally.
-        free_stages = [self.start_sid]
+        # Stages that are immediately playable from session start. Under
+        # field_token_granularity == per_stage this is just the chosen starter.
+        # Under per_tile / per_tier the precollected starter token covers
+        # multiple stages — they're all "free" at start since the token gate
+        # is satisfied immediately. The mod uses this list for the Hollow Gem
+        # bootstrap, FirstPlayBypass, and free-buildings logic.
+        from . import gating as _gating
+        ft_gran = self.options.field_token_granularity.value
+        starter_token_name = _gating.starter_field_token(self.start_sid, ft_gran)
+        free_stages = [
+            s["str_id"] for s in stages
+            if _gating.field_token_for_stage(s["str_id"], ft_gran) == starter_token_name
+        ]
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -837,17 +850,24 @@ class GemcraftFrostbornWrathWorld(World):
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
-            # Gem-pouch gating: per-prefix gem-orb suppression. Mod uses these
-            # to decide whether to spawn gem orbs on level start, and to
-            # display "needs Gempouch X" in tooltips.
-            #   gem_pouch_gating: 0=off, 1=distinct, 2=progressive
-            #   gem_pouch_play_order: list of prefix letters in play order;
-            #     for distinct, item AP id = 626 + index in this list;
-            #     for progressive, the Nth Progressive Gempouch covers the
-            #     first N prefixes in this list.
-            "gem_pouch_gating":        self.options.gem_pouch_gating.value,
+            # Granularity settings for the three gating-item categories.
+            # Mod uses these to interpret coarser items (e.g. a per_tile stash
+            # key unlocks every stash with that prefix).
+            #   field_token_granularity: 0=per_stage, 1=per_tile, 2=per_tier
+            #   stash_key_granularity:   0=per_stage, 1=per_tile, 2=per_tier, 3=global
+            #   gem_pouch_granularity:   0=off, 1=per_tile_distinct,
+            #                            2=per_tile_progressive, 3=per_tier, 4=global
+            "field_token_granularity": self.options.field_token_granularity.value,
+            "stash_key_granularity":   self.options.stash_key_granularity.value,
+            "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
             "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
             "gem_pouch_progressive_id": item_table["Progressive Gempouch"].id,
+            # Per-stage tier assignments so the mod can resolve coarse
+            # tier-keyed items (e.g. "Tier 3 Field Token" → all tier-3 stages).
+            "stage_tier_by_str_id": {
+                s["str_id"]: STAGE_RULES[s["str_id"]].tier
+                for s in GAME_DATA["stages"]
+            },
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,

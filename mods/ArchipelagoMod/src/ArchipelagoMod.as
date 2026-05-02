@@ -1471,7 +1471,7 @@ package {
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {
-                    // Wizard Stash key — gates the per-level stash AP check.
+                    // Per-stage Wizard Stash key — gates the per-level stash AP check.
                     var stashLocId:int = apId - 1400 + 1;
                     var stashStrId:String = null;
                     var stageLocIdMap:Object = ConnectionManager.stageLocIds;
@@ -1488,6 +1488,34 @@ package {
                     } else {
                         _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
                     }
+                    return;
+                }
+                if (apId >= 1522 && apId <= 1547) {
+                    // Per-tile stash key (one per stage prefix). Unlocks every
+                    // stash whose stage starts with the matching prefix.
+                    _grantStashKeyByPrefix(apId);
+                    return;
+                }
+                if (apId >= 1548 && apId <= 1560) {
+                    // Per-tier stash key. Unlocks every stash whose stage is
+                    // in the matching tier.
+                    _grantStashKeyByTier(apId - 1548);
+                    return;
+                }
+                if (apId == 1561) {
+                    // Master stash key. Unlocks every stash.
+                    _grantMasterStashKey();
+                    return;
+                }
+                if (apId >= 1562 && apId <= 1587) {
+                    // Per-tile field token. Unlocks every stage whose str_id
+                    // starts with the matching prefix.
+                    _grantFieldTokenByPrefix(apId);
+                    return;
+                }
+                if (apId >= 1588 && apId <= 1600) {
+                    // Per-tier field token. Unlocks every stage in the tier.
+                    _grantFieldTokenByTier(apId - 1588);
                     return;
                 }
                 if (apId >= 1700 && apId <= 1709) {
@@ -1527,6 +1555,181 @@ package {
          *                                         unlocked-but-not-completed
          *   - already completed (xp>0)        → leave alone
          */
+        // -----------------------------------------------------------------------
+        // Coarse-granularity item handlers
+        //
+        // ID layout (mirrors apworld gating.py):
+        //   1522-1547 stash tile keys (one per prefix in gemPouchPlayOrder)
+        //   1548-1560 stash tier keys (one per tier 0..12)
+        //   1561      stash master key
+        //   1562-1587 field tile tokens (one per prefix)
+        //   1588-1600 field tier tokens (one per tier 0..12)
+        // For tile-keyed items, prefix = playOrder[apId - base]. For tier-keyed
+        // items, tier = apId - base. Master keys cover everything.
+
+        private function _prefixForTileApId(apId:int, base:int):String {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.gemPouchPlayOrder as Array
+                : null;
+            if (order == null || order.length == 0) return null;
+            var idx:int = apId - base;
+            if (idx < 0 || idx >= order.length) return null;
+            return String(order[idx]);
+        }
+
+        private function _grantStashKeyByPrefix(apId:int):void {
+            var prefix:String = _prefixForTileApId(apId, 1522);
+            if (prefix == null) {
+                _logger.log(MOD_NAME, "  grantItem: tile stash key apId=" + apId + " — no prefix mapping");
+                return;
+            }
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    AV.sessionData.markStashUnlocked(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
+        }
+
+        private function _grantStashKeyByTier(tier:int):void {
+            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.stageTierByStrId
+                : null;
+            if (tierMap == null) {
+                _logger.log(MOD_NAME, "  grantItem: tier stash key tier=" + tier + " — no stage->tier map");
+                return;
+            }
+            var count:int = 0;
+            for (var sid:String in tierMap) {
+                if (int(tierMap[sid]) == tier) {
+                    AV.sessionData.markStashUnlocked(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
+        }
+
+        private function _grantMasterStashKey():void {
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            var count:int = 0;
+            for (var sid:String in byStrId) {
+                AV.sessionData.markStashUnlocked(sid);
+                count++;
+            }
+            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Master stash key unlocked " + count + " stashes");
+        }
+
+        private function _grantFieldTokenByPrefix(apId:int):void {
+            var prefix:String = _prefixForTileApId(apId, 1562);
+            if (prefix == null) {
+                _logger.log(MOD_NAME, "  grantItem: tile field token apId=" + apId + " — no prefix mapping");
+                return;
+            }
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    _stageUnlocker.unlockStage(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
+        }
+
+        private function _grantFieldTokenByTier(tier:int):void {
+            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.stageTierByStrId
+                : null;
+            if (tierMap == null) {
+                _logger.log(MOD_NAME, "  grantItem: tier field token tier=" + tier + " — no stage->tier map");
+                return;
+            }
+            var count:int = 0;
+            for (var sid:String in tierMap) {
+                if (int(tierMap[sid]) == tier) {
+                    _stageUnlocker.unlockStage(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
+        }
+
+        /** Re-apply stash unlocks from received items. Called from
+         *  syncWithAP after sessionData.reset() so the unlocked state is
+         *  rebuilt from the full item list at every sync. Handles all four
+         *  stash_key_granularity modes:
+         *    per_stage  → AP id 1400-1521 (one per stage's loc id)
+         *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
+         *    per_tier   → AP id 1548-1560 (one per tier 0..12)
+         *    global     → AP id 1561 (master key)
+         */
+        private function _syncStashLockState():int {
+            if (AV.serverData == null) return 0;
+            var changes:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            var opts:* = AV.serverData.serverOptions;
+
+            // Per-stage: walk the stageLocIds map, mark each stash whose
+            // matching key item id is held.
+            var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+            if (stageLocIdMap != null) {
+                for (var psid:String in stageLocIdMap) {
+                    var keyApId:int = 1400 + int(stageLocIdMap[psid]) - 1;
+                    if (AV.sessionData.hasItem(keyApId)) {
+                        if (!AV.sessionData.isStashUnlocked(psid)) {
+                            AV.sessionData.markStashUnlocked(psid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Per-tile: AP id 1522 + prefix index
+            var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
+            if (order != null) {
+                for (var pi:int = 0; pi < order.length; pi++) {
+                    if (!AV.sessionData.hasItem(1522 + pi)) continue;
+                    var prefix:String = String(order[pi]);
+                    for (var sid:String in byStrId) {
+                        if (sid.charAt(0) == prefix && !AV.sessionData.isStashUnlocked(sid)) {
+                            AV.sessionData.markStashUnlocked(sid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Per-tier: AP id 1548 + tier
+            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
+            if (tierMap != null) {
+                for (var tt:int = 0; tt <= 12; tt++) {
+                    if (!AV.sessionData.hasItem(1548 + tt)) continue;
+                    for (var tsid:String in tierMap) {
+                        if (int(tierMap[tsid]) == tt && !AV.sessionData.isStashUnlocked(tsid)) {
+                            AV.sessionData.markStashUnlocked(tsid);
+                            changes++;
+                        }
+                    }
+                }
+            }
+            // Global master key
+            if (AV.sessionData.hasItem(1561)) {
+                for (var msid:String in byStrId) {
+                    if (!AV.sessionData.isStashUnlocked(msid)) {
+                        AV.sessionData.markStashUnlocked(msid);
+                        changes++;
+                    }
+                }
+            }
+            return changes;
+        }
+
         private function _syncStageLockState():int {
             if (GV.ppd == null || GV.stageCollection == null || AV.serverData == null) return 0;
 
@@ -1540,6 +1743,31 @@ package {
             if (tokenMap != null) {
                 for (var apIdStr:String in tokenMap) {
                     if (AV.sessionData.hasItem(int(apIdStr))) hasToken[tokenMap[apIdStr]] = true;
+                }
+            }
+            // Coarse field-token coverage: per-tile (1562 + prefix index)
+            // covers all stages with that prefix; per-tier (1588 + tier)
+            // covers all stages in the tier.
+            var opts:* = AV.serverData.serverOptions;
+            var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
+            if (order != null) {
+                for (var pi:int = 0; pi < order.length; pi++) {
+                    if (AV.sessionData.hasItem(1562 + pi)) {
+                        var prefix:String = String(order[pi]);
+                        for (var psid:String in AV.serverData.stagesByStrId) {
+                            if (psid.charAt(0) == prefix) hasToken[psid] = true;
+                        }
+                    }
+                }
+            }
+            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
+            if (tierMap != null) {
+                for (var tt:int = 0; tt <= 12; tt++) {
+                    if (AV.sessionData.hasItem(1588 + tt)) {
+                        for (var tsid:String in tierMap) {
+                            if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
+                        }
+                    }
                 }
             }
 
@@ -1637,6 +1865,9 @@ package {
             // --- Stages --- (unified lock/unlock logic, also handles free stages)
             var stageChanges:int = _syncStageLockState();
 
+            // --- Stashes --- (re-apply unlocks from received key items, all granularities)
+            var stashChanges:int = _syncStashLockState();
+
             // --- Wizard levels ---
             _levelUnlocker.bonusWizardLevel = apXpTotal;
             _levelUnlocker.applyBonusLevels();
@@ -1655,6 +1886,7 @@ package {
 
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
+                " stashes:" + stashChanges +
                 " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
         }
 

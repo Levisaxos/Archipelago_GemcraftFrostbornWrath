@@ -50,6 +50,7 @@ STARTING_STAGE_BY_VALUE = {
     StartingStage.option_s4: "S4",
 }
 
+
 class FieldTokenPlacement(Choice):
     """Controls where field tokens (stage unlocks) are allowed to be placed in the multiworld.
 
@@ -273,29 +274,81 @@ class ExtraWaveCount(Range):
     default     = 0
 
 
-class GemPouchGating(Choice):
+class GemPouchGranularity(Choice):
     """How gem availability per stage is gated by Archipelago items.
 
     off:         No gempouches. Stages keep their original `gemSkills: N` gate
                  (collect N of the 6 gem-skill items); gem orbs spawn freely
                  in every level.
-    distinct:    26 named pouches (one per stage-prefix letter). A stage in
-                 prefix X spawns no gem orbs at all until you collect
+    distinct:    26 named pouches (one per stage-prefix letter / tile). A stage
+                 in prefix X spawns no gem orbs at all until you collect
                  `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
     progressive: 26 copies of `Progressive Gempouch` in play order
                  (W, S, V, R, Q, P, O, N, M, L, K, J, I, H, G, F, E, D, C, B,
                  A, Z, Y, X, U, T). The Nth copy unlocks the Nth world in that
                  order. Spoiler log shows fungible items but fill is more
                  forgiving.
+    per_tier:    13 named pouches (one per power tier, 0-12). Stages unlock
+                 gem orbs once you collect their tier's pouch. Coarser than
+                 distinct — fewer items in the pool but unlocks chunks of
+                 stages at a time.
+    global:      1 master pouch unlocks gems on every stage at once.
 
-    distinct and progressive both pre-collect the W (tutorial) pouch so the
-    seed is solvable from frame zero.
+    distinct, progressive, per_tier, and global all pre-collect the gating
+    item that covers the chosen starting stage so the seed is solvable from
+    frame zero.
     """
-    display_name = "Gem Pouch Gating"
-    option_off         = 0
-    option_distinct    = 1
-    option_progressive = 2
-    default = 0
+    display_name = "Gem Pouch Granularity"
+    option_off                  = 0
+    option_per_tile_distinct    = 1
+    option_per_tile_progressive = 2
+    option_per_tier             = 3
+    option_global               = 4
+    default = 1
+
+
+class FieldTokenGranularity(Choice):
+    """How coarse Field Token items are. Coarser = fewer unique items in the
+    pool, larger swaths of stages unlocked per item. Lower density of
+    progression items overall, achievement locations drift toward filler.
+
+    per_stage: One token per stage (122 tokens total). Original behaviour.
+    per_tile:  One token per stage prefix / map tile (26 tokens). Collecting
+               `<Prefix> Tile Field Token` unlocks every stage starting with
+               that prefix.
+    per_tier:  One token per power tier (13 tokens, 0-12). Collecting
+               `Tier <N> Field Token` unlocks every stage in that tier.
+
+    The starting stage's covering token is precollected so Menu->starter
+    still works regardless of which mode is chosen.
+    """
+    display_name = "Field Token Granularity"
+    option_per_stage = 0
+    option_per_tile  = 1
+    option_per_tier  = 2
+    default = 1
+
+
+class StashKeyGranularity(Choice):
+    """How coarse Wizard Stash Key items are.
+
+    per_stage: One key per stage (122 keys total). Original behaviour.
+    per_tile:  One key per stage prefix / map tile (26 keys). Collecting
+               `<Prefix> Stash Tile Key` unlocks every stash starting with
+               that prefix.
+    per_tier:  One key per power tier (13 keys, 0-12). Collecting
+               `Tier <N> Stash Key` unlocks every stash in that tier.
+    global:    A single `Master Stash Key` unlocks every stash at once.
+
+    The starting stage's covering key is precollected so the player can
+    immediately collect the starter's stash check.
+    """
+    display_name = "Stash Key Granularity"
+    option_per_stage = 0
+    option_per_tile  = 1
+    option_per_tier  = 2
+    option_global    = 3
+    default = 1
 
 
 class StartingOvercrowd(Toggle):
@@ -381,9 +434,11 @@ class GCFWOptions(PerGameCommonOptions):
     disable_trial:             DisableTrial
     starting_wizard_level:     StartingWizardLevel
     starting_overcrowd:        StartingOvercrowd
-    gem_pouch_gating:          GemPouchGating
     achievement_required_effort: AchievementRequiredEffort
     achievement_progression:   AchievementProgression
+    field_token_granularity:   FieldTokenGranularity
+    stash_key_granularity:     StashKeyGranularity
+    gem_pouch_granularity:     GemPouchGranularity
     skillpoint_multiplier:     SkillpointMultiplier
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier

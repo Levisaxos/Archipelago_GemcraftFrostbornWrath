@@ -41,7 +41,10 @@ package patch {
      *   - The "spent on mana-leech" stat increment from castCreateGem is undone
      *     so achievement gates (e.g. "only mana leech gems") aren't polluted.
      *
-     * Activation: AV.serverData.freeStages[0] holds the starter stage str_id
+     * Activation: AV.serverData.freeStages holds the starter stage str_id(s).
+     * Under per_stage granularity that's a single str_id; under per_tile or
+     * per_tier the entire covered set is included — Hollow Gem activates on
+     * any stage in the set when no covering pouch is held.
      * (e.g. "S2"). Active only on that exact stage and only when its prefix
      * letter has no Gempouch. Auto-deactivates once the pouch arrives.
      */
@@ -178,37 +181,61 @@ package patch {
             }
 
             var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGating);
+            var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0) {
                 _lockedActive = 0; // gating disabled for the seed — stable, lock.
                 return false;
             }
 
-            if (String(freeStages[0]) != stageStrId) {
-                _lockedActive = 0; // not the starter stage — won't change mid-level.
+            // Starter set may be a single stage (per_stage granularity) or an
+            // entire tile / tier worth of stages (per_tile / per_tier).
+            // Activate Hollow Gem bootstrap on any stage in the set.
+            var inStarterSet:Boolean = false;
+            for (var fi:int = 0; fi < freeStages.length; fi++) {
+                if (String(freeStages[fi]) == stageStrId) {
+                    inStarterSet = true;
+                    break;
+                }
+            }
+            if (!inStarterSet) {
+                _lockedActive = 0; // not in starter set — won't change mid-level.
                 return false;
             }
 
-            var prefix:String = stageStrId.charAt(0);
-            var active:Boolean = !_hasPouchFor(prefix, opts);
+            var active:Boolean = !_hasPouchFor(stageStrId, opts);
             _lockedActive = active ? 1 : 0;
             return active;
         }
 
-        private function _hasPouchFor(prefix:String, opts:*):Boolean {
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0)
-                return true; // unknown — fail open
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0)
-                return true;
-            var mode:int = int(opts.gemPouchGating);
-            if (mode == 1)
-                return AV.sessionData.hasItem(626 + idx);
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0)
-                progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+        private function _hasPouchFor(stageStrId:String, opts:*):Boolean {
+            var mode:int = int(opts.gemPouchGranularity);
+            var prefix:String = stageStrId.charAt(0);
+
+            if (mode == 1 || mode == 2) {
+                var order:Array = opts.gemPouchPlayOrder as Array;
+                if (order == null || order.length == 0)
+                    return true; // unknown — fail open
+                var idx:int = order.indexOf(prefix);
+                if (idx < 0)
+                    return true;
+                if (mode == 1)
+                    return AV.sessionData.hasItem(626 + idx);
+                var progId:int = int(opts.gemPouchProgressiveId);
+                if (progId <= 0)
+                    progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idx + 1;
+            }
+            if (mode == 3) {
+                // per_tier: AP id 1601 + tier (gating.py POUCH_TIER_BASE).
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null || tierMap[stageStrId] == null)
+                    return true;
+                return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
+            }
+            if (mode == 4) {
+                return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            }
+            return true;
         }
 
         // -----------------------------------------------------------------------
