@@ -523,18 +523,25 @@ package tracker {
                     return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
                 }
                 var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
-                if (mode == 1 || mode == 2) {
-                    var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
-                    if (order == null) return true;
-                    var idx:int = order.indexOf(pouchPrefix);
-                    if (idx < 0) return true; // unknown prefix — don't block
-                    if (mode == 1) {
-                        return AV.sessionData.hasItem(626 + idx);
-                    }
-                    // mode == 2: progressive
+                if (mode == 1) {
+                    // per_tile (distinct): canonical order for ID lookup.
+                    var orderD:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                    if (orderD == null) return true;
+                    var idxD:int = orderD.indexOf(pouchPrefix);
+                    if (idxD < 0) return true;
+                    return AV.sessionData.hasItem(626 + idxD);
+                }
+                if (mode == 2) {
+                    // per_tile_progressive: starter-first count threshold.
+                    var orderP:Array = AV.serverData.serverOptions.progressiveTileOrder;
+                    if (orderP == null || orderP.length == 0)
+                        orderP = AV.serverData.serverOptions.gemPouchPlayOrder;
+                    if (orderP == null) return true;
+                    var idxP:int = orderP.indexOf(pouchPrefix);
+                    if (idxP < 0) return true;
                     var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
                     if (progId <= 0) progId = 652;
-                    return AV.sessionData.getItemCount(progId) >= idx + 1;
+                    return AV.sessionData.getItemCount(progId) >= idxP + 1;
                 }
                 if (mode == 3 || mode == 4) {
                     // per_tier (3) and per_tier_progressive (4): without a
@@ -543,16 +550,19 @@ package tracker {
                     var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
                     if (tierMap == null) return true;
                     var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
+                    var tierOrd:Array = AV.serverData.serverOptions.progressiveTierOrder as Array;
                     for (var sid:String in tierMap) {
                         if (sid.charAt(0) == pouchPrefix) {
                             var st:int = int(tierMap[sid]);
                             if (mode == 3) {
                                 if (AV.sessionData.hasItem(1601 + st))
                                     return true;
-                            } else {
-                                // mode == 4: progressive — Nth copy unlocks tier N.
-                                if (tierProgId > 0 &&
-                                        AV.sessionData.getItemCount(tierProgId) >= st + 1)
+                            } else if (tierProgId > 0) {
+                                // mode == 4: starter-first count threshold.
+                                var posT:int = (tierOrd != null && tierOrd.length > 0)
+                                                  ? tierOrd.indexOf(st) : st;
+                                if (posT < 0) continue;
+                                if (AV.sessionData.getItemCount(tierProgId) >= posT + 1)
                                     return true;
                             }
                         }
@@ -1211,33 +1221,44 @@ package tracker {
             if (mode == 0) return true;
             if (mode == 5) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
             if (mode == 3 || mode == 4) {
-                // per_tier (3) and per_tier_progressive (4): any tier item
-                // held that covers a stage with this prefix counts as
-                // "this prefix has gems."
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null) return true;
                 var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
                 for (var sid:String in tierMap) {
                     if (sid.charAt(0) != prefix) continue;
                     var st:int = int(tierMap[sid]);
                     if (mode == 3) {
                         if (AV.sessionData.hasItem(1601 + st)) return true;
-                    } else if (tierProgId > 0
-                            && AV.sessionData.getItemCount(tierProgId) >= st + 1) {
-                        return true;
+                    } else if (tierProgId > 0) {
+                        var posT:int = (tierOrd != null && tierOrd.length > 0)
+                                          ? tierOrd.indexOf(st) : st;
+                        if (posT >= 0 &&
+                                AV.sessionData.getItemCount(tierProgId) >= posT + 1)
+                            return true;
                     }
                 }
                 return false;
             }
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0) return true;
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0) return true;
-            if (mode == 1) return AV.sessionData.hasItem(626 + idx);
-            // mode == 2: progressive
+            // mode == 1 (per_tile): canonical order for ID lookup.
+            // mode == 2 (per_tile_progressive): starter-first count threshold.
+            if (mode == 1) {
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
+            }
+            // mode == 2
+            var orderP:Array = opts.progressiveTileOrder as Array;
+            if (orderP == null || orderP.length == 0)
+                orderP = opts.gemPouchPlayOrder as Array;
+            if (orderP == null || orderP.length == 0) return true;
+            var idxP:int = orderP.indexOf(prefix);
+            if (idxP < 0) return true;
             var progId:int = int(opts.gemPouchProgressiveId);
             if (progId <= 0) progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+            return AV.sessionData.getItemCount(progId) >= idxP + 1;
         }
 
         /** True if any in-logic stage's `availableGems` lists `gemName` AND

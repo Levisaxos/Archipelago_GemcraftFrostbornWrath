@@ -157,6 +157,12 @@ package net {
                     AV.serverData.serverOptions.gemPouchPlayOrder = sd.gem_pouch_play_order as Array;
                 if (sd.stage_progressive_order !== undefined)
                     AV.serverData.serverOptions.stageProgressiveOrder = sd.stage_progressive_order as Array;
+                if (sd.progressive_tile_order !== undefined)
+                    AV.serverData.serverOptions.progressiveTileOrder = sd.progressive_tile_order as Array;
+                if (sd.progressive_stage_order !== undefined)
+                    AV.serverData.serverOptions.progressiveStageOrder = sd.progressive_stage_order as Array;
+                if (sd.progressive_tier_order !== undefined)
+                    AV.serverData.serverOptions.progressiveTierOrder = sd.progressive_tier_order as Array;
                 if (sd.gem_pouch_progressive_id !== undefined)
                     AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
                 if (sd.gem_pouch_per_tier_progressive_id !== undefined)

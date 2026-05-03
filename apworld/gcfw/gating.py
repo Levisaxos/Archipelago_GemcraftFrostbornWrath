@@ -166,16 +166,22 @@ def stash_key_for_stage(sid: str, granularity: int) -> str:
     raise ValueError(f"Unknown stash_key_granularity: {granularity}")
 
 
-def stash_key_count_for_stage(sid: str, granularity: int) -> int:
+def stash_key_count_for_stage(sid: str, granularity: int, starter_sid: str = None) -> int:
     """Number of copies of `stash_key_for_stage(sid, granularity)` required to
-    unlock `sid`'s stash. 1 for distinct/global, N=position-in-order for
-    progressive variants."""
+    unlock `sid`'s stash. 1 for distinct/global, N=position-in-starter-aware-
+    order for progressive variants."""
     if granularity == STASH_PER_STAGE_PROGRESSIVE:
-        return STAGE_PROGRESSIVE_ORDER.index(sid) + 1
+        order = (progressive_stage_order_for_starter(starter_sid)
+                 if starter_sid is not None else STAGE_PROGRESSIVE_ORDER)
+        return order.index(sid) + 1
     if granularity == STASH_PER_TILE_PROGRESSIVE:
-        return _tile_index(sid[0]) + 1
+        order = (progressive_tile_order_for_starter(starter_sid)
+                 if starter_sid is not None else TILE_PREFIXES)
+        return order.index(sid[0]) + 1
     if granularity == STASH_PER_TIER_PROGRESSIVE:
-        return ACTIVE_TIERS.index(STAGE_RULES[sid].tier) + 1
+        tiers = (progressive_tier_order_for_starter(starter_sid)
+                 if starter_sid is not None else ACTIVE_TIERS)
+        return tiers.index(STAGE_RULES[sid].tier) + 1
     return 1
 
 
@@ -219,23 +225,31 @@ def field_token_for_stage(sid: str, granularity: int) -> str:
     raise ValueError(f"Unknown field_token_granularity: {granularity}")
 
 
-def field_token_count_for_stage(sid: str, granularity: int) -> int:
+def field_token_count_for_stage(sid: str, granularity: int, starter_sid: str = None) -> int:
     """Number of copies of `field_token_for_stage(sid, granularity)` required
-    to unlock `sid`. 1 for distinct, N=position-in-order for progressive."""
+    to unlock `sid`. 1 for distinct, N=position-in-starter-aware-order for
+    progressive (so the starter is always at position 1 = needs 1 copy =
+    matches the single precollect)."""
     if granularity == FIELD_PER_STAGE_PROGRESSIVE:
-        return STAGE_PROGRESSIVE_ORDER.index(sid) + 1
+        order = (progressive_stage_order_for_starter(starter_sid)
+                 if starter_sid is not None else STAGE_PROGRESSIVE_ORDER)
+        return order.index(sid) + 1
     if granularity == FIELD_PER_TILE_PROGRESSIVE:
-        return _tile_index(sid[0]) + 1
+        order = (progressive_tile_order_for_starter(starter_sid)
+                 if starter_sid is not None else TILE_PREFIXES)
+        return order.index(sid[0]) + 1
     if granularity == FIELD_PER_TIER_PROGRESSIVE:
-        return ACTIVE_TIERS.index(STAGE_RULES[sid].tier) + 1
+        tiers = (progressive_tier_order_for_starter(starter_sid)
+                 if starter_sid is not None else ACTIVE_TIERS)
+        return tiers.index(STAGE_RULES[sid].tier) + 1
     return 1
 
 
 def field_tokens_for_pool(granularity: int, exclude_starter_sid: str) -> List[str]:
     """Return the list of field-token items to add to the pool, omitting the
-    item(s) covering the chosen starter (which are precollected instead).
-    For progressive variants, M = starter's index + 1 copies are precollected
-    so the pool gets `total - M`."""
+    item covering the chosen starter (which is precollected instead).
+    For progressive variants the precollect is always 1 copy regardless of
+    starter position, so the pool gets `total - 1`."""
     if granularity == FIELD_PER_STAGE:
         return [
             f"{s['str_id']} Field Token"
@@ -243,43 +257,37 @@ def field_tokens_for_pool(granularity: int, exclude_starter_sid: str) -> List[st
             if s["str_id"] != exclude_starter_sid
         ]
     if granularity == FIELD_PER_STAGE_PROGRESSIVE:
-        m = STAGE_PROGRESSIVE_ORDER.index(exclude_starter_sid) + 1
-        return [PROG_FIELD_PER_STAGE_NAME] * (len(STAGE_PROGRESSIVE_ORDER) - m)
+        return [PROG_FIELD_PER_STAGE_NAME] * (len(STAGE_PROGRESSIVE_ORDER) - 1)
     if granularity == FIELD_PER_TILE:
         starter_prefix = exclude_starter_sid[0]
         return [f"{p} Tile Field Token" for p in TILE_PREFIXES if p != starter_prefix]
     if granularity == FIELD_PER_TILE_PROGRESSIVE:
-        m = _tile_index(exclude_starter_sid[0]) + 1
-        return [PROG_FIELD_PER_TILE_NAME] * (len(TILE_PREFIXES) - m)
+        return [PROG_FIELD_PER_TILE_NAME] * (len(TILE_PREFIXES) - 1)
     if granularity == FIELD_PER_TIER:
         starter_tier = STAGE_RULES[exclude_starter_sid].tier
         return [f"Tier {t} Field Token" for t in ACTIVE_TIERS if t != starter_tier]
     if granularity == FIELD_PER_TIER_PROGRESSIVE:
-        starter_tier = STAGE_RULES[exclude_starter_sid].tier
-        m = ACTIVE_TIERS.index(starter_tier) + 1
-        return [PROG_FIELD_PER_TIER_NAME] * (len(ACTIVE_TIERS) - m)
+        return [PROG_FIELD_PER_TIER_NAME] * (len(ACTIVE_TIERS) - 1)
     raise ValueError(f"Unknown field_token_granularity: {granularity}")
 
 
 def starter_field_tokens_to_precollect(starter_sid: str, granularity: int) -> List[str]:
     """Items the apworld must precollect so the starter stage is reachable
-    under the given granularity. For progressives this is M copies of the
-    singleton (M = starter's index in the unlock order + 1)."""
+    under the given granularity. For progressives the unlock order is now
+    starter-first, so a single precollected copy lands the player exactly
+    on the starter's group — no need for M copies."""
     if granularity == FIELD_PER_STAGE:
         return [f"{starter_sid} Field Token"]
     if granularity == FIELD_PER_STAGE_PROGRESSIVE:
-        m = STAGE_PROGRESSIVE_ORDER.index(starter_sid) + 1
-        return [PROG_FIELD_PER_STAGE_NAME] * m
+        return [PROG_FIELD_PER_STAGE_NAME]
     if granularity == FIELD_PER_TILE:
         return [f"{starter_sid[0]} Tile Field Token"]
     if granularity == FIELD_PER_TILE_PROGRESSIVE:
-        m = _tile_index(starter_sid[0]) + 1
-        return [PROG_FIELD_PER_TILE_NAME] * m
+        return [PROG_FIELD_PER_TILE_NAME]
     if granularity == FIELD_PER_TIER:
         return [f"Tier {STAGE_RULES[starter_sid].tier} Field Token"]
     if granularity == FIELD_PER_TIER_PROGRESSIVE:
-        m = ACTIVE_TIERS.index(STAGE_RULES[starter_sid].tier) + 1
-        return [PROG_FIELD_PER_TIER_NAME] * m
+        return [PROG_FIELD_PER_TIER_NAME]
     raise ValueError(f"Unknown field_token_granularity: {granularity}")
 
 
@@ -288,6 +296,67 @@ def starter_field_token(sid: str, granularity: int) -> str:
     granularities. For progressive variants prefer
     starter_field_tokens_to_precollect, which returns the full M-copy list."""
     return field_token_for_stage(sid, granularity)
+
+
+def progressive_tile_order_for_starter(starter_sid: str) -> List[str]:
+    """Starter-first reordering of TILE_PREFIXES used for progressive count
+    thresholds. Position 0 is the starter's tile (precollected); the rest of
+    the canonical PROGRESSIVE_TILE_ORDER follows in original sequence with
+    the starter's tile removed.
+
+    Example with canonical [W, S, V, R, Q, ..., A]:
+      starter on W → [W, S, V, R, Q, ..., A]   (no change — W was first)
+      starter on S → [S, W, V, R, Q, ..., A]   (S to front, W now second)
+    """
+    starter_prefix = starter_sid[0]
+    if starter_prefix not in TILE_PREFIXES:
+        return list(TILE_PREFIXES)
+    rest = [p for p in TILE_PREFIXES if p != starter_prefix]
+    return [starter_prefix] + rest
+
+
+def progressive_stage_order_for_starter(starter_sid: str) -> List[str]:
+    """Starter-first reordering of STAGE_PROGRESSIVE_ORDER. Position 0 is
+    the starter stage; the rest follows the canonical (tile play x within-tile
+    alphabetical) order with the starter removed."""
+    if starter_sid not in STAGE_PROGRESSIVE_ORDER:
+        return list(STAGE_PROGRESSIVE_ORDER)
+    rest = [s for s in STAGE_PROGRESSIVE_ORDER if s != starter_sid]
+    return [starter_sid] + rest
+
+
+def progressive_tier_order_for_starter(starter_sid: str) -> List[int]:
+    """Starter-first reordering of ACTIVE_TIERS. Position 0 is the starter's
+    tier; the rest follows ascending order with the starter's tier removed."""
+    starter_tier = STAGE_RULES[starter_sid].tier
+    if starter_tier not in ACTIVE_TIERS:
+        return list(ACTIVE_TIERS)
+    rest = [t for t in ACTIVE_TIERS if t != starter_tier]
+    return [starter_tier] + rest
+
+
+def free_stages_for_starter(starter_sid: str, granularity: int) -> List[str]:
+    """Stages that are immediately playable at session start under the given
+    granularity, given that the starter's covering token is precollected.
+
+    For all modes (distinct AND progressive) the precollect now covers
+    exactly one group — the starter's group. For per_stage this is just
+    the starter; for per_tile it's the whole starter tile; for per_tier
+    it's the whole starter tier. Progressive variants behave the same as
+    their distinct siblings because the unlock order is starter-first
+    (position 0 = starter's group)."""
+    starter_prefix = starter_sid[0]
+    starter_tier   = STAGE_RULES[starter_sid].tier
+
+    if granularity in (FIELD_PER_STAGE, FIELD_PER_STAGE_PROGRESSIVE):
+        return [starter_sid]
+    if granularity in (FIELD_PER_TILE, FIELD_PER_TILE_PROGRESSIVE):
+        return [s["str_id"] for s in GAME_DATA["stages"]
+                if s["str_id"][0] == starter_prefix]
+    if granularity in (FIELD_PER_TIER, FIELD_PER_TIER_PROGRESSIVE):
+        return [s["str_id"] for s in GAME_DATA["stages"]
+                if STAGE_RULES[s["str_id"]].tier == starter_tier]
+    raise ValueError(f"Unknown field_token_granularity: {granularity}")
 
 
 # ----------------------------------------------------------------------- #
@@ -312,13 +381,18 @@ def pouch_for_stage(sid: str, granularity: int) -> str | None:
     raise ValueError(f"Unknown gem_pouch_granularity: {granularity}")
 
 
-def pouch_count_for_stage(sid: str, granularity: int) -> int:
+def pouch_count_for_stage(sid: str, granularity: int, starter_sid: str = None) -> int:
     """Number of copies of `pouch_for_stage(sid, granularity)` required for
-    gems on `sid`. 1 for distinct/global, N=position-in-order for progressive."""
+    gems on `sid`. 1 for distinct/global, N=position-in-starter-aware-order
+    for progressive."""
     if granularity == POUCH_PER_TILE_PROGRESSIVE:
-        return _tile_index(sid[0]) + 1
+        order = (progressive_tile_order_for_starter(starter_sid)
+                 if starter_sid is not None else TILE_PREFIXES)
+        return order.index(sid[0]) + 1
     if granularity == POUCH_PER_TIER_PROGRESSIVE:
-        return ACTIVE_TIERS.index(STAGE_RULES[sid].tier) + 1
+        tiers = (progressive_tier_order_for_starter(starter_sid)
+                 if starter_sid is not None else ACTIVE_TIERS)
+        return tiers.index(STAGE_RULES[sid].tier) + 1
     return 1
 
 

@@ -1728,9 +1728,13 @@ package {
                 // the player's current progress, not when the cell was built.
                 var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (prgOpts != null) {
-                    var stagOrder:Array = prgOpts.stageProgressiveOrder as Array;
-                    var tileOrder:Array = prgOpts.gemPouchPlayOrder as Array;
-                    var tierTotal:int   = 13;
+                    // Progressive tooltips use the starter-first orders so the
+                    // "Next: <prefix>" line reflects what the next received
+                    // copy will actually unlock.
+                    var stagOrder:Array = prgOpts.progressiveStageOrder as Array;
+                    var tileOrder:Array = prgOpts.progressiveTileOrder as Array;
+                    var tierOrder:Array = prgOpts.progressiveTierOrder as Array;
+                    var tierTotal:int   = (tierOrder != null) ? tierOrder.length : 13;
 
                     if (prgOpts.fieldTokenPerStageProgressiveId > 0
                             && apId == prgOpts.fieldTokenPerStageProgressiveId) {
@@ -2190,6 +2194,19 @@ package {
         // appropriate order (stage / tile / tier), and unlocks just that one
         // group. Earlier copies were already processed on previous calls.
 
+        /** Starter-first tier order — prefers progressiveTierOrder from
+         *  slot_data (starter's tier at position 0, rest ascending with
+         *  starter removed). Falls back to plain ascending if slot_data
+         *  didn't supply the list (older mod build / non-progressive seed). */
+        private function _progressiveTiersOrAsc():Array {
+            var so:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (so != null) {
+                var list:Array = so.progressiveTierOrder as Array;
+                if (list != null && list.length > 0) return list;
+            }
+            return _activeTiersAsc();
+        }
+
         /** Returns the unique tier ints in ascending order, derived live from
          *  stageTierByStrId. Cached per call but cheap; alternative would be
          *  to send active_tiers via slot_data. */
@@ -2213,7 +2230,7 @@ package {
 
         private function _grantFieldTokenProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageProgressiveOrder as Array : null;
+                ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
             if (order == null || order.length == 0) {
                 _logger.log(MOD_NAME, "  grantItem: per-stage progressive field token — no order");
                 return;
@@ -2231,7 +2248,7 @@ package {
 
         private function _grantFieldTokenProgressivePerTile(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.gemPouchPlayOrder as Array : null;
+                ? AV.serverData.serverOptions.progressiveTileOrder as Array : null;
             if (order == null || order.length == 0) {
                 _logger.log(MOD_NAME, "  grantItem: per-tile progressive field token — no order");
                 return;
@@ -2257,7 +2274,7 @@ package {
         }
 
         private function _grantFieldTokenProgressivePerTier(apId:int):void {
-            var tiers:Array = _activeTiersAsc();
+            var tiers:Array = _progressiveTiersOrAsc();
             var n:int = AV.sessionData.getItemCount(apId);
             if (n <= 0 || n > tiers.length) {
                 _logger.log(MOD_NAME, "  grantItem: per-tier progressive field token count " + n + " out of range");
@@ -2270,7 +2287,7 @@ package {
 
         private function _grantStashKeyProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageProgressiveOrder as Array : null;
+                ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
             if (order == null || order.length == 0) {
                 _logger.log(MOD_NAME, "  grantItem: per-stage progressive stash key — no order");
                 return;
@@ -2288,7 +2305,7 @@ package {
 
         private function _grantStashKeyProgressivePerTile(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.gemPouchPlayOrder as Array : null;
+                ? AV.serverData.serverOptions.progressiveTileOrder as Array : null;
             if (order == null || order.length == 0) {
                 _logger.log(MOD_NAME, "  grantItem: per-tile progressive stash key — no order");
                 return;
@@ -2314,7 +2331,7 @@ package {
         }
 
         private function _grantStashKeyProgressivePerTier(apId:int):void {
-            var tiers:Array = _activeTiersAsc();
+            var tiers:Array = _progressiveTiersOrAsc();
             var n:int = AV.sessionData.getItemCount(apId);
             if (n <= 0 || n > tiers.length) {
                 _logger.log(MOD_NAME, "  grantItem: per-tier progressive stash key count " + n + " out of range");
@@ -2395,6 +2412,62 @@ package {
                     }
                 }
             }
+
+            // -------- Progressive variants (singleton apIds, count-based) --------
+            // Nth received copy unlocks the Nth entry in the starter-first
+            // order (progressive*Order in ServerOptions). Build the cumulative
+            // unlock set on every sync from getItemCount.
+            if (opts != null) {
+                var stagOrder:Array = opts.progressiveStageOrder as Array;
+                var tileOrder:Array = opts.progressiveTileOrder as Array;
+                var tierOrder:Array = opts.progressiveTierOrder as Array;
+
+                // Per-stage progressive
+                var spProgId:int = int(opts.stashKeyPerStageProgressiveId);
+                if (spProgId > 0 && stagOrder != null) {
+                    var spN:int = AV.sessionData.getItemCount(spProgId);
+                    var spLimit:int = (spN < stagOrder.length) ? spN : stagOrder.length;
+                    for (var spi:int = 0; spi < spLimit; spi++) {
+                        var ssid:String = String(stagOrder[spi]);
+                        if (!AV.sessionData.isStashUnlocked(ssid)) {
+                            AV.sessionData.markStashUnlocked(ssid);
+                            changes++;
+                        }
+                    }
+                }
+                // Per-tile progressive
+                var tpProgId:int = int(opts.stashKeyPerTileProgressiveId);
+                if (tpProgId > 0 && tileOrder != null) {
+                    var tpN:int = AV.sessionData.getItemCount(tpProgId);
+                    var tpLimit:int = (tpN < tileOrder.length) ? tpN : tileOrder.length;
+                    for (var tpi:int = 0; tpi < tpLimit; tpi++) {
+                        var tpfx:String = String(tileOrder[tpi]);
+                        for (var stsid:String in byStrId) {
+                            if (stsid.charAt(0) == tpfx && !AV.sessionData.isStashUnlocked(stsid)) {
+                                AV.sessionData.markStashUnlocked(stsid);
+                                changes++;
+                            }
+                        }
+                    }
+                }
+                // Per-tier progressive
+                var ttProgId:int = int(opts.stashKeyPerTierProgressiveId);
+                if (ttProgId > 0 && tierMap != null) {
+                    var ttTiers:Array = (tierOrder != null && tierOrder.length > 0)
+                                            ? tierOrder : _activeTiersAsc();
+                    var ttN:int = AV.sessionData.getItemCount(ttProgId);
+                    var ttLimit:int = (ttN < ttTiers.length) ? ttN : ttTiers.length;
+                    for (var tti:int = 0; tti < ttLimit; tti++) {
+                        var ttTier:int = int(ttTiers[tti]);
+                        for (var tttsid:String in tierMap) {
+                            if (int(tierMap[tttsid]) == ttTier && !AV.sessionData.isStashUnlocked(tttsid)) {
+                                AV.sessionData.markStashUnlocked(tttsid);
+                                changes++;
+                            }
+                        }
+                    }
+                }
+            }
             return changes;
         }
 
@@ -2434,6 +2507,48 @@ package {
                     if (AV.sessionData.hasItem(1588 + tt)) {
                         for (var tsid:String in tierMap) {
                             if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
+                        }
+                    }
+                }
+            }
+
+            // -------- Progressive variants (singleton apIds, count-based) --------
+            // Nth received copy unlocks the Nth entry in the starter-first
+            // order (progressive*Order in ServerOptions).
+            if (opts != null) {
+                var stagOrderFs:Array = opts.progressiveStageOrder as Array;
+                var tileOrderFs:Array = opts.progressiveTileOrder as Array;
+                var tierOrderFs:Array = opts.progressiveTierOrder as Array;
+
+                var fsProgId:int = int(opts.fieldTokenPerStageProgressiveId);
+                if (fsProgId > 0 && stagOrderFs != null) {
+                    var fsN:int = AV.sessionData.getItemCount(fsProgId);
+                    var fsLimit:int = (fsN < stagOrderFs.length) ? fsN : stagOrderFs.length;
+                    for (var fsi:int = 0; fsi < fsLimit; fsi++) {
+                        hasToken[String(stagOrderFs[fsi])] = true;
+                    }
+                }
+                var ftProgId:int = int(opts.fieldTokenPerTileProgressiveId);
+                if (ftProgId > 0 && tileOrderFs != null) {
+                    var ftN:int = AV.sessionData.getItemCount(ftProgId);
+                    var ftLimit:int = (ftN < tileOrderFs.length) ? ftN : tileOrderFs.length;
+                    for (var fti:int = 0; fti < ftLimit; fti++) {
+                        var ftPfx:String = String(tileOrderFs[fti]);
+                        for (var ftSid:String in AV.serverData.stagesByStrId) {
+                            if (ftSid.charAt(0) == ftPfx) hasToken[ftSid] = true;
+                        }
+                    }
+                }
+                var ftTierProgId:int = int(opts.fieldTokenPerTierProgressiveId);
+                if (ftTierProgId > 0 && tierMap != null) {
+                    var ftTiers:Array = (tierOrderFs != null && tierOrderFs.length > 0)
+                                            ? tierOrderFs : _activeTiersAsc();
+                    var fttN:int = AV.sessionData.getItemCount(ftTierProgId);
+                    var fttLimit:int = (fttN < ftTiers.length) ? fttN : ftTiers.length;
+                    for (var ftti:int = 0; ftti < fttLimit; ftti++) {
+                        var fttTier:int = int(ftTiers[ftti]);
+                        for (var ftTsid:String in tierMap) {
+                            if (int(tierMap[ftTsid]) == fttTier) hasToken[ftTsid] = true;
                         }
                     }
                 }

@@ -42,6 +42,16 @@ package data {
         // within each tile alphabetical by stage strId. Nth copy of any
         // per_stage_progressive item unlocks stageProgressiveOrder[N-1].
         public var stageProgressiveOrder:Array;
+        // Starter-first variants of the three progressive orders. The Nth
+        // received copy of a progressive item unlocks the Nth entry of these
+        // (so position 0 = starter's group, the precollect lands the player
+        // there; position 1+ = canonical sequence with starter's group
+        // removed). All progressive grant / sync / tooltip logic reads from
+        // these, NOT from gemPouchPlayOrder / stageProgressiveOrder which
+        // remain in canonical order for distinct ID assignment + UI display.
+        public var progressiveTileOrder:Array;            // <prefix>[]
+        public var progressiveStageOrder:Array;           // <strId>[]
+        public var progressiveTierOrder:Array;            // <int>[] (tier ints)
         public var gemPouchProgressiveId:int;             // 1614 by default — per_tile_progressive
         public var gemPouchPerTierProgressiveId:int;      // per_tier_progressive
         public var fieldTokenPerStageProgressiveId:int;
@@ -96,6 +106,9 @@ package data {
             gemPouchGranularity = 0;
             gemPouchPlayOrder = [];
             stageProgressiveOrder = [];
+            progressiveTileOrder = [];
+            progressiveStageOrder = [];
+            progressiveTierOrder = [];
             gemPouchProgressiveId = 0;
             gemPouchPerTierProgressiveId = 0;
             fieldTokenPerStageProgressiveId = 0;

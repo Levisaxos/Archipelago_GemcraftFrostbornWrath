@@ -647,19 +647,19 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Stages that are immediately playable from session start. Under
-        # field_token_granularity == per_stage this is just the chosen starter.
-        # Under per_tile / per_tier the precollected starter token covers
-        # multiple stages — they're all "free" at start since the token gate
-        # is satisfied immediately. The mod uses this list for the Hollow Gem
-        # bootstrap, FirstPlayBypass, and free-buildings logic.
+        # Stages that are immediately playable from session start. The exact
+        # set depends on granularity AND whether progressive: distinct modes
+        # cover the starter's tile/tier/stage; progressive modes cover the
+        # first M groups of the unlock order, where M = starter's position + 1
+        # (i.e. the same M copies the apworld precollects). The mod uses this
+        # list for HollowGemInjector, FirstPlayBypass, and free-buildings.
+        #
+        # NOTE: doing this via item-name equality breaks under progressive,
+        # since every stage shares the same singleton item name. The helper
+        # uses the same M-position logic that drives precollect.
         from . import gating as _gating
         ft_gran = self.options.field_token_granularity.value
-        starter_token_name = _gating.starter_field_token(self.start_sid, ft_gran)
-        free_stages = [
-            s["str_id"] for s in stages
-            if _gating.field_token_for_stage(s["str_id"], ft_gran) == starter_token_name
-        ]
+        free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -806,12 +806,12 @@ class GemcraftFrostbornWrathWorld(World):
             "field_token_granularity": self.options.field_token_granularity.value,
             "stash_key_granularity":   self.options.stash_key_granularity.value,
             "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
-            # Single shared play order — every per_tile / per_tile_progressive
-            # variant across all three categories reads from this list.
+            # Canonical play order — used for distinct gempouch ID assignment
+            # (apId 626 + idx in this list) and for UI display ordering.
             "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
-            # Per-stage progressive unlock order: walk gem_pouch_play_order,
-            # within each tile take stages in alphabetical str_id order. The
-            # Nth copy of a per-stage-progressive item unlocks the Nth entry.
+            # Canonical per-stage progressive order (kept for backward compat
+            # with older mod builds; the starter-first variant below should be
+            # used by all new progressive-mode logic).
             "stage_progressive_order": [
                 s for prefix in GEM_POUCH_PLAY_ORDER
                 for s in sorted(
@@ -819,6 +819,14 @@ class GemcraftFrostbornWrathWorld(World):
                     if st["str_id"][0] == prefix
                 )
             ],
+            # Starter-aware progressive orders — the Nth copy of a progressive
+            # item unlocks the Nth entry of the matching list below. Position
+            # 0 is always the starter's own group, so a single precollected
+            # copy lands the player exactly on the starter and the first
+            # *received* copy unlocks the next group in canonical order.
+            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sid),
+            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sid),
+            "progressive_tier_order":  _gating.progressive_tier_order_for_starter(self.start_sid),
             # Singleton item ids for each progressive variant. The mod uses
             # these to recognize which apId is "the progressive item" for
             # a given category and granularity, then count-tracks via

@@ -179,10 +179,11 @@ def _count_field_tokens(state, player: int) -> int:
     if pairs is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
+        starter_sid = world.start_sid
         pairs = [
             (
                 _g.field_token_for_stage(s["str_id"], ft_gran),
-                _g.field_token_count_for_stage(s["str_id"], ft_gran),
+                _g.field_token_count_for_stage(s["str_id"], ft_gran, starter_sid),
                 _compile_gempouch_checker(world, s["str_id"]),
             )
             for s in GAME_DATA["stages"]
@@ -316,10 +317,11 @@ def _get_world_stash_key_map(state, player: int) -> dict:
     if cached is None:
         from . import gating as _g
         sk_gran = world.options.stash_key_granularity.value
+        starter_sid = world.start_sid
         cached = {
             s["str_id"]: (
                 _g.stash_key_for_stage(s["str_id"], sk_gran),
-                _g.stash_key_count_for_stage(s["str_id"], sk_gran),
+                _g.stash_key_count_for_stage(s["str_id"], sk_gran, starter_sid),
             )
             for s in GAME_DATA["stages"]
         }
@@ -335,10 +337,11 @@ def _get_world_field_token_map(state, player: int) -> dict:
     if cached is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
+        starter_sid = world.start_sid
         cached = {
             s["str_id"]: (
                 _g.field_token_for_stage(s["str_id"], ft_gran),
-                _g.field_token_count_for_stage(s["str_id"], ft_gran),
+                _g.field_token_count_for_stage(s["str_id"], ft_gran, starter_sid),
             )
             for s in GAME_DATA["stages"]
         }
@@ -446,10 +449,12 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
         # opening its stash, which requires the per-stage stash key. So gate
         # on both (stage reachable, stash key held) for any qualifying stage.
         from . import gating as _g
-        sk_gran = state.multiworld.worlds[player].options.stash_key_granularity.value
+        world = state.multiworld.worlds[player]
+        sk_gran = world.options.stash_key_granularity.value
+        starter_sid = world.start_sid
         for sid in qualifying:
             key_name  = _g.stash_key_for_stage(sid, sk_gran)
-            key_count = _g.stash_key_count_for_stage(sid, sk_gran)
+            key_count = _g.stash_key_count_for_stage(sid, sk_gran, starter_sid)
             if key_count == 1:
                 if not state.has(key_name, player):
                     continue
@@ -854,7 +859,7 @@ def _compile_gempouch_checker(world, sid: str):
         # Should not happen for non-off modes after the helper rewrite,
         # but fall through safely.
         return _always_true
-    needed = _g.pouch_count_for_stage(sid, mode)
+    needed = _g.pouch_count_for_stage(sid, mode, world.start_sid)
     if needed == 1:
         return lambda state: state.has(item_name, player)
     return lambda state: state.count(item_name, player) >= needed
@@ -1120,7 +1125,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         connection = start_region.connect(child_region, f"{start_sid} -> {str_id}")
 
         token_name  = _gating.field_token_for_stage(str_id, ft_gran)
-        token_count = _gating.field_token_count_for_stage(str_id, ft_gran)
+        token_count = _gating.field_token_count_for_stage(str_id, ft_gran, start_sid)
         if token_count == 1:
             connection.access_rule = (
                 lambda state, tok=token_name: state.has(tok, player)
@@ -1159,7 +1164,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                     pouch_item = _g.pouch_for_stage(str_id, pouch_mode)
                     if pouch_item is None:
                         continue
-                    pouch_needed = _g.pouch_count_for_stage(str_id, pouch_mode)
+                    pouch_needed = _g.pouch_count_for_stage(str_id, pouch_mode, world.start_sid)
                     if pouch_needed == 1:
                         conditions.append(lambda state, i=pouch_item: state.has(i, player))
                     else:
@@ -1209,7 +1214,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         if sid != start_sid:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             token_name  = _gating.field_token_for_stage(sid, ft_gran)
-            token_count = _gating.field_token_count_for_stage(sid, ft_gran)
+            token_count = _gating.field_token_count_for_stage(sid, ft_gran, start_sid)
             # Token-presence check, count-aware so progressive variants gate
             # the Nth stage on N copies of the singleton.
             if token_count == 1:
@@ -1250,7 +1255,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         from . import gating as _gating
         sk_gran   = world.options.stash_key_granularity.value
         key_name  = _gating.stash_key_for_stage(sid, sk_gran)
-        key_count = _gating.stash_key_count_for_stage(sid, sk_gran)
+        key_count = _gating.stash_key_count_for_stage(sid, sk_gran, start_sid)
         if key_count == 1:
             key_check = lambda state, n=key_name: state.has(n, player)
         else:

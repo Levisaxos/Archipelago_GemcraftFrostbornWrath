@@ -138,37 +138,46 @@ package patch {
             var mode:int = int(opts.gemPouchGranularity);
             var prefix:String = stageStrId.charAt(0);
 
-            if (mode == 1 || mode == 2) {
-                var order:Array = opts.gemPouchPlayOrder as Array;
-                if (order == null || order.length == 0)
-                    return true; // no order — fail open
-                var idx:int = order.indexOf(prefix);
-                if (idx < 0)
-                    return true;
-                if (mode == 1) {
-                    return AV.sessionData.hasItem(626 + idx);
-                }
+            if (mode == 1) {
+                // per_tile (distinct): canonical ID assignment via gemPouchPlayOrder.
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
+            }
+            if (mode == 2) {
+                // per_tile_progressive: starter-first count threshold.
+                var orderP:Array = opts.progressiveTileOrder as Array;
+                if (orderP == null || orderP.length == 0)
+                    orderP = opts.gemPouchPlayOrder as Array;
+                if (orderP == null || orderP.length == 0) return true;
+                var idxP:int = orderP.indexOf(prefix);
+                if (idxP < 0) return true;
                 var progId:int = int(opts.gemPouchProgressiveId);
-                if (progId <= 0)
-                    progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idx + 1;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idxP + 1;
             }
             if (mode == 3) {
                 // per_tier: AP id 1601 + tier (see gating.py POUCH_TIER_BASE).
                 var tier:int = _tierForStage(stageStrId);
-                if (tier < 0)
-                    return true;
+                if (tier < 0) return true;
                 return AV.sessionData.hasItem(1601 + tier);
             }
             if (mode == 4) {
-                // per_tier_progressive: Nth copy unlocks Nth tier in ACTIVE_TIERS.
-                // Tiers are 0..12 by convention; stage's tier = index threshold.
+                // per_tier_progressive: Nth copy unlocks Nth tier in
+                // progressiveTierOrder (starter's tier first).
                 var tier4:int = _tierForStage(stageStrId);
-                if (tier4 < 0)
-                    return true;
+                if (tier4 < 0) return true;
                 var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
-                if (tierProgId <= 0)
-                    return true; // not configured — fail open
+                if (tierProgId <= 0) return true;
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
+                if (tierOrd != null && tierOrd.length > 0) {
+                    var posT:int = tierOrd.indexOf(tier4);
+                    if (posT < 0) return true;
+                    return AV.sessionData.getItemCount(tierProgId) >= posT + 1;
+                }
+                // Fallback to natural ascending.
                 return AV.sessionData.getItemCount(tierProgId) >= tier4 + 1;
             }
             if (mode == 5) {

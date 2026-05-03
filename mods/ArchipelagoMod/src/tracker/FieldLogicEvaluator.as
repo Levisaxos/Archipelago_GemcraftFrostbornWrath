@@ -786,29 +786,40 @@ package tracker {
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null) return true;
                 var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
                 for (var sid:String in tierMap) {
                     if (sid.charAt(0) != prefix) continue;
                     var st:int = int(tierMap[sid]);
                     if (mode == 3) {
                         if (AV.sessionData.hasItem(1601 + st)) return true;
-                    } else if (tierProgId > 0
-                            && AV.sessionData.getItemCount(tierProgId) >= st + 1) {
-                        return true;
+                    } else if (tierProgId > 0) {
+                        var posT:int = (tierOrd != null && tierOrd.length > 0)
+                                          ? tierOrd.indexOf(st) : st;
+                        if (posT >= 0 &&
+                                AV.sessionData.getItemCount(tierProgId) >= posT + 1)
+                            return true;
                     }
                 }
                 return false;
             }
-            var order:Array = opts.gemPouchPlayOrder as Array;
-            if (order == null || order.length == 0) return true;
-            var idx:int = order.indexOf(prefix);
-            if (idx < 0) return true;
             if (mode == 1) {
-                return AV.sessionData.hasItem(626 + idx);
+                // per_tile (distinct): canonical order for ID lookup.
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
             }
-            // mode == 2: per_tile_progressive
+            // mode == 2: per_tile_progressive — starter-first count threshold.
+            var orderP:Array = opts.progressiveTileOrder as Array;
+            if (orderP == null || orderP.length == 0)
+                orderP = opts.gemPouchPlayOrder as Array;
+            if (orderP == null || orderP.length == 0) return true;
+            var idxP:int = orderP.indexOf(prefix);
+            if (idxP < 0) return true;
             var progId:int = int(opts.gemPouchProgressiveId);
             if (progId <= 0) progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idx + 1;
+            return AV.sessionData.getItemCount(progId) >= idxP + 1;
         }
 
         // Local trim to avoid pulling in a tracker dependency.
