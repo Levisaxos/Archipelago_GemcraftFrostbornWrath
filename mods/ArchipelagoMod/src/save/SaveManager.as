@@ -15,7 +15,8 @@ package save {
      *
      * Slot file fields: host, port, slot, password, bonusWizardLevel,
      *                   totalShadowCoresGranted, genericTalismansGranted,
-     *                   completed, deathLinkEnabled, standalone.
+     *                   completed, deathLinkEnabled, standalone,
+     *                   seenOfflineApIds.
      */
     public class SaveManager {
 
@@ -33,6 +34,7 @@ package save {
         private var _deathLinkEnabledSet:Boolean = false; // false = no saved value yet (new slot)
         private var _standalone:Boolean    = false;
         private var _standaloneSet:Boolean = false;       // false = no saved value yet (new slot)
+        private var _seenOfflineApIds:Array = [];         // apIds the player has seen via the offline-items grid
 
         public function SaveManager(logger:Logger, modName:String,
                                     fileHandler:FileHandler,
@@ -63,6 +65,10 @@ package save {
         /** False if the slot file had no saved standalone flag (new slot). */
         public function get standaloneSet():Boolean { return _standaloneSet; }
 
+        /** apIds that have already been displayed in the offline-items grid for this slot. */
+        public function get seenOfflineApIds():Array       { return _seenOfflineApIds; }
+        public function set seenOfflineApIds(v:Array):void { _seenOfflineApIds = (v != null) ? v : []; }
+
         /**
          * Load saved slot data into ConnectionManager and LevelUnlocker.
          * Also updates currentSlot to slotId.
@@ -78,6 +84,7 @@ package save {
             _deathLinkEnabledSet = false;
             _standalone          = false;
             _standaloneSet       = false;
+            _seenOfflineApIds    = [];
 
             var data:Object = _fileHandler.loadSlotData(slotId);
             if (data != null) {
@@ -101,6 +108,12 @@ package save {
                 if (data.standalone !== undefined) {
                     _standalone    = data.standalone === true;
                     _standaloneSet = true;
+                }
+                if (data.seenOfflineApIds !== undefined && data.seenOfflineApIds is Array) {
+                    var ids:Array = data.seenOfflineApIds as Array;
+                    var copy:Array = [];
+                    for each (var rawId:* in ids) copy.push(int(rawId));
+                    _seenOfflineApIds = copy;
                 }
             }
         }
@@ -126,7 +139,8 @@ package save {
                 grantedTalismanApIds: grantedTalIds,
                 completed:        _slotCompleted,
                 deathLinkEnabled: _deathLinkEnabled,
-                standalone:       _standalone
+                standalone:       _standalone,
+                seenOfflineApIds: _seenOfflineApIds
             };
             _fileHandler.saveSlotData(_currentSlot, data);
         }
@@ -162,6 +176,7 @@ package save {
             _deathLinkEnabledSet = false;
             _standalone          = false;
             _standaloneSet       = false;
+            _seenOfflineApIds    = [];
             _logger.log(_modName, "Slot " + slotId + " deleted — in-memory state cleared");
         }
     }

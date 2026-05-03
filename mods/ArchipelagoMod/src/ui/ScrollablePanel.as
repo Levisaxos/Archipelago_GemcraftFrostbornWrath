@@ -120,6 +120,28 @@ package ui {
         }
 
         // -----------------------------------------------------------------------
+        // Programmatic scroll — used by panels (e.g. OfflineItemsPanel) that
+        // need to bring a freshly-revealed item into view.
+
+        public function get viewportHeight():Number { return VIEWPORT_HEIGHT; }
+        public function get vpY():Number            { return _vpY; }
+        public function get vpYMax():Number         { return _vpYMax; }
+
+        /**
+         * Scroll the viewport so that _vpY equals the given target (clamped to
+         * the valid range). Updates the scrollbar knob and re-renders the
+         * viewport so item visibility / positions stay in sync.
+         */
+        public function scrollToY(targetY:Number):void {
+            if (_mc == null) return;
+            var clamped:Number = Math.max(_vpYMin, Math.min(_vpYMax, targetY));
+            _vpY = clamped;
+            _mc.btnScrollKnob.y = MathToolbox.convertCoord(
+                _vpYMin, _vpYMax, _vpY, KNOB_Y_MIN, KNOB_Y_MAX);
+            renderViewport();
+        }
+
+        // -----------------------------------------------------------------------
         // Viewport
 
         public function renderViewport():void {
