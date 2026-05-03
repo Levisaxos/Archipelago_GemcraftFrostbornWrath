@@ -519,7 +519,7 @@ package tracker {
             if (lower.indexOf("gempouch:") == 0) {
                 var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
-                if (mode == 4) {
+                if (mode == 5) {
                     return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
                 }
                 var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
@@ -536,17 +536,25 @@ package tracker {
                     if (progId <= 0) progId = 652;
                     return AV.sessionData.getItemCount(progId) >= idx + 1;
                 }
-                if (mode == 3) {
-                    // per_tier — without a specific stage in scope, accept if
-                    // ANY tier pouch is held that covers a stage with this
-                    // prefix. This is used by the achievement-tracker UI;
-                    // strict per-stage gating is enforced by GemPouchSuppressor.
+                if (mode == 3 || mode == 4) {
+                    // per_tier (3) and per_tier_progressive (4): without a
+                    // specific stage in scope, accept if ANY tier pouch is
+                    // held that covers a stage with this prefix.
                     var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
                     if (tierMap == null) return true;
+                    var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
                     for (var sid:String in tierMap) {
                         if (sid.charAt(0) == pouchPrefix) {
-                            if (AV.sessionData.hasItem(1601 + int(tierMap[sid])))
-                                return true;
+                            var st:int = int(tierMap[sid]);
+                            if (mode == 3) {
+                                if (AV.sessionData.hasItem(1601 + st))
+                                    return true;
+                            } else {
+                                // mode == 4: progressive — Nth copy unlocks tier N.
+                                if (tierProgId > 0 &&
+                                        AV.sessionData.getItemCount(tierProgId) >= st + 1)
+                                    return true;
+                            }
                         }
                     }
                     return false;
@@ -1201,16 +1209,23 @@ package tracker {
             var opts:* = AV.serverData.serverOptions;
             var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0) return true;
-            if (mode == 4) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
-            if (mode == 3) {
-                // per_tier: any tier-pouch held that covers a stage with this
-                // prefix counts as "this prefix has gems."
+            if (mode == 5) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            if (mode == 3 || mode == 4) {
+                // per_tier (3) and per_tier_progressive (4): any tier item
+                // held that covers a stage with this prefix counts as
+                // "this prefix has gems."
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null) return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
                 for (var sid:String in tierMap) {
-                    if (sid.charAt(0) == prefix
-                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                    if (sid.charAt(0) != prefix) continue;
+                    var st:int = int(tierMap[sid]);
+                    if (mode == 3) {
+                        if (AV.sessionData.hasItem(1601 + st)) return true;
+                    } else if (tierProgId > 0
+                            && AV.sessionData.getItemCount(tierProgId) >= st + 1) {
                         return true;
+                    }
                 }
                 return false;
             }

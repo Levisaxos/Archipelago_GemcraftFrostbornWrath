@@ -23,18 +23,33 @@ package data {
         public var startingOvercrowd:Boolean;
 
         // Gating granularity for the three gating-item categories.
-        // fieldTokenGranularity: 0=per_stage, 1=per_tile, 2=per_tier
-        // stashKeyGranularity:   0=per_stage, 1=per_tile, 2=per_tier, 3=global
-        // gemPouchGranularity:   0=off, 1=per_tile_distinct,
-        //                        2=per_tile_progressive, 3=per_tier, 4=global
+        // fieldTokenGranularity: 0=per_stage, 1=per_stage_progressive,
+        //                        2=per_tile,  3=per_tile_progressive,
+        //                        4=per_tier,  5=per_tier_progressive
+        // stashKeyGranularity:   0=per_stage, 1=per_stage_progressive,
+        //                        2=per_tile,  3=per_tile_progressive,
+        //                        4=per_tier,  5=per_tier_progressive, 6=global
+        // gemPouchGranularity:   0=off, 1=per_tile, 2=per_tile_progressive,
+        //                        3=per_tier, 4=per_tier_progressive, 5=global
         // gemPouchPlayOrder is the prefix list (W, S, V, R, ...) used by
-        // per_tile_distinct (item id = 626 + index) and per_tile_progressive
-        // (Nth copy unlocks Nth prefix).
+        // per_tile (item id = 626 + index) and shared by every per_tile /
+        // per_tile_progressive variant across all three categories.
         public var fieldTokenGranularity:int;
         public var stashKeyGranularity:int;
         public var gemPouchGranularity:int;
         public var gemPouchPlayOrder:Array;
-        public var gemPouchProgressiveId:int;
+        // Per-stage progressive unlock order — walks gemPouchPlayOrder,
+        // within each tile alphabetical by stage strId. Nth copy of any
+        // per_stage_progressive item unlocks stageProgressiveOrder[N-1].
+        public var stageProgressiveOrder:Array;
+        public var gemPouchProgressiveId:int;             // 1614 by default — per_tile_progressive
+        public var gemPouchPerTierProgressiveId:int;      // per_tier_progressive
+        public var fieldTokenPerStageProgressiveId:int;
+        public var fieldTokenPerTileProgressiveId:int;
+        public var fieldTokenPerTierProgressiveId:int;
+        public var stashKeyPerStageProgressiveId:int;
+        public var stashKeyPerTileProgressiveId:int;
+        public var stashKeyPerTierProgressiveId:int;
 
         // Per-stage tier number, sent from the apworld so the mod can resolve
         // coarse tier-keyed items. Map: str_id -> tier int (e.g. {"W1": 0}).
@@ -80,7 +95,15 @@ package data {
             stashKeyGranularity = 0;
             gemPouchGranularity = 0;
             gemPouchPlayOrder = [];
+            stageProgressiveOrder = [];
             gemPouchProgressiveId = 0;
+            gemPouchPerTierProgressiveId = 0;
+            fieldTokenPerStageProgressiveId = 0;
+            fieldTokenPerTileProgressiveId = 0;
+            fieldTokenPerTierProgressiveId = 0;
+            stashKeyPerStageProgressiveId = 0;
+            stashKeyPerTileProgressiveId = 0;
+            stashKeyPerTierProgressiveId = 0;
             stageTierByStrId = {};
 
             fieldsRequired = 0;

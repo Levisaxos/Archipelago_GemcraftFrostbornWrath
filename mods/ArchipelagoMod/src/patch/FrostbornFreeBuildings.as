@@ -151,6 +151,16 @@ package patch {
                 return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
             }
             if (mode == 4) {
+                // per_tier_progressive
+                var tierMap4:Object = opts.stageTierByStrId;
+                if (tierMap4 == null || tierMap4[stageStrId] == null)
+                    return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                if (tierProgId <= 0)
+                    return true;
+                return AV.sessionData.getItemCount(tierProgId) >= int(tierMap4[stageStrId]) + 1;
+            }
+            if (mode == 5) {
                 return AV.sessionData.hasItem(1614);
             }
             return true;

@@ -155,8 +155,24 @@ package net {
                     AV.serverData.serverOptions.gemPouchGranularity = int(sd.gem_pouch_granularity);
                 if (sd.gem_pouch_play_order !== undefined)
                     AV.serverData.serverOptions.gemPouchPlayOrder = sd.gem_pouch_play_order as Array;
+                if (sd.stage_progressive_order !== undefined)
+                    AV.serverData.serverOptions.stageProgressiveOrder = sd.stage_progressive_order as Array;
                 if (sd.gem_pouch_progressive_id !== undefined)
                     AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
+                if (sd.gem_pouch_per_tier_progressive_id !== undefined)
+                    AV.serverData.serverOptions.gemPouchPerTierProgressiveId = int(sd.gem_pouch_per_tier_progressive_id);
+                if (sd.field_token_per_stage_progressive_id !== undefined)
+                    AV.serverData.serverOptions.fieldTokenPerStageProgressiveId = int(sd.field_token_per_stage_progressive_id);
+                if (sd.field_token_per_tile_progressive_id !== undefined)
+                    AV.serverData.serverOptions.fieldTokenPerTileProgressiveId = int(sd.field_token_per_tile_progressive_id);
+                if (sd.field_token_per_tier_progressive_id !== undefined)
+                    AV.serverData.serverOptions.fieldTokenPerTierProgressiveId = int(sd.field_token_per_tier_progressive_id);
+                if (sd.stash_key_per_stage_progressive_id !== undefined)
+                    AV.serverData.serverOptions.stashKeyPerStageProgressiveId = int(sd.stash_key_per_stage_progressive_id);
+                if (sd.stash_key_per_tile_progressive_id !== undefined)
+                    AV.serverData.serverOptions.stashKeyPerTileProgressiveId = int(sd.stash_key_per_tile_progressive_id);
+                if (sd.stash_key_per_tier_progressive_id !== undefined)
+                    AV.serverData.serverOptions.stashKeyPerTierProgressiveId = int(sd.stash_key_per_tier_progressive_id);
                 if (sd.stage_tier_by_str_id !== undefined)
                     AV.serverData.serverOptions.stageTierByStrId = sd.stage_tier_by_str_id;
                 if (sd.enemy_hp_multiplier !== undefined)

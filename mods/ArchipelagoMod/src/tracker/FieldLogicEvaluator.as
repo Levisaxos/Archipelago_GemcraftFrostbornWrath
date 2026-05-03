@@ -763,8 +763,9 @@ package tracker {
             return true;
         }
 
-        // Active gem-pouch granularity (0=off, 1=per_tile_distinct,
-        // 2=per_tile_progressive, 3=per_tier, 4=global).
+        // Active gem-pouch granularity:
+        //   0=off, 1=per_tile, 2=per_tile_progressive,
+        //   3=per_tier, 4=per_tier_progressive, 5=global
         // Read from slot_data via ServerOptions; returns 0 if not set.
         private function _pouchMode():int {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
@@ -780,14 +781,20 @@ package tracker {
             if (opts == null) return true;
             var mode:int = int(opts.gemPouchGranularity);
             if (mode == 0) return true;
-            if (mode == 4) return AV.sessionData.hasItem(1614);
-            if (mode == 3) {
+            if (mode == 5) return AV.sessionData.hasItem(1614);
+            if (mode == 3 || mode == 4) {
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null) return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
                 for (var sid:String in tierMap) {
-                    if (sid.charAt(0) == prefix
-                        && AV.sessionData.hasItem(1601 + int(tierMap[sid])))
+                    if (sid.charAt(0) != prefix) continue;
+                    var st:int = int(tierMap[sid]);
+                    if (mode == 3) {
+                        if (AV.sessionData.hasItem(1601 + st)) return true;
+                    } else if (tierProgId > 0
+                            && AV.sessionData.getItemCount(tierProgId) >= st + 1) {
                         return true;
+                    }
                 }
                 return false;
             }

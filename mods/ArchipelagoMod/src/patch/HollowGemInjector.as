@@ -233,6 +233,17 @@ package patch {
                 return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
             }
             if (mode == 4) {
+                // per_tier_progressive: Nth copy unlocks tier N (0..12).
+                var tierMap4:Object = opts.stageTierByStrId;
+                if (tierMap4 == null || tierMap4[stageStrId] == null)
+                    return true;
+                var tier4:int = int(tierMap4[stageStrId]);
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                if (tierProgId <= 0)
+                    return true; // not configured — fail open
+                return AV.sessionData.getItemCount(tierProgId) >= tier4 + 1;
+            }
+            if (mode == 5) {
                 return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
             }
             return true;

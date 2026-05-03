@@ -107,19 +107,22 @@ del stage, sid
 
 
 # ---------------------------------------------------------------------------
-# Gem-pouch ordering — first-letter prefixes of stage str_ids in the order
-# stages appear in game_data.json. This is the natural play order:
-# W (tutorial) → S → V → R → ... → A (final). Used for:
-#   - Distinct-mode item naming: `Gempouch (W)`, `Gempouch (S)`, ...
-#   - Progressive-mode item count gating: the Nth Progressive Gempouch
-#     unlocks the Nth prefix in this list.
-#   - Item-id assignment: 626 + index in this list.
+# Progressive tile ordering — single source of truth for the unlock order of
+# every progressive granularity (gempouches, field tokens, stash keys).
+#
+# The Nth received copy of a progressive item unlocks the Nth tile prefix
+# below. Edit this list to retune the unlock order — all three categories
+# pick it up automatically.
+#
+# Roughly the natural game progression: W (tutorial) → S → V → R → ... with
+# A intentionally last so the toughest tile is the final unlock regardless
+# of how stages happen to be ordered in game_data.json.
 # ---------------------------------------------------------------------------
-GEM_POUCH_PLAY_ORDER: List[str] = []
-_seen_pouch_prefixes: set = set()
-for _stage in GAME_DATA["stages"]:
-    _p = _stage["str_id"][0]
-    if _p not in _seen_pouch_prefixes:
-        _seen_pouch_prefixes.add(_p)
-        GEM_POUCH_PLAY_ORDER.append(_p)
-del _stage, _p, _seen_pouch_prefixes
+PROGRESSIVE_TILE_ORDER: List[str] = [
+    "W", "S", "V", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H",
+    "G", "F", "E", "D", "C", "B", "Z", "Y", "X", "U", "T", "A",
+]
+
+# Backward-compatible alias — old code still references this name. Both
+# point to the same list, so editing PROGRESSIVE_TILE_ORDER updates both.
+GEM_POUCH_PLAY_ORDER: List[str] = PROGRESSIVE_TILE_ORDER
