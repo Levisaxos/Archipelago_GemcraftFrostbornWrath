@@ -68,6 +68,7 @@ package ui {
         private var _bg:Shape;
         private var _queue:Array;   // { text:String, color:uint }
         private var _current:Object; // { text:String, color:uint, startTime:int, container:Sprite }
+        private var _suppressed:Boolean = false;
 
         /** Width of the currently displayed panel in stage pixels.
          *  Updated each time showNext() builds a new container.
@@ -109,8 +110,22 @@ package ui {
          * @param color  Text colour as 0xRRGGBB (no alpha component needed)
          */
         public function addItem(text:String, color:uint):void {
+            if (_suppressed) return;
             _queue.push({ text: text, color: color });
             if (_current == null) showNext();
+        }
+
+        /**
+         * Toggle suppression. While true, addItem() is a no-op.
+         * Used during full-sync so the OfflineItemsPanel can display the
+         * batch instead of firing per-item toasts.
+         */
+        public function setSuppressed(value:Boolean):void {
+            _suppressed = value;
+        }
+
+        public function get isSuppressed():Boolean {
+            return _suppressed;
         }
 
         // -----------------------------------------------------------------------

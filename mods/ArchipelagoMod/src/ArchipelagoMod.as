@@ -10,8 +10,11 @@ package {
     import Bezel.Logger;
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.DropType;
     import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.constants.ScreenId;
+    import com.giab.games.gcfw.entity.TalismanFragment;
+    import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
 
     import data.AV;
     import goals.GoalManager;
@@ -25,6 +28,8 @@ package {
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
+    import ui.OfflineItemsPanel;
+    import ui.OfflineItemsCollector;
 
     import ui.MainMenuUI;
     import ui.AchievementsInLogicBadge;
@@ -120,6 +125,8 @@ package {
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
         private var _disconnectPanelOnStage:Boolean = false;
+        private var _offlineItemsPanel:OfflineItemsPanel;
+        private var _offlineItemsCollector:OfflineItemsCollector;
         private var _modeInterceptor:ModeSelectorInterceptor;
         private var _deathLinkHandler:DeathLinkHandler;
         private var _goalManager:GoalManager;
@@ -284,6 +291,12 @@ package {
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
                 _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
+
+                // Offline items grid — popup window of items received while offline.
+                _offlineItemsPanel     = new OfflineItemsPanel();
+                _offlineItemsPanel.tooltipRenderer = _renderOfflineTooltip;
+                _offlineItemsCollector = new OfflineItemsCollector(_logger, MOD_NAME, _offlineItemsPanel);
+                _offlineItemsCollector.onSeenApIdsChanged = _persistSeenOfflineApIds;
 
                 _saveManager = new SaveManager(_logger, MOD_NAME,
                 _fileHandler, _connectionManager, _levelUnlocker);
@@ -473,6 +486,16 @@ package {
                 positionReceivedToast();
             }
 
+            // Offline items grid — show pending items when player reaches the
+            // world map (SELECTOR). Tick the open panel so its scroll +
+            // staggered icon reveal animations advance.
+            if (_offlineItemsCollector != null) {
+                _offlineItemsCollector.tick(this.stage);
+            }
+            if (_offlineItemsPanel != null && _offlineItemsPanel.isShowing) {
+                _offlineItemsPanel.doEnterFrame();
+            }
+
             // Main menu overlay — show/tick/hide driven by screen state.
             var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
             if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
@@ -554,7 +577,11 @@ package {
                     hideDisconnectPanel();
                     _goalManager.reset();
                     if (_systemToast != null) _systemToast.clear();
-                    if (_receivedToast != null) _receivedToast.clear();
+                    if (_receivedToast != null) {
+                        _receivedToast.clear();
+                        _receivedToast.setSuppressed(false);
+                    }
+                    if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
                     _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
                     _mainMenuUI.hide(); // remove any existing set before re-adding next frame
                 }
@@ -964,6 +991,7 @@ package {
          */
         private function startConnectionForSlot():void {
             _saveManager.loadSlotData(_saveManager.currentSlot);
+            _loadSeenOfflineApIdsIntoCollector();
             _messageLog.init(_fileHandler, _saveManager.currentSlot);
 
             // Slot file exists and player previously chose standalone — skip popup entirely.
@@ -1101,6 +1129,7 @@ package {
                 // Without this, first-time connection data is never written to the slot file.
                 _saveManager.saveSlotData();
                 _saveManager.loadSlotData(_saveManager.currentSlot);
+                _loadSeenOfflineApIdsIntoCollector();
                 _levelUnlocker.applyBonusLevels();
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "ERROR in loadSlotData: " + e.message);
@@ -1418,11 +1447,267 @@ package {
         }
 
         // -----------------------------------------------------------------------
+        // Offline items collector — persistence + diff sync helpers
+
+        /** Push the persisted seen-set from SaveManager into the collector. */
+        private function _loadSeenOfflineApIdsIntoCollector():void {
+            if (_offlineItemsCollector == null || _saveManager == null) return;
+            var ids:Array = _saveManager.seenOfflineApIds;
+            var set:Object = {};
+            if (ids != null) {
+                for each (var id:* in ids) set[String(int(id))] = true;
+            }
+            _offlineItemsCollector.seenApIds = set;
+        }
+
+        /** Persist the collector's seen-set via SaveManager. */
+        private function _persistSeenOfflineApIds():void {
+            if (_offlineItemsCollector == null || _saveManager == null) return;
+            _saveManager.seenOfflineApIds = _offlineItemsCollector.seenApIdsAsArray;
+            _saveManager.saveSlotData();
+        }
+
+        /**
+         * Resolver invoked by OfflineItemsCollector for each newly-seen apId.
+         * Returns { name, sender, iconBmpd? } for the grid cell. iconBmpd is
+         * pre-built here only for ranges that need mod-side context the
+         * panel's own icon factory doesn't have access to (e.g. achievement
+         * gameId lookup, which lives on AchievementUnlocker). For everything
+         * else, McOfflineItems builds the icon itself from the apId.
+         */
+        private function _resolveOfflineItemEntry(apId:int, item:Object):Object {
+            var name:String = itemName(apId);
+            if (name == null) name = "Item #" + apId;
+
+            var sender:String = null;
+            if (item != null && item.player != null) {
+                var senderSlot:int = int(item.player);
+                if (senderSlot > 0 && AV.archipelagoData != null && AV.archipelagoData.players != null) {
+                    var pd:Object = AV.archipelagoData.players[senderSlot];
+                    if (pd != null && pd.name != null) sender = String(pd.name);
+                }
+            }
+
+            var iconBmpd:* = null;
+            try {
+                // Achievement icons: McDropIconOutcome(ACHIEVEMENT, gameId)
+                // needs the game-internal achievement id, which only
+                // AchievementUnlocker knows (apId → gameId via game_data.json).
+                if (apId >= 2000 && apId <= 2636 && _achievementUnlocker != null
+                        && GV.achiCollection != null && GV.achiCollection.achisById != null) {
+                    var gid:int = _achievementUnlocker.findGameIdByApId(apId);
+                    if (gid >= 0 && GV.achiCollection.achisById[gid] != null) {
+                        iconBmpd = (new McDropIconOutcome(DropType.ACHIEVEMENT, gid)).bmpdIcon;
+                    }
+                }
+            } catch (errIcon:Error) {
+                _logger.log(MOD_NAME, "_resolveOfflineItemEntry icon error apId="
+                    + apId + ": " + errIcon.message);
+            }
+
+            return { name: name, sender: sender, iconBmpd: iconBmpd };
+        }
+
+        /**
+         * Tooltip renderer for the offline-items grid. Mirrors vanilla
+         * IngameInfoPanelRenderer2.renderDropIconInfoPanel exactly for ranges
+         * vanilla supports, and uses the existing custom tooltip text from
+         * XpTomeDropIcon / GempouchDropIcon / SkillPointDropIcon for ranges
+         * vanilla doesn't.
+         *
+         * Vanilla TALISMAN_FRAGMENT and ACHIEVEMENT delegate to selectorCore
+         * panels (renderInfoPanelFragment, renderAchiInfoPanel) — those panels
+         * do their own reset() and addChild(vIp), so when this returns true
+         * the caller (McOfflineItems._onCellOver) skips the fallback.
+         *
+         * Returns true on success so the caller knows the title text is
+         * populated; false makes McOfflineItems print a generic "<name>"
+         * fallback instead.
+         */
+        private function _renderOfflineTooltip(vIp:*, apId:int):Boolean {
+            try {
+                // Field tokens (1-122)
+                if (apId >= 1 && apId <= 122) {
+                    var strId:* = AV.serverData != null ? AV.serverData.tokenMap[String(apId)] : null;
+                    if (strId == null) return false;
+                    vIp.reset(180);
+                    vIp.addTextfield(0xFFFF81, "Token for field " + String(strId), false, 12);
+                    vIp.addExtraHeight(-4);
+                    return true;
+                }
+                // Map tiles (600-625)
+                if (apId >= 600 && apId <= 625) {
+                    if (GV.selectorCore == null || GV.selectorCore.mapTiles == null) return false;
+                    if (AV.serverData == null || AV.serverData.apIdToGameId == null) return false;
+                    var tileGid:int = int(AV.serverData.apIdToGameId[apId]);
+                    var tile:* = GV.selectorCore.mapTiles[tileGid];
+                    if (tile == null) return false;
+                    vIp.reset(180);
+                    vIp.addTextfield(0xFFFF81, "Map tile " + String(tile.strId), false, 12);
+                    vIp.addExtraHeight(-4);
+                    return true;
+                }
+                // Skill tomes (700-723)
+                if (apId >= 700 && apId <= 723) {
+                    if (GV.selectorCore == null || GV.selectorCore.pnlSkills == null) return false;
+                    var skillTitle:String = String(GV.selectorCore.pnlSkills.skillTitles[apId - 700]);
+                    vIp.reset(290);
+                    vIp.addTextfield(0xFFCC00, skillTitle, true, 13);
+                    vIp.addTextfield(0xFFFF81, "Skill Tome", false, 11);
+                    vIp.addTextfield(0xD2C2A0, "Will be added to the skills panel", false, 11);
+                    return true;
+                }
+                // Battle trait scrolls (800-814)
+                if (apId >= 800 && apId <= 814) {
+                    if (GV.selectorCore == null || GV.selectorCore.renderer == null) return false;
+                    var traitTitle:String = String(GV.selectorCore.renderer.traitTitles[apId - 800]);
+                    vIp.reset(360);
+                    vIp.addTextfield(0xFFCC00, traitTitle, true, 13);
+                    vIp.addTextfield(0xFFFF81, "Battle Trait Scroll", false, 11);
+                    vIp.addTextfield(0xD2C2A0, "Will be added to the battle traits panel", false, 11);
+                    vIp.addTextfield(0xBBBBBB, "You can add traits to the battle\nafter selecting a field on the map", false, 11);
+                    return true;
+                }
+                // Talisman fragments (900-952, 1200-1246) — delegate to vanilla.
+                if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) {
+                    if (AV.serverData == null || AV.serverData.talismanMap == null) return false;
+                    var talData:* = AV.serverData.talismanMap[String(apId)];
+                    if (talData == null) return false;
+                    var parts:Array = String(talData).split("/");
+                    if (parts.length < 4) return false;
+                    if (GV.selectorCore == null || GV.selectorCore.pnlTalisman == null) return false;
+                    var frag:TalismanFragment = new TalismanFragment(
+                        int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3]));
+                    // The vanilla renderer reads pFrag.bmpInTalisman / bmpInInventory;
+                    // those are populated lazily by talFragBitmapCreator. Without
+                    // this call the renderer throws (or shows a blank fragment).
+                    if (GV.talFragBitmapCreator != null && frag.bmpInInventory == null) {
+                        GV.talFragBitmapCreator.giveTalFragBitmaps(frag);
+                    }
+                    GV.selectorCore.pnlTalisman.renderInfoPanelFragment(frag);
+                    return true;
+                }
+                // Shadow cores (1000-1016, 1300-1351)
+                if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
+                    var amount:int = 1;
+                    if (AV.serverData != null && AV.serverData.shadowCoreMap != null) {
+                        var amt:* = AV.serverData.shadowCoreMap[String(apId)];
+                        if (amt != null) amount = int(amt);
+                    }
+                    if (amount < 1) amount = 1;
+                    vIp.reset(360);
+                    vIp.addTextfield(0xFFA42F, amount + (amount > 1 ? " shadow cores" : " shadow core"), false, 13);
+                    vIp.addExtraHeight(5);
+                    vIp.addSeparator(-2);
+                    vIp.addTextfield(0xC1C1C1, "Shadow cores can be used to:", false, 11);
+                    vIp.addTextfield(0xDEB349, " - Boost talisman fragment drop rarity", true, 11);
+                    vIp.addTextfield(0xC0C1C1, " - Unlock talisman slots", true, 11);
+                    vIp.addTextfield(0xDEB349, " - Upgrade talisman fragments", true, 11);
+                    vIp.addTextfield(0xC0C1C1, " - Change talisman fragment shapes", true, 11);
+                    vIp.addTextfield(0xDEB349, " - Get more skill points", false, 11);
+                    vIp.addExtraHeight(-4);
+                    return true;
+                }
+                // XP tomes (1100-1199) — same text XpTomeDropIcon shows on level-end.
+                if (apId >= 1100 && apId <= 1199) {
+                    var label:String = "Tattered Scroll";
+                    if (apId >= 1132 && apId <= 1137) label = "Worn Tome";
+                    else if (apId >= 1138 && apId <= 1139) label = "Ancient Grimoire";
+                    var lv:int = (_levelUnlocker != null) ? _levelUnlocker.levelsForApId(apId) : 0;
+                    vIp.reset(260);
+                    vIp.addTextfield(0xFFD700, label, false, 13);
+                    vIp.addTextfield(0xCCCCCC, "Wizard XP Tome", false, 11);
+                    var grantText:String = (lv > 0)
+                        ? ("Grants " + lv + " wizard level" + (lv == 1 ? "" : "s"))
+                        : "Grants wizard levels when collected";
+                    vIp.addTextfield(0x99FF99, grantText, false, 11);
+                    return true;
+                }
+                // Skill point bundles (1700-1709) — same text SkillPointDropIcon shows.
+                if (apId >= 1700 && apId <= 1709) {
+                    var skp:int = apId - 1699;
+                    vIp.reset(280);
+                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle", false, 13);
+                    vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
+                    vIp.addTextfield(0x99FF99, "+" + skp + " skill points.", false, 11);
+                    return true;
+                }
+                // Achievements (2000-2636) — delegate to vanilla.
+                if (apId >= 2000 && apId <= 2636) {
+                    if (_achievementUnlocker == null || GV.selectorCore == null
+                            || GV.selectorCore.pnlAchievements == null
+                            || GV.achiCollection == null
+                            || GV.achiCollection.achisById == null) return false;
+                    var gid:int = _achievementUnlocker.findGameIdByApId(apId);
+                    if (gid < 0 || GV.achiCollection.achisById[gid] == null) return false;
+                    GV.selectorCore.pnlAchievements.renderAchiInfoPanel(GV.achiCollection.achisById[gid]);
+                    return true;
+                }
+                // Stash keys (1400-1561) — name from itemName().
+                if (apId >= 1400 && apId <= 1561) {
+                    var keyName:String = itemName(apId);
+                    if (keyName == null) return false;
+                    vIp.reset(280);
+                    vIp.addTextfield(0x99CCFF, keyName, false, 13);
+                    vIp.addTextfield(0xCCCCCC, "Wizard Stash Key", false, 11);
+                    return true;
+                }
+                // Per-tile / per-tier field tokens (1562-1600).
+                if (apId >= 1562 && apId <= 1600) {
+                    var tokenName:String = itemName(apId);
+                    if (tokenName == null) return false;
+                    vIp.reset(280);
+                    vIp.addTextfield(0xFFFF81, tokenName, false, 13);
+                    vIp.addTextfield(0xCCCCCC, "Field Tokens (bundle)", false, 11);
+                    return true;
+                }
+                // Gempouches (626-652) — exact match to GempouchDropIcon._onMouseOver.
+                if (apId >= 626 && apId <= 652) {
+                    var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                    var order:Array = (opts != null) ? opts.gemPouchPlayOrder as Array : null;
+                    var progressiveId:int = (opts != null) ? int(opts.gemPouchProgressiveId) : 652;
+                    if (progressiveId <= 0) progressiveId = 652;
+
+                    var gpTitle:String;
+                    var gpBody:String;
+                    if (apId == progressiveId) {
+                        var copies:int = (AV.sessionData != null)
+                            ? AV.sessionData.getItemCount(apId) : 0;
+                        var total:int = (order != null) ? order.length : 26;
+                        gpTitle = "Progressive Gempouch";
+                        gpBody  = "Unlocks gems on the next world. ("
+                            + copies + "/" + total + " worlds unlocked)";
+                    } else {
+                        var gpIdx:int = apId - 626;
+                        var prefix:String = (order != null && gpIdx >= 0 && gpIdx < order.length)
+                            ? String(order[gpIdx]) : "?";
+                        gpTitle = "Gempouch (" + prefix + ")";
+                        gpBody  = "Unlocks gems on stages of world " + prefix + ".";
+                    }
+                    vIp.reset(280);
+                    vIp.addTextfield(0xFFD700, gpTitle, false, 13);
+                    vIp.addTextfield(0xCCCCCC, "Gem Pouch", false, 11);
+                    vIp.addTextfield(0x99FF99, gpBody, false, 11);
+                    return true;
+                }
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "_renderOfflineTooltip error apId=" + apId + ": " + err.message);
+            }
+            return false;
+        }
+
+        // -----------------------------------------------------------------------
         // Item handling
 
         private function grantItem(apId:int):void {
             try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
+
+                // Mark this apId as seen so it doesn't reappear in the
+                // next session's offline-items diff. Without this, items
+                // received live during a play session would be treated as
+                // unseen on next reconnect and re-pop in the panel.
+                if (_offlineItemsCollector != null) _offlineItemsCollector.markSeen(apId);
 
                 // Feed the in-game tracker (idempotent — safe to call before dispatch).
                 AV.sessionData.onItem(apId);
@@ -1838,6 +2123,12 @@ package {
             }
             _pendingSyncItems = null;
 
+            // Suppress per-item toasts during the bulk-grant — the OfflineItemsPanel
+            // will display the newly-granted set instead.
+            if (_receivedToast != null) _receivedToast.setSuppressed(true);
+
+            try {
+
             if (_progressionBlocker != null) _progressionBlocker.resetGrants();
 
             var apSkills:Object = {};
@@ -1945,6 +2236,19 @@ package {
                 " traits:" + traitChanges + " stages:" + stageChanges +
                 " stashes:" + stashChanges +
                 " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
+
+            // Hand the full-sync items to the offline-items collector so the grid
+            // popup will surface anything new the next time the player is on
+            // MAINMENU / SELECTOR. The collector diffs against the persisted
+            // seen-set, so re-syncs in future sessions don't re-show old items.
+            if (_offlineItemsCollector != null) {
+                _offlineItemsCollector.onSyncCompleted(items, _resolveOfflineItemEntry);
+            }
+
+            } finally {
+                // Resume normal toast behavior for any live (index>0) items received later.
+                if (_receivedToast != null) _receivedToast.setSuppressed(false);
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -2014,6 +2318,70 @@ package {
             if (apId >= 2000 && apId <= 2636) {
                 var achName:String = _achievementUnlocker.findAchievementNameByApId(apId);
                 return achName != null ? achName : ("Achievement #" + apId);
+            }
+            // Map tiles
+            if (apId >= 600 && apId <= 625) {
+                return "Map Tile #" + (apId - 600);
+            }
+            // Gempouches: distinct mode = 626 + index in gemPouchPlayOrder;
+            // progressive mode = gemPouchProgressiveId (default 652).
+            if (apId >= 626 && apId <= 652) {
+                var gpOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                var gpProgId:int = (gpOpts != null) ? int(gpOpts.gemPouchProgressiveId) : 652;
+                if (gpProgId <= 0) gpProgId = 652;
+                if (apId == gpProgId) return "Progressive Gempouch";
+                var gpOrder:Array = (gpOpts != null) ? gpOpts.gemPouchPlayOrder as Array : null;
+                var gpIdx2:int = apId - 626;
+                if (gpOrder != null && gpIdx2 >= 0 && gpIdx2 < gpOrder.length) {
+                    return "Gempouch (" + String(gpOrder[gpIdx2]) + ")";
+                }
+                return "Gempouch";
+            }
+            // XP tomes — ranges chosen by the apworld; LevelUnlocker knows the count.
+            if (apId >= 1100 && apId <= 1199) {
+                if (apId >= 1100 && apId <= 1131) return "Tattered Scroll";
+                if (apId >= 1132 && apId <= 1137) return "Worn Tome";
+                if (apId >= 1138 && apId <= 1139) return "Ancient Grimoire";
+                return "XP Tome";
+            }
+            // Per-stage Wizard Stash keys (1400-1521 = 122 stages).
+            if (apId >= 1400 && apId <= 1521) {
+                return "Wizard Stash Key #" + (apId - 1400 + 1);
+            }
+            // Per-tile Wizard Stash keys (1522-1547 = one per prefix in playOrder).
+            if (apId >= 1522 && apId <= 1547) {
+                var stashTilePrefix:String = _prefixForTileApId(apId, 1522);
+                if (stashTilePrefix != null && stashTilePrefix.length > 0) {
+                    return "Wizard Stash Tile " + stashTilePrefix + " Key";
+                }
+                return "Wizard Stash Tile Key (#" + (apId - 1522) + ")";
+            }
+            // Per-tier Wizard Stash keys (1548-1560 = tiers 0..12).
+            if (apId >= 1548 && apId <= 1560) {
+                return "Wizard Stash Tier " + (apId - 1548) + " Key";
+            }
+            // Master Wizard Stash key (1561).
+            if (apId == 1561) {
+                return "Wizard Stash Master Key";
+            }
+            // Per-tile field tokens (1562-1587 = one per gemPouchPlayOrder prefix).
+            if (apId >= 1562 && apId <= 1587) {
+                var tileIdx:int = apId - 1562;
+                if (AV.serverData != null && AV.serverData.serverOptions != null) {
+                    var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder as Array;
+                    if (order != null && tileIdx < order.length) {
+                        return String(order[tileIdx]) + " Tile Field Tokens";
+                    }
+                }
+                return "Tile Field Tokens (#" + tileIdx + ")";
+            }
+            // Per-tier field tokens (1588-1600 = one per tier).
+            if (apId >= 1588 && apId <= 1600) {
+                return "Tier " + (apId - 1588) + " Field Tokens";
+            }
+            // Skill point bundles (1700-1709 — bundle size = apId - 1699).
+            if (apId >= 1700 && apId <= 1709) {
+                return "Skill Point Bundle (+" + (apId - 1699) + ")";
             }
             return null; // let ConnectionManager handle the rest
         }
