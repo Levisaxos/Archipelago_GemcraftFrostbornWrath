@@ -159,6 +159,11 @@ package {
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
         private var _lastScreen:int            = -1;
+        // Tracks the prior frame's GV.ingameCore.ingameStatus so we can detect
+        // an in-place level restart (outcome panel's Retry button calls
+        // initializer.setScene1 without changing currentScreen, so the
+        // screen-transition cleanup never fires). -1 = not initialized / not in INGAME.
+        private var _lastIngameStatus:int      = -1;
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
@@ -617,11 +622,7 @@ package {
                 if (screen == ScreenId.TRANS_SELECTOR_TO_INGAME1 ||
                     screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
                     screen == ScreenId.INGAME) {
-                    skipAllTutorials();
-                    _deathLinkHandler.resetForNewStage();
-                    _wavePrePatcher.resetForNewStage();
-                    _ritualSpawnPatcher.resetForNewStage();
-                    _startingGemSuppressor.applyIfReady();
+                    _initForNewStage();
                 }
 
                 // Recompute the available-achievements list when entering battle so
@@ -636,23 +637,7 @@ package {
                 // the next ingame entry for the same stage (after initializer resets
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
-                    _firstPlayBypass.resetIngame();
-                    _frostbornFreeBuildings.resetIngame();
-                    _gemPouchSuppressor.resetIngame();
-                    _hollowGemInjector.resetIngame();
-                    _startingGemSuppressor.resetForNewStage();
-                    _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
-                    _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
-                    // sd / sdEntry are already function-scope-declared in the
-                    // earlier _sessionDrops loop above; reuse them here.
-                    for (sd = 0; sd < _sessionDrops.length; sd++) {
-                        sdEntry = _sessionDrops[sd];
-                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
-                    }
-                    _logger.log(MOD_NAME, "=== end of AP items list ===");
-                    _sessionDrops = [];
-                    _sessionGrantedFragments = [];
-                    if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
+                    _resetPerLevelState("LEFT INGAME → transitioning to screen=" + screen);
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
@@ -660,6 +645,28 @@ package {
                 }
 
                 _lastScreen = screen;
+            }
+
+            // Detect in-place level restart from the outcome panel's Retry button
+            // (vanilla IngameInputHandler2.ehOutcomePanelBtnRetryUp calls
+            // initializer.setScene1 without changing currentScreen). The screen-
+            // transition cleanup above never fires in that case, so stale per-level
+            // state (_apIconsInjected, _sessionDrops, _levelEndCountdown) carries
+            // into the next end-of-level and suppresses AP drop-icon injection —
+            // the player sees vanilla achievement icons instead.
+            if (screen == ScreenId.INGAME && GV.ingameCore != null) {
+                var status:int = int(GV.ingameCore.ingameStatus);
+                if (_lastIngameStatus != -1
+                        && status != _lastIngameStatus
+                        && status == IngameStatus.PLAYING
+                        && _isGameOverPanelStatus(_lastIngameStatus)) {
+                    _resetPerLevelState("In-place restart detected (status "
+                        + _lastIngameStatus + " → PLAYING)");
+                    _initForNewStage();
+                }
+                _lastIngameStatus = status;
+            } else {
+                _lastIngameStatus = -1;
             }
 
             // Hook mode selector buttons while on LOADGAME.
@@ -1175,6 +1182,54 @@ package {
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
             }
+        }
+
+        /**
+         * Per-stage init that must run when the player begins (or restarts) a level.
+         * Fires both on screen-transition into INGAME and on in-place restart from
+         * the outcome panel's Retry button.
+         */
+        private function _initForNewStage():void {
+            skipAllTutorials();
+            _deathLinkHandler.resetForNewStage();
+            _wavePrePatcher.resetForNewStage();
+            _ritualSpawnPatcher.resetForNewStage();
+            _startingGemSuppressor.applyIfReady();
+        }
+
+        /**
+         * Per-level cleanup — clears session drops, resets the AP-icon-injection
+         * flag, and re-arms the patches that latch on first apply during a level.
+         * Fires both on screen-transition out of INGAME and on in-place restart
+         * from the outcome panel's Retry button (which keeps currentScreen=INGAME
+         * but starts a fresh attempt via initializer.setScene1).
+         */
+        private function _resetPerLevelState(reason:String):void {
+            _firstPlayBypass.resetIngame();
+            _frostbornFreeBuildings.resetIngame();
+            _gemPouchSuppressor.resetIngame();
+            _hollowGemInjector.resetIngame();
+            _startingGemSuppressor.resetForNewStage();
+            _logger.log(MOD_NAME, reason);
+            _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
+            for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                var sdEntry:Object = _sessionDrops[sd];
+                _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
+            }
+            _logger.log(MOD_NAME, "=== end of AP items list ===");
+            _sessionDrops = [];
+            _sessionGrantedFragments = [];
+            _levelEndCountdown = -1;
+            if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
+        }
+
+        /** True for any of the GAMEOVER_PANEL_* outcome-panel substates. */
+        private function _isGameOverPanelStatus(s:int):Boolean {
+            return s == IngameStatus.GAMEOVER_PANEL_APPEARING
+                || s == IngameStatus.GAMEOVER_PANEL_STATS_ROLLING
+                || s == IngameStatus.GAMEOVER_PANEL_DROPS_LISTING
+                || s == IngameStatus.GAMEOVER_PANEL_SHOWING_IDLE
+                || s == IngameStatus.GAMEOVER_PANEL_DISAPPEARING;
         }
 
         /**
