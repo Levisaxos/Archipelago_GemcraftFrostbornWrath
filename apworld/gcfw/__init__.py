@@ -139,61 +139,6 @@ def _can_achievement_be_met(requirements: list) -> bool:
     return _group_can_be_met(requirements)
 
 
-def _detect_achievement_chains(all_achievements) -> dict:
-    """
-    Auto-detect progressive achievement chains by analyzing achievement names.
-
-    Looks for patterns like:
-    - "Kill 10 Waves", "Kill 20 Waves", "Kill 30 Waves" → chain with numerical progression
-    - "Do X 5 Times", "Do X 10 Times" → chain with numerical progression
-    - etc.
-
-    Returns dict: {achievement_name -> previous_achievement_name_in_chain}
-    Example: {"Kill 20 Waves": "Kill 10 Waves", "Kill 30 Waves": "Kill 20 Waves"}
-    """
-    import re
-
-    chains = {}
-
-    # Detect chains by looking for numerical patterns
-    for ach_name in all_achievements.keys():
-        # Look for patterns: "Word1 Word2 ... Number" or "Number ... Word"
-        # Examples: "Kill 10 Waves", "Do Something 5 Times"
-        match = re.search(r'(\d+)', ach_name)
-        if not match:
-            continue
-
-        number = int(match.group(1))
-        base_name = ach_name[:match.start()] + "X" + ach_name[match.end():]
-
-        # Look for other achievements with different numbers but same base
-        potential_chain = []
-        for other_name in all_achievements.keys():
-            other_match = re.search(r'(\d+)', other_name)
-            if not other_match:
-                continue
-
-            other_base = other_name[:other_match.start()] + "X" + other_name[other_match.end():]
-            other_num = int(other_match.group(1))
-
-            if base_name == other_base and other_num != number:
-                potential_chain.append((other_num, other_name))
-
-        # If we found other achievements with the same pattern, this is likely a chain
-        if potential_chain:
-            potential_chain.sort(key=lambda x: x[0])
-
-            # Find what achievement comes before this one in the chain
-            for i, (num, name) in enumerate(potential_chain):
-                if name == ach_name and i > 0:
-                    # This achievement has a predecessor
-                    prev_num, prev_name = potential_chain[i - 1]
-                    chains[ach_name] = prev_name
-                    break
-
-    return chains
-
-
 def _get_filter_reason(requirements: list) -> str:
     """
     Determine why an achievement was filtered out.
@@ -336,8 +281,11 @@ class GemcraftFrostbornWrathWorld(World):
         # so Menu->starter is satisfied without the player having to find it.
         from . import gating as _gating
         ft_gran = self.options.field_token_granularity.value
-        starter_token = _gating.starter_field_token(self.start_sid, ft_gran)
-        self.multiworld.push_precollected(self.create_item(starter_token))
+        # Progressive variants need M copies precollected (M = starter's index
+        # in the unlock order + 1) so the starter is reachable from frame 0.
+        # Distinct variants precollect a single covering item.
+        for tok_name in _gating.starter_field_tokens_to_precollect(self.start_sid, ft_gran):
+            self.multiworld.push_precollected(self.create_item(tok_name))
         for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sid):
             pool.append(self.create_item(token_name))
 
@@ -435,17 +383,6 @@ class GemcraftFrostbornWrathWorld(World):
                 if not _can_achievement_be_met(ach_data.get("requirements", [])):
                     continue
                 included_achievements.add(ach_name)
-
-            # Progressive chains: each chained achievement requires its parent's
-            # location to be reachable. rules.py:_eval_req checks via state.can_reach
-            # for "Achievement:" requirements when in progressive mode.
-            if self.options.achievement_progression.value == 0:  # 0 = progressive
-                achievement_chains = _detect_achievement_chains(all_achievements)
-                for ach_name in included_achievements:
-                    parent_ach = achievement_chains.get(ach_name)
-                    if parent_ach and parent_ach in included_achievements:
-                        ach_data = all_achievements[ach_name]
-                        ach_data["requirements"] = ach_data.get("requirements", []) + [f"Achievement: {parent_ach}"]
 
         # Wizard Stash keys — count and names depend on stash_key_granularity:
         #   per_stage: 122 keys (one per stage)
@@ -710,19 +647,19 @@ class GemcraftFrostbornWrathWorld(World):
             if s["item_ap_id"] is not None
         }
 
-        # Stages that are immediately playable from session start. Under
-        # field_token_granularity == per_stage this is just the chosen starter.
-        # Under per_tile / per_tier the precollected starter token covers
-        # multiple stages — they're all "free" at start since the token gate
-        # is satisfied immediately. The mod uses this list for the Hollow Gem
-        # bootstrap, FirstPlayBypass, and free-buildings logic.
+        # Stages that are immediately playable from session start. The exact
+        # set depends on granularity AND whether progressive: distinct modes
+        # cover the starter's tile/tier/stage; progressive modes cover the
+        # first M groups of the unlock order, where M = starter's position + 1
+        # (i.e. the same M copies the apworld precollects). The mod uses this
+        # list for HollowGemInjector, FirstPlayBypass, and free-buildings.
+        #
+        # NOTE: doing this via item-name equality breaks under progressive,
+        # since every stage shares the same singleton item name. The helper
+        # uses the same M-position logic that drives precollect.
         from . import gating as _gating
         ft_gran = self.options.field_token_granularity.value
-        starter_token_name = _gating.starter_field_token(self.start_sid, ft_gran)
-        free_stages = [
-            s["str_id"] for s in stages
-            if _gating.field_token_for_stage(s["str_id"], ft_gran) == starter_token_name
-        ]
+        free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
         talisman_map = {
@@ -852,16 +789,56 @@ class GemcraftFrostbornWrathWorld(World):
             "starting_overcrowd":      bool(self.options.starting_overcrowd.value),
             # Granularity settings for the three gating-item categories.
             # Mod uses these to interpret coarser items (e.g. a per_tile stash
-            # key unlocks every stash with that prefix).
-            #   field_token_granularity: 0=per_stage, 1=per_tile, 2=per_tier
-            #   stash_key_granularity:   0=per_stage, 1=per_tile, 2=per_tier, 3=global
-            #   gem_pouch_granularity:   0=off, 1=per_tile_distinct,
-            #                            2=per_tile_progressive, 3=per_tier, 4=global
+            # key unlocks every stash with that prefix). Each granularity has
+            # a "_progressive" sibling: a single fungible item id is added N
+            # times to the pool; the Nth received copy unlocks the Nth entry
+            # in PROGRESSIVE_TILE_ORDER (for per_tile / per_tier variants) or
+            # in the per-stage progressive order (tile playOrder x within-tile
+            # alphabetical).
+            #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
+            #                            2=per_tile,  3=per_tile_progressive,
+            #                            4=per_tier,  5=per_tier_progressive
+            #   stash_key_granularity:   0=per_stage, 1=per_stage_progressive,
+            #                            2=per_tile,  3=per_tile_progressive,
+            #                            4=per_tier,  5=per_tier_progressive, 6=global
+            #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
+            #                            3=per_tier, 4=per_tier_progressive, 5=global
             "field_token_granularity": self.options.field_token_granularity.value,
             "stash_key_granularity":   self.options.stash_key_granularity.value,
             "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
+            # Canonical play order — used for distinct gempouch ID assignment
+            # (apId 626 + idx in this list) and for UI display ordering.
             "gem_pouch_play_order":    list(GEM_POUCH_PLAY_ORDER),
-            "gem_pouch_progressive_id": item_table["Progressive Gempouch"].id,
+            # Canonical per-stage progressive order (kept for backward compat
+            # with older mod builds; the starter-first variant below should be
+            # used by all new progressive-mode logic).
+            "stage_progressive_order": [
+                s for prefix in GEM_POUCH_PLAY_ORDER
+                for s in sorted(
+                    st["str_id"] for st in GAME_DATA["stages"]
+                    if st["str_id"][0] == prefix
+                )
+            ],
+            # Starter-aware progressive orders — the Nth copy of a progressive
+            # item unlocks the Nth entry of the matching list below. Position
+            # 0 is always the starter's own group, so a single precollected
+            # copy lands the player exactly on the starter and the first
+            # *received* copy unlocks the next group in canonical order.
+            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sid),
+            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sid),
+            "progressive_tier_order":  _gating.progressive_tier_order_for_starter(self.start_sid),
+            # Singleton item ids for each progressive variant. The mod uses
+            # these to recognize which apId is "the progressive item" for
+            # a given category and granularity, then count-tracks via
+            # AV.sessionData.getItemCount(apId).
+            "gem_pouch_progressive_id":             item_table["Progressive Gempouch"].id,
+            "gem_pouch_per_tier_progressive_id":    item_table["Progressive Gempouch (per-tier)"].id,
+            "field_token_per_stage_progressive_id": item_table["Progressive Field Token (per-stage)"].id,
+            "field_token_per_tile_progressive_id":  item_table["Progressive Field Token (per-tile)"].id,
+            "field_token_per_tier_progressive_id":  item_table["Progressive Field Token (per-tier)"].id,
+            "stash_key_per_stage_progressive_id":   item_table["Progressive Stash Stage Key"].id,
+            "stash_key_per_tile_progressive_id":    item_table["Progressive Stash Tile Key"].id,
+            "stash_key_per_tier_progressive_id":    item_table["Progressive Stash Tier Key"].id,
             # Per-stage tier assignments so the mod can resolve coarse
             # tier-keyed items (e.g. "Tier 3 Field Token" → all tier-3 stages).
             "stage_tier_by_str_id": {

@@ -172,9 +172,26 @@ package ui {
 
             var entries:Array = _pending;
             _pending = [];
+            // Group thematically before display: tile-related → gempouches →
+            // stash keys → skills/traits → talismans/cores → XP/SP →
+            // achievements → other. The priority comes from the entry's
+            // sortPriority field set by ArchipelagoMod._resolveOfflineItemEntry.
+            // Stable-ish: equal priority falls back to apId, so progressive
+            // singletons stay clustered.
+            entries.sort(_compareEntries);
             _logger.log(_modName, "OfflineItemsCollector: opening panel with "
                 + entries.length + " entries (apIds=" + _summarizeApIds(entries) + ")");
             _panel.show(stage, entries);
+        }
+
+        private static function _compareEntries(a:Object, b:Object):int {
+            var pa:int = (a != null && a.sortPriority != null) ? int(a.sortPriority) : 99;
+            var pb:int = (b != null && b.sortPriority != null) ? int(b.sortPriority) : 99;
+            if (pa != pb) return pa - pb;
+            // Same priority: fall back to apId for stable, predictable layout.
+            var aa:int = (a != null && a.apId != null) ? int(a.apId) : 0;
+            var bb:int = (b != null && b.apId != null) ? int(b.apId) : 0;
+            return aa - bb;
         }
 
         private function _summarizeApIds(entries:Array):String {

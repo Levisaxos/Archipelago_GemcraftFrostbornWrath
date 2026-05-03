@@ -130,19 +130,23 @@ package patch {
             var mode:int = int(opts.gemPouchGranularity);
             var prefix:String = stageStrId.charAt(0);
 
-            if (mode == 1 || mode == 2) {
-                var order:Array = opts.gemPouchPlayOrder as Array;
-                if (order == null || order.length == 0)
-                    return true; // unknown — fail open.
-                var idx:int = order.indexOf(prefix);
-                if (idx < 0)
-                    return true;
-                if (mode == 1)
-                    return AV.sessionData.hasItem(626 + idx);
+            if (mode == 1) {
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
+            }
+            if (mode == 2) {
+                var orderP:Array = opts.progressiveTileOrder as Array;
+                if (orderP == null || orderP.length == 0)
+                    orderP = opts.gemPouchPlayOrder as Array;
+                if (orderP == null || orderP.length == 0) return true;
+                var idxP:int = orderP.indexOf(prefix);
+                if (idxP < 0) return true;
                 var progId:int = int(opts.gemPouchProgressiveId);
-                if (progId <= 0)
-                    progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idx + 1;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idxP + 1;
             }
             if (mode == 3) {
                 var tierMap:Object = opts.stageTierByStrId;
@@ -151,6 +155,20 @@ package patch {
                 return AV.sessionData.hasItem(1601 + int(tierMap[stageStrId]));
             }
             if (mode == 4) {
+                var tierMap4:Object = opts.stageTierByStrId;
+                if (tierMap4 == null || tierMap4[stageStrId] == null) return true;
+                var tier4:int = int(tierMap4[stageStrId]);
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                if (tierProgId <= 0) return true;
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
+                if (tierOrd != null && tierOrd.length > 0) {
+                    var posT:int = tierOrd.indexOf(tier4);
+                    if (posT < 0) return true;
+                    return AV.sessionData.getItemCount(tierProgId) >= posT + 1;
+                }
+                return AV.sessionData.getItemCount(tierProgId) >= tier4 + 1;
+            }
+            if (mode == 5) {
                 return AV.sessionData.hasItem(1614);
             }
             return true;

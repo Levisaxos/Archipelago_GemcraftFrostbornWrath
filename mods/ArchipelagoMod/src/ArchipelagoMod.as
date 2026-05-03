@@ -159,6 +159,11 @@ package {
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
         private var _lastScreen:int            = -1;
+        // Tracks the prior frame's GV.ingameCore.ingameStatus so we can detect
+        // an in-place level restart (outcome panel's Retry button calls
+        // initializer.setScene1 without changing currentScreen, so the
+        // screen-transition cleanup never fires). -1 = not initialized / not in INGAME.
+        private var _lastIngameStatus:int      = -1;
         private var _mapTilesUnlocked:Boolean  = false;
         private var _standalone:Boolean        = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
@@ -617,11 +622,7 @@ package {
                 if (screen == ScreenId.TRANS_SELECTOR_TO_INGAME1 ||
                     screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
                     screen == ScreenId.INGAME) {
-                    skipAllTutorials();
-                    _deathLinkHandler.resetForNewStage();
-                    _wavePrePatcher.resetForNewStage();
-                    _ritualSpawnPatcher.resetForNewStage();
-                    _startingGemSuppressor.applyIfReady();
+                    _initForNewStage();
                 }
 
                 // Recompute the available-achievements list when entering battle so
@@ -636,23 +637,7 @@ package {
                 // the next ingame entry for the same stage (after initializer resets
                 // availableGemTypes to []).
                 if (_lastScreen == ScreenId.INGAME) {
-                    _firstPlayBypass.resetIngame();
-                    _frostbornFreeBuildings.resetIngame();
-                    _gemPouchSuppressor.resetIngame();
-                    _hollowGemInjector.resetIngame();
-                    _startingGemSuppressor.resetForNewStage();
-                    _logger.log(MOD_NAME, "LEFT INGAME → transitioning to screen=" + screen);
-                    _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
-                    // sd / sdEntry are already function-scope-declared in the
-                    // earlier _sessionDrops loop above; reuse them here.
-                    for (sd = 0; sd < _sessionDrops.length; sd++) {
-                        sdEntry = _sessionDrops[sd];
-                        _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
-                    }
-                    _logger.log(MOD_NAME, "=== end of AP items list ===");
-                    _sessionDrops = [];
-                    _sessionGrantedFragments = [];
-                    if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
+                    _resetPerLevelState("LEFT INGAME → transitioning to screen=" + screen);
                 }
                 // Remove MAINMENU overlays when navigating away from the main menu.
                 if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
@@ -660,6 +645,28 @@ package {
                 }
 
                 _lastScreen = screen;
+            }
+
+            // Detect in-place level restart from the outcome panel's Retry button
+            // (vanilla IngameInputHandler2.ehOutcomePanelBtnRetryUp calls
+            // initializer.setScene1 without changing currentScreen). The screen-
+            // transition cleanup above never fires in that case, so stale per-level
+            // state (_apIconsInjected, _sessionDrops, _levelEndCountdown) carries
+            // into the next end-of-level and suppresses AP drop-icon injection —
+            // the player sees vanilla achievement icons instead.
+            if (screen == ScreenId.INGAME && GV.ingameCore != null) {
+                var status:int = int(GV.ingameCore.ingameStatus);
+                if (_lastIngameStatus != -1
+                        && status != _lastIngameStatus
+                        && status == IngameStatus.PLAYING
+                        && _isGameOverPanelStatus(_lastIngameStatus)) {
+                    _resetPerLevelState("In-place restart detected (status "
+                        + _lastIngameStatus + " → PLAYING)");
+                    _initForNewStage();
+                }
+                _lastIngameStatus = status;
+            } else {
+                _lastIngameStatus = -1;
             }
 
             // Hook mode selector buttons while on LOADGAME.
@@ -1178,6 +1185,54 @@ package {
         }
 
         /**
+         * Per-stage init that must run when the player begins (or restarts) a level.
+         * Fires both on screen-transition into INGAME and on in-place restart from
+         * the outcome panel's Retry button.
+         */
+        private function _initForNewStage():void {
+            skipAllTutorials();
+            _deathLinkHandler.resetForNewStage();
+            _wavePrePatcher.resetForNewStage();
+            _ritualSpawnPatcher.resetForNewStage();
+            _startingGemSuppressor.applyIfReady();
+        }
+
+        /**
+         * Per-level cleanup — clears session drops, resets the AP-icon-injection
+         * flag, and re-arms the patches that latch on first apply during a level.
+         * Fires both on screen-transition out of INGAME and on in-place restart
+         * from the outcome panel's Retry button (which keeps currentScreen=INGAME
+         * but starts a fresh attempt via initializer.setScene1).
+         */
+        private function _resetPerLevelState(reason:String):void {
+            _firstPlayBypass.resetIngame();
+            _frostbornFreeBuildings.resetIngame();
+            _gemPouchSuppressor.resetIngame();
+            _hollowGemInjector.resetIngame();
+            _startingGemSuppressor.resetForNewStage();
+            _logger.log(MOD_NAME, reason);
+            _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
+            for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
+                var sdEntry:Object = _sessionDrops[sd];
+                _logger.log(MOD_NAME, "  [" + sd + "] " + sdEntry.name + " (apId=" + sdEntry.apId + ")");
+            }
+            _logger.log(MOD_NAME, "=== end of AP items list ===");
+            _sessionDrops = [];
+            _sessionGrantedFragments = [];
+            _levelEndCountdown = -1;
+            if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
+        }
+
+        /** True for any of the GAMEOVER_PANEL_* outcome-panel substates. */
+        private function _isGameOverPanelStatus(s:int):Boolean {
+            return s == IngameStatus.GAMEOVER_PANEL_APPEARING
+                || s == IngameStatus.GAMEOVER_PANEL_STATS_ROLLING
+                || s == IngameStatus.GAMEOVER_PANEL_DROPS_LISTING
+                || s == IngameStatus.GAMEOVER_PANEL_SHOWING_IDLE
+                || s == IngameStatus.GAMEOVER_PANEL_DISAPPEARING;
+        }
+
+        /**
          * Refresh the achievement panel logic state.
          * Called as `_achievementUnlocker.onChecked` after any achievement location
          * check is sent, so collected achievements immediately leave "In Logic".
@@ -1505,7 +1560,67 @@ package {
                     + apId + ": " + errIcon.message);
             }
 
-            return { name: name, sender: sender, iconBmpd: iconBmpd };
+            return {
+                name: name,
+                sender: sender,
+                iconBmpd: iconBmpd,
+                sortPriority: _offlineSortPriority(apId)
+            };
+        }
+
+        /**
+         * Sort priority for the offline-items grid. Lower = earlier in the grid.
+         * Categories cluster together so the player sees thematic groups: tile-
+         * related items first, then quality-of-life unlocks, then collectables,
+         * then filler. Within a priority bucket, OfflineItemsCollector keeps
+         * insertion order (which is server-item-array order ≈ chronological).
+         */
+        private function _offlineSortPriority(apId:int):int {
+            // Field tokens — all granularities, including progressive singletons.
+            if (apId >= 1 && apId <= 122)         return 1;
+            if (apId >= 1562 && apId <= 1600)     return 1;
+            var so:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (so != null) {
+                if (so.fieldTokenPerStageProgressiveId > 0
+                        && apId == so.fieldTokenPerStageProgressiveId) return 1;
+                if (so.fieldTokenPerTileProgressiveId > 0
+                        && apId == so.fieldTokenPerTileProgressiveId)  return 1;
+                if (so.fieldTokenPerTierProgressiveId > 0
+                        && apId == so.fieldTokenPerTierProgressiveId)  return 1;
+            }
+            // Map tiles
+            if (apId >= 600 && apId <= 625) return 2;
+            // Gempouches — distinct + tier + master + both progressives
+            if (apId >= 626 && apId <= 652)       return 3;
+            if (apId >= 1601 && apId <= 1614)     return 3;
+            if (so != null && so.gemPouchPerTierProgressiveId > 0
+                    && apId == so.gemPouchPerTierProgressiveId) return 3;
+            // Wizard Stash keys — all granularities
+            if (apId >= 1400 && apId <= 1561)     return 4;
+            if (so != null) {
+                if (so.stashKeyPerStageProgressiveId > 0
+                        && apId == so.stashKeyPerStageProgressiveId) return 4;
+                if (so.stashKeyPerTileProgressiveId > 0
+                        && apId == so.stashKeyPerTileProgressiveId)  return 4;
+                if (so.stashKeyPerTierProgressiveId > 0
+                        && apId == so.stashKeyPerTierProgressiveId)  return 4;
+            }
+            // Skills
+            if (apId >= 700 && apId <= 723) return 5;
+            // Battle traits
+            if (apId >= 800 && apId <= 814) return 6;
+            // Talismans
+            if ((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246)) return 7;
+            // Shadow cores
+            if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) return 8;
+            // XP tomes
+            if (apId >= 1100 && apId <= 1199) return 9;
+            // Skill points
+            if (apId >= 1700 && apId <= 1709) return 10;
+            // Achievements
+            if (apId >= 2000 && apId <= 2636) return 11;
+            // Other (other-game items, unmapped ranges)
+            return 99;
         }
 
         /**
@@ -1661,6 +1776,64 @@ package {
                     vIp.addTextfield(0xCCCCCC, "Field Tokens (bundle)", false, 11);
                     return true;
                 }
+                // ---------- Progressive variants ----------
+                // Each progressive singleton renders a count-aware tooltip:
+                // title = item name, body = "Unlocks ... (N/total unlocked)".
+                // The renderer reads getItemCount live so the count reflects
+                // the player's current progress, not when the cell was built.
+                var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (prgOpts != null) {
+                    // Progressive tooltips use the starter-first orders so the
+                    // "Next: <prefix>" line reflects what the next received
+                    // copy will actually unlock.
+                    var stagOrder:Array = prgOpts.progressiveStageOrder as Array;
+                    var tileOrder:Array = prgOpts.progressiveTileOrder as Array;
+                    var tierOrder:Array = prgOpts.progressiveTierOrder as Array;
+                    var tierTotal:int   = (tierOrder != null) ? tierOrder.length : 13;
+
+                    if (prgOpts.fieldTokenPerStageProgressiveId > 0
+                            && apId == prgOpts.fieldTokenPerStageProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Field Token", "Field Token",
+                            "Unlocks the next stage", stagOrder, true);
+                    }
+                    if (prgOpts.fieldTokenPerTileProgressiveId > 0
+                            && apId == prgOpts.fieldTokenPerTileProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Field Token", "Field Token (per tile)",
+                            "Unlocks all stages on the next tile", tileOrder, true);
+                    }
+                    if (prgOpts.fieldTokenPerTierProgressiveId > 0
+                            && apId == prgOpts.fieldTokenPerTierProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Field Token", "Field Token (per tier)",
+                            "Unlocks all stages in the next tier", null, false, tierTotal);
+                    }
+                    if (prgOpts.stashKeyPerStageProgressiveId > 0
+                            && apId == prgOpts.stashKeyPerStageProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Stash Key", "Wizard Stash Key (per stage)",
+                            "Unlocks the next stash", stagOrder, true);
+                    }
+                    if (prgOpts.stashKeyPerTileProgressiveId > 0
+                            && apId == prgOpts.stashKeyPerTileProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Stash Key", "Wizard Stash Key (per tile)",
+                            "Unlocks all stashes on the next tile", tileOrder, true);
+                    }
+                    if (prgOpts.stashKeyPerTierProgressiveId > 0
+                            && apId == prgOpts.stashKeyPerTierProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Stash Key", "Wizard Stash Key (per tier)",
+                            "Unlocks all stashes in the next tier", null, false, tierTotal);
+                    }
+                    if (prgOpts.gemPouchPerTierProgressiveId > 0
+                            && apId == prgOpts.gemPouchPerTierProgressiveId) {
+                        return _renderProgressiveTooltip(vIp, apId,
+                            "Progressive Gempouch", "Gem Pouch (per tier)",
+                            "Unlocks gems for the next tier", null, false, tierTotal);
+                    }
+                }
                 // Gempouches (626-652) — exact match to GempouchDropIcon._onMouseOver.
                 if (apId >= 626 && apId <= 652) {
                     var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
@@ -1694,6 +1867,44 @@ package {
                 _logger.log(MOD_NAME, "_renderOfflineTooltip error apId=" + apId + ": " + err.message);
             }
             return false;
+        }
+
+        /**
+         * Shared tooltip renderer for progressive singleton items. Mirrors the
+         * format GempouchDropIcon uses — title (gold), subtitle (grey),
+         * count-aware body (green) showing "(N/total unlocked)".
+         *
+         * @param order    If non-null, drives the body line "Next: <prefix>"
+         *                 by reading order[N]. For per-tier variants the
+         *                 fixedTotal kwarg is used instead.
+         * @param showNext If true and order is non-null, append the next-to-
+         *                 unlock prefix/sid to the body.
+         * @param fixedTotal Override for `total` when no order list applies
+         *                   (per-tier variants pass 13).
+         */
+        private function _renderProgressiveTooltip(vIp:*, apId:int,
+                title:String, subtitle:String, bodyLead:String,
+                order:Array, showNext:Boolean, fixedTotal:int = 0):Boolean {
+            try {
+                var copies:int = (AV.sessionData != null) ? AV.sessionData.getItemCount(apId) : 0;
+                var total:int  = (order != null) ? order.length : fixedTotal;
+                if (total <= 0) total = (order != null) ? order.length : 1;
+
+                var body:String = bodyLead + ". (" + copies + "/" + total + " unlocked)";
+                if (showNext && order != null && copies < order.length) {
+                    body += "\nNext: " + String(order[copies]);
+                }
+
+                vIp.reset(300);
+                vIp.addTextfield(0xFFD700, title, false, 13);
+                vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
+                vIp.addTextfield(0x99FF99, body, false, 11);
+                return true;
+            } catch (err:Error) {
+                _logger.log(MOD_NAME, "_renderProgressiveTooltip error apId="
+                    + apId + ": " + err.message);
+                return false;
+            }
         }
 
         // -----------------------------------------------------------------------
@@ -1815,6 +2026,56 @@ package {
                     // Per-tier field token. Unlocks every stage in the tier.
                     _grantFieldTokenByTier(apId - 1588);
                     return;
+                }
+                // ---------- Progressive variants (singleton apIds, count-based) ----------
+                // Each is a single item id added to the pool N times. The Nth
+                // received copy unlocks the Nth entry in the relevant order.
+                // The corresponding *ProgressiveId fields come from slot_data
+                // (set in net.ApReceiver.handleConnected). 0 means the slot
+                // never used this granularity, so we fall through.
+                var so:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+                if (so != null) {
+                    if (so.fieldTokenPerStageProgressiveId > 0
+                            && apId == so.fieldTokenPerStageProgressiveId) {
+                        _grantFieldTokenProgressivePerStage(apId);
+                        return;
+                    }
+                    if (so.fieldTokenPerTileProgressiveId > 0
+                            && apId == so.fieldTokenPerTileProgressiveId) {
+                        _grantFieldTokenProgressivePerTile(apId);
+                        return;
+                    }
+                    if (so.fieldTokenPerTierProgressiveId > 0
+                            && apId == so.fieldTokenPerTierProgressiveId) {
+                        _grantFieldTokenProgressivePerTier(apId);
+                        return;
+                    }
+                    if (so.stashKeyPerStageProgressiveId > 0
+                            && apId == so.stashKeyPerStageProgressiveId) {
+                        _grantStashKeyProgressivePerStage(apId);
+                        return;
+                    }
+                    if (so.stashKeyPerTileProgressiveId > 0
+                            && apId == so.stashKeyPerTileProgressiveId) {
+                        _grantStashKeyProgressivePerTile(apId);
+                        return;
+                    }
+                    if (so.stashKeyPerTierProgressiveId > 0
+                            && apId == so.stashKeyPerTierProgressiveId) {
+                        _grantStashKeyProgressivePerTier(apId);
+                        return;
+                    }
+                    if ((so.gemPouchProgressiveId > 0 && apId == so.gemPouchProgressiveId)
+                            || (so.gemPouchPerTierProgressiveId > 0
+                                && apId == so.gemPouchPerTierProgressiveId)) {
+                        // Gempouches don't change in-game state — gating is
+                        // handled by SessionData.getItemCount on the mod side
+                        // and is read live by HollowGemInjector etc. Just toast.
+                        _receivedToast.addItem("Received Progressive Gempouch", 0xFF99FF);
+                        _logger.log(MOD_NAME, "  → Progressive Gempouch (count="
+                            + AV.sessionData.getItemCount(apId) + ")");
+                        return;
+                    }
                 }
                 if (apId >= 1700 && apId <= 1709) {
                     // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
@@ -1982,6 +2243,160 @@ package {
             _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
         }
 
+        // ---------- Progressive grant helpers ----------
+        // Each handler reads the live count of the singleton apId via
+        // AV.sessionData.getItemCount, finds the (count-1)-th entry in the
+        // appropriate order (stage / tile / tier), and unlocks just that one
+        // group. Earlier copies were already processed on previous calls.
+
+        /** Starter-first tier order — prefers progressiveTierOrder from
+         *  slot_data (starter's tier at position 0, rest ascending with
+         *  starter removed). Falls back to plain ascending if slot_data
+         *  didn't supply the list (older mod build / non-progressive seed). */
+        private function _progressiveTiersOrAsc():Array {
+            var so:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (so != null) {
+                var list:Array = so.progressiveTierOrder as Array;
+                if (list != null && list.length > 0) return list;
+            }
+            return _activeTiersAsc();
+        }
+
+        /** Returns the unique tier ints in ascending order, derived live from
+         *  stageTierByStrId. Cached per call but cheap; alternative would be
+         *  to send active_tiers via slot_data. */
+        private function _activeTiersAsc():Array {
+            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.stageTierByStrId : null;
+            var seen:Object = {};
+            var out:Array = [];
+            if (tierMap != null) {
+                for (var sid:String in tierMap) {
+                    var t:int = int(tierMap[sid]);
+                    if (t >= 0 && !seen[String(t)]) {
+                        seen[String(t)] = true;
+                        out.push(t);
+                    }
+                }
+            }
+            out.sort(Array.NUMERIC);
+            return out;
+        }
+
+        private function _grantFieldTokenProgressivePerStage(apId:int):void {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
+            if (order == null || order.length == 0) {
+                _logger.log(MOD_NAME, "  grantItem: per-stage progressive field token — no order");
+                return;
+            }
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > order.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-stage progressive field token count " + n + " out of range");
+                return;
+            }
+            var sid:String = String(order[n - 1]);
+            _stageUnlocker.unlockStage(sid);
+            _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
+        }
+
+        private function _grantFieldTokenProgressivePerTile(apId:int):void {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.progressiveTileOrder as Array : null;
+            if (order == null || order.length == 0) {
+                _logger.log(MOD_NAME, "  grantItem: per-tile progressive field token — no order");
+                return;
+            }
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > order.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-tile progressive field token count " + n + " out of range");
+                return;
+            }
+            var prefix:String = String(order[n - 1]);
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    _stageUnlocker.unlockStage(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Progressive Field Token — tile " + prefix
+                + " (" + count + " stages)", 0xFFDD55);
+            _logger.log(MOD_NAME, "  → Progressive field token (per-tile) #" + n
+                + " unlocks tile " + prefix + " (" + count + " stages)");
+        }
+
+        private function _grantFieldTokenProgressivePerTier(apId:int):void {
+            var tiers:Array = _progressiveTiersOrAsc();
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > tiers.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-tier progressive field token count " + n + " out of range");
+                return;
+            }
+            var tier:int = int(tiers[n - 1]);
+            _grantFieldTokenByTier(tier);
+            _logger.log(MOD_NAME, "  → Progressive field token (per-tier) #" + n + " = tier " + tier);
+        }
+
+        private function _grantStashKeyProgressivePerStage(apId:int):void {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
+            if (order == null || order.length == 0) {
+                _logger.log(MOD_NAME, "  grantItem: per-stage progressive stash key — no order");
+                return;
+            }
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > order.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-stage progressive stash key count " + n + " out of range");
+                return;
+            }
+            var sid:String = String(order[n - 1]);
+            AV.sessionData.markStashUnlocked(sid);
+            _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Progressive stash key (per-stage) #" + n + " unlocks " + sid);
+        }
+
+        private function _grantStashKeyProgressivePerTile(apId:int):void {
+            var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
+                ? AV.serverData.serverOptions.progressiveTileOrder as Array : null;
+            if (order == null || order.length == 0) {
+                _logger.log(MOD_NAME, "  grantItem: per-tile progressive stash key — no order");
+                return;
+            }
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > order.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-tile progressive stash key count " + n + " out of range");
+                return;
+            }
+            var prefix:String = String(order[n - 1]);
+            var count:int = 0;
+            var byStrId:Object = AV.serverData.stagesByStrId;
+            for (var sid:String in byStrId) {
+                if (sid.charAt(0) == prefix) {
+                    AV.sessionData.markStashUnlocked(sid);
+                    count++;
+                }
+            }
+            _receivedToast.addItem("Received Progressive Stash Key — tile " + prefix
+                + " (" + count + " stashes)", 0x55AAFF);
+            _logger.log(MOD_NAME, "  → Progressive stash key (per-tile) #" + n
+                + " unlocks tile " + prefix + " (" + count + " stashes)");
+        }
+
+        private function _grantStashKeyProgressivePerTier(apId:int):void {
+            var tiers:Array = _progressiveTiersOrAsc();
+            var n:int = AV.sessionData.getItemCount(apId);
+            if (n <= 0 || n > tiers.length) {
+                _logger.log(MOD_NAME, "  grantItem: per-tier progressive stash key count " + n + " out of range");
+                return;
+            }
+            var tier:int = int(tiers[n - 1]);
+            _grantStashKeyByTier(tier);
+            _logger.log(MOD_NAME, "  → Progressive stash key (per-tier) #" + n + " = tier " + tier);
+        }
+
         /** Re-apply stash unlocks from received items. Called from
          *  syncWithAP after sessionData.reset() so the unlocked state is
          *  rebuilt from the full item list at every sync. Handles all four
@@ -2052,6 +2467,62 @@ package {
                     }
                 }
             }
+
+            // -------- Progressive variants (singleton apIds, count-based) --------
+            // Nth received copy unlocks the Nth entry in the starter-first
+            // order (progressive*Order in ServerOptions). Build the cumulative
+            // unlock set on every sync from getItemCount.
+            if (opts != null) {
+                var stagOrder:Array = opts.progressiveStageOrder as Array;
+                var tileOrder:Array = opts.progressiveTileOrder as Array;
+                var tierOrder:Array = opts.progressiveTierOrder as Array;
+
+                // Per-stage progressive
+                var spProgId:int = int(opts.stashKeyPerStageProgressiveId);
+                if (spProgId > 0 && stagOrder != null) {
+                    var spN:int = AV.sessionData.getItemCount(spProgId);
+                    var spLimit:int = (spN < stagOrder.length) ? spN : stagOrder.length;
+                    for (var spi:int = 0; spi < spLimit; spi++) {
+                        var ssid:String = String(stagOrder[spi]);
+                        if (!AV.sessionData.isStashUnlocked(ssid)) {
+                            AV.sessionData.markStashUnlocked(ssid);
+                            changes++;
+                        }
+                    }
+                }
+                // Per-tile progressive
+                var tpProgId:int = int(opts.stashKeyPerTileProgressiveId);
+                if (tpProgId > 0 && tileOrder != null) {
+                    var tpN:int = AV.sessionData.getItemCount(tpProgId);
+                    var tpLimit:int = (tpN < tileOrder.length) ? tpN : tileOrder.length;
+                    for (var tpi:int = 0; tpi < tpLimit; tpi++) {
+                        var tpfx:String = String(tileOrder[tpi]);
+                        for (var stsid:String in byStrId) {
+                            if (stsid.charAt(0) == tpfx && !AV.sessionData.isStashUnlocked(stsid)) {
+                                AV.sessionData.markStashUnlocked(stsid);
+                                changes++;
+                            }
+                        }
+                    }
+                }
+                // Per-tier progressive
+                var ttProgId:int = int(opts.stashKeyPerTierProgressiveId);
+                if (ttProgId > 0 && tierMap != null) {
+                    var ttTiers:Array = (tierOrder != null && tierOrder.length > 0)
+                                            ? tierOrder : _activeTiersAsc();
+                    var ttN:int = AV.sessionData.getItemCount(ttProgId);
+                    var ttLimit:int = (ttN < ttTiers.length) ? ttN : ttTiers.length;
+                    for (var tti:int = 0; tti < ttLimit; tti++) {
+                        var ttTier:int = int(ttTiers[tti]);
+                        for (var tttsid:String in tierMap) {
+                            if (int(tierMap[tttsid]) == ttTier && !AV.sessionData.isStashUnlocked(tttsid)) {
+                                AV.sessionData.markStashUnlocked(tttsid);
+                                changes++;
+                            }
+                        }
+                    }
+                }
+            }
             return changes;
         }
 
@@ -2091,6 +2562,48 @@ package {
                     if (AV.sessionData.hasItem(1588 + tt)) {
                         for (var tsid:String in tierMap) {
                             if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
+                        }
+                    }
+                }
+            }
+
+            // -------- Progressive variants (singleton apIds, count-based) --------
+            // Nth received copy unlocks the Nth entry in the starter-first
+            // order (progressive*Order in ServerOptions).
+            if (opts != null) {
+                var stagOrderFs:Array = opts.progressiveStageOrder as Array;
+                var tileOrderFs:Array = opts.progressiveTileOrder as Array;
+                var tierOrderFs:Array = opts.progressiveTierOrder as Array;
+
+                var fsProgId:int = int(opts.fieldTokenPerStageProgressiveId);
+                if (fsProgId > 0 && stagOrderFs != null) {
+                    var fsN:int = AV.sessionData.getItemCount(fsProgId);
+                    var fsLimit:int = (fsN < stagOrderFs.length) ? fsN : stagOrderFs.length;
+                    for (var fsi:int = 0; fsi < fsLimit; fsi++) {
+                        hasToken[String(stagOrderFs[fsi])] = true;
+                    }
+                }
+                var ftProgId:int = int(opts.fieldTokenPerTileProgressiveId);
+                if (ftProgId > 0 && tileOrderFs != null) {
+                    var ftN:int = AV.sessionData.getItemCount(ftProgId);
+                    var ftLimit:int = (ftN < tileOrderFs.length) ? ftN : tileOrderFs.length;
+                    for (var fti:int = 0; fti < ftLimit; fti++) {
+                        var ftPfx:String = String(tileOrderFs[fti]);
+                        for (var ftSid:String in AV.serverData.stagesByStrId) {
+                            if (ftSid.charAt(0) == ftPfx) hasToken[ftSid] = true;
+                        }
+                    }
+                }
+                var ftTierProgId:int = int(opts.fieldTokenPerTierProgressiveId);
+                if (ftTierProgId > 0 && tierMap != null) {
+                    var ftTiers:Array = (tierOrderFs != null && tierOrderFs.length > 0)
+                                            ? tierOrderFs : _activeTiersAsc();
+                    var fttN:int = AV.sessionData.getItemCount(ftTierProgId);
+                    var fttLimit:int = (fttN < ftTiers.length) ? fttN : ftTiers.length;
+                    for (var ftti:int = 0; ftti < fttLimit; ftti++) {
+                        var fttTier:int = int(ftTiers[ftti]);
+                        for (var ftTsid:String in tierMap) {
+                            if (int(tierMap[ftTsid]) == fttTier) hasToken[ftTsid] = true;
                         }
                     }
                 }
@@ -2382,6 +2895,31 @@ package {
             // Skill point bundles (1700-1709 — bundle size = apId - 1699).
             if (apId >= 1700 && apId <= 1709) {
                 return "Skill Point Bundle (+" + (apId - 1699) + ")";
+            }
+            // Progressive variants — singleton ids from slot_data.
+            var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (prgOpts != null) {
+                if (prgOpts.fieldTokenPerStageProgressiveId > 0
+                        && apId == prgOpts.fieldTokenPerStageProgressiveId)
+                    return "Progressive Field Token (per-stage)";
+                if (prgOpts.fieldTokenPerTileProgressiveId > 0
+                        && apId == prgOpts.fieldTokenPerTileProgressiveId)
+                    return "Progressive Field Token (per-tile)";
+                if (prgOpts.fieldTokenPerTierProgressiveId > 0
+                        && apId == prgOpts.fieldTokenPerTierProgressiveId)
+                    return "Progressive Field Token (per-tier)";
+                if (prgOpts.stashKeyPerStageProgressiveId > 0
+                        && apId == prgOpts.stashKeyPerStageProgressiveId)
+                    return "Progressive Stash Stage Key";
+                if (prgOpts.stashKeyPerTileProgressiveId > 0
+                        && apId == prgOpts.stashKeyPerTileProgressiveId)
+                    return "Progressive Stash Tile Key";
+                if (prgOpts.stashKeyPerTierProgressiveId > 0
+                        && apId == prgOpts.stashKeyPerTierProgressiveId)
+                    return "Progressive Stash Tier Key";
+                if (prgOpts.gemPouchPerTierProgressiveId > 0
+                        && apId == prgOpts.gemPouchPerTierProgressiveId)
+                    return "Progressive Gempouch (per-tier)";
             }
             return null; // let ConnectionManager handle the rest
         }

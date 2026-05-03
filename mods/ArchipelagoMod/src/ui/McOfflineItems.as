@@ -262,31 +262,47 @@ package ui {
                     // Stash key pouches: per-tile (1522-1547),
                     // per-tier (1548-1560), and master (1561).
                     return new KeyPouchDropIcon(apId).bmpdIcon;
-                } else if (apId >= 1562 && apId <= 1587) {
-                    // Per-tile field tokens (1562-1587): the apId maps to a
-                    // gemPouchPlayOrder index → prefix letter → tile gameId.
-                    // Render that tile so e.g. "D Tile Field Tokens" actually
-                    // shows the D map tile artwork.
-                    if (AV.serverData != null && AV.serverData.serverOptions != null
-                            && GV.selectorCore != null && GV.selectorCore.mapTiles != null) {
-                        var order:Array = AV.serverData.serverOptions.gemPouchPlayOrder as Array;
-                        var idx:int = apId - 1562;
-                        if (order != null && idx < order.length) {
-                            var prefix:String = String(order[idx]);
-                            if (prefix != null && prefix.length > 0) {
-                                var c:int = prefix.charCodeAt(0);
-                                // WorldMapBuilder convention: gameId 0 = "Z", gameId 25 = "A".
-                                if (c >= 65 && c <= 90) {
-                                    var tileGid:int = 25 - (c - 65);
-                                    if (tileGid >= 0 && tileGid < 26) {
-                                        return new MapTileDropIcon(tileGid).bmpdIcon;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                } else if (apId >= 1562 && apId <= 1600) {
+                    // Coarse field tokens — per-tile (1562-1587) and per-tier
+                    // (1588-1600). Both render as the generic TilePouch artwork
+                    // since the player's getting "tokens for a group of stages",
+                    // not a specific map tile.
+                    return new TilePouchDropIcon(apId).bmpdIcon;
                 } else if (apId >= 1700 && apId <= 1709) {
                     return new SkillPointDropIcon(apId - 1699).bmpdIcon;
+                }
+                // ---------- Progressive variants (singleton apIds) ----------
+                // Each progressive's apId comes from slot_data, so we route
+                // via ServerOptions rather than hardcoded ranges.
+                if (AV.serverData != null && AV.serverData.serverOptions != null) {
+                    var so:* = AV.serverData.serverOptions;
+                    if (so.fieldTokenPerStageProgressiveId > 0
+                            && apId == so.fieldTokenPerStageProgressiveId) {
+                        // Per-stage progressive: render as a generic field-token
+                        // plate. Each instance unlocks one specific stage but
+                        // we don't know which from apId alone — could compute
+                        // from count + order, but that varies between instances
+                        // in the offline panel. Use TilePouch as a neutral icon.
+                        return new TilePouchDropIcon(apId).bmpdIcon;
+                    }
+                    if ((so.fieldTokenPerTileProgressiveId > 0
+                                && apId == so.fieldTokenPerTileProgressiveId)
+                            || (so.fieldTokenPerTierProgressiveId > 0
+                                && apId == so.fieldTokenPerTierProgressiveId)) {
+                        return new TilePouchDropIcon(apId).bmpdIcon;
+                    }
+                    if ((so.stashKeyPerStageProgressiveId > 0
+                                && apId == so.stashKeyPerStageProgressiveId)
+                            || (so.stashKeyPerTileProgressiveId > 0
+                                && apId == so.stashKeyPerTileProgressiveId)
+                            || (so.stashKeyPerTierProgressiveId > 0
+                                && apId == so.stashKeyPerTierProgressiveId)) {
+                        return new KeyPouchDropIcon(apId).bmpdIcon;
+                    }
+                    if (so.gemPouchPerTierProgressiveId > 0
+                            && apId == so.gemPouchPerTierProgressiveId) {
+                        return new GempouchDropIcon(apId).bmpdIcon;
+                    }
                 }
                 // Achievements (2000-2636) need _achievementUnlocker.findGameIdByApId
                 // which lives on the mod side, not in this view. ArchipelagoMod's

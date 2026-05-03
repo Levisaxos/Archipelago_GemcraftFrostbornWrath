@@ -10,7 +10,6 @@ from .requirement_tokens import (
 )
 from .rulesdata_goals import goal_requirements
 from .rulesdata_levels import level_requirements as LEVEL_DATA
-from .options import AchievementProgression
 from .talismans import (
     EDGE_TALISMAN_NAMES,
     CORNER_TALISMAN_NAMES,
@@ -180,17 +179,21 @@ def _count_field_tokens(state, player: int) -> int:
     if pairs is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
+        starter_sid = world.start_sid
         pairs = [
             (
                 _g.field_token_for_stage(s["str_id"], ft_gran),
+                _g.field_token_count_for_stage(s["str_id"], ft_gran, starter_sid),
                 _compile_gempouch_checker(world, s["str_id"]),
             )
             for s in GAME_DATA["stages"]
         ]
         world._field_token_pouch_pairs = pairs
+    def _has_token(tok, n):
+        return state.has(tok, player) if n == 1 else state.count(tok, player) >= n
     val = sum(
-        1 for tok, pouch_ok in pairs
-        if state.has(tok, player) and pouch_ok(state)
+        1 for tok, n, pouch_ok in pairs
+        if _has_token(tok, n) and pouch_ok(state)
     )
     cache["ft"] = val
     return val
@@ -305,15 +308,21 @@ def _element_count_field(elem_name: str) -> str:
 
 
 def _get_world_stash_key_map(state, player: int) -> dict:
-    """Per-world map of sid -> stash-key item name, granularity-aware.
-    Built once and cached on the world instance."""
+    """Per-world map of sid -> (stash-key item name, count needed),
+    granularity-aware. Built once and cached on the world instance.
+    For distinct/global modes count is always 1; progressive modes return
+    the position-in-order count threshold."""
     world = state.multiworld.worlds[player]
     cached = getattr(world, "_sid_to_stash_key", None)
     if cached is None:
         from . import gating as _g
         sk_gran = world.options.stash_key_granularity.value
+        starter_sid = world.start_sid
         cached = {
-            s["str_id"]: _g.stash_key_for_stage(s["str_id"], sk_gran)
+            s["str_id"]: (
+                _g.stash_key_for_stage(s["str_id"], sk_gran),
+                _g.stash_key_count_for_stage(s["str_id"], sk_gran, starter_sid),
+            )
             for s in GAME_DATA["stages"]
         }
         world._sid_to_stash_key = cached
@@ -321,15 +330,19 @@ def _get_world_stash_key_map(state, player: int) -> dict:
 
 
 def _get_world_field_token_map(state, player: int) -> dict:
-    """Per-world map of sid -> field-token item name, granularity-aware.
-    Built once and cached on the world instance."""
+    """Per-world map of sid -> (field-token item name, count needed),
+    granularity-aware. Built once and cached on the world instance."""
     world = state.multiworld.worlds[player]
     cached = getattr(world, "_sid_to_field_token", None)
     if cached is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
+        starter_sid = world.start_sid
         cached = {
-            s["str_id"]: _g.field_token_for_stage(s["str_id"], ft_gran)
+            s["str_id"]: (
+                _g.field_token_for_stage(s["str_id"], ft_gran),
+                _g.field_token_count_for_stage(s["str_id"], ft_gran, starter_sid),
+            )
             for s in GAME_DATA["stages"]
         }
         world._sid_to_field_token = cached
@@ -346,8 +359,11 @@ def _any_stash_reachable(state, player: int) -> bool:
     would be circular since that location's own access rule includes the
     key check)."""
     sid_to_key = _get_world_stash_key_map(state, player)
-    for sid, key_name in sid_to_key.items():
-        if not state.has(key_name, player):
+    for sid, (key_name, key_count) in sid_to_key.items():
+        if key_count == 1:
+            if not state.has(key_name, player):
+                continue
+        elif state.count(key_name, player) < key_count:
             continue
         try:
             if state.can_reach(f"Complete {sid} - Journey", "Location", player):
@@ -433,10 +449,16 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
         # opening its stash, which requires the per-stage stash key. So gate
         # on both (stage reachable, stash key held) for any qualifying stage.
         from . import gating as _g
-        sk_gran = state.multiworld.worlds[player].options.stash_key_granularity.value
+        world = state.multiworld.worlds[player]
+        sk_gran = world.options.stash_key_granularity.value
+        starter_sid = world.start_sid
         for sid in qualifying:
-            key_name = _g.stash_key_for_stage(sid, sk_gran)
-            if not state.has(key_name, player):
+            key_name  = _g.stash_key_for_stage(sid, sk_gran)
+            key_count = _g.stash_key_count_for_stage(sid, sk_gran, starter_sid)
+            if key_count == 1:
+                if not state.has(key_name, player):
+                    continue
+            elif state.count(key_name, player) < key_count:
                 continue
             try:
                 if state.can_reach(f"Complete {sid} - Journey", "Location", player):
@@ -825,35 +847,22 @@ def _always_false(state) -> bool:
 
 def _compile_gempouch_checker(world, sid: str):
     """Return (state) -> bool: True iff the player has access to gems on
-    the given stage. Granularity-aware:
-        off                  → always True (no gating)
-        per_tile_distinct    → state.has("Gempouch (<prefix>)")
-        per_tile_progressive → state.count("Progressive Gempouch") >= idx+1
-        per_tier             → state.has("Tier <N> Gempouch") for stage's tier
-        global               → state.has("Master Gempouch")
-    """
+    the given stage. Granularity-aware — uses gating helpers so the rule
+    automatically adapts to all variants (distinct + progressive + global)."""
+    from . import gating as _g
     mode = world.options.gem_pouch_granularity.value
-    if mode == 0:
+    if mode == _g.POUCH_OFF:
         return _always_true
     player = world.player
-    prefix = sid[0]
-    if mode == 1:  # per_tile_distinct
-        item_name = f"Gempouch ({prefix})"
+    item_name = _g.pouch_for_stage(sid, mode)
+    if item_name is None:
+        # Should not happen for non-off modes after the helper rewrite,
+        # but fall through safely.
+        return _always_true
+    needed = _g.pouch_count_for_stage(sid, mode, world.start_sid)
+    if needed == 1:
         return lambda state: state.has(item_name, player)
-    if mode == 2:  # per_tile_progressive
-        try:
-            idx = GEM_POUCH_PLAY_ORDER.index(prefix)
-        except ValueError:
-            return _always_true
-        needed = idx + 1
-        return lambda state: state.count("Progressive Gempouch", player) >= needed
-    if mode == 3:  # per_tier
-        tier = STAGE_RULES[sid].tier
-        item_name = f"Tier {tier} Gempouch"
-        return lambda state: state.has(item_name, player)
-    if mode == 4:  # global
-        return lambda state: state.has("Master Gempouch", player)
-    return _always_true
+    return lambda state: state.count(item_name, player) >= needed
 
 
 def _compile_gem_broadened(world, gem_name: str):
@@ -1115,25 +1124,25 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         child_region = multiworld.get_region(str_id, player)
         connection = start_region.connect(child_region, f"{start_sid} -> {str_id}")
 
-        token_name = _gating.field_token_for_stage(str_id, ft_gran)
-        connection.access_rule = (
-            lambda state, tok=token_name: state.has(tok, player)
-        )
+        token_name  = _gating.field_token_for_stage(str_id, ft_gran)
+        token_count = _gating.field_token_count_for_stage(str_id, ft_gran, start_sid)
+        if token_count == 1:
+            connection.access_rule = (
+                lambda state, tok=token_name: state.has(tok, player)
+            )
+        else:
+            connection.access_rule = (
+                lambda state, tok=token_name, n=token_count:
+                    state.count(tok, player) >= n
+            )
 
     # --- Location rules: WIZLOCK skill requirements only ---
-    # gem_pouch_granularity selects which gem-related requirements actually gate:
-    #   off                  → gemSkills:N active, gemPouch:<prefix> is no-op
-    #   per_tile_distinct    → gemSkills:N is a no-op, gemPouch:<prefix> needs
-    #                          the named pouch item `Gempouch (<prefix>)`
-    #   per_tile_progressive → gemSkills:N is a no-op, gemPouch:<prefix> needs
-    #                          N copies of "Progressive Gempouch" where N is the
-    #                          prefix's index in GEM_POUCH_PLAY_ORDER + 1
-    #   per_tier             → gemSkills:N is a no-op, gemPouch:<prefix> needs
-    #                          `Tier <N> Gempouch` for the stage's tier
-    #   global               → gemSkills:N is a no-op, gemPouch:<prefix> needs
-    #                          the single "Master Gempouch"
+    # gem_pouch_granularity selects which gem-related requirements actually gate.
+    # All variants use the same `pouch_for_stage` + `pouch_count_for_stage`
+    # contract from gating.py — distinct modes resolve to state.has, progressive
+    # modes to state.count >= N, off short-circuits.
+    from . import gating as _g
     pouch_mode = world.options.gem_pouch_granularity.value
-    pouch_index = {p: i for i, p in enumerate(GEM_POUCH_PLAY_ORDER)}
 
     for str_id, rule in STAGE_RULES.items():
         if not rule.skills:
@@ -1145,26 +1154,25 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 group_name, count_str = skill.split(":", 1)
                 group_name = group_name.strip()
                 if group_name == "gemPouch":
-                    if pouch_mode == 0:
+                    if pouch_mode == _g.POUCH_OFF:
                         continue  # off — pouches don't gate
-                    prefix = count_str.strip()
-                    if pouch_mode == 1:  # per_tile_distinct
-                        item_name = f"Gempouch ({prefix})"
-                        conditions.append(lambda state, i=item_name: state.has(i, player))
-                    elif pouch_mode == 2:  # per_tile_progressive
-                        needed = pouch_index.get(prefix, -1) + 1
-                        if needed > 0:
-                            conditions.append(
-                                lambda state, n=needed: state.count("Progressive Gempouch", player) >= n
-                            )
-                    elif pouch_mode == 3:  # per_tier
-                        stage_tier = STAGE_RULES[str_id].tier
-                        item_name = f"Tier {stage_tier} Gempouch"
-                        conditions.append(lambda state, i=item_name: state.has(i, player))
-                    elif pouch_mode == 4:  # global
-                        conditions.append(lambda state: state.has("Master Gempouch", player))
+                    # The `prefix` after the colon was used by per-tile-distinct
+                    # for naming; with the unified helper we look up the pouch
+                    # item via the stage's own sid. Per-tile rules naturally
+                    # produce the same prefix-keyed item, and per-tier / global
+                    # ignore the prefix entirely.
+                    pouch_item = _g.pouch_for_stage(str_id, pouch_mode)
+                    if pouch_item is None:
+                        continue
+                    pouch_needed = _g.pouch_count_for_stage(str_id, pouch_mode, world.start_sid)
+                    if pouch_needed == 1:
+                        conditions.append(lambda state, i=pouch_item: state.has(i, player))
+                    else:
+                        conditions.append(
+                            lambda state, i=pouch_item, n=pouch_needed:
+                                state.count(i, player) >= n)
                     continue
-                if group_name == "gemSkills" and pouch_mode != 0:
+                if group_name == "gemSkills" and pouch_mode != _g.POUCH_OFF:
                     continue  # pouches replace the gem-skill gate
                 count_needed = int(count_str.strip())
                 if group_name in skill_groups:
@@ -1205,7 +1213,15 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
         if sid != start_sid:
             requirements = LEVEL_DATA[sid].get("requirements", [])
-            token_name = _gating.field_token_for_stage(sid, ft_gran)
+            token_name  = _gating.field_token_for_stage(sid, ft_gran)
+            token_count = _gating.field_token_count_for_stage(sid, ft_gran, start_sid)
+            # Token-presence check, count-aware so progressive variants gate
+            # the Nth stage on N copies of the singleton.
+            if token_count == 1:
+                token_check = lambda state, t=token_name: state.has(t, player)
+            else:
+                token_check = lambda state, t=token_name, n=token_count: \
+                    state.count(t, player) >= n
             # Mirror the location access rule: clearing a stage in-logic also
             # requires the gem pouch needed to play it. Without this term,
             # Field_<sid> chain prereqs would resolve True from token + DNF
@@ -1222,23 +1238,30 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 normalized = _normalize_requirements(requirements)
                 dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
                 _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, t=token_name, d=dnf_rule, p=pouch_ok:
-                        state.has(t, player) and p(state) and d(state)
+                    lambda state, tc=token_check, d=dnf_rule, p=pouch_ok:
+                        tc(state) and p(state) and d(state)
                 )
                 add_rule(journey_loc, wrap_rule(f"stage:{sid}:journey", dnf_rule))
                 add_rule(stash_loc,   wrap_rule(f"stage:{sid}:stash", dnf_rule))
             else:
                 _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, t=token_name, p=pouch_ok:
-                        state.has(t, player) and p(state)
+                    lambda state, tc=token_check, p=pouch_ok:
+                        tc(state) and p(state)
                 )
 
         # Wizard-stash key item is always required (no off mode). The actual
         # item name depends on stash_key_granularity — see gating.stash_key_for_stage.
+        # For progressive variants the rule needs N copies via state.count.
         from . import gating as _gating
-        key_name = _gating.stash_key_for_stage(sid, world.options.stash_key_granularity.value)
-        add_rule(stash_loc, wrap_rule(f"stash_key:{sid}",
-                                       lambda state, n=key_name: state.has(n, player)))
+        sk_gran   = world.options.stash_key_granularity.value
+        key_name  = _gating.stash_key_for_stage(sid, sk_gran)
+        key_count = _gating.stash_key_count_for_stage(sid, sk_gran, start_sid)
+        if key_count == 1:
+            key_check = lambda state, n=key_name: state.has(n, player)
+        else:
+            key_check = lambda state, n=key_name, c=key_count: \
+                state.count(n, player) >= c
+        add_rule(stash_loc, wrap_rule(f"stash_key:{sid}", key_check))
     from ._timing import log as _tlog
     _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
@@ -1290,7 +1313,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     try:
         from .rulesdata_achievements import achievement_requirements as all_achievements
 
-        is_progressive = world.options.achievement_progression.value == AchievementProgression.option_progressive
+        is_progressive = False
         max_effort_level = world.options.achievement_required_effort.value
         effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
         max_effort_index = min(max_effort_level - 1, len(effort_hierarchy) - 1)

@@ -20,7 +20,7 @@ package patch {
      * Per-frame guard mirrors FirstPlayBypass: cache the array reference and
      * only re-process when the game replaces it (level restart / new stage).
      *
-     * Inactive when gem_pouch_granularity == 0 (off mode) or when the pouch for
+     * Inactive when gemPouchGranularity == 0 (off mode) or when the pouch for
      * the current stage's prefix is owned.
      */
     public class GemPouchSuppressor {
@@ -125,39 +125,62 @@ package patch {
 
         /** True when the player owns the pouch (or precollected copy) that
          *  unlocks gems for the given stage. Granularity-aware:
-         *    mode 1 (per_tile_distinct):    Gempouch (<prefix>) item present
+         *    mode 1 (per_tile):             Gempouch (<prefix>) item present
          *    mode 2 (per_tile_progressive): N copies of Progressive Gempouch
          *    mode 3 (per_tier):             Tier <N> Gempouch item present
-         *    mode 4 (global):               Master Gempouch item present
+         *    mode 4 (per_tier_progressive): N+1 copies of Progressive
+         *                                    Gempouch (per-tier) where N is
+         *                                    the stage's tier in ACTIVE_TIERS
+         *    mode 5 (global):               Master Gempouch item present
          */
         private function _hasPouchFor(stageStrId:String):Boolean {
             var opts:* = AV.serverData.serverOptions;
             var mode:int = int(opts.gemPouchGranularity);
             var prefix:String = stageStrId.charAt(0);
 
-            if (mode == 1 || mode == 2) {
-                var order:Array = opts.gemPouchPlayOrder as Array;
-                if (order == null || order.length == 0)
-                    return true; // no order — fail open
-                var idx:int = order.indexOf(prefix);
-                if (idx < 0)
-                    return true;
-                if (mode == 1) {
-                    return AV.sessionData.hasItem(626 + idx);
-                }
+            if (mode == 1) {
+                // per_tile (distinct): canonical ID assignment via gemPouchPlayOrder.
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
+            }
+            if (mode == 2) {
+                // per_tile_progressive: starter-first count threshold.
+                var orderP:Array = opts.progressiveTileOrder as Array;
+                if (orderP == null || orderP.length == 0)
+                    orderP = opts.gemPouchPlayOrder as Array;
+                if (orderP == null || orderP.length == 0) return true;
+                var idxP:int = orderP.indexOf(prefix);
+                if (idxP < 0) return true;
                 var progId:int = int(opts.gemPouchProgressiveId);
-                if (progId <= 0)
-                    progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idx + 1;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idxP + 1;
             }
             if (mode == 3) {
                 // per_tier: AP id 1601 + tier (see gating.py POUCH_TIER_BASE).
                 var tier:int = _tierForStage(stageStrId);
-                if (tier < 0)
-                    return true;
+                if (tier < 0) return true;
                 return AV.sessionData.hasItem(1601 + tier);
             }
             if (mode == 4) {
+                // per_tier_progressive: Nth copy unlocks Nth tier in
+                // progressiveTierOrder (starter's tier first).
+                var tier4:int = _tierForStage(stageStrId);
+                if (tier4 < 0) return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                if (tierProgId <= 0) return true;
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
+                if (tierOrd != null && tierOrd.length > 0) {
+                    var posT:int = tierOrd.indexOf(tier4);
+                    if (posT < 0) return true;
+                    return AV.sessionData.getItemCount(tierProgId) >= posT + 1;
+                }
+                // Fallback to natural ascending.
+                return AV.sessionData.getItemCount(tierProgId) >= tier4 + 1;
+            }
+            if (mode == 5) {
                 // global: AP id 1614 (see gating.py POUCH_MASTER_ID).
                 return AV.sessionData.hasItem(1614);
             }
