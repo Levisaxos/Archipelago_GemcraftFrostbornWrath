@@ -34,7 +34,7 @@ package net {
         // Connection settings
         private var _archipelagoHost:String     = "localhost";
         private var _archipelagoPort:int        = 38281;
-        private var _archipelagoSlot:String     = "Levisaxos";
+        private var _archipelagoSlot:String     = "";
         private var _archipelagoPassword:String = "";
         private var _saveSlot:int               = 0;
 
@@ -229,7 +229,7 @@ package net {
         public function resetSettings():void {
             _archipelagoHost     = "localhost";
             _archipelagoPort     = 38281;
-            _archipelagoSlot     = "Levisaxos";
+            _archipelagoSlot     = "";
             _archipelagoPassword = "";
         }
 

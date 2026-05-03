@@ -86,6 +86,29 @@ package save {
         }
 
         /**
+         * Returns true if the slot file exists and has non-empty AP credentials
+         * (host + slot). Used by the router to decide whether to activate AP mode
+         * automatically vs prompt the player.
+         */
+        public function slotHasApCredentials(slotId:int):Boolean {
+            if (slotId <= 0) return false;
+            var f:File = _configDir.resolvePath("slot_" + slotId + ".json");
+            if (!f.exists) return false;
+            try {
+                var stream:FileStream = new FileStream();
+                stream.open(f, FileMode.READ);
+                var raw:String = stream.readUTFBytes(stream.bytesAvailable);
+                stream.close();
+                var data:Object = JSON.parse(raw);
+                return data.host != null && String(data.host).length > 0
+                    && data.slot != null && String(data.slot).length > 0;
+            } catch (err:Error) {
+                _logger.log(_modName, "slotHasApCredentials ERROR: " + err.message);
+            }
+            return false;
+        }
+
+        /**
          * Returns true if the slot file exists and standalone=true.
          * Returns false if the file is missing, unreadable, or standalone is not set.
          */
