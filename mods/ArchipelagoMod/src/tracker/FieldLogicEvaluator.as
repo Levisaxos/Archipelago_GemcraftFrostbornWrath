@@ -478,23 +478,30 @@ package tracker {
             var lines:Array = [];
 
             // Field_ prereqs — show as a single OR line if any are missing.
-            var missingFields:Array = [];
-            var anyFieldHeld:Boolean = false;
-            var anyFreePrereq:Boolean = false;
-            var tokens:Object = AV.sessionData.tokensByStrId;
-            for each (var req:String in flat) {
-                if (req == null || req.indexOf("Field_") != 0) continue;
-                var sid:String = req.substr(6);
-                if (_freeStages[sid] == true) {
-                    anyFreePrereq = true;
-                } else if (tokens != null && tokens[sid] == true) {
-                    anyFieldHeld = true;
-                } else {
-                    missingFields.push(sid);
+            // Skipped entirely in progressive field-token modes: the Nth
+            // copy of the progressive token unlocks the Nth stage in the
+            // seed's randomized order, so vanilla GCFW Field_<sid> chains
+            // are artificial and the "Requires field X" hint would point
+            // the player at items they can't directly hunt for.
+            if (!_isFieldTokenProgressive()) {
+                var missingFields:Array = [];
+                var anyFieldHeld:Boolean = false;
+                var anyFreePrereq:Boolean = false;
+                var tokens:Object = AV.sessionData.tokensByStrId;
+                for each (var req:String in flat) {
+                    if (req == null || req.indexOf("Field_") != 0) continue;
+                    var sid:String = req.substr(6);
+                    if (_freeStages[sid] == true) {
+                        anyFreePrereq = true;
+                    } else if (tokens != null && tokens[sid] == true) {
+                        anyFieldHeld = true;
+                    } else {
+                        missingFields.push(sid);
+                    }
                 }
-            }
-            if (!anyFieldHeld && !anyFreePrereq && missingFields.length > 0) {
-                lines.push(["Requires field " + missingFields.join(" / "), 0x888888]);
+                if (!anyFieldHeld && !anyFreePrereq && missingFields.length > 0) {
+                    lines.push(["Requires field " + missingFields.join(" / "), 0x888888]);
+                }
             }
 
             // Counter requirements that aren't met — one line each.
@@ -714,12 +721,14 @@ package tracker {
             }
 
             var tokens:Object = AV.sessionData.tokensByStrId;
+            var progressive:Boolean = _isFieldTokenProgressive();
             for each (var group:Array in groups) {
                 if (group == null) continue;
                 var groupOk:Boolean = true;
                 for each (var req:String in group) {
                     if (req == null) continue;
                     if (req.indexOf("Field_") == 0) {
+                        if (progressive) continue;
                         var sid:String = req.substr(6);
                         if (_freeStages[sid] != true
                             && !(tokens != null && tokens[sid] == true)) {
@@ -859,6 +868,20 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             return int(AV.serverData.serverOptions.gemPouchGranularity);
+        }
+
+        // True when field_token_granularity is one of the progressive
+        // variants (per_stage_progressive=1, per_tile_progressive=3,
+        // per_tier_progressive=5). In those modes the Nth copy of the
+        // singleton progressive item unlocks the Nth tile/stage in the
+        // seed's randomized order, so the token count IS the prereq
+        // chain — vanilla GCFW Field_<sid> chains from rulesdata_levels
+        // become artificial and must be ignored.
+        private function _isFieldTokenProgressive():Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return false;
+            var g:int = int(AV.serverData.serverOptions.fieldTokenGranularity);
+            return g == 1 || g == 3 || g == 5;
         }
 
     }

@@ -2455,7 +2455,7 @@ achievement_requirements = {
         "game_id": 530,
         "description": "Kill 100 monsters while time is frozen.",
         "details": "Kill 100 monsters during a single time-frozen window.",
-        "requirements": ["sFreeze"],
+        "requirements": [""],
         "required_effort": "Trivial",
     },
     # AP ID: 2274
@@ -4537,10 +4537,9 @@ achievement_requirements = {
         "ap_id": 2508,
         "game_id": 615,
         "description": "Full of oxygen",
-        "details": "Pokemon Magikarp reference. In-game trigger (IngameAchiChecker6.as case 615): fill all 9 inventory slots with pure Slowing gems. Inventory state isn't reliably gateable by AP logic, so kept untrackable.",
+        "details": "Fill all 9 inventory slots with pure Slowing gems.",
         "requirements": [],
         "required_effort": "Trivial",
-        "untrackable": True,
     },
     # AP ID: 2509
     "Starter Pack": {

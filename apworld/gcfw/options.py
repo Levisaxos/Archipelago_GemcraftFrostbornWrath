@@ -6,10 +6,7 @@ from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
 class EnforceLogic(Toggle):
     """When enabled, prevents starting out-of-logic stages in Journey mode.
 
-    Journey mode is where Archipelago check locations live. With this on, the
-    Journey start button is disabled for stages whose tier gate is not yet met,
-    forcing the player to follow the randomizer's intended progression order.
-
+    Journey mode is where Archipelago check locations live. With this on, the Journey start button is disabled for stages whose tier gate is not yet met, forcing the player to follow the randomizer's intended progression order.
     Endurance and Trial modes are unaffected (they have no AP checks).
     """
     display_name = "Enforce Logic"
@@ -19,11 +16,8 @@ class EnforceLogic(Toggle):
 class StartingStage(Choice):
     """Which early-game stage you start the run on.
 
-    The chosen stage is accessible from the menu without a Field Token; all
-    other stages (including the W/S stages you didn't pick) require their
-    own token plus a clearable prereq stage.
-
-    Default 'random' picks one of W1-W4 / S1-S4 each generation.
+    The chosen stage is accessible from the menu without a Field Token; all other stages (including the W/S stages you didn't pick) require their own token plus a clearable prereq stage.
+    In case of tile/tier starter will be the levels tile/tier    
     """
     display_name = "Starting Stage"
     option_w1 = 0
@@ -36,9 +30,6 @@ class StartingStage(Choice):
     option_s4 = 7
     default = "random"
 
-
-# Map StartingStage option int -> stage str_id. Order matches the option_* values
-# above. Imported by __init__.py and rules.py to resolve the chosen start.
 STARTING_STAGE_BY_VALUE = {
     StartingStage.option_w1: "W1",
     StartingStage.option_w2: "W2",
@@ -109,12 +100,7 @@ class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes in the item pool combined.
 
     The pool contains 32 Tattered Scrolls, 6 Worn Tomes, and 2 Ancient Grimoires.
-    Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.
-
-    At the default of 100 each tome gives 1 / 2 / 3 levels (118 total).
-    Values below ~100 all resolve to the same minimum (1/2/3 levels, ~118 total).
-    At 200 tomes give roughly 2/3/5 levels (~224 total).
-    At 300 tomes give roughly 3/5/8 levels (~342 total).
+    Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.    
     """
     display_name = "XP Tome Bonus"
     range_start = 50
@@ -181,10 +167,7 @@ class DeathLinkCooldown(Range):
 class StartingWizardLevel(Range):
     """Wizard level the player starts at, before any XP tomes are collected.
 
-    Setting this above 1 grants bonus wizard levels at game start, giving extra
-    skill points to spend before the run is in full swing.  Useful for runs where
-    you want to skip early skill-grinding and get into the interesting decisions
-    faster.  Has no effect on tier logic or item placement.
+    Setting this above 1 grants bonus wizard levels at game start, giving extra skill points to spend before the run is in full swing. 
     """
     display_name = "Starting Wizard Level"
     range_start = 1
@@ -195,8 +178,7 @@ class StartingWizardLevel(Range):
 class DisableEndurance(Toggle):
     """When enabled, Endurance mode is permanently blocked on the stage settings screen.
 
-    Useful for players who want to restrict themselves to Journey mode only,
-    or for seeds where Endurance farming would trivialise progression.
+    Useful for players who want to restrict themselves to Journey mode only, or for seeds where Endurance farming would trivialise progression.
     """
     display_name = "Disable Endurance Mode"
     default = 0
@@ -205,8 +187,7 @@ class DisableEndurance(Toggle):
 class DisableTrial(Toggle):
     """When enabled, Wizard Trial mode is permanently blocked on the stage settings screen.
 
-    Trial mode has no Archipelago check locations, so it is disabled by default to
-    keep the focus on Journey mode progression.
+    Trial mode has no Archipelago check locations, so it is disabled by default to keep the focus on Journey mode progression.
     """
     display_name = "Disable Trial Mode"
     default = 1
@@ -215,9 +196,7 @@ class DisableTrial(Toggle):
 class EnemyHpMultiplier(Range):
     """Percentage multiplier applied to every enemy's HP at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100
-    make enemies tougher.  Applied once per monster when it first enters the
-    field — does not stack with DeathLink wave surges.
+    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher. 
     """
     display_name = "Enemy HP Multiplier"
     range_start = 50
@@ -228,8 +207,7 @@ class EnemyHpMultiplier(Range):
 class EnemyArmorMultiplier(Range):
     """Percentage multiplier applied to every enemy's armor level at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100
-    make enemies tougher.
+    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher.
     """
     display_name = "Enemy Armor Multiplier"
     range_start = 50
@@ -240,8 +218,7 @@ class EnemyArmorMultiplier(Range):
 class EnemyShieldMultiplier(Range):
     """Percentage multiplier applied to every enemy's shield HP at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100
-    make enemies tougher.
+    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher.
     """
     display_name = "Enemy Shield Multiplier"
     range_start = 50
@@ -253,8 +230,7 @@ class EnemiesPerWaveMultiplier(Range):
     """Percentage multiplier applied to the number of monsters in every wave.
 
     100 = no change.  150 = 50% more monsters per wave.  50 = half as many.
-    Applied to wave definitions before the first wave spawns, so the wave bar
-    tooltip reflects the real counts.
+    Applied to wave definitions before the first wave spawns, so the wave bar tooltip reflects the real counts.
     """
     display_name = "Enemies Per Wave Multiplier"
     range_start = 50
@@ -277,23 +253,11 @@ class ExtraWaveCount(Range):
 class GemPouchGranularity(Choice):
     """How gem availability per stage is gated by Archipelago items.
 
-    off:                  No gempouches. Stages keep their original `gemSkills: N` gate
-                          (collect N of the 6 gem-skill items); gem orbs spawn freely
-                          in every level.
-    per_tile:             26 named pouches (one per stage-prefix letter / tile). A stage
-                          in prefix X spawns no gem orbs at all until you collect
-                          `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
-    per_tile_progressive: 26 copies of `Progressive Gempouch` in play order
-                          (PROGRESSIVE_TILE_ORDER in rulesdata.py). The Nth copy
-                          unlocks the Nth tile in that order. Spoiler log shows
-                          fungible items but fill is more forgiving.
-    per_tier:             13 named pouches (one per power tier, 0-12). Stages unlock
-                          gem orbs once you collect their tier's pouch. Coarser than
-                          per_tile — fewer items in the pool but unlocks chunks of
-                          stages at a time.
-    per_tier_progressive: 13 copies of `Progressive Gempouch (per-tier)`. The Nth
-                          copy unlocks tier N (0..12). Same fill-friendliness benefit
-                          as per_tile_progressive but at coarser granularity.
+    off:                  No gempouches. Stages keep their original `gemSkills: N` gate (collect N of the 6 gem-skill items); gem orbs spawn freely in every level.
+    per_tile:             26 named pouches (one per stage-prefix letter / tile). A stage in prefix X spawns no gem orbs at all until you collect `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
+    per_tile_progressive: 26 copies of `Progressive Gempouch` in play order (PROGRESSIVE_TILE_ORDER in rulesdata.py). The Nth copy unlocks the Nth tile in that order.
+    per_tier:             13 named pouches (one per power tier, 0-12). Stages unlock gem orbs once you collect their tier's pouch. Coarser than per_tile — fewer items in the pool but unlocks chunks of stages at a time.
+    per_tier_progressive: 13 copies of `Progressive Gempouch (per-tier)`. The Nth copy unlocks tier N (0..12). Same fill-friendliness benefit as per_tile_progressive but at coarser granularity.
     global:               1 master pouch unlocks gems on every stage at once.
 
     All non-off modes pre-collect enough of the gating item to cover the chosen
@@ -320,22 +284,11 @@ class FieldTokenGranularity(Choice):
     log shows fungible items but fill is more forgiving.
 
     per_stage:             One token per stage (122 tokens total). Original behaviour.
-    per_stage_progressive: 122 copies of `Progressive Field Token (per-stage)`. The
-                           Nth copy unlocks the Nth stage in (tile play order x
-                           alphabetical-within-tile) order.
-    per_tile:              One token per stage prefix / map tile (26 tokens). Collecting
-                           `<Prefix> Tile Field Token` unlocks every stage starting with
-                           that prefix.
-    per_tile_progressive:  26 copies of `Progressive Field Token (per-tile)` in play
-                           order. Same fill benefit as per_stage_progressive at coarser
-                           granularity.
-    per_tier:              One token per power tier (13 tokens, 0-12). Collecting
-                           `Tier <N> Field Token` unlocks every stage in that tier.
-    per_tier_progressive:  13 copies of `Progressive Field Token (per-tier)`. The Nth
-                           copy unlocks tier N (0..12).
-
-    The starting stage's covering token(s) are precollected so Menu->starter
-    still works regardless of which mode is chosen.
+    per_stage_progressive: 122 copies of `Progressive Field Token (per-stage)`. The Nth copy unlocks the Nth stage in (tile play order x alphabetical-within-tile) order.
+    per_tile:              One token per stage prefix / map tile (26 tokens). Collecting `<Prefix> Tile Field Token` unlocks every stage starting with that prefix.
+    per_tile_progressive:  26 copies of `Progressive Field Token (per-tile)` in play order. Same fill benefit as per_stage_progressive at coarser granularity.
+    per_tier:              One token per power tier (13 tokens, 0-12). Collecting `Tier <N> Field Token` unlocks every stage in that tier.
+    per_tier_progressive:  13 copies of `Progressive Field Token (per-tier)`. The Nth copy unlocks tier N (0..12).    
     """
     display_name = "Field Token Granularity"
     option_per_stage             = 0
@@ -441,17 +394,17 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
-    starting_stage:              StartingStage
-    achievement_required_effort: AchievementRequiredEffort    
     field_token_granularity:   FieldTokenGranularity
     stash_key_granularity:     StashKeyGranularity
     gem_pouch_granularity:     GemPouchGranularity
-    enforce_logic:             EnforceLogic
-    xp_tome_bonus:             XpTomeBonus    
+    starting_stage:              StartingStage
+    achievement_required_effort: AchievementRequiredEffort        
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial
-    starting_wizard_level:     StartingWizardLevel
+    enforce_logic:             EnforceLogic
+    xp_tome_bonus:             XpTomeBonus            
     starting_overcrowd:        StartingOvercrowd    
+    starting_wizard_level:     StartingWizardLevel
     skillpoint_multiplier:     SkillpointMultiplier
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier

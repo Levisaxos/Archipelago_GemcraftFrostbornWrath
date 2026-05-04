@@ -1389,6 +1389,18 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     from ._timing import wrap_rule, phase as _phase
     import time as _t
     _t_stages = _t.perf_counter()
+    # Progressive field-token modes: the Nth copy of the singleton item
+    # unlocks the Nth stage in the seed's randomized progression order, so
+    # the token count IS the prereq chain. Vanilla GCFW Field_<sid> chains
+    # from rulesdata_levels.py become artificial in those modes — a tile
+    # at progressive position 5 with vanilla prereqs from a tile at
+    # position 10 would otherwise be marked unreachable until the later
+    # tile arrives. Skip the DNF entirely for progressive granularities.
+    ft_progressive = ft_gran in (
+        _gating.FIELD_PER_STAGE_PROGRESSIVE,
+        _gating.FIELD_PER_TILE_PROGRESSIVE,
+        _gating.FIELD_PER_TIER_PROGRESSIVE,
+    )
     for stage in stages:
         sid = stage["str_id"]
         journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
@@ -1417,7 +1429,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # stages with no DNF prereqs (W2-W4, S1-S4 when not chosen as
             # start) would fall through to True unconditionally, letting AP
             # place late tokens on sphere-1 locations.
-            if requirements:
+            if requirements and not ft_progressive:
                 normalized = _normalize_requirements(requirements)
                 dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
                 _STAGE_CLEAR_RULES[(player, sid)] = (

@@ -273,7 +273,7 @@ package unlockers {
                                     String(ach.title), achData));
                             if (!inLogic && _receivedToast != null) {
                                 _receivedToast.addItem(
-                                    ach.title + " — out of logic", 0xFF8844);
+                                    ach.title , 0xFF8844);
                                 _logger.log(_modName, "Out-of-logic unlock: " + ach.title);
                             }
                         } catch (eLogic:Error) {
