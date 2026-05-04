@@ -518,19 +518,13 @@
       "waveCount": 32,
       "requirements": [
         [
-          "Field_Y3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y3"
         ],
         [
-          "Field_R4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R4"
         ],
         [
-          "Field_R3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R3"
         ]
       ]
     },
@@ -877,19 +871,13 @@
       "waveCount": 32,
       "requirements": [
         [
-          "Field_Y3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y3"
         ],
         [
-          "Field_R4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R4"
         ],
         [
-          "Field_R3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R3"
         ]
       ]
     },
@@ -908,19 +896,13 @@
       "waveCount": 35,
       "requirements": [
         [
-          "Field_N2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N2"
         ],
         [
-          "Field_O4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O4"
         ],
         [
-          "Field_N1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N1"
         ]
       ]
     },
@@ -967,19 +949,13 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_O2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O2"
         ],
         [
-          "Field_P1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P1"
         ],
         [
-          "Field_R6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R6"
         ]
       ]
     },
@@ -999,19 +975,13 @@
       "waveCount": 42,
       "requirements": [
         [
-          "Field_P6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P6"
         ],
         [
-          "Field_P4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P4"
         ],
         [
-          "Field_P2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P2"
         ]
       ]
     },
@@ -1029,19 +999,13 @@
       "waveCount": 48,
       "requirements": [
         [
-          "Field_L3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L3"
         ],
         [
-          "Field_Z3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z3"
         ],
         [
-          "Field_L2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L2"
         ]
       ]
     },
@@ -1060,19 +1024,13 @@
       "waveCount": 44,
       "requirements": [
         [
-          "Field_P6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P6"
         ],
         [
-          "Field_P2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P2"
         ],
         [
-          "Field_P4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P4"
         ]
       ]
     },
@@ -1091,19 +1049,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_Z1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z1"
         ],
         [
-          "Field_X3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X3"
         ],
         [
-          "Field_X1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X1"
         ]
       ]
     },
@@ -1125,19 +1077,13 @@
       "waveCount": 44,
       "requirements": [
         [
-          "Field_P2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P2"
         ],
         [
-          "Field_P6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P6"
         ],
         [
-          "Field_P4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P4"
         ]
       ]
     },
@@ -1155,19 +1101,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_L1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_L1"
         ],
         [
-          "Field_X4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X4"
         ],
         [
-          "Field_K4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K4"
         ]
       ]
     },
@@ -1185,19 +1125,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_K1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K1"
         ],
         [
-          "Field_K2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K2"
         ],
         [
-          "Field_Z2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z2"
         ]
       ]
     },
@@ -1214,19 +1148,13 @@
       "waveCount": 48,
       "requirements": [
         [
-          "Field_Z3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z3"
         ],
         [
-          "Field_L3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L3"
         ],
         [
-          "Field_L2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L2"
         ]
       ]
     },
@@ -1246,19 +1174,13 @@
       "waveCount": 34,
       "requirements": [
         [
-          "Field_N1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N1"
         ],
         [
-          "Field_N2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N2"
         ],
         [
-          "Field_O4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O4"
         ]
       ]
     },
@@ -1275,19 +1197,13 @@
       "waveCount": 35,
       "requirements": [
         [
-          "Field_O1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O1"
         ],
         [
-          "Field_T5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_T5"
         ],
         [
-          "Field_Y2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y2"
         ]
       ]
     },
@@ -1306,19 +1222,13 @@
       "waveCount": 32,
       "requirements": [
         [
-          "Field_R3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R3"
         ],
         [
-          "Field_R4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R4"
         ],
         [
-          "Field_Y3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y3"
         ]
       ]
     },
@@ -1339,19 +1249,13 @@
       "waveCount": 33,
       "requirements": [
         [
-          "Field_O3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O3"
         ],
         [
-          "Field_Y1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y1"
         ],
         [
-          "Field_R5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R5"
         ]
       ]
     },
@@ -1371,19 +1275,13 @@
       "waveCount": 35,
       "requirements": [
         [
-          "Field_R5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R5"
         ],
         [
-          "Field_O3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O3"
         ],
         [
-          "Field_Y1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y1"
         ]
       ]
     },
@@ -1400,19 +1298,13 @@
       "waveCount": 36,
       "requirements": [
         [
-          "Field_Y1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y1"
         ],
         [
-          "Field_R5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R5"
         ],
         [
-          "Field_O3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O3"
         ]
       ]
     },
@@ -1429,19 +1321,13 @@
       "waveCount": 38,
       "requirements": [
         [
-          "Field_R6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R6"
         ],
         [
-          "Field_P1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P1"
         ],
         [
-          "Field_O2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O2"
         ]
       ]
     },
@@ -1459,19 +1345,13 @@
       "waveCount": 70,
       "requirements": [
         [
-          "Field_H5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H5"
         ],
         [
-          "Field_M4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M4"
         ],
         [
-          "Field_H2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H2"
         ]
       ]
     },
@@ -1489,19 +1369,13 @@
       "waveCount": 68,
       "requirements": [
         [
-          "Field_M4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M4"
         ],
         [
-          "Field_H2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H2"
         ],
         [
-          "Field_H5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H5"
         ]
       ]
     },
@@ -1521,19 +1395,13 @@
       "waveCount": 38,
       "requirements": [
         [
-          "Field_T5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_T5"
         ],
         [
-          "Field_O1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O1"
         ],
         [
-          "Field_Y2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y2"
         ]
       ]
     },
@@ -1550,19 +1418,13 @@
       "waveCount": 42,
       "requirements": [
         [
-          "Field_P3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P3"
         ],
         [
-          "Field_N3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N3"
         ],
         [
-          "Field_Y4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y4"
         ]
       ]
     },
@@ -1582,19 +1444,13 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_O2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O2"
         ],
         [
-          "Field_R6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R6"
         ],
         [
-          "Field_P1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P1"
         ]
       ]
     },
@@ -1615,24 +1471,16 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_N3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N3"
         ],
         [
-          "Field_Y4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y4"
         ],
         [
-          "Field_P5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P5"
         ],
         [
-          "Field_P3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P3"
         ]
       ]
     },
@@ -1649,19 +1497,13 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_P1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P1"
         ],
         [
-          "Field_R6",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_R6"
         ],
         [
-          "Field_O2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O2"
         ]
       ]
     },
@@ -1680,19 +1522,13 @@
       "waveCount": 44,
       "requirements": [
         [
-          "Field_X1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X1"
         ],
         [
-          "Field_Z1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z1"
         ],
         [
-          "Field_X3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X3"
         ]
       ]
     },
@@ -1711,19 +1547,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_K2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K2"
         ],
         [
-          "Field_K1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K1"
         ],
         [
-          "Field_Z2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z2"
         ]
       ]
     },
@@ -1743,19 +1573,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_Z2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z2"
         ],
         [
-          "Field_K2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K2"
         ],
         [
-          "Field_K1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K1"
         ]
       ]
     },
@@ -1776,19 +1600,13 @@
       "waveCount": 50,
       "requirements": [
         [
-          "Field_Z3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z3"
         ],
         [
-          "Field_L2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L2"
         ],
         [
-          "Field_L3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L3"
         ]
       ]
     },
@@ -1810,8 +1628,6 @@
       "requirements": [
         [
           "Field_E2",
-          "talismanRow:2",
-          "talismanColumn:2",
           "sBeam",
           "sBolt",
           "sBarrage",
@@ -1819,8 +1635,6 @@
         ],
         [
           "Field_M3",
-          "talismanRow:2",
-          "talismanColumn:2",
           "sBeam",
           "sBolt",
           "sBarrage",
@@ -1828,8 +1642,6 @@
         ],
         [
           "Field_M2",
-          "talismanRow:2",
-          "talismanColumn:2",
           "sBeam",
           "sBolt",
           "sBarrage",
@@ -1853,19 +1665,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_L1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_L1"
         ],
         [
-          "Field_X4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X4"
         ],
         [
-          "Field_K4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K4"
         ]
       ]
     },
@@ -1884,19 +1690,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_X4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X4"
         ],
         [
-          "Field_L1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_L1"
         ],
         [
-          "Field_K4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_K4"
         ]
       ]
     },
@@ -1915,24 +1715,16 @@
       "waveCount": 50,
       "requirements": [
         [
-          "Field_K5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K5"
         ],
         [
-          "Field_Z4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z4"
         ],
         [
-          "Field_L4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L4"
         ],
         [
-          "Field_X2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_X2"
         ]
       ]
     },
@@ -1953,19 +1745,13 @@
       "waveCount": 46,
       "requirements": [
         [
-          "Field_Z1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Z1"
         ],
         [
-          "Field_X3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X3"
         ],
         [
-          "Field_X1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_X1"
         ]
       ]
     },
@@ -1985,19 +1771,13 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_E2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E2"
         ],
         [
-          "Field_M3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M3"
         ],
         [
-          "Field_M2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M2"
         ]
       ]
     },
@@ -2017,19 +1797,13 @@
       "waveCount": 66,
       "requirements": [
         [
-          "Field_L5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L5"
         ],
         [
-          "Field_F2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F2"
         ],
         [
-          "Field_H1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H1"
         ]
       ]
     },
@@ -2048,19 +1822,13 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_E2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E2"
         ],
         [
-          "Field_M3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M3"
         ],
         [
-          "Field_M2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M2"
         ]
       ]
     },
@@ -2081,19 +1849,13 @@
       "waveCount": 70,
       "requirements": [
         [
-          "Field_N4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N4"
         ],
         [
-          "Field_N5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N5"
         ],
         [
-          "Field_E1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E1"
         ]
       ]
     },
@@ -2115,24 +1877,16 @@
       "waveCount": 50,
       "requirements": [
         [
-          "Field_L4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L4"
         ],
         [
-          "Field_X2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_X2"
         ],
         [
-          "Field_Z4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z4"
         ],
         [
-          "Field_K5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K5"
         ]
       ]
     },
@@ -2150,24 +1904,16 @@
       "waveCount": 52,
       "requirements": [
         [
-          "Field_X2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_X2"
         ],
         [
-          "Field_Z4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z4"
         ],
         [
-          "Field_K5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K5"
         ],
         [
-          "Field_L4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L4"
         ]
       ]
     },
@@ -2189,19 +1935,13 @@
       "waveCount": 55,
       "requirements": [
         [
-          "Field_J1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J1"
         ],
         [
-          "Field_J2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J2"
         ],
         [
-          "Field_Z5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z5"
         ]
       ]
     },
@@ -2220,19 +1960,13 @@
       "waveCount": 56,
       "requirements": [
         [
-          "Field_J1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J1"
         ],
         [
-          "Field_J2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J2"
         ],
         [
-          "Field_Z5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z5"
         ]
       ]
     },
@@ -2253,19 +1987,13 @@
       "waveCount": 55,
       "requirements": [
         [
-          "Field_K3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K3"
         ],
         [
-          "Field_G2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G2"
         ],
         [
-          "Field_G1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G1"
         ]
       ]
     },
@@ -2282,19 +2010,13 @@
       "waveCount": 54,
       "requirements": [
         [
-          "Field_G2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G2"
         ],
         [
-          "Field_K3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K3"
         ],
         [
-          "Field_G1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G1"
         ]
       ]
     },
@@ -2314,19 +2036,13 @@
       "waveCount": 56,
       "requirements": [
         [
-          "Field_J1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J1"
         ],
         [
-          "Field_Z5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z5"
         ],
         [
-          "Field_J2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J2"
         ]
       ]
     },
@@ -2344,19 +2060,13 @@
       "waveCount": 58,
       "requirements": [
         [
-          "Field_J3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J3"
         ],
         [
-          "Field_G4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G4"
         ],
         [
-          "Field_G3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G3"
         ]
       ]
     },
@@ -2376,19 +2086,13 @@
       "waveCount": 60,
       "requirements": [
         [
-          "Field_J3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J3"
         ],
         [
-          "Field_G3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G3"
         ],
         [
-          "Field_G4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G4"
         ]
       ]
     },
@@ -2408,19 +2112,13 @@
       "waveCount": 62,
       "requirements": [
         [
-          "Field_F1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F1"
         ],
         [
-          "Field_J4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J4"
         ],
         [
-          "Field_M1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M1"
         ]
       ]
     },
@@ -2441,19 +2139,13 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_J4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J4"
         ],
         [
-          "Field_F1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F1"
         ],
         [
-          "Field_M1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M1"
         ]
       ]
     },
@@ -2473,24 +2165,16 @@
       "waveCount": 66,
       "requirements": [
         [
-          "Field_L5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L5"
         ],
         [
-          "Field_H1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H1"
         ],
         [
-          "Field_F2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F2"
         ],
         [
-          "Field_H3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H3"
         ]
       ]
     },
@@ -2510,19 +2194,13 @@
       "waveCount": 60,
       "requirements": [
         [
-          "Field_G3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G3"
         ],
         [
-          "Field_J3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J3"
         ],
         [
-          "Field_G4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G4"
         ]
       ]
     },
@@ -2540,19 +2218,13 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_E2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E2"
         ],
         [
-          "Field_M2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M2"
         ],
         [
-          "Field_M3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M3"
         ]
       ]
     },
@@ -2572,19 +2244,13 @@
       "waveCount": 85,
       "requirements": [
         [
-          "Field_B5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B5"
         ],
         [
-          "Field_I4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I4"
         ],
         [
-          "Field_C1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C1"
         ]
       ]
     },
@@ -2602,19 +2268,13 @@
       "waveCount": 88,
       "requirements": [
         [
-          "Field_F3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F3"
         ],
         [
-          "Field_C3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C3"
         ],
         [
-          "Field_B3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B3"
         ]
       ]
     },
@@ -2634,19 +2294,13 @@
       "waveCount": 70,
       "requirements": [
         [
-          "Field_H5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H5"
         ],
         [
-          "Field_M4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M4"
         ],
         [
-          "Field_H2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H2"
         ]
       ]
     },
@@ -2666,19 +2320,13 @@
       "waveCount": 62,
       "requirements": [
         [
-          "Field_M1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_M1"
         ],
         [
-          "Field_J4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_J4"
         ],
         [
-          "Field_F1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F1"
         ]
       ]
     },
@@ -2698,19 +2346,13 @@
       "waveCount": 74,
       "requirements": [
         [
-          "Field_D4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D4"
         ],
         [
-          "Field_D1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D1"
         ],
         [
-          "Field_H4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_H4"
         ]
       ]
     },
@@ -2732,19 +2374,13 @@
       "waveCount": 74,
       "requirements": [
         [
-          "Field_D4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D4"
         ],
         [
-          "Field_H4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_H4"
         ],
         [
-          "Field_D1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D1"
         ]
       ]
     },
@@ -2764,19 +2400,13 @@
       "waveCount": 72,
       "requirements": [
         [
-          "Field_N5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N5"
         ],
         [
-          "Field_E1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E1"
         ],
         [
-          "Field_N4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N4"
         ]
       ]
     },
@@ -2797,19 +2427,13 @@
       "waveCount": 75,
       "requirements": [
         [
-          "Field_H4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_H4"
         ],
         [
-          "Field_D4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D4"
         ],
         [
-          "Field_D1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D1"
         ]
       ]
     },
@@ -2830,19 +2454,13 @@
       "waveCount": 77,
       "requirements": [
         [
-          "Field_E3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E3"
         ],
         [
-          "Field_E4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E4"
         ],
         [
-          "Field_D2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D2"
         ]
       ]
     },
@@ -2860,19 +2478,13 @@
       "waveCount": 70,
       "requirements": [
         [
-          "Field_N4",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N4"
         ],
         [
-          "Field_N5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_N5"
         ],
         [
-          "Field_E1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_E1"
         ]
       ]
     },
@@ -2892,19 +2504,13 @@
       "waveCount": 76,
       "requirements": [
         [
-          "Field_E4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E4"
         ],
         [
-          "Field_E3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E3"
         ],
         [
-          "Field_D2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D2"
         ]
       ]
     },
@@ -2927,19 +2533,13 @@
       "waveCount": 80,
       "requirements": [
         [
-          "Field_I1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I1"
         ],
         [
-          "Field_D3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D3"
         ],
         [
-          "Field_B1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B1"
         ]
       ]
     },
@@ -2957,19 +2557,13 @@
       "waveCount": 86,
       "requirements": [
         [
-          "Field_C1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C1"
         ],
         [
-          "Field_I4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I4"
         ],
         [
-          "Field_B5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B5"
         ]
       ]
     },
@@ -2987,24 +2581,16 @@
       "waveCount": 80,
       "requirements": [
         [
-          "Field_I2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I2"
         ],
         [
-          "Field_D5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D5"
         ],
         [
-          "Field_E5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E5"
         ],
         [
-          "Field_B2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B2"
         ]
       ]
     },
@@ -3025,19 +2611,13 @@
       "waveCount": 82,
       "requirements": [
         [
-          "Field_C2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C2"
         ],
         [
-          "Field_I3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I3"
         ],
         [
-          "Field_B4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B4"
         ]
       ]
     },
@@ -3055,19 +2635,13 @@
       "waveCount": 80,
       "requirements": [
         [
-          "Field_E5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E5"
         ],
         [
-          "Field_B2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B2"
         ],
         [
-          "Field_I2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I2"
         ]
       ]
     },
@@ -3087,19 +2661,13 @@
       "waveCount": 84,
       "requirements": [
         [
-          "Field_I4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I4"
         ],
         [
-          "Field_B5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B5"
         ],
         [
-          "Field_C1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C1"
         ]
       ]
     },
@@ -3119,19 +2687,13 @@
       "waveCount": 87,
       "requirements": [
         [
-          "Field_C3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C3"
         ],
         [
-          "Field_B3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B3"
         ],
         [
-          "Field_F3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F3"
         ]
       ]
     },
@@ -3152,19 +2714,13 @@
       "waveCount": 90,
       "requirements": [
         [
-          "Field_F3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F3"
         ],
         [
-          "Field_B3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B3"
         ],
         [
-          "Field_C3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C3"
         ]
       ]
     },
@@ -3186,19 +2742,13 @@
       "waveCount": 90,
       "requirements": [
         [
-          "Field_F4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F4"
         ],
         [
-          "Field_C5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C5"
         ],
         [
-          "Field_C4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C4"
         ]
       ]
     },
@@ -3220,19 +2770,13 @@
       "waveCount": 90,
       "requirements": [
         [
-          "Field_F4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F4"
         ],
         [
-          "Field_C5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C5"
         ],
         [
-          "Field_C4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C4"
         ]
       ]
     },
@@ -3254,19 +2798,13 @@
       "waveCount": 90,
       "requirements": [
         [
-          "Field_A1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A1"
         ],
         [
-          "Field_F5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F5"
         ],
         [
-          "Field_A2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A2"
         ]
       ]
     },
@@ -3287,19 +2825,13 @@
       "waveCount": 100,
       "requirements": [
         [
-          "Field_A3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A3"
         ],
         [
-          "Field_A6",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A6"
         ],
         [
-          "Field_A5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A5"
         ]
       ]
     },
@@ -3319,19 +2851,13 @@
       "waveCount": 78,
       "requirements": [
         [
-          "Field_I1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I1"
         ],
         [
-          "Field_B1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B1"
         ],
         [
-          "Field_D3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D3"
         ]
       ]
     },
@@ -3351,19 +2877,13 @@
       "waveCount": 80,
       "requirements": [
         [
-          "Field_D5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D5"
         ],
         [
-          "Field_E5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E5"
         ],
         [
-          "Field_B2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B2"
         ]
       ]
     },
@@ -3379,19 +2899,13 @@
       "waveCount": 82,
       "requirements": [
         [
-          "Field_C2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C2"
         ],
         [
-          "Field_B4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B4"
         ],
         [
-          "Field_I3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I3"
         ]
       ]
     },
@@ -3407,19 +2921,13 @@
       "waveCount": 50,
       "requirements": [
         [
-          "Field_K3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_K3"
         ],
         [
-          "Field_G2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G2"
         ],
         [
-          "Field_G1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_G1"
         ]
       ]
     },
@@ -3437,19 +2945,13 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_N2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N2"
         ],
         [
-          "Field_O4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O4"
         ],
         [
-          "Field_N1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N1"
         ]
       ]
     },
@@ -3467,19 +2969,13 @@
       "waveCount": 36,
       "requirements": [
         [
-          "Field_O1",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_O1"
         ],
         [
-          "Field_Y2",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y2"
         ],
         [
-          "Field_T5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_T5"
         ]
       ]
     },
@@ -3500,24 +2996,16 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_P5",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P5"
         ],
         [
-          "Field_Y4",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_Y4"
         ],
         [
-          "Field_N3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_N3"
         ],
         [
-          "Field_P3",
-          "talismanRow:1",
-          "talismanColumn:1"
+          "Field_P3"
         ]
       ]
     },
@@ -3534,19 +3022,13 @@
       "waveCount": 54,
       "requirements": [
         [
-          "Field_L2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L2"
         ],
         [
-          "Field_Z3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_Z3"
         ],
         [
-          "Field_L3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L3"
         ]
       ]
     },
@@ -3567,24 +3049,16 @@
       "waveCount": 68,
       "requirements": [
         [
-          "Field_H1",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H1"
         ],
         [
-          "Field_L5",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_L5"
         ],
         [
-          "Field_F2",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_F2"
         ],
         [
-          "Field_H3",
-          "talismanRow:2",
-          "talismanColumn:2"
+          "Field_H3"
         ]
       ]
     },
@@ -3605,19 +3079,13 @@
       "waveCount": 90,
       "requirements": [
         [
-          "Field_C4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C4"
         ],
         [
-          "Field_C5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C5"
         ],
         [
-          "Field_F4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F4"
         ]
       ]
     },
@@ -3634,19 +3102,13 @@
       "waveCount": 78,
       "requirements": [
         [
-          "Field_D3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D3"
         ],
         [
-          "Field_I1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I1"
         ],
         [
-          "Field_B1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B1"
         ]
       ]
     },
@@ -3667,19 +3129,13 @@
       "waveCount": 84,
       "requirements": [
         [
-          "Field_I3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I3"
         ],
         [
-          "Field_C2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_C2"
         ],
         [
-          "Field_B4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B4"
         ]
       ]
     },
@@ -3697,19 +3153,13 @@
       "waveCount": 96,
       "requirements": [
         [
-          "Field_F5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F5"
         ],
         [
-          "Field_A1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A1"
         ],
         [
-          "Field_A2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A2"
         ]
       ]
     },
@@ -3727,19 +3177,13 @@
       "waveCount": 99,
       "requirements": [
         [
-          "Field_A1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A1"
         ],
         [
-          "Field_F5",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_F5"
         ],
         [
-          "Field_A2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_A2"
         ]
       ]
     },
@@ -3759,19 +3203,13 @@
       "waveCount": 76,
       "requirements": [
         [
-          "Field_E4",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E4"
         ],
         [
-          "Field_E3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_E3"
         ],
         [
-          "Field_D2",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D2"
         ]
       ]
     },
@@ -3789,19 +3227,13 @@
       "waveCount": 78,
       "requirements": [
         [
-          "Field_D3",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_D3"
         ],
         [
-          "Field_I1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_I1"
         ],
         [
-          "Field_B1",
-          "talismanRow:3",
-          "talismanColumn:3"
+          "Field_B1"
         ]
       ]
     }

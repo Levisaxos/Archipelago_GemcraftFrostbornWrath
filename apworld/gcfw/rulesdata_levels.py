@@ -38,9 +38,9 @@ level_requirements = {
         "MonstersBeforeWave12": 205,
         "MarkedMonsterCount": 57,
         "requirements": [
-            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F4"],
+            ["Field_C5"],
+            ["Field_C4"],
         ],
     },
     "A2": {
@@ -63,9 +63,9 @@ level_requirements = {
         "MonstersBeforeWave12": 193,
         "MarkedMonsterCount": 147,
         "requirements": [
-            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F4"],
+            ["Field_C5"],
+            ["Field_C4"],
         ],
     },
     "A3": {
@@ -89,9 +89,9 @@ level_requirements = {
         "MarkedMonsterCount": 123,
         "BeaconCount": 10,
         "requirements": [
-            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A1"],
+            ["Field_F5"],
+            ["Field_A2"],
         ],
     },
     "A4": {
@@ -119,9 +119,9 @@ level_requirements = {
         "ShadowCount": 1,
         "WraithCount": 1,
         "requirements": [
-            ["Field_A3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A6", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A3"],
+            ["Field_A6"],
+            ["Field_A5"],
         ],
     },
     "A5": {
@@ -144,9 +144,9 @@ level_requirements = {
         "MonstersBeforeWave12": 126,
         "MarkedMonsterCount": 118,
         "requirements": [
-            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F5"],
+            ["Field_A1"],
+            ["Field_A2"],
         ],
     },
     "A6": {
@@ -169,9 +169,9 @@ level_requirements = {
         "MonstersBeforeWave12": 228,
         "MarkedMonsterCount": 104,
         "requirements": [
-            ["Field_A1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_F5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_A2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_A1"],
+            ["Field_F5"],
+            ["Field_A2"],
         ],
     },
     "B1": {
@@ -197,9 +197,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "TombCount": 1,
         "requirements": [
-            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E4"],
+            ["Field_E3"],
+            ["Field_D2"],
         ],
     },
     "B2": {
@@ -223,9 +223,9 @@ level_requirements = {
         "MarkedMonsterCount": 39,
         "MonsterNestCount": 1,
         "requirements": [
-            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I1"],
+            ["Field_D3"],
+            ["Field_B1"],
         ],
     },
     "B3": {
@@ -249,9 +249,9 @@ level_requirements = {
         "MarkedMonsterCount": 180,
         "BarricadeCount": 10,
         "requirements": [
-            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C1"],
+            ["Field_I4"],
+            ["Field_B5"],
         ],
     },
     "B4": {
@@ -277,10 +277,10 @@ level_requirements = {
         "ShrineCount": 1,
         "SleepingHiveCount": 2,
         "requirements": [
-            ["Field_I2", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I2"],
+            ["Field_D5"],
+            ["Field_E5"],
+            ["Field_B2"],
         ],
     },
     "B5": {
@@ -304,9 +304,9 @@ level_requirements = {
         "MarkedMonsterCount": 217,
         "MonsterNestCount": 3,
         "requirements": [
-            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I3"],
+            ["Field_C2"],
+            ["Field_B4"],
         ],
     },
     "C1": {
@@ -333,9 +333,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "SealedGemCount": 1,
         "requirements": [
-            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C2"],
+            ["Field_I3"],
+            ["Field_B4"],
         ],
     },
     "C2": {
@@ -360,9 +360,9 @@ level_requirements = {
         "CorruptedManaShardCount": 1,
         "ManaShardCount": 4,
         "requirements": [
-            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E5"],
+            ["Field_B2"],
+            ["Field_I2"],
         ],
     },
     "C3": {
@@ -387,9 +387,9 @@ level_requirements = {
         "BarricadeCount": 27,
         "MonsterNestCount": 2,
         "requirements": [
-            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I4"],
+            ["Field_B5"],
+            ["Field_C1"],
         ],
     },
     "C4": {
@@ -414,9 +414,9 @@ level_requirements = {
         "BeaconCount": 6,
         "ObeliskCount": 1,
         "requirements": [
-            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C3"],
+            ["Field_B3"],
+            ["Field_F3"],
         ],
     },
     "C5": {
@@ -441,9 +441,9 @@ level_requirements = {
         "MarkedMonsterCount": 156,
         "ShadowCount": 1,
         "requirements": [
-            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F3"],
+            ["Field_B3"],
+            ["Field_C3"],
         ],
     },
     "D1": {
@@ -467,9 +467,9 @@ level_requirements = {
         "MarkedMonsterCount": 35,
         "BarricadeCount": 6,
         "requirements": [
-            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N5"],
+            ["Field_E1"],
+            ["Field_N4"],
         ],
     },
     "D2": {
@@ -493,9 +493,9 @@ level_requirements = {
         "MarkedMonsterCount": 52,
         "MonsterNestCount": 4,
         "requirements": [
-            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_H4"],
+            ["Field_D4"],
+            ["Field_D1"],
         ],
     },
     "D3": {
@@ -517,9 +517,9 @@ level_requirements = {
         "GiantMaxArmor": 633,
         "MonstersBeforeWave12": 148,
         "requirements": [
-            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E3"],
+            ["Field_E4"],
+            ["Field_D2"],
         ],
     },
     "D4": {
@@ -543,9 +543,9 @@ level_requirements = {
         "MarkedMonsterCount": 5,
         "MonsterNestCount": 1,
         "requirements": [
-            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N4"],
+            ["Field_N5"],
+            ["Field_E1"],
         ],
     },
     "D5": {
@@ -568,9 +568,9 @@ level_requirements = {
         "MonstersBeforeWave12": 109,
         "MarkedMonsterCount": 24,
         "requirements": [
-            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D3"],
+            ["Field_I1"],
+            ["Field_B1"],
         ],
     },
     "E1": {
@@ -596,9 +596,9 @@ level_requirements = {
         "MarkedMonsterCount": 49,
         "BarricadeCount": 10,
         "requirements": [
-            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H5"],
+            ["Field_M4"],
+            ["Field_H2"],
         ],
     },
     "E2": {
@@ -622,9 +622,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "SpireCount": 1,
         "requirements": [
-            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M1"],
+            ["Field_J4"],
+            ["Field_F1"],
         ],
     },
     "E3": {
@@ -649,9 +649,9 @@ level_requirements = {
         "BarricadeCount": 1,
         "MonsterNestCount": 3,
         "requirements": [
-            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D4"],
+            ["Field_D1"],
+            ["Field_H4"],
         ],
     },
     "E4": {
@@ -678,9 +678,9 @@ level_requirements = {
         "ShadowCount": 1,
         "SpecterCount": 1,
         "requirements": [
-            ["Field_D4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_H4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D4"],
+            ["Field_H4"],
+            ["Field_D1"],
         ],
     },
     "E5": {
@@ -705,9 +705,9 @@ level_requirements = {
         "BarricadeCount": 6,
         "TombCount": 4,
         "requirements": [
-            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D3"],
+            ["Field_I1"],
+            ["Field_B1"],
         ],
     },
     "F1": {
@@ -734,9 +734,9 @@ level_requirements = {
         "AbandonedDwellingCount": 13,
         "DropHolderCount": 19,
         "requirements": [
-            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G3"],
+            ["Field_J3"],
+            ["Field_G4"],
         ],
     },
     "F2": {
@@ -760,9 +760,9 @@ level_requirements = {
         "MarkedMonsterCount": 16,
         "RainCount": 1,
         "requirements": [
-            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E2"],
+            ["Field_M2"],
+            ["Field_M3"],
         ],
     },
     "F3": {
@@ -788,9 +788,9 @@ level_requirements = {
         "RainCount": 1,
         "TombCount": 1,
         "requirements": [
-            ["Field_B5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C1", "talismanRow:3", "talismanColumn:3"],
+            ["Field_B5"],
+            ["Field_I4"],
+            ["Field_C1"],
         ],
     },
     "F4": {
@@ -815,9 +815,9 @@ level_requirements = {
         "BarricadeCount": 14,
         "RainCount": 1,
         "requirements": [
-            ["Field_F3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_F3"],
+            ["Field_C3"],
+            ["Field_B3"],
         ],
     },
     "F5": {
@@ -843,9 +843,9 @@ level_requirements = {
         "BarricadeCount": 12,
         "RainCount": 1,
         "requirements": [
-            ["Field_C4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_C5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_F4", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C4"],
+            ["Field_C5"],
+            ["Field_F4"],
         ],
     },
     "G1": {
@@ -869,10 +869,10 @@ level_requirements = {
         "MonstersBeforeWave12": 219,
         "MarkedMonsterCount": 48,
         "requirements": [
-            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L4"],
+            ["Field_X2"],
+            ["Field_Z4"],
+            ["Field_K5"],
         ],
     },
     "G2": {
@@ -896,10 +896,10 @@ level_requirements = {
         "MarkedMonsterCount": 24,
         "MonsterNestCount": 3,
         "requirements": [
-            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_X2"],
+            ["Field_Z4"],
+            ["Field_K5"],
+            ["Field_L4"],
         ],
     },
     "G3": {
@@ -924,9 +924,9 @@ level_requirements = {
         "MarkedMonsterCount": 2,
         "ShadowCount": 1,
         "requirements": [
-            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J1"],
+            ["Field_J2"],
+            ["Field_Z5"],
         ],
     },
     "G4": {
@@ -952,9 +952,9 @@ level_requirements = {
         "GiantMaxArmor": 415,
         "MonstersBeforeWave12": 146,
         "requirements": [
-            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J1"],
+            ["Field_J2"],
+            ["Field_Z5"],
         ],
     },
     "H1": {
@@ -978,9 +978,9 @@ level_requirements = {
         "MarkedMonsterCount": 141,
         "MonsterNestCount": 1,
         "requirements": [
-            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E2"],
+            ["Field_M3"],
+            ["Field_M2"],
         ],
     },
     "H2": {
@@ -1005,9 +1005,9 @@ level_requirements = {
         "BeaconCount": 3,
         "ShrineCount": 2,
         "requirements": [
-            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L5"],
+            ["Field_F2"],
+            ["Field_H1"],
         ],
     },
     "H3": {
@@ -1031,9 +1031,9 @@ level_requirements = {
         "MarkedMonsterCount": 85,
         "BarricadeCount": 23,
         "requirements": [
-            ["Field_E2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_E2"],
+            ["Field_M3"],
+            ["Field_M2"],
         ],
     },
     "H4": {
@@ -1056,9 +1056,9 @@ level_requirements = {
         "MonstersBeforeWave12": 199,
         "MarkedMonsterCount": 86,
         "requirements": [
-            ["Field_N4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_N5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_E1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_N4"],
+            ["Field_N5"],
+            ["Field_E1"],
         ],
     },
     "H5": {
@@ -1082,10 +1082,10 @@ level_requirements = {
         "MarkedMonsterCount": 74,
         "BarricadeCount": 23,
         "requirements": [
-            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H1"],
+            ["Field_L5"],
+            ["Field_F2"],
+            ["Field_H3"],
         ],
     },
     "I1": {
@@ -1110,9 +1110,9 @@ level_requirements = {
         "MarkedMonsterCount": 51,
         "BarricadeCount": 5,
         "requirements": [
-            ["Field_E4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_E3", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_E4"],
+            ["Field_E3"],
+            ["Field_D2"],
         ],
     },
     "I2": {
@@ -1138,9 +1138,9 @@ level_requirements = {
         "DropHolderCount": 7,
         "TombCount": 1,
         "requirements": [
-            ["Field_I1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B1", "talismanRow:3", "talismanColumn:3"],
-            ["Field_D3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_I1"],
+            ["Field_B1"],
+            ["Field_D3"],
         ],
     },
     "I3": {
@@ -1164,9 +1164,9 @@ level_requirements = {
         "MarkedMonsterCount": 8,
         "BarricadeCount": 32,
         "requirements": [
-            ["Field_D5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_E5", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B2", "talismanRow:3", "talismanColumn:3"],
+            ["Field_D5"],
+            ["Field_E5"],
+            ["Field_B2"],
         ],
     },
     "I4": {
@@ -1183,9 +1183,9 @@ level_requirements = {
         "BarricadeCount": 12,
         "RainCount": 1,
         "requirements": [
-            ["Field_C2", "talismanRow:3", "talismanColumn:3"],
-            ["Field_B4", "talismanRow:3", "talismanColumn:3"],
-            ["Field_I3", "talismanRow:3", "talismanColumn:3"],
+            ["Field_C2"],
+            ["Field_B4"],
+            ["Field_I3"],
         ],
     },
     "J1": {
@@ -1209,9 +1209,9 @@ level_requirements = {
         "MonsterNestCount": 3,
         "RainCount": 1,
         "requirements": [
-            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K3"],
+            ["Field_G2"],
+            ["Field_G1"],
         ],
     },
     "J2": {
@@ -1240,9 +1240,9 @@ level_requirements = {
         "RainCount": 1,
         "ShrineCount": 1,
         "requirements": [
-            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_G2"],
+            ["Field_K3"],
+            ["Field_G1"],
         ],
     },
     "J3": {
@@ -1269,9 +1269,9 @@ level_requirements = {
         "RainCount": 1,
         "TombCount": 1,
         "requirements": [
-            ["Field_J1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J1"],
+            ["Field_Z5"],
+            ["Field_J2"],
         ],
     },
     "J4": {
@@ -1298,9 +1298,9 @@ level_requirements = {
         "RainCount": 1,
         "ShrineCount": 1,
         "requirements": [
-            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J3"],
+            ["Field_G4"],
+            ["Field_G3"],
         ],
     },
     "K1": {
@@ -1325,9 +1325,9 @@ level_requirements = {
         "MarkedMonsterCount": 33,
         "WatchtowerCount": 1,
         "requirements": [
-            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_L1"],
+            ["Field_X4"],
+            ["Field_K4"],
         ],
     },
     "K2": {
@@ -1353,9 +1353,9 @@ level_requirements = {
         "MarkedMonsterCount": 13,
         "BarricadeCount": 6,
         "requirements": [
-            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X4"],
+            ["Field_L1"],
+            ["Field_K4"],
         ],
     },
     "K3": {
@@ -1380,10 +1380,10 @@ level_requirements = {
         "ManaShardCount": 1,
         "MonsterNestCount": 1,
         "requirements": [
-            ["Field_K5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_X2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K5"],
+            ["Field_Z4"],
+            ["Field_L4"],
+            ["Field_X2"],
         ],
     },
     "K4": {
@@ -1408,9 +1408,9 @@ level_requirements = {
         "MarkedMonsterCount": 4,
         "SwarmQueenCount": 1,
         "requirements": [
-            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z1"],
+            ["Field_X3"],
+            ["Field_X1"],
         ],
     },
     "K5": {
@@ -1430,9 +1430,9 @@ level_requirements = {
         "MarkedMonsterCount": 26,
         "MonsterNestCount": 5,
         "requirements": [
-            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L2"],
+            ["Field_Z3"],
+            ["Field_L3"],
         ],
     },
     "L1": {
@@ -1458,9 +1458,9 @@ level_requirements = {
         "MonsterNestCount": 5,
         "RainCount": 1,
         "requirements": [
-            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_X1"],
+            ["Field_Z1"],
+            ["Field_X3"],
         ],
     },
     "L2": {
@@ -1484,9 +1484,9 @@ level_requirements = {
         "DropHolderCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K2"],
+            ["Field_K1"],
+            ["Field_Z2"],
         ],
     },
     "L3": {
@@ -1514,9 +1514,9 @@ level_requirements = {
         "RainCount": 1,
         "ShrineCount": 1,
         "requirements": [
-            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z2"],
+            ["Field_K2"],
+            ["Field_K1"],
         ],
     },
     "L4": {
@@ -1542,9 +1542,9 @@ level_requirements = {
         "BarricadeCount": 4,
         "WizardHunterCount": 1,
         "requirements": [
-            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z3"],
+            ["Field_L2"],
+            ["Field_L3"],
         ],
     },
     "L5": {
@@ -1569,9 +1569,9 @@ level_requirements = {
         "MonsterNestCount": 2,
         "WizardTowerCount": 1,
         "requirements": [
-            ["Field_E2", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
-            ["Field_M3", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
-            ["Field_M2", "talismanRow:2", "talismanColumn:2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
+            ["Field_E2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
+            ["Field_M3", "sBeam", "sBolt", "sBarrage", "sFreeze"],
+            ["Field_M2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
         ],
     },
     "M1": {
@@ -1597,9 +1597,9 @@ level_requirements = {
         "MonsterNestCount": 5,
         "RainCount": 1,
         "requirements": [
-            ["Field_J3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G4", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J3"],
+            ["Field_G3"],
+            ["Field_G4"],
         ],
     },
     "M2": {
@@ -1624,9 +1624,9 @@ level_requirements = {
         "MonsterNestCount": 3,
         "RainCount": 1,
         "requirements": [
-            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_F1"],
+            ["Field_J4"],
+            ["Field_M1"],
         ],
     },
     "M3": {
@@ -1658,9 +1658,9 @@ level_requirements = {
         "RainCount": 1,
         "TombCount": 2,
         "requirements": [
-            ["Field_J4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_F1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_J4"],
+            ["Field_F1"],
+            ["Field_M1"],
         ],
     },
     "M4": {
@@ -1685,10 +1685,10 @@ level_requirements = {
         "RainCount": 1,
         "ShrineCount": 1,
         "requirements": [
-            ["Field_L5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H1", "talismanRow:2", "talismanColumn:2"],
-            ["Field_F2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H3", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L5"],
+            ["Field_H1"],
+            ["Field_F2"],
+            ["Field_H3"],
         ],
     },
     "N1": {
@@ -1712,9 +1712,9 @@ level_requirements = {
         "MarkedMonsterCount": 27,
         "RainCount": 1,
         "requirements": [
-            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R5"],
+            ["Field_O3"],
+            ["Field_Y1"],
         ],
     },
     "N2": {
@@ -1741,9 +1741,9 @@ level_requirements = {
         "ManaShardCount": 2,
         "RainCount": 1,
         "requirements": [
-            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y1"],
+            ["Field_R5"],
+            ["Field_O3"],
         ],
     },
     "N3": {
@@ -1770,9 +1770,9 @@ level_requirements = {
         "RainCount": 1,
         "ShrineCount": 1,
         "requirements": [
-            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R6"],
+            ["Field_P1"],
+            ["Field_O2"],
         ],
     },
     "N4": {
@@ -1797,9 +1797,9 @@ level_requirements = {
         "MonsterNestCount": 2,
         "RainCount": 1,
         "requirements": [
-            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
-            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_H5"],
+            ["Field_M4"],
+            ["Field_H2"],
         ],
     },
     "N5": {
@@ -1825,9 +1825,9 @@ level_requirements = {
         "MonstersBeforeWave12": 231,
         "RainCount": 1,
         "requirements": [
-            ["Field_M4", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_H5", "talismanRow:2", "talismanColumn:2"],
+            ["Field_M4"],
+            ["Field_H2"],
+            ["Field_H5"],
         ],
     },
     "O1": {
@@ -1851,9 +1851,9 @@ level_requirements = {
         "MarkedMonsterCount": 2,
         "RainCount": 1,
         "requirements": [
-            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N1"],
+            ["Field_N2"],
+            ["Field_O4"],
         ],
     },
     "O2": {
@@ -1880,9 +1880,9 @@ level_requirements = {
         "DropHolderCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O1"],
+            ["Field_T5"],
+            ["Field_Y2"],
         ],
     },
     "O3": {
@@ -1907,9 +1907,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_R3"],
+            ["Field_R4"],
+            ["Field_Y3"],
         ],
     },
     "O4": {
@@ -1941,9 +1941,9 @@ level_requirements = {
         "MonsterNestCount": 4,
         "RainCount": 1,
         "requirements": [
-            ["Field_O3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O3"],
+            ["Field_Y1"],
+            ["Field_R5"],
         ],
     },
     "P1": {
@@ -1967,9 +1967,9 @@ level_requirements = {
         "MarkedMonsterCount": 29,
         "RainCount": 1,
         "requirements": [
-            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_T5"],
+            ["Field_O1"],
+            ["Field_Y2"],
         ],
     },
     "P2": {
@@ -1996,9 +1996,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P3"],
+            ["Field_N3"],
+            ["Field_Y4"],
         ],
     },
     "P3": {
@@ -2021,9 +2021,9 @@ level_requirements = {
         "MonstersBeforeWave12": 121,
         "RainCount": 1,
         "requirements": [
-            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O2"],
+            ["Field_R6"],
+            ["Field_P1"],
         ],
     },
     "P4": {
@@ -2049,10 +2049,10 @@ level_requirements = {
         "MonsterNestCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N3"],
+            ["Field_Y4"],
+            ["Field_P5"],
+            ["Field_P3"],
         ],
     },
     "P5": {
@@ -2077,9 +2077,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P1"],
+            ["Field_R6"],
+            ["Field_O2"],
         ],
     },
     "P6": {
@@ -2095,10 +2095,10 @@ level_requirements = {
         "MarkedMonsterCount": 8,
         "RainCount": 1,
         "requirements": [
-            ["Field_P5", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_N3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P5"],
+            ["Field_Y4"],
+            ["Field_N3"],
+            ["Field_P3"],
         ],
     },
     "Q1": {
@@ -2358,9 +2358,9 @@ level_requirements = {
         "MonstersBeforeWave12": 144,
         "MarkedMonsterCount": 15,
         "requirements": [
-            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y3"],
+            ["Field_R4"],
+            ["Field_R3"],
         ],
     },
     "R6": {
@@ -2388,9 +2388,9 @@ level_requirements = {
         "MonsterNestCount": 3,
         "RainCount": 1,
         "requirements": [
-            ["Field_O1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Y2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_T5", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O1"],
+            ["Field_Y2"],
+            ["Field_T5"],
         ],
     },
     "S1": {
@@ -2612,9 +2612,9 @@ level_requirements = {
         "MarkedMonsterCount": 13,
         "SnowCount": 1,
         "requirements": [
-            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N2"],
+            ["Field_O4"],
+            ["Field_N1"],
         ],
     },
     "U1": {
@@ -2902,9 +2902,9 @@ level_requirements = {
         "MonsterNestCount": 2,
         "SnowCount": 1,
         "requirements": [
-            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P6"],
+            ["Field_P4"],
+            ["Field_P2"],
         ],
     },
     "X2": {
@@ -2933,9 +2933,9 @@ level_requirements = {
         "JarOfWaspsCount": 3,
         "SnowCount": 1,
         "requirements": [
-            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_L3"],
+            ["Field_Z3"],
+            ["Field_L2"],
         ],
     },
     "X3": {
@@ -2965,9 +2965,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "SnowCount": 1,
         "requirements": [
-            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P6"],
+            ["Field_P2"],
+            ["Field_P4"],
         ],
     },
     "X4": {
@@ -2997,9 +2997,9 @@ level_requirements = {
         "SnowCount": 1,
         "WraithCount": 1,
         "requirements": [
-            ["Field_Z1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Z1"],
+            ["Field_X3"],
+            ["Field_X1"],
         ],
     },
     "Y1": {
@@ -3023,9 +3023,9 @@ level_requirements = {
         "SleepingHiveCount": 1,
         "SnowCount": 1,
         "requirements": [
-            ["Field_Y3", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R3", "talismanRow:1", "talismanColumn:1"],
+            ["Field_Y3"],
+            ["Field_R4"],
+            ["Field_R3"],
         ],
     },
     "Y2": {
@@ -3052,9 +3052,9 @@ level_requirements = {
         "ManaShardCount": 1,
         "SnowCount": 1,
         "requirements": [
-            ["Field_N2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_O4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_N1", "talismanRow:1", "talismanColumn:1"],
+            ["Field_N2"],
+            ["Field_O4"],
+            ["Field_N1"],
         ],
     },
     "Y3": {
@@ -3108,9 +3108,9 @@ level_requirements = {
         "SnowCount": 1,
         "SpecterCount": 1,
         "requirements": [
-            ["Field_O2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_R6", "talismanRow:1", "talismanColumn:1"],
+            ["Field_O2"],
+            ["Field_P1"],
+            ["Field_R6"],
         ],
     },
     "Z1": {
@@ -3136,9 +3136,9 @@ level_requirements = {
         "MonsterNestCount": 4,
         "SnowCount": 1,
         "requirements": [
-            ["Field_P2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P6", "talismanRow:1", "talismanColumn:1"],
-            ["Field_P4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_P2"],
+            ["Field_P6"],
+            ["Field_P4"],
         ],
     },
     "Z2": {
@@ -3162,9 +3162,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "SnowCount": 1,
         "requirements": [
-            ["Field_L1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_X4", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K4", "talismanRow:1", "talismanColumn:1"],
+            ["Field_L1"],
+            ["Field_X4"],
+            ["Field_K4"],
         ],
     },
     "Z3": {
@@ -3190,9 +3190,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "SnowCount": 1,
         "requirements": [
-            ["Field_K1", "talismanRow:1", "talismanColumn:1"],
-            ["Field_K2", "talismanRow:1", "talismanColumn:1"],
-            ["Field_Z2", "talismanRow:1", "talismanColumn:1"],
+            ["Field_K1"],
+            ["Field_K2"],
+            ["Field_Z2"],
         ],
     },
     "Z4": {
@@ -3218,9 +3218,9 @@ level_requirements = {
         "DropHolderCount": 4,
         "MonsterNestCount": 1,
         "requirements": [
-            ["Field_Z3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_L2", "talismanRow:2", "talismanColumn:2"],
+            ["Field_Z3"],
+            ["Field_L3"],
+            ["Field_L2"],
         ],
     },
     "Z5": {
@@ -3236,9 +3236,9 @@ level_requirements = {
         "MarkedMonsterCount": 3,
         "ManaShardCount": 1,
         "requirements": [
-            ["Field_K3", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G2", "talismanRow:2", "talismanColumn:2"],
-            ["Field_G1", "talismanRow:2", "talismanColumn:2"],
+            ["Field_K3"],
+            ["Field_G2"],
+            ["Field_G1"],
         ],
     },
 }

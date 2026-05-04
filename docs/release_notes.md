@@ -38,6 +38,31 @@ This release covers the full feature set of the randomizer: what is shuffled, ho
 - Talisman fragments earned from normal wave completion are untouched
 - Shadow cores earned during gameplay are untouched (only Wizard Stash drops are intercepted)
 
+### Item classification
+
+Items are tagged so the Archipelago fill algorithm knows what counts as in-logic-relevant:
+
+**Progression** — required by logic, placed first
+
+- Field Tokens (all 122, plus all coarse / progressive variants)
+- Skills (all 24, including the 6 gem-type unlocks)
+- Battle Traits (all 15 — many achievement counters require them)
+- Map Tiles (all of them)
+- Shadow Core stashes (all 17 specific + all 18 extras — the full pool sums into the `shadowCore:N` gate)
+- Wizard Stash Keys (per-stage, coarse, and progressive variants)
+- Gem Pouches (per-tile, per-tier, master, and progressive variants)
+- 25 Talisman Fragments — the highest-rarity fragment in each slot type (4 corner + 12 edge + 9 inner) so the `talismanCornerFragment:N / Edge / Center` counters can be gated
+- ~50% of XP Tomes — odd-indexed Tattered Scrolls / Worn Tomes / Ancient Grimoires / Extra XP Items, so `wizardLevel:N` gates can be reasoned about
+
+**Useful** — not required by logic, but worth placing where they help
+
+- The remaining ~28 Talisman Fragments (still drop, just don't gate)
+- ~50% of XP Tomes — even-indexed Tattered Scrolls / Worn Tomes / Ancient Grimoires / Extra XP Items
+
+**Filler** — pure pool-padding once the real items are placed
+
+- Skillpoint Bundles (1–10 SP each, count scaled by `skillpoint_multiplier`)
+
 ---
 
 ## Goals

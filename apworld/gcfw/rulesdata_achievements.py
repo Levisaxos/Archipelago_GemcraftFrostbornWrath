@@ -1725,7 +1725,7 @@ achievement_requirements = {
         "ap_id": 2191,
         "game_id": 365,
         "description": "Find 2 talisman fragments.",
-        "requirements": ["minWave:50"],
+        "requirements": ["minWave:30"],
         "required_effort": "Trivial",
     },
     # AP ID: 2192
