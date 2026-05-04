@@ -453,7 +453,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:S"
       ],
       "wave_count": 14,
@@ -471,7 +470,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:S"
       ],
       "wave_count": 16,
@@ -490,7 +488,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:S"
       ],
       "wave_count": 14,
@@ -510,7 +507,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:S"
       ],
       "wave_count": 20,
@@ -529,7 +525,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "wave_count": 20,
@@ -549,7 +544,6 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "wave_count": 22,
@@ -566,7 +560,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "wave_count": 24,
@@ -586,7 +579,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:V"
       ],
       "wave_count": 24,
@@ -605,7 +597,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "wave_count": 22,
@@ -624,7 +615,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "wave_count": 22,
@@ -643,7 +633,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "wave_count": 30,
@@ -662,7 +651,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "wave_count": 30,
@@ -682,7 +670,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "wave_count": 32,
@@ -701,7 +688,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "wave_count": 24,
@@ -720,7 +706,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "wave_count": 22,
@@ -740,7 +725,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "wave_count": 24,
@@ -759,7 +743,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "wave_count": 26,
@@ -779,7 +762,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:Q"
       ],
       "wave_count": 26,
@@ -798,7 +780,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "wave_count": 26,
@@ -817,7 +798,6 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "wave_count": 28,
@@ -836,7 +816,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "wave_count": 28,
@@ -856,7 +835,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:T"
       ],
       "wave_count": 30,
@@ -876,7 +854,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "wave_count": 30,
@@ -895,7 +872,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "wave_count": 32,
@@ -912,7 +888,6 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "wave_count": 30,
@@ -932,7 +907,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:U"
       ],
       "wave_count": 30,
@@ -951,7 +925,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Y"
       ],
       "wave_count": 32,
@@ -970,7 +943,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Y"
       ],
       "wave_count": 35,
@@ -990,7 +962,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:Y"
       ],
       "wave_count": 30,
@@ -1011,7 +982,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:Y"
       ],
       "wave_count": 40,
@@ -1031,7 +1001,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:X"
       ],
       "wave_count": 42,
@@ -1049,7 +1018,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:X"
       ],
       "wave_count": 48,
@@ -1068,7 +1036,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:X"
       ],
       "wave_count": 44,
@@ -1087,7 +1054,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:X"
       ],
       "wave_count": 46,
@@ -1109,7 +1075,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "wave_count": 44,
@@ -1127,7 +1092,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "wave_count": 46,
@@ -1145,7 +1109,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "wave_count": 46,
@@ -1162,7 +1125,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:Z"
       ],
       "wave_count": 48,
@@ -1182,7 +1144,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "wave_count": 34,
@@ -1199,7 +1160,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "wave_count": 35,
@@ -1218,7 +1178,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "wave_count": 32,
@@ -1239,7 +1198,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:O"
       ],
       "wave_count": 33,
@@ -1259,7 +1217,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "wave_count": 35,
@@ -1276,7 +1233,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "wave_count": 36,
@@ -1293,7 +1249,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "wave_count": 38,
@@ -1311,7 +1266,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:N"
       ],
       "wave_count": 70,
@@ -1329,7 +1283,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:N"
       ],
       "wave_count": 68,
@@ -1349,7 +1302,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "wave_count": 38,
@@ -1366,7 +1318,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "wave_count": 42,
@@ -1386,7 +1337,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "wave_count": 40,
@@ -1407,7 +1357,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:P"
       ],
       "wave_count": 40,
@@ -1425,7 +1374,6 @@
       ],
       "note": "towers can't be placed, therefore,",
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "wave_count": 40,
@@ -1444,7 +1392,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "wave_count": 44,
@@ -1463,7 +1410,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "wave_count": 46,
@@ -1483,7 +1429,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "wave_count": 46,
@@ -1504,7 +1449,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:L"
       ],
       "wave_count": 50,
@@ -1525,7 +1469,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:L"
       ],
       "wave_count": 64,
@@ -1545,7 +1488,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:K"
       ],
       "wave_count": 46,
@@ -1564,7 +1506,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "wave_count": 46,
@@ -1583,7 +1524,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "wave_count": 50,
@@ -1604,7 +1544,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:K"
       ],
       "wave_count": 46,
@@ -1624,7 +1563,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:H"
       ],
       "wave_count": 64,
@@ -1644,7 +1582,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:H"
       ],
       "wave_count": 66,
@@ -1663,7 +1600,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:H"
       ],
       "wave_count": 64,
@@ -1684,7 +1620,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:H"
       ],
       "wave_count": 70,
@@ -1706,7 +1641,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:G"
       ],
       "wave_count": 50,
@@ -1724,7 +1658,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:G"
       ],
       "wave_count": 52,
@@ -1746,7 +1679,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:G"
       ],
       "wave_count": 55,
@@ -1765,7 +1697,6 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:G"
       ],
       "wave_count": 56,
@@ -1786,7 +1717,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "wave_count": 55,
@@ -1803,7 +1733,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:J"
       ],
       "wave_count": 54,
@@ -1823,7 +1752,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "wave_count": 56,
@@ -1841,7 +1769,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "wave_count": 58,
@@ -1861,7 +1788,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "wave_count": 60,
@@ -1881,7 +1807,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "wave_count": 62,
@@ -1902,7 +1827,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "wave_count": 64,
@@ -1922,7 +1846,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "wave_count": 66,
@@ -1942,7 +1865,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "wave_count": 60,
@@ -1960,7 +1882,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "wave_count": 64,
@@ -1980,7 +1901,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "wave_count": 85,
@@ -1998,7 +1918,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "wave_count": 88,
@@ -2018,7 +1937,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "wave_count": 70,
@@ -2038,7 +1956,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "wave_count": 62,
@@ -2058,7 +1975,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "wave_count": 74,
@@ -2080,7 +1996,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:E"
       ],
       "wave_count": 74,
@@ -2100,7 +2015,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "wave_count": 72,
@@ -2121,7 +2035,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "wave_count": 75,
@@ -2142,7 +2055,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:D"
       ],
       "wave_count": 77,
@@ -2160,7 +2072,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "wave_count": 70,
@@ -2180,7 +2091,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "wave_count": 76,
@@ -2203,7 +2113,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5",
         "gemPouch:B"
       ],
       "wave_count": 80,
@@ -2221,7 +2130,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "wave_count": 86,
@@ -2239,7 +2147,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "wave_count": 80,
@@ -2260,7 +2167,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "wave_count": 82,
@@ -2278,7 +2184,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "wave_count": 80,
@@ -2298,7 +2203,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "wave_count": 84,
@@ -2318,7 +2222,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "wave_count": 87,
@@ -2339,7 +2242,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 4",
         "gemPouch:C"
       ],
       "wave_count": 90,
@@ -2361,7 +2263,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "wave_count": 90,
@@ -2383,7 +2284,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "wave_count": 90,
@@ -2405,7 +2305,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "wave_count": 90,
@@ -2426,7 +2325,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6",
         "gemPouch:A"
       ],
       "wave_count": 100,
@@ -2446,7 +2344,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "wave_count": 78,
@@ -2466,7 +2363,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "wave_count": 80,
@@ -2482,7 +2378,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 1",
         "gemPouch:I"
       ],
       "wave_count": 82,
@@ -2498,7 +2393,6 @@
         "Leech"
       ],
       "required_skills": [
-        "gemSkills: 1",
         "gemPouch:Z"
       ],
       "wave_count": 50,
@@ -2516,7 +2410,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:T"
       ],
       "wave_count": 40,
@@ -2534,7 +2427,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:R"
       ],
       "wave_count": 36,
@@ -2555,7 +2447,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6",
         "gemPouch:P"
       ],
       "wave_count": 40,
@@ -2572,7 +2463,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "wave_count": 54,
@@ -2593,7 +2483,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6",
         "gemPouch:H"
       ],
       "wave_count": 68,
@@ -2614,7 +2503,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6",
         "gemPouch:F"
       ],
       "wave_count": 90,
@@ -2631,7 +2519,6 @@
         "Poison"
       ],
       "required_skills": [
-        "gemSkills: 2",
         "gemPouch:E"
       ],
       "wave_count": 78,
@@ -2652,7 +2539,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 6",
         "gemPouch:B"
       ],
       "wave_count": 84,
@@ -2670,7 +2556,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:A"
       ],
       "wave_count": 96,
@@ -2688,7 +2573,6 @@
         "Bleed"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:A"
       ],
       "wave_count": 99,
@@ -2709,7 +2593,6 @@
         "Slow"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "wave_count": 76,
@@ -2728,7 +2611,6 @@
         "Armor Tear"
       ],
       "required_skills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "wave_count": 78,

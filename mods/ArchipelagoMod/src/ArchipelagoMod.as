@@ -1534,6 +1534,12 @@ package {
             //   652      per-tile progressive
             //   1601-1614 per-tier + master
             //   1615     per-tier progressive
+            // Per-tile-progressive (652) is a single fungible item id added 26
+            // times to the pool, so two copies received in the same session
+            // would otherwise both stamp the same getItemCount() reading on
+            // their tooltip. Pre-count this session's progressive drops and
+            // hand each icon its own ordinal so the Nth icon shows tile N.
+            var pouchProgNext:int = _firstProgressiveOrdinal(652);
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
@@ -1541,7 +1547,8 @@ package {
                 var isPouchDistinct:Boolean = (apId >= 626 && apId <= 652);
                 var isPouchTier:Boolean     = (apId >= 1601 && apId <= 1615);
                 if (!isPouchDistinct && !isPouchTier) continue;
-                _progressionBlocker.addGempouchDropIcon(apId);
+                var pouchOrd:int = (apId == 652) ? pouchProgNext++ : 0;
+                _progressionBlocker.addGempouchDropIcon(apId, pouchOrd);
             }
 
             // 4c. Wizard Stash keys:
@@ -1582,14 +1589,23 @@ package {
             // WizStashKeyDropIcon. Per-tile / per-tier variants get one
             // generic pouch icon per copy received.
             var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+            // Same multi-copy ordinal handling as 4b: 1617 (per-tile field
+            // token progressive) and 1620 (per-tile stash key progressive)
+            // are fungible and rely on per-icon ordinals to render the right
+            // tile in the tooltip. 1618 / 1621 (per-tier progressives) have
+            // no tooltip yet so ordinal stays 0.
+            var fieldTileProgNext:int = _firstProgressiveOrdinal(1617);
+            var stashTileProgNext:int = _firstProgressiveOrdinal(1620);
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
                 if (apId == 1617 || apId == 1618) {
-                    _progressionBlocker.addTilePouchDropIcon(apId);
+                    var ftOrd:int = (apId == 1617) ? fieldTileProgNext++ : 0;
+                    _progressionBlocker.addTilePouchDropIcon(apId, ftOrd);
                 } else if (apId == 1620 || apId == 1621) {
-                    _progressionBlocker.addKeyPouchDropIcon(apId);
+                    var skOrd:int = (apId == 1620) ? stashTileProgNext++ : 0;
+                    _progressionBlocker.addKeyPouchDropIcon(apId, skOrd);
                 }
             }
             for (var fpi:int = 0; fpi < _sessionFieldStageProgressiveUnlocks.length; fpi++) {
@@ -2392,6 +2408,22 @@ package {
             _progressionBlocker.addMapTileDropIcon(tileGameId);
         }
 
+        // For a fungible per-tile-progressive apId (652 / 1617 / 1620): figure
+        // out the 1-based ordinal of the FIRST drop in the current session.
+        // sessionData.getItemCount() reflects the post-receive total; pre-count
+        // the session's drops for this apId and subtract to find what number
+        // the first one in this batch was.
+        private function _firstProgressiveOrdinal(apId:int):int {
+            var sessionCount:int = 0;
+            for (var i:int = 0; i < _sessionDrops.length; i++) {
+                var e:Object = _sessionDrops[i];
+                if (e.isForMe === true && int(e.apId) == apId) sessionCount++;
+            }
+            if (sessionCount == 0) return 1;
+            var live:int = (AV.sessionData != null) ? AV.sessionData.getItemCount(apId) : sessionCount;
+            return live - sessionCount + 1;
+        }
+
         private function _prefixForTileApId(apId:int, base:int):String {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
                 ? AV.serverData.serverOptions.gemPouchPlayOrder as Array
@@ -2461,6 +2493,7 @@ package {
             for (var sid:String in byStrId) {
                 if (sid.charAt(0) == prefix) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }
@@ -2480,6 +2513,7 @@ package {
             for (var sid:String in tierMap) {
                 if (int(tierMap[sid]) == tier) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }
@@ -2541,6 +2575,7 @@ package {
             }
             var sid:String = String(order[n - 1]);
             _stageUnlocker.unlockStage(sid);
+            AV.sessionData.markFieldTokenHeld(sid);
             _sessionFieldStageProgressiveUnlocks.push(sid);
             _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
             _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
@@ -2564,6 +2599,7 @@ package {
             for (var sid:String in byStrId) {
                 if (sid.charAt(0) == prefix) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }

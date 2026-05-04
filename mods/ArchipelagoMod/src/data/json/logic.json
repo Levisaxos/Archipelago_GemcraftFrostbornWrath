@@ -154,7 +154,6 @@
         "S3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:S"
       ],
       "availableGems": [
@@ -190,7 +189,6 @@
       "strId": "S2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:S"
       ],
       "availableGems": [
@@ -229,7 +227,6 @@
         "S4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:S"
       ],
       "availableGems": [
@@ -267,7 +264,6 @@
         "V1"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:S"
       ],
       "availableGems": [
@@ -306,7 +302,6 @@
         "V2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "availableGems": [
@@ -333,7 +328,6 @@
         "V4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "availableGems": [
@@ -357,7 +351,6 @@
       "strId": "V3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:V"
       ],
       "availableGems": [
@@ -383,7 +376,6 @@
         "R1"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:V"
       ],
       "availableGems": [
@@ -410,7 +402,6 @@
         "R2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -436,7 +427,6 @@
         "Q1"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -462,7 +452,6 @@
         "R4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -491,7 +480,6 @@
         "R5"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -521,7 +509,6 @@
         "N1"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -553,7 +540,6 @@
         "Q2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "availableGems": [
@@ -579,7 +565,6 @@
         "Q3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "availableGems": [
@@ -606,7 +591,6 @@
         "Q5"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "availableGems": [
@@ -632,7 +616,6 @@
         "T1"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Q"
       ],
       "availableGems": [
@@ -658,7 +641,6 @@
         "R3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:Q"
       ],
       "availableGems": [
@@ -685,7 +667,6 @@
         "T2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "availableGems": [
@@ -711,7 +692,6 @@
         "T3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "availableGems": [
@@ -737,7 +717,6 @@
         "T4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:T"
       ],
       "availableGems": [
@@ -763,7 +742,6 @@
         "U1"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:T"
       ],
       "availableGems": [
@@ -791,7 +769,6 @@
         "U3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "availableGems": [
@@ -817,7 +794,6 @@
         "U4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "availableGems": [
@@ -841,7 +817,6 @@
       "strId": "U3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:U"
       ],
       "availableGems": [
@@ -867,7 +842,6 @@
         "Y1"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:U"
       ],
       "availableGems": [
@@ -894,7 +868,6 @@
         "Y2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Y"
       ],
       "availableGems": [
@@ -926,7 +899,6 @@
         "Y3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Y"
       ],
       "availableGems": [
@@ -958,7 +930,6 @@
         "Y4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:Y"
       ],
       "availableGems": [
@@ -985,7 +956,6 @@
         "X1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:Y"
       ],
       "availableGems": [
@@ -1020,7 +990,6 @@
         "X3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:X"
       ],
       "availableGems": [
@@ -1050,7 +1019,6 @@
       "strId": "X2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:X"
       ],
       "availableGems": [
@@ -1083,7 +1051,6 @@
         "X4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:X"
       ],
       "availableGems": [
@@ -1113,7 +1080,6 @@
       "strId": "X4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:X"
       ],
       "availableGems": [
@@ -1149,7 +1115,6 @@
         "Z4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "availableGems": [
@@ -1180,7 +1145,6 @@
       "strId": "Z2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "availableGems": [
@@ -1211,7 +1175,6 @@
       "strId": "Z3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:Z"
       ],
       "availableGems": [
@@ -1242,7 +1205,6 @@
       "strId": "Z4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:Z"
       ],
       "availableGems": [
@@ -1275,7 +1237,6 @@
         "O3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "availableGems": [
@@ -1305,7 +1266,6 @@
       "strId": "O2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "availableGems": [
@@ -1337,7 +1297,6 @@
         "O4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:O"
       ],
       "availableGems": [
@@ -1369,7 +1328,6 @@
         "P1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:O"
       ],
       "availableGems": [
@@ -1404,7 +1362,6 @@
         "N3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "availableGems": [
@@ -1434,7 +1391,6 @@
       "strId": "N2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "availableGems": [
@@ -1464,7 +1420,6 @@
       "strId": "N3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:N"
       ],
       "availableGems": [
@@ -1494,7 +1449,6 @@
       "strId": "N4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:N"
       ],
       "availableGems": [
@@ -1525,7 +1479,6 @@
       "strId": "N5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:N"
       ],
       "availableGems": [
@@ -1559,7 +1512,6 @@
         "P3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -1589,7 +1541,6 @@
       "strId": "P2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -1622,7 +1573,6 @@
         "P5"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -1654,7 +1604,6 @@
         "L1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -1691,7 +1640,6 @@
       "strId": "P5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -1723,7 +1671,6 @@
         "L2"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "availableGems": [
@@ -1755,7 +1702,6 @@
         "L3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "availableGems": [
@@ -1788,7 +1734,6 @@
         "L5"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:L"
       ],
       "availableGems": [
@@ -1820,7 +1765,6 @@
         "K1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:L"
       ],
       "availableGems": [
@@ -1854,7 +1798,6 @@
         "H1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:L"
       ],
       "availableGems": [
@@ -1900,7 +1843,6 @@
         "K2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:K"
       ],
       "availableGems": [
@@ -1933,7 +1875,6 @@
         "K3"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "availableGems": [
@@ -1965,7 +1906,6 @@
         "K4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "availableGems": [
@@ -2002,7 +1942,6 @@
         "G1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:K"
       ],
       "availableGems": [
@@ -2036,7 +1975,6 @@
         "H2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:H"
       ],
       "availableGems": [
@@ -2069,7 +2007,6 @@
         "H3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:H"
       ],
       "availableGems": [
@@ -2102,7 +2039,6 @@
         "H4"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:H"
       ],
       "availableGems": [
@@ -2134,7 +2070,6 @@
         "E1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:H"
       ],
       "availableGems": [
@@ -2170,7 +2105,6 @@
         "J1"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:G"
       ],
       "availableGems": [
@@ -2206,7 +2140,6 @@
       "strId": "G2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:G"
       ],
       "availableGems": [
@@ -2245,7 +2178,6 @@
         "G4"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:G"
       ],
       "availableGems": [
@@ -2279,7 +2211,6 @@
         "F1"
       ],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:G"
       ],
       "availableGems": [
@@ -2312,7 +2243,6 @@
         "J3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "availableGems": [
@@ -2343,7 +2273,6 @@
       "strId": "J2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:J"
       ],
       "availableGems": [
@@ -2375,7 +2304,6 @@
         "J4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "availableGems": [
@@ -2406,7 +2334,6 @@
       "strId": "J4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:J"
       ],
       "availableGems": [
@@ -2439,7 +2366,6 @@
         "M2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "availableGems": [
@@ -2472,7 +2398,6 @@
         "M3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "availableGems": [
@@ -2506,7 +2431,6 @@
         "N5"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "availableGems": [
@@ -2539,7 +2463,6 @@
         "N4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:M"
       ],
       "availableGems": [
@@ -2577,7 +2500,6 @@
         "F2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "availableGems": [
@@ -2608,7 +2530,6 @@
       "strId": "F2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "availableGems": [
@@ -2641,7 +2562,6 @@
         "F4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "availableGems": [
@@ -2672,7 +2592,6 @@
       "strId": "F4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:F"
       ],
       "availableGems": [
@@ -2705,7 +2624,6 @@
         "E2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "availableGems": [
@@ -2738,7 +2656,6 @@
         "E3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "availableGems": [
@@ -2771,7 +2688,6 @@
         "E4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:E"
       ],
       "availableGems": [
@@ -2805,7 +2721,6 @@
         "B1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:E"
       ],
       "availableGems": [
@@ -2839,7 +2754,6 @@
         "D2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "availableGems": [
@@ -2873,7 +2787,6 @@
         "D4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "availableGems": [
@@ -2906,7 +2819,6 @@
         "C1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:D"
       ],
       "availableGems": [
@@ -2938,7 +2850,6 @@
       "strId": "D4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "availableGems": [
@@ -2971,7 +2882,6 @@
         "B2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "availableGems": [
@@ -3005,7 +2915,6 @@
         "B4"
       ],
       "requiredSkills": [
-        "gemSkills: 5",
         "gemPouch:B"
       ],
       "availableGems": [
@@ -3038,7 +2947,6 @@
       "strId": "B3",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "availableGems": [
@@ -3069,7 +2977,6 @@
       "strId": "B4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:B"
       ],
       "availableGems": [
@@ -3108,7 +3015,6 @@
         "C3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "availableGems": [
@@ -3139,7 +3045,6 @@
       "strId": "C2",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "availableGems": [
@@ -3172,7 +3077,6 @@
         "C4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "availableGems": [
@@ -3205,7 +3109,6 @@
         "C5"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:C"
       ],
       "availableGems": [
@@ -3238,7 +3141,6 @@
         "A1"
       ],
       "requiredSkills": [
-        "gemSkills: 4",
         "gemPouch:C"
       ],
       "availableGems": [
@@ -3272,7 +3174,6 @@
         "A2"
       ],
       "requiredSkills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3307,7 +3208,6 @@
         "A3"
       ],
       "requiredSkills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3342,7 +3242,6 @@
         "A4"
       ],
       "requiredSkills": [
-        "gemSkills: 5",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3375,7 +3274,6 @@
       "strId": "A4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3411,7 +3309,6 @@
         "I3"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "availableGems": [
@@ -3444,7 +3341,6 @@
         "I4"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "availableGems": [
@@ -3475,7 +3371,6 @@
       "strId": "I4",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 1",
         "gemPouch:I"
       ],
       "availableGems": [
@@ -3504,7 +3399,6 @@
       "strId": "Z5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 1",
         "gemPouch:Z"
       ],
       "availableGems": [
@@ -3533,7 +3427,6 @@
       "strId": "T5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:T"
       ],
       "availableGems": [
@@ -3564,7 +3457,6 @@
       "strId": "R6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:R"
       ],
       "availableGems": [
@@ -3595,7 +3487,6 @@
       "strId": "P6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6",
         "gemPouch:P"
       ],
       "availableGems": [
@@ -3634,7 +3525,6 @@
       "strId": "K5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:K"
       ],
       "availableGems": [
@@ -3664,7 +3554,6 @@
       "strId": "H5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6",
         "gemPouch:H"
       ],
       "availableGems": [
@@ -3703,7 +3592,6 @@
       "strId": "F5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6",
         "gemPouch:F"
       ],
       "availableGems": [
@@ -3737,7 +3625,6 @@
       "strId": "E5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 2",
         "gemPouch:E"
       ],
       "availableGems": [
@@ -3767,7 +3654,6 @@
       "strId": "B5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 6",
         "gemPouch:B"
       ],
       "availableGems": [
@@ -3801,7 +3687,6 @@
       "strId": "A5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3832,7 +3717,6 @@
       "strId": "A6",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:A"
       ],
       "availableGems": [
@@ -3865,7 +3749,6 @@
         "I2"
       ],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:I"
       ],
       "availableGems": [
@@ -3896,7 +3779,6 @@
       "strId": "D5",
       "unlocks": [],
       "requiredSkills": [
-        "gemSkills: 3",
         "gemPouch:D"
       ],
       "availableGems": [

@@ -42,19 +42,24 @@ package ui {
         public var bmpdIcon:BitmapData;
         public var type:int;
         public var data:Object;
-        public var meta:Object;  // { apId:int, isProgressive:Boolean }
+        // ordinal is the 1-based copy index for progressive variants — needed
+        // because multiple copies can drop at the same level-end and reading
+        // getItemCount() at hover stamps the same total on every icon. 0 ==
+        // "fall back to live count" for callers that don't track per-copy.
+        public var meta:Object;  // { apId:int, isProgressive:Boolean, ordinal:int }
 
         [Embed(source='../../resources/KeyPouch.png')]
         private static const KeyPouchAsset:Class;
 
-        public function KeyPouchDropIcon(apId:int) {
+        public function KeyPouchDropIcon(apId:int, ordinal:int = 0) {
             super();
 
             this.type = DropType.FIELD_TOKEN; // for the vanilla reveal sound
             this.data = { apId: apId };
             this.meta = {
                 apId: apId,
-                isProgressive: _isPerTileProgressive(apId)
+                isProgressive: _isPerTileProgressive(apId),
+                ordinal: ordinal
             };
 
             this.cntInner = new Sprite();
@@ -101,7 +106,9 @@ package ui {
                 vIp.reset(280);
 
                 var apId:int = int(this.meta.apId);
-                var copies:int = AV.sessionData.getItemCount(apId);
+                var ordinal:int = int(this.meta.ordinal);
+                var copies:int = (ordinal > 0) ? ordinal
+                                               : AV.sessionData.getItemCount(apId);
                 var prefix:String = _progressiveTilePrefix(copies);
 
                 var title:String = "Progressive Stash Key";

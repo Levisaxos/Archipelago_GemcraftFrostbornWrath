@@ -35,7 +35,12 @@ package ui {
         public var bmpdIcon:BitmapData;
         public var type:int;
         // Variant: "tile" / "tile_progressive" / "tier" / "master" / "tier_progressive".
-        public var meta:Object;  // { apId:int, prefix:String, variant:String }
+        // ordinal is the 1-based copy index for progressive variants — needed
+        // because multiple progressive copies can drop at the same level-end,
+        // and reading getItemCount() at hover would stamp the same total on
+        // every icon. ordinal == 0 means "fall back to live count" (icons
+        // built outside the per-session emission path keep the old behaviour).
+        public var meta:Object;  // { apId:int, prefix:String, variant:String, ordinal:int }
         // Vanilla IngameEnding.removeAllDropIcons writes `.data = null` on
         // every entry in core.ending.dropIcons during cleanup. Sealed Sprite
         // subclasses reject dynamic property assignment, so the field must
@@ -47,7 +52,7 @@ package ui {
         [Embed(source='../../resources/GemPouch.png')]
         private static const PouchAsset:Class;
 
-        public function GempouchDropIcon(apId:int) {
+        public function GempouchDropIcon(apId:int, ordinal:int = 0) {
             super();
 
             var variant:String = _variantForApId(apId);
@@ -57,7 +62,8 @@ package ui {
             this.meta = {
                 apId: apId,
                 prefix: prefix,
-                variant: variant
+                variant: variant,
+                ordinal: ordinal
             };
 
             this.cntInner = new Sprite();
@@ -136,9 +142,11 @@ package ui {
                 var body:String;
                 var variant:String = String(this.meta.variant);
                 var apId:int = int(this.meta.apId);
+                var ordinal:int = int(this.meta.ordinal);
                 if (variant == "tile_progressive") {
                     title = "Progressive Gempouch";
-                    var copiesT:int = AV.sessionData.getItemCount(apId);
+                    var copiesT:int = (ordinal > 0) ? ordinal
+                                                    : AV.sessionData.getItemCount(apId);
                     var prefixT:String = _progressiveTilePrefix(copiesT);
                     body = "Unlocks gems on tile " + prefixT + ". "
                          + "(" + copiesT + "/" + _orderLength() + " worlds unlocked)";

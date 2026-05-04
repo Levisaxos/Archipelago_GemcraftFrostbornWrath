@@ -295,12 +295,12 @@ package patch {
          *   1615     per-tier progressive
          * Uses its own MOUSE_OVER tooltip handler.
          */
-        public function addGempouchDropIcon(apId:int):void {
+        public function addGempouchDropIcon(apId:int, ordinal:int = 0):void {
             var inDistinct:Boolean = (apId >= 626 && apId <= 652);
             var inTier:Boolean     = (apId >= 1601 && apId <= 1615);
             if (!inDistinct && !inTier) return;
-            _addDropIcon(new GempouchDropIcon(apId),
-                "GEMPOUCH apId=" + apId,
+            _addDropIcon(new GempouchDropIcon(apId, ordinal),
+                "GEMPOUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
         }
 
@@ -325,12 +325,12 @@ package patch {
          *   1620       per-tile progressive
          *   1621       per-tier progressive
          */
-        public function addKeyPouchDropIcon(apId:int):void {
+        public function addKeyPouchDropIcon(apId:int, ordinal:int = 0):void {
             var inFixed:Boolean = (apId >= 1522 && apId <= 1561);
             var inProg:Boolean  = (apId == 1620 || apId == 1621);
             if (!inFixed && !inProg) return;
-            _addDropIcon(new KeyPouchDropIcon(apId),
-                "KEY_POUCH apId=" + apId,
+            _addDropIcon(new KeyPouchDropIcon(apId, ordinal),
+                "KEY_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
         }
 
@@ -341,12 +341,12 @@ package patch {
          *   1617       per-tile progressive
          *   1618       per-tier progressive
          */
-        public function addTilePouchDropIcon(apId:int):void {
+        public function addTilePouchDropIcon(apId:int, ordinal:int = 0):void {
             var inFixed:Boolean = (apId >= 1562 && apId <= 1600);
             var inProg:Boolean  = (apId == 1617 || apId == 1618);
             if (!inFixed && !inProg) return;
-            _addDropIcon(new TilePouchDropIcon(apId),
-                "TILE_POUCH apId=" + apId,
+            _addDropIcon(new TilePouchDropIcon(apId, ordinal),
+                "TILE_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
         }
 

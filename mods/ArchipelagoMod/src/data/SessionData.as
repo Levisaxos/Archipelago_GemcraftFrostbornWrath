@@ -93,6 +93,13 @@ package data {
             if (strId != null) unlockedStashesByStrId[strId] = true;
         }
 
+        /** Mark a stage as having its field token held. Used by coarse
+         *  (per-tile / per-tier) and progressive field-token grant paths
+         *  that don't go through _tokenMap in onItem. */
+        public function markFieldTokenHeld(strId:String):void {
+            if (strId != null) tokensByStrId[strId] = true;
+        }
+
         /** True if the player has received the Wizard Stash unlock item for this stage. */
         public function isStashUnlocked(strId:String):Boolean {
             return unlockedStashesByStrId[strId] == true;

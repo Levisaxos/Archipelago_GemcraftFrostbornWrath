@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, List
 
 from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
-from .rulesdata_settings import skill_groups
 from .requirement_tokens import (
     item_prefix_map, element_prefix_map,
     mode_tokens, level_stat_counters, skill_counter_pools,
@@ -231,6 +230,53 @@ _TALISMAN_FRAGMENT_COUNTERS: dict[str, frozenset] = {
 _TALISMAN_ROW_TOKEN_FLOOR: dict[int, int] = {1: 20, 2: 40, 3: 60}
 _TALISMAN_COLUMN_TOKEN_FLOOR: dict[int, int] = {1: 10, 2: 30, 3: 50}
 _TALISMAN_FRAGMENTS_TOKEN_FLOOR: dict[int, int] = {25: 75}
+
+
+# Skill/trait counter floors — same shape as the talisman floors above.
+# count_needed -> minimum effectively-unlocked stages required. Floors are
+# chosen to scale with how much progression each count implies (needing 6 of
+# 6 gem skills is end-game; needing 1 is sphere 0).
+_GEM_SKILLS_TOKEN_FLOOR: dict[int, int] = {3: 8, 4: 16, 5: 28, 6: 40}
+_BATTLE_TRAITS_TOKEN_FLOOR: dict[int, int] = {5: 10, 8: 25, 10: 40, 12: 55, 13: 60}
+_STRIKE_SPELLS_TOKEN_FLOOR: dict[int, int] = {2: 10, 3: 25}
+_ENHANCEMENT_SPELLS_TOKEN_FLOOR: dict[int, int] = {2: 10, 3: 25}
+
+# Lookup by the counter group_name token used in requirement strings. The
+# eval / compile paths consult this single map rather than four conditionals.
+_SKILL_COUNTER_FLOORS: dict[str, dict[int, int]] = {
+    "gemSkills":         _GEM_SKILLS_TOKEN_FLOOR,
+    "GemSkills":         _GEM_SKILLS_TOKEN_FLOOR,
+    "battleTraits":      _BATTLE_TRAITS_TOKEN_FLOOR,
+    "BattleTraits":      _BATTLE_TRAITS_TOKEN_FLOOR,
+    "strikeSpells":      _STRIKE_SPELLS_TOKEN_FLOOR,
+    "enhancementSpells": _ENHANCEMENT_SPELLS_TOKEN_FLOOR,
+}
+
+
+# Per-seed graduated token-floor gating for skill + battle-trait items.
+# Each of the 24 skills + 15 traits is assigned a unique floor in {2, 4, ..., 78}
+# at set_rules time; the assignment is shuffled with world.random so different
+# seeds gate different items at different points in the run. Achievement /
+# stage requirements that resolve `sX` / `tX` AND-gate the item check with
+# `_count_field_tokens(state, player) >= floor`, pushing the requirements (and
+# the locations that host them) later in the playthrough.
+_SKILL_TRAIT_FLOOR_SCHEDULE: List[int] = list(range(2, 80, 2))
+
+
+def _build_skill_trait_floors(world) -> None:
+    """Populate world._skill_trait_floors: per-seed map of skill/trait item
+    names to field-token floors. Call once at set_rules time before any
+    requirement compilation that depends on the floors."""
+    from .items import item_table
+    items = [name for name in item_table
+             if name.endswith(" Skill") or name.endswith(" Battle Trait")]
+    schedule = list(_SKILL_TRAIT_FLOOR_SCHEDULE)
+    while len(schedule) < len(items):
+        # Defensive: if the item set ever grows past 39, repeat the max floor.
+        schedule.append(schedule[-1])
+    schedule = schedule[:len(items)]
+    world.random.shuffle(items)
+    world._skill_trait_floors = dict(zip(items, schedule))
 
 
 def _count_talisman_fragments(state, player: int, names) -> int:
@@ -659,9 +705,20 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         # Skill" / "Haste Battle Trait") so no string construction here.
         # Gem-skill `sX` tokens broaden to also pass when a stage with
         # the matching starter gem is reachable.
+        item_name = item_prefix_map[req]
         if req in _GEM_TOKEN_TO_GEM_NAME:
-            return _has_gem_token(req, state, player)
-        return state.has(item_prefix_map[req], player)
+            if not _has_gem_token(req, state, player):
+                return False
+        elif not state.has(item_name, player):
+            return False
+        # Per-seed skill/trait floor: a token referencing this item only
+        # passes once enough field tokens have been earned in-state.
+        floors = getattr(state.multiworld.worlds[player], "_skill_trait_floors", None)
+        if floors:
+            floor = floors.get(item_name, 0)
+            if floor and _count_field_tokens(state, player) < floor:
+                return False
+        return True
     if req in element_prefix_map:
         # Element/group/weather token (single-element lists for `eBeacon`,
         # multi-element list for `eNonMonsters`). Reachable if any member is.
@@ -701,9 +758,18 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             # counter pools (strikeSpells, enhancementSpells,
             # BattleTraits, OtherSkills, skills) stay strict-item-count.
             if group_name in ("gemSkills", "GemSkills"):
-                return _count_gem_skills_broadened(state, player) >= count_needed
-            pool = skill_counter_pools[group_name]
-            return sum(1 for name in pool if state.has(name, player)) >= count_needed
+                if _count_gem_skills_broadened(state, player) < count_needed:
+                    return False
+            else:
+                pool = skill_counter_pools[group_name]
+                if sum(1 for name in pool if state.has(name, player)) < count_needed:
+                    return False
+            floor_table = _SKILL_COUNTER_FLOORS.get(group_name)
+            if floor_table is not None:
+                floor = floor_table.get(count_needed)
+                if floor is not None and _count_field_tokens(state, player) < floor:
+                    return False
+            return True
 
         # Stage-stat gates: "<counter>:N" passes if any reachable stage's
         # field(s) >= N.  Tuple values are max-aggregated across the fields.
@@ -960,17 +1026,27 @@ def _compile_req(req: str, world, is_progressive: bool):
         return _always_false
 
     if req in item_prefix_map:
+        item_name = item_prefix_map[req]
+        floor = getattr(world, "_skill_trait_floors", {}).get(item_name, 0)
         if req in _GEM_TOKEN_TO_GEM_NAME:
-            item_name = item_prefix_map[req]
             gem_name = _GEM_TOKEN_TO_GEM_NAME[req]
             broaden = _compile_gem_broadened(world, gem_name)
-            def _gem_token(state):
-                if state.has(item_name, player):
+            if floor:
+                def _gem_token_floored(state, n=item_name, b=broaden, f=floor):
+                    if not (state.has(n, player) or b(state)):
+                        return False
+                    return _count_field_tokens(state, player) >= f
+                return _gem_token_floored
+            def _gem_token(state, n=item_name, b=broaden):
+                if state.has(n, player):
                     return True
-                return broaden(state)
+                return b(state)
             return _gem_token
-        name = item_prefix_map[req]
-        return lambda state: state.has(name, player)
+        if floor:
+            return lambda state, n=item_name, f=floor: (
+                state.has(n, player) and _count_field_tokens(state, player) >= f
+            )
+        return lambda state, n=item_name: state.has(n, player)
 
     if req in element_prefix_map:
         return _compile_element_or(element_prefix_map[req], player)
@@ -996,6 +1072,8 @@ def _compile_req(req: str, world, is_progressive: bool):
             return lambda state: _can_reach_any_stage(state, player, stages)
 
         if group_name in skill_counter_pools:
+            floor_table = _SKILL_COUNTER_FLOORS.get(group_name)
+            counter_floor = floor_table.get(count_needed) if floor_table else None
             if group_name in ("gemSkills", "GemSkills"):
                 # Gempouch-aware count: each of the 6 gem skills counts iff
                 # the skill item is held OR a stage hosting it in available_gems
@@ -1003,15 +1081,30 @@ def _compile_req(req: str, world, is_progressive: bool):
                 pairs = []
                 for tok, gem_name in _GEM_TOKEN_TO_GEM_NAME.items():
                     pairs.append((item_prefix_map[tok], _compile_gem_broadened(world, gem_name)))
-                def _gemskills_count_check(state):
+                if counter_floor is None:
+                    def _gemskills_count_check(state):
+                        n = 0
+                        for item_name, broaden in pairs:
+                            if state.has(item_name, player) or broaden(state):
+                                n += 1
+                        return n >= count_needed
+                    return _gemskills_count_check
+                def _gemskills_count_check_floored(state, fl=counter_floor):
                     n = 0
                     for item_name, broaden in pairs:
                         if state.has(item_name, player) or broaden(state):
                             n += 1
-                    return n >= count_needed
-                return _gemskills_count_check
+                    if n < count_needed:
+                        return False
+                    return _count_field_tokens(state, player) >= fl
+                return _gemskills_count_check_floored
             pool = tuple(skill_counter_pools[group_name])
-            return lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed
+            if counter_floor is None:
+                return lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed
+            return lambda state, fl=counter_floor: (
+                sum(1 for n in pool if state.has(n, player)) >= count_needed
+                and _count_field_tokens(state, player) >= fl
+            )
 
         if group_name in level_stat_counters:
             stages = _qualifying_stages_for_stat(group_name, count_needed)
@@ -1101,6 +1194,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     player = world.player
     multiworld = world.multiworld
 
+    # Per-seed skill/trait floor map. Built before any access-rule compilation
+    # so the resolvers in _eval_req / _compile_req can look up the floor for
+    # the matching item name.
+    _build_skill_trait_floors(world)
+
     stages = GAME_DATA["stages"]
 
     # The chosen starting stage (from world.options.starting_stage) is the
@@ -1172,13 +1270,6 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                             lambda state, i=pouch_item, n=pouch_needed:
                                 state.count(i, player) >= n)
                     continue
-                if group_name == "gemSkills" and pouch_mode != _g.POUCH_OFF:
-                    continue  # pouches replace the gem-skill gate
-                count_needed = int(count_str.strip())
-                if group_name in skill_groups:
-                    group_members = skill_groups[group_name].get("members", [])
-                    conditions.append(lambda state, mems=group_members, n=count_needed:
-                        sum(1 for m in mems if state.has(f"{m} Skill", player)) >= n)
             else:
                 item_name = f"{skill} Skill"
                 conditions.append(lambda state, i=item_name: state.has(i, player))
