@@ -6,13 +6,21 @@ package data {
     public class ServerOptions {
         // Goal and Primary Settings
         public var goal:int;                     // 0=beat_game, 2=swarm_queen, 3=fields_count, 4=fields_percentage
+        public var startingStage:int;            // 0=W1..3=W4, 4=S1..7=S4 (StartingStage option order)
         public var fieldTokenPlacement:int;      // 0=own_world, 1=any_world, 2=different_world
         public var enforce_logic:Boolean;
         public var disable_endurance:Boolean;
         public var disable_trial:Boolean;
 
-        // XP Tome Levels
+        // XP Tome Levels — derived per-tome counts plus raw % multiplier.
         public var tomeXpLevels:Object;          // { tattered, worn, ancient }
+        public var xpTomeBonus:int;              // raw yaml % (50–300, default 150)
+
+        // Skill point pool scale (50–200% of the 2000 SP baseline).
+        public var skillpointMultiplier:int;
+
+        // Reserved for full_talisman goal — currently no yaml option, kept
+        // wired so GoalManager.configure / FullTalismanGoal still compile.
         public var talismanMinRarity:int;
 
         // Difficulty Multipliers
@@ -82,12 +90,15 @@ package data {
 
         public function initialize():void {
             goal = 0;
+            startingStage = 0;
             fieldTokenPlacement = 1;
             enforce_logic = true;
             disable_endurance = false;
             disable_trial = true;
 
             tomeXpLevels = { tattered: 1, worn: 2, ancient: 3 };
+            xpTomeBonus = 150;
+            skillpointMultiplier = 100;
             talismanMinRarity = 0;
 
             enemyMultipliers = {

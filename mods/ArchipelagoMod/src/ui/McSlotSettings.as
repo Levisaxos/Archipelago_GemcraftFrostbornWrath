@@ -70,17 +70,30 @@ package ui {
                 var count:int = int(Math.ceil(pct * 122.0 / 100.0));
                 addRow("Fields Required", count + " (" + pct + "%)", vY);                                     vY += ROW_HEIGHT;
             }
-            addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
-            addRow("Talisman Min Rarity",     opts.talismanMinRarity.toString(), vY);                         vY += ROW_HEIGHT;
+            addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
+            addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
             addRow("Enforce Logic",           opts.enforce_logic    ? "Yes" : "No", vY);                      vY += ROW_HEIGHT;
             addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Trial Mode",              opts.disable_trial     ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Starting Wizard Level",   opts.startingWizardLevel == 1 ? "Off" : "Level " + opts.startingWizardLevel, vY); vY += ROW_HEIGHT;
             addRow("Starting Overcrowd",      opts.startingOvercrowd ? "Yes" : "No", vY);                    vY += ROW_HEIGHT;
-            addRow("Tattered Scroll",         opts.tomeXpLevels.tattered + " levels", vY);                   vY += ROW_HEIGHT;
-            addRow("Worn Tome",               opts.tomeXpLevels.worn       + " levels", vY);                  vY += ROW_HEIGHT;
-            addRow("Ancient Grimoire",        opts.tomeXpLevels.ancient    + " levels", vY);                  vY += ROW_HEIGHT;
+
+            // ── Item gating granularity ──────────────────────────────────────
+            vY += SECTION_GAP;
+            addSectionHeader("Gating", vY); vY += ROW_HEIGHT;
+            addRow("Field Token Granularity", fieldTokenGranularityName(opts.fieldTokenGranularity), vY);     vY += ROW_HEIGHT;
+            addRow("Stash Key Granularity",   stashKeyGranularityName(opts.stashKeyGranularity), vY);         vY += ROW_HEIGHT;
+            addRow("Gem Pouch Granularity",   gemPouchGranularityName(opts.gemPouchGranularity), vY);         vY += ROW_HEIGHT;
+
+            // ── Item economy ─────────────────────────────────────────────────
+            vY += SECTION_GAP;
+            addSectionHeader("Item Economy", vY); vY += ROW_HEIGHT;
+            addRow("XP Tome Bonus",           opts.xpTomeBonus + "%", vY);                                    vY += ROW_HEIGHT;
+            addRow("Tattered Scroll",         opts.tomeXpLevels.tattered + " levels", vY);                    vY += ROW_HEIGHT;
+            addRow("Worn Tome",               opts.tomeXpLevels.worn     + " levels", vY);                    vY += ROW_HEIGHT;
+            addRow("Ancient Grimoire",        opts.tomeXpLevels.ancient  + " levels", vY);                    vY += ROW_HEIGHT;
+            addRow("Skillpoint Multiplier",   opts.skillpointMultiplier + "%", vY);                           vY += ROW_HEIGHT;
 
             // ── Difficulty Modifiers ─────────────────────────────────────────
             vY += SECTION_GAP;
@@ -157,6 +170,51 @@ package ui {
                 case 1:  return "Any World";
                 case 2:  return "Different World";
                 default: return "Unknown (" + ftp + ")";
+            }
+        }
+
+        private function startingStageName(s:int):String {
+            switch (s) {
+                case 0:  return "W1";
+                case 1:  return "W2";
+                case 2:  return "W3";
+                case 3:  return "W4";
+                case 4:  return "S1";
+                case 5:  return "S2";
+                case 6:  return "S3";
+                case 7:  return "S4";
+                default: return "Unknown (" + s + ")";
+            }
+        }
+
+        // Field tokens & stash keys share the same granularity values 0-5,
+        // and stash keys add 6=global. Render with the same name table.
+        private function fieldTokenGranularityName(g:int):String {
+            switch (g) {
+                case 0:  return "Per Stage";
+                case 1:  return "Per Stage (Progressive)";
+                case 2:  return "Per Tile";
+                case 3:  return "Per Tile (Progressive)";
+                case 4:  return "Per Tier";
+                case 5:  return "Per Tier (Progressive)";
+                default: return "Unknown (" + g + ")";
+            }
+        }
+
+        private function stashKeyGranularityName(g:int):String {
+            if (g == 6) return "Global";
+            return fieldTokenGranularityName(g);
+        }
+
+        private function gemPouchGranularityName(g:int):String {
+            switch (g) {
+                case 0:  return "Off";
+                case 1:  return "Per Tile";
+                case 2:  return "Per Tile (Progressive)";
+                case 3:  return "Per Tier";
+                case 4:  return "Per Tier (Progressive)";
+                case 5:  return "Global";
+                default: return "Unknown (" + g + ")";
             }
         }
 

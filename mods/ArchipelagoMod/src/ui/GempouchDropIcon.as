@@ -14,13 +14,14 @@ package ui {
     import data.AV;
 
     /**
-     * Custom drop icon for AP "Gempouch" items (apIds 626-652).
+     * Custom drop icon for AP "Gempouch" items.
      *
-     * Distinct mode: ap id = 626 + index in gemPouchPlayOrder; the icon
-     * displays "Gempouch (X)" where X is the prefix letter.
-     * Progressive mode: ap id = 652 (gemPouchProgressiveId); the icon
-     * displays "Progressive Gempouch" with a copy-count subtitle pulled
-     * live from SessionData at render time.
+     * Supported apIds:
+     *   626-651  per-tile distinct  (Gempouch (X))
+     *   652      per-tile progressive
+     *   1601-1613 per-tier distinct  (Tier N Gempouch)
+     *   1614     master              (Master Gempouch)
+     *   1615     per-tier progressive
      *
      * Mirrors XpTomeDropIcon's public shape so it lives in ending.dropIcons
      * without breaking the vanilla animation loop or cleanup. Uses our own
@@ -33,7 +34,8 @@ package ui {
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var meta:Object;  // { apId:int, prefix:String, isProgressive:Boolean }
+        // Variant: "tile" / "tile_progressive" / "tier" / "master" / "tier_progressive".
+        public var meta:Object;  // { apId:int, prefix:String, variant:String }
         // Vanilla IngameEnding.removeAllDropIcons writes `.data = null` on
         // every entry in core.ending.dropIcons during cleanup. Sealed Sprite
         // subclasses reject dynamic property assignment, so the field must
@@ -48,14 +50,14 @@ package ui {
         public function GempouchDropIcon(apId:int) {
             super();
 
-            var isProgressive:Boolean = _isProgressiveId(apId);
-            var prefix:String = isProgressive ? "" : _prefixForApId(apId);
+            var variant:String = _variantForApId(apId);
+            var prefix:String = (variant == "tile") ? _prefixForApId(apId) : "";
 
             this.type = DropType.SKILL_TOME; // reuse the tome reveal SFX
             this.meta = {
                 apId: apId,
                 prefix: prefix,
-                isProgressive: isProgressive
+                variant: variant
             };
 
             this.cntInner = new Sprite();
@@ -89,16 +91,22 @@ package ui {
 
         // -----------------------------------------------------------------------
 
-        private static function _isProgressiveId(apId:int):Boolean {
+        private static function _variantForApId(apId:int):String {
             try {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
-                    var progId:int = int(opts.gemPouchProgressiveId);
-                    if (progId > 0 && apId == progId) return true;
+                    var tileProg:int = int(opts.gemPouchProgressiveId);
+                    if (tileProg > 0 && apId == tileProg) return "tile_progressive";
+                    var tierProg:int = int(opts.gemPouchPerTierProgressiveId);
+                    if (tierProg > 0 && apId == tierProg) return "tier_progressive";
                 }
             } catch (e:Error) {}
-            // Fallback to the apworld-allocated default.
-            return apId == 652;
+            // Apworld-allocated defaults / fixed ranges.
+            if (apId == 652)  return "tile_progressive";
+            if (apId == 1615) return "tier_progressive";
+            if (apId == 1614) return "master";
+            if (apId >= 1601 && apId <= 1613) return "tier";
+            return "tile";
         }
 
         private static function _prefixForApId(apId:int):String {
@@ -126,13 +134,26 @@ package ui {
                 var title:String;
                 var subtitle:String = "Gem Pouch";
                 var body:String;
-                if (this.meta.isProgressive == true) {
+                var variant:String = String(this.meta.variant);
+                var apId:int = int(this.meta.apId);
+                if (variant == "tile_progressive") {
                     title = "Progressive Gempouch";
-                    var copies:int = AV.sessionData.getItemCount(int(this.meta.apId));
-                    var unlocked:int = copies; // includes precollected copy
-                    var total:int = _orderLength();
-                    body = "Unlocks gems on the next world. "
-                         + "(" + unlocked + "/" + total + " worlds unlocked)";
+                    var copiesT:int = AV.sessionData.getItemCount(apId);
+                    var prefixT:String = _progressiveTilePrefix(copiesT);
+                    body = "Unlocks gems on tile " + prefixT + ". "
+                         + "(" + copiesT + "/" + _orderLength() + " worlds unlocked)";
+                } else if (variant == "tier_progressive") {
+                    title = "Progressive Gempouch (per-tier)";
+                    var copiesTier:int = AV.sessionData.getItemCount(apId);
+                    body = "Unlocks gems on the next tier. "
+                         + "(" + copiesTier + "/" + _tierLength() + " tiers unlocked)";
+                } else if (variant == "tier") {
+                    var tier:int = apId - 1601;
+                    title = "Tier " + tier + " Gempouch";
+                    body = "Unlocks gems on stages of tier " + tier + ".";
+                } else if (variant == "master") {
+                    title = "Master Gempouch";
+                    body = "Unlocks gems on every stage.";
                 } else {
                     title = "Gempouch (" + String(this.meta.prefix) + ")";
                     body = "Unlocks gems on stages of world " + String(this.meta.prefix) + ".";
@@ -154,11 +175,43 @@ package ui {
             try {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
-                    var order:Array = opts.gemPouchPlayOrder as Array;
+                    var order:Array = opts.progressiveTileOrder as Array;
                     if (order != null) return order.length;
                 }
             } catch (e:Error) {}
             return 26;
+        }
+
+        private static function _progressiveTilePrefix(copies:int):String {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var order:Array = opts.progressiveTileOrder as Array;
+                    if (order != null && copies >= 1 && copies <= order.length) {
+                        return String(order[copies - 1]);
+                    }
+                }
+            } catch (e:Error) {}
+            return "?";
+        }
+
+        private static function _tierLength():int {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var tm:Object = opts.stageTierByStrId;
+                    if (tm != null) {
+                        var seen:Object = {};
+                        var n:int = 0;
+                        for (var k:String in tm) {
+                            var t:int = int(tm[k]);
+                            if (seen[t] !== true) { seen[t] = true; n++; }
+                        }
+                        if (n > 0) return n;
+                    }
+                }
+            } catch (e:Error) {}
+            return 13;
         }
     }
 }

@@ -763,6 +763,10 @@ class GemcraftFrostbornWrathWorld(World):
         _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
+            "starting_stage":        self.options.starting_stage.value,
+            "field_token_placement": self.options.field_token_placement.value,
+            "xp_tome_bonus":         self.options.xp_tome_bonus.value,
+            "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,

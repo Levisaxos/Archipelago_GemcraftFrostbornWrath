@@ -4,7 +4,6 @@ package ui {
     import flash.display.Sprite;
     import flash.events.MouseEvent;
     import flash.filters.ColorMatrixFilter;
-    import flash.geom.Matrix;
 
     /**
      * Base class for all mod buttons on the selector screen and the main menu.
@@ -43,6 +42,13 @@ package ui {
         /**
          * Re-snapshot the button with a new label.
          * Clears all existing children, then draws a fresh bitmap clone.
+         *
+         * Draws the template directly (not its parent) so the snapshot does
+         * not depend on the parent's current render state. When the selector
+         * is animating in (TRANS_BGR_TO_SELECTOR) the parent's display tree
+         * is in transit — drawing through it produced empty bitmaps on the
+         * second slot load. The template itself, however, has its own
+         * coherent display list at all times.
          */
         protected function _rebuild(label:String):void {
             while (numChildren > 0) removeChildAt(0);
@@ -54,10 +60,7 @@ package ui {
             _template.tf.text = label;
 
             var bd:BitmapData = new BitmapData(bw, bh, true, 0x00000000);
-            var m:Matrix = new Matrix();
-            m.tx = -_template.x;
-            m.ty = -_template.y;
-            bd.draw(_template.parent, m);
+            bd.draw(_template);
             addChild(new Bitmap(bd));
 
             _template.tf.text = originalText;

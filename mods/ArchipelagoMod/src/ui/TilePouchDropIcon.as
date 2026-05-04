@@ -2,12 +2,16 @@ package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.Sprite;
+    import flash.events.MouseEvent;
     import flash.filters.DropShadowFilter;
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
 
+    import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+
+    import data.AV;
 
     /**
      * Custom drop icon for coarse-granularity field-token items — per_tile,
@@ -37,6 +41,7 @@ package ui {
         public var bmpdIcon:BitmapData;
         public var type:int;
         public var data:Object;
+        public var meta:Object;  // { apId:int, isProgressive:Boolean }
 
         [Embed(source='../../resources/TilePouch.png')]
         private static const TilePouchAsset:Class;
@@ -46,6 +51,10 @@ package ui {
 
             this.type = DropType.FIELD_TOKEN;
             this.data = { apId: apId };
+            this.meta = {
+                apId: apId,
+                isProgressive: _isPerTileProgressive(apId)
+            };
 
             this.cntInner = new Sprite();
             addChild(this.cntInner);
@@ -72,6 +81,79 @@ package ui {
             }
 
             this.cntInner.addChild(this.bmpIcon);
+
+            addEventListener(MouseEvent.MOUSE_OVER, _onMouseOver, false, 0, true);
+            addEventListener(MouseEvent.MOUSE_OUT,  _onMouseOut,  false, 0, true);
+        }
+
+        // -----------------------------------------------------------------------
+        // Tooltip — only the per-tile progressive variant renders one for now;
+        // the per-tile / per-tier distinct variants and per-tier progressive
+        // fall through silently.
+
+        private function _onMouseOver(e:MouseEvent):void {
+            try {
+                if (this.meta == null || this.meta.isProgressive != true)
+                    return;
+
+                var vIp:* = GV.mcInfoPanel;
+                vIp.reset(280);
+
+                var apId:int = int(this.meta.apId);
+                var copies:int = AV.sessionData.getItemCount(apId);
+                var prefix:String = _progressiveTilePrefix(copies);
+
+                var title:String = "Progressive Field Token";
+                var subtitle:String = "Field Token";
+                var body:String = "Unlocks fields on tile " + prefix + ". "
+                                + "(" + copies + "/" + _orderLength() + " worlds unlocked)";
+
+                vIp.addTextfield(0xFFD700, title, false, 13);
+                vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
+                vIp.addTextfield(0x99FF99, body, false, 11);
+                GV.main.cntInfoPanel.addChild(vIp);
+                vIp.doEnterFrame();
+            } catch (err:Error) {}
+        }
+
+        private function _onMouseOut(e:MouseEvent):void {
+            try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
+        }
+
+        private static function _isPerTileProgressive(apId:int):Boolean {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var progId:int = int(opts.fieldTokenPerTileProgressiveId);
+                    if (progId > 0 && apId == progId)
+                        return true;
+                }
+            } catch (e:Error) {}
+            return false;
+        }
+
+        private static function _orderLength():int {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var order:Array = opts.progressiveTileOrder as Array;
+                    if (order != null) return order.length;
+                }
+            } catch (e:Error) {}
+            return 26;
+        }
+
+        private static function _progressiveTilePrefix(copies:int):String {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var order:Array = opts.progressiveTileOrder as Array;
+                    if (order != null && copies >= 1 && copies <= order.length) {
+                        return String(order[copies - 1]);
+                    }
+                }
+            } catch (e:Error) {}
+            return "?";
         }
     }
 }

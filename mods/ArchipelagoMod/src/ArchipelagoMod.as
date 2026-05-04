@@ -195,6 +195,12 @@ package {
         // per AP-granted fragment without duplicating monster-drop fragments (which
         // are tracked separately via GV.ingameCore.ocLootTalFrags).
         private var _sessionGrantedFragments:Array = [];
+        // Stage strIds unlocked this session by per-stage progressive items —
+        // _injectApDropIcons reads these to emit a stage-specific FieldTokenDropIcon
+        // (1616) or WizStashKeyDropIcon (1619) for each copy received. Populated
+        // in the corresponding _grant…ProgressivePerStage functions.
+        private var _sessionFieldStageProgressiveUnlocks:Array = [];
+        private var _sessionStashStageProgressiveUnlocks:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
         // Achievements-in-logic badge — small text label that floats above
@@ -518,6 +524,7 @@ package {
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
+            if (_stageTinter != null) _stageTinter.reset();
             if (_modButtons != null) {
                 _modButtons.settingsVisible = false;
                 _modButtons.removeFromSelector();
@@ -527,6 +534,8 @@ package {
 
             _sessionDrops = [];
             _sessionGrantedFragments = [];
+            _sessionFieldStageProgressiveUnlocks = [];
+            _sessionStashStageProgressiveUnlocks = [];
             _levelEndCountdown = -1;
             _needsConnection = false;
 
@@ -707,6 +716,23 @@ package {
                 startConnectionForSlot();
             }
 
+            // Main menu overlay — version label + changelog button. Shown
+            // whenever the player is on MAINMENU regardless of AP/standalone
+            // state, so the changelog and update badge are always reachable.
+            // (Note: ScrSlotSettings/ScrDebugOptions UI live behind the AP
+            // gate below — they only make sense when connected.)
+            var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
+            if (_mainMenuUI != null) {
+                if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
+                    _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
+                }
+                if (_mainMenuUI.isShowing) {
+                    _mainMenuUI.onFrame();
+                    if (!onMainMenu)
+                        _mainMenuUI.hide();
+                }
+            }
+
             // ===============================================================
             // AP-MODE GATE — everything below runs only when AP is active.
             // Standalone slots return here, leaving the game fully vanilla.
@@ -749,17 +775,6 @@ package {
                 _offlineItemsPanel.doEnterFrame();
             }
 
-            // Main menu overlay — show/tick/hide driven by screen state.
-            var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
-            if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
-                _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
-            }
-            if (_mainMenuUI.isShowing) {
-                _mainMenuUI.onFrame();
-                if (!onMainMenu)
-                    _mainMenuUI.hide();
-            }
-
             // Register the debug hotkey once the stage exists.
             if (!_keyListenerAdded && this.stage != null) {
                 this.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown, false, 0, true);
@@ -797,6 +812,8 @@ package {
                     _injectApDropIcons();
                     _sessionDrops = [];
                     _sessionGrantedFragments = [];
+                    _sessionFieldStageProgressiveUnlocks = [];
+                    _sessionStashStageProgressiveUnlocks = [];
                     _levelEndCountdown = -1;
                 }
             }
@@ -868,6 +885,7 @@ package {
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
                 _updateAchievementsBadge();
+                if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             } else if (_achLogicBadgeFrame != null) {
                 _detachAchievementsBadge();
             }
@@ -1389,6 +1407,8 @@ package {
             _logger.log(MOD_NAME, "=== end of AP items list ===");
             _sessionDrops = [];
             _sessionGrantedFragments = [];
+            _sessionFieldStageProgressiveUnlocks = [];
+            _sessionStashStageProgressiveUnlocks = [];
             _levelEndCountdown = -1;
             if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
         }
@@ -1422,11 +1442,15 @@ package {
          * in the icon row (and animate in first):
          *
          *   1.  Field tokens
-         *   1b. Map tiles  (direct + per-tile/per-tier field token expansion)
+         *   1b. Map tiles  (direct items only; coarse field tokens use 4d)
          *   2.  Skill tomes
          *   3.  Battle trait scrolls
          *   4.  XP tomes
-         *   4b. Gempouches
+         *   4b. Gempouches  (per-tile / per-tier / master / progressives)
+         *   4c. Stash keys  (per-stage + per-tile / per-tier / master pouches)
+         *   4d. Tile pouches  (coarse per-tile / per-tier field tokens)
+         *   4e. Progressive variants (per-stage stage-specific icons,
+         *       per-tile / per-tier pouch icons)
          *   5.  Shadow cores  (one combined icon: AP-granted + monster drops)
          *   5b. Skillpoint bundles  (cyan-glow icon, summed per run)
          *   6.  Talisman fragments  (monster drops + AP-granted)
@@ -1463,37 +1487,18 @@ package {
                 }
             }
 
-            // 1b. Map tiles. Three apId ranges contribute:
-            //   600-625    direct map tile items (apIdToGameId resolves the gameId)
-            //   1562-1587  per-tile field tokens (one tile each, via gemPouchPlayOrder)
-            //   1588-1600  per-tier field tokens (one icon per tile in the tier)
+            // 1b. Map tiles (direct items only — apIdToGameId resolves the gameId).
+            // Coarse field tokens (1562-1600) get their own TilePouchDropIcon below.
             // Deduped: receiving the same tile twice in a run produces one icon.
             var seenTileGameIds:Object = {};
-            var tierMap:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
-                ? AV.serverData.serverOptions.stageTierByStrId : null;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-
-                if (apId >= 600 && apId <= 625) {
-                    if (AV.serverData != null && AV.serverData.apIdToGameId != null) {
-                        var directGid:int = int(AV.serverData.apIdToGameId[apId]);
-                        _emitMapTileIconOnce(directGid, seenTileGameIds);
-                    }
-                } else if (apId >= 1562 && apId <= 1587) {
-                    var tilePrefix:String = _prefixForTileApId(apId, 1562);
-                    if (tilePrefix != null && tilePrefix.length > 0) {
-                        _emitMapTileIconOnce(_tileGameIdForPrefix(tilePrefix), seenTileGameIds);
-                    }
-                } else if (apId >= 1588 && apId <= 1600 && tierMap != null) {
-                    var tier:int = apId - 1588;
-                    for (var tsid:String in tierMap) {
-                        if (int(tierMap[tsid]) != tier) continue;
-                        if (tsid.length == 0) continue;
-                        _emitMapTileIconOnce(_tileGameIdForPrefix(tsid.charAt(0)), seenTileGameIds);
-                    }
-                }
+                if (apId < 600 || apId > 625) continue;
+                if (AV.serverData == null || AV.serverData.apIdToGameId == null) continue;
+                var directGid:int = int(AV.serverData.apIdToGameId[apId]);
+                _emitMapTileIconOnce(directGid, seenTileGameIds);
             }
 
             // 2. Skill tomes
@@ -1524,13 +1529,82 @@ package {
                 _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
             }
 
-            // 4b. Gempouches (distinct 626-651, progressive 652).
+            // 4b. Gempouches:
+            //   626-651  per-tile distinct
+            //   652      per-tile progressive
+            //   1601-1614 per-tier + master
+            //   1615     per-tier progressive
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 626 || apId > 652) continue;
+                var isPouchDistinct:Boolean = (apId >= 626 && apId <= 652);
+                var isPouchTier:Boolean     = (apId >= 1601 && apId <= 1615);
+                if (!isPouchDistinct && !isPouchTier) continue;
                 _progressionBlocker.addGempouchDropIcon(apId);
+            }
+
+            // 4c. Wizard Stash keys:
+            //   1400-1521  per-stage (one per stage)
+            //   1522-1547  per-tile pouch
+            //   1548-1560  per-tier pouch
+            //   1561       master pouch
+            // Per-stage progressive (1619) handled below from
+            // _sessionStashStageProgressiveUnlocks. Per-tile / per-tier
+            // progressives (1620, 1621) handled in 4e.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId >= 1400 && apId <= 1521) {
+                    _progressionBlocker.addWizStashKeyDropIcon(apId);
+                } else if (apId >= 1522 && apId <= 1561) {
+                    _progressionBlocker.addKeyPouchDropIcon(apId);
+                }
+            }
+
+            // 4d. Coarse field-token pouches:
+            //   1562-1587  per-tile
+            //   1588-1600  per-tier
+            // One TilePouchDropIcon per copy received. Per-stage progressive
+            // (1616) handled below from _sessionFieldStageProgressiveUnlocks.
+            // Per-tile / per-tier progressives (1617, 1618) handled in 4e.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1562 || apId > 1600) continue;
+                _progressionBlocker.addTilePouchDropIcon(apId);
+            }
+
+            // 4e. Progressive variants (1616-1621). Per-stage variants resolve
+            // to the specific stage and reuse FieldTokenDropIcon /
+            // WizStashKeyDropIcon. Per-tile / per-tier variants get one
+            // generic pouch icon per copy received.
+            var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId == 1617 || apId == 1618) {
+                    _progressionBlocker.addTilePouchDropIcon(apId);
+                } else if (apId == 1620 || apId == 1621) {
+                    _progressionBlocker.addKeyPouchDropIcon(apId);
+                }
+            }
+            for (var fpi:int = 0; fpi < _sessionFieldStageProgressiveUnlocks.length; fpi++) {
+                var fpStrId:String = String(_sessionFieldStageProgressiveUnlocks[fpi]);
+                var fpStageId:int = GV.getFieldId(fpStrId);
+                if (fpStageId >= 0) {
+                    _progressionBlocker.addFieldTokenDropIcon(fpStageId);
+                }
+            }
+            for (var spi:int = 0; spi < _sessionStashStageProgressiveUnlocks.length; spi++) {
+                var spStrId:String = String(_sessionStashStageProgressiveUnlocks[spi]);
+                if (stageLocIdMap == null) continue;
+                var spLocId:int = int(stageLocIdMap[spStrId]);
+                if (spLocId <= 0) continue;
+                _progressionBlocker.addWizStashKeyDropIcon(1400 + spLocId - 1);
             }
 
             // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).
@@ -2467,6 +2541,7 @@ package {
             }
             var sid:String = String(order[n - 1]);
             _stageUnlocker.unlockStage(sid);
+            _sessionFieldStageProgressiveUnlocks.push(sid);
             _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
             _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
         }
@@ -2524,6 +2599,7 @@ package {
             }
             var sid:String = String(order[n - 1]);
             AV.sessionData.markStashUnlocked(sid);
+            _sessionStashStageProgressiveUnlocks.push(sid);
             _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, 0x55AAFF);
             _logger.log(MOD_NAME, "  → Progressive stash key (per-stage) #" + n + " unlocks " + sid);
         }
