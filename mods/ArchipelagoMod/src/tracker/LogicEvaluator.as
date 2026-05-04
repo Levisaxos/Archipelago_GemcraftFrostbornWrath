@@ -388,11 +388,11 @@ package tracker {
                 // a clearable stage with the matching tower count.
                 if (ehead == "eWizardTower" || nameForField == "WizardTower") {
                     if (_fieldEvaluator == null) return false;
-                    var unlocked:Object = AV.sessionData.unlockedStashesByStrId;
-                    for (var stashSid:String in unlocked) {
-                        if (unlocked[stashSid] != true) continue;
-                        if (!_fieldEvaluator.isStashGateMet(stashSid)) continue;
-                        if (_fieldEvaluator.stageHasElementCount(stashSid, "WizardTower", ecount)) {
+                    var unlockedTowers:Object = AV.sessionData.unlockedStashesByStrId;
+                    for (var towerSid:String in unlockedTowers) {
+                        if (unlockedTowers[towerSid] != true) continue;
+                        if (!_fieldEvaluator.isStashGateMet(towerSid)) continue;
+                        if (_fieldEvaluator.stageHasElementCount(towerSid, "WizardTower", ecount)) {
                             return true;
                         }
                     }
@@ -1286,6 +1286,13 @@ package tracker {
 
         /** Returns true if any reachable in-logic stage hosts the named element. */
         private function _elementInLogic(elemName:String):Boolean {
+            if (elemName == "Drop Holder"
+                    && !AV.sessionData.hasItem(700 + SessionData.SKILL_NAMES.indexOf("Bolt")))
+            {
+                // Drop Holders only open to Bolt shots — gate matches apworld
+                // _eval_element_reachable for "Drop Holder".
+                return false;
+            }
             if (_elementStages == null)
             {
                 return true;

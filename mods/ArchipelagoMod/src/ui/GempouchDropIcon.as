@@ -29,7 +29,7 @@ package ui {
      * MOUSE_OVER/MOUSE_OUT — vanilla renderDropIconInfoPanel doesn't know
      * our type.
      */
-    public class GempouchDropIcon extends Sprite {
+    public dynamic class GempouchDropIcon extends Sprite {
 
         public var cntInner:Sprite;
         public var bmpIcon:Bitmap;
@@ -42,11 +42,10 @@ package ui {
         // every icon. ordinal == 0 means "fall back to live count" (icons
         // built outside the per-session emission path keep the old behaviour).
         public var meta:Object;  // { apId:int, prefix:String, variant:String, ordinal:int }
-        // Vanilla IngameEnding.removeAllDropIcons writes `.data = null` on
-        // every entry in core.ending.dropIcons during cleanup. Sealed Sprite
-        // subclasses reject dynamic property assignment, so the field must
-        // exist or the cleanup throws. Unread by us — mirrors XpTomeDropIcon.
-        public var data:*;
+        // Class is `dynamic` so vanilla IngameEnding.removeAllDropIcons can
+        // write `.data = null` on every entry in core.ending.dropIcons during
+        // cleanup without us declaring a `data` field — declaring one would
+        // shadow the `data` package this file imports from.
 
         // Single shared artwork for all pouch variants. Path is relative to
         // this .as file: src/ui/ → ../../resources/

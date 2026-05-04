@@ -35,13 +35,15 @@ package ui {
      * .type = DropType.FIELD_TOKEN so the vanilla reveal animation plays
      * the same chime as regular per-stage field tokens (sndoctoken).
      */
-    public class TilePouchDropIcon extends Sprite {
+    public dynamic class TilePouchDropIcon extends Sprite {
 
         public var cntInner:Sprite;
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var data:Object;
+        // Class is `dynamic` so vanilla cleanup can write `.data = null`
+        // without us declaring a `data` field that would shadow the
+        // imported `data` package.
         // ordinal is the 1-based copy index for progressive variants — needed
         // because multiple copies can drop at the same level-end and reading
         // getItemCount() at hover stamps the same total on every icon. 0 ==

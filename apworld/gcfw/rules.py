@@ -80,8 +80,8 @@ def _count_xp_items(state, player: int) -> int:
 
 
 def _sum_shadow_cores(state, player: int) -> int:
-    """Sum of core amounts for held shadow-core stash items.  Only items
-    classified as progression count — others don't enter state.prog_items."""
+    """Sum of core amounts for held shadow-core stash items.  All shadow-core
+    stashes are progression so the held total reflects every collected stash."""
     cache = _get_counter_cache(state, player)
     val = cache.get("sc")
     if val is None:
@@ -488,6 +488,10 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
     field = elem_pascal + "Count"
     if field not in _PRESENT_COUNT_FIELDS:
         return True
+    if elem_pascal == "DropHolder" and not state.has("Bolt Skill", player):
+        # Drop Holders are only opened by Bolt shots (DropHolder.takeDamage
+        # requires a TowerBolt origin, decrements pBoltShotsNeeded).
+        return False
     qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
     if elem_pascal == "WizardTower":
         # Wizard towers are the visual structure of wizard stashes — even if
@@ -806,9 +810,8 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         if group_name == "fieldToken":
             return _count_field_tokens(state, player) >= count_needed
         if group_name == "shadowCore":
-            # Sum core amounts of held progression shadow-core stash items.
-            # Half of stashes are progression (see items.py _sc_cls); useful/
-            # filler stashes are invisible to state.has and contribute 0.
+            # Sum core amounts of held shadow-core stash items.  All stashes
+            # are progression so the full collected total counts toward the gate.
             return _sum_shadow_cores(state, player) >= count_needed
         if group_name == "wizardLevel":
             # Half of XP items are progression; player needs ceil(N/2) of

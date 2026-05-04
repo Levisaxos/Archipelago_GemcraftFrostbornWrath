@@ -2277,7 +2277,7 @@ level_requirements = {
         "ReaverMaxHP": 57,
         "ReaverMaxArmor": 11,
         "MonstersBeforeWave12": 137,
-        "AbandonedDwellingCount": 2,
+        "AbandonedDwellingCount": 1,
         "BeaconCount": 2,
         "DropHolderCount": 1,
         "requirements": [

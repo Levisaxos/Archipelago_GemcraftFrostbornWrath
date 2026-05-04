@@ -1,6 +1,6 @@
 {
   "_notes": {
-    "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 600-625 | Skills: 700-723 | Battle Traits: 800-814 | Talismans: 900-952 | Shadow Cores: 1000-1016 | XP: 1100-1199 | Extra Talismans: 1200-1246 | Extra Shadow Cores: 1300-1351 | Wizard Stash Keys: 1400-1521 | Skillpoint Bundles: 1700-1709 | Achievements: 2000-2636",
+    "item_id_buckets": "Stages (Field Tokens): 1-124 | Map Tiles: 600-625 | Skills: 700-723 | Battle Traits: 800-814 | Talismans: 900-952 | Shadow Cores: 1000-1016 | XP: 1100-1199 | Extra Shadow Cores: 1300-1317 | Wizard Stash Keys: 1400-1521 | Skillpoint Bundles: 1700-1709 | Achievements: 2000-2636",
     "location_id_buckets": "Stages (Journey): 1-122 | Wiz Stash: 400-521 | Achievements: 2000-2636",
     "game_id_note": "game_id is the internal engine ID (index or constant). ap_id is the Archipelago item/location ID.",
     "scope_note": "All 122 stages are in scope. W1 has no AP token (always free). Formerly trial-locked stages (FLDA5/A6, FLDB5, FLDD5, FLDE5, FLDF5, FLDH5, FLDI1, FLDK5, FLDP6, FLDR6, FLDT5, FLDZ5) are accessible via AP token instead of trial drops. W5 and G5 do not exist in the game and have been removed. W1-W4 are all free (no field token item). W2-W4 changed from pre-collected to always-free like W1."
@@ -3077,550 +3077,97 @@
       "item_ap_id": 1016
     }
   ],
-  "extra_talisman_fragments": [
-    {
-      "name": "Extra Talisman Fragment #1",
-      "seed": 900001,
-      "tal_data": "900001/2/0/0",
-      "item_ap_id": 1200
-    },
-    {
-      "name": "Extra Talisman Fragment #2",
-      "seed": 900002,
-      "tal_data": "900002/4/1/0",
-      "item_ap_id": 1201
-    },
-    {
-      "name": "Extra Talisman Fragment #3",
-      "seed": 900003,
-      "tal_data": "900003/6/2/0",
-      "item_ap_id": 1202
-    },
-    {
-      "name": "Extra Talisman Fragment #4",
-      "seed": 900004,
-      "tal_data": "900004/8/0/0",
-      "item_ap_id": 1203
-    },
-    {
-      "name": "Extra Talisman Fragment #5",
-      "seed": 900005,
-      "tal_data": "900005/10/1/0",
-      "item_ap_id": 1204
-    },
-    {
-      "name": "Extra Talisman Fragment #6",
-      "seed": 900006,
-      "tal_data": "900006/12/2/0",
-      "item_ap_id": 1205
-    },
-    {
-      "name": "Extra Talisman Fragment #7",
-      "seed": 900007,
-      "tal_data": "900007/14/0/0",
-      "item_ap_id": 1206
-    },
-    {
-      "name": "Extra Talisman Fragment #8",
-      "seed": 900008,
-      "tal_data": "900008/16/1/0",
-      "item_ap_id": 1207
-    },
-    {
-      "name": "Extra Talisman Fragment #9",
-      "seed": 900009,
-      "tal_data": "900009/18/2/0",
-      "item_ap_id": 1208
-    },
-    {
-      "name": "Extra Talisman Fragment #10",
-      "seed": 900010,
-      "tal_data": "900010/20/0/0",
-      "item_ap_id": 1209
-    },
-    {
-      "name": "Extra Talisman Fragment #11",
-      "seed": 900011,
-      "tal_data": "900011/22/1/0",
-      "item_ap_id": 1210
-    },
-    {
-      "name": "Extra Talisman Fragment #12",
-      "seed": 900012,
-      "tal_data": "900012/24/2/0",
-      "item_ap_id": 1211
-    },
-    {
-      "name": "Extra Talisman Fragment #13",
-      "seed": 900013,
-      "tal_data": "900013/26/0/0",
-      "item_ap_id": 1212
-    },
-    {
-      "name": "Extra Talisman Fragment #14",
-      "seed": 900014,
-      "tal_data": "900014/28/1/0",
-      "item_ap_id": 1213
-    },
-    {
-      "name": "Extra Talisman Fragment #15",
-      "seed": 900015,
-      "tal_data": "900015/30/2/0",
-      "item_ap_id": 1214
-    },
-    {
-      "name": "Extra Talisman Fragment #16",
-      "seed": 900016,
-      "tal_data": "900016/32/0/0",
-      "item_ap_id": 1215
-    },
-    {
-      "name": "Extra Talisman Fragment #17",
-      "seed": 900017,
-      "tal_data": "900017/34/1/0",
-      "item_ap_id": 1216
-    },
-    {
-      "name": "Extra Talisman Fragment #18",
-      "seed": 900018,
-      "tal_data": "900018/36/2/0",
-      "item_ap_id": 1217
-    },
-    {
-      "name": "Extra Talisman Fragment #19",
-      "seed": 900019,
-      "tal_data": "900019/38/0/0",
-      "item_ap_id": 1218
-    },
-    {
-      "name": "Extra Talisman Fragment #20",
-      "seed": 900020,
-      "tal_data": "900020/40/1/0",
-      "item_ap_id": 1219
-    },
-    {
-      "name": "Extra Talisman Fragment #21",
-      "seed": 900021,
-      "tal_data": "900021/42/2/0",
-      "item_ap_id": 1220
-    },
-    {
-      "name": "Extra Talisman Fragment #22",
-      "seed": 900022,
-      "tal_data": "900022/44/0/0",
-      "item_ap_id": 1221
-    },
-    {
-      "name": "Extra Talisman Fragment #23",
-      "seed": 900023,
-      "tal_data": "900023/46/1/0",
-      "item_ap_id": 1222
-    },
-    {
-      "name": "Extra Talisman Fragment #24",
-      "seed": 900024,
-      "tal_data": "900024/48/2/0",
-      "item_ap_id": 1223
-    },
-    {
-      "name": "Extra Talisman Fragment #25",
-      "seed": 900025,
-      "tal_data": "900025/50/0/0",
-      "item_ap_id": 1224
-    },
-    {
-      "name": "Extra Talisman Fragment #26",
-      "seed": 900026,
-      "tal_data": "900026/52/1/0",
-      "item_ap_id": 1225
-    },
-    {
-      "name": "Extra Talisman Fragment #27",
-      "seed": 900027,
-      "tal_data": "900027/54/2/0",
-      "item_ap_id": 1226
-    },
-    {
-      "name": "Extra Talisman Fragment #28",
-      "seed": 900028,
-      "tal_data": "900028/56/0/0",
-      "item_ap_id": 1227
-    },
-    {
-      "name": "Extra Talisman Fragment #29",
-      "seed": 900029,
-      "tal_data": "900029/58/1/0",
-      "item_ap_id": 1228
-    },
-    {
-      "name": "Extra Talisman Fragment #30",
-      "seed": 900030,
-      "tal_data": "900030/60/2/0",
-      "item_ap_id": 1229
-    },
-    {
-      "name": "Extra Talisman Fragment #31",
-      "seed": 900031,
-      "tal_data": "900031/62/0/0",
-      "item_ap_id": 1230
-    },
-    {
-      "name": "Extra Talisman Fragment #32",
-      "seed": 900032,
-      "tal_data": "900032/64/1/0",
-      "item_ap_id": 1231
-    },
-    {
-      "name": "Extra Talisman Fragment #33",
-      "seed": 900033,
-      "tal_data": "900033/66/2/0",
-      "item_ap_id": 1232
-    },
-    {
-      "name": "Extra Talisman Fragment #34",
-      "seed": 900034,
-      "tal_data": "900034/68/0/0",
-      "item_ap_id": 1233
-    },
-    {
-      "name": "Extra Talisman Fragment #35",
-      "seed": 900035,
-      "tal_data": "900035/70/1/0",
-      "item_ap_id": 1234
-    },
-    {
-      "name": "Extra Talisman Fragment #36",
-      "seed": 900036,
-      "tal_data": "900036/72/2/0",
-      "item_ap_id": 1235
-    },
-    {
-      "name": "Extra Talisman Fragment #37",
-      "seed": 900037,
-      "tal_data": "900037/74/0/0",
-      "item_ap_id": 1236
-    },
-    {
-      "name": "Extra Talisman Fragment #38",
-      "seed": 900038,
-      "tal_data": "900038/76/1/0",
-      "item_ap_id": 1237
-    },
-    {
-      "name": "Extra Talisman Fragment #39",
-      "seed": 900039,
-      "tal_data": "900039/78/2/0",
-      "item_ap_id": 1238
-    },
-    {
-      "name": "Extra Talisman Fragment #40",
-      "seed": 900040,
-      "tal_data": "900040/80/0/0",
-      "item_ap_id": 1239
-    },
-    {
-      "name": "Extra Talisman Fragment #41",
-      "seed": 900041,
-      "tal_data": "900041/82/1/0",
-      "item_ap_id": 1240
-    },
-    {
-      "name": "Extra Talisman Fragment #42",
-      "seed": 900042,
-      "tal_data": "900042/84/2/0",
-      "item_ap_id": 1241
-    },
-    {
-      "name": "Extra Talisman Fragment #43",
-      "seed": 900043,
-      "tal_data": "900043/86/0/0",
-      "item_ap_id": 1242
-    },
-    {
-      "name": "Extra Talisman Fragment #44",
-      "seed": 900044,
-      "tal_data": "900044/88/1/0",
-      "item_ap_id": 1243
-    },
-    {
-      "name": "Extra Talisman Fragment #45",
-      "seed": 900045,
-      "tal_data": "900045/90/2/0",
-      "item_ap_id": 1244
-    },
-    {
-      "name": "Extra Talisman Fragment #46",
-      "seed": 900046,
-      "tal_data": "900046/92/0/0",
-      "item_ap_id": 1245
-    },
-    {
-      "name": "Extra Talisman Fragment #47",
-      "seed": 900047,
-      "tal_data": "900047/94/1/0",
-      "item_ap_id": 1246
-    }
-  ],
+  "extra_talisman_fragments": [],
   "extra_shadow_core_stashes": [
     {
       "name": "Extra Shadow Cores #1",
-      "amount": 60,
+      "amount": 200,
       "item_ap_id": 1300
     },
     {
       "name": "Extra Shadow Cores #2",
-      "amount": 80,
+      "amount": 300,
       "item_ap_id": 1301
     },
     {
       "name": "Extra Shadow Cores #3",
-      "amount": 100,
+      "amount": 400,
       "item_ap_id": 1302
     },
     {
       "name": "Extra Shadow Cores #4",
-      "amount": 120,
+      "amount": 500,
       "item_ap_id": 1303
     },
     {
       "name": "Extra Shadow Cores #5",
-      "amount": 140,
+      "amount": 600,
       "item_ap_id": 1304
     },
     {
       "name": "Extra Shadow Cores #6",
-      "amount": 160,
+      "amount": 700,
       "item_ap_id": 1305
     },
     {
       "name": "Extra Shadow Cores #7",
-      "amount": 180,
+      "amount": 800,
       "item_ap_id": 1306
     },
     {
       "name": "Extra Shadow Cores #8",
-      "amount": 200,
+      "amount": 900,
       "item_ap_id": 1307
     },
     {
       "name": "Extra Shadow Cores #9",
-      "amount": 220,
+      "amount": 1000,
       "item_ap_id": 1308
     },
     {
       "name": "Extra Shadow Cores #10",
-      "amount": 240,
+      "amount": 1100,
       "item_ap_id": 1309
     },
     {
       "name": "Extra Shadow Cores #11",
-      "amount": 260,
+      "amount": 1200,
       "item_ap_id": 1310
     },
     {
       "name": "Extra Shadow Cores #12",
-      "amount": 280,
+      "amount": 1300,
       "item_ap_id": 1311
     },
     {
       "name": "Extra Shadow Cores #13",
-      "amount": 300,
+      "amount": 1400,
       "item_ap_id": 1312
     },
     {
       "name": "Extra Shadow Cores #14",
-      "amount": 320,
+      "amount": 1500,
       "item_ap_id": 1313
     },
     {
       "name": "Extra Shadow Cores #15",
-      "amount": 340,
+      "amount": 1600,
       "item_ap_id": 1314
     },
     {
       "name": "Extra Shadow Cores #16",
-      "amount": 360,
+      "amount": 1700,
       "item_ap_id": 1315
     },
     {
       "name": "Extra Shadow Cores #17",
-      "amount": 380,
+      "amount": 1800,
       "item_ap_id": 1316
     },
     {
       "name": "Extra Shadow Cores #18",
-      "amount": 400,
+      "amount": 1900,
       "item_ap_id": 1317
-    },
-    {
-      "name": "Extra Shadow Cores #19",
-      "amount": 420,
-      "item_ap_id": 1318
-    },
-    {
-      "name": "Extra Shadow Cores #20",
-      "amount": 440,
-      "item_ap_id": 1319
-    },
-    {
-      "name": "Extra Shadow Cores #21",
-      "amount": 460,
-      "item_ap_id": 1320
-    },
-    {
-      "name": "Extra Shadow Cores #22",
-      "amount": 480,
-      "item_ap_id": 1321
-    },
-    {
-      "name": "Extra Shadow Cores #23",
-      "amount": 500,
-      "item_ap_id": 1322
-    },
-    {
-      "name": "Extra Shadow Cores #24",
-      "amount": 520,
-      "item_ap_id": 1323
-    },
-    {
-      "name": "Extra Shadow Cores #25",
-      "amount": 540,
-      "item_ap_id": 1324
-    },
-    {
-      "name": "Extra Shadow Cores #26",
-      "amount": 560,
-      "item_ap_id": 1325
-    },
-    {
-      "name": "Extra Shadow Cores #27",
-      "amount": 580,
-      "item_ap_id": 1326
-    },
-    {
-      "name": "Extra Shadow Cores #28",
-      "amount": 600,
-      "item_ap_id": 1327
-    },
-    {
-      "name": "Extra Shadow Cores #29",
-      "amount": 620,
-      "item_ap_id": 1328
-    },
-    {
-      "name": "Extra Shadow Cores #30",
-      "amount": 640,
-      "item_ap_id": 1329
-    },
-    {
-      "name": "Extra Shadow Cores #31",
-      "amount": 660,
-      "item_ap_id": 1330
-    },
-    {
-      "name": "Extra Shadow Cores #32",
-      "amount": 680,
-      "item_ap_id": 1331
-    },
-    {
-      "name": "Extra Shadow Cores #33",
-      "amount": 700,
-      "item_ap_id": 1332
-    },
-    {
-      "name": "Extra Shadow Cores #34",
-      "amount": 720,
-      "item_ap_id": 1333
-    },
-    {
-      "name": "Extra Shadow Cores #35",
-      "amount": 740,
-      "item_ap_id": 1334
-    },
-    {
-      "name": "Extra Shadow Cores #36",
-      "amount": 760,
-      "item_ap_id": 1335
-    },
-    {
-      "name": "Extra Shadow Cores #37",
-      "amount": 780,
-      "item_ap_id": 1336
-    },
-    {
-      "name": "Extra Shadow Cores #38",
-      "amount": 800,
-      "item_ap_id": 1337
-    },
-    {
-      "name": "Extra Shadow Cores #39",
-      "amount": 820,
-      "item_ap_id": 1338
-    },
-    {
-      "name": "Extra Shadow Cores #40",
-      "amount": 840,
-      "item_ap_id": 1339
-    },
-    {
-      "name": "Extra Shadow Cores #41",
-      "amount": 860,
-      "item_ap_id": 1340
-    },
-    {
-      "name": "Extra Shadow Cores #42",
-      "amount": 880,
-      "item_ap_id": 1341
-    },
-    {
-      "name": "Extra Shadow Cores #43",
-      "amount": 900,
-      "item_ap_id": 1342
-    },
-    {
-      "name": "Extra Shadow Cores #44",
-      "amount": 920,
-      "item_ap_id": 1343
-    },
-    {
-      "name": "Extra Shadow Cores #45",
-      "amount": 940,
-      "item_ap_id": 1344
-    },
-    {
-      "name": "Extra Shadow Cores #46",
-      "amount": 960,
-      "item_ap_id": 1345
-    },
-    {
-      "name": "Extra Shadow Cores #47",
-      "amount": 980,
-      "item_ap_id": 1346
-    },
-    {
-      "name": "Extra Shadow Cores #48",
-      "amount": 1000,
-      "item_ap_id": 1347
-    },
-    {
-      "name": "Extra Shadow Cores #49",
-      "amount": 1020,
-      "item_ap_id": 1348
-    },
-    {
-      "name": "Extra Shadow Cores #50",
-      "amount": 1040,
-      "item_ap_id": 1349
-    },
-    {
-      "name": "Extra Shadow Cores #51",
-      "amount": 1060,
-      "item_ap_id": 1350
-    },
-    {
-      "name": "Extra Shadow Cores #52",
-      "amount": 1080,
-      "item_ap_id": 1351
     }
   ]
 }
