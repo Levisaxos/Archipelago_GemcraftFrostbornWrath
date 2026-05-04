@@ -3752,9 +3752,9 @@
         "gemPouch:I"
       ],
       "availableGems": [
-        "Bleed",
-        "Poison",
-        "Slow"
+        "Crit",
+        "Leech",
+        "Bleed"
       ],
       "waveCount": 76,
       "requirements": [
@@ -3782,9 +3782,9 @@
         "gemPouch:D"
       ],
       "availableGems": [
-        "Crit",
-        "Bleed",
-        "Armor Tear"
+        "Leech",
+        "Armor Tear",
+        "Slow"
       ],
       "waveCount": 78,
       "requirements": [

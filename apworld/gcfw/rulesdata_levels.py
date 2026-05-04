@@ -21,6 +21,7 @@ level_requirements = {
     "A1": {
         "type": "NORMAL",
         "WaveCount": 90,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1436,
         "ReaverWaves": 30,
         "ReaverCount": 358,
@@ -45,6 +46,7 @@ level_requirements = {
     "A2": {
         "type": "NORMAL",
         "WaveCount": 90,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 1533,
         "ReaverWaves": 30,
         "ReaverCount": 357,
@@ -69,6 +71,7 @@ level_requirements = {
     "A3": {
         "type": "NORMAL",
         "WaveCount": 90,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 1503,
         "ReaverWaves": 30,
         "ReaverCount": 380,
@@ -94,6 +97,7 @@ level_requirements = {
     "A4": {
         "type": "NORMAL",
         "WaveCount": 100,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1570,
         "ReaverWaves": 40,
         "ReaverCount": 517,
@@ -123,6 +127,7 @@ level_requirements = {
     "A5": {
         "type": "NORMAL",
         "WaveCount": 96,
+        "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1617,
         "ReaverWaves": 36,
         "ReaverCount": 458,
@@ -147,6 +152,7 @@ level_requirements = {
     "A6": {
         "type": "NORMAL",
         "WaveCount": 99,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
         "MonsterCount": 1642,
         "ReaverWaves": 33,
         "ReaverCount": 402,
@@ -171,6 +177,7 @@ level_requirements = {
     "B1": {
         "type": "NORMAL",
         "WaveCount": 76,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "SLOWING"],
         "MonsterCount": 1560,
         "ReaverWaves": 27,
         "ReaverCount": 351,
@@ -198,6 +205,7 @@ level_requirements = {
     "B2": {
         "type": "NORMAL",
         "WaveCount": 80,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 2509,
         "ReaverWaves": 6,
         "ReaverCount": 79,
@@ -223,6 +231,7 @@ level_requirements = {
     "B3": {
         "type": "NORMAL",
         "WaveCount": 86,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 2414,
         "ReaverWaves": 12,
         "ReaverCount": 154,
@@ -248,6 +257,7 @@ level_requirements = {
     "B4": {
         "type": "NORMAL",
         "WaveCount": 80,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 1766,
         "ReaverWaves": 27,
         "ReaverCount": 319,
@@ -276,6 +286,7 @@ level_requirements = {
     "B5": {
         "type": "SECRET",
         "WaveCount": 84,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 2109,
         "ReaverWaves": 18,
         "ReaverCount": 234,
@@ -301,6 +312,7 @@ level_requirements = {
     "C1": {
         "type": "NORMAL",
         "WaveCount": 82,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "POISON"],
         "MonsterCount": 1370,
         "ReaverWaves": 28,
         "ReaverCount": 350,
@@ -329,6 +341,7 @@ level_requirements = {
     "C2": {
         "type": "NORMAL",
         "WaveCount": 80,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 1346,
         "ReaverWaves": 28,
         "ReaverCount": 350,
@@ -355,6 +368,7 @@ level_requirements = {
     "C3": {
         "type": "NORMAL",
         "WaveCount": 84,
+        "AvailableGems": ["CRITHIT", "POISON", "SLOWING"],
         "MonsterCount": 1452,
         "ReaverWaves": 28,
         "ReaverCount": 349,
@@ -381,6 +395,7 @@ level_requirements = {
     "C4": {
         "type": "TILE_GIVING",
         "WaveCount": 87,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
         "MonsterCount": 1427,
         "ReaverWaves": 29,
         "ReaverCount": 355,
@@ -407,6 +422,8 @@ level_requirements = {
     "C5": {
         "type": "EPIC",
         "WaveCount": 90,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
+        "LanternCount": 4,
         "MonsterCount": 1524,
         "ReaverWaves": 30,
         "ReaverCount": 367,
@@ -432,6 +449,7 @@ level_requirements = {
     "D1": {
         "type": "NORMAL",
         "WaveCount": 72,
+        "AvailableGems": ["MANA_LEECHING", "POISON", "SLOWING"],
         "MonsterCount": 1066,
         "ReaverWaves": 23,
         "ReaverCount": 251,
@@ -457,6 +475,7 @@ level_requirements = {
     "D2": {
         "type": "NORMAL",
         "WaveCount": 75,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "SLOWING"],
         "MonsterCount": 1128,
         "ReaverWaves": 28,
         "ReaverCount": 357,
@@ -482,6 +501,7 @@ level_requirements = {
     "D3": {
         "type": "EPIC",
         "WaveCount": 77,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
         "MonsterCount": 1134,
         "ReaverWaves": 32,
         "ReaverCount": 390,
@@ -505,6 +525,7 @@ level_requirements = {
     "D4": {
         "type": "NORMAL",
         "WaveCount": 70,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "POISON"],
         "MonsterCount": 1078,
         "ReaverWaves": 21,
         "ReaverCount": 251,
@@ -530,6 +551,7 @@ level_requirements = {
     "D5": {
         "type": "NORMAL",
         "WaveCount": 78,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 1097,
         "ReaverWaves": 23,
         "ReaverCount": 273,
@@ -554,6 +576,9 @@ level_requirements = {
     "E1": {
         "type": "NORMAL",
         "WaveCount": 70,
+        "AvailableGems": ["CRITHIT", "POISON", "SLOWING"],
+        "LanternCount": 4,
+        "PylonCount": 2,
         "MonsterCount": 1228,
         "ReaverWaves": 32,
         "ReaverCount": 399,
@@ -579,6 +604,7 @@ level_requirements = {
     "E2": {
         "type": "NORMAL",
         "WaveCount": 62,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 1084,
         "ReaverWaves": 24,
         "ReaverCount": 303,
@@ -604,6 +630,7 @@ level_requirements = {
     "E3": {
         "type": "NORMAL",
         "WaveCount": 74,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "SLOWING"],
         "MonsterCount": 1337,
         "ReaverWaves": 32,
         "ReaverCount": 390,
@@ -630,6 +657,7 @@ level_requirements = {
     "E4": {
         "type": "EPIC",
         "WaveCount": 74,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1061,
         "ReaverWaves": 41,
         "ReaverCount": 500,
@@ -658,6 +686,7 @@ level_requirements = {
     "E5": {
         "type": "SECRET",
         "WaveCount": 78,
+        "AvailableGems": ["CRITHIT", "POISON"],
         "MonsterCount": 1391,
         "ReaverWaves": 34,
         "ReaverCount": 388,
@@ -684,6 +713,9 @@ level_requirements = {
     "F1": {
         "type": "NORMAL",
         "WaveCount": 60,
+        "AvailableGems": ["MANA_LEECHING", "POISON", "SLOWING"],
+        "TowerCount": 3,
+        "OldWallCount": 22,
         "MonsterCount": 812,
         "ReaverWaves": 16,
         "ReaverCount": 211,
@@ -710,6 +742,7 @@ level_requirements = {
     "F2": {
         "type": "NORMAL",
         "WaveCount": 64,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING"],
         "MonsterCount": 706,
         "ReaverWaves": 16,
         "ReaverCount": 194,
@@ -735,6 +768,7 @@ level_requirements = {
     "F3": {
         "type": "NORMAL",
         "WaveCount": 85,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
         "MonsterCount": 1131,
         "ReaverWaves": 22,
         "ReaverCount": 265,
@@ -762,6 +796,7 @@ level_requirements = {
     "F4": {
         "type": "NORMAL",
         "WaveCount": 88,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "SLOWING"],
         "MonsterCount": 978,
         "ReaverWaves": 16,
         "ReaverCount": 196,
@@ -788,6 +823,8 @@ level_requirements = {
     "F5": {
         "type": "SECRET",
         "WaveCount": 90,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
+        "OldWallCount": 50,
         "MonsterCount": 716,
         "ReaverWaves": 8,
         "ReaverCount": 98,
@@ -814,6 +851,8 @@ level_requirements = {
     "G1": {
         "type": "NORMAL",
         "WaveCount": 50,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "POISON"],
+        "PylonCount": 4,
         "MonsterCount": 628,
         "ReaverWaves": 22,
         "ReaverCount": 265,
@@ -839,6 +878,7 @@ level_requirements = {
     "G2": {
         "type": "NORMAL",
         "WaveCount": 52,
+        "AvailableGems": ["MANA_LEECHING", "POISON", "SLOWING"],
         "MonsterCount": 608,
         "ReaverWaves": 20,
         "ReaverCount": 267,
@@ -865,6 +905,8 @@ level_requirements = {
     "G3": {
         "type": "EPIC",
         "WaveCount": 55,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
+        "OldWallCount": 30,
         "MonsterCount": 638,
         "ReaverWaves": 20,
         "ReaverCount": 243,
@@ -890,6 +932,11 @@ level_requirements = {
     "G4": {
         "type": "TILE_GIVING",
         "WaveCount": 56,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING"],
+        "AmplifierCount": 4,
+        "TowerCount": 7,
+        "WallCount": 9,
+        "OldWallCount": 104,
         "MonsterCount": 827,
         "ReaverWaves": 26,
         "ReaverCount": 350,
@@ -913,6 +960,7 @@ level_requirements = {
     "H1": {
         "type": "NORMAL",
         "WaveCount": 64,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING"],
         "MonsterCount": 1051,
         "ReaverWaves": 20,
         "ReaverCount": 252,
@@ -938,6 +986,7 @@ level_requirements = {
     "H2": {
         "type": "NORMAL",
         "WaveCount": 66,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "POISON"],
         "MonsterCount": 1048,
         "ReaverWaves": 26,
         "ReaverCount": 305,
@@ -964,6 +1013,7 @@ level_requirements = {
     "H3": {
         "type": "TILE_GIVING",
         "WaveCount": 64,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 1024,
         "ReaverWaves": 24,
         "ReaverCount": 288,
@@ -989,6 +1039,7 @@ level_requirements = {
     "H4": {
         "type": "NORMAL",
         "WaveCount": 70,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1087,
         "ReaverWaves": 26,
         "ReaverCount": 308,
@@ -1013,6 +1064,7 @@ level_requirements = {
     "H5": {
         "type": "SECRET",
         "WaveCount": 68,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1104,
         "ReaverWaves": 25,
         "ReaverCount": 320,
@@ -1039,6 +1091,8 @@ level_requirements = {
     "I1": {
         "type": "NORMAL",
         "WaveCount": 76,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
+        "TowerCount": 1,
         "MonsterCount": 898,
         "ReaverWaves": 35,
         "ReaverCount": 441,
@@ -1064,6 +1118,7 @@ level_requirements = {
     "I2": {
         "type": "NORMAL",
         "WaveCount": 78,
+        "AvailableGems": ["BLEEDING", "POISON", "SLOWING"],
         "MonsterCount": 735,
         "ReaverWaves": 24,
         "ReaverCount": 308,
@@ -1091,6 +1146,7 @@ level_requirements = {
     "I3": {
         "type": "NORMAL",
         "WaveCount": 80,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 509,
         "ReaverWaves": 9,
         "ReaverCount": 117,
@@ -1116,6 +1172,7 @@ level_requirements = {
     "I4": {
         "type": "NORMAL",
         "WaveCount": 82,
+        "AvailableGems": ["BLEEDING"],
         "MonsterCount": 298,
         "GiantWaves": 82,
         "GiantCount": 298,
@@ -1134,6 +1191,7 @@ level_requirements = {
     "J1": {
         "type": "NORMAL",
         "WaveCount": 55,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 990,
         "ReaverWaves": 24,
         "ReaverCount": 279,
@@ -1159,6 +1217,8 @@ level_requirements = {
     "J2": {
         "type": "NORMAL",
         "WaveCount": 54,
+        "AvailableGems": ["CRITHIT", "POISON"],
+        "LanternCount": 4,
         "MonsterCount": 1194,
         "ReaverWaves": 19,
         "ReaverCount": 243,
@@ -1188,6 +1248,9 @@ level_requirements = {
     "J3": {
         "type": "NORMAL",
         "WaveCount": 56,
+        "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
+        "AmplifierCount": 4,
+        "TowerCount": 1,
         "MonsterCount": 1128,
         "ReaverWaves": 16,
         "ReaverCount": 191,
@@ -1214,6 +1277,7 @@ level_requirements = {
     "J4": {
         "type": "TILE_GIVING",
         "WaveCount": 58,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING"],
         "MonsterCount": 1200,
         "ReaverWaves": 15,
         "ReaverCount": 182,
@@ -1242,6 +1306,8 @@ level_requirements = {
     "K1": {
         "type": "STORY_RELATED",
         "WaveCount": 46,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING"],
+        "LanternCount": 4,
         "MonsterCount": 569,
         "ReaverWaves": 21,
         "ReaverCount": 248,
@@ -1267,6 +1333,9 @@ level_requirements = {
     "K2": {
         "type": "NORMAL",
         "WaveCount": 46,
+        "AvailableGems": ["MANA_LEECHING", "SLOWING"],
+        "TowerCount": 2,
+        "OldWallCount": 64,
         "MonsterCount": 564,
         "ReaverWaves": 17,
         "ReaverCount": 214,
@@ -1292,6 +1361,7 @@ level_requirements = {
     "K3": {
         "type": "NORMAL",
         "WaveCount": 50,
+        "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterCount": 631,
         "ReaverWaves": 22,
         "ReaverCount": 263,
@@ -1319,6 +1389,8 @@ level_requirements = {
     "K4": {
         "type": "EPIC",
         "WaveCount": 46,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "SLOWING"],
+        "TowerCount": 3,
         "MonsterCount": 495,
         "ReaverWaves": 17,
         "ReaverCount": 218,
@@ -1344,6 +1416,7 @@ level_requirements = {
     "K5": {
         "type": "SECRET",
         "WaveCount": 54,
+        "AvailableGems": ["CRITHIT", "POISON"],
         "MonsterCount": 753,
         "ReaverWaves": 48,
         "ReaverCount": 586,
@@ -1365,6 +1438,7 @@ level_requirements = {
     "L1": {
         "type": "NORMAL",
         "WaveCount": 44,
+        "AvailableGems": ["CRITHIT", "BLEEDING"],
         "MonsterCount": 414,
         "ReaverWaves": 21,
         "ReaverCount": 265,
@@ -1392,6 +1466,7 @@ level_requirements = {
     "L2": {
         "type": "NORMAL",
         "WaveCount": 46,
+        "AvailableGems": ["POISON", "SLOWING"],
         "MonsterCount": 478,
         "ReaverWaves": 10,
         "ReaverCount": 134,
@@ -1417,6 +1492,8 @@ level_requirements = {
     "L3": {
         "type": "NORMAL",
         "WaveCount": 46,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING"],
+        "TowerCount": 4,
         "MonsterCount": 563,
         "ReaverWaves": 25,
         "ReaverCount": 289,
@@ -1445,6 +1522,8 @@ level_requirements = {
     "L4": {
         "type": "EPIC",
         "WaveCount": 50,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING", "POISON"],
+        "TowerCount": 6,
         "MonsterCount": 483,
         "ReaverWaves": 18,
         "ReaverCount": 201,
@@ -1471,6 +1550,7 @@ level_requirements = {
     "L5": {
         "type": "EPIC",
         "WaveCount": 64,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "SLOWING"],
         "MonsterCount": 870,
         "ReaverWaves": 34,
         "ReaverCount": 443,
@@ -1497,6 +1577,7 @@ level_requirements = {
     "M1": {
         "type": "NORMAL",
         "WaveCount": 60,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING", "SLOWING"],
         "MonsterCount": 953,
         "ReaverWaves": 20,
         "ReaverCount": 239,
@@ -1524,6 +1605,7 @@ level_requirements = {
     "M2": {
         "type": "NORMAL",
         "WaveCount": 62,
+        "AvailableGems": ["CRITHIT", "POISON", "SLOWING"],
         "MonsterCount": 1031,
         "ReaverWaves": 20,
         "ReaverCount": 240,
@@ -1550,6 +1632,10 @@ level_requirements = {
     "M3": {
         "type": "NORMAL",
         "WaveCount": 64,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "POISON"],
+        "LanternCount": 2,
+        "AmplifierCount": 2,
+        "TowerCount": 5,
         "MonsterCount": 1090,
         "ReaverWaves": 20,
         "ReaverCount": 238,
@@ -1580,6 +1666,7 @@ level_requirements = {
     "M4": {
         "type": "NORMAL",
         "WaveCount": 66,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 1200,
         "ReaverWaves": 24,
         "ReaverCount": 288,
@@ -1607,6 +1694,7 @@ level_requirements = {
     "N1": {
         "type": "NORMAL",
         "WaveCount": 35,
+        "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "MonsterCount": 671,
         "ReaverWaves": 23,
         "ReaverCount": 302,
@@ -1632,6 +1720,8 @@ level_requirements = {
     "N2": {
         "type": "NORMAL",
         "WaveCount": 36,
+        "AvailableGems": ["BLEEDING", "POISON"],
+        "WallCount": 6,
         "MonsterCount": 587,
         "ReaverWaves": 24,
         "ReaverCount": 306,
@@ -1659,6 +1749,7 @@ level_requirements = {
     "N3": {
         "type": "NORMAL",
         "WaveCount": 38,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING"],
         "MonsterCount": 532,
         "ReaverWaves": 26,
         "ReaverCount": 325,
@@ -1687,6 +1778,7 @@ level_requirements = {
     "N4": {
         "type": "NORMAL",
         "WaveCount": 70,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 1125,
         "ReaverWaves": 24,
         "ReaverCount": 290,
@@ -1713,6 +1805,10 @@ level_requirements = {
     "N5": {
         "type": "NORMAL",
         "WaveCount": 68,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "SLOWING"],
+        "PylonCount": 1,
+        "AmplifierCount": 1,
+        "OldWallCount": 62,
         "MonsterCount": 1104,
         "ReaverWaves": 22,
         "ReaverCount": 283,
@@ -1737,6 +1833,7 @@ level_requirements = {
     "O1": {
         "type": "NORMAL",
         "WaveCount": 34,
+        "AvailableGems": ["MANA_LEECHING", "POISON"],
         "MonsterCount": 516,
         "ReaverWaves": 25,
         "ReaverCount": 304,
@@ -1762,6 +1859,7 @@ level_requirements = {
     "O2": {
         "type": "NORMAL",
         "WaveCount": 35,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING"],
         "MonsterCount": 509,
         "ReaverWaves": 26,
         "ReaverCount": 339,
@@ -1790,6 +1888,7 @@ level_requirements = {
     "O3": {
         "type": "NORMAL",
         "WaveCount": 32,
+        "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterCount": 454,
         "ReaverWaves": 26,
         "ReaverCount": 305,
@@ -1816,6 +1915,12 @@ level_requirements = {
     "O4": {
         "type": "EPIC",
         "WaveCount": 33,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "POISON", "SLOWING"],
+        "PylonCount": 1,
+        "AmplifierCount": 1,
+        "TowerCount": 1,
+        "WallCount": 7,
+        "OldWallCount": 23,
         "MonsterCount": 445,
         "ReaverWaves": 21,
         "ReaverCount": 252,
@@ -1844,6 +1949,7 @@ level_requirements = {
     "P1": {
         "type": "NORMAL",
         "WaveCount": 38,
+        "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "MonsterCount": 524,
         "ReaverWaves": 26,
         "ReaverCount": 332,
@@ -1869,6 +1975,9 @@ level_requirements = {
     "P2": {
         "type": "NORMAL",
         "WaveCount": 42,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
+        "LanternCount": 3,
+        "TowerCount": 6,
         "MonsterCount": 515,
         "ReaverWaves": 27,
         "ReaverCount": 335,
@@ -1895,6 +2004,7 @@ level_requirements = {
     "P3": {
         "type": "NORMAL",
         "WaveCount": 40,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING"],
         "MonsterCount": 495,
         "ReaverWaves": 27,
         "ReaverCount": 318,
@@ -1919,6 +2029,7 @@ level_requirements = {
     "P4": {
         "type": "EPIC",
         "WaveCount": 40,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 394,
         "ReaverWaves": 23,
         "ReaverCount": 277,
@@ -1947,6 +2058,7 @@ level_requirements = {
     "P5": {
         "type": "NORMAL",
         "WaveCount": 40,
+        "AvailableGems": ["MANA_LEECHING", "POISON"],
         "MonsterCount": 1265,
         "ReaverWaves": 5,
         "ReaverCount": 61,
@@ -1973,6 +2085,7 @@ level_requirements = {
     "P6": {
         "type": "SECRET",
         "WaveCount": 40,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 149,
         "GiantWaves": 40,
         "GiantCount": 149,
@@ -1991,6 +2104,7 @@ level_requirements = {
     "Q1": {
         "type": "NORMAL",
         "WaveCount": 24,
+        "AvailableGems": ["CRITHIT", "BLEEDING"],
         "MonsterCount": 398,
         "ReaverWaves": 20,
         "ReaverCount": 256,
@@ -2011,6 +2125,10 @@ level_requirements = {
     "Q2": {
         "type": "NORMAL",
         "WaveCount": 22,
+        "AvailableGems": ["CRITHIT", "POISON"],
+        "LanternCount": 1,
+        "AmplifierCount": 1,
+        "TowerCount": 2,
         "MonsterCount": 374,
         "ReaverWaves": 16,
         "ReaverCount": 196,
@@ -2031,6 +2149,9 @@ level_requirements = {
     "Q3": {
         "type": "NORMAL",
         "WaveCount": 24,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
+        "PylonCount": 1,
+        "TowerCount": 2,
         "MonsterCount": 379,
         "ReaverWaves": 19,
         "ReaverCount": 241,
@@ -2054,6 +2175,11 @@ level_requirements = {
     "Q4": {
         "type": "EPIC",
         "WaveCount": 26,
+        "AvailableGems": ["BLEEDING", "SLOWING"],
+        "LanternCount": 2,
+        "TowerCount": 2,
+        "WallCount": 7,
+        "OldWallCount": 19,
         "MonsterCount": 396,
         "ReaverWaves": 21,
         "ReaverCount": 264,
@@ -2082,6 +2208,8 @@ level_requirements = {
     "Q5": {
         "type": "NORMAL",
         "WaveCount": 26,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "POISON"],
+        "TrapCount": 4,
         "MonsterCount": 405,
         "ReaverWaves": 20,
         "ReaverCount": 230,
@@ -2107,6 +2235,11 @@ level_requirements = {
     "R1": {
         "type": "NORMAL",
         "WaveCount": 22,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING"],
+        "LanternCount": 2,
+        "AmplifierCount": 1,
+        "WallCount": 14,
+        "OldWallCount": 11,
         "MonsterCount": 339,
         "ReaverWaves": 17,
         "ReaverCount": 205,
@@ -2127,6 +2260,8 @@ level_requirements = {
     "R2": {
         "type": "EPIC",
         "WaveCount": 22,
+        "AvailableGems": ["BLEEDING", "POISON"],
+        "TrapCount": 4,
         "MonsterCount": 409,
         "ReaverWaves": 16,
         "ReaverCount": 202,
@@ -2146,6 +2281,7 @@ level_requirements = {
     "R3": {
         "type": "NORMAL",
         "WaveCount": 30,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING"],
         "MonsterCount": 495,
         "ReaverWaves": 24,
         "ReaverCount": 318,
@@ -2173,6 +2309,9 @@ level_requirements = {
     "R4": {
         "type": "NORMAL",
         "WaveCount": 30,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
+        "PylonCount": 2,
+        "TowerCount": 3,
         "MonsterCount": 495,
         "ReaverWaves": 24,
         "ReaverCount": 318,
@@ -2200,6 +2339,9 @@ level_requirements = {
     "R5": {
         "type": "EPIC",
         "WaveCount": 32,
+        "AvailableGems": ["CRITHIT", "POISON"],
+        "PylonCount": 4,
+        "TowerCount": 2,
         "MonsterCount": 509,
         "ReaverWaves": 22,
         "ReaverCount": 272,
@@ -2224,6 +2366,9 @@ level_requirements = {
     "R6": {
         "type": "SECRET",
         "WaveCount": 36,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
+        "AmplifierCount": 6,
+        "TowerCount": 1,
         "MonsterCount": 392,
         "ReaverWaves": 12,
         "ReaverCount": 135,
@@ -2251,6 +2396,8 @@ level_requirements = {
     "S1": {
         "type": "NORMAL",
         "WaveCount": 14,
+        "AvailableGems": ["MANA_LEECHING", "SLOWING"],
+        "TrapCount": 4,
         "MonsterCount": 172,
         "ReaverWaves": 14,
         "ReaverCount": 172,
@@ -2271,6 +2418,8 @@ level_requirements = {
     "S2": {
         "type": "NORMAL",
         "WaveCount": 16,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
+        "TowerCount": 1,
         "MonsterCount": 199,
         "ReaverWaves": 16,
         "ReaverCount": 199,
@@ -2293,6 +2442,10 @@ level_requirements = {
     "S3": {
         "type": "NORMAL",
         "WaveCount": 14,
+        "AvailableGems": ["CRITHIT", "SLOWING"],
+        "TrapCount": 3,
+        "TowerCount": 1,
+        "OldWallCount": 1,
         "MonsterCount": 165,
         "ReaverWaves": 14,
         "ReaverCount": 165,
@@ -2313,6 +2466,11 @@ level_requirements = {
     "S4": {
         "type": "EPIC",
         "WaveCount": 20,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING"],
+        "TrapCount": 6,
+        "TowerCount": 8,
+        "WallCount": 22,
+        "OldWallCount": 57,
         "MonsterCount": 318,
         "ReaverWaves": 17,
         "ReaverCount": 206,
@@ -2337,6 +2495,8 @@ level_requirements = {
     "T1": {
         "type": "NORMAL",
         "WaveCount": 26,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING"],
+        "TowerCount": 1,
         "MonsterCount": 427,
         "ReaverWaves": 20,
         "ReaverCount": 250,
@@ -2360,6 +2520,9 @@ level_requirements = {
     "T2": {
         "type": "STORY_RELATED",
         "WaveCount": 28,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING"],
+        "AmplifierCount": 3,
+        "WallCount": 16,
         "MonsterCount": 441,
         "ReaverWaves": 23,
         "ReaverCount": 298,
@@ -2384,6 +2547,7 @@ level_requirements = {
     "T3": {
         "type": "NORMAL",
         "WaveCount": 28,
+        "AvailableGems": ["POISON", "SLOWING"],
         "MonsterCount": 678,
         "ReaverWaves": 12,
         "ReaverCount": 145,
@@ -2411,6 +2575,7 @@ level_requirements = {
     "T4": {
         "type": "EPIC",
         "WaveCount": 30,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 742,
         "ReaverWaves": 14,
         "ReaverCount": 188,
@@ -2433,6 +2598,7 @@ level_requirements = {
     "T5": {
         "type": "SECRET",
         "WaveCount": 40,
+        "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 1025,
         "ReaverWaves": 12,
         "ReaverCount": 144,
@@ -2454,6 +2620,7 @@ level_requirements = {
     "U1": {
         "type": "NORMAL",
         "WaveCount": 30,
+        "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterCount": 598,
         "ReaverWaves": 20,
         "ReaverCount": 233,
@@ -2474,6 +2641,7 @@ level_requirements = {
     "U2": {
         "type": "NORMAL",
         "WaveCount": 32,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 761,
         "ReaverWaves": 18,
         "ReaverCount": 224,
@@ -2495,6 +2663,7 @@ level_requirements = {
     "U3": {
         "type": "NORMAL",
         "WaveCount": 30,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING"],
         "MonsterCount": 758,
         "ReaverWaves": 10,
         "ReaverCount": 120,
@@ -2517,6 +2686,7 @@ level_requirements = {
     "U4": {
         "type": "EPIC",
         "WaveCount": 30,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING"],
         "MonsterCount": 694,
         "ReaverWaves": 15,
         "ReaverCount": 174,
@@ -2540,6 +2710,7 @@ level_requirements = {
     "V1": {
         "type": "NORMAL",
         "WaveCount": 20,
+        "AvailableGems": ["ARMOR_TEARING", "POISON"],
         "MonsterCount": 343,
         "ReaverWaves": 15,
         "ReaverCount": 180,
@@ -2559,6 +2730,8 @@ level_requirements = {
     "V2": {
         "type": "NORMAL",
         "WaveCount": 22,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING"],
+        "TowerCount": 10,
         "MonsterCount": 368,
         "ReaverWaves": 16,
         "ReaverCount": 184,
@@ -2580,6 +2753,7 @@ level_requirements = {
     "V3": {
         "type": "NORMAL",
         "WaveCount": 24,
+        "AvailableGems": ["POISON", "SLOWING"],
         "MonsterCount": 439,
         "ReaverWaves": 17,
         "ReaverCount": 214,
@@ -2600,6 +2774,9 @@ level_requirements = {
     "V4": {
         "type": "EPIC",
         "WaveCount": 24,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
+        "AmplifierCount": 7,
+        "TowerCount": 2,
         "MonsterCount": 453,
         "ReaverWaves": 16,
         "ReaverCount": 198,
@@ -2619,6 +2796,8 @@ level_requirements = {
     "W1": {
         "type": "NORMAL",
         "WaveCount": 6,
+        "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
+        "TowerCount": 5,
         "MonsterCount": 84,
         "ReaverWaves": 6,
         "ReaverCount": 84,
@@ -2639,6 +2818,8 @@ level_requirements = {
     "W2": {
         "type": "NORMAL",
         "WaveCount": 8,
+        "AvailableGems": ["ARMOR_TEARING", "POISON"],
+        "TowerCount": 4,
         "MonsterCount": 110,
         "ReaverWaves": 8,
         "ReaverCount": 110,
@@ -2658,6 +2839,7 @@ level_requirements = {
     "W3": {
         "type": "STORY_RELATED",
         "WaveCount": 12,
+        "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "MonsterCount": 141,
         "ReaverWaves": 12,
         "ReaverCount": 141,
@@ -2677,6 +2859,9 @@ level_requirements = {
     "W4": {
         "type": "EPIC",
         "WaveCount": 14,
+        "AvailableGems": ["POISON"],
+        "TowerCount": 8,
+        "WallCount": 4,
         "MonsterCount": 173,
         "ReaverWaves": 14,
         "ReaverCount": 173,
@@ -2697,6 +2882,7 @@ level_requirements = {
     "X1": {
         "type": "NORMAL",
         "WaveCount": 42,
+        "AvailableGems": ["ARMOR_TEARING", "POISON"],
         "MonsterCount": 1061,
         "ReaverWaves": 14,
         "ReaverCount": 169,
@@ -2724,6 +2910,9 @@ level_requirements = {
     "X2": {
         "type": "NORMAL",
         "WaveCount": 48,
+        "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
+        "PylonCount": 1,
+        "TowerCount": 1,
         "MonsterCount": 720,
         "ReaverWaves": 22,
         "ReaverCount": 253,
@@ -2752,6 +2941,9 @@ level_requirements = {
     "X3": {
         "type": "NORMAL",
         "WaveCount": 44,
+        "AvailableGems": ["BLEEDING", "ARMOR_TEARING"],
+        "LanternCount": 1,
+        "AmplifierCount": 1,
         "MonsterCount": 742,
         "ReaverWaves": 23,
         "ReaverCount": 282,
@@ -2781,6 +2973,10 @@ level_requirements = {
     "X4": {
         "type": "EPIC",
         "WaveCount": 46,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING", "POISON"],
+        "LanternCount": 1,
+        "PylonCount": 1,
+        "TowerCount": 2,
         "MonsterCount": 532,
         "ReaverWaves": 29,
         "ReaverCount": 359,
@@ -2809,6 +3005,7 @@ level_requirements = {
     "Y1": {
         "type": "NORMAL",
         "WaveCount": 32,
+        "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterCount": 708,
         "ReaverWaves": 15,
         "ReaverCount": 187,
@@ -2834,6 +3031,9 @@ level_requirements = {
     "Y2": {
         "type": "NORMAL",
         "WaveCount": 35,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING"],
+        "LanternCount": 1,
+        "PylonCount": 2,
         "MonsterCount": 704,
         "ReaverWaves": 17,
         "ReaverCount": 234,
@@ -2860,6 +3060,7 @@ level_requirements = {
     "Y3": {
         "type": "STORY_RELATED",
         "WaveCount": 30,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "POISON"],
         "MonsterCount": 621,
         "ReaverWaves": 16,
         "ReaverCount": 196,
@@ -2886,6 +3087,8 @@ level_requirements = {
     "Y4": {
         "type": "EPIC",
         "WaveCount": 40,
+        "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "SLOWING"],
+        "TowerCount": 6,
         "MonsterCount": 794,
         "ReaverWaves": 20,
         "ReaverCount": 233,
@@ -2913,6 +3116,7 @@ level_requirements = {
     "Z1": {
         "type": "NORMAL",
         "WaveCount": 44,
+        "AvailableGems": ["CRITHIT", "BLEEDING", "POISON"],
         "MonsterCount": 778,
         "ReaverWaves": 22,
         "ReaverCount": 247,
@@ -2940,6 +3144,7 @@ level_requirements = {
     "Z2": {
         "type": "NORMAL",
         "WaveCount": 46,
+        "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterCount": 796,
         "ReaverWaves": 24,
         "ReaverCount": 302,
@@ -2965,6 +3170,7 @@ level_requirements = {
     "Z3": {
         "type": "NORMAL",
         "WaveCount": 46,
+        "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "MonsterCount": 312,
         "ReaverWaves": 6,
         "ReaverCount": 73,
@@ -2992,6 +3198,7 @@ level_requirements = {
     "Z4": {
         "type": "NORMAL",
         "WaveCount": 48,
+        "AvailableGems": ["MANA_LEECHING", "BLEEDING"],
         "MonsterCount": 600,
         "ReaverWaves": 15,
         "ReaverCount": 195,
@@ -3019,6 +3226,7 @@ level_requirements = {
     "Z5": {
         "type": "SECRET",
         "WaveCount": 50,
+        "AvailableGems": ["MANA_LEECHING"],
         "MonsterCount": 180,
         "GiantWaves": 50,
         "GiantCount": 180,

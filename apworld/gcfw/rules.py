@@ -432,9 +432,13 @@ def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
 # Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
 # counter) passes if the player owns the AP skill item OR can reach a stage
 # whose starter pouch lists the matching gem.  Per-stage starter pouches
-# come from `available_gems` in game_data.json (mirrored to the mod as
-# `availableGems` in logic.json).  strikeSpells / enhancementSpells / other
-# skill counters stay strict-item-count.
+# come from `AvailableGems` in rulesdata_levels.py (extracted from the
+# decompiled stage data by extract_level_gems_and_elements.py — the
+# authoritative source).  strikeSpells / enhancementSpells / other skill
+# counters stay strict-item-count.
+#
+# Token values are the display names so the dict still doubles as a
+# label table for any UI/diagnostic that wants human-readable gem names.
 _GEM_TOKEN_TO_GEM_NAME: dict = {
     "sBleeding":     "Bleed",
     "sCriticalHit":  "Crit",
@@ -444,15 +448,32 @@ _GEM_TOKEN_TO_GEM_NAME: dict = {
     "sSlowing":      "Slow",
 }
 
-# Gem name -> stage str_ids whose `available_gems` lists that gem.
+# rulesdata_levels.py uses GemComponentType constant names — map them to
+# the display-name vocabulary used by `_GEM_TOKEN_TO_GEM_NAME`.
+_GEM_CONSTANT_TO_DISPLAY: dict = {
+    "CRITHIT":       "Crit",
+    "MANA_LEECHING": "Leech",
+    "BLEEDING":      "Bleed",
+    "ARMOR_TEARING": "Armor Tear",
+    "POISON":        "Poison",
+    "SLOWING":       "Slow",
+}
+
+# Gem name -> stage str_ids whose `AvailableGems` lists that gem.
 _STAGES_BY_GEM: dict = {}
-for _stage in GAME_DATA.get("stages", []):
-    for _gem in _stage.get("available_gems", []):
-        _STAGES_BY_GEM.setdefault(_gem, []).append(_stage["str_id"])
-if "_stage" in dir():
-    del _stage
-if "_gem" in dir():
-    del _gem
+for _sid, _data in LEVEL_DATA.items():
+    for _gem_const in _data.get("AvailableGems", []):
+        _gem_disp = _GEM_CONSTANT_TO_DISPLAY.get(_gem_const)
+        if _gem_disp is not None:
+            _STAGES_BY_GEM.setdefault(_gem_disp, []).append(_sid)
+if "_sid" in dir():
+    del _sid
+if "_data" in dir():
+    del _data
+if "_gem_const" in dir():
+    del _gem_const
+if "_gem_disp" in dir():
+    del _gem_disp
 
 
 def _has_gem_token(req: str, state, player: int) -> bool:
@@ -478,6 +499,37 @@ def _count_gem_skills_broadened(state, player: int) -> int:
         if _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, [])):
             n += 1
     return n
+
+
+# Building-skill broadening: a bare `sTraps` / `sLanterns` / `sPylons` /
+# `sAmplifiers` token passes if the player owns the AP skill item OR can
+# reach a stage that hosts the matching pre-placed building (and holds the
+# stage's gempouch — gems are required to charge these structures).  Per-
+# stage building counts come from `rulesdata_levels.py`, populated by
+# `extract_level_gems_and_elements.py` from the decompiled stage data.
+_BUILDING_TOKEN_TO_FIELD: dict = {
+    "sTraps":      "TrapCount",
+    "sLanterns":   "LanternCount",
+    "sPylons":     "PylonCount",
+    "sAmplifiers": "AmplifierCount",
+}
+
+# Field name -> stage str_ids whose <field> > 0.
+_STAGES_BY_BUILDING: dict = {
+    field: [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) > 0]
+    for field in set(_BUILDING_TOKEN_TO_FIELD.values())
+}
+
+
+def _has_building_token(req: str, state, player: int) -> bool:
+    """Broadened evaluator for building-skill `s*` tokens (sTraps etc.)."""
+    item_name = item_prefix_map.get(req)
+    if item_name and state.has(item_name, player):
+        return True
+    field = _BUILDING_TOKEN_TO_FIELD.get(req)
+    if field is None:
+        return False
+    return _can_reach_any_stage(state, player, _STAGES_BY_BUILDING.get(field, []))
 
 
 def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
@@ -708,10 +760,15 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         # Direct AP-item check.  Map values are full item names ("Bolt
         # Skill" / "Haste Battle Trait") so no string construction here.
         # Gem-skill `sX` tokens broaden to also pass when a stage with
-        # the matching starter gem is reachable.
+        # the matching starter gem is reachable; building-skill `sTraps`
+        # / `sLanterns` / `sPylons` / `sAmplifiers` broaden the same way
+        # for stages that host the pre-placed building.
         item_name = item_prefix_map[req]
         if req in _GEM_TOKEN_TO_GEM_NAME:
             if not _has_gem_token(req, state, player):
+                return False
+        elif req in _BUILDING_TOKEN_TO_FIELD:
+            if not _has_building_token(req, state, player):
                 return False
         elif not state.has(item_name, player):
             return False
@@ -953,6 +1010,24 @@ def _compile_gem_broadened(world, gem_name: str):
     return _check
 
 
+def _compile_building_broadened(world, field: str):
+    """Compile a broadened building-availability checker:
+    True iff some stage with <field> > 0 is in-logic AND the player owns
+    that stage's gempouch (gems are required to charge the building).
+    Mirrors `_compile_gem_broadened`; the only difference is the source
+    list of stages — pre-placed buildings rather than starter-pouch gems.
+    """
+    stages = _STAGES_BY_BUILDING.get(field, [])
+    pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in stages]
+    player = world.player
+    def _check(state):
+        for sid, pouch_ok in pairs:
+            if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
+                return True
+        return False
+    return _check
+
+
 def _compile_element_or(elem_names, player: int):
     """Compile an "any of these elements is reachable" check.
 
@@ -1045,6 +1120,20 @@ def _compile_req(req: str, world, is_progressive: bool):
                     return True
                 return b(state)
             return _gem_token
+        if req in _BUILDING_TOKEN_TO_FIELD:
+            field = _BUILDING_TOKEN_TO_FIELD[req]
+            broaden = _compile_building_broadened(world, field)
+            if floor:
+                def _bld_token_floored(state, n=item_name, b=broaden, f=floor):
+                    if not (state.has(n, player) or b(state)):
+                        return False
+                    return _count_field_tokens(state, player) >= f
+                return _bld_token_floored
+            def _bld_token(state, n=item_name, b=broaden):
+                if state.has(n, player):
+                    return True
+                return b(state)
+            return _bld_token
         if floor:
             return lambda state, n=item_name, f=floor: (
                 state.has(n, player) and _count_field_tokens(state, player) >= f
