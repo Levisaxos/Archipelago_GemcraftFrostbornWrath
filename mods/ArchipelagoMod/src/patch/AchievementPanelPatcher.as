@@ -4,6 +4,7 @@ package patch {
     import flash.geom.Rectangle;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.mcDyn.BtnAchiFilter;
     import com.giab.games.gcfw.selector.PnlAchievements;
     import tracker.AchievementLogicEvaluator;
@@ -55,6 +56,12 @@ package patch {
 
         private var _dotsDirty:Boolean = false;
         private var _dotFrame:int      = 0;
+        // Edge-detect for the in-game achievement panel: vanilla
+        // openAchievementsPanel() runs resetFilters() and showAchiList(), but
+        // never invokes our patcher because the selector frame loop is paused
+        // while currentScreen == INGAME. We re-apply filters + dots once on
+        // the rising edge, then throttle reapply while the panel stays up.
+        private var _lastIngameAchPanelActive:Boolean = false;
 
         private var _tooltipOverlay:AchievementTooltipOverlay;
         private var _groupPanel:AchievementGroupPanel;
@@ -435,6 +442,63 @@ package patch {
             _dotFrame  = 0;
             _dotsDirty = false;
             _applyLogicDots();
+        }
+
+        // -----------------------------------------------------------------------
+
+        /**
+         * Call every in-game frame while currentScreen == INGAME. Mirrors
+         * onSelectorFrame() for the case where the player opens the achievement
+         * panel mid-gameplay (vanilla IngameInputHandler2.openAchievementsPanel
+         * re-parents pnlAchievements.mc under cntOutcomePanel and drives it via
+         * IngameStatus.ACHIEVEMENTS_PANEL_*, not selectorCore.screenStatus).
+         */
+        public function onIngameFrame():void {
+            if (!_patched) return;
+            if (GV.ingameCore == null || GV.selectorCore == null) return;
+            var panel:PnlAchievements = GV.selectorCore.pnlAchievements;
+            if (panel == null) return;
+
+            try {
+                var status:int = int(GV.ingameCore.ingameStatus);
+                var panelActive:Boolean =
+                    status == IngameStatus.ACHIEVEMENTS_PANEL_APPEARING ||
+                    status == IngameStatus.ACHIEVEMENTS_PANEL_SHOWING   ||
+                    status == IngameStatus.ACHIEVEMENTS_PANEL_DISAPPEARING;
+
+                if (panelActive) {
+                    if (!_lastIngameAchPanelActive) {
+                        // Rising edge: vanilla resetFilters() cleared our filter
+                        // slot — reapply group/search filter, then force a list
+                        // refresh + dots so the user sees them immediately.
+                        _applyGroupFilter();
+                        try {
+                            panel.showAchiList();
+                            _applyLogicDots();
+                        } catch (eOpen:Error) {
+                            _logger.log(_modName,
+                                "AchievementPanelPatcher.onIngameFrame open error: " + eOpen.message);
+                        }
+                        _dotFrame  = 0;
+                        _dotsDirty = false;
+                    } else {
+                        if (_tooltipOverlay != null) _tooltipOverlay.onSelectorFrame(panel);
+
+                        _dotFrame++;
+                        if (_dotsDirty || _dotFrame >= DOT_INTERVAL) {
+                            _dotFrame  = 0;
+                            _dotsDirty = false;
+                            _applyLogicDots();
+                        }
+                    }
+                }
+
+                _lastIngameAchPanelActive = panelActive;
+            } catch (e:Error) {
+                _logger.log(_modName,
+                    "AchievementPanelPatcher.onIngameFrame error: " + e.message);
+                _lastIngameAchPanelActive = false;
+            }
         }
 
         // -----------------------------------------------------------------------

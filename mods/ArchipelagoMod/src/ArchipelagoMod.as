@@ -32,7 +32,6 @@ package {
     import ui.OfflineItemsCollector;
 
     import ui.MainMenuUI;
-    import ui.AchievementsInLogicBadge;
 
     import deathlink.DeathLinkHandler;
 
@@ -165,7 +164,19 @@ package {
         // screen-transition cleanup never fires). -1 = not initialized / not in INGAME.
         private var _lastIngameStatus:int      = -1;
         private var _mapTilesUnlocked:Boolean  = false;
+        // Standalone gate — true once the player has confirmed (or implicitly chosen)
+        // standalone play for the current slot. Standalone slots leave _active=false
+        // so the mod is fully inert: no SAVE_SAVE listener, no EXIT_FRAME loop, no
+        // ProgressionBlocker, no UI on stage, no per-frame patcher work.
         private var _standalone:Boolean        = false;
+        // AP-mode activation flag. False until the player commits to Archipelago
+        // for the current slot (auto-reconnect from saved creds, or Connect on the
+        // ConnectionPanel). All game-modifying hooks are gated by this.
+        private var _active:Boolean            = false;
+        // Set true once WizStashes.apply() has run for the current game-process.
+        // The mutation is global to GV.stageCollection and not currently revertible,
+        // so we apply it once on first activation and skip it on subsequent ones.
+        private var _wizStashesApplied:Boolean = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
         private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
@@ -183,13 +194,13 @@ package {
         // per AP-granted fragment without duplicating monster-drop fragments (which
         // are tracked separately via GV.ingameCore.ocLootTalFrags).
         private var _sessionGrantedFragments:Array = [];
+        // Stage strIds unlocked this session by per-stage progressive items —
+        // _injectApDropIcons reads these to emit a stage-specific FieldTokenDropIcon
+        // (1616) or WizStashKeyDropIcon (1619) for each copy received. Populated
+        // in the corresponding _grant…ProgressivePerStage functions.
+        private var _sessionFieldStageProgressiveUnlocks:Array = [];
+        private var _sessionStashStageProgressiveUnlocks:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
-
-        // Achievements-in-logic badge — small text label that floats above
-        // the in-level vanilla btnPnlAchis. Attached lazily to mcIngameFrame
-        // per ingame entry, position synced every frame.
-        private var _achLogicBadge:AchievementsInLogicBadge;
-        private var _achLogicBadgeFrame:* = null; // mcIngameFrame we attached to
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -329,20 +340,14 @@ package {
                 _modeInterceptor.onSlotDeleteWarning   = onSlotDeleteWarning;
                 _modeInterceptor.onSlotDeleteConfirmed = onSlotDeleteConfirmed;
 
-                _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
-
-                _progressionBlocker.enable(_bezel);
-
+                // ENTER_FRAME runs unconditionally — it owns the screen-transition
+                // router that decides whether to activate AP mode for the current slot.
+                // All game-modifying hooks (SAVE_SAVE listener, EXIT_FRAME loop,
+                // ProgressionBlocker, WizStashes.apply, per-frame patcher work) are
+                // deferred to _activateApMode() and only run when the player has
+                // confirmed Archipelago play for the current slot.
                 addEventListener(Event.ENTER_FRAME, onEnterFrame, false, 0, true);
-                // EXIT_FRAME fires after every ENTER_FRAME handler on the
-                // stage has completed, so vanilla's redrawHighBuildings (which
-                // can run inside Main.doEnterFrame on level-load frames) is
-                // guaranteed to be done before our handler. Used to re-apply
-                // the locked-stash overdraw without a single-frame flash of
-                // the unmodified stash sprite.
-                addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
-                patchWizStashModes();
-                _logger.log(MOD_NAME, "ArchipelagoMod loaded!");
+                _logger.log(MOD_NAME, "ArchipelagoMod loaded — router idle, AP inactive");
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "BIND ERROR: " + err.message + "\n" + err.getStackTrace());
             }
@@ -408,6 +413,137 @@ package {
         }
 
         // -----------------------------------------------------------------------
+        // Standalone gate — Archipelago activation lifecycle
+        //
+        // The mod stays inert until the player commits to AP mode for the
+        // current save slot (auto-reconnect from saved creds, or Connect on
+        // the ConnectionPanel). Standalone slots never call _activateApMode,
+        // so all of these hooks remain unattached and the game runs vanilla:
+        //   - SAVE_SAVE listener  (would revert game auto-unlocks)
+        //   - EXIT_FRAME listener (would re-apply locked-stash overdraw)
+        //   - ProgressionBlocker  (would intercept post-battle saves)
+        //   - WizStashes.apply    (would relocate stash data globally)
+        //   - All UI panels       (toasts, log, disconnect, offline items)
+        //   - All per-frame patcher work (gated in onEnterFrame)
+        //
+        // _deactivateApMode reverses everything reversible. WizStashes.apply
+        // mutates GV.stageCollection irreversibly, so it runs at most once
+        // per game-process — see _wizStashesApplied.
+
+        /**
+         * Activate Archipelago mode for the current slot. Idempotent.
+         * Attaches all game-modifying hooks and primes the connection layer.
+         * Called from startConnectionForSlot after the routing decision.
+         */
+        private function _activateApMode():void {
+            if (_active) return;
+            _active     = true;
+            _standalone = false;
+
+            // Game hooks
+            _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
+            _progressionBlocker.enable(_bezel);
+            // EXIT_FRAME fires after every ENTER_FRAME handler on the
+            // stage has completed, so vanilla's redrawHighBuildings (which
+            // can run inside Main.doEnterFrame on level-load frames) is
+            // guaranteed to be done before our handler. Used to re-apply
+            // the locked-stash overdraw without a single-frame flash of
+            // the unmodified stash sprite.
+            addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
+
+            // WizStashes.apply mutates GV.stageCollection (moves stashes from
+            // Endurance to Journey mode). The mutation is global and not
+            // currently reversible, so we run it once per game-process even
+            // if the player later loads a standalone slot. Fresh launch =
+            // fresh state.
+            if (!_wizStashesApplied) {
+                patchWizStashModes();
+                _wizStashesApplied = true;
+            }
+
+            _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
+        }
+
+        /**
+         * Deactivate Archipelago mode and tear down everything reversible.
+         * Called when the player returns to MAINMENU so the next slot's
+         * routing decision starts from a clean slate.
+         */
+        private function _deactivateApMode():void {
+            if (!_active) {
+                // Even if AP was never activated this session, clear the
+                // standalone flag so a subsequent slot pick re-routes fresh.
+                _standalone = false;
+                return;
+            }
+            _active     = false;
+            _standalone = false;
+
+            // Game hooks
+            if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
+            if (_progressionBlocker != null) _progressionBlocker.disable();
+            removeEventListener(Event.EXIT_FRAME, onExitFrame);
+
+            // Connection
+            if (_connectionManager != null) _connectionManager.disconnectAndReset();
+
+            // Detach UI from stage so a standalone slot loaded next gets
+            // a fully clean stage.
+            if (_systemToast != null && _systemToast.parent != null) {
+                _systemToast.parent.removeChild(_systemToast);
+            }
+            _systemToastOnStage = false;
+            if (_receivedToast != null && _receivedToast.parent != null) {
+                _receivedToast.parent.removeChild(_receivedToast);
+            }
+            _receivedToastOnStage = false;
+            if (_messageLogPanel != null) {
+                if (_messageLogPanel.isOpen) _messageLogPanel.close();
+                if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
+            }
+            _messageLogOnStage = false;
+            if (_disconnectPanel != null && _disconnectPanel.parent != null) {
+                _disconnectPanel.parent.removeChild(_disconnectPanel);
+            }
+            _disconnectPanelOnStage = false;
+            if (_connectionPanel != null) _connectionPanel.dismiss();
+
+            // Reset transient session state
+            if (_systemToast != null) _systemToast.clear();
+            if (_receivedToast != null) {
+                _receivedToast.clear();
+                _receivedToast.setSuppressed(false);
+            }
+            if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
+            if (_goalManager != null) _goalManager.reset();
+            if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
+            if (_stageTinter != null) _stageTinter.reset();
+            if (_modButtons != null) {
+                _modButtons.settingsVisible = false;
+                _modButtons.removeFromSelector();
+            }
+            if (_slotSettings != null && _slotSettings.isOpen) _slotSettings.close();
+            if (_mainMenuUI != null) _mainMenuUI.hide();
+
+            _sessionDrops = [];
+            _sessionGrantedFragments = [];
+            _sessionFieldStageProgressiveUnlocks = [];
+            _sessionStashStageProgressiveUnlocks = [];
+            _levelEndCountdown = -1;
+            _needsConnection = false;
+
+            _logger.log(MOD_NAME, "AP MODE DEACTIVATED — mod is now inert");
+        }
+
+        /** Mark the current slot as standalone (no AP). Mod stays inert. */
+        private function _enterStandaloneMode():void {
+            // If AP was previously active for some reason, tear it down first.
+            if (_active) _deactivateApMode();
+            _standalone = true;
+            _logger.log(MOD_NAME, "STANDALONE MODE — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1) + " — mod inert");
+        }
+
+        // -----------------------------------------------------------------------
         // Delegating wrappers — used by ScrDebugOptions and external callers.
 
         public function unlockSkill(apId:int):void { _skillUnlocker.unlockSkill(apId); }
@@ -458,14 +594,145 @@ package {
 
         private function onEnterFrame(e:Event):void
         {
+            // ---------------------------------------------------------------
+            // ROUTER SECTION — runs in all modes (inert, standalone, AP).
+            //
+            // The router watches screen transitions, hooks the mode-selector
+            // interceptor while on LOADGAME, and triggers the slot-routing
+            // decision when the player leaves LOADGAME with a slot picked.
+            // It does NOT modify game state — just observes and dispatches.
+
             // Populate stage data from GV once stageCollection is ready (one-time init).
+            // Read-only init of AV.stages — harmless in any mode.
             if (!_stagesPopulated && GV.stageCollection != null && GV.stageCollection.stageMetas != null)
             {
                 AV.populateStages();
                 _stagesPopulated = true;
             }
 
-            // Add toasts to stage once available.
+            _dbgFrameCounter++;
+
+            // Track screen transitions — always.
+            var screen:int = int(GV.main.currentScreen);
+            if (_lastScreen == -1)
+                _lastScreen = screen;
+            if (screen != _lastScreen) {
+                _logger.log(MOD_NAME, "Screen transition: " + _lastScreen + " → " + screen);
+
+                // Entering MAINMENU — tear down AP if active. Also clears the
+                // standalone flag so the next slot pick re-routes from scratch.
+                // _deactivateApMode is idempotent: no-op when already inert.
+                if (screen == ScreenId.MAINMENU) {
+                    _deactivateApMode();
+                }
+
+                // Entering LOADGAME — clear pending state on the interceptor
+                // (kept across modes so we re-detect slot picks cleanly).
+                if (screen == ScreenId.LOADGAME) {
+                    if (_modeInterceptor != null) _modeInterceptor.clearPending();
+                    _needsConnection = false;
+                    if (_active) {
+                        _connectionManager.disconnectAndReset();
+                        if (_modButtons != null) _modButtons.removeFromSelector();
+                        if (_connectionPanel != null) _connectionPanel.dismiss();
+                        if (_goalManager != null) _goalManager.reset();
+                        if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
+                        _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
+                    } else {
+                        _logger.log(MOD_NAME, "Entered LOADGAME (mod inert)");
+                    }
+                }
+
+                // Leaving LOADGAME with a slot picked — schedule fallback routing
+                // for the next frame ONLY if the mode-selector interceptor was
+                // bypassed (e.g. Continue button on a completed slot). When the
+                // interceptor fires onModeIntercepted, _active or _standalone is
+                // already set before the screen transitions, so we skip the
+                // fallback.
+                if (_lastScreen == ScreenId.LOADGAME) {
+                    if (_modeInterceptor != null) _modeInterceptor.unhook();
+                    if (screen != ScreenId.MAINMENU && GV.loaderSaver != null) {
+                        var slotId:int = int(GV.loaderSaver.activeSlotId) + 1;
+                        if (_saveManager != null) _saveManager.currentSlot = slotId;
+                        if (!_active && !_standalone) {
+                            // Interceptor was bypassed — do the routing decision now.
+                            _needsConnection = true;
+                            _logger.log(MOD_NAME, "Left LOADGAME — slot=" + slotId
+                                + "  needsRouting=true (interceptor bypassed)");
+                        } else if (_active && !_connectionManager.isConnected) {
+                            // AP active but connection dropped — try to reconnect.
+                            _needsConnection = true;
+                            _connectionManager.disconnect();
+                            _logger.log(MOD_NAME, "Left LOADGAME — slot=" + slotId
+                                + "  needsReconnect=true");
+                        } else {
+                            _logger.log(MOD_NAME, "Left LOADGAME — slot=" + slotId
+                                + "  mode=" + (_active ? "AP" : "standalone"));
+                        }
+                    }
+                }
+
+                // AP-only screen-transition handling.
+                if (_active) {
+                    if (screen == ScreenId.TRANS_SELECTOR_TO_INGAME1 ||
+                        screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
+                        screen == ScreenId.INGAME) {
+                        _initForNewStage();
+                    }
+                    if (screen == ScreenId.INGAME) {
+                        _refreshAchievementPanel();
+                    }
+                    if (_lastScreen == ScreenId.INGAME) {
+                        _resetPerLevelState("LEFT INGAME → transitioning to screen=" + screen);
+                    }
+                    if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
+                        if (_mainMenuUI != null) _mainMenuUI.hide();
+                    }
+                }
+
+                _lastScreen = screen;
+            }
+
+            // Hook the mode-selector interceptor while on LOADGAME — ALWAYS,
+            // regardless of mode. Without this, standalone-flagged slots can't
+            // be detected and the empty-slot ConnectionPanel never appears.
+            if (screen == ScreenId.LOADGAME && _modeInterceptor != null && !_modeInterceptor.isHooked) {
+                _modeInterceptor.hook(this.stage);
+            }
+
+            // Routing trigger — fires once after the player leaves LOADGAME
+            // with a chosen slot. startConnectionForSlot inspects the slot
+            // file and either activates AP, enters standalone, or shows
+            // the ConnectionPanel.
+            if (_needsConnection && this.stage != null) {
+                _needsConnection = false;
+                startConnectionForSlot();
+            }
+
+            // Main menu overlay — version label + changelog button. Shown
+            // whenever the player is on MAINMENU regardless of AP/standalone
+            // state, so the changelog and update badge are always reachable.
+            // (Note: ScrSlotSettings/ScrDebugOptions UI live behind the AP
+            // gate below — they only make sense when connected.)
+            var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
+            if (_mainMenuUI != null) {
+                if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
+                    _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
+                }
+                if (_mainMenuUI.isShowing) {
+                    _mainMenuUI.onFrame();
+                    if (!onMainMenu)
+                        _mainMenuUI.hide();
+                }
+            }
+
+            // ===============================================================
+            // AP-MODE GATE — everything below runs only when AP is active.
+            // Standalone slots return here, leaving the game fully vanilla.
+            if (!_active) return;
+            // ===============================================================
+
+            // Add UI panels to stage lazily (now safe — only AP mode reaches here).
             if (!_systemToastOnStage && _systemToast != null && this.stage != null) {
                 this.stage.addChild(_systemToast);
                 _systemToastOnStage = true;
@@ -500,18 +767,6 @@ package {
             if (_offlineItemsPanel != null && _offlineItemsPanel.isShowing) {
                 _offlineItemsPanel.doEnterFrame();
             }
-
-            // Main menu overlay — show/tick/hide driven by screen state.
-            var onMainMenu:Boolean = int(GV.main.currentScreen) == ScreenId.MAINMENU;
-            if (!_mainMenuUI.isShowing && onMainMenu && this.stage != null) {
-                _mainMenuUI.show(this.stage, VERSION, APWORLD_VERSION);
-            }
-            if (_mainMenuUI.isShowing) {
-                _mainMenuUI.onFrame();
-                if (!onMainMenu)
-                    _mainMenuUI.hide();
-            }
-            _dbgFrameCounter++;
 
             // Register the debug hotkey once the stage exists.
             if (!_keyListenerAdded && this.stage != null) {
@@ -550,6 +805,8 @@ package {
                     _injectApDropIcons();
                     _sessionDrops = [];
                     _sessionGrantedFragments = [];
+                    _sessionFieldStageProgressiveUnlocks = [];
+                    _sessionStashStageProgressiveUnlocks = [];
                     _levelEndCountdown = -1;
                 }
             }
@@ -557,94 +814,11 @@ package {
             // Poll the goal manager every frame so mid-battle goals (e.g. Swarm
             // Queen kill on K4) fire as soon as the condition is met, not only
             // on the next save event. No-ops once the goal has been sent.
-            if (!_standalone && _goalManager != null) _goalManager.check();
+            if (_goalManager != null) _goalManager.check();
 
             // Detect and report achievements every 30 frames
-            if (!_standalone && _dbgFrameCounter % 30 == 0) {
+            if (_dbgFrameCounter % 30 == 0) {
                 _achievementUnlocker.detectAndReport();
-            }
-
-            // Track screen transitions.
-            var screen:int = int(GV.main.currentScreen);
-            if (_lastScreen == -1)
-                _lastScreen = screen;
-            if (screen != _lastScreen) {
-                _logger.log(MOD_NAME, "Screen transition: " + _lastScreen + " → " + screen);
-
-                // Entering MAINMENU — disconnect early so the connection doesn't
-                // linger while the player is on the main menu.
-                if (screen == ScreenId.MAINMENU) {
-                    _connectionManager.disconnectAndReset();
-                    _needsConnection = false;
-                    _standalone      = false;
-                    _achievementUnlocker.resetReportedAchievements();
-                    if (_connectionPanel != null) _connectionPanel.dismiss();
-                    hideDisconnectPanel();
-                    _goalManager.reset();
-                    if (_systemToast != null) _systemToast.clear();
-                    if (_receivedToast != null) {
-                        _receivedToast.clear();
-                        _receivedToast.setSuppressed(false);
-                    }
-                    if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
-                    _logger.log(MOD_NAME, "Entered MAINMENU — connection reset, toasts cleared");
-                    _mainMenuUI.hide(); // remove any existing set before re-adding next frame
-                }
-
-                // Entering LOADGAME — always reset connection so leaving LOADGAME
-                // sees _isConnected=false and triggers the overlay when needed.
-                if (screen == ScreenId.LOADGAME) {
-                    _connectionManager.disconnectAndReset();
-                    _needsConnection = false;
-                    _standalone      = false;
-                    _achievementUnlocker.resetReportedAchievements();
-                    if (_modButtons != null) _modButtons.removeFromSelector();
-                    if (_connectionPanel != null) _connectionPanel.dismiss();
-                    _modeInterceptor.clearPending();
-                    _goalManager.reset();
-                    _logger.log(MOD_NAME, "Entered LOADGAME — connection reset");
-                }
-
-                if (_lastScreen == ScreenId.LOADGAME) {
-                    _modeInterceptor.unhook();
-                    if (screen != ScreenId.MAINMENU && GV.loaderSaver != null) {
-                        _saveManager.currentSlot = int(GV.loaderSaver.activeSlotId) + 1;
-                        if (!_connectionManager.isConnected) {
-                            _needsConnection = true;
-                            _connectionManager.disconnect();
-                            _logger.log(MOD_NAME, "Left LOADGAME not-connected — slot=" + _saveManager.currentSlot
-                                + "  needsConnection=true");
-                        } else {
-                            _logger.log(MOD_NAME, "Left LOADGAME already-connected — slot=" + _saveManager.currentSlot);
-                        }
-                    }
-                }
-                if (screen == ScreenId.TRANS_SELECTOR_TO_INGAME1 ||
-                    screen == ScreenId.TRANS_SELECTOR_TO_INGAME2 ||
-                    screen == ScreenId.INGAME) {
-                    _initForNewStage();
-                }
-
-                // Recompute the available-achievements list when entering battle so
-                // the panel reflects the player's current loadout for the new field.
-                // Also refresh the vanilla achievement panel's logic dots so they're
-                // up-to-date the next time the player opens the achievements menu —
-                // not stale from before this battle started.
-                if (screen == ScreenId.INGAME) {
-                    _refreshAchievementPanel();
-                }
-                // Reset first-play gem patch when leaving ingame so it re-runs on
-                // the next ingame entry for the same stage (after initializer resets
-                // availableGemTypes to []).
-                if (_lastScreen == ScreenId.INGAME) {
-                    _resetPerLevelState("LEFT INGAME → transitioning to screen=" + screen);
-                }
-                // Remove MAINMENU overlays when navigating away from the main menu.
-                if (_lastScreen == ScreenId.MAINMENU && screen != ScreenId.MAINMENU) {
-                    _mainMenuUI.hide();
-                }
-
-                _lastScreen = screen;
             }
 
             // Detect in-place level restart from the outcome panel's Retry button
@@ -669,19 +843,12 @@ package {
                 _lastIngameStatus = -1;
             }
 
-            // Hook mode selector buttons while on LOADGAME.
-            if (screen == ScreenId.LOADGAME && !_modeInterceptor.isHooked) {
-                _modeInterceptor.hook(this.stage);
-            }
-
             // Prevent the game from auto-launching W1 on new game.
             // startNewGame2() sets willStartNewGame=true, which makes
             // LoaderSaver bypass the selector and jump straight into W1.
             // We clear it so the player lands on the selector and can
             // choose their starting level from the unlocked stages.
-            if (!_standalone
-                    && GV.loaderSaver != null
-                    && GV.loaderSaver.willStartNewGame) {
+            if (GV.loaderSaver != null && GV.loaderSaver.willStartNewGame) {
                 GV.loaderSaver.willStartNewGame = false;
                 if (GV.ingameCore != null) {
                     GV.ingameCore.isFirstStageFirstTime = false;
@@ -690,15 +857,9 @@ package {
                     "Cleared willStartNewGame — player will land on selector");
             }
 
-            // Connection required (e.g. Continue button bypassed our interceptor).
-            if (_needsConnection && !_connectionManager.isConnected && this.stage != null) {
-                _needsConnection = false;
-                startConnectionForSlot();
-            }
-
             // DeathLink: detect player death (send), drain punishment queue (receive),
             // and maintain any active wave-surge.
-            if (screen == ScreenId.INGAME && !_standalone) {
+            if (screen == ScreenId.INGAME) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
                 _deathLinkHandler.checkWaveSurge();
@@ -716,9 +877,7 @@ package {
                 _earlyExitOutcome.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
-                _updateAchievementsBadge();
-            } else if (_achLogicBadgeFrame != null) {
-                _detachAchievementsBadge();
+                if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
 
 
@@ -837,50 +996,6 @@ package {
             _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
         }
 
-        /**
-         * Per-frame upkeep for the in-level achievements-in-logic badge.
-         *   - Attach lazily to the current `mcIngameFrame` (vanilla rebuilds
-         *     it whenever a new level loads, so re-attach if the frame
-         *     reference changed).
-         *   - Sync the count from sessionData.achievementNamesInLogic.
-         *   - Position above `btnPnlAchis` (right-aligned to its right edge,
-         *     a few px above the top edge).
-         *   - Visibility tracks btnPnlAchis.
-         */
-        private function _updateAchievementsBadge():void {
-            if (GV.ingameCore == null || GV.ingameCore.cnt == null) return;
-            var frame:* = GV.ingameCore.cnt.mcIngameFrame;
-            if (frame == null) return;
-            var btn:* = frame.btnPnlAchis;
-            if (btn == null) return;
-
-            if (_achLogicBadge == null) {
-                _achLogicBadge = new AchievementsInLogicBadge();
-            }
-            if (_achLogicBadgeFrame != frame) {
-                if (_achLogicBadge.parent != null)
-                    _achLogicBadge.parent.removeChild(_achLogicBadge);
-                frame.addChild(_achLogicBadge);
-                _achLogicBadgeFrame = frame;
-            }
-
-            var achs:Array = AV.sessionData.achievementNamesInLogic;
-            _achLogicBadge.update(achs != null ? achs.length : 0);
-            // Anchor the badge's top-right corner just outside the button's
-            // top-right corner — like a notification dot on an app icon.
-            _achLogicBadge.x = btn.x + btn.width - _achLogicBadge.badgeWidth + 4;
-            _achLogicBadge.y = btn.y - _achLogicBadge.badgeHeight + 4;
-            _achLogicBadge.visible = btn.visible;
-        }
-
-        /** Detach the badge when leaving the in-game screen. */
-        private function _detachAchievementsBadge():void {
-            if (_achLogicBadge != null && _achLogicBadge.parent != null) {
-                _achLogicBadge.parent.removeChild(_achLogicBadge);
-            }
-            _achLogicBadgeFrame = null;
-        }
-
         private function onStageResize(e:Event):void {
             positionSystemToast();
             positionReceivedToast();
@@ -991,40 +1106,56 @@ package {
         // Connection
 
         /**
-         * Load saved credentials for the current slot and either auto-connect
-         * (if a slot name is on file) or show the connection overlay.
-         * Called whenever we need a connection — on mode/continue intercept
-         * and as a fallback when leaving LOADGAME undetected.
+         * Routing entry point — called once after the player leaves LOADGAME
+         * with a slot picked. Inspects the slot file (cheap, no subsystem
+         * side effects) and routes to one of three paths:
+         *
+         *   1. Standalone slot       → _enterStandaloneMode (mod stays inert)
+         *   2. Slot with AP credentials → _activateApMode + auto-reconnect
+         *   3. Empty slot            → show ConnectionPanel for the choice
+         *
+         * Path 3 stays inert until the player picks a button on the panel.
          */
         private function startConnectionForSlot():void {
-            _saveManager.loadSlotData(_saveManager.currentSlot);
-            _loadSeenOfflineApIdsIntoCollector();
-            _messageLog.init(_fileHandler, _saveManager.currentSlot);
-
-            // Slot file exists and player previously chose standalone — skip popup entirely.
-            if (_saveManager.standaloneSet && _saveManager.standalone) {
-                _standalone = true;
-                AV.sessionData.reset();
-                _progressionBlocker.disable();
-                _logger.log(MOD_NAME, "Standalone slot — skipping AP connection, slot=" + _saveManager.currentSlot);
-                _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
-                _modeInterceptor.redispatchPendingClick();
+            var slotId:int = (_saveManager != null) ? _saveManager.currentSlot : -1;
+            if (slotId <= 0) {
+                _logger.log(MOD_NAME, "startConnectionForSlot: invalid slotId");
                 return;
             }
 
-            if (_connectionManager.apSlot.length > 0) {
-                _logger.log(MOD_NAME, "Auto-connecting slot=" + _saveManager.currentSlot
+            // PATH 1: Standalone slot — stay inert.
+            if (_fileHandler.isSlotStandalone(slotId)) {
+                _enterStandaloneMode();
+                _logger.log(MOD_NAME, "Standalone slot — skipping AP, slot=" + slotId);
+                if (_modeInterceptor != null) _modeInterceptor.redispatchPendingClick();
+                return;
+            }
+
+            // PATH 2: AP credentials saved — activate and auto-reconnect.
+            if (_fileHandler.slotHasApCredentials(slotId)) {
+                _activateApMode();
+                _saveManager.loadSlotData(slotId);
+                _loadSeenOfflineApIdsIntoCollector();
+                _messageLog.init(_fileHandler, slotId);
+                _logger.log(MOD_NAME, "Auto-connecting slot=" + slotId
                     + "  host=" + _connectionManager.apHost
                     + "  apSlot=" + _connectionManager.apSlot);
-                _connectionManager.saveSlot = _saveManager.currentSlot;
+                _connectionManager.saveSlot = slotId;
                 _connectionManager.connect(
                     _connectionManager.apHost,
                     _connectionManager.apPort,
                     _connectionManager.apSlot,
                     _connectionManager.apPassword);
-            } else {
-                ensureConnectionOverlay();
+                return;
             }
+
+            // PATH 3: Empty slot — load defaults so SaveManager knows the slot,
+            // then show the ConnectionPanel. Mod stays inert; activation happens
+            // only if the player picks Connect (Solo persists standalone=true and
+            // stays inert).
+            _saveManager.loadSlotData(slotId);
+            _messageLog.init(_fileHandler, slotId);
+            ensureConnectionOverlay();
         }
 
         private function ensureConnectionOverlay():void {
@@ -1052,6 +1183,9 @@ package {
             _logger.log(MOD_NAME, "PLAYER_SUBMITTED_CONNECTION host=" + host
                 + "  port=" + port + "  slot=" + slot
                 + "  hasPassword=" + (password.length > 0));
+            // Player committed to AP — activate the mod for this session.
+            _activateApMode();
+            _loadSeenOfflineApIdsIntoCollector();
             _connectionManager.saveSlot = _saveManager.currentSlot;
             _connectionManager.connect(host, port, slot, password);
         }
@@ -1062,15 +1196,15 @@ package {
         }
 
         private function onConnectionPanelStandalone():void {
+            // Persist the standalone flag to the slot file so this slot stays
+            // inert across future loads. saveSlotData reads _connectionManager
+            // fields (default empty) plus standalone=true — fine for an empty slot.
             _saveManager.standalone = true;
             _saveManager.saveSlotData();
-            _standalone = true;
-            AV.sessionData.reset();
-            _progressionBlocker.disable();
+            // Mod stays inert; no activation needed.
+            _enterStandaloneMode();
             if (_connectionPanel != null) _connectionPanel.dismiss();
-            hideDisconnectPanel();
             _logger.log(MOD_NAME, "PLAYER_CHOSE_STANDALONE slot=" + _saveManager.currentSlot);
-            _systemToast.addMessage("Solo mode (Slot " + _saveManager.currentSlot + ") — playing without randomizer", 0xFF88CCFF);
             _modeInterceptor.redispatchPendingClick();
         }
 
@@ -1219,6 +1353,8 @@ package {
             _logger.log(MOD_NAME, "=== end of AP items list ===");
             _sessionDrops = [];
             _sessionGrantedFragments = [];
+            _sessionFieldStageProgressiveUnlocks = [];
+            _sessionStashStageProgressiveUnlocks = [];
             _levelEndCountdown = -1;
             if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
         }
@@ -1252,11 +1388,15 @@ package {
          * in the icon row (and animate in first):
          *
          *   1.  Field tokens
-         *   1b. Map tiles  (direct + per-tile/per-tier field token expansion)
+         *   1b. Map tiles  (direct items only; coarse field tokens use 4d)
          *   2.  Skill tomes
          *   3.  Battle trait scrolls
          *   4.  XP tomes
-         *   4b. Gempouches
+         *   4b. Gempouches  (per-tile / per-tier / master / progressives)
+         *   4c. Stash keys  (per-stage + per-tile / per-tier / master pouches)
+         *   4d. Tile pouches  (coarse per-tile / per-tier field tokens)
+         *   4e. Progressive variants (per-stage stage-specific icons,
+         *       per-tile / per-tier pouch icons)
          *   5.  Shadow cores  (one combined icon: AP-granted + monster drops)
          *   5b. Skillpoint bundles  (cyan-glow icon, summed per run)
          *   6.  Talisman fragments  (monster drops + AP-granted)
@@ -1293,37 +1433,18 @@ package {
                 }
             }
 
-            // 1b. Map tiles. Three apId ranges contribute:
-            //   600-625    direct map tile items (apIdToGameId resolves the gameId)
-            //   1562-1587  per-tile field tokens (one tile each, via gemPouchPlayOrder)
-            //   1588-1600  per-tier field tokens (one icon per tile in the tier)
+            // 1b. Map tiles (direct items only — apIdToGameId resolves the gameId).
+            // Coarse field tokens (1562-1600) get their own TilePouchDropIcon below.
             // Deduped: receiving the same tile twice in a run produces one icon.
             var seenTileGameIds:Object = {};
-            var tierMap:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
-                ? AV.serverData.serverOptions.stageTierByStrId : null;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-
-                if (apId >= 600 && apId <= 625) {
-                    if (AV.serverData != null && AV.serverData.apIdToGameId != null) {
-                        var directGid:int = int(AV.serverData.apIdToGameId[apId]);
-                        _emitMapTileIconOnce(directGid, seenTileGameIds);
-                    }
-                } else if (apId >= 1562 && apId <= 1587) {
-                    var tilePrefix:String = _prefixForTileApId(apId, 1562);
-                    if (tilePrefix != null && tilePrefix.length > 0) {
-                        _emitMapTileIconOnce(_tileGameIdForPrefix(tilePrefix), seenTileGameIds);
-                    }
-                } else if (apId >= 1588 && apId <= 1600 && tierMap != null) {
-                    var tier:int = apId - 1588;
-                    for (var tsid:String in tierMap) {
-                        if (int(tierMap[tsid]) != tier) continue;
-                        if (tsid.length == 0) continue;
-                        _emitMapTileIconOnce(_tileGameIdForPrefix(tsid.charAt(0)), seenTileGameIds);
-                    }
-                }
+                if (apId < 600 || apId > 625) continue;
+                if (AV.serverData == null || AV.serverData.apIdToGameId == null) continue;
+                var directGid:int = int(AV.serverData.apIdToGameId[apId]);
+                _emitMapTileIconOnce(directGid, seenTileGameIds);
             }
 
             // 2. Skill tomes
@@ -1354,13 +1475,98 @@ package {
                 _progressionBlocker.addXpTomeDropIcon(apId, _levelUnlocker.levelsForApId(apId));
             }
 
-            // 4b. Gempouches (distinct 626-651, progressive 652).
+            // 4b. Gempouches:
+            //   626-651  per-tile distinct
+            //   652      per-tile progressive
+            //   1601-1614 per-tier + master
+            //   1615     per-tier progressive
+            // Per-tile-progressive (652) is a single fungible item id added 26
+            // times to the pool, so two copies received in the same session
+            // would otherwise both stamp the same getItemCount() reading on
+            // their tooltip. Pre-count this session's progressive drops and
+            // hand each icon its own ordinal so the Nth icon shows tile N.
+            var pouchProgNext:int = _firstProgressiveOrdinal(652);
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 626 || apId > 652) continue;
-                _progressionBlocker.addGempouchDropIcon(apId);
+                var isPouchDistinct:Boolean = (apId >= 626 && apId <= 652);
+                var isPouchTier:Boolean     = (apId >= 1601 && apId <= 1615);
+                if (!isPouchDistinct && !isPouchTier) continue;
+                var pouchOrd:int = (apId == 652) ? pouchProgNext++ : 0;
+                _progressionBlocker.addGempouchDropIcon(apId, pouchOrd);
+            }
+
+            // 4c. Wizard Stash keys:
+            //   1400-1521  per-stage (one per stage)
+            //   1522-1547  per-tile pouch
+            //   1548-1560  per-tier pouch
+            //   1561       master pouch
+            // Per-stage progressive (1619) handled below from
+            // _sessionStashStageProgressiveUnlocks. Per-tile / per-tier
+            // progressives (1620, 1621) handled in 4e.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId >= 1400 && apId <= 1521) {
+                    _progressionBlocker.addWizStashKeyDropIcon(apId);
+                } else if (apId >= 1522 && apId <= 1561) {
+                    _progressionBlocker.addKeyPouchDropIcon(apId);
+                }
+            }
+
+            // 4d. Coarse field-token pouches:
+            //   1562-1587  per-tile
+            //   1588-1600  per-tier
+            // One TilePouchDropIcon per copy received. Per-stage progressive
+            // (1616) handled below from _sessionFieldStageProgressiveUnlocks.
+            // Per-tile / per-tier progressives (1617, 1618) handled in 4e.
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId < 1562 || apId > 1600) continue;
+                _progressionBlocker.addTilePouchDropIcon(apId);
+            }
+
+            // 4e. Progressive variants (1616-1621). Per-stage variants resolve
+            // to the specific stage and reuse FieldTokenDropIcon /
+            // WizStashKeyDropIcon. Per-tile / per-tier variants get one
+            // generic pouch icon per copy received.
+            var stageLocIdMap:Object = ConnectionManager.stageLocIds;
+            // Same multi-copy ordinal handling as 4b: 1617 (per-tile field
+            // token progressive) and 1620 (per-tile stash key progressive)
+            // are fungible and rely on per-icon ordinals to render the right
+            // tile in the tooltip. 1618 / 1621 (per-tier progressives) have
+            // no tooltip yet so ordinal stays 0.
+            var fieldTileProgNext:int = _firstProgressiveOrdinal(1617);
+            var stashTileProgNext:int = _firstProgressiveOrdinal(1620);
+            for (i = 0; i < _sessionDrops.length; i++) {
+                entry = _sessionDrops[i];
+                if (entry.isForMe !== true) continue;
+                apId = int(entry.apId);
+                if (apId == 1617 || apId == 1618) {
+                    var ftOrd:int = (apId == 1617) ? fieldTileProgNext++ : 0;
+                    _progressionBlocker.addTilePouchDropIcon(apId, ftOrd);
+                } else if (apId == 1620 || apId == 1621) {
+                    var skOrd:int = (apId == 1620) ? stashTileProgNext++ : 0;
+                    _progressionBlocker.addKeyPouchDropIcon(apId, skOrd);
+                }
+            }
+            for (var fpi:int = 0; fpi < _sessionFieldStageProgressiveUnlocks.length; fpi++) {
+                var fpStrId:String = String(_sessionFieldStageProgressiveUnlocks[fpi]);
+                var fpStageId:int = GV.getFieldId(fpStrId);
+                if (fpStageId >= 0) {
+                    _progressionBlocker.addFieldTokenDropIcon(fpStageId);
+                }
+            }
+            for (var spi:int = 0; spi < _sessionStashStageProgressiveUnlocks.length; spi++) {
+                var spStrId:String = String(_sessionStashStageProgressiveUnlocks[spi]);
+                if (stageLocIdMap == null) continue;
+                var spLocId:int = int(stageLocIdMap[spStrId]);
+                if (spLocId <= 0) continue;
+                _progressionBlocker.addWizStashKeyDropIcon(1400 + spLocId - 1);
             }
 
             // 5. Shadow cores: one combined icon (AP cores routed to us + monster drops).
@@ -2148,6 +2354,22 @@ package {
             _progressionBlocker.addMapTileDropIcon(tileGameId);
         }
 
+        // For a fungible per-tile-progressive apId (652 / 1617 / 1620): figure
+        // out the 1-based ordinal of the FIRST drop in the current session.
+        // sessionData.getItemCount() reflects the post-receive total; pre-count
+        // the session's drops for this apId and subtract to find what number
+        // the first one in this batch was.
+        private function _firstProgressiveOrdinal(apId:int):int {
+            var sessionCount:int = 0;
+            for (var i:int = 0; i < _sessionDrops.length; i++) {
+                var e:Object = _sessionDrops[i];
+                if (e.isForMe === true && int(e.apId) == apId) sessionCount++;
+            }
+            if (sessionCount == 0) return 1;
+            var live:int = (AV.sessionData != null) ? AV.sessionData.getItemCount(apId) : sessionCount;
+            return live - sessionCount + 1;
+        }
+
         private function _prefixForTileApId(apId:int, base:int):String {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
                 ? AV.serverData.serverOptions.gemPouchPlayOrder as Array
@@ -2217,6 +2439,7 @@ package {
             for (var sid:String in byStrId) {
                 if (sid.charAt(0) == prefix) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }
@@ -2236,6 +2459,7 @@ package {
             for (var sid:String in tierMap) {
                 if (int(tierMap[sid]) == tier) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }
@@ -2297,6 +2521,8 @@ package {
             }
             var sid:String = String(order[n - 1]);
             _stageUnlocker.unlockStage(sid);
+            AV.sessionData.markFieldTokenHeld(sid);
+            _sessionFieldStageProgressiveUnlocks.push(sid);
             _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
             _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
         }
@@ -2319,6 +2545,7 @@ package {
             for (var sid:String in byStrId) {
                 if (sid.charAt(0) == prefix) {
                     _stageUnlocker.unlockStage(sid);
+                    AV.sessionData.markFieldTokenHeld(sid);
                     count++;
                 }
             }
@@ -2354,6 +2581,7 @@ package {
             }
             var sid:String = String(order[n - 1]);
             AV.sessionData.markStashUnlocked(sid);
+            _sessionStashStageProgressiveUnlocks.push(sid);
             _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, 0x55AAFF);
             _logger.log(MOD_NAME, "  → Progressive stash key (per-stage) #" + n + " unlocks " + sid);
         }

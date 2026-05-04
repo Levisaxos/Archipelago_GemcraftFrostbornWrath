@@ -316,11 +316,12 @@ class GemcraftFrostbornWrathWorld(World):
 
         gd = _load_game_data()
 
-        # Extra talisman fragments (IDs 753–799)
+        # Extra talisman fragments — currently empty (vanilla drops cover the
+        # rest); loop kept for forward compatibility.
         for frag in gd["extra_talisman_fragments"]:
             pool.append(self.create_item(frag["name"]))
 
-        # Extra shadow core stashes (IDs 817–868)
+        # Extra shadow core stashes (IDs 1300–1317)
         for sc in gd["extra_shadow_core_stashes"]:
             pool.append(self.create_item(sc["name"]))
 
@@ -661,7 +662,7 @@ class GemcraftFrostbornWrathWorld(World):
         ft_gran = self.options.field_token_granularity.value
         free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
 
-        # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 700–799)
+        # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 900–952)
         talisman_map = {
             str(frag["item_ap_id"]): frag["tal_data"]
             for frag in gd["talisman_fragments"]
@@ -671,7 +672,7 @@ class GemcraftFrostbornWrathWorld(World):
             for frag in gd["extra_talisman_fragments"]
         })
 
-        # Talisman name map: item AP ID (str) → display name (IDs 700–799)
+        # Talisman name map: item AP ID (str) → display name (IDs 900–952)
         talisman_name_map = {
             str(frag["item_ap_id"]): f"{frag['str_id']} Talisman Fragment"
             for frag in gd["talisman_fragments"]
@@ -688,7 +689,7 @@ class GemcraftFrostbornWrathWorld(World):
             for frag in gd["talisman_fragments"]
         }
 
-        # Shadow core map: item AP ID (str) → amount (IDs 800–868)
+        # Shadow core map: item AP ID (str) → amount (IDs 1000–1016, 1300–1317)
         shadow_core_map = {
             str(sc["item_ap_id"]): sc["total"]
             for sc in gd["shadow_core_stashes"]
@@ -698,7 +699,7 @@ class GemcraftFrostbornWrathWorld(World):
             for sc in gd["extra_shadow_core_stashes"]
         })
 
-        # Shadow core name map: item AP ID (str) → display name (IDs 800–868)
+        # Shadow core name map: item AP ID (str) → display name (IDs 1000–1016, 1300–1317)
         shadow_core_name_map = {
             str(sc["item_ap_id"]): f"{sc['str_id']} Shadow Cores"
             for sc in gd["shadow_core_stashes"]
@@ -763,6 +764,10 @@ class GemcraftFrostbornWrathWorld(World):
         _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
+            "starting_stage":        self.options.starting_stage.value,
+            "field_token_placement": self.options.field_token_placement.value,
+            "xp_tome_bonus":         self.options.xp_tome_bonus.value,
+            "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,

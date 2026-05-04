@@ -197,12 +197,23 @@ package tracker {
          *  which derives stages from <Pascal>Count fields in
          *  rulesdata_levels.py and requires WIZLOCK skills for completion. */
         public function isElementInLogic(elemName:String):Boolean {
+            if (elemName == "Drop Holder" && !hasBoltSkill())
+                return false;
             var stages:Array = _elementToStages[elemName] as Array;
             if (stages == null || stages.length == 0) return true;
             for each (var sid:String in stages) {
                 if (canCompleteStage(sid)) return true;
             }
             return false;
+        }
+
+        // Drop Holders are opened only by Bolt shots (DropHolder.takeDamage
+        // consumes the bolt-shot counter), so any element gate touching them
+        // must additionally require the Bolt Skill AP item.
+        private static const BOLT_SKILL_AP_ID:int = 700 + 15; // SKILL_NAMES index of "Bolt"
+
+        public function hasBoltSkill():Boolean {
+            return AV.sessionData.hasItem(BOLT_SKILL_AP_ID);
         }
 
         /** True if Ritual is held AND at least one stage that hosts this
@@ -248,8 +259,8 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
-                    out.push(["Gempouch (" + pouchPrefix + ")", _pouchHeld(pouchPrefix)]);
+                    pouchPrefix = _trimStr(pouchPrefix);
+                    out.push(["Gempouch (" + pouchPrefix + ")", AV.sessionData.hasPouchForPrefix(pouchPrefix)]);
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -354,6 +365,8 @@ package tracker {
          *  `fieldNamePascal` is the element name in PascalCase without spaces;
          *  the level-stat key is `<fieldNamePascal>Count`. */
         public function hasInLogicFieldWithElementCount(fieldNamePascal:String, threshold:int):Boolean {
+            if (fieldNamePascal == "DropHolder" && !hasBoltSkill())
+                return false;
             if (_dirty) recompute();
             var key:String = fieldNamePascal + "Count";
             for (var sid:String in _levelStats)
@@ -374,6 +387,28 @@ package tracker {
             var stats:Object = _levelStats != null ? _levelStats[strId] : null;
             if (stats == null) return false;
             return int(stats[fieldNamePascal + "Count"]) >= threshold;
+        }
+
+        /** Per-stage count for an element or monster (display name with
+         *  spaces, e.g. "Monster Nest"). Mirrors apworld _element_count_field:
+         *  split on spaces, capitalise the first char of each word, join,
+         *  read `<Pascal>Count` from the stage's level stats. Returns 0 when
+         *  level stats for the stage haven't loaded. */
+        public function getStageElementCount(strId:String, elemName:String):int {
+            var stats:Object = _levelStats != null ? _levelStats[strId] : null;
+            if (stats == null) return 0;
+            return int(stats[_elementPascal(elemName) + "Count"]);
+        }
+
+        private static function _elementPascal(name:String):String {
+            if (name == null) return "";
+            var parts:Array = name.split(" ");
+            var out:String = "";
+            for each (var p:String in parts) {
+                if (p == null || p.length == 0) continue;
+                out += p.charAt(0).toUpperCase() + p.substring(1);
+            }
+            return out;
         }
 
         /** True if any in-logic field has MonstersBeforeWave12 >= threshold.
@@ -504,6 +539,59 @@ package tracker {
         }
 
         /**
+         * "Got pouch (X)" / "Needs pouch (X)" suffix for the Journey line.
+         * Returns null when pouch gating is off or the stage has no
+         * gempouch requirement, so the caller appends nothing in that case.
+         * The prefix in `gempouch:<X>` is the stage's tile letter regardless
+         * of granularity — `hasPouchForPrefix` handles granularity-aware
+         * coverage internally.
+         */
+        public function getPouchLabel(strId:String):String {
+            if (_stageSkills == null) return null;
+            var required:Array = _stageSkills[strId] as Array;
+            if (required == null || required.length == 0) return null;
+            if (_pouchMode() == 0) return null;
+            for each (var skillName:String in required) {
+                var lower:String = skillName.toLowerCase().split(" ").join("");
+                if (lower.indexOf("gempouch:") != 0) continue;
+                var prefix:String = skillName.split(":")[1];
+                if (prefix == null) continue;
+                prefix = _trimStr(prefix);
+                var verb:String = AV.sessionData.hasPouchForPrefix(prefix) ? "Got" : "Needs";
+                return verb + " pouch (" + prefix + ")";
+            }
+            return null;
+        }
+
+        /**
+         * "Got key (X)" / "Needs key (X)" suffix for the Stash line.
+         * Stashes always require a key so this always returns a label —
+         * granularity-aware so the player knows which item it points at:
+         *   per_stage(_progressive)  → "key" (this stage's key, no suffix)
+         *   per_tile(_progressive)   → "key (W)"
+         *   per_tier(_progressive)   → "key (Tier 1)"
+         *   global                   → "key" (master, no suffix)
+         */
+        public function getStashKeyLabel(strId:String):String {
+            var verb:String = (AV.sessionData != null
+                    && AV.sessionData.isStashUnlocked(strId)) ? "Got" : "Needs";
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (opts == null) return verb + " key";
+            var g:int = int(opts.stashKeyGranularity);
+            if (g == 2 || g == 3) {
+                if (strId == null || strId.length == 0) return verb + " key";
+                return verb + " key (" + strId.charAt(0) + ")";
+            }
+            if (g == 4 || g == 5) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null || tierMap[strId] == null) return verb + " key";
+                return verb + " key (Tier " + int(tierMap[strId]) + ")";
+            }
+            // 0 / 1 (per_stage variants) and 6 (global) — no extra suffix needed.
+            return verb + " key";
+        }
+
+        /**
          * Returns skill names required for this stage's Journey that
          * the player has not yet collected.
          */
@@ -530,8 +618,8 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
-                    if (!_pouchHeld(pouchPrefix))
+                    pouchPrefix = _trimStr(pouchPrefix);
+                    if (!AV.sessionData.hasPouchForPrefix(pouchPrefix))
                         missing.push("Gempouch (" + pouchPrefix + ")");
                     continue;
                 }
@@ -734,7 +822,7 @@ package tracker {
             // the pouch arrives and normal rules take over.
             if (_freeStages[strId] == true && pouchMode != 0
                     && strId != null && strId.length > 0
-                    && !_pouchHeld(strId.charAt(0))) {
+                    && !AV.sessionData.hasPouchForPrefix(strId.charAt(0))) {
                 return true;
             }
             for each (var skillName:String in required) {
@@ -752,8 +840,8 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
-                    if (!_pouchHeld(pouchPrefix)) return false;
+                    pouchPrefix = _trimStr(pouchPrefix);
+                    if (!AV.sessionData.hasPouchForPrefix(pouchPrefix)) return false;
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -771,61 +859,6 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             return int(AV.serverData.serverOptions.gemPouchGranularity);
-        }
-
-        // True when the player owns the pouch covering the given stage-prefix
-        // letter under the current granularity. Fails open on unknown prefixes.
-        private function _pouchHeld(prefix:String):Boolean {
-            if (prefix == null || prefix.length == 0) return true;
-            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-            if (opts == null) return true;
-            var mode:int = int(opts.gemPouchGranularity);
-            if (mode == 0) return true;
-            if (mode == 5) return AV.sessionData.hasItem(1614);
-            if (mode == 3 || mode == 4) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null) return true;
-                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
-                var tierOrd:Array = opts.progressiveTierOrder as Array;
-                for (var sid:String in tierMap) {
-                    if (sid.charAt(0) != prefix) continue;
-                    var st:int = int(tierMap[sid]);
-                    if (mode == 3) {
-                        if (AV.sessionData.hasItem(1601 + st)) return true;
-                    } else if (tierProgId > 0) {
-                        var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                          ? tierOrd.indexOf(st) : st;
-                        if (posT >= 0 &&
-                                AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                            return true;
-                    }
-                }
-                return false;
-            }
-            if (mode == 1) {
-                // per_tile (distinct): canonical order for ID lookup.
-                var orderD:Array = opts.gemPouchPlayOrder as Array;
-                if (orderD == null || orderD.length == 0) return true;
-                var idxD:int = orderD.indexOf(prefix);
-                if (idxD < 0) return true;
-                return AV.sessionData.hasItem(626 + idxD);
-            }
-            // mode == 2: per_tile_progressive — starter-first count threshold.
-            var orderP:Array = opts.progressiveTileOrder as Array;
-            if (orderP == null || orderP.length == 0)
-                orderP = opts.gemPouchPlayOrder as Array;
-            if (orderP == null || orderP.length == 0) return true;
-            var idxP:int = orderP.indexOf(prefix);
-            if (idxP < 0) return true;
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0) progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idxP + 1;
-        }
-
-        // Local trim to avoid pulling in a tracker dependency.
-        private function _trimAS(s:String):String {
-            if (s == null) return "";
-            return s.replace(/^\s+|\s+$/g, "");
         }
 
     }

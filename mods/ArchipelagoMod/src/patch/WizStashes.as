@@ -393,6 +393,23 @@ package patch {
                 }
 
                 try {
+                    var oldBmp:Bitmap = vIp.bmp as Bitmap;
+                    if (oldBmp != null && oldBmp.bitmapData != null)
+                        oldBmp.bitmapData.dispose();
+                    vIp.bmp = null;
+                    vIp.isImageRendered = false;
+                } catch (eRender:Error) {}
+
+                // drawBitmap() multiplied vIp.w by projectorZoom in-place during the
+                // first render. Undo that before addTextfield() so new textfields
+                // size against the unscaled width and the second drawBitmap()
+                // doesn't double-zoom the canvas.
+                try {
+                    var zoom:Number = Number(GV.projectorZoom);
+                    if (zoom > 0) vIp.w = vIp.w / zoom;
+                } catch (eZoom:Error) {}
+
+                try {
                     vIp.addExtraHeight(5);
                     vIp.addSeparator(-2);
                     for (var li:int = 0; li < lines.length; li++) {
@@ -405,14 +422,6 @@ package patch {
                     logger.log(modName, "WizStashes.tickStashLockTooltip addTextfield error: " + eAdd.message);
                     return;
                 }
-
-                try {
-                    var oldBmp:Bitmap = vIp.bmp as Bitmap;
-                    if (oldBmp != null && oldBmp.bitmapData != null)
-                        oldBmp.bitmapData.dispose();
-                    vIp.bmp = null;
-                    vIp.isImageRendered = false;
-                } catch (eRender:Error) {}
 
                 // Re-render in the SAME frame so the panel doesn't render
                 // blank/stale for one frame between dispose and vanilla's next

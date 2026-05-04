@@ -102,25 +102,25 @@ def _load_item_table() -> Dict[str, ItemData]:
                else ItemClassification.useful)
         table[name] = ItemData(frag["item_ap_id"], cls)
 
-    # Extra talisman fragments — named "Extra Talisman Fragment #N" (IDs 1200–1299).
+    # Extra talisman fragments — kept for forward compatibility but the pool
+    # is empty: vanilla in-game talisman drops cover the additional fragments
+    # so we don't need to randomize extras here.
     for frag in data["extra_talisman_fragments"]:
         table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
 
-    # Shadow core stashes — half progression / half filler (alternating by
-    # registration order).  Progression items are state-tracked so the
-    # shadowCore:N gate can sum collected core amounts; the other half is
-    # filler placed wherever AP wants.  Final progression-cores total is
-    # roughly 50% of pool capacity (~19,870 of 39,740 cores).
-    def _sc_cls(idx: int) -> ItemClassification:
-        return ItemClassification.progression if idx % 2 == 0 else ItemClassification.filler
+    # Shadow core stashes — all progression so the shadowCore:N gate can sum
+    # the full collected total. Combined base (10,100) + 18 extras (sum 18,900)
+    # = 29,000 cores, comfortably above the 25,000 cap from the
+    # "Endgame Balance" achievement.
+    # Specific shadow core stashes — named by original field (IDs 1000–1016).
+    for sc in data["shadow_core_stashes"]:
+        table[f"{sc['str_id']} Shadow Cores"] = ItemData(
+            sc["item_ap_id"], ItemClassification.progression)
 
-    # Specific shadow core stashes — named by original field (IDs 1000–1046).
-    for i, sc in enumerate(data["shadow_core_stashes"]):
-        table[f"{sc['str_id']} Shadow Cores"] = ItemData(sc["item_ap_id"], _sc_cls(i))
-
-    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1399).
-    for i, sc in enumerate(data["extra_shadow_core_stashes"]):
-        table[sc["name"]] = ItemData(sc["item_ap_id"], _sc_cls(i))
+    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1317).
+    for sc in data["extra_shadow_core_stashes"]:
+        table[sc["name"]] = ItemData(
+            sc["item_ap_id"], ItemClassification.progression)
 
     # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
     # gates its matching "Complete {strId} - Wizard stash" location.

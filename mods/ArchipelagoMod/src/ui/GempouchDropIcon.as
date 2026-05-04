@@ -12,50 +12,58 @@ package ui {
     import com.giab.games.gcfw.constants.DropType;
 
     import data.AV;
+    import data.ServerOptions;
 
     /**
-     * Custom drop icon for AP "Gempouch" items (apIds 626-652).
+     * Custom drop icon for AP "Gempouch" items.
      *
-     * Distinct mode: ap id = 626 + index in gemPouchPlayOrder; the icon
-     * displays "Gempouch (X)" where X is the prefix letter.
-     * Progressive mode: ap id = 652 (gemPouchProgressiveId); the icon
-     * displays "Progressive Gempouch" with a copy-count subtitle pulled
-     * live from SessionData at render time.
+     * Supported apIds:
+     *   626-651  per-tile distinct  (Gempouch (X))
+     *   652      per-tile progressive
+     *   1601-1613 per-tier distinct  (Tier N Gempouch)
+     *   1614     master              (Master Gempouch)
+     *   1615     per-tier progressive
      *
      * Mirrors XpTomeDropIcon's public shape so it lives in ending.dropIcons
      * without breaking the vanilla animation loop or cleanup. Uses our own
      * MOUSE_OVER/MOUSE_OUT — vanilla renderDropIconInfoPanel doesn't know
      * our type.
      */
-    public class GempouchDropIcon extends Sprite {
+    public dynamic class GempouchDropIcon extends Sprite {
 
         public var cntInner:Sprite;
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var meta:Object;  // { apId:int, prefix:String, isProgressive:Boolean }
-        // Vanilla IngameEnding.removeAllDropIcons writes `.data = null` on
-        // every entry in core.ending.dropIcons during cleanup. Sealed Sprite
-        // subclasses reject dynamic property assignment, so the field must
-        // exist or the cleanup throws. Unread by us — mirrors XpTomeDropIcon.
-        public var data:*;
+        // Variant: "tile" / "tile_progressive" / "tier" / "master" / "tier_progressive".
+        // ordinal is the 1-based copy index for progressive variants — needed
+        // because multiple progressive copies can drop at the same level-end,
+        // and reading getItemCount() at hover would stamp the same total on
+        // every icon. ordinal == 0 means "fall back to live count" (icons
+        // built outside the per-session emission path keep the old behaviour).
+        public var meta:Object;  // { apId:int, prefix:String, variant:String, ordinal:int }
+        // Class is `dynamic` so vanilla IngameEnding.removeAllDropIcons can
+        // write `.data = null` on every entry in core.ending.dropIcons during
+        // cleanup without us declaring a `data` field — declaring one would
+        // shadow the `data` package this file imports from.
 
         // Single shared artwork for all pouch variants. Path is relative to
         // this .as file: src/ui/ → ../../resources/
         [Embed(source='../../resources/GemPouch.png')]
         private static const PouchAsset:Class;
 
-        public function GempouchDropIcon(apId:int) {
+        public function GempouchDropIcon(apId:int, ordinal:int = 0) {
             super();
 
-            var isProgressive:Boolean = _isProgressiveId(apId);
-            var prefix:String = isProgressive ? "" : _prefixForApId(apId);
+            var variant:String = _variantForApId(apId);
+            var prefix:String = (variant == "tile") ? _prefixForApId(apId) : "";
 
             this.type = DropType.SKILL_TOME; // reuse the tome reveal SFX
             this.meta = {
                 apId: apId,
                 prefix: prefix,
-                isProgressive: isProgressive
+                variant: variant,
+                ordinal: ordinal
             };
 
             this.cntInner = new Sprite();
@@ -89,16 +97,22 @@ package ui {
 
         // -----------------------------------------------------------------------
 
-        private static function _isProgressiveId(apId:int):Boolean {
+        private static function _variantForApId(apId:int):String {
             try {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
-                    var progId:int = int(opts.gemPouchProgressiveId);
-                    if (progId > 0 && apId == progId) return true;
+                    var tileProg:int = int(opts.gemPouchProgressiveId);
+                    if (tileProg > 0 && apId == tileProg) return "tile_progressive";
+                    var tierProg:int = int(opts.gemPouchPerTierProgressiveId);
+                    if (tierProg > 0 && apId == tierProg) return "tier_progressive";
                 }
             } catch (e:Error) {}
-            // Fallback to the apworld-allocated default.
-            return apId == 652;
+            // Apworld-allocated defaults / fixed ranges.
+            if (apId == 652)  return "tile_progressive";
+            if (apId == 1615) return "tier_progressive";
+            if (apId == 1614) return "master";
+            if (apId >= 1601 && apId <= 1613) return "tier";
+            return "tile";
         }
 
         private static function _prefixForApId(apId:int):String {
@@ -126,13 +140,29 @@ package ui {
                 var title:String;
                 var subtitle:String = "Gem Pouch";
                 var body:String;
-                if (this.meta.isProgressive == true) {
+                var variant:String = String(this.meta.variant);
+                var apId:int = int(this.meta.apId);
+                var ordinal:int = int(this.meta.ordinal);
+                if (variant == "tile_progressive") {
                     title = "Progressive Gempouch";
-                    var copies:int = AV.sessionData.getItemCount(int(this.meta.apId));
-                    var unlocked:int = copies; // includes precollected copy
-                    var total:int = _orderLength();
-                    body = "Unlocks gems on the next world. "
-                         + "(" + unlocked + "/" + total + " worlds unlocked)";
+                    var copiesT:int = (ordinal > 0) ? ordinal
+                                                    : AV.sessionData.getItemCount(apId);
+                    var optsT:ServerOptions = AV.serverData.serverOptions;
+                    var prefixT:String = optsT.progressiveTilePrefix(copiesT);
+                    body = "Unlocks gems on tile " + prefixT + ". "
+                         + "(" + copiesT + "/" + optsT.progressiveTileOrderLength() + " worlds unlocked)";
+                } else if (variant == "tier_progressive") {
+                    title = "Progressive Gempouch (per-tier)";
+                    var copiesTier:int = AV.sessionData.getItemCount(apId);
+                    body = "Unlocks gems on the next tier. "
+                         + "(" + copiesTier + "/" + _tierLength() + " tiers unlocked)";
+                } else if (variant == "tier") {
+                    var tier:int = apId - 1601;
+                    title = "Tier " + tier + " Gempouch";
+                    body = "Unlocks gems on stages of tier " + tier + ".";
+                } else if (variant == "master") {
+                    title = "Master Gempouch";
+                    body = "Unlocks gems on every stage.";
                 } else {
                     title = "Gempouch (" + String(this.meta.prefix) + ")";
                     body = "Unlocks gems on stages of world " + String(this.meta.prefix) + ".";
@@ -150,15 +180,23 @@ package ui {
             try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
         }
 
-        private static function _orderLength():int {
+        private static function _tierLength():int {
             try {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
-                    var order:Array = opts.gemPouchPlayOrder as Array;
-                    if (order != null) return order.length;
+                    var tm:Object = opts.stageTierByStrId;
+                    if (tm != null) {
+                        var seen:Object = {};
+                        var n:int = 0;
+                        for (var k:String in tm) {
+                            var t:int = int(tm[k]);
+                            if (seen[t] !== true) { seen[t] = true; n++; }
+                        }
+                        if (n > 0) return n;
+                    }
                 }
             } catch (e:Error) {}
-            return 26;
+            return 13;
         }
     }
 }

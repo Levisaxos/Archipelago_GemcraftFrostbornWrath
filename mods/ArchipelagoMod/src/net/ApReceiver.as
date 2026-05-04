@@ -128,13 +128,18 @@ package net {
             if (p.slot_data) {
                 var sd:Object = p.slot_data;
                 AV.serverData.serverOptions.goal              = int(sd.goal);
-                AV.serverData.serverOptions.talismanMinRarity = int(sd.talisman_min_rarity);
+                if (sd.starting_stage !== undefined)
+                    AV.serverData.serverOptions.startingStage = int(sd.starting_stage);
                 if (sd.tattered_scroll_levels !== undefined)
                     AV.serverData.serverOptions.tomeXpLevels.tattered = int(sd.tattered_scroll_levels);
                 if (sd.worn_tome_levels !== undefined)
                     AV.serverData.serverOptions.tomeXpLevels.worn = int(sd.worn_tome_levels);
                 if (sd.ancient_grimoire_levels !== undefined)
                     AV.serverData.serverOptions.tomeXpLevels.ancient = int(sd.ancient_grimoire_levels);
+                if (sd.xp_tome_bonus !== undefined)
+                    AV.serverData.serverOptions.xpTomeBonus = int(sd.xp_tome_bonus);
+                if (sd.skillpoint_multiplier !== undefined)
+                    AV.serverData.serverOptions.skillpointMultiplier = int(sd.skillpoint_multiplier);
                 if (sd.field_token_placement !== undefined)
                     AV.serverData.serverOptions.fieldTokenPlacement = int(sd.field_token_placement);
                 if (sd.enforce_logic !== undefined)

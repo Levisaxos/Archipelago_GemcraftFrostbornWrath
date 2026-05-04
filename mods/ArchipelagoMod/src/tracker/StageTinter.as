@@ -67,6 +67,34 @@ package tracker {
         public function set enabled(v:Boolean):void { _enabled = v; }
         public function get enabled():Boolean { return _enabled; }
 
+        /**
+         * Clear all tints from every field-token light + stash pip, regardless
+         * of connection state. Used on AP-mode deactivation so a subsequent
+         * standalone session sees the vanilla un-tinted lights.
+         *
+         * apply()'s !isConnected branch normally handles this, but only while
+         * the per-frame selector loop is running. Once the mod is deactivated
+         * apply() never gets called again, so we need an explicit teardown.
+         */
+        public function reset():void {
+            try {
+                if (GV.selectorCore == null) return;
+                var mc:* = GV.selectorCore.mc;
+                if (mc == null) return;
+                var cnt:* = mc.cntFieldTokens;
+                if (cnt == null) return;
+                for (var i:int = 0; i < cnt.numChildren; i++) {
+                    var tok:* = cnt.getChildAt(i);
+                    if (tok != null) {
+                        paint(tok, STATE_NONE);
+                        paintPip(tok, PIP_NONE);
+                    }
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "StageTinter.reset error: " + err.message);
+            }
+        }
+
         /** Called every selector frame with GV.selectorCore.mc. */
         public function apply(mc:*):void {
             if (!_enabled || mc == null || _cm == null || _evaluator == null) return;

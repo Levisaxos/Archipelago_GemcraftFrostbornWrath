@@ -201,6 +201,16 @@ package unlockers {
                     return;
                 }
 
+                // Per-slot authoritative source. GV.achiCollection.achisByOrder[i].status
+                // is GLOBAL state and carries across slot loads (vanilla bug) — so a
+                // standalone session that earned achievements leaves status >= 2 on those
+                // entries when the next AP slot connects, causing detectAndReport to
+                // spuriously fire location checks for them. GV.ppd.gainedAchis is the
+                // current slot's saved set and is reset to all-false by setInitialValues
+                // when the slot is created. Cross-checking against it eliminates the leak.
+                var gainedAchis:Array = (GV.ppd != null) ? GV.ppd.gainedAchis : null;
+                if (gainedAchis == null) return;
+
                 for (var i:int = 0; i < achisByOrder.length; i++) {
                     var ach:* = achisByOrder[i];
                     if (!ach) continue;
@@ -211,6 +221,13 @@ package unlockers {
 
                     var gameId:int = int(ach.id);
                     if (_reportedAchievements[gameId]) continue;
+
+                    // Only report achievements actually committed to the current
+                    // slot. gainedAchis[gameId] is set on the win-screen drop
+                    // processing (IngameEnding.updatePpdWithDrops), so this delays
+                    // mid-battle reporting until the battle is won — but the slot
+                    // file is the only source of truth for "earned in this slot".
+                    if (gameId >= gainedAchis.length || gainedAchis[gameId] !== true) continue;
 
                     var achData:Object = _gameIdToData[gameId];
                     if (!achData) {

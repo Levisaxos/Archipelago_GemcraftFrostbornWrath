@@ -2,12 +2,17 @@ package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.Sprite;
+    import flash.events.MouseEvent;
     import flash.filters.DropShadowFilter;
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
 
+    import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+
+    import data.AV;
+    import data.ServerOptions;
 
     /**
      * Custom drop icon for Wizard Stash key pouches — bundled stash keys that
@@ -17,6 +22,7 @@ package ui {
      *   1522-1547  Per-tile  (one pouch per prefix in gemPouchPlayOrder)
      *   1548-1560  Per-tier  (one pouch per tier 0..12)
      *   1561       Master    (single pouch unlocking every stash)
+     *   stashKeyPerTileProgressiveId   per-tile progressive (single id, 26 copies)
      *
      * Vanilla has no DropType for stash keys, so we synthesize an icon using
      * an embedded PNG (KeyPouch.png in mods/ArchipelagoMod/resources/).
@@ -30,22 +36,34 @@ package ui {
      * picks the "sndoctoken" sound (no dedicated stash-key SFX exists). Same
      * pattern XpTomeDropIcon uses with SKILL_TOME for the chime.
      */
-    public class KeyPouchDropIcon extends Sprite {
+    public dynamic class KeyPouchDropIcon extends Sprite {
 
         public var cntInner:Sprite;
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var data:Object;
+        // Class is `dynamic` so vanilla cleanup can write `.data = null`
+        // without us declaring a `data` field that would shadow the
+        // imported `data` package.
+        // ordinal is the 1-based copy index for progressive variants — needed
+        // because multiple copies can drop at the same level-end and reading
+        // getItemCount() at hover stamps the same total on every icon. 0 ==
+        // "fall back to live count" for callers that don't track per-copy.
+        public var meta:Object;  // { apId:int, isProgressive:Boolean, ordinal:int }
 
         [Embed(source='../../resources/KeyPouch.png')]
         private static const KeyPouchAsset:Class;
 
-        public function KeyPouchDropIcon(apId:int) {
+        public function KeyPouchDropIcon(apId:int, ordinal:int = 0) {
             super();
 
             this.type = DropType.FIELD_TOKEN; // for the vanilla reveal sound
             this.data = { apId: apId };
+            this.meta = {
+                apId: apId,
+                isProgressive: _isPerTileProgressive(apId),
+                ordinal: ordinal
+            };
 
             this.cntInner = new Sprite();
             addChild(this.cntInner);
@@ -73,6 +91,58 @@ package ui {
             }
 
             this.cntInner.addChild(this.bmpIcon);
+
+            addEventListener(MouseEvent.MOUSE_OVER, _onMouseOver, false, 0, true);
+            addEventListener(MouseEvent.MOUSE_OUT,  _onMouseOut,  false, 0, true);
         }
+
+        // -----------------------------------------------------------------------
+        // Tooltip — only the per-tile progressive variant renders one for now;
+        // the per-tile / per-tier / master variants fall through silently.
+
+        private function _onMouseOver(e:MouseEvent):void {
+            try {
+                if (this.meta == null || this.meta.isProgressive != true)
+                    return;
+
+                var vIp:* = GV.mcInfoPanel;
+                vIp.reset(280);
+
+                var apId:int = int(this.meta.apId);
+                var ordinal:int = int(this.meta.ordinal);
+                var copies:int = (ordinal > 0) ? ordinal
+                                               : AV.sessionData.getItemCount(apId);
+                var opts:ServerOptions = AV.serverData.serverOptions;
+                var prefix:String = opts.progressiveTilePrefix(copies);
+
+                var title:String = "Progressive Stash Key";
+                var subtitle:String = "Wizard Stash Key";
+                var body:String = "Unlocks Wizard Stashes on tile " + prefix + ". "
+                                + "(" + copies + "/" + opts.progressiveTileOrderLength() + " worlds unlocked)";
+
+                vIp.addTextfield(0xFFD700, title, false, 13);
+                vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
+                vIp.addTextfield(0x99FF99, body, false, 11);
+                GV.main.cntInfoPanel.addChild(vIp);
+                vIp.doEnterFrame();
+            } catch (err:Error) {}
+        }
+
+        private function _onMouseOut(e:MouseEvent):void {
+            try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
+        }
+
+        private static function _isPerTileProgressive(apId:int):Boolean {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var progId:int = int(opts.stashKeyPerTileProgressiveId);
+                    if (progId > 0 && apId == progId)
+                        return true;
+                }
+            } catch (e:Error) {}
+            return false;
+        }
+
     }
 }

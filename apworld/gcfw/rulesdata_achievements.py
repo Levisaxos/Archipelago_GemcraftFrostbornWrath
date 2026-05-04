@@ -1700,7 +1700,7 @@ achievement_requirements = {
         "game_id": 398,
         "description": "Have the Ritual trait set to level 6 or higher and win the battle.",
         "details": "Win a battle with the Ritual trait at level 6 or higher.",
-        "requirements": ["tRitual"],
+        "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Trivial",
     },
     # AP ID: 2189
@@ -1725,7 +1725,7 @@ achievement_requirements = {
         "ap_id": 2191,
         "game_id": 365,
         "description": "Find 2 talisman fragments.",
-        "requirements": ["minWave:50"],
+        "requirements": ["minWave:30"],
         "required_effort": "Trivial",
     },
     # AP ID: 2192
@@ -3566,7 +3566,7 @@ achievement_requirements = {
         "game_id": 141,
         "description": "Reach 500 non-monsters killed through all the battles.",
         "details": "Cumulative across all battles: 500 non-monster kills.",
-        "requirements": ["tRitual"],
+        "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Extreme",
     },
     # AP ID: 2399
@@ -4401,7 +4401,7 @@ achievement_requirements = {
         "ap_id": 2493,
         "game_id": 137,
         "description": "Reach 20 non-monsters killed through all the battles.",
-        "requirements": ["tRitual"],
+        "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Trivial",
     },
     # AP ID: 2494
@@ -5550,7 +5550,7 @@ achievement_requirements = {
         "game_id": 139,
         "description": "Reach 200 non-monsters killed through all the battles.",
         "details": "Cumulative across all battles: 200 non-monster kills.",
-        "requirements": ["tRitual"],
+        "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Major",
     },
     # AP ID: 2624

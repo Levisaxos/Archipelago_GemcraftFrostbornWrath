@@ -17,6 +17,9 @@ package patch {
     import ui.RemoteItemDropIcon;
     import ui.MapTileDropIcon;
     import ui.SkillPointDropIcon;
+    import ui.WizStashKeyDropIcon;
+    import ui.KeyPouchDropIcon;
+    import ui.TilePouchDropIcon;
 
     /**
      * Intercepts SAVE_SAVE and reverts any automatic field-token, map-tile,
@@ -284,14 +287,66 @@ package patch {
         }
 
         /**
-         * Inject a Gempouch drop icon. Distinct mode: ap id 626..651 maps to
-         * a single prefix letter; progressive mode: ap id 652 (one icon per
-         * received copy). Uses its own MOUSE_OVER tooltip handler.
+         * Inject a Gempouch drop icon. Accepted apId ranges:
+         *   626-651  per-tile distinct (Gempouch (X))
+         *   652      per-tile progressive
+         *   1601-1613 per-tier (Tier N Gempouch)
+         *   1614     master (Master Gempouch)
+         *   1615     per-tier progressive
+         * Uses its own MOUSE_OVER tooltip handler.
          */
-        public function addGempouchDropIcon(apId:int):void {
-            if (apId < 626 || apId > 652) return;
-            _addDropIcon(new GempouchDropIcon(apId),
-                "GEMPOUCH apId=" + apId,
+        public function addGempouchDropIcon(apId:int, ordinal:int = 0):void {
+            var inDistinct:Boolean = (apId >= 626 && apId <= 652);
+            var inTier:Boolean     = (apId >= 1601 && apId <= 1615);
+            if (!inDistinct && !inTier) return;
+            _addDropIcon(new GempouchDropIcon(apId, ordinal),
+                "GEMPOUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a per-stage Wizard Stash key drop icon. apId is in 1400-1521
+         * (one per stage, key apId = 1400 + locId - 1). Also reused for the
+         * per-stage progressive variant (1619), with the dispatcher resolving
+         * the unlocked stage to its 1400-range key apId before calling here.
+         */
+        public function addWizStashKeyDropIcon(apId:int):void {
+            if (apId < 1400 || apId > 1521) return;
+            _addDropIcon(new WizStashKeyDropIcon(apId),
+                "WIZ_STASH_KEY apId=" + apId,
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a coarse stash-key pouch drop icon. apId ranges:
+         *   1522-1547  per-tile pouch
+         *   1548-1560  per-tier pouch
+         *   1561       master pouch
+         *   1620       per-tile progressive
+         *   1621       per-tier progressive
+         */
+        public function addKeyPouchDropIcon(apId:int, ordinal:int = 0):void {
+            var inFixed:Boolean = (apId >= 1522 && apId <= 1561);
+            var inProg:Boolean  = (apId == 1620 || apId == 1621);
+            if (!inFixed && !inProg) return;
+            _addDropIcon(new KeyPouchDropIcon(apId, ordinal),
+                "KEY_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
+                false /* useVanillaHover */);
+        }
+
+        /**
+         * Inject a coarse field-token pouch drop icon. apId ranges:
+         *   1562-1587  per-tile field tokens
+         *   1588-1600  per-tier field tokens
+         *   1617       per-tile progressive
+         *   1618       per-tier progressive
+         */
+        public function addTilePouchDropIcon(apId:int, ordinal:int = 0):void {
+            var inFixed:Boolean = (apId >= 1562 && apId <= 1600);
+            var inProg:Boolean  = (apId == 1617 || apId == 1618);
+            if (!inFixed && !inProg) return;
+            _addDropIcon(new TilePouchDropIcon(apId, ordinal),
+                "TILE_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
         }
 

@@ -12,14 +12,13 @@ package patch {
      * Appends Archipelago check-status lines into the game's field hover tooltip
      * (McInfoPanel) using the same intercept pattern as AchievementTooltipOverlay.
      *
-     * Shows per-check status for Journey and Stash locations as
-     * one line each:
-     *   ✓  grey  — already checked
-     *   in logic     green — missing and reachable
-     *   not in logic red   — missing and blocked
-     * Also lists each element / special-monster spawn on its own colour-coded
-     * line (green = in logic, red = not yet reachable), and stage skill /
-     * tier prerequisites colour-coded the same way.
+     * Shows per-check status for Journey and Stash locations as one line
+     * each: grey "✓" if already checked, green when in logic, red when
+     * blocked. Live lines carry a granularity-aware "Got/Needs pouch (X)"
+     * or "Got/Needs key (X)" suffix when the gate involves a gempouch or
+     * wizard stash key. Each element / special-monster spawn on the
+     * stage is listed as "<Name>: <count>" coloured the same way (count
+     * drops to just the name when stats aren't loaded).
      *
      * Also removes the "Available gems" section for levels that are not W1-W4,
      * since those gems reflect the original game state rather than the
@@ -267,18 +266,24 @@ package patch {
             // Wizard Tower additionally requires the stash key — it's the
             // visual structure of the wizard stash and can only be unlocked
             // by opening the stash.
+            // Drop Holder additionally requires the Bolt Skill — it's only
+            // opened by Bolt shots.
             var stageReachable:Boolean = _evaluator.canCompleteStage(strId);
             var hasRitual:Boolean = AV.sessionData.hasItem(FieldLogicEvaluator.RITUAL_TRAIT_AP_ID);
             var stashUnlockedForElems:Boolean = AV.sessionData.isStashUnlocked(strId);
+            var hasBolt:Boolean = _evaluator.hasBoltSkill();
             for each (var elem:String in _evaluator.getStageElements(strId)) {
                 var elemInLogic:Boolean = stageReachable;
                 if (elem == "Wizard Tower") {
                     elemInLogic = elemInLogic && stashUnlockedForElems;
+                } else if (elem == "Drop Holder") {
+                    elemInLogic = elemInLogic && hasBolt;
                 }
-                lines.push(_checkLine(elem, false, elemInLogic));
+                lines.push(_countLine(elem, _evaluator.getStageElementCount(strId, elem), elemInLogic));
             }
             for each (var mon:String in _evaluator.getStageMonsters(strId)) {
-                lines.push(_checkLine(mon, false, stageReachable && hasRitual));
+                lines.push(_countLine(mon, _evaluator.getStageElementCount(strId, mon),
+                                      stageReachable && hasRitual));
             }
 
             var journeyExists:Boolean  = journeyMissing || journeyDone;
@@ -286,36 +291,21 @@ package patch {
 
             var journeyInLogic:Boolean = journeyMissing &&
                     _evaluator.stageHasInLogicMissing(strId, true, false);
-            var stashUnlocked:Boolean  = AV.sessionData.isStashUnlocked(strId);
-            var stashInLogic:Boolean   = stashMissing && stashUnlocked &&
+            var stashInLogic:Boolean   = stashMissing &&
                     _evaluator.stageHasInLogicMissing(strId, false, true);
 
-            // One line per check, each coloured by its state.
-            if (journeyExists) lines.push(_checkLine("Journey", journeyDone, journeyInLogic));
+            // One line per check, each coloured by its state. When the
+            // gate involves a granularity-aware item (gempouch / stash
+            // key), append a "Got …" / "Needs …" suffix so the player can
+            // see exactly which item it refers to. Suffix is skipped for
+            // the done (grey ✓) state since the check is already complete.
+            if (journeyExists) {
+                var pouchSuffix:String = journeyDone ? null : _evaluator.getPouchLabel(strId);
+                lines.push(_checkLine("Journey", journeyDone, journeyInLogic, pouchSuffix));
+            }
             if (stashExists) {
-                if (stashDone) {
-                    lines.push(["Stash: ✓", 0x888888]);
-                } else if (!stashUnlocked) {
-                    lines.push(["Stash: locked", 0xFF4444]);
-                } else {
-                    lines.push(_checkLine("Stash", false, stashInLogic));
-                }
-            }
-
-            // Stage skill requirements: always shown when present, coloured
-            // green when met, red when not. Mirrors apworld _eval_req for
-            // the WIZLOCK skill gate on Journey/Stash locations.
-            for each (var skillReq:Array in _evaluator.getStageSkillsStatus(strId)) {
-                var met:Boolean = skillReq[1] == true;
-                lines.push(["Needs: " + String(skillReq[0]),
-                            met ? 0x44FF44 : 0xFF4444]);
-            }
-
-            // A4-only: "All 24 skills" gate on Journey.
-            if (FieldLogicEvaluator.ALL_SKILLS_STAGES[strId] == true) {
-                var have24:int = AV.sessionData.totalSkillsCollected;
-                lines.push(["All 24 skills (" + have24 + "/24)",
-                            have24 >= 24 ? 0x44FF44 : 0xFF4444]);
+                var keySuffix:String = stashDone ? null : _evaluator.getStashKeyLabel(strId);
+                lines.push(_checkLine("Stash", stashDone, stashInLogic, keySuffix));
             }
 
             // Stage out of logic: show why.
@@ -335,10 +325,17 @@ package patch {
             return lines;
         }
 
-        private function _checkLine(label:String, done:Boolean, inLogic:Boolean):Array {
-            if (done)    return [label + ": \u2713",         0x888888];
-            if (inLogic) return [label + ": in logic",       0x44FF44];
-            return              [label + ": not in logic",   0xFF4444];
+        private function _checkLine(label:String, done:Boolean, inLogic:Boolean,
+                                    suffix:String = null):Array {
+            if (done) return [label + ": \u2713", 0x888888];
+            var text:String = (suffix != null && suffix.length > 0)
+                    ? (label + ": " + suffix) : label;
+            return [text, inLogic ? 0x44FF44 : 0xFF4444];
+        }
+
+        private function _countLine(label:String, count:int, inLogic:Boolean):Array {
+            var text:String = count > 0 ? (label + ": " + count) : label;
+            return [text, inLogic ? 0x44FF44 : 0xFF4444];
         }
 
         /**

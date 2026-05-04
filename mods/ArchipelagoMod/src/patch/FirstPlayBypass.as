@@ -3,6 +3,7 @@ package patch {
     import flash.filters.GlowFilter;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import data.AV;
 
     /**
      * Bypasses first-play restrictions on journey levels.
@@ -18,8 +19,10 @@ package patch {
      *      MOUSE_DOWN/UP listeners (priority 101) block the game's click handlers.
      *      Hover detection is done per-frame via hitTestPoint on stage.mouseX/Y,
      *      avoiding any listener registration timing issues.
-     *   3. On the first frame of INGAME for an unbeaten stage, injects skill-unlocked
-     *      gem types that the initializer skipped.
+     *   3. On the first frame of INGAME for an unbeaten stage with the covering
+     *      Gempouch owned, adds skill-unlocked gem types on top of vanilla
+     *      GIVEGT. AP skill tomes only ADD gem types — they never strip
+     *      vanilla-GIVEGT gems. Pouch ownership is the per-tile gate.
      *
      * Not active in Iron mode (GameMode.IRON == 2).
      */
@@ -188,6 +191,14 @@ package patch {
                 // W1 on revisit: vanilla already handles skill gems, nothing to do.
                 if (isStarterStage && !isFirstPlay) return;
 
+                // Pouches are the per-tile gate. Without the covering pouch,
+                // GemPouchSuppressor wipes availableGemTypes on the same frame
+                // — adding skill gems here would just be wiped. With the
+                // pouch, vanilla GIVEGT is the player's loadout for this
+                // stage; AP skill tomes layer extra gem types on top.
+                if (!AV.sessionData.hasPouchForStage(stageMeta.strId))
+                    return;
+
                 var availableGemTypes:Array = GV.ingameCore.availableGemTypes;
                 var cnt:*                   = GV.ingameCore.cnt;
                 if (availableGemTypes == null || cnt == null) return;
@@ -197,40 +208,25 @@ package patch {
                 // differs and we fall through to re-process.
                 if (_patchedAvailableGemTypes === availableGemTypes) return;
 
-                var added:int   = 0;
-                var removed:int = 0;
+                var added:int = 0;
                 for each (var entry:Array in SKILL_GEM_MAP) {
                     var skillId:int  = int(entry[0]);
                     var gemType:int  = int(entry[1]);
                     var spellIdx:int = int(entry[2]);
-                    var hasSkill:Boolean = Boolean(GV.ppd.gainedSkillTomes[skillId]);
-
-                    if (hasSkill) {
-                        // Ensure this skill's gem is available.
-                        if (availableGemTypes.indexOf(gemType) == -1) {
-                            availableGemTypes.push(gemType);
-                            cnt.mcIngameFrame.addChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
-                            GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = true;
-                            added++;
-                        }
-                    } else if (!isStarterStage) {
-                        // Non-starter stage: strip any GIVEGT gem the player hasn't earned.
-                        var idx:int = availableGemTypes.indexOf(gemType);
-                        if (idx != -1) {
-                            availableGemTypes.splice(idx, 1);
-                            try {
-                                cnt.mcIngameFrame.removeChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
-                            } catch (e:Error) {}
-                            GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = false;
-                            removed++;
-                        }
-                    }
+                    if (!Boolean(GV.ppd.gainedSkillTomes[skillId]))
+                        continue;
+                    if (availableGemTypes.indexOf(gemType) != -1)
+                        continue;
+                    availableGemTypes.push(gemType);
+                    cnt.mcIngameFrame.addChild(cnt.mcIngameFrame.gemCreateButtons[gemType]);
+                    GV.ingameCore.arrIsSpellBtnVisible[spellIdx] = true;
+                    added++;
                 }
 
                 _patchedAvailableGemTypes = availableGemTypes;
-                if (added > 0 || removed > 0) {
+                if (added > 0) {
                     _logger.log(_modName, "FirstPlayBypass: stage=" + stageMeta.strId +
-                        " added=" + added + " removed=" + removed + " skill gems");
+                        " added=" + added + " skill gems");
                 }
             } catch (err:Error) {
                 _logger.log(_modName,

@@ -40,6 +40,12 @@ package ui {
         private var _fieldsBtn:FieldsInLogicButton;
         private var _apDebugBtn:CustomButton;
 
+        // Desired visibility — tracked separately so the setter survives
+        // calls made while the buttons don't exist yet (e.g. onApConnected
+        // sets settingsVisible=true before SELECTOR has been reached).
+        private var _settingsDesiredVisible:Boolean = false;
+        private var _apDebugDesiredVisible:Boolean = false;
+
         // Main-menu button
         private var _changelogBtn:CustomButton;
         private var _changelogBtnFrameDelay:Number = 5;
@@ -62,10 +68,12 @@ package ui {
         // Visibility setters (called by ArchipelagoMod on connect / disconnect)
 
         public function set settingsVisible(v:Boolean):void {
+            _settingsDesiredVisible = v;
             if (_settingsBtn != null) _settingsBtn.visible = v;
         }
 
         public function set apDebugVisible(v:Boolean):void {
+            _apDebugDesiredVisible = v;
             if (_apDebugBtn != null) _apDebugBtn.visible = v;
         }
 
@@ -90,11 +98,11 @@ package ui {
             _reportBtn.onClick = _onReportClick;
             mc.addChild(_reportBtn);
 
-            // ---- AP Settings (hidden until AP connects) ----
+            // ---- AP Settings (visible while AP is connected) ----
             _settingsBtn         = new CustomButton(tmpl, "AP Settings");
             _settingsBtn.x       = tmpl.x;
             _settingsBtn.y       = tmpl.y + stepY * 2;
-            _settingsBtn.visible = false;
+            _settingsBtn.visible = _settingsDesiredVisible;
             _settingsBtn.onClick = function():void {
                 if (onSettingsClick != null) onSettingsClick();
             };
@@ -110,7 +118,7 @@ package ui {
             _apDebugBtn         = new CustomButton(tmpl, "Archipelago");
             _apDebugBtn.x       = tmpl.x;
             _apDebugBtn.y       = tmpl.y + stepY * 4;
-            _apDebugBtn.visible = false;
+            _apDebugBtn.visible = _apDebugDesiredVisible;
             _apDebugBtn.onClick = function():void {
                 if (onApDebugClick != null) onApDebugClick();
             };
@@ -203,6 +211,8 @@ package ui {
 
         /**
          * Remove the main-menu changelog button and clear its reference.
+         * Re-arms the slide-in frame delay so the next show waits for
+         * ScrMainMenu's animation to settle.
          */
         public function removeFromMainMenu():void {
             if (!isNaN(_startBtnOriginalY)) {
@@ -211,6 +221,7 @@ package ui {
             }
             _remove(_changelogBtn);
             _changelogBtn = null;
+            _changelogBtnFrameDelay = 5;
         }
 
         // -----------------------------------------------------------------------
