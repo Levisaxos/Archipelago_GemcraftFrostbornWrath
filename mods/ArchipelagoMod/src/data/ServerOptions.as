@@ -139,5 +139,29 @@ package data {
             deathLinkCoup = false;
             deathLinkAnyBonus = false;
         }
+
+        /**
+         * Number of tiles in the starter-first progressive unlock order.
+         * Falls back to 26 (alphabet length) when slot_data hasn't populated
+         * the order yet — matches the drop-icon tooltip's "X / N worlds
+         * unlocked" defaults from before this was centralized.
+         */
+        public function progressiveTileOrderLength():int {
+            if (progressiveTileOrder == null)
+                return 26;
+            return progressiveTileOrder.length;
+        }
+
+        /**
+         * Tile prefix letter unlocked by the Nth copy of any per-tile
+         * progressive item (1-based). Returns "?" if copies is out of range
+         * or the order array isn't populated.
+         */
+        public function progressiveTilePrefix(copies:int):String {
+            if (progressiveTileOrder == null
+                    || copies < 1 || copies > progressiveTileOrder.length)
+                return "?";
+            return String(progressiveTileOrder[copies - 1]);
+        }
     }
 }

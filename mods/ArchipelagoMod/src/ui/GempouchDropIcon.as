@@ -12,6 +12,7 @@ package ui {
     import com.giab.games.gcfw.constants.DropType;
 
     import data.AV;
+    import data.ServerOptions;
 
     /**
      * Custom drop icon for AP "Gempouch" items.
@@ -147,9 +148,10 @@ package ui {
                     title = "Progressive Gempouch";
                     var copiesT:int = (ordinal > 0) ? ordinal
                                                     : AV.sessionData.getItemCount(apId);
-                    var prefixT:String = _progressiveTilePrefix(copiesT);
+                    var optsT:ServerOptions = AV.serverData.serverOptions;
+                    var prefixT:String = optsT.progressiveTilePrefix(copiesT);
                     body = "Unlocks gems on tile " + prefixT + ". "
-                         + "(" + copiesT + "/" + _orderLength() + " worlds unlocked)";
+                         + "(" + copiesT + "/" + optsT.progressiveTileOrderLength() + " worlds unlocked)";
                 } else if (variant == "tier_progressive") {
                     title = "Progressive Gempouch (per-tier)";
                     var copiesTier:int = AV.sessionData.getItemCount(apId);
@@ -177,30 +179,6 @@ package ui {
 
         private function _onMouseOut(e:MouseEvent):void {
             try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
-        }
-
-        private static function _orderLength():int {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var order:Array = opts.progressiveTileOrder as Array;
-                    if (order != null) return order.length;
-                }
-            } catch (e:Error) {}
-            return 26;
-        }
-
-        private static function _progressiveTilePrefix(copies:int):String {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var order:Array = opts.progressiveTileOrder as Array;
-                    if (order != null && copies >= 1 && copies <= order.length) {
-                        return String(order[copies - 1]);
-                    }
-                }
-            } catch (e:Error) {}
-            return "?";
         }
 
         private static function _tierLength():int {

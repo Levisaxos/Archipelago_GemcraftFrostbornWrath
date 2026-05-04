@@ -32,7 +32,6 @@ package {
     import ui.OfflineItemsCollector;
 
     import ui.MainMenuUI;
-    import ui.AchievementsInLogicBadge;
 
     import deathlink.DeathLinkHandler;
 
@@ -202,12 +201,6 @@ package {
         private var _sessionFieldStageProgressiveUnlocks:Array = [];
         private var _sessionStashStageProgressiveUnlocks:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
-
-        // Achievements-in-logic badge — small text label that floats above
-        // the in-level vanilla btnPnlAchis. Attached lazily to mcIngameFrame
-        // per ingame entry, position synced every frame.
-        private var _achLogicBadge:AchievementsInLogicBadge;
-        private var _achLogicBadgeFrame:* = null; // mcIngameFrame we attached to
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
         private static const DEBUG_MODE_DEFAULT:Boolean = false;
@@ -884,10 +877,7 @@ package {
                 _earlyExitOutcome.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
-                _updateAchievementsBadge();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
-            } else if (_achLogicBadgeFrame != null) {
-                _detachAchievementsBadge();
             }
 
 
@@ -1004,50 +994,6 @@ package {
             // Use stageWidth for centering — gameRoot.width fluctuates with animated content.
             _receivedToast.x = this.stage.stageWidth * 0.5 - _receivedToast.panelWidth * 0.5;
             _receivedToast.y = gameRoot.y + ITEM_TOAST_OFFSET_Y * gameRoot.scaleY;
-        }
-
-        /**
-         * Per-frame upkeep for the in-level achievements-in-logic badge.
-         *   - Attach lazily to the current `mcIngameFrame` (vanilla rebuilds
-         *     it whenever a new level loads, so re-attach if the frame
-         *     reference changed).
-         *   - Sync the count from sessionData.achievementNamesInLogic.
-         *   - Position above `btnPnlAchis` (right-aligned to its right edge,
-         *     a few px above the top edge).
-         *   - Visibility tracks btnPnlAchis.
-         */
-        private function _updateAchievementsBadge():void {
-            if (GV.ingameCore == null || GV.ingameCore.cnt == null) return;
-            var frame:* = GV.ingameCore.cnt.mcIngameFrame;
-            if (frame == null) return;
-            var btn:* = frame.btnPnlAchis;
-            if (btn == null) return;
-
-            if (_achLogicBadge == null) {
-                _achLogicBadge = new AchievementsInLogicBadge();
-            }
-            if (_achLogicBadgeFrame != frame) {
-                if (_achLogicBadge.parent != null)
-                    _achLogicBadge.parent.removeChild(_achLogicBadge);
-                frame.addChild(_achLogicBadge);
-                _achLogicBadgeFrame = frame;
-            }
-
-            var achs:Array = AV.sessionData.achievementNamesInLogic;
-            _achLogicBadge.update(achs != null ? achs.length : 0);
-            // Anchor the badge's top-right corner just outside the button's
-            // top-right corner — like a notification dot on an app icon.
-            _achLogicBadge.x = btn.x + btn.width - _achLogicBadge.badgeWidth + 4;
-            _achLogicBadge.y = btn.y - _achLogicBadge.badgeHeight + 4;
-            _achLogicBadge.visible = btn.visible;
-        }
-
-        /** Detach the badge when leaving the in-game screen. */
-        private function _detachAchievementsBadge():void {
-            if (_achLogicBadge != null && _achLogicBadge.parent != null) {
-                _achLogicBadge.parent.removeChild(_achLogicBadge);
-            }
-            _achLogicBadgeFrame = null;
         }
 
         private function onStageResize(e:Event):void {

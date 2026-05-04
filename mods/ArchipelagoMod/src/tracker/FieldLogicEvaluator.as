@@ -248,7 +248,7 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
+                    pouchPrefix = _trimStr(pouchPrefix);
                     out.push(["Gempouch (" + pouchPrefix + ")", AV.sessionData.hasPouchForPrefix(pouchPrefix)]);
                     continue;
                 }
@@ -530,7 +530,7 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
+                    pouchPrefix = _trimStr(pouchPrefix);
                     if (!AV.sessionData.hasPouchForPrefix(pouchPrefix))
                         missing.push("Gempouch (" + pouchPrefix + ")");
                     continue;
@@ -752,7 +752,7 @@ package tracker {
                     var pouchPrefix:String = skillName.split(":")[1];
                     if (pouchPrefix == null)
                         continue;
-                    pouchPrefix = _trimAS(pouchPrefix);
+                    pouchPrefix = _trimStr(pouchPrefix);
                     if (!AV.sessionData.hasPouchForPrefix(pouchPrefix)) return false;
                     continue;
                 }
@@ -771,12 +771,6 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             return int(AV.serverData.serverOptions.gemPouchGranularity);
-        }
-
-        // Local trim to avoid pulling in a tracker dependency.
-        private function _trimAS(s:String):String {
-            if (s == null) return "";
-            return s.replace(/^\s+|\s+$/g, "");
         }
 
     }

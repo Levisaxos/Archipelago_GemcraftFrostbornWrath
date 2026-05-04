@@ -1942,7 +1942,8 @@
       "description": "Have the Ritual trait set to level 6 or higher and win the battle.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual"
+        "tRitual",
+        "eNonMonsters:1"
       ],
       "details": "Win a battle with the Ritual trait at level 6 or higher."
     },
@@ -4115,7 +4116,8 @@
       "description": "Reach 500 non-monsters killed through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        "tRitual"
+        "tRitual",
+        "eNonMonsters:1"
       ],
       "details": "Cumulative across all battles: 500 non-monster kills."
     },
@@ -5090,7 +5092,8 @@
       "description": "Reach 20 non-monsters killed through all the battles.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual"
+        "tRitual",
+        "eNonMonsters:1"
       ]
     },
     "Snatchers": {
@@ -6396,7 +6399,8 @@
       "description": "Reach 200 non-monsters killed through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "tRitual"
+        "tRitual",
+        "eNonMonsters:1"
       ],
       "details": "Cumulative across all battles: 200 non-monster kills."
     },

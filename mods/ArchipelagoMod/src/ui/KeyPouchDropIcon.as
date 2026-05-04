@@ -12,6 +12,7 @@ package ui {
     import com.giab.games.gcfw.constants.DropType;
 
     import data.AV;
+    import data.ServerOptions;
 
     /**
      * Custom drop icon for Wizard Stash key pouches — bundled stash keys that
@@ -109,12 +110,13 @@ package ui {
                 var ordinal:int = int(this.meta.ordinal);
                 var copies:int = (ordinal > 0) ? ordinal
                                                : AV.sessionData.getItemCount(apId);
-                var prefix:String = _progressiveTilePrefix(copies);
+                var opts:ServerOptions = AV.serverData.serverOptions;
+                var prefix:String = opts.progressiveTilePrefix(copies);
 
                 var title:String = "Progressive Stash Key";
                 var subtitle:String = "Wizard Stash Key";
                 var body:String = "Unlocks Wizard Stashes on tile " + prefix + ". "
-                                + "(" + copies + "/" + _orderLength() + " worlds unlocked)";
+                                + "(" + copies + "/" + opts.progressiveTileOrderLength() + " worlds unlocked)";
 
                 vIp.addTextfield(0xFFD700, title, false, 13);
                 vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
@@ -140,28 +142,5 @@ package ui {
             return false;
         }
 
-        private static function _orderLength():int {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var order:Array = opts.progressiveTileOrder as Array;
-                    if (order != null) return order.length;
-                }
-            } catch (e:Error) {}
-            return 26;
-        }
-
-        private static function _progressiveTilePrefix(copies:int):String {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var order:Array = opts.progressiveTileOrder as Array;
-                    if (order != null && copies >= 1 && copies <= order.length) {
-                        return String(order[copies - 1]);
-                    }
-                }
-            } catch (e:Error) {}
-            return "?";
-        }
     }
 }
