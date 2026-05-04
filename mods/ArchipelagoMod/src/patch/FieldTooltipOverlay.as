@@ -273,6 +273,10 @@ package patch {
             var stashUnlockedForElems:Boolean = AV.sessionData.isStashUnlocked(strId);
             var hasBolt:Boolean = _evaluator.hasBoltSkill();
             for each (var elem:String in _evaluator.getStageElements(strId)) {
+                // Tower and Wall appear on nearly every stage with no useful
+                // gating signal — hide them so the tooltip stays focused on
+                // elements the player actually cares about.
+                if (elem == "Tower" || elem == "Wall") continue;
                 var elemInLogic:Boolean = stageReachable;
                 if (elem == "Wizard Tower") {
                     elemInLogic = elemInLogic && stashUnlockedForElems;

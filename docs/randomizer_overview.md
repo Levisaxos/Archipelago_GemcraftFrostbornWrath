@@ -2,7 +2,7 @@
 
 A randomizer mod for **GemCraft: Frostborn Wrath** built on the [Archipelago](https://archipelago.gg) multiworld framework. Items the player would normally earn by completing levels are instead shuffled — sent to other players' games, or held back until received from them.
 
-This release covers the full feature set of the randomizer: what is shuffled, how progression is gated, all available YAML options, the in-game UI, and the supported play modes.
+This document describes the full feature set of the randomizer: what is shuffled, how progression is gated, all available YAML options, the in-game UI, and the supported play modes.
 
 ---
 
@@ -134,6 +134,21 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 ---
 
+## Hollow Gem
+
+When Gem Pouches are enabled, you can't create gems on a stage until you've received a Gem Pouch covering that gem type — which would leave you stuck on your very first stage with nothing to fight back with. The **Hollow Gem** is your starter tool:
+
+- On your starter stage, while you don't yet own a Gem Pouch, an extra **"Create Hollow Gem"** button appears alongside the normal gem-create buttons.
+- A Hollow Gem is a plain, colorless gem with **no special effect** — no leech, no crit, no slow, no poison. It hits for the minimum damage in the game. Just enough to clear early waves and start earning real items.
+- Combining or duplicating Hollow Gems works normally — the result stays hollow.
+- **Free starter towers (Frostborn mode):** Chilling already grants 3 free buildings at level start, but Frostborn normally grants 0. While Hollow Gem is active on a Frostborn stage, you get up to **3 free towers** at the start of the level (topped up to 3 minus any pre-placed towers on that stage), so you have something to socket your Hollow Gems into.
+- The button **disappears automatically** as soon as you receive a Gem Pouch for that stage. From then on you create gems the normal way.
+- Costs the same mana as a regular gem create.
+
+In short: Hollow Gem keeps your run playable from turn one when Gem Pouches are gating your gem types.
+
+---
+
 ## In-game UI
 
 - **Connection panel** — opens automatically on slot select. Enter host, port, slot, password and connect, or click **Play without randomizer** for a vanilla run.
@@ -166,16 +181,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 - **Chilling** — supported
 - **Frostborn** — supported
 - **Iron Wizard** — *not supported*
-- **Endurance / Trial** — togglable in yaml; Neither has no AP checks.
-
----
-
-## Known limitations (pre-alpha)
-
-- Iron Wizard mode is not supported
-- DeathLink is implemented but may have edge cases
-- Some achievements are flagged "untrackable" and excluded from the location pool
-- This is an early pre-alpha — feedback is very welcome via GitHub Issues
+- **Endurance / Trial** — togglable in YAML; neither has AP checks.
 
 ---
 

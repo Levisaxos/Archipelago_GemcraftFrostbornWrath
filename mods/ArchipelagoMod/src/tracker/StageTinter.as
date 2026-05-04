@@ -17,10 +17,11 @@ package tracker {
      *
      * Per-stage state (aggregate across the 3 AP locations on the stage):
      *
-     *   all 3 checks done                   → leave to game (don't touch)
-     *   1 or 2 checks done (partial)        → yellow on all 3 lights
-     *   0 done, at least one in logic       → green
-     *   0 done, none in logic               → red
+     *   all checks done                          → leave to game (vanilla "done" light)
+     *   every missing check reachable            → green ("everything left is doable")
+     *   some reachable, some not                 → yellow ("partial — some still blocked")
+     *   none reachable, stage still playable     → purple ("grind achievements here")
+     *   none reachable, stage locked             → red
      *
      * Must be called every selector frame because adjustFieldTokens() will
      * gotoAndStop() the lights back to their blank frame, wiping our state.
@@ -31,6 +32,7 @@ package tracker {
         private static const STATE_GREEN:int   = 1;
         private static const STATE_RED:int     = 2;
         private static const STATE_YELLOW:int  = 3;
+        private static const STATE_PURPLE:int  = 4; // no AP checks reachable, but stage still playable for achievements
 
         // Wizard-stash pip (wizStashMarker) state. Pip color is independent of
         // the main light state: it tracks the stash check specifically.
@@ -45,6 +47,10 @@ package tracker {
             new ColorTransform(1.20, 0.30, 0.30, 1.0, 60, 0, 0, 0);
         private static const CT_YELLOW:ColorTransform =
             new ColorTransform(0, 0, 0, 1.0, 255, 200, 0, 0);
+        // Purple/violet (≈0xCC66FF) — distinct from red, yellow, green, and the
+        // vanilla fieldType-derived "done" hues.
+        private static const CT_PURPLE:ColorTransform =
+            new ColorTransform(1.10, 0.40, 1.20, 1.0, 60, 0, 80, 0);
         private static const CT_IDENTITY:ColorTransform =
             new ColorTransform(1.0, 1.0, 1.0, 1.0, 0, 0, 0, 0);
 
@@ -142,21 +148,32 @@ package tracker {
                     if (journeyMissing) missingCount++;
                     if (stashMissing)   missingCount++;
 
+                    // Per-check reachability: probe each missing location
+                    // independently so we can tell "all reachable" from "mixed".
+                    var journeyReachable:Boolean = journeyMissing &&
+                        _evaluator.stageHasInLogicMissing(strId, true, false);
+                    var stashReachable:Boolean   = stashMissing &&
+                        _evaluator.stageHasInLogicMissing(strId, false, true);
+                    var reachableCount:int = 0;
+                    if (journeyReachable) reachableCount++;
+                    if (stashReachable)   reachableCount++;
+
                     var desired:int;
                     if (missingCount == 0) {
                         // All checks done — let game render its completed lights.
                         desired = STATE_NONE;
-                    } else if (!_evaluator.stageHasInLogicMissing(
-                                   strId, journeyMissing, stashMissing)) {
-                        // No remaining check is reachable — stuck. Includes the
-                        // case "journey done, stash missing, no key collected".
-                        desired = STATE_RED;
-                    } else if (missingCount < 2) {
-                        // Some progress, remaining checks reachable.
-                        desired = STATE_YELLOW;
-                    } else {
-                        // Nothing done yet, but at least one check reachable.
+                    } else if (reachableCount == 0) {
+                        // No missing check is reachable. If the stage is still
+                        // playable we mark it purple (achievements grind);
+                        // otherwise red (fully locked).
+                        desired = _evaluator.canCompleteStage(strId)
+                            ? STATE_PURPLE : STATE_RED;
+                    } else if (reachableCount == missingCount) {
+                        // Every missing check is reachable.
                         desired = STATE_GREEN;
+                    } else {
+                        // Some reachable, some not.
+                        desired = STATE_YELLOW;
                     }
 
                     paint(tok, desired);
@@ -199,6 +216,7 @@ package tracker {
             var ct:ColorTransform;
             if      (state == STATE_GREEN)  ct = CT_GREEN;
             else if (state == STATE_RED)    ct = CT_RED;
+            else if (state == STATE_PURPLE) ct = CT_PURPLE;
             else                            ct = CT_YELLOW;
 
             // Lit-frame formula taken from SelectorRenderer.adjustFieldTokens():
