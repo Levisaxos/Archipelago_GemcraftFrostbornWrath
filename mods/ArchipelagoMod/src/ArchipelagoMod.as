@@ -679,9 +679,6 @@ package {
                         screen == ScreenId.INGAME) {
                         _initForNewStage();
                     }
-                    if (screen == ScreenId.INGAME) {
-                        _refreshAchievementPanel();
-                    }
                     if (_lastScreen == ScreenId.INGAME) {
                         _resetPerLevelState("LEFT INGAME → transitioning to screen=" + screen);
                     }
@@ -1329,6 +1326,9 @@ package {
             _wavePrePatcher.resetForNewStage();
             _ritualSpawnPatcher.resetForNewStage();
             _startingGemSuppressor.applyIfReady();
+            // Refresh achievement-panel pips so they're current even if the
+            // player never opens the panel (covers in-place retry too).
+            _refreshAchievementPanel();
         }
 
         /**

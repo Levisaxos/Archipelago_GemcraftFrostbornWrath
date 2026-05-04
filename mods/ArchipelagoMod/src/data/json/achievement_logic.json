@@ -1971,7 +1971,7 @@
       "description": "Find 2 talisman fragments.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:50"
+        "minWave:30"
       ]
     },
     "Frag Rain": {
@@ -6806,9 +6806,7 @@
       "L4"
     ],
     "Wizard Tower": [
-      "L5",
-      "W1",
-      "Y3"
+      "L5"
     ],
     "Wraith": [
       "A4",
@@ -8766,8 +8764,7 @@
       "ReaverCount": 84,
       "ReaverMaxHP": 9,
       "ReaverMaxArmor": 6,
-      "MonstersBeforeWave12": 84,
-      "WizardTowerCount": 1
+      "MonstersBeforeWave12": 84
     },
     "W2": {
       "WaveCount": 8,
@@ -8941,8 +8938,7 @@
       "GiantMaxArmor": 85,
       "MonstersBeforeWave12": 225,
       "MarkedMonsterCount": 49,
-      "SnowCount": 1,
-      "WizardTowerCount": 1
+      "SnowCount": 1
     },
     "Y4": {
       "WaveCount": 40,

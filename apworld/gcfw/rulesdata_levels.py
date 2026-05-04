@@ -2804,7 +2804,6 @@ level_requirements = {
         "ReaverMaxHP": 9,
         "ReaverMaxArmor": 6,
         "MonstersBeforeWave12": 84,
-        "WizardTowerCount": 1,
         "requirements": [
             ["Field_W2"],
             ["Field_W3"],
@@ -3076,8 +3075,7 @@ level_requirements = {
         "GiantMaxArmor": 85,
         "MonstersBeforeWave12": 225,
         "MarkedMonsterCount": 49,
-        "SnowCount": 1,
-        "WizardTowerCount": 1,
+        "SnowCount": 1,        
         "requirements": [
             ["Field_Q5"],
             ["Field_T2"],
