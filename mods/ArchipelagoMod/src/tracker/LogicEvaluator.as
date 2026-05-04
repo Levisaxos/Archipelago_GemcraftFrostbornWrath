@@ -1207,60 +1207,6 @@ package tracker {
             "Armor Tearing", "Poison", "Slowing"
         ];
 
-        /** True if the player has access to gems on stages of the given
-         *  prefix letter. With gem pouch gating ON, a stage's available_gems
-         *  are only actually usable when the prefix's gempouch is held —
-         *  otherwise the player only has the colorless Hollow Gem. Mirrors
-         *  GemPouchSuppressor / HollowGemInjector decisions on the mod side
-         *  and `_compile_gempouch_checker` in apworld rules.py. */
-        private function _hasPouchForPrefix(prefix:String):Boolean {
-            if (AV.serverData == null || AV.serverData.serverOptions == null)
-                return true;
-            var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGranularity);
-            if (mode == 0) return true;
-            if (mode == 5) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
-            if (mode == 3 || mode == 4) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null) return true;
-                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
-                var tierOrd:Array = opts.progressiveTierOrder as Array;
-                for (var sid:String in tierMap) {
-                    if (sid.charAt(0) != prefix) continue;
-                    var st:int = int(tierMap[sid]);
-                    if (mode == 3) {
-                        if (AV.sessionData.hasItem(1601 + st)) return true;
-                    } else if (tierProgId > 0) {
-                        var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                          ? tierOrd.indexOf(st) : st;
-                        if (posT >= 0 &&
-                                AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                            return true;
-                    }
-                }
-                return false;
-            }
-            // mode == 1 (per_tile): canonical order for ID lookup.
-            // mode == 2 (per_tile_progressive): starter-first count threshold.
-            if (mode == 1) {
-                var orderD:Array = opts.gemPouchPlayOrder as Array;
-                if (orderD == null || orderD.length == 0) return true;
-                var idxD:int = orderD.indexOf(prefix);
-                if (idxD < 0) return true;
-                return AV.sessionData.hasItem(626 + idxD);
-            }
-            // mode == 2
-            var orderP:Array = opts.progressiveTileOrder as Array;
-            if (orderP == null || orderP.length == 0)
-                orderP = opts.gemPouchPlayOrder as Array;
-            if (orderP == null || orderP.length == 0) return true;
-            var idxP:int = orderP.indexOf(prefix);
-            if (idxP < 0) return true;
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0) progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idxP + 1;
-        }
-
         /** True if any in-logic stage's `availableGems` lists `gemName` AND
          *  the player has the matching prefix's gempouch (when gating is on). */
         private function _gemReachableInLogic(gemName:String):Boolean {
@@ -1272,7 +1218,7 @@ package tracker {
             var fields:Object = AV.sessionData.fieldsInLogic;
             for (var sid:String in pools) {
                 if (fields[sid] != true) continue;
-                if (sid.length == 0 || !_hasPouchForPrefix(sid.charAt(0))) continue;
+                if (sid.length == 0 || !AV.sessionData.hasPouchForPrefix(sid.charAt(0))) continue;
                 var arr:Array = pools[sid] as Array;
                 if (arr == null) continue;
                 for each (var g:String in arr) {
@@ -1289,7 +1235,7 @@ package tracker {
                 return false;
             if (stageStrId == null || stageStrId.length == 0)
                 return false;
-            if (!_hasPouchForPrefix(stageStrId.charAt(0)))
+            if (!AV.sessionData.hasPouchForPrefix(stageStrId.charAt(0)))
                 return false;
             var arr:Array = AV.serverData.stageAvailableGems[stageStrId] as Array;
             if (arr == null) return false;

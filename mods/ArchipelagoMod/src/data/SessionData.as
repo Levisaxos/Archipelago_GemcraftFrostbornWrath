@@ -105,6 +105,153 @@ package data {
             return unlockedStashesByStrId[strId] == true;
         }
 
+        /**
+         * True if the player owns the Gempouch covering this stage.
+         * Granularity-aware (matches gemPouchGranularity in slot_data):
+         *   0 (off)                   → always true
+         *   1 (per_tile)              → Gempouch (<prefix>) item present
+         *   2 (per_tile_progressive)  → N copies of Progressive Gempouch where
+         *                               N is 1-based index in progressiveTileOrder
+         *   3 (per_tier)              → Tier <N> Gempouch item present
+         *   4 (per_tier_progressive)  → N copies of Progressive Gempouch (per-tier)
+         *                               where N is 1-based index in progressiveTierOrder
+         *   5 (global)                → Master Gempouch item present
+         * Returns true on any unknown configuration so a misconfigured seed
+         * never deadlocks the player.
+         */
+        public function hasPouchForStage(stageStrId:String):Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return true;
+            var opts:* = AV.serverData.serverOptions;
+            var mode:int = int(opts.gemPouchGranularity);
+            var prefix:String = stageStrId.charAt(0);
+
+            if (mode == 1) {
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0)
+                    return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0)
+                    return true;
+                return hasItem(626 + idxD);
+            }
+            if (mode == 2) {
+                var orderP:Array = opts.progressiveTileOrder as Array;
+                if (orderP == null || orderP.length == 0)
+                    orderP = opts.gemPouchPlayOrder as Array;
+                if (orderP == null || orderP.length == 0)
+                    return true;
+                var idxP:int = orderP.indexOf(prefix);
+                if (idxP < 0)
+                    return true;
+                var progId:int = int(opts.gemPouchProgressiveId);
+                if (progId <= 0)
+                    progId = 652;
+                return getItemCount(progId) >= idxP + 1;
+            }
+            if (mode == 3) {
+                var tier:int = _tierForStage(stageStrId);
+                if (tier < 0)
+                    return true;
+                return hasItem(1601 + tier);
+            }
+            if (mode == 4) {
+                var tier4:int = _tierForStage(stageStrId);
+                if (tier4 < 0)
+                    return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                if (tierProgId <= 0)
+                    return true;
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
+                if (tierOrd != null && tierOrd.length > 0) {
+                    var posT:int = tierOrd.indexOf(tier4);
+                    if (posT < 0)
+                        return true;
+                    return getItemCount(tierProgId) >= posT + 1;
+                }
+                return getItemCount(tierProgId) >= tier4 + 1;
+            }
+            if (mode == 5) {
+                return hasItem(1614);
+            }
+            return true;
+        }
+
+        private function _tierForStage(stageStrId:String):int {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return -1;
+            var map:Object = AV.serverData.serverOptions.stageTierByStrId;
+            if (map == null || map[stageStrId] == null)
+                return -1;
+            return int(map[stageStrId]);
+        }
+
+        /**
+         * True if the player owns ANY Gempouch covering the given tile prefix
+         * letter ("W", "S", ...). Used by tracker/logic evaluators that work
+         * on tile sets rather than specific stages.
+         *
+         * Differs from hasPouchForStage for per-tier modes (3, 4): iterates
+         * every stage with this prefix and OR's the per-tier checks — owning
+         * the tier-pouch for any one of the prefix's stages counts as
+         * covering the prefix.
+         */
+        public function hasPouchForPrefix(prefix:String):Boolean {
+            if (prefix == null || prefix.length == 0)
+                return true;
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return true;
+            var opts:* = AV.serverData.serverOptions;
+            var mode:int = int(opts.gemPouchGranularity);
+            if (mode == 0)
+                return true;
+            if (mode == 5)
+                return hasItem(1614);
+            if (mode == 3 || mode == 4) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null)
+                    return true;
+                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
+                var tierOrd:Array = opts.progressiveTierOrder as Array;
+                for (var sid:String in tierMap) {
+                    if (sid.charAt(0) != prefix)
+                        continue;
+                    var st:int = int(tierMap[sid]);
+                    if (mode == 3) {
+                        if (hasItem(1601 + st))
+                            return true;
+                    } else if (tierProgId > 0) {
+                        var posT:int = (tierOrd != null && tierOrd.length > 0)
+                                          ? tierOrd.indexOf(st) : st;
+                        if (posT >= 0 && getItemCount(tierProgId) >= posT + 1)
+                            return true;
+                    }
+                }
+                return false;
+            }
+            if (mode == 1) {
+                var orderD:Array = opts.gemPouchPlayOrder as Array;
+                if (orderD == null || orderD.length == 0)
+                    return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0)
+                    return true;
+                return hasItem(626 + idxD);
+            }
+            var orderP:Array = opts.progressiveTileOrder as Array;
+            if (orderP == null || orderP.length == 0)
+                orderP = opts.gemPouchPlayOrder as Array;
+            if (orderP == null || orderP.length == 0)
+                return true;
+            var idxP:int = orderP.indexOf(prefix);
+            if (idxP < 0)
+                return true;
+            var progId:int = int(opts.gemPouchProgressiveId);
+            if (progId <= 0)
+                progId = 652;
+            return getItemCount(progId) >= idxP + 1;
+        }
+
         // -----------------------------------------------------------------------
         // Item tracking
 

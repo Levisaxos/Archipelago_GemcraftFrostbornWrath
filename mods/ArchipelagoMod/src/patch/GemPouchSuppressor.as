@@ -115,85 +115,13 @@ package patch {
             if (stageStrId == null || stageStrId.length == 0)
                 return false;
 
-            var suppress:Boolean = !_hasPouchFor(stageStrId);
+            var suppress:Boolean = !AV.sessionData.hasPouchForStage(stageStrId);
             _lockedSuppress = suppress ? 1 : 0;
             return suppress;
         }
 
         // -----------------------------------------------------------------------
         // Helpers
-
-        /** True when the player owns the pouch (or precollected copy) that
-         *  unlocks gems for the given stage. Granularity-aware:
-         *    mode 1 (per_tile):             Gempouch (<prefix>) item present
-         *    mode 2 (per_tile_progressive): N copies of Progressive Gempouch
-         *    mode 3 (per_tier):             Tier <N> Gempouch item present
-         *    mode 4 (per_tier_progressive): N+1 copies of Progressive
-         *                                    Gempouch (per-tier) where N is
-         *                                    the stage's tier in ACTIVE_TIERS
-         *    mode 5 (global):               Master Gempouch item present
-         */
-        private function _hasPouchFor(stageStrId:String):Boolean {
-            var opts:* = AV.serverData.serverOptions;
-            var mode:int = int(opts.gemPouchGranularity);
-            var prefix:String = stageStrId.charAt(0);
-
-            if (mode == 1) {
-                // per_tile (distinct): canonical ID assignment via gemPouchPlayOrder.
-                var orderD:Array = opts.gemPouchPlayOrder as Array;
-                if (orderD == null || orderD.length == 0) return true;
-                var idxD:int = orderD.indexOf(prefix);
-                if (idxD < 0) return true;
-                return AV.sessionData.hasItem(626 + idxD);
-            }
-            if (mode == 2) {
-                // per_tile_progressive: starter-first count threshold.
-                var orderP:Array = opts.progressiveTileOrder as Array;
-                if (orderP == null || orderP.length == 0)
-                    orderP = opts.gemPouchPlayOrder as Array;
-                if (orderP == null || orderP.length == 0) return true;
-                var idxP:int = orderP.indexOf(prefix);
-                if (idxP < 0) return true;
-                var progId:int = int(opts.gemPouchProgressiveId);
-                if (progId <= 0) progId = 652;
-                return AV.sessionData.getItemCount(progId) >= idxP + 1;
-            }
-            if (mode == 3) {
-                // per_tier: AP id 1601 + tier (see gating.py POUCH_TIER_BASE).
-                var tier:int = _tierForStage(stageStrId);
-                if (tier < 0) return true;
-                return AV.sessionData.hasItem(1601 + tier);
-            }
-            if (mode == 4) {
-                // per_tier_progressive: Nth copy unlocks Nth tier in
-                // progressiveTierOrder (starter's tier first).
-                var tier4:int = _tierForStage(stageStrId);
-                if (tier4 < 0) return true;
-                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
-                if (tierProgId <= 0) return true;
-                var tierOrd:Array = opts.progressiveTierOrder as Array;
-                if (tierOrd != null && tierOrd.length > 0) {
-                    var posT:int = tierOrd.indexOf(tier4);
-                    if (posT < 0) return true;
-                    return AV.sessionData.getItemCount(tierProgId) >= posT + 1;
-                }
-                // Fallback to natural ascending.
-                return AV.sessionData.getItemCount(tierProgId) >= tier4 + 1;
-            }
-            if (mode == 5) {
-                // global: AP id 1614 (see gating.py POUCH_MASTER_ID).
-                return AV.sessionData.hasItem(1614);
-            }
-            return true;
-        }
-
-        /** Look up a stage's tier from slot_data; -1 if unknown. */
-        private function _tierForStage(stageStrId:String):int {
-            var map:Object = AV.serverData.serverOptions.stageTierByStrId;
-            if (map == null || map[stageStrId] == null)
-                return -1;
-            return int(map[stageStrId]);
-        }
 
         /** Wipe availableGemTypes and remove all 6 gem-create buttons.
          *  Returns the number of gem types that were present before wiping. */

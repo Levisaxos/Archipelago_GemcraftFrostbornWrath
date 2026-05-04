@@ -249,7 +249,7 @@ package tracker {
                     if (pouchPrefix == null)
                         continue;
                     pouchPrefix = _trimAS(pouchPrefix);
-                    out.push(["Gempouch (" + pouchPrefix + ")", _pouchHeld(pouchPrefix)]);
+                    out.push(["Gempouch (" + pouchPrefix + ")", AV.sessionData.hasPouchForPrefix(pouchPrefix)]);
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -531,7 +531,7 @@ package tracker {
                     if (pouchPrefix == null)
                         continue;
                     pouchPrefix = _trimAS(pouchPrefix);
-                    if (!_pouchHeld(pouchPrefix))
+                    if (!AV.sessionData.hasPouchForPrefix(pouchPrefix))
                         missing.push("Gempouch (" + pouchPrefix + ")");
                     continue;
                 }
@@ -734,7 +734,7 @@ package tracker {
             // the pouch arrives and normal rules take over.
             if (_freeStages[strId] == true && pouchMode != 0
                     && strId != null && strId.length > 0
-                    && !_pouchHeld(strId.charAt(0))) {
+                    && !AV.sessionData.hasPouchForPrefix(strId.charAt(0))) {
                 return true;
             }
             for each (var skillName:String in required) {
@@ -753,7 +753,7 @@ package tracker {
                     if (pouchPrefix == null)
                         continue;
                     pouchPrefix = _trimAS(pouchPrefix);
-                    if (!_pouchHeld(pouchPrefix)) return false;
+                    if (!AV.sessionData.hasPouchForPrefix(pouchPrefix)) return false;
                     continue;
                 }
                 var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
@@ -771,55 +771,6 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             return int(AV.serverData.serverOptions.gemPouchGranularity);
-        }
-
-        // True when the player owns the pouch covering the given stage-prefix
-        // letter under the current granularity. Fails open on unknown prefixes.
-        private function _pouchHeld(prefix:String):Boolean {
-            if (prefix == null || prefix.length == 0) return true;
-            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-            if (opts == null) return true;
-            var mode:int = int(opts.gemPouchGranularity);
-            if (mode == 0) return true;
-            if (mode == 5) return AV.sessionData.hasItem(1614);
-            if (mode == 3 || mode == 4) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null) return true;
-                var tierProgId:int = int(opts.gemPouchPerTierProgressiveId);
-                var tierOrd:Array = opts.progressiveTierOrder as Array;
-                for (var sid:String in tierMap) {
-                    if (sid.charAt(0) != prefix) continue;
-                    var st:int = int(tierMap[sid]);
-                    if (mode == 3) {
-                        if (AV.sessionData.hasItem(1601 + st)) return true;
-                    } else if (tierProgId > 0) {
-                        var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                          ? tierOrd.indexOf(st) : st;
-                        if (posT >= 0 &&
-                                AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                            return true;
-                    }
-                }
-                return false;
-            }
-            if (mode == 1) {
-                // per_tile (distinct): canonical order for ID lookup.
-                var orderD:Array = opts.gemPouchPlayOrder as Array;
-                if (orderD == null || orderD.length == 0) return true;
-                var idxD:int = orderD.indexOf(prefix);
-                if (idxD < 0) return true;
-                return AV.sessionData.hasItem(626 + idxD);
-            }
-            // mode == 2: per_tile_progressive — starter-first count threshold.
-            var orderP:Array = opts.progressiveTileOrder as Array;
-            if (orderP == null || orderP.length == 0)
-                orderP = opts.gemPouchPlayOrder as Array;
-            if (orderP == null || orderP.length == 0) return true;
-            var idxP:int = orderP.indexOf(prefix);
-            if (idxP < 0) return true;
-            var progId:int = int(opts.gemPouchProgressiveId);
-            if (progId <= 0) progId = 652;
-            return AV.sessionData.getItemCount(progId) >= idxP + 1;
         }
 
         // Local trim to avoid pulling in a tracker dependency.
