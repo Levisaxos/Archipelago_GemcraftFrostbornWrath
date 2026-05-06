@@ -206,6 +206,17 @@ package patch {
                 var strId:String = String(core.stageMeta.strId);
                 var stageId:int  = int(core.stageMeta.id);
 
+                // Stage changed (entered a new level). Vanilla rebuilt
+                // core.wizardStashes from scratch, so our hidden-stash cache
+                // is stale. Drop it now — otherwise _restoreHiddenStashes()
+                // in the unlocked branch below would push a previous stage's
+                // WizardStash references into the current stage's targeting
+                // array and corrupt tower target selection.
+                if (_hiddenStashesStageId != -1 && _hiddenStashesStageId != stageId) {
+                    _hiddenStashes.length = 0;
+                    _hiddenStashesStageId = -1;
+                }
+
                 // Stash is "unlocked" only when both gates pass: key collected
                 // AND the same per-stage logic gate that governs the stage's
                 // Journey location (prereq stages + WIZLOCK skills + talisman
@@ -225,14 +236,6 @@ package patch {
                     _restoreSpikedShields(core);
                     _restoreHiddenStashes(core);
                     return;
-                }
-
-                // Stage changed (entered a new level). Vanilla rebuilt
-                // core.wizardStashes from scratch, so our hidden-stash cache
-                // is stale.
-                if (_hiddenStashesStageId != -1 && _hiddenStashesStageId != stageId) {
-                    _hiddenStashes.length = 0;
-                    _hiddenStashesStageId = -1;
                 }
 
                 var areaM:* = core.buildingAreaMatrix;

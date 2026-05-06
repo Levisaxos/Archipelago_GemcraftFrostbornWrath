@@ -12,6 +12,7 @@ from .locations import GCFWLocation, location_table
 from .options import (
     GCFWOptions,
     FieldTokenPlacement,
+    ProgressionBias,
     Goal,
     XpTomeBonus,
     DeathLinkPunishment,
@@ -257,6 +258,7 @@ class GemcraftFrostbornWrathWorld(World):
             StashKeyGranularity,
             GemPouchGranularity,
             FieldTokenPlacement,
+            ProgressionBias,
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
@@ -282,11 +284,69 @@ class GemcraftFrostbornWrathWorld(World):
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+    def _bias_fraction(self) -> float:
+        bias = self.options.progression_bias.value
+        if bias == ProgressionBias.option_soft:
+            return 0.5
+        if bias == ProgressionBias.option_strong:
+            return 0.85
+        return 0.0
+
+    def _apply_progression_bias(self, include_tokens: bool, include_skills: bool) -> None:
+        """Pre-place a fraction of (tokens + skills) onto the player's own
+        Journey/Stash locations to bias them away from achievements.
+        Items that cannot be placed (access rules) are returned to the main pool."""
+        from Fill import fill_restrictive
+
+        fraction = self._bias_fraction()
+        if fraction <= 0.0:
+            return
+
+        candidates = []
+        for item in self.multiworld.itempool:
+            if item.player != self.player:
+                continue
+            if include_tokens and item.name.endswith(" Field Token"):
+                candidates.append(item)
+            elif include_skills and item.name.endswith(" Skill"):
+                candidates.append(item)
+        if not candidates:
+            return
+
+        journey_stash_locs = [
+            loc for loc in self.multiworld.get_unfilled_locations(self.player)
+            if loc.name.startswith("Complete ")
+        ]
+        if not journey_stash_locs:
+            return
+
+        self.multiworld.random.shuffle(candidates)
+        self.multiworld.random.shuffle(journey_stash_locs)
+        sample_size = max(1, int(len(candidates) * fraction))
+        biased_items = candidates[:sample_size]
+        for it in biased_items:
+            self.multiworld.itempool.remove(it)
+
+        state = self.multiworld.get_all_state(use_cache=False)
+        fill_restrictive(self.multiworld, state, journey_stash_locs, biased_items,
+                         lock=True, allow_partial=True)
+        # Any items left in biased_items were not placed — return them to the pool.
+        if biased_items:
+            self.multiworld.itempool.extend(biased_items)
+
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
             from Fill import FillError, fill_restrictive
 
             placement = self.options.field_token_placement.value
+
+            # Apply progression bias before token placement.
+            # different_world tokens are placed into other players' worlds in
+            # stage_pre_fill; bias only their skills here. For own_world / any_world,
+            # bias both tokens and skills.
+            include_tokens = placement != FieldTokenPlacement.option_different_world
+            self._apply_progression_bias(include_tokens=include_tokens, include_skills=True)
+
             if placement != FieldTokenPlacement.option_own_world:
                 return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 

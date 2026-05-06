@@ -239,7 +239,7 @@
       "required_effort": "Major",
       "requirements": [
         "eShrine",
-        "minMonsters:460",
+        "minMonsters:920",
         "talismanRow:2"
       ],
       "details": "Kill 460 banished monsters with shrines."
@@ -335,7 +335,7 @@
       "description": "Deliver 1.200 banishments with your orb.",
       "required_effort": "Major",
       "requirements": [
-        "minMonsters:1200",
+        "minMonsters:2400",
         "talismanRow:1"
       ]
     },
@@ -410,11 +410,11 @@
       "required_effort": "Extreme",
       "requirements": [
         [
-          "minMonsters:790",
+          "minMonsters:1580",
           "talismanRow:2"
         ],
         [
-          "minMonsters:790",
+          "minMonsters:1580",
           "talismanColumn:2"
         ]
       ],
@@ -719,13 +719,7 @@
       "description": "Destroy 8 beacons before wave 8.",
       "required_effort": "Trivial",
       "requirements": [
-        [
-          "tDarkMasonry",
-          "minWave:10"
-        ],
-        [
-          "eBeacon:8"
-        ]
+        "eBeacon:8"
       ],
       "details": "Destroy 8 beacons before wave 8 starts."
     },
@@ -1027,7 +1021,7 @@
       "description": "Kill 190 banished monsters.",
       "required_effort": "Trivial",
       "requirements": [
-        "minMonsters:190"
+        "minMonsters:380"
       ]
     },
     "Come Out": {
@@ -1092,7 +1086,7 @@
       "description": "Find 20 shadow cores.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:16"
+        "minWave:22"
       ]
     },
     "Core Pile": {
@@ -1207,7 +1201,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "sBolt",
-        "sTraps",
+        "eTraps",
         "minWave:40"
       ]
     },
@@ -1668,7 +1662,7 @@
       "description": "Kill 12 monsters with gems in traps.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps"
+        "eTraps"
       ]
     },
     "Enter The Gate": {
@@ -2187,7 +2181,7 @@
       "description": "Drop 48 gem bombs on beacons.",
       "required_effort": "Trivial",
       "requirements": [
-        "eBeacon:1"
+        "eBeacon:4"
       ],
       "details": "Throw 48 gem bombs at beacons in one battle."
     },
@@ -2330,7 +2324,7 @@
       "description": "Demolish a trap.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps",
+        "eTraps",
         "sDemolition"
       ],
       "details": "Demolish a trap."
@@ -2802,7 +2796,12 @@
       "description": "Kill 100 monsters while time is frozen.",
       "required_effort": "Trivial",
       "requirements": [
-        "sFreeze"
+        [
+          "eShrine"
+        ],
+        [
+          "fieldToken:5"
+        ]
       ],
       "details": "Kill 100 monsters during a single time-frozen window."
     },
@@ -3781,7 +3780,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "eShrine",
-        "minMonsters:60"
+        "minMonsters:120"
       ]
     },
     "No Need to Aim": {
@@ -4598,7 +4597,7 @@
       "requirements": [
         "sManaLeech",
         "minGemGrade:1",
-        "sTraps"
+        "eTraps"
       ]
     },
     "Riding the Waves": {
@@ -4619,7 +4618,7 @@
       "requirements": [
         "tRitual",
         "eWraith",
-        "minMonsters:150"
+        "minMonsters:300"
       ],
       "details": "Banish 150 monsters with at least 2 wraiths alive."
     },
@@ -4668,7 +4667,7 @@
       "description": "Kill 60 monsters with gems in traps.",
       "required_effort": "Minor",
       "requirements": [
-        "sTraps"
+        "eTraps"
       ]
     },
     "Round Cut": {
@@ -4761,7 +4760,7 @@
       "required_effort": "Extreme",
       "requirements": [
         "eShrine",
-        "minMonsters:660"
+        "minMonsters:1320"
       ],
       "details": "Kill 660 banished monsters with shrines."
     },
@@ -4853,7 +4852,7 @@
       "description": "Enhance a gem in a trap.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps",
+        "eTraps",
         "enhancementSpells:1"
       ],
       "details": "Cast Bolt/Beam/Barrage on a gem that's inside a trap."
@@ -5247,9 +5246,10 @@
       "game_id": 615,
       "description": "Full of oxygen",
       "required_effort": "Trivial",
-      "requirements": [],
-      "details": "Pokemon Magikarp reference. In-game trigger (IngameAchiChecker6.as case 615): fill all 9 inventory slots with pure Slowing gems. Inventory state isn't reliably gateable by AP logic, so kept untrackable.",
-      "untrackable": true
+      "requirements": [
+        "sSlowing"
+      ],
+      "details": "Fill all 9 inventory slots with pure Slowing gems."
     },
     "Starter Pack": {
       "apId": 2509,
@@ -5336,7 +5336,7 @@
       "description": "Deliver 100 banishments with your orb.",
       "required_effort": "Trivial",
       "requirements": [
-        "minMonsters:100"
+        "minMonsters:200"
       ],
       "details": "Banish 100 monsters using the orb (orb gem with banishment effect)."
     },
@@ -5366,7 +5366,9 @@
       "game_id": 203,
       "description": "Deliver gem bomb and wasp kills only.",
       "required_effort": "Trivial",
-      "requirements": [],
+      "requirements": [
+        "fieldToken:10"
+      ],
       "details": "In one battle, all kills come from gem bombs and wasps only."
     },
     "Stockpile": {
@@ -5452,7 +5454,7 @@
       "description": "Hit the same monster with traps 100 times.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps",
+        "eTraps",
         "fieldToken:20"
       ],
       "details": "Hit the same monster with traps 100 times."
@@ -5689,7 +5691,7 @@
       "description": "Kill 590 banished monsters.",
       "required_effort": "Major",
       "requirements": [
-        "minMonsters:590",
+        "minMonsters:1080",
         "fieldToken:40"
       ],
       "details": "Kill 590 banished monsters."
@@ -5751,7 +5753,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "sFreeze",
-        "sTraps"
+        "eTraps"
       ],
       "details": "Kill 20 frozen monsters with traps."
     },
@@ -5781,7 +5783,7 @@
       "description": "Deliver 400 banishments with your orb.",
       "required_effort": "Minor",
       "requirements": [
-        "minMonsters:400"
+        "minMonsters:800"
       ],
       "details": "Banish 400 monsters using the orb."
     },
@@ -5821,7 +5823,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "sSlowing",
-        "minMonsters:90"
+        "minMonsters:90",
+        "fieldToken:15"
       ],
       "details": "Have 90 monsters slowed at the same instant."
     },
@@ -5945,7 +5948,7 @@
       "description": "And it's bloody too",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps"
+        "eTraps"
       ],
       "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
       "untrackable": true
@@ -6467,7 +6470,7 @@
       "required_effort": "Major",
       "requirements": [
         "eShrine",
-        "minMonsters:260"
+        "minMonsters:520"
       ],
       "details": "Kill 260 banished monsters with shrines."
     },
@@ -6552,6 +6555,19 @@
       "X3",
       "Z4"
     ],
+    "Amplifier": [
+      "G4",
+      "J3",
+      "M3",
+      "N5",
+      "O4",
+      "Q2",
+      "R1",
+      "R6",
+      "T2",
+      "V4",
+      "X3"
+    ],
     "Apparition": [
       "Q1",
       "R6"
@@ -6634,6 +6650,20 @@
       "X1",
       "X2"
     ],
+    "Lantern": [
+      "C5",
+      "E1",
+      "J2",
+      "K1",
+      "M3",
+      "P2",
+      "Q2",
+      "Q4",
+      "R1",
+      "X3",
+      "X4",
+      "Y2"
+    ],
     "Mana Shard": [
       "C2",
       "E4",
@@ -6696,6 +6726,18 @@
     "Obelisk": [
       "A4",
       "C4"
+    ],
+    "Pylon": [
+      "E1",
+      "G1",
+      "N5",
+      "O4",
+      "Q3",
+      "R4",
+      "R5",
+      "X2",
+      "X4",
+      "Y2"
     ],
     "Rain": [
       "F2",
@@ -6798,6 +6840,13 @@
       "I2",
       "J3",
       "M3"
+    ],
+    "Trap": [
+      "Q5",
+      "R2",
+      "S1",
+      "S3",
+      "S4"
     ],
     "Watchtower": [
       "K1"
@@ -7127,6 +7176,7 @@
       "GiantMaxArmor": 2171,
       "MonstersBeforeWave12": 232,
       "MarkedMonsterCount": 156,
+      "LanternCount": 4,
       "ShadowCount": 1
     },
     "D1": {
@@ -7238,7 +7288,9 @@
       "GiantMaxArmor": 721,
       "MonstersBeforeWave12": 136,
       "MarkedMonsterCount": 49,
-      "BarricadeCount": 10
+      "BarricadeCount": 10,
+      "LanternCount": 4,
+      "PylonCount": 2
     },
     "E2": {
       "WaveCount": 62,
@@ -7437,7 +7489,8 @@
       "GiantMaxHP": 34701,
       "GiantMaxArmor": 323,
       "MonstersBeforeWave12": 219,
-      "MarkedMonsterCount": 48
+      "MarkedMonsterCount": 48,
+      "PylonCount": 4
     },
     "G2": {
       "WaveCount": 52,
@@ -7492,7 +7545,8 @@
       "GiantCount": 59,
       "GiantMaxHP": 59858,
       "GiantMaxArmor": 415,
-      "MonstersBeforeWave12": 146
+      "MonstersBeforeWave12": 146,
+      "AmplifierCount": 4
     },
     "H1": {
       "WaveCount": 64,
@@ -7698,6 +7752,7 @@
       "MarkedMonsterCount": 77,
       "AbandonedDwellingCount": 1,
       "DropHolderCount": 3,
+      "LanternCount": 4,
       "ManaShardCount": 4,
       "RainCount": 1,
       "ShrineCount": 1
@@ -7719,6 +7774,7 @@
       "GiantMaxArmor": 600,
       "MonstersBeforeWave12": 275,
       "MarkedMonsterCount": 62,
+      "AmplifierCount": 4,
       "RainCount": 1,
       "TombCount": 1
     },
@@ -7761,6 +7817,7 @@
       "GiantMaxArmor": 267,
       "MonstersBeforeWave12": 155,
       "MarkedMonsterCount": 33,
+      "LanternCount": 4,
       "WatchtowerCount": 1
     },
     "K2": {
@@ -7997,8 +8054,10 @@
       "MonstersBeforeWave12": 207,
       "MarkedMonsterCount": 22,
       "AbandonedDwellingCount": 2,
+      "AmplifierCount": 2,
       "BarricadeCount": 7,
       "DropHolderCount": 1,
+      "LanternCount": 2,
       "ManaShardCount": 2,
       "RainCount": 1,
       "TombCount": 2
@@ -8121,6 +8180,8 @@
       "GiantMaxHP": 117501,
       "GiantMaxArmor": 606,
       "MonstersBeforeWave12": 231,
+      "AmplifierCount": 1,
+      "PylonCount": 1,
       "RainCount": 1
     },
     "O1": {
@@ -8201,9 +8262,11 @@
       "GiantMaxArmor": 95,
       "MonstersBeforeWave12": 134,
       "AbandonedDwellingCount": 6,
+      "AmplifierCount": 1,
       "BarricadeCount": 9,
       "DropHolderCount": 2,
       "MonsterNestCount": 4,
+      "PylonCount": 1,
       "RainCount": 1
     },
     "P1": {
@@ -8242,6 +8305,7 @@
       "GiantMaxArmor": 152,
       "MonstersBeforeWave12": 141,
       "BeaconCount": 1,
+      "LanternCount": 3,
       "MonsterNestCount": 1,
       "RainCount": 1
     },
@@ -8341,7 +8405,9 @@
       "SwarmlingMaxHP": 43,
       "SwarmlingMaxArmor": 23,
       "MonstersBeforeWave12": 152,
-      "BarricadeCount": 6
+      "AmplifierCount": 1,
+      "BarricadeCount": 6,
+      "LanternCount": 1
     },
     "Q3": {
       "WaveCount": 24,
@@ -8358,7 +8424,8 @@
       "GiantCount": 5,
       "GiantMaxHP": 2530,
       "GiantMaxArmor": 54,
-      "MonstersBeforeWave12": 166
+      "MonstersBeforeWave12": 166,
+      "PylonCount": 1
     },
     "Q4": {
       "WaveCount": 26,
@@ -8379,6 +8446,7 @@
       "AbandonedDwellingCount": 5,
       "BarricadeCount": 4,
       "DropHolderCount": 3,
+      "LanternCount": 2,
       "RainCount": 1,
       "SnowCount": 1
     },
@@ -8399,7 +8467,8 @@
       "GiantMaxArmor": 44,
       "MonstersBeforeWave12": 151,
       "MarkedMonsterCount": 12,
-      "BarricadeCount": 11
+      "BarricadeCount": 11,
+      "TrapCount": 4
     },
     "R1": {
       "WaveCount": 22,
@@ -8413,7 +8482,9 @@
       "SwarmlingMaxHP": 39,
       "SwarmlingMaxArmor": 8,
       "MonstersBeforeWave12": 174,
-      "BarricadeCount": 11
+      "AmplifierCount": 1,
+      "BarricadeCount": 11,
+      "LanternCount": 2
     },
     "R2": {
       "WaveCount": 22,
@@ -8426,7 +8497,8 @@
       "SwarmlingCount": 207,
       "SwarmlingMaxHP": 39,
       "SwarmlingMaxArmor": 17,
-      "MonstersBeforeWave12": 205
+      "MonstersBeforeWave12": 205,
+      "TrapCount": 4
     },
     "R3": {
       "WaveCount": 30,
@@ -8466,6 +8538,7 @@
       "MonstersBeforeWave12": 169,
       "MarkedMonsterCount": 11,
       "AbandonedDwellingCount": 2,
+      "PylonCount": 2,
       "ShrineCount": 1
     },
     "R5": {
@@ -8484,7 +8557,8 @@
       "GiantMaxHP": 6253,
       "GiantMaxArmor": 89,
       "MonstersBeforeWave12": 144,
-      "MarkedMonsterCount": 15
+      "MarkedMonsterCount": 15,
+      "PylonCount": 4
     },
     "R6": {
       "WaveCount": 36,
@@ -8503,6 +8577,7 @@
       "GiantMaxArmor": 167,
       "MonstersBeforeWave12": 169,
       "AbandonedDwellingCount": 2,
+      "AmplifierCount": 6,
       "ApparitionCount": 1,
       "MonsterNestCount": 3,
       "RainCount": 1
@@ -8515,7 +8590,8 @@
       "ReaverMaxHP": 44,
       "ReaverMaxArmor": 10,
       "MonstersBeforeWave12": 137,
-      "MonsterNestCount": 1
+      "MonsterNestCount": 1,
+      "TrapCount": 4
     },
     "S2": {
       "WaveCount": 16,
@@ -8537,7 +8613,8 @@
       "ReaverMaxHP": 44,
       "ReaverMaxArmor": 10,
       "MonstersBeforeWave12": 133,
-      "MonsterNestCount": 1
+      "MonsterNestCount": 1,
+      "TrapCount": 3
     },
     "S4": {
       "WaveCount": 20,
@@ -8551,7 +8628,8 @@
       "SwarmlingMaxHP": 31,
       "SwarmlingMaxArmor": 14,
       "MonstersBeforeWave12": 135,
-      "BeaconCount": 1
+      "BeaconCount": 1,
+      "TrapCount": 6
     },
     "T1": {
       "WaveCount": 26,
@@ -8586,6 +8664,7 @@
       "GiantMaxHP": 3910,
       "GiantMaxArmor": 55,
       "MonstersBeforeWave12": 147,
+      "AmplifierCount": 3,
       "SnowCount": 1
     },
     "T3": {
@@ -8755,7 +8834,8 @@
       "SwarmlingCount": 255,
       "SwarmlingMaxHP": 43,
       "SwarmlingMaxArmor": 17,
-      "MonstersBeforeWave12": 197
+      "MonstersBeforeWave12": 197,
+      "AmplifierCount": 7
     },
     "W1": {
       "WaveCount": 6,
@@ -8835,6 +8915,7 @@
       "AbandonedDwellingCount": 6,
       "DropHolderCount": 1,
       "JarOfWaspsCount": 3,
+      "PylonCount": 1,
       "SnowCount": 1
     },
     "X3": {
@@ -8855,7 +8936,9 @@
       "MonstersBeforeWave12": 229,
       "MarkedMonsterCount": 29,
       "AbandonedDwellingCount": 5,
+      "AmplifierCount": 1,
       "BarricadeCount": 5,
+      "LanternCount": 1,
       "ManaShardCount": 1,
       "MonsterNestCount": 1,
       "SnowCount": 1
@@ -8878,7 +8961,9 @@
       "MonstersBeforeWave12": 121,
       "MarkedMonsterCount": 5,
       "BeaconCount": 4,
+      "LanternCount": 1,
       "ManaShardCount": 3,
+      "PylonCount": 1,
       "SnowCount": 1,
       "WraithCount": 1
     },
@@ -8918,7 +9003,9 @@
       "GiantMaxArmor": 64,
       "MonstersBeforeWave12": 199,
       "BarricadeCount": 6,
+      "LanternCount": 1,
       "ManaShardCount": 1,
+      "PylonCount": 2,
       "SnowCount": 1
     },
     "Y3": {

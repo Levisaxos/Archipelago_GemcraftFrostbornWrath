@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List
 
 from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
 from .requirement_tokens import (
-    item_prefix_map, element_prefix_map,
+    item_prefix_map, element_prefix_map, skill_prefix_map,
     mode_tokens, level_stat_counters, skill_counter_pools,
 )
 from .rulesdata_goals import goal_requirements
@@ -511,35 +511,19 @@ def _count_gem_skills_broadened(state, player: int) -> int:
     return n
 
 
-# Building-skill broadening: a bare `sTraps` / `sLanterns` / `sPylons` /
-# `sAmplifiers` token passes if the player owns the AP skill item OR can
-# reach a stage that hosts the matching pre-placed building (and holds the
-# stage's gempouch — gems are required to charge these structures).  Per-
-# stage building counts come from `rulesdata_levels.py`, populated by
-# `extract_level_gems_and_elements.py` from the decompiled stage data.
-_BUILDING_TOKEN_TO_FIELD: dict = {
-    "sTraps":      "TrapCount",
-    "sLanterns":   "LanternCount",
-    "sPylons":     "PylonCount",
-    "sAmplifiers": "AmplifierCount",
+# Building-element broadening: bare `eTraps` / `eLanterns` / `ePylons` /
+# `eAmplifiers` tokens pass if the player owns the matching skill item
+# (lets them build the element on any reachable stage) OR can reach a
+# stage that already hosts the pre-placed building.  Strict `sTraps`
+# etc. still mean "Traps Skill held"; achievements that genuinely need
+# the player to *build* a trap (Sparse Snares / Entrenched / etc.) keep
+# the strict s-form.
+_BUILDING_ELEMENT_TO_SKILL_ITEM: dict = {
+    "eTraps":      skill_prefix_map["sTraps"],
+    "eLanterns":   skill_prefix_map["sLanterns"],
+    "ePylons":     skill_prefix_map["sPylons"],
+    "eAmplifiers": skill_prefix_map["sAmplifiers"],
 }
-
-# Field name -> stage str_ids whose <field> > 0.
-_STAGES_BY_BUILDING: dict = {
-    field: [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) > 0]
-    for field in set(_BUILDING_TOKEN_TO_FIELD.values())
-}
-
-
-def _has_building_token(req: str, state, player: int) -> bool:
-    """Broadened evaluator for building-skill `s*` tokens (sTraps etc.)."""
-    item_name = item_prefix_map.get(req)
-    if item_name and state.has(item_name, player):
-        return True
-    field = _BUILDING_TOKEN_TO_FIELD.get(req)
-    if field is None:
-        return False
-    return _can_reach_any_stage(state, player, _STAGES_BY_BUILDING.get(field, []))
 
 
 def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
@@ -759,15 +743,12 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         # Direct AP-item check.  Map values are full item names ("Bolt
         # Skill" / "Haste Battle Trait") so no string construction here.
         # Gem-skill `sX` tokens broaden to also pass when a stage with
-        # the matching starter gem is reachable; building-skill `sTraps`
-        # / `sLanterns` / `sPylons` / `sAmplifiers` broaden the same way
-        # for stages that host the pre-placed building.
+        # the matching starter gem is reachable.  Building skills (sTraps
+        # etc.) stay strict — achievements that need pre-placed traps to
+        # count use the lenient `eTraps` form instead.
         item_name = item_prefix_map[req]
         if req in _GEM_TOKEN_TO_GEM_NAME:
             if not _has_gem_token(req, state, player):
-                return False
-        elif req in _BUILDING_TOKEN_TO_FIELD:
-            if not _has_building_token(req, state, player):
                 return False
         elif not state.has(item_name, player):
             return False
@@ -782,6 +763,12 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     if req in element_prefix_map:
         # Element/group/weather token (single-element lists for `eBeacon`,
         # multi-element list for `eNonMonsters`). Reachable if any member is.
+        # Building elements (eTraps / eLanterns / ePylons / eAmplifiers)
+        # also pass when the player holds the matching skill — they can
+        # build the element on any reachable stage.
+        skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
+        if skill_item is not None and state.has(skill_item, player):
+            return True
         return any(_eval_element_reachable(n, state, player)
                    for n in element_prefix_map[req])
 
@@ -1009,24 +996,6 @@ def _compile_gem_broadened(world, gem_name: str):
     return _check
 
 
-def _compile_building_broadened(world, field: str):
-    """Compile a broadened building-availability checker:
-    True iff some stage with <field> > 0 is in-logic AND the player owns
-    that stage's gempouch (gems are required to charge the building).
-    Mirrors `_compile_gem_broadened`; the only difference is the source
-    list of stages — pre-placed buildings rather than starter-pouch gems.
-    """
-    stages = _STAGES_BY_BUILDING.get(field, [])
-    pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in stages]
-    player = world.player
-    def _check(state):
-        for sid, pouch_ok in pairs:
-            if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
-                return True
-        return False
-    return _check
-
-
 # Per-predicate cost ranks used by `_compile_dnf` to short-circuit cheap
 # checks first. Tiers reflect average per-call work in a typical fill:
 #   0 = constant (always_true / always_false)
@@ -1136,20 +1105,6 @@ def _compile_req(req: str, world, is_progressive: bool):
                     return True
                 return b(state)
             return (_gem_token, _COST_REACH)
-        if req in _BUILDING_TOKEN_TO_FIELD:
-            field = _BUILDING_TOKEN_TO_FIELD[req]
-            broaden = _compile_building_broadened(world, field)
-            if floor:
-                def _bld_token_floored(state, n=item_name, b=broaden, f=floor):
-                    if not (state.has(n, player) or b(state)):
-                        return False
-                    return _count_field_tokens(state, player) >= f
-                return (_bld_token_floored, _COST_REACH)
-            def _bld_token(state, n=item_name, b=broaden):
-                if state.has(n, player):
-                    return True
-                return b(state)
-            return (_bld_token, _COST_REACH)
         if floor:
             return (lambda state, n=item_name, f=floor: (
                 state.has(n, player) and _count_field_tokens(state, player) >= f
@@ -1158,6 +1113,14 @@ def _compile_req(req: str, world, is_progressive: bool):
 
     if req in element_prefix_map:
         fn = _compile_element_or(element_prefix_map[req], player)
+        # Building elements (eTraps etc.) also pass when the matching skill
+        # is held — broaden the compiled disjunction.
+        skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
+        if skill_item is not None:
+            inner = fn
+            def _bld_elem(state, n=skill_item, f=inner):
+                return state.has(n, player) or f(state)
+            return (_bld_elem, _COST_REACH)
         return (fn, _COST_CONST if fn is _always_true else _COST_REACH)
 
     if ":" in req:

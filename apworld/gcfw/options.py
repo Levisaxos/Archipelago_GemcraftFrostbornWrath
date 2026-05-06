@@ -56,6 +56,22 @@ class FieldTokenPlacement(Choice):
     default = 1
 
 
+class ProgressionBias(Choice):
+    """Biases placement of field tokens and skills toward Journey and Wizard Stash locations during generation, away from achievement locations.
+
+    off:    No bias. Tokens and skills are distributed by Archipelago's normal fill algorithm and may land on any location, including achievements.
+    soft:   Pre-places ~50% of tokens and skills onto random Journey/Stash locations before the main fill runs. Remaining tokens/skills go through normal fill.
+    strong: Pre-places ~85% of tokens and skills onto random Journey/Stash locations. Achievements still hold a small share of tokens/skills, plus all other progression types (traits, talisman fragments, gem pouches, shadow cores).
+
+    The bias is best-effort — items that cannot fit due to access rules fall back to the normal fill pool. Other progression item types are unaffected.
+    """
+    display_name = "Progression Bias"
+    option_off    = 0
+    option_soft   = 1
+    option_strong = 2
+    default = 2
+
+
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
@@ -394,6 +410,7 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
+    progression_bias:            ProgressionBias
     field_token_granularity:   FieldTokenGranularity
     stash_key_granularity:     StashKeyGranularity
     gem_pouch_granularity:     GemPouchGranularity

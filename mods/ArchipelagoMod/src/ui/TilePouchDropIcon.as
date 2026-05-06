@@ -48,7 +48,7 @@ package ui {
         // because multiple copies can drop at the same level-end and reading
         // getItemCount() at hover stamps the same total on every icon. 0 ==
         // "fall back to live count" for callers that don't track per-copy.
-        public var meta:Object;  // { apId:int, isProgressive:Boolean, ordinal:int }
+        public var meta:Object;  // { apId:int, isProgressive:Boolean, isTierProgressive:Boolean, ordinal:int }
 
         [Embed(source='../../resources/TilePouch.png')]
         private static const TilePouchAsset:Class;
@@ -61,6 +61,7 @@ package ui {
             this.meta = {
                 apId: apId,
                 isProgressive: _isPerTileProgressive(apId),
+                isTierProgressive: _isPerTierProgressive(apId),
                 ordinal: ordinal
             };
 
@@ -95,30 +96,65 @@ package ui {
         }
 
         // -----------------------------------------------------------------------
-        // Tooltip — only the per-tile progressive variant renders one for now;
-        // the per-tile / per-tier distinct variants and per-tier progressive
-        // fall through silently.
+        // Tooltip — branches on apId range. Wording mirrors itemName(apId) in
+        // ArchipelagoMod.as so labels are consistent across UI surfaces.
 
         private function _onMouseOver(e:MouseEvent):void {
             try {
-                if (this.meta == null || this.meta.isProgressive != true)
+                if (this.meta == null)
                     return;
+                var apId:int = int(this.meta.apId);
+
+                var title:String = null;
+                var subtitle:String = "Field Token";
+                var body:String = null;
+
+                var opts:ServerOptions = AV.serverData != null
+                    ? AV.serverData.serverOptions : null;
+
+                if (this.meta.isProgressive == true) {
+                    // 1617 — per-tile progressive
+                    var ordinalT:int = int(this.meta.ordinal);
+                    var copiesT:int = (ordinalT > 0) ? ordinalT
+                                                    : AV.sessionData.getItemCount(apId);
+                    var prefixT:String = opts != null ? opts.progressiveTilePrefix(copiesT) : "?";
+                    title = "Progressive Field Token";
+                    body  = "Unlocks fields on tile " + prefixT + ". "
+                          + "(" + copiesT + "/" + (opts != null ? opts.progressiveTileOrderLength() : 26)
+                          + " worlds unlocked)";
+                } else if (this.meta.isTierProgressive == true) {
+                    // 1618 — per-tier progressive
+                    var ordinalR:int = int(this.meta.ordinal);
+                    var copiesR:int = (ordinalR > 0) ? ordinalR
+                                                    : AV.sessionData.getItemCount(apId);
+                    var tierOrder:Array = (opts != null) ? opts.progressiveTierOrder as Array : null;
+                    var tierLabel:String = (tierOrder != null && copiesR >= 1 && copiesR <= tierOrder.length)
+                        ? String(tierOrder[copiesR - 1])
+                        : "?";
+                    var tierTotal:int = (tierOrder != null) ? tierOrder.length : 13;
+                    title = "Progressive Field Token (per-tier)";
+                    body  = "Unlocks fields in tier " + tierLabel + ". "
+                          + "(" + copiesR + "/" + tierTotal + " tiers unlocked)";
+                } else if (apId >= 1562 && apId <= 1587) {
+                    // Per-tile distinct
+                    var idx:int = apId - 1562;
+                    var order:Array = (opts != null) ? opts.gemPouchPlayOrder as Array : null;
+                    if (order == null || idx < 0 || idx >= order.length)
+                        return;
+                    var prefix:String = String(order[idx]);
+                    title = prefix + " Tile Field Tokens";
+                    body  = "Unlocks all field tokens on tile " + prefix + ".";
+                } else if (apId >= 1588 && apId <= 1600) {
+                    // Per-tier distinct
+                    var tier:int = apId - 1588;
+                    title = "Tier " + tier + " Field Tokens";
+                    body  = "Unlocks all field tokens in tier " + tier + ".";
+                } else {
+                    return;
+                }
 
                 var vIp:* = GV.mcInfoPanel;
                 vIp.reset(280);
-
-                var apId:int = int(this.meta.apId);
-                var ordinal:int = int(this.meta.ordinal);
-                var copies:int = (ordinal > 0) ? ordinal
-                                               : AV.sessionData.getItemCount(apId);
-                var opts:ServerOptions = AV.serverData.serverOptions;
-                var prefix:String = opts.progressiveTilePrefix(copies);
-
-                var title:String = "Progressive Field Token";
-                var subtitle:String = "Field Token";
-                var body:String = "Unlocks fields on tile " + prefix + ". "
-                                + "(" + copies + "/" + opts.progressiveTileOrderLength() + " worlds unlocked)";
-
                 vIp.addTextfield(0xFFD700, title, false, 13);
                 vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
                 vIp.addTextfield(0x99FF99, body, false, 11);
@@ -136,6 +172,18 @@ package ui {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
                     var progId:int = int(opts.fieldTokenPerTileProgressiveId);
+                    if (progId > 0 && apId == progId)
+                        return true;
+                }
+            } catch (e:Error) {}
+            return false;
+        }
+
+        private static function _isPerTierProgressive(apId:int):Boolean {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null) {
+                    var progId:int = int(opts.fieldTokenPerTierProgressiveId);
                     if (progId > 0 && apId == progId)
                         return true;
                 }

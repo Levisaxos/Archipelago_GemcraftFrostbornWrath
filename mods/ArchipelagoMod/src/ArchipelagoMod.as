@@ -56,6 +56,7 @@ package {
     import patch.WizStashes;
     import patch.FirstPlayBypass;
     import patch.EarlyExitOutcome;
+    import patch.VictoryRestartButton;
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
     import patch.HollowGemInjector;
@@ -140,6 +141,7 @@ package {
         private var _achievementUnlocker:AchievementUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
         private var _earlyExitOutcome:EarlyExitOutcome;
+        private var _victoryRestartButton:VictoryRestartButton;
         private var _frostbornFreeBuildings:FrostbornFreeBuildings;
         private var _gemPouchSuppressor:GemPouchSuppressor;
         private var _hollowGemInjector:HollowGemInjector;
@@ -243,6 +245,7 @@ package {
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
+                _victoryRestartButton = new VictoryRestartButton(_logger, MOD_NAME);
                 _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
@@ -266,7 +269,14 @@ package {
                 _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
-                _connectionManager.onItemReceived          = grantItem;
+                // Wrap grantItem so every live receipt persists the updated
+                // AV.sessionData snapshot to the slot file. Field tokens and
+                // stash unlocks live only in AV.sessionData, so without this
+                // a token received between full-syncs would be lost on relaunch.
+                _connectionManager.onItemReceived          = function(apId:int):void {
+                    grantItem(apId);
+                    if (_saveManager != null) _saveManager.saveSlotData();
+                };
                 _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
                     _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
                     _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
@@ -872,6 +882,7 @@ package {
                 _hollowGemInjector.onIngameFrame();
                 _frostbornFreeBuildings.onIngameFrame();
                 _earlyExitOutcome.tryAttach();
+                _victoryRestartButton.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
@@ -2176,13 +2187,11 @@ package {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
                     var grantedFrag:* = _talismanUnlocker.grantFragment(apId);
                     if (grantedFrag != null) _sessionGrantedFragments.push(grantedFrag);
-                    _saveManager.saveSlotData();
                     return;
                 }
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
-                    _saveManager.saveSlotData();
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {

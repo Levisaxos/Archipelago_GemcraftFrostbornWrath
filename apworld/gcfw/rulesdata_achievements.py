@@ -233,7 +233,7 @@ achievement_requirements = {
         "game_id": 547,
         "description": "Kill 460 banished monsters with shrines.",
         "details": "Kill 460 banished monsters with shrines.",
-        "requirements": ["eShrine", "minMonsters:460", "talismanRow:2"],
+        "requirements": ["eShrine", "minMonsters:920", "talismanRow:2"],
         "required_effort": "Major",
     },
     # AP ID: 2023
@@ -316,7 +316,7 @@ achievement_requirements = {
         "ap_id": 2031,
         "game_id": 256,
         "description": "Deliver 1.200 banishments with your orb.",
-        "requirements": ["minMonsters:1200", "talismanRow:1"],
+        "requirements": ["minMonsters:2400", "talismanRow:1"],
         "required_effort": "Major",
     },
     # AP ID: 2032
@@ -379,8 +379,8 @@ achievement_requirements = {
         "description": "Kill 790 banished monsters.",
         "details": "Kill 790 banished monsters.",
         "requirements": [
-            ["minMonsters:790", "talismanRow:2"],
-            ["minMonsters:790", "talismanColumn:2"],
+            ["minMonsters:1580", "talismanRow:2"],
+            ["minMonsters:1580", "talismanColumn:2"],
         ],
         "required_effort": "Extreme",
     },
@@ -648,10 +648,7 @@ achievement_requirements = {
         "game_id": 96,
         "description": "Destroy 8 beacons before wave 8.",
         "details": "Destroy 8 beacons before wave 8 starts.",
-        "requirements": [
-            ["tDarkMasonry", "minWave:10"],
-            ["eBeacon:8"],
-        ],
+        "requirements": ["eBeacon:8"],
         "required_effort": "Trivial",
     },
     # AP ID: 2069
@@ -908,7 +905,7 @@ achievement_requirements = {
         "ap_id": 2097,
         "game_id": 549,
         "description": "Kill 190 banished monsters.",
-        "requirements": ["minMonsters:190"],
+        "requirements": ["minMonsters:380"],
         "required_effort": "Trivial",
     },
     # AP ID: 2098
@@ -966,7 +963,7 @@ achievement_requirements = {
         "ap_id": 2104,
         "game_id": 346,
         "description": "Find 20 shadow cores.",
-        "requirements": ["minWave:16"],
+        "requirements": ["minWave:26"],
         "required_effort": "Trivial",
     },
     # AP ID: 2105
@@ -1067,7 +1064,7 @@ achievement_requirements = {
         "ap_id": 2116,
         "game_id": 469,
         "description": "Have 5 traps with bolt enhanced gems in them.",
-        "requirements": ["sBolt", "sTraps", "minWave:40"],
+        "requirements": ["sBolt", "eTraps", "minWave:40"],
         "required_effort": "Trivial",
     },
     # AP ID: 2117
@@ -1129,7 +1126,7 @@ achievement_requirements = {
         "game_id": 143,
         "description": "Kill 666 swarmlings.",
         "requirements": ["minSwarmlings:666"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2124
     "Dichromatic": {
@@ -1457,7 +1454,7 @@ achievement_requirements = {
         "ap_id": 2160,
         "game_id": 127,
         "description": "Kill 12 monsters with gems in traps.",
-        "requirements": ["sTraps"],
+        "requirements": ["eTraps"],
         "required_effort": "Trivial",
     },
     # AP ID: 2161
@@ -1912,7 +1909,7 @@ achievement_requirements = {
         "game_id": 344,
         "description": "Drop 48 gem bombs on beacons.",
         "details": "Throw 48 gem bombs at beacons in one battle.",
-        "requirements": ["eBeacon:1"],
+        "requirements": ["eBeacon:4", "tDarkMasonry"],
         "required_effort": "Trivial",
     },
     # AP ID: 2213
@@ -1921,8 +1918,8 @@ achievement_requirements = {
         "game_id": 53,
         "description": "Have a grade 1 gem with 1.500 hits.",
         "details": "Reach 1,500 hits on a grade-1 gem.",
-        "requirements": ["sBeam"],
-        "required_effort": "Minor",
+        "requirements": ["sBeam", "minWave:20"],
+        "required_effort": "Trivial",
     },
     # AP ID: 2214
     "Getting Waves Done": {
@@ -1983,7 +1980,7 @@ achievement_requirements = {
         "game_id": 478,
         "description": "Have a pure mana leeching gem with 4.500 hits.",
         "details": "Reach 4,500 hits on a pure mana-leech gem.",
-        "requirements": ["sManaLeech", "sBeam"],
+        "requirements": ["sManaLeech", "sBeam", "minWave:40"],
         "required_effort": "Trivial",
     },
     # AP ID: 2221
@@ -2045,7 +2042,7 @@ achievement_requirements = {
         "game_id": 601,
         "description": "Demolish a trap.",
         "details": "Demolish a trap.",
-        "requirements": ["sTraps", "sDemolition"],
+        "requirements": ["eTraps", "sDemolition"],
         "required_effort": "Trivial",
     },
     # AP ID: 2228
@@ -2455,7 +2452,10 @@ achievement_requirements = {
         "game_id": 530,
         "description": "Kill 100 monsters while time is frozen.",
         "details": "Kill 100 monsters during a single time-frozen window.",
-        "requirements": [""],
+        "requirements": [
+            ["eShrine"],
+            ["fieldToken:5"]
+        ],
         "required_effort": "Trivial",
     },
     # AP ID: 2274
@@ -3293,7 +3293,7 @@ achievement_requirements = {
         "ap_id": 2368,
         "game_id": 545,
         "description": "Kill 60 banished monsters with shrines.",
-        "requirements": ["eShrine", "minMonsters:60"],
+        "requirements": ["eShrine", "minMonsters:120"],
         "required_effort": "Trivial",
     },
     # AP ID: 2369
@@ -3575,7 +3575,10 @@ achievement_requirements = {
         "game_id": 48,
         "description": "Amplify a gem.",
         "details": "Place a gem inside an amplifier (i.e. amplify a gem at least once).",
-        "requirements": ["sAmplifiers"],
+        "requirements": [
+            ["sAmplifiers"],
+            ["eAmplifiers:1"]
+        ],
         "required_effort": "Trivial",
     },
     # AP ID: 2400
@@ -3982,7 +3985,7 @@ achievement_requirements = {
         "ap_id": 2445,
         "game_id": 597,
         "description": "Leech 900 mana with a grade 1 gem.",
-        "requirements": ["sManaLeech", "minGemGrade:1", "sTraps"],
+        "requirements": ["sManaLeech", "minGemGrade:1", "eTraps", "fieldToken:40"],
         "required_effort": "Trivial",
     },
     # AP ID: 2446
@@ -4000,7 +4003,7 @@ achievement_requirements = {
         "game_id": 584,
         "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
         "details": "Banish 150 monsters with at least 2 wraiths alive.",
-        "requirements": ["tRitual", "eWraith", "minMonsters:150"],
+        "requirements": ["tRitual", "eWraith", "minMonsters:300"],
         "required_effort": "Trivial",
     },
     # AP ID: 2448
@@ -4041,7 +4044,7 @@ achievement_requirements = {
         "ap_id": 2452,
         "game_id": 128,
         "description": "Kill 60 monsters with gems in traps.",
-        "requirements": ["sTraps"],
+        "requirements": ["eTraps"],
         "required_effort": "Minor",
     },
     # AP ID: 2453
@@ -4121,7 +4124,7 @@ achievement_requirements = {
         "game_id": 548,
         "description": "Kill 660 banished monsters with shrines.",
         "details": "Kill 660 banished monsters with shrines.",
-        "requirements": ["eShrine", "minMonsters:660"],
+        "requirements": ["eShrine", "minMonsters:1320"],
         "required_effort": "Extreme",
     },
     # AP ID: 2462
@@ -4200,7 +4203,7 @@ achievement_requirements = {
         "game_id": 400,
         "description": "Enhance a gem in a trap.",
         "details": "Cast Bolt/Beam/Barrage on a gem that's inside a trap.",
-        "requirements": ["sTraps", "enhancementSpells:1"],
+        "requirements": ["eTraps", "enhancementSpells:1"],
         "required_effort": "Trivial",
     },
     # AP ID: 2471
@@ -4538,7 +4541,7 @@ achievement_requirements = {
         "game_id": 615,
         "description": "Full of oxygen",
         "details": "Fill all 9 inventory slots with pure Slowing gems.",
-        "requirements": [],
+        "requirements": ["sSlowing"],
         "required_effort": "Trivial",
     },
     # AP ID: 2509
@@ -4615,7 +4618,7 @@ achievement_requirements = {
         "game_id": 254,
         "description": "Deliver 100 banishments with your orb.",
         "details": "Banish 100 monsters using the orb (orb gem with banishment effect).",
-        "requirements": ["minMonsters:100"],
+        "requirements": ["minMonsters:200"],
         "required_effort": "Trivial",
     },
     # AP ID: 2518
@@ -4642,7 +4645,7 @@ achievement_requirements = {
         "game_id": 203,
         "description": "Deliver gem bomb and wasp kills only.",
         "details": "In one battle, all kills come from gem bombs and wasps only.",
-        "requirements": [],
+        "requirements": ["fieldToken:10"],
         "required_effort": "Trivial",
     },
     # AP ID: 2521
@@ -4719,7 +4722,7 @@ achievement_requirements = {
         "game_id": 213,
         "description": "Hit the same monster with traps 100 times.",
         "details": "Hit the same monster with traps 100 times.",
-        "requirements": ["sTraps", "fieldToken:20"],
+        "requirements": ["sTraps", "minMonsterHP:300"],
         "required_effort": "Trivial",
     },
     # AP ID: 2530
@@ -4925,7 +4928,7 @@ achievement_requirements = {
         "game_id": 551,
         "description": "Kill 590 banished monsters.",
         "details": "Kill 590 banished monsters.",
-        "requirements": ["minMonsters:590", "fieldToken:40"],
+        "requirements": ["minMonsters:1080", "fieldToken:40"],
         "required_effort": "Major",
     },
     # AP ID: 2553
@@ -4980,7 +4983,7 @@ achievement_requirements = {
         "game_id": 158,
         "description": "Kill 20 frozen monsters with gems in traps.",
         "details": "Kill 20 frozen monsters with traps.",
-        "requirements": ["sFreeze", "sTraps"],
+        "requirements": ["sFreeze", "eTraps"],
         "required_effort": "Trivial",
     },
     # AP ID: 2559
@@ -5007,7 +5010,7 @@ achievement_requirements = {
         "game_id": 255,
         "description": "Deliver 400 banishments with your orb.",
         "details": "Banish 400 monsters using the orb.",
-        "requirements": ["minMonsters:400"],
+        "requirements": ["minMonsters:800"],
         "required_effort": "Minor",
     },
     # AP ID: 2562
@@ -5042,7 +5045,7 @@ achievement_requirements = {
         "game_id": 207,
         "description": "Have 90 monsters slowed at the same time.",
         "details": "Have 90 monsters slowed at the same instant.",
-        "requirements": ["sSlowing", "minMonsters:90"],
+        "requirements": ["sSlowing", "minMonsters:90", "fieldToken:15"],
         "required_effort": "Trivial",
     },
     # AP ID: 2566
@@ -5150,7 +5153,7 @@ achievement_requirements = {
         "game_id": 162,
         "description": "And it's bloody too",
         "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
-        "requirements": ["sTraps"],
+        "requirements": ["eTraps"],
         "required_effort": "Trivial",
         "untrackable": True,
     },
@@ -5603,7 +5606,7 @@ achievement_requirements = {
         "game_id": 546,
         "description": "Kill 260 banished monsters with shrines.",
         "details": "Kill 260 banished monsters with shrines.",
-        "requirements": ["eShrine", "minMonsters:260"],
+        "requirements": ["eShrine", "minMonsters:520"],
         "required_effort": "Major",
     },
     # AP ID: 2630

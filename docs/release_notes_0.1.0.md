@@ -23,7 +23,7 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 
 - 122 Journey-clear checks (one per stage)
 - 122 Wizard Stash checks (one per stage, stashes start locked)
-- Up to ~537 optional achievement checks
+- Up to ~636 optional achievement checks (5 selectable effort tiers)
 
 ## Goals
 
@@ -35,16 +35,16 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 ## YAML options
 
 - Choose your starting stage (W1–W4 / S1–S4 / random)
-- Field Token granularity: per-stage, per-tile, per-tier, or progressive
-- Wizard Stash Key granularity: same options
-- Gem Pouch granularity: same options, or off
+- Field Token granularity: per-stage, per-tile, or per-tier — each with a progressive sibling
+- Wizard Stash Key granularity: same families as Field Tokens, plus a single-master-key `global` option
+- Gem Pouch granularity: `off`, per-tile, per-tier (each with a progressive sibling), or `global`. Defaults to per-tile progressive.
 - Field Token placement: any world, own world only, or other worlds only
 - Tier-requirement percentage controls how strict logic is
 - XP tome bonus and starting wizard level are configurable
 - Optional starting Overcrowd trait
 - Skillpoint multiplier for filler skill points
 - Difficulty multipliers: enemy HP, armor, shield, count, and extra waves
-- Achievement effort tier: trivial / minor / major
+- Achievement effort tier: 5 levels — `1` Trivial only, `2` +Minor, `3` +Major, `4` +Extreme, `5` All
 - Toggle Endurance and Trial modes
 
 ## DeathLink
