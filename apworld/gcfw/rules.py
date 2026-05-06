@@ -104,13 +104,23 @@ def _gcfw_state_sig(state, player: int):
     return (player, len(items), sum(items.values()))
 
 
-def _get_counter_cache(state, player: int) -> dict:
+# Single bundle holds all three per-state-sig caches (counter values,
+# stage-clearability, and OR-of-stages reachability) keyed off ONE
+# `_gcfw_state_sig` computation per call. Previously each cache called
+# the sig helper independently, paying `sum(items.values())` 2-3 times
+# per achievement-rule eval. The bundle is invalidated atomically when
+# the sig changes, so semantics stay identical.
+def _get_caches(state, player: int):
     sig = _gcfw_state_sig(state, player)
-    cache = getattr(state, "_gcfw_counter_cache", None)
-    if cache is None or cache[0] != sig:
-        cache = (sig, {})
-        state._gcfw_counter_cache = cache
-    return cache[1]
+    bundle = getattr(state, "_gcfw_caches", None)
+    if bundle is None or bundle[0] != sig:
+        bundle = (sig, {}, {}, {})
+        state._gcfw_caches = bundle
+    return bundle  # (sig, counter_dict, clear_dict, or_dict)
+
+
+def _get_counter_cache(state, player: int) -> dict:
+    return _get_caches(state, player)[1]
 
 
 def _count_complete_talisman_rows(state, player: int) -> int:
@@ -607,12 +617,7 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
       2. Per-stage `_can_clear_stage_cached` — each stage's clearability is
          computed once per state-sig and reused across all OR scans.
     """
-    sig = _gcfw_state_sig(state, player)
-    cache = getattr(state, "_gcfw_or_cache", None)
-    if cache is None or cache[0] != sig:
-        cache = (sig, {})
-        state._gcfw_or_cache = cache
-    data = cache[1]
+    data = _get_caches(state, player)[3]
     key = id(stages)
     if key in data:
         return data[key]
@@ -657,13 +662,7 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
     skipping `state.can_reach`. See dict comment above for the assumption
     this relies on.
     """
-    sig = _gcfw_state_sig(state, player)
-
-    cache = getattr(state, "_gcfw_clear_cache", None)
-    if cache is None or cache[0] != sig:
-        cache = (sig, {})
-        state._gcfw_clear_cache = cache
-    data = cache[1]
+    data = _get_caches(state, player)[2]
 
     if sid in data:
         return data[sid]
@@ -1028,6 +1027,19 @@ def _compile_building_broadened(world, field: str):
     return _check
 
 
+# Per-predicate cost ranks used by `_compile_dnf` to short-circuit cheap
+# checks first. Tiers reflect average per-call work in a typical fill:
+#   0 = constant (always_true / always_false)
+#   1 = single state.has / state.count lookup
+#   2 = cached counter (state-sig memoised; first call per sig is the
+#                       expensive one, all reused)
+#   3 = stage reachability / element OR / Achievement: recursion
+_COST_CONST: int = 0
+_COST_HAS:   int = 1
+_COST_COUNTER: int = 2
+_COST_REACH:   int = 3
+
+
 def _compile_element_or(elem_names, player: int):
     """Compile an "any of these elements is reachable" check.
 
@@ -1071,11 +1083,14 @@ def _compile_element_or(elem_names, player: int):
 
 
 def _compile_req(req: str, world, is_progressive: bool):
-    """Compile a single requirement string to a `(state) -> bool` closure.
+    """Compile a single requirement string to a `((state) -> bool, cost)` pair.
 
     Mirrors `_eval_req` branch-for-branch — keep them in sync. The returned
     closure binds all per-call constants (item names, qualifying stage lists,
     counter pools) so the only runtime work is the actual state lookups.
+    The cost is one of `_COST_CONST` / `_COST_HAS` / `_COST_COUNTER` /
+    `_COST_REACH` and lets `_compile_dnf` sort cheap predicates first so AND
+    short-circuits earlier in the common (False) case during fill.
 
     Takes `world` (not just player) so gem-skill broadening can build the
     per-stage gempouch checker — the broadening must respect the player's
@@ -1087,21 +1102,22 @@ def _compile_req(req: str, world, is_progressive: bool):
 
     if req.startswith("Field_"):
         sid = req[len("Field_"):]
-        return lambda state: _can_clear_stage_cached(state, player, sid)
+        return (lambda state: _can_clear_stage_cached(state, player, sid),
+                _COST_REACH)
 
     if req.startswith("Achievement:"):
         if not is_progressive:
-            return _always_true
+            return (_always_true, _COST_CONST)
         loc_name = req
         def _ach_reachable(state):
             try:
                 return state.can_reach(loc_name, "Location", player)
             except KeyError:
                 return False
-        return _ach_reachable
+        return (_ach_reachable, _COST_REACH)
 
     if req in mode_tokens:
-        return _always_false
+        return (_always_false, _COST_CONST)
 
     if req in item_prefix_map:
         item_name = item_prefix_map[req]
@@ -1114,12 +1130,12 @@ def _compile_req(req: str, world, is_progressive: bool):
                     if not (state.has(n, player) or b(state)):
                         return False
                     return _count_field_tokens(state, player) >= f
-                return _gem_token_floored
+                return (_gem_token_floored, _COST_REACH)
             def _gem_token(state, n=item_name, b=broaden):
                 if state.has(n, player):
                     return True
                 return b(state)
-            return _gem_token
+            return (_gem_token, _COST_REACH)
         if req in _BUILDING_TOKEN_TO_FIELD:
             field = _BUILDING_TOKEN_TO_FIELD[req]
             broaden = _compile_building_broadened(world, field)
@@ -1128,20 +1144,21 @@ def _compile_req(req: str, world, is_progressive: bool):
                     if not (state.has(n, player) or b(state)):
                         return False
                     return _count_field_tokens(state, player) >= f
-                return _bld_token_floored
+                return (_bld_token_floored, _COST_REACH)
             def _bld_token(state, n=item_name, b=broaden):
                 if state.has(n, player):
                     return True
                 return b(state)
-            return _bld_token
+            return (_bld_token, _COST_REACH)
         if floor:
-            return lambda state, n=item_name, f=floor: (
+            return (lambda state, n=item_name, f=floor: (
                 state.has(n, player) and _count_field_tokens(state, player) >= f
-            )
-        return lambda state, n=item_name: state.has(n, player)
+            ), _COST_COUNTER)
+        return (lambda state, n=item_name: state.has(n, player), _COST_HAS)
 
     if req in element_prefix_map:
-        return _compile_element_or(element_prefix_map[req], player)
+        fn = _compile_element_or(element_prefix_map[req], player)
+        return (fn, _COST_CONST if fn is _always_true else _COST_REACH)
 
     if ":" in req:
         group_name, count_str = req.split(":", 1)
@@ -1149,19 +1166,21 @@ def _compile_req(req: str, world, is_progressive: bool):
         try:
             count_needed = int(count_str.strip())
         except ValueError:
-            return _always_true
+            return (_always_true, _COST_CONST)
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _eval_req. Reachable iff any group member is reachable.
         if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
-            return _compile_element_or(element_prefix_map[group_name], player)
+            fn = _compile_element_or(element_prefix_map[group_name], player)
+            return (fn, _COST_CONST if fn is _always_true else _COST_REACH)
 
         if _is_prefix_token(group_name, "e"):
             elem_pascal = group_name[1:]
             stages = _qualifying_stages_for_element(elem_pascal, count_needed)
             if stages is None:
-                return _always_true
-            return lambda state: _can_reach_any_stage(state, player, stages)
+                return (_always_true, _COST_CONST)
+            return (lambda state: _can_reach_any_stage(state, player, stages),
+                    _COST_REACH)
 
         if group_name in skill_counter_pools:
             floor_table = _SKILL_COUNTER_FLOORS.get(group_name)
@@ -1180,7 +1199,7 @@ def _compile_req(req: str, world, is_progressive: bool):
                             if state.has(item_name, player) or broaden(state):
                                 n += 1
                         return n >= count_needed
-                    return _gemskills_count_check
+                    return (_gemskills_count_check, _COST_REACH)
                 def _gemskills_count_check_floored(state, fl=counter_floor):
                     n = 0
                     for item_name, broaden in pairs:
@@ -1189,80 +1208,160 @@ def _compile_req(req: str, world, is_progressive: bool):
                     if n < count_needed:
                         return False
                     return _count_field_tokens(state, player) >= fl
-                return _gemskills_count_check_floored
+                return (_gemskills_count_check_floored, _COST_REACH)
             pool = tuple(skill_counter_pools[group_name])
             if counter_floor is None:
-                return lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed
-            return lambda state, fl=counter_floor: (
+                return (lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed,
+                        _COST_COUNTER)
+            return (lambda state, fl=counter_floor: (
                 sum(1 for n in pool if state.has(n, player)) >= count_needed
                 and _count_field_tokens(state, player) >= fl
-            )
+            ), _COST_COUNTER)
 
         if group_name in level_stat_counters:
             stages = _qualifying_stages_for_stat(group_name, count_needed)
-            return lambda state: _can_reach_any_stage(state, player, stages)
+            return (lambda state: _can_reach_any_stage(state, player, stages),
+                    _COST_REACH)
 
         if group_name in _TALISMAN_FRAGMENT_COUNTERS:
             names = _TALISMAN_FRAGMENT_COUNTERS[group_name]
             floor = (_TALISMAN_FRAGMENTS_TOKEN_FLOOR.get(count_needed)
                      if group_name == "talismanFragments" else None)
             if floor is None:
-                return lambda state: _count_talisman_fragments(state, player, names) >= count_needed
-            return lambda state: (
+                return (lambda state: _count_talisman_fragments(state, player, names) >= count_needed,
+                        _COST_COUNTER)
+            return (lambda state: (
                 _count_talisman_fragments(state, player, names) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            )
+            ), _COST_COUNTER)
 
         if group_name in _TALISMAN_PROPERTY_TOKENS:
             prop_id = _TALISMAN_PROPERTY_TOKENS[group_name]
-            return lambda state: _sum_talisman_property(prop_id, state, player) >= count_needed
+            return (lambda state: _sum_talisman_property(prop_id, state, player) >= count_needed,
+                    _COST_COUNTER)
 
         if group_name == "fieldToken":
-            return lambda state: _count_field_tokens(state, player) >= count_needed
+            return (lambda state: _count_field_tokens(state, player) >= count_needed,
+                    _COST_COUNTER)
         if group_name == "shadowCore":
-            return lambda state: _sum_shadow_cores(state, player) >= count_needed
+            return (lambda state: _sum_shadow_cores(state, player) >= count_needed,
+                    _COST_COUNTER)
         if group_name == "wizardLevel":
             needed_items = (count_needed + 1) // 2
-            return lambda state: _count_xp_items(state, player) >= needed_items
+            return (lambda state: _count_xp_items(state, player) >= needed_items,
+                    _COST_COUNTER)
         if group_name == "talismanRow":
             floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
             if floor is None:
-                return lambda state: _count_complete_talisman_rows(state, player) >= count_needed
-            return lambda state: (
+                return (lambda state: _count_complete_talisman_rows(state, player) >= count_needed,
+                        _COST_COUNTER)
+            return (lambda state: (
                 _count_complete_talisman_rows(state, player) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            )
+            ), _COST_COUNTER)
         if group_name == "talismanColumn":
             floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
             if floor is None:
-                return lambda state: _count_complete_talisman_columns(state, player) >= count_needed
-            return lambda state: (
+                return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
+                        _COST_COUNTER)
+            return (lambda state: (
                 _count_complete_talisman_columns(state, player) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            )
+            ), _COST_COUNTER)
         if group_name == "skillPoints":
-            return lambda state: _count_skill_points(state, player) >= count_needed
+            return (lambda state: _count_skill_points(state, player) >= count_needed,
+                    _COST_COUNTER)
 
-        return _always_true  # Unknown counter
+        return (_always_true, _COST_CONST)  # Unknown counter
 
-    return _always_true  # Metadata
+    return (_always_true, _COST_CONST)  # Metadata
+
+
+def _compose_and(compiled):
+    """Compose a sorted (cheap-first) list of (state) -> bool closures into
+    one AND closure. Specialised for N=1/2/3 to dodge generator overhead on
+    the common shapes; falls back to `all(...)` for longer groups.
+    """
+    n = len(compiled)
+    if n == 1:
+        return compiled[0]
+    if n == 2:
+        f0, f1 = compiled
+        return lambda state: f0(state) and f1(state)
+    if n == 3:
+        f0, f1, f2 = compiled
+        return lambda state: f0(state) and f1(state) and f2(state)
+    fs = tuple(compiled)
+    return lambda state: all(f(state) for f in fs)
+
+
+def _compose_or(group_fns):
+    """Compose group-level OR closure with the same N=1/2/3 specialisation."""
+    n = len(group_fns)
+    if n == 1:
+        return group_fns[0]
+    if n == 2:
+        g0, g1 = group_fns
+        return lambda state: g0(state) or g1(state)
+    if n == 3:
+        g0, g1, g2 = group_fns
+        return lambda state: g0(state) or g1(state) or g2(state)
+    gs = tuple(group_fns)
+    return lambda state: any(g(state) for g in gs)
 
 
 def _compile_dnf(groups: list, world, is_progressive: bool):
     """Compile a DNF requirement structure (list of AND-groups, outer OR) into
-    a single (state) -> bool closure. Optimises common shapes."""
-    compiled_groups = [
-        [_compile_req(r, world, is_progressive) for r in group]
-        for group in groups
-    ]
-    if not compiled_groups:
+    a single (state) -> bool closure.
+
+    Two-level cost ordering for short-circuit:
+      * AND-group: predicates sorted cheap-first so a False on a 1-µs
+        `state.has` skips the 100-µs `_can_reach_any_stage` behind it.
+      * Outer OR: groups sorted by their cheapest member so a True on a
+        cheap group skips the expensive groups entirely. Stable-sort keeps
+        author-intent order among groups with equal min-cost.
+    """
+    if not groups:
         return _always_true
-    if len(compiled_groups) == 1:
-        compiled = compiled_groups[0]
-        if len(compiled) == 1:
-            return compiled[0]
-        return lambda state: all(f(state) for f in compiled)
-    return lambda state: any(all(f(state) for f in g) for g in compiled_groups)
+
+    compiled_groups: list = []
+    group_min_costs: list = []
+    for group in groups:
+        items = [_compile_req(r, world, is_progressive) for r in group]
+        # Drop unconditionally-true predicates inside an AND-group: they
+        # contribute nothing and would waste a function call. If an
+        # always_false slips in we collapse the whole group right away.
+        filtered: list = []
+        dead_group = False
+        for fn, cost in items:
+            if fn is _always_true:
+                continue
+            if fn is _always_false:
+                dead_group = True
+                break
+            filtered.append((fn, cost))
+        if dead_group:
+            continue  # this AND-group can never satisfy
+        if not filtered:
+            # All predicates were always_true → group is unconditionally true,
+            # so the whole DNF is true regardless of other groups.
+            return _always_true
+        # Sort cheap predicates first inside the group.
+        filtered.sort(key=lambda t: t[1])
+        compiled_groups.append([fn for fn, _ in filtered])
+        group_min_costs.append(filtered[0][1])
+
+    if not compiled_groups:
+        # Every group was dead (always_false somewhere) → DNF is unsat.
+        return _always_false
+
+    # Stable-sort groups by their cheapest predicate cost so cheap groups
+    # OR-evaluate first.
+    order = sorted(range(len(compiled_groups)), key=lambda i: group_min_costs[i])
+    sorted_groups = [compiled_groups[i] for i in order]
+
+    group_fns = [_compose_and(g) for g in sorted_groups]
+    return _compose_or(group_fns)
 
 
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
@@ -1281,7 +1380,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     Victory: A4 reachable AND all 24 skills collected (handled below).
     """
-    from worlds.generic.Rules import add_rule
+    # Stage + achievement rules now go straight to `location.access_rule`
+    # via the compose_and / compose_or helpers — `add_rule` chained
+    # closures together, but per-stage we already know the full set of
+    # checks at compile time, so a single composed AND is faster.
 
     player = world.player
     multiworld = world.multiworld
@@ -1326,66 +1428,24 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                     state.count(tok, player) >= n
             )
 
-    # --- Location rules: WIZLOCK skill requirements only ---
+    # --- Per-stage location rules (Journey + Wizard stash) ---
+    # One pass per stage that builds the full per-location AND-chain in
+    # one shot, instead of layering it via repeated `add_rule` calls.
+    # Per-location components, in cheap-first order:
+    #   1. WIZLOCK skill / pouch checks (state.has lambdas).
+    #   2. Wizard-stash key check (stash location only; state.has lambda).
+    #   3. DNF prereq closure (mixed cost, can recurse through Field_<sid>).
+    # The combined closure is assigned directly to `location.access_rule`,
+    # skipping the chain wrappers `add_rule` would have produced.
+    #
     # gem_pouch_granularity selects which gem-related requirements actually gate.
     # All variants use the same `pouch_for_stage` + `pouch_count_for_stage`
     # contract from gating.py — distinct modes resolve to state.has, progressive
     # modes to state.count >= N, off short-circuits.
     from . import gating as _g
     pouch_mode = world.options.gem_pouch_granularity.value
+    sk_gran    = world.options.stash_key_granularity.value
 
-    for str_id, rule in STAGE_RULES.items():
-        if not rule.skills:
-            continue
-
-        conditions = []
-        for skill in rule.skills:
-            if ":" in skill:
-                group_name, count_str = skill.split(":", 1)
-                group_name = group_name.strip()
-                if group_name == "gemPouch":
-                    if pouch_mode == _g.POUCH_OFF:
-                        continue  # off — pouches don't gate
-                    # The `prefix` after the colon was used by per-tile-distinct
-                    # for naming; with the unified helper we look up the pouch
-                    # item via the stage's own sid. Per-tile rules naturally
-                    # produce the same prefix-keyed item, and per-tier / global
-                    # ignore the prefix entirely.
-                    pouch_item = _g.pouch_for_stage(str_id, pouch_mode)
-                    if pouch_item is None:
-                        continue
-                    pouch_needed = _g.pouch_count_for_stage(str_id, pouch_mode, world.start_sid)
-                    if pouch_needed == 1:
-                        conditions.append(lambda state, i=pouch_item: state.has(i, player))
-                    else:
-                        conditions.append(
-                            lambda state, i=pouch_item, n=pouch_needed:
-                                state.count(i, player) >= n)
-                    continue
-            else:
-                item_name = f"{skill} Skill"
-                conditions.append(lambda state, i=item_name: state.has(i, player))
-
-        if not conditions:
-            continue
-
-        def make_rule(conds):
-            return lambda state: all(c(state) for c in conds)
-
-        for suffix in ("Journey", "Wizard stash"):
-            loc_name = f"Complete {str_id} - {suffix}"
-            location = multiworld.get_location(loc_name, player)
-            location.access_rule = make_rule(conditions)
-
-    # --- Per-stage requirement gates (Journey + Wizard stash) ---
-    # Each non-start stage's `requirements` list in rulesdata_levels.py is
-    # written in DNF (outer-OR over inner AND-groups). Field_<sid> entries
-    # resolve to "stage <sid>'s Journey is clearable in-logic" via _eval_req,
-    # so token possession alone isn't enough — the prereq stage must actually
-    # be beatable through the chain.
-    #
-    # The chosen starting stage skips this gate entirely (it's the menu
-    # connection; its own listed prereqs are intentionally ignored).
     from ._timing import wrap_rule, phase as _phase
     import time as _t
     _t_stages = _t.perf_counter()
@@ -1406,49 +1466,34 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
         stash_loc   = multiworld.get_location(f"Complete {sid} - Wizard stash", player)
 
-        if sid != start_sid:
-            requirements = LEVEL_DATA[sid].get("requirements", [])
-            token_name  = _gating.field_token_for_stage(sid, ft_gran)
-            token_count = _gating.field_token_count_for_stage(sid, ft_gran, start_sid)
-            # Token-presence check, count-aware so progressive variants gate
-            # the Nth stage on N copies of the singleton.
-            if token_count == 1:
-                token_check = lambda state, t=token_name: state.has(t, player)
-            else:
-                token_check = lambda state, t=token_name, n=token_count: \
-                    state.count(t, player) >= n
-            # Mirror the location access rule: clearing a stage in-logic also
-            # requires the gem pouch needed to play it. Without this term,
-            # Field_<sid> chain prereqs would resolve True from token + DNF
-            # alone, letting fill place items on chains the player can't
-            # actually traverse. Off mode short-circuits to _always_true.
-            pouch_ok = _compile_gempouch_checker(world, sid)
-            # The cached rule must require the stage's covering field-token
-            # item so chain prereqs (Field_<sid>) only resolve True when the
-            # prereq stage is actually clearable. Without this, starter-tier
-            # stages with no DNF prereqs (W2-W4, S1-S4 when not chosen as
-            # start) would fall through to True unconditionally, letting AP
-            # place late tokens on sphere-1 locations.
-            if requirements and not ft_progressive:
-                normalized = _normalize_requirements(requirements)
-                dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
-                _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, tc=token_check, d=dnf_rule, p=pouch_ok:
-                        tc(state) and p(state) and d(state)
-                )
-                add_rule(journey_loc, wrap_rule(f"stage:{sid}:journey", dnf_rule))
-                add_rule(stash_loc,   wrap_rule(f"stage:{sid}:stash", dnf_rule))
-            else:
-                _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, tc=token_check, p=pouch_ok:
-                        tc(state) and p(state)
-                )
+        # ---- WIZLOCK conditions (cheap state.has / state.count) ----
+        wizlock_conditions: list = []
+        rule = STAGE_RULES.get(sid)
+        if rule is not None and rule.skills:
+            for skill in rule.skills:
+                if ":" in skill:
+                    group_name = skill.split(":", 1)[0].strip()
+                    if group_name == "gemPouch":
+                        if pouch_mode == _g.POUCH_OFF:
+                            continue  # off — pouches don't gate
+                        pouch_item = _g.pouch_for_stage(sid, pouch_mode)
+                        if pouch_item is None:
+                            continue
+                        pouch_needed = _g.pouch_count_for_stage(sid, pouch_mode, start_sid)
+                        if pouch_needed == 1:
+                            wizlock_conditions.append(
+                                lambda state, i=pouch_item: state.has(i, player))
+                        else:
+                            wizlock_conditions.append(
+                                lambda state, i=pouch_item, n=pouch_needed:
+                                    state.count(i, player) >= n)
+                        continue
+                else:
+                    item_name = f"{skill} Skill"
+                    wizlock_conditions.append(
+                        lambda state, i=item_name: state.has(i, player))
 
-        # Wizard-stash key item is always required (no off mode). The actual
-        # item name depends on stash_key_granularity — see gating.stash_key_for_stage.
-        # For progressive variants the rule needs N copies via state.count.
-        from . import gating as _gating
-        sk_gran   = world.options.stash_key_granularity.value
+        # ---- Wizard-stash key (always; cheap state.has / state.count) ----
         key_name  = _gating.stash_key_for_stage(sid, sk_gran)
         key_count = _gating.stash_key_count_for_stage(sid, sk_gran, start_sid)
         if key_count == 1:
@@ -1456,7 +1501,56 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         else:
             key_check = lambda state, n=key_name, c=key_count: \
                 state.count(n, player) >= c
-        add_rule(stash_loc, wrap_rule(f"stash_key:{sid}", key_check))
+        # Diagnostic label only added when GCFW_TIMING=1 (otherwise no-op).
+        key_check_w = wrap_rule(f"stash_key:{sid}", key_check)
+
+        # ---- DNF prereq closure (mixed cost) + _STAGE_CLEAR_RULES entry ----
+        dnf_rule = None  # None means "no DNF gate" (start stage / progressive)
+        if sid != start_sid:
+            requirements = LEVEL_DATA[sid].get("requirements", [])
+            token_name  = _gating.field_token_for_stage(sid, ft_gran)
+            token_count = _gating.field_token_count_for_stage(sid, ft_gran, start_sid)
+            if token_count == 1:
+                token_check = lambda state, t=token_name: state.has(t, player)
+            else:
+                token_check = lambda state, t=token_name, n=token_count: \
+                    state.count(t, player) >= n
+            # Off mode short-circuits this to `_always_true`.
+            pouch_ok = _compile_gempouch_checker(world, sid)
+            if requirements and not ft_progressive:
+                normalized = _normalize_requirements(requirements)
+                dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
+                _STAGE_CLEAR_RULES[(player, sid)] = (
+                    lambda state, tc=token_check, d=dnf_rule, p=pouch_ok:
+                        tc(state) and p(state) and d(state)
+                )
+            else:
+                _STAGE_CLEAR_RULES[(player, sid)] = (
+                    lambda state, tc=token_check, p=pouch_ok:
+                        tc(state) and p(state)
+                )
+
+        # Skip dnf in the location rule when it's _always_true — it would be
+        # a wasted call. Otherwise wrap with a label so the diag report still
+        # attributes calls to the per-stage DNF.
+        dnf_rule_w = (wrap_rule(f"stage:{sid}", dnf_rule)
+                      if dnf_rule is not None and dnf_rule is not _always_true
+                      else None)
+
+        # ---- Compose final access_rule per location ----
+        # Order: cheap state.has first, DNF last. Drop any None / always_true
+        # components so we don't pay an extra call for nothing.
+        journey_components = list(wizlock_conditions)
+        if dnf_rule_w is not None:
+            journey_components.append(dnf_rule_w)
+        if journey_components:
+            journey_loc.access_rule = _compose_and(journey_components)
+
+        stash_components = list(wizlock_conditions)
+        stash_components.append(key_check_w)
+        if dnf_rule_w is not None:
+            stash_components.append(dnf_rule_w)
+        stash_loc.access_rule = _compose_and(stash_components)
     from ._timing import log as _tlog
     _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
