@@ -16,8 +16,7 @@ class EnforceLogic(Toggle):
 class StartingStage(Choice):
     """Which early-game stage you start the run on.
 
-    The chosen stage is accessible from the menu without a Field Token; all other stages (including the W/S stages you didn't pick) require their own token plus a clearable prereq stage.
-    In case of tile/tier starter will be the levels tile/tier    
+    The chosen stage is playable from the menu immediately; every other stage (including the W/S stages you didn't pick) needs to be unlocked through Archipelago. If you're using tile- or tier-based granularity for field tokens or stash keys, the starter's tile/tier is unlocked from the start as well so you can play and collect checks right away.
     """
     display_name = "Starting Stage"
     option_w1 = 0
@@ -56,22 +55,6 @@ class FieldTokenPlacement(Choice):
     default = 1
 
 
-class ProgressionBias(Choice):
-    """Biases placement of field tokens and skills toward Journey and Wizard Stash locations during generation, away from achievement locations.
-
-    off:    No bias. Tokens and skills are distributed by Archipelago's normal fill algorithm and may land on any location, including achievements.
-    soft:   Pre-places ~50% of tokens and skills onto random Journey/Stash locations before the main fill runs. Remaining tokens/skills go through normal fill.
-    strong: Pre-places ~85% of tokens and skills onto random Journey/Stash locations. Achievements still hold a small share of tokens/skills, plus all other progression types (traits, talisman fragments, gem pouches, shadow cores).
-
-    The bias is best-effort — items that cannot fit due to access rules fall back to the normal fill pool. Other progression item types are unaffected.
-    """
-    display_name = "Progression Bias"
-    option_off    = 0
-    option_soft   = 1
-    option_strong = 2
-    default = 2
-
-
 class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
@@ -104,8 +87,7 @@ class FieldsRequiredPercentage(Range):
     """Percentage of Journey stages that must be completed to win.
     Only used when Goal is set to 'fields_percentage'.
 
-    The required field count is ceil(percentage × 122 / 100).
-    Default of 66% requires exactly 80 fields (ceil(66 × 122 / 100) = 80).
+    Rounded up if it doesn't divide evenly. Default of 66% requires 80 of the 122 stages.
     """
     display_name = "Fields Required Percentage"
     range_start = 40
@@ -113,10 +95,9 @@ class FieldsRequiredPercentage(Range):
     default     = 66
 
 class XpTomeBonus(Range):
-    """Approximate total wizard levels granted by all XP tomes in the item pool combined.
+    """Approximate total wizard levels granted by all XP tomes you'll find combined.
 
-    The pool contains 32 Tattered Scrolls, 6 Worn Tomes, and 2 Ancient Grimoires.
-    Their per-tome level values are scaled in a 1:2:3 ratio to hit the target total.    
+    XP tomes come as Tattered Scrolls, Worn Tomes, and Ancient Grimoires (40 in total), with progressively larger level rewards. This option scales their combined value. Lower for a slower XP curve, higher for a faster one.
     """
     display_name = "XP Tome Bonus"
     range_start = 50
@@ -245,8 +226,7 @@ class EnemyShieldMultiplier(Range):
 class EnemiesPerWaveMultiplier(Range):
     """Percentage multiplier applied to the number of monsters in every wave.
 
-    100 = no change.  150 = 50% more monsters per wave.  50 = half as many.
-    Applied to wave definitions before the first wave spawns, so the wave bar tooltip reflects the real counts.
+    100 = no change. 150 = 50% more monsters per wave. 50 = half as many. The wave bar tooltip reflects the actual counts you'll face.
     """
     display_name = "Enemies Per Wave Multiplier"
     range_start = 50
@@ -267,17 +247,18 @@ class ExtraWaveCount(Range):
 
 
 class GemPouchGranularity(Choice):
-    """How gem availability per stage is gated by Archipelago items.
+    """How collectible gems on the field are gated by Archipelago items.
 
-    off:                  No gempouches. Stages keep their original `gemSkills: N` gate (collect N of the 6 gem-skill items); gem orbs spawn freely in every level.
-    per_tile:             26 named pouches (one per stage-prefix letter / tile). A stage in prefix X spawns no gem orbs at all until you collect `Gempouch (X)`. Replaces `gemSkills: N` on every stage.
-    per_tile_progressive: 26 copies of `Progressive Gempouch` in play order (PROGRESSIVE_TILE_ORDER in rulesdata.py). The Nth copy unlocks the Nth tile in that order.
-    per_tier:             13 named pouches (one per power tier, 0-12). Stages unlock gem orbs once you collect their tier's pouch. Coarser than per_tile — fewer items in the pool but unlocks chunks of stages at a time.
-    per_tier_progressive: 13 copies of `Progressive Gempouch (per-tier)`. The Nth copy unlocks tier N (0..12). Same fill-friendliness benefit as per_tile_progressive but at coarser granularity.
-    global:               1 master pouch unlocks gems on every stage at once.
+    By default GemCraft stages spawn loose gem orbs you can pick up to grow your mana pool. This option lets you lock those orbs behind Gem Pouch items, so stages stay "dry" until you receive a pouch that covers them.
 
-    All non-off modes pre-collect enough of the gating item to cover the chosen
-    starting stage so the seed is solvable from frame zero.
+    off:                  Gems are never gated. Every stage spawns gem orbs as normal.
+    per_tile:             One pouch per map tile (26 total). A stage spawns no gem orbs until you receive the pouch for its tile.
+    per_tile_progressive: 26 generic progressive pouches. Each one you receive unlocks gems on the next tile in a randomized order.
+    per_tier:             One pouch per power tier (13 total). Each tier's pouch unlocks gems on every stage of that tier.
+    per_tier_progressive: 13 generic progressive pouches. Each one unlocks gems on the next tier.
+    global:               A single master pouch unlocks gems on every stage at once.
+
+    Whichever mode you pick, your starting stage always has gems available immediately so you can play from the moment you connect.
     """
     display_name = "Gem Pouch Granularity"
     option_off                  = 0
@@ -290,21 +271,18 @@ class GemPouchGranularity(Choice):
 
 
 class FieldTokenGranularity(Choice):
-    """How coarse Field Token items are. Coarser = fewer unique items in the
-    pool, larger swaths of stages unlocked per item. Lower density of
-    progression items overall, achievement locations drift toward filler.
+    """How coarse the items that unlock new stages are.
 
-    Each mode also has a "_progressive" sibling that uses a single fungible
-    item added to the pool N times; the Nth received copy unlocks the Nth
-    entry in PROGRESSIVE_TILE_ORDER (or per-stage / per-tier order). Spoiler
-    log shows fungible items but fill is more forgiving.
+    Stages start locked and require Field Tokens to access. This option controls whether each stage has its own token or whole groups of stages unlock together. Coarser settings put fewer unique tokens in the pool but each token unlocks more stages; finer settings give you more individual unlocks but a larger item pool overall.
 
-    per_stage:             One token per stage (122 tokens total). Original behaviour.
-    per_stage_progressive: 122 copies of `Progressive Field Token (per-stage)`. The Nth copy unlocks the Nth stage in (tile play order x alphabetical-within-tile) order.
-    per_tile:              One token per stage prefix / map tile (26 tokens). Collecting `<Prefix> Tile Field Token` unlocks every stage starting with that prefix.
-    per_tile_progressive:  26 copies of `Progressive Field Token (per-tile)` in play order. Same fill benefit as per_stage_progressive at coarser granularity.
-    per_tier:              One token per power tier (13 tokens, 0-12). Collecting `Tier <N> Field Token` unlocks every stage in that tier.
-    per_tier_progressive:  13 copies of `Progressive Field Token (per-tier)`. The Nth copy unlocks tier N (0..12).    
+    Each granularity has a "_progressive" sibling. Progressive variants use a single generic token that appears multiple times in the pool, and the Nth copy you receive unlocks the Nth stage/tile/tier in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
+
+    per_stage:             One token per stage (122 tokens). Each stage has its own unlock.
+    per_stage_progressive: 122 generic tokens. Each one unlocks the next stage in a randomized order.
+    per_tile:              One token per map tile (26 tokens). A tile's token unlocks every stage on that tile.
+    per_tile_progressive:  26 generic tokens. Each one unlocks the next tile.
+    per_tier:              One token per power tier (13 tokens). A tier's token unlocks every stage in that tier.
+    per_tier_progressive:  13 generic tokens. Each one unlocks the next tier.
     """
     display_name = "Field Token Granularity"
     option_per_stage             = 0
@@ -317,64 +295,53 @@ class FieldTokenGranularity(Choice):
 
 
 class StashKeyGranularity(Choice):
-    """How coarse Wizard Stash Key items are.
+    """How coarse the items that unlock Wizard Stashes are.
 
-    Each mode also has a "_progressive" sibling — see FieldTokenGranularity for
-    how progressive items are ordered.
+    Wizard Stashes start locked and need a key to open. This option controls whether each stash needs its own key or groups of stashes unlock together. Coarser settings mean fewer unique keys but each key opens more stashes.
 
-    per_stage:             One key per stage (122 keys total). Original behaviour.
-    per_stage_progressive: 122 copies of `Progressive Stash Stage Key`. The Nth copy
-                           unlocks the Nth stage in (tile play order x
-                           alphabetical-within-tile) order.
-    per_tile:              One key per stage prefix / map tile (26 keys). Collecting
-                           `<Prefix> Stash Tile Key` unlocks every stash starting with
-                           that prefix.
-    per_tile_progressive:  26 copies of `Progressive Stash Tile Key` in play order.
-    per_tier:              One key per power tier (13 keys, 0-12). Collecting
-                           `Tier <N> Stash Key` unlocks every stash in that tier.
-    per_tier_progressive:  13 copies of `Progressive Stash Tier Key`. The Nth copy
-                           unlocks tier N (0..12).
-    global:                A single `Master Stash Key` unlocks every stash at once.
+    Like Field Tokens, each granularity has a "_progressive" sibling that uses a generic key. The Nth copy unlocks the Nth stash in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
 
-    The starting stage's covering key(s) are precollected so the player can
-    immediately collect the starter's stash check.
+    off:                   Stashes are not gated. Every Wizard Stash is open from the start — no keys exist.
+    per_stage:             One key per stage (122 keys). Each stash has its own key.
+    per_stage_progressive: 122 generic keys. Each one unlocks the next stash in a randomized order.
+    per_tile:              One key per map tile (26 keys). A tile's key unlocks every stash on that tile.
+    per_tile_progressive:  26 generic keys. Each one unlocks the next tile's stashes.
+    per_tier:              One key per power tier (13 keys). A tier's key unlocks every stash in that tier.
+    per_tier_progressive:  13 generic keys. Each one unlocks the next tier's stashes.
+    global:                A single master key unlocks every stash at once.
     """
     display_name = "Stash Key Granularity"
-    option_per_stage             = 0
-    option_per_stage_progressive = 1
-    option_per_tile              = 2
-    option_per_tile_progressive  = 3
-    option_per_tier              = 4
-    option_per_tier_progressive  = 5
-    option_global                = 6
-    default = 3
+    option_off                   = 0
+    option_per_stage             = 1
+    option_per_stage_progressive = 2
+    option_per_tile              = 3
+    option_per_tile_progressive  = 4
+    option_per_tier              = 5
+    option_per_tier_progressive  = 6
+    option_global                = 7
+    
+    default = 4
 
 
 class StartingOvercrowd(Toggle):
-    """When enabled, the Overcrowd battle trait is added to the player's starting inventory.
+    """When enabled, the Overcrowd battle trait is active from the start of the run.
 
-    Overcrowd makes more monsters arrive each wave, increasing the difficulty
-    of every stage from the very start of the run.  The trait is removed from the
-    randomised item pool — it will not appear as a collectable item for anyone.
+    Overcrowd makes more monsters arrive each wave, increasing the difficulty of every stage from the very start. With this on, you receive Overcrowd up front and it won't appear as a collectible item anywhere in the multiworld.
     """
     display_name = "Start with Overcrowd"
     default = 0
 
 
 class AchievementRequiredEffort(Choice):
-    """Required effort level of achievements to include in the randomizer.
+    """How many of the in-game achievements count as Archipelago checks.
 
-    1:    Trivial achievements only (~362 achievements).
-    2:    Trivial + Minor (~453 achievements).
-    3:    Trivial + Minor + Major (~537 achievements).
-    4:    Trivial + Minor + Major + Extreme (~620 achievements).
-    5:    All achievements (~636 achievements).
+    1:    Trivial achievements only (~362 checks).
+    2:    Trivial + Minor (~453 checks).
+    3:    Trivial + Minor + Major (~537 checks).
+    4:    Trivial + Minor + Major + Extreme (~620 checks).
+    5:    All achievements (~636 checks).
 
-    Selecting level N includes all achievements from levels 1 through N.
-    More achievements = more items to find, longer seed.
-
-    Trivial achievements are always included (minimum is 1): the progression
-    item pool requires their locations to fit.
+    Selecting level N includes every achievement up to and including level N. More achievements means more checks to find and a longer seed. Trivial achievements are always included so the randomizer has enough room for the progression items.
     """
     display_name = "Achievement Required Effort"
     option_1   = 1
@@ -386,17 +353,11 @@ class AchievementRequiredEffort(Choice):
 
 
 class SkillpointMultiplier(Range):
-    """Total skill points distributed via Skillpoint Bundle filler items, as a
-    percentage of the 2000 SP baseline.
+    """Adjusts the total skill points you'll earn from Skillpoint Bundle items.
 
-    Bundles are sized 1-10 SP each (skewed small), and the count of bundles is
-    determined by the remaining filler slots after all real items are placed.
+    In the randomizer, the per-achievement skillpoint rewards from vanilla GemCraft are replaced by Skillpoint Bundles found throughout the multiworld. This option scales the total payout from those bundles.
 
-    Mod-side suppresses vanilla per-achievement SP rewards (see
-    AchievementUnlocker.suppressVanillaAchievementSp), so AP bundles are the
-    primary source of skill points. 100 = ~2000 SP from bundles, in the same
-    order of magnitude as vanilla's full achievement payout. Lower for tighter
-    SP economies, higher for abundance.
+    100 = roughly the same total skill points you would earn in a vanilla full-achievement run. Lower values tighten the skill-point economy; higher values give you more skill points to spend on wizard skills.
     """
     display_name = "Skillpoint Multiplier"
     range_start = 50
@@ -410,7 +371,6 @@ class GCFWOptions(PerGameCommonOptions):
     fields_required:             FieldsRequired
     fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
-    progression_bias:            ProgressionBias
     field_token_granularity:   FieldTokenGranularity
     stash_key_granularity:     StashKeyGranularity
     gem_pouch_granularity:     GemPouchGranularity

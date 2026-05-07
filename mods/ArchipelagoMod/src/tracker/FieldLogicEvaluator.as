@@ -617,16 +617,16 @@ package tracker {
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return verb + " key";
             var g:int = int(opts.stashKeyGranularity);
-            if (g == 2 || g == 3) {
+            if (g == 3 || g == 4) {
                 if (strId == null || strId.length == 0) return verb + " key";
                 return verb + " key (" + strId.charAt(0) + ")";
             }
-            if (g == 4 || g == 5) {
+            if (g == 5 || g == 6) {
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null || tierMap[strId] == null) return verb + " key";
                 return verb + " key (Tier " + int(tierMap[strId]) + ")";
             }
-            // 0 / 1 (per_stage variants) and 6 (global) — no extra suffix needed.
+            // 0 (off), 1/2 (per_stage variants), 7 (global) — no extra suffix needed.
             return verb + " key";
         }
 
@@ -953,13 +953,7 @@ package tracker {
             return int(AV.serverData.serverOptions.gemPouchGranularity);
         }
 
-        // True when field_token_granularity is one of the progressive
-        // variants (per_stage_progressive=1, per_tile_progressive=3,
-        // per_tier_progressive=5). In those modes the Nth copy of the
-        // singleton progressive item unlocks the Nth tile/stage in the
-        // seed's randomized order, so the token count IS the prereq
-        // chain — vanilla GCFW Field_<sid> chains from rulesdata_levels
-        // become artificial and must be ignored.
+        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3, per_tier_progressive=5). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
         private function _isFieldTokenProgressive():Boolean {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return false;

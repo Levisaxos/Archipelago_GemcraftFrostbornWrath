@@ -98,7 +98,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 | Option | Default | Description |
 |---|---|---|
-| `stash_key_granularity` | `per_tile_progressive` | Wizard Stashes start locked. Same `per_stage` / `per_tile` / `per_tier` families as Field Tokens (each with a `_progressive` sibling), plus a `global` option that uses one master key for every stash. |
+| `stash_key_granularity` | `per_tile_progressive` | Wizard Stashes start locked. Same `per_stage` / `per_tile` / `per_tier` families as Field Tokens (each with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. |
 | `gem_pouch_granularity` | `per_tile_progressive` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `per_tier`, `per_tier_progressive`, `global`. |
 
 ### Difficulty

@@ -557,9 +557,7 @@ package tracker {
                     return AV.sessionData.getItemCount(progId) >= idxP + 1;
                 }
                 if (mode == 3 || mode == 4) {
-                    // per_tier (3) and per_tier_progressive (4): without a
-                    // specific stage in scope, accept if ANY tier pouch is
-                    // held that covers a stage with this prefix.
+                    // per_tier (3) and per_tier_progressive (4): without a specific stage in scope, accept if ANY tier pouch is held that covers a stage with this prefix.
                     var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
                     if (tierMap == null) return true;
                     var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);

@@ -34,9 +34,9 @@ package data {
         // fieldTokenGranularity: 0=per_stage, 1=per_stage_progressive,
         //                        2=per_tile,  3=per_tile_progressive,
         //                        4=per_tier,  5=per_tier_progressive
-        // stashKeyGranularity:   0=per_stage, 1=per_stage_progressive,
-        //                        2=per_tile,  3=per_tile_progressive,
-        //                        4=per_tier,  5=per_tier_progressive, 6=global
+        // stashKeyGranularity:   0=off, 1=per_stage, 2=per_stage_progressive,
+        //                        3=per_tile,  4=per_tile_progressive,
+        //                        5=per_tier,  6=per_tier_progressive, 7=global
         // gemPouchGranularity:   0=off, 1=per_tile, 2=per_tile_progressive,
         //                        3=per_tier, 4=per_tier_progressive, 5=global
         // gemPouchPlayOrder is the prefix list (W, S, V, R, ...) used by

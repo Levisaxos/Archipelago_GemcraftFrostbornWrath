@@ -202,6 +202,13 @@ package {
         // in the corresponding _grant…ProgressivePerStage functions.
         private var _sessionFieldStageProgressiveUnlocks:Array = [];
         private var _sessionStashStageProgressiveUnlocks:Array = [];
+        // Internal achievement gameIds earned this level whose AP location was
+        // excluded at gen time (effort threshold, untrackable, Trial-only,
+        // Endurance disabled). _injectApDropIcons emits a vanilla achievement
+        // drop icon for each so the player still sees the unlock at level end;
+        // vanilla skill points already flow because we don't suppress SP for
+        // excluded achievements.
+        private var _sessionExcludedAchievementGameIds:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
@@ -304,6 +311,9 @@ package {
                 // When an achievement check is sent, immediately refresh the panel so the
                 // achievement leaves "In Logic" without waiting for the next item grant.
                 _achievementUnlocker.onChecked = _refreshAchievementPanel;
+                // Excluded-from-AP achievements still earn vanilla SP — record
+                // their gameIds so the level-end drop screen renders an icon.
+                _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
@@ -539,6 +549,7 @@ package {
             _sessionGrantedFragments = [];
             _sessionFieldStageProgressiveUnlocks = [];
             _sessionStashStageProgressiveUnlocks = [];
+            _sessionExcludedAchievementGameIds = [];
             _levelEndCountdown = -1;
             _needsConnection = false;
 
@@ -814,6 +825,7 @@ package {
                     _sessionGrantedFragments = [];
                     _sessionFieldStageProgressiveUnlocks = [];
                     _sessionStashStageProgressiveUnlocks = [];
+                    _sessionExcludedAchievementGameIds = [];
                     _levelEndCountdown = -1;
                 }
             }
@@ -1366,6 +1378,7 @@ package {
             _sessionGrantedFragments = [];
             _sessionFieldStageProgressiveUnlocks = [];
             _sessionStashStageProgressiveUnlocks = [];
+            _sessionExcludedAchievementGameIds = [];
             _levelEndCountdown = -1;
             if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
         }
@@ -1391,6 +1404,17 @@ package {
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
             }
+        }
+
+        /**
+         * Wired as `_achievementUnlocker.onAchievementSkipped`. Records the
+         * gameId so _injectApDropIcons can render a vanilla achievement icon
+         * for it at level end. Vanilla SP for these unlocks is not suppressed,
+         * so the icon stands in for the SP the player just received.
+         */
+        private function _onExcludedAchievementUnlocked(gameId:int, skipReason:String):void {
+            if (gameId < 0) return;
+            _sessionExcludedAchievementGameIds.push(gameId);
         }
 
         /**
@@ -1654,6 +1678,15 @@ package {
                 if (achGameId >= 0) {
                     _progressionBlocker.addAchievementDropIcon(achGameId);
                 }
+            }
+
+            // 8b. Excluded achievements — earned in-game but with no AP
+            // location. Render a vanilla achievement icon so the unlock is
+            // still visible; the player has already received vanilla SP for
+            // these (we don't suppress it).
+            for (i = 0; i < _sessionExcludedAchievementGameIds.length; i++) {
+                _progressionBlocker.addAchievementDropIcon(
+                    int(_sessionExcludedAchievementGameIds[i]));
             }
 
             // 9. Remote items: anything routed to another player gets a generic AP
@@ -2636,8 +2669,9 @@ package {
 
         /** Re-apply stash unlocks from received items. Called from
          *  syncWithAP after sessionData.reset() so the unlocked state is
-         *  rebuilt from the full item list at every sync. Handles all four
-         *  stash_key_granularity modes:
+         *  rebuilt from the full item list at every sync. Handles every
+         *  stash_key_granularity mode:
+         *    off        → no keys exist; every stash is unlocked outright
          *    per_stage  → AP id 1400-1521 (one per stage's loc id)
          *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
          *    per_tier   → AP id 1548-1560 (one per tier 0..12)
@@ -2651,6 +2685,20 @@ package {
 
             _logger.log(MOD_NAME, "_syncStashLockState: stashKeyGranularity="
                 + (opts != null ? String(opts.stashKeyGranularity) : "?"));
+
+            // Off mode: no keys are issued, so unlock every stash up front
+            // and skip the per-mode key scans below.
+            if (opts != null && int(opts.stashKeyGranularity) == 0) {
+                for (var offSid:String in byStrId) {
+                    if (!AV.sessionData.isStashUnlocked(offSid)) {
+                        AV.sessionData.markStashUnlocked(offSid);
+                        changes++;
+                    }
+                }
+                _logger.log(MOD_NAME, "_syncStashLockState: off mode — unlocked "
+                    + changes + " stashes");
+                return changes;
+            }
 
             // Per-stage: walk the stageLocIds map, mark each stash whose
             // matching key item id is held.

@@ -54,6 +54,16 @@ package unlockers {
          */
         public var onChecked:Function = null;
 
+        /**
+         * Called when an achievement is earned that's been excluded from AP
+         * generation (effort threshold, untrackable, Trial-only, Endurance
+         * disabled). ArchipelagoMod wires this to record the gameId so the
+         * level-end drop screen can still render an achievement icon for it,
+         * matching vanilla behaviour for excluded achievements.
+         * Signature: (gameId:int, skipReason:String):void
+         */
+        public var onAchievementSkipped:Function = null;
+
         // -----------------------------------------------------------------------
 
         public function AchievementUnlocker(logger:Logger,
@@ -256,6 +266,16 @@ package unlockers {
                         }
                         _logger.log(_modName, "Achievement excluded from AP ('" + ach.title
                             + "'): " + skipReason);
+                        // Notify ArchipelagoMod so it can still render a
+                        // drop icon for the unlock at level end. Vanilla
+                        // SP flows naturally because we don't suppress it
+                        // for excluded achievements.
+                        if (onAchievementSkipped != null) {
+                            try { onAchievementSkipped(gameId, skipReason); }
+                            catch (eSkip:Error) {
+                                _logger.log(_modName, "onAchievementSkipped threw: " + eSkip.message);
+                            }
+                        }
                         continue;
                     }
 

@@ -163,14 +163,11 @@ package data {
          * Granularity-aware (matches gemPouchGranularity in slot_data):
          *   0 (off)                   → always true
          *   1 (per_tile)              → Gempouch (<prefix>) item present
-         *   2 (per_tile_progressive)  → N copies of Progressive Gempouch where
-         *                               N is 1-based index in progressiveTileOrder
+         *   2 (per_tile_progressive)  → N copies of Progressive Gempouch where N is 1-based index in progressiveTileOrder
          *   3 (per_tier)              → Tier <N> Gempouch item present
-         *   4 (per_tier_progressive)  → N copies of Progressive Gempouch (per-tier)
-         *                               where N is 1-based index in progressiveTierOrder
+         *   4 (per_tier_progressive)  → N copies of Progressive Gempouch (per-tier) where N is 1-based index in progressiveTierOrder
          *   5 (global)                → Master Gempouch item present
-         * Returns true on any unknown configuration so a misconfigured seed
-         * never deadlocks the player.
+         * Returns true on any unknown configuration so a misconfigured seed never deadlocks the player.
          */
         public function hasPouchForStage(stageStrId:String):Boolean {
             if (AV.serverData == null || AV.serverData.serverOptions == null)

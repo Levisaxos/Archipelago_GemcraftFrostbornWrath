@@ -142,16 +142,11 @@ def _load_item_table() -> Dict[str, ItemData]:
     table["Wizard Stash Master Key"] = ItemData(
         _g.STASH_MASTER_KEY_ID, ItemClassification.progression)
 
-    # Gempouches. Always declared so name→id resolution works regardless of
-    # gem_pouch_granularity option; create_items() picks which set goes into
-    # the pool.
+    # Gempouches. Always declared so name→id resolution works regardless of gem_pouch_granularity option; create_items() picks which set goes into the pool.
     #   - per_tile:             26 named pouches `Gempouch (X)` at IDs 626..651.
-    #   - per_tile_progressive: single "Progressive Gempouch" at ID 652,
-    #                           added 26 times to the pool.
+    #   - per_tile_progressive: single "Progressive Gempouch" at ID 652, added 26 times to the pool.
     #   - per_tier:             `Tier <N> Gempouch` (one per active tier).
-    #   - per_tier_progressive: single "Progressive Gempouch (per-tier)"
-    #                           added once per active tier (declared below
-    #                           with the other progressive variants).
+    #   - per_tier_progressive: single "Progressive Gempouch (per-tier)" added once per active tier (declared below with the other progressive variants).
     #   - global:               "Master Gempouch" (single item).
     for i, prefix in enumerate(_g.TILE_PREFIXES):
         table[f"Gempouch ({prefix})"] = ItemData(

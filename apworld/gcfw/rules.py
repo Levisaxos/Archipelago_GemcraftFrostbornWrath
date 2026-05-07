@@ -363,26 +363,28 @@ def _element_count_field(elem_name: str) -> str:
     return "".join(p[0].upper() + p[1:] for p in elem_name.split() if p) + "Count"
 
 
-def _get_world_stash_key_map(state, player: int) -> dict:
+def _get_world_stash_key_map(state, player: int) -> dict | None:
     """Per-world map of sid -> (stash-key item name, count needed),
     granularity-aware. Built once and cached on the world instance.
     For distinct/global modes count is always 1; progressive modes return
-    the position-in-order count threshold."""
+    the position-in-order count threshold. Returns None when stash keys
+    are off — callers must treat the gate as unconditionally satisfied."""
     world = state.multiworld.worlds[player]
-    cached = getattr(world, "_sid_to_stash_key", None)
-    if cached is None:
+    if not hasattr(world, "_sid_to_stash_key"):
         from . import gating as _g
         sk_gran = world.options.stash_key_granularity.value
-        starter_sid = world.start_sid
-        cached = {
-            s["str_id"]: (
-                _g.stash_key_for_stage(s["str_id"], sk_gran),
-                _g.stash_key_count_for_stage(s["str_id"], sk_gran, starter_sid),
-            )
-            for s in GAME_DATA["stages"]
-        }
-        world._sid_to_stash_key = cached
-    return cached
+        if sk_gran == _g.STASH_OFF:
+            world._sid_to_stash_key = None
+        else:
+            starter_sid = world.start_sid
+            world._sid_to_stash_key = {
+                s["str_id"]: (
+                    _g.stash_key_for_stage(s["str_id"], sk_gran),
+                    _g.stash_key_count_for_stage(s["str_id"], sk_gran, starter_sid),
+                )
+                for s in GAME_DATA["stages"]
+            }
+    return world._sid_to_stash_key
 
 
 def _get_world_field_token_map(state, player: int) -> dict:
@@ -413,8 +415,17 @@ def _any_stash_reachable(state, player: int) -> bool:
 
     Uses Journey-location reachability (not Wizard-stash-location, which
     would be circular since that location's own access rule includes the
-    key check)."""
+    key check). When stash keys are off, every stash is open so this
+    reduces to "any stage's Journey location is reachable"."""
     sid_to_key = _get_world_stash_key_map(state, player)
+    if sid_to_key is None:
+        for s in GAME_DATA["stages"]:
+            try:
+                if state.can_reach(f"Complete {s['str_id']} - Journey", "Location", player):
+                    return True
+            except KeyError:
+                continue
+        return False
     for sid, (key_name, key_count) in sid_to_key.items():
         if key_count == 1:
             if not state.has(key_name, player):
@@ -544,9 +555,12 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
         # the stage is reachable, the player can only "unlock" the tower by
         # opening its stash, which requires the per-stage stash key. So gate
         # on both (stage reachable, stash key held) for any qualifying stage.
+        # When stash keys are off, the key check is dropped.
         from . import gating as _g
         world = state.multiworld.worlds[player]
         sk_gran = world.options.stash_key_granularity.value
+        if sk_gran == _g.STASH_OFF:
+            return _can_reach_any_stage(state, player, qualifying)
         starter_sid = world.start_sid
         for sid in qualifying:
             key_name  = _g.stash_key_for_stage(sid, sk_gran)
@@ -1457,13 +1471,17 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                         lambda state, i=item_name: state.has(i, player))
 
         # ---- Wizard-stash key (always; cheap state.has / state.count) ----
-        key_name  = _gating.stash_key_for_stage(sid, sk_gran)
-        key_count = _gating.stash_key_count_for_stage(sid, sk_gran, start_sid)
-        if key_count == 1:
-            key_check = lambda state, n=key_name: state.has(n, player)
+        # Off mode short-circuits to `_always_true`.
+        if sk_gran == _gating.STASH_OFF:
+            key_check = _always_true
         else:
-            key_check = lambda state, n=key_name, c=key_count: \
-                state.count(n, player) >= c
+            key_name  = _gating.stash_key_for_stage(sid, sk_gran)
+            key_count = _gating.stash_key_count_for_stage(sid, sk_gran, start_sid)
+            if key_count == 1:
+                key_check = lambda state, n=key_name: state.has(n, player)
+            else:
+                key_check = lambda state, n=key_name, c=key_count: \
+                    state.count(n, player) >= c
         # Diagnostic label only added when GCFW_TIMING=1 (otherwise no-op).
         key_check_w = wrap_rule(f"stash_key:{sid}", key_check)
 

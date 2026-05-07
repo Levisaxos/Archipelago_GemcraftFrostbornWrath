@@ -12,7 +12,6 @@ from .locations import GCFWLocation, location_table
 from .options import (
     GCFWOptions,
     FieldTokenPlacement,
-    ProgressionBias,
     Goal,
     XpTomeBonus,
     DeathLinkPunishment,
@@ -258,7 +257,6 @@ class GemcraftFrostbornWrathWorld(World):
             StashKeyGranularity,
             GemPouchGranularity,
             FieldTokenPlacement,
-            ProgressionBias,
             XpTomeBonus,
             AchievementRequiredEffort,
             SkillpointMultiplier,
@@ -284,23 +282,13 @@ class GemcraftFrostbornWrathWorld(World):
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
-    def _bias_fraction(self) -> float:
-        bias = self.options.progression_bias.value
-        if bias == ProgressionBias.option_soft:
-            return 0.5
-        if bias == ProgressionBias.option_strong:
-            return 0.85
-        return 0.0
+    _BIAS_FRACTION = 0.75
 
     def _apply_progression_bias(self, include_tokens: bool, include_skills: bool) -> None:
-        """Pre-place a fraction of (tokens + skills) onto the player's own
-        Journey/Stash locations to bias them away from achievements.
-        Items that cannot be placed (access rules) are returned to the main pool."""
+        """Pre-place a fraction of (tokens + skills) onto the player's own Journey/Stash locations to bias them away from achievements. Items that cannot be placed (access rules) are returned to the main pool."""
         from Fill import fill_restrictive
 
-        fraction = self._bias_fraction()
-        if fraction <= 0.0:
-            return
+        fraction = self._BIAS_FRACTION
 
         candidates = []
         for item in self.multiworld.itempool:
@@ -930,9 +918,9 @@ class GemcraftFrostbornWrathWorld(World):
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
             #                            2=per_tile,  3=per_tile_progressive,
             #                            4=per_tier,  5=per_tier_progressive
-            #   stash_key_granularity:   0=per_stage, 1=per_stage_progressive,
-            #                            2=per_tile,  3=per_tile_progressive,
-            #                            4=per_tier,  5=per_tier_progressive, 6=global
+            #   stash_key_granularity:   0=off, 1=per_stage, 2=per_stage_progressive,
+            #                            3=per_tile,  4=per_tile_progressive,
+            #                            5=per_tier,  6=per_tier_progressive, 7=global
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
             #                            3=per_tier, 4=per_tier_progressive, 5=global
             "field_token_granularity": self.options.field_token_granularity.value,
