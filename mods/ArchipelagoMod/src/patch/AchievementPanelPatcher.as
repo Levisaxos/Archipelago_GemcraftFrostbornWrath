@@ -387,14 +387,18 @@ package patch {
         /**
          * Called last in the update sequence (after updateExcluded / updateEffortExcluded /
          * updateLogicFlags).  Stores the requirements-met set, re-sorts the panel, and
-         * refreshes the group filter + counts.
+         * refreshes the group filter + counts. Also paints dots onto every
+         * achievement's mcAchi — including ones whose mcAchi isn't currently
+         * parented — so the in-game collect popup (which reuses mcAchi) shows
+         * a current dot even when the player never opens the panel.
          */
         public function updateDots(reqMetApIds:Object):void {
             _reqMetApIds = reqMetApIds || {};
-            _dotsDirty   = true;
+            _dotsDirty   = false;
             _applySortedOrder();
             _applyGroupFilter();
             _updateGroupCounts();
+            _applyLogicDots();
         }
 
         /**
@@ -592,7 +596,11 @@ package patch {
                 var mcAchi:* = _getAchMcAchi(ach);
                 if (mcAchi == null) { noMc++; continue; }
 
-                try { if (mcAchi.parent == null) continue; } catch (e:Error) { continue; }
+                // No mcAchi.parent guard: the dot is just a child of mcAchi,
+                // so it's harmless to attach when mcAchi is unparented and it
+                // rides along when the in-game collect popup later parents
+                // mcAchi to its container — giving the popup a current dot
+                // without requiring the player to open the panel first.
 
                 var apIdInt:int      = int(apId);
                 var excluded:Boolean = (_excludedApIds[apIdInt] === true || _effortExcludedApIds[apIdInt] === true);

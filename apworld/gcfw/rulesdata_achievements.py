@@ -931,7 +931,7 @@ achievement_requirements = {
         "description": "Build 30 walls.",
         "details": "Build 30 walls in one battle.",
         "requirements": ["eWall"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2101
     "Connected": {
