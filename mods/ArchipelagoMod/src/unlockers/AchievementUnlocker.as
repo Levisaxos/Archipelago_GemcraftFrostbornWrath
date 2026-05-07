@@ -6,6 +6,7 @@ package unlockers {
     import data.EmbeddedData;
     import patch.ProgressionBlocker;
     import ui.ReceivedToast;
+    import ui.ItemColors;
 
     /**
      * Handles achievement detection, reporting, and skill-point rewards.
@@ -258,11 +259,12 @@ package unlockers {
                     var skipReason:String = getSkipReason(achData);
                     if (skipReason != null) {
                         _reportedAchievements[gameId] = true;  // don't re-check every frame
-                        // Toast it so the player can spot calibration mistakes
-                        // ("I just got this — should it really be excluded?").
+                        // Toast the bare title so the unlock surfaces in the
+                        // popup just like any other received item; the skip
+                        // reason is dropped from user-facing UI but still
+                        // logged for diagnostics.
                         if (_receivedToast != null) {
-                            _receivedToast.addItem(
-                                ach.title + " — " + skipReason, 0xFF8844);
+                            _receivedToast.addItem(ach.title, ItemColors.USEFUL);
                         }
                         _logger.log(_modName, "Achievement excluded from AP ('" + ach.title
                             + "'): " + skipReason);

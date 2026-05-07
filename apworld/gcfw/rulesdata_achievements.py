@@ -242,7 +242,7 @@ achievement_requirements = {
         "game_id": 142,
         "description": "Reach 1.000 gem wasp kills through all the battles.",
         "details": "Cumulative across all battles: 1,000 wasp kills.",
-        "requirements": ["fieldToken:1"],
+        "requirements": ["fieldToken:15"],
         "required_effort": "Trivial",
     },
     # AP ID: 2024
@@ -2042,7 +2042,7 @@ achievement_requirements = {
         "game_id": 601,
         "description": "Demolish a trap.",
         "details": "Demolish a trap.",
-        "requirements": ["eTraps", "sDemolition"],
+        "requirements": ["eTraps"],
         "required_effort": "Trivial",
     },
     # AP ID: 2228
@@ -4044,8 +4044,8 @@ achievement_requirements = {
         "ap_id": 2452,
         "game_id": 128,
         "description": "Kill 60 monsters with gems in traps.",
-        "requirements": ["eTraps"],
-        "required_effort": "Minor",
+        "requirements": ["eTraps", "minMonsters:60"],
+        "required_effort": "Trivial",
     },
     # AP ID: 2453
     "Round Cut": {

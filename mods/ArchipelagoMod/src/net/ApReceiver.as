@@ -5,6 +5,7 @@ package net {
     import ui.SystemToast;
     import ui.ReceivedToast;
     import ui.MessageLog;
+    import ui.ItemColors;
 
     /**
      * Handles all inbound Archipelago protocol packets.
@@ -229,6 +230,13 @@ package net {
             var items:Array = p.items as Array;
             _logger.log(_modName, "ReceivedItems index=" + index + " count=" + items.length);
 
+            // Cache classification flags so toast emitters can colour the
+            // popup by importance (progression / useful / trap / filler).
+            for each (var ni:Object in items) {
+                if (ni == null || ni.item == null) continue;
+                ItemColors.setFlags(int(ni.item), int(ni.flags));
+            }
+
             if (index == 0) {
                 if (onFullSync != null) onFullSync(items);
             } else {
@@ -255,16 +263,30 @@ package net {
                 if (receiving != _mySlot && senderSlot != _mySlot) return;
 
                 var logText:String = resolvePartsText(p.data, senderSlot);
+                var logHtml:String = resolvePartsHtml(p.data, senderSlot);
                 _logger.log(_modName, "  ItemSend: " + logText);
-                if (_messageLog != null) _messageLog.add(logText, 0xFFCC99FF, MessageLog.SOURCE_SYSTEM);
+                if (_messageLog != null) _messageLog.add(logText, 0xFFFFFF, MessageLog.SOURCE_SYSTEM, logHtml);
 
                 if (senderSlot == _mySlot) {
                     var sentItemId:int      = int(p.item.item);
                     var sentLocId:int       = int(p.item.location);
+                    var sentFlags:int       = (p.item.flags != null) ? int(p.item.flags) : 0;
                     var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
+                    var sentLocName:String  = resolveLocationNameForSlot(sentLocId, _mySlot);
                     var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
                     var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
-                    _toast.addMessage("Sent " + sentItemName + " to " + recvName, 0xCC99FF);
+
+                    // Item appears in its Archipelago importance colour;
+                    // surrounding text stays the toast's default white.
+                    var itemHex:String = _hex6(ItemColors.forFlags(sentFlags));
+                    var html:String = "Sent <font color=\"#" + itemHex + "\">"
+                        + _escapeHtml(sentItemName) + "</font> to "
+                        + _escapeHtml(recvName)
+                        + " (Found at " + _escapeHtml(sentLocName) + ")";
+                    var plain:String = "Sent " + sentItemName + " to " + recvName
+                        + " (Found at " + sentLocName + ")";
+                    _toast.addRichMessage(html, plain);
+
                     var isForMe:Boolean = (receiving == _mySlot);
                     if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe);
                 }
@@ -299,7 +321,20 @@ package net {
                         itemCount++;
                     }
                     AV.archipelagoData.games[gameName] = byId;
-                    _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items");
+
+                    // Same treatment for locations so foreign-game location ids
+                    // in ItemSend messages can be resolved to readable names.
+                    var locNameToId:Object = gameData.location_name_to_id;
+                    var locCount:int = 0;
+                    if (locNameToId != null) {
+                        var locById:Object = {};
+                        for (var lname:String in locNameToId) {
+                            locById[String(int(locNameToId[lname]))] = lname;
+                            locCount++;
+                        }
+                        AV.archipelagoData.gamesLocations[gameName] = locById;
+                    }
+                    _logger.log(_modName, "    [DataPackage] Game '" + gameName + "': " + itemCount + " items, " + locCount + " locations");
 
                     // Back-fill names for checks that were waiting on this DataPackage
                     var filled:int = 0;
@@ -360,6 +395,42 @@ package net {
         }
 
         /**
+         * HTML variant of resolvePartsText: emits the same readable text but
+         * wraps each item_id part in a <font color="…"> tag matching the
+         * Archipelago importance of the part's flags. Other segments are
+         * escaped so they render as literal text. Used by the MessageLog so
+         * the ItemSend history shows item names in their progression /
+         * useful / trap / filler colour while the rest of the line stays
+         * the panel's default white.
+         */
+        private function resolvePartsHtml(data:*, defaultItemOwner:int = -1):String {
+            var result:String = "";
+            if (data == null) return result;
+            var parts:Array = data as Array;
+            for each (var part:Object in parts) {
+                var ptype:String = (part.type != null) ? String(part.type) : "text";
+                if (ptype == "player_id") {
+                    var pSlot:int = int(part.text);
+                    var pData:PlayerData = AV.archipelagoData.players[pSlot] as PlayerData;
+                    var pName:String = (pData != null) ? pData.name : ("Slot " + pSlot);
+                    result += _escapeHtml(pName);
+                } else if (ptype == "item_id") {
+                    var ownerSlot:int = (part.player != null) ? int(part.player) : defaultItemOwner;
+                    var itemName:String = resolveItemNameForSlot(int(part.text), ownerSlot);
+                    var flags:int = (part.flags != null) ? int(part.flags) : 0;
+                    var hex:String = _hex6(ItemColors.forFlags(flags));
+                    result += "<font color=\"#" + hex + "\">" + _escapeHtml(itemName) + "</font>";
+                } else if (ptype == "location_id") {
+                    var locOwner:int = (part.player != null) ? int(part.player) : -1;
+                    result += _escapeHtml(resolveLocationNameForSlot(int(part.text), locOwner));
+                } else {
+                    if (part.text != null) result += _escapeHtml(String(part.text));
+                }
+            }
+            return result;
+        }
+
+        /**
          * Resolve a PrintJSON data array to a human-readable string.
          * defaultItemOwner is the slot to assume owns any item_id part that
          * does not include its own player field (e.g. the receiving slot in
@@ -379,7 +450,8 @@ package net {
                     var ownerSlot:int = (part.player != null) ? int(part.player) : defaultItemOwner;
                     result += resolveItemNameForSlot(int(part.text), ownerSlot);
                 } else if (ptype == "location_id") {
-                    result += resolveLocationName(int(part.text));
+                    var locOwner:int = (part.player != null) ? int(part.player) : -1;
+                    result += resolveLocationNameForSlot(int(part.text), locOwner);
                 } else {
                     if (part.text != null) result += String(part.text);
                 }
@@ -418,14 +490,52 @@ package net {
             return "Item #" + itemId;
         }
 
+        /**
+         * Resolve a location id to a name when the owning slot is unknown
+         * (legacy callers). Tries the GCFW stage table first, then walks the
+         * cached per-game location maps as a fallback.
+         */
         private function resolveLocationName(locId:int):String {
-            var suffix:String = "";
-            var baseId:int = locId;
-            if (baseId >= 400) { baseId -= 399;  suffix = " Stash"; }
-            var stageLocIds:Object = ConnectionManager.stageLocIds;
-            for (var strId:String in stageLocIds) {
-                if (int(stageLocIds[strId]) == baseId) return strId + suffix;
+            return resolveLocationNameForSlot(locId, -1);
+        }
+
+        /**
+         * Resolve a location id given the slot whose game owns the location.
+         *
+         * Priority:
+         *   1. If owner is our slot (or the helper inferred it via the GCFW
+         *      stage map), use the stage-aware GCFW name (Journey / Stash).
+         *   2. If the owner's game has a cached location_name_to_id map
+         *      (loaded from DataPackage), use it.
+         *   3. Fall back to "Location #<id>".
+         */
+        private function resolveLocationNameForSlot(locId:int, ownerSlot:int):String {
+            // Step 1: GCFW stage table (only meaningful for our own slot).
+            if (ownerSlot < 0 || ownerSlot == _mySlot) {
+                var suffix:String = "";
+                var baseId:int = locId;
+                if (baseId >= 400 && baseId < 1400) { baseId -= 399;  suffix = " Stash"; }
+                var stageLocIds:Object = ConnectionManager.stageLocIds;
+                if (stageLocIds != null) {
+                    for (var strId:String in stageLocIds) {
+                        if (int(stageLocIds[strId]) == baseId) return strId + suffix;
+                    }
+                }
             }
+
+            // Step 2: per-game DataPackage cache.
+            if (ownerSlot >= 0) {
+                var ownerData:PlayerData = AV.archipelagoData.players[ownerSlot] as PlayerData;
+                var gameName:String = (ownerData != null) ? ownerData.game : null;
+                if (gameName != null) {
+                    var gameLocs:Object = AV.archipelagoData.gamesLocations[gameName];
+                    if (gameLocs != null) {
+                        var resolved:String = gameLocs[String(locId)];
+                        if (resolved != null) return resolved;
+                    }
+                }
+            }
+
             return "Location #" + locId;
         }
 
@@ -433,6 +543,19 @@ package net {
             var n:int = 0;
             for (var k:String in obj) n++;
             return n;
+        }
+
+        /** Format a uint as a zero-padded 6-digit hex string for HTML colour tags. */
+        private function _hex6(c:uint):String {
+            var s:String = (c & 0xFFFFFF).toString(16);
+            while (s.length < 6) s = "0" + s;
+            return s;
+        }
+
+        /** Escape the few characters that would otherwise be parsed as HTML. */
+        private function _escapeHtml(s:String):String {
+            if (s == null) return "";
+            return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
     }
 }

@@ -36,14 +36,18 @@ package ui {
             _entries     = _fileHandler.loadLog(slotId);
         }
 
-        /** Add a message to the log (and persist it to disk if a slot is active). */
-        public function add(text:String, color:uint, source:String):void {
+        /** Add a message to the log (and persist it to disk if a slot is active).
+         *  If `html` is provided, the panel renders it via TextField.htmlText so
+         *  individual segments (e.g. item names) can carry their own colours;
+         *  otherwise the whole line is drawn in `color`. */
+        public function add(text:String, color:uint, source:String, html:String = null):void {
             var entry:Object = {
                 text:   text,
                 color:  color,
                 source: source,
                 time:   new Date()
             };
+            if (html != null) entry.html = html;
             _entries.push(entry);
             if (_fileHandler != null && _slotId > 0) {
                 _fileHandler.appendLogEntry(_slotId, entry);

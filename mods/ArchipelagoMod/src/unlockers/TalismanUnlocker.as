@@ -3,6 +3,7 @@ package unlockers {
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.entity.TalismanFragment;
     import ui.ReceivedToast;
+    import ui.ItemColors;
     import utils.ApIdMapper;
 
     /**
@@ -110,7 +111,7 @@ package unlockers {
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
                 : ("Talisman Fragment #" + apId);
-            showToast("Received " + label, 0xFFCC44);
+            showToast("Received " + label, ItemColors.forApId(apId));
             logAction("Granted talisman apId=" + apId
                 + " seed=" + seed + " rarity=" + rarity
                 + " type=" + type + " slot=" + slotIdx);

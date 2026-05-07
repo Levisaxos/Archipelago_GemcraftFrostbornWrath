@@ -38,9 +38,13 @@ package ui {
         private static const FADE_OUT_MS:int  = 1000;
         private static const TOTAL_MS:int     = FADE_IN_MS + VISIBLE_MS + FADE_OUT_MS;
 
-        // Dark fill + Archipelago purple border
-        private static const BG_ALPHA:Number   = 0.82;
-        private static const BORDER_COLOR:uint = 0x9966CC;
+        // Dark fill + neutral system-console border. Body text defaults to
+        // white; coloured segments are emitted via htmlText (see addRichMessage)
+        // so item names can carry their Archipelago importance colour while
+        // the surrounding message stays readable.
+        private static const BG_ALPHA:Number    = 0.85;
+        private static const BORDER_COLOR:uint  = 0x444444;
+        private static const DEFAULT_TEXT:uint  = 0xFFFFFF;
 
         private var _bg:Shape;
         private var _slots:Array;  // { row:Sprite, startTime:int }
@@ -81,27 +85,45 @@ package ui {
         }
 
         /**
-         * Enqueue a message. Shows immediately if a slot is free,
-         * otherwise waits until a slot becomes available.
+         * Enqueue a plain-text message in a single colour. Shows immediately
+         * if a slot is free, otherwise waits.
          */
         public function addMessage(text:String, color:uint):void {
             if (_messageLog != null) {
                 _messageLog.add(text, color, MessageLog.SOURCE_SYSTEM);
             }
             if (_slots.length < MAX_SLOTS) {
-                addSlot(text, color);
+                addSlot(text, null, color);
             } else {
-                _queue.push({ text: text, color: color });
+                _queue.push({ text: text, html: null, color: color });
+            }
+        }
+
+        /**
+         * Enqueue a rich message rendered via TextField.htmlText. The body
+         * defaults to white; embed `<font color="#XXXXXX">…</font>` to
+         * colour individual segments (e.g. item names by importance).
+         * Only the on-screen overlay slot is populated — callers that also
+         * want a MessageLog entry must call MessageLog.add() themselves
+         * (typically with their own resolved HTML), which avoids duplicates
+         * when the log already records a richer version of the same event.
+         */
+        public function addRichMessage(html:String, plain:String, plainColor:uint = DEFAULT_TEXT):void {
+            if (_slots.length < MAX_SLOTS) {
+                addSlot(plain, html, plainColor);
+            } else {
+                _queue.push({ text: plain, html: html, color: plainColor });
             }
         }
 
         // -----------------------------------------------------------------------
         // Internal
 
-        private function addSlot(text:String, color:uint):void {
+        private function addSlot(text:String, html:String, color:uint):void {
             var fmt:TextFormat   = new TextFormat(FONT, TEXT_SIZE);
             fmt.align            = TextFormatAlign.LEFT;
             fmt.bold             = true;
+            fmt.color            = color;
 
             var tf:TextField     = new TextField();
             tf.mouseEnabled      = false;
@@ -113,7 +135,11 @@ package ui {
             tf.wordWrap          = false;
             tf.autoSize          = TextFieldAutoSize.LEFT;
             tf.textColor         = color;
-            tf.text              = text;
+            if (html != null) {
+                tf.htmlText      = html;
+            } else {
+                tf.text          = text;
+            }
             tf.x                 = PAD_X;
             tf.y                 = 0;
 
@@ -189,7 +215,7 @@ package ui {
                 // Fill freed slots from the queue
                 while (_slots.length < MAX_SLOTS && _queue.length > 0) {
                     var pending:Object = _queue.shift();
-                    addSlot(pending.text, pending.color);
+                    addSlot(pending.text, pending.html, pending.color);
                 }
                 layoutSlots();
                 redrawBg();

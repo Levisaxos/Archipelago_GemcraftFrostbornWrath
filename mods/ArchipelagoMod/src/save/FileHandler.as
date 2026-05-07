@@ -201,6 +201,7 @@ package save {
                     source: entry.source,
                     time:   (entry.time as Date).time
                 };
+                if (entry.html != null) serialized.html = entry.html;
                 stream.writeUTFBytes(JSON.stringify(serialized) + "\n");
                 stream.close();
             } catch (err:Error) {

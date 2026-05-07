@@ -3,6 +3,7 @@ package unlockers {
     import com.giab.games.gcfw.GV;
     import flash.utils.getDefinitionByName;
     import ui.ReceivedToast;
+    import ui.ItemColors;
 
     /**
      * Handles AP wizard level / XP bonus grants.
@@ -120,7 +121,7 @@ package unlockers {
             }
 
             logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            showToast("Received " + label, 0x88CCFF);
+            showToast("Received " + label, ItemColors.forApId(apId));
         }
 
         /**
@@ -147,7 +148,7 @@ package unlockers {
             }
 
             logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            showToast("Received " + label, 0x88CCFF);
+            showToast("Received " + label, ItemColors.forApId(apId));
         }
 
         /**

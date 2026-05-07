@@ -9,8 +9,12 @@ package data {
      * ArchipelagoData — Stores games, locations and itemnames for all different archipelago games.
      */
     public class ArchipelagoData {
-        
+
         public var games:Dictionary = new Dictionary();
+        // Per-game location id (string) → location name. Populated alongside `games`
+        // from each DataPackage so we can resolve foreign-game location ids in
+        // ItemSend messages instead of falling back to "Location #N".
+        public var gamesLocations:Dictionary = new Dictionary();
         public var players:Dictionary = new Dictionary(); // Stores id, name of player, game and list of items. Needs to get filled by resolveItemNameForSlot.
         public var checks:Object = {};  // locationId(int) → {id:int, name:String, game:String, playerName:String}
         

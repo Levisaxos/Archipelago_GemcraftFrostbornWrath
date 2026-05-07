@@ -24,6 +24,7 @@ package {
     import ui.SystemToast;
     import ui.ReceivedToast;
     import ui.MessageLog;
+    import ui.ItemColors;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
@@ -2186,7 +2187,7 @@ package {
                 if (strId != null) {
                     _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
                     _stageUnlocker.unlockStage(strId);
-                    _receivedToast.addItem("Received " + strId + " Field Token", 0xFFDD55);
+                    _receivedToast.addItem("Received " + strId + " Field Token", ItemColors.forApId(apId));
                     return;
                 }
                 if (apId >= 700 && apId <= 723) {
@@ -2240,7 +2241,7 @@ package {
                     }
                     if (stashStrId != null) {
                         AV.sessionData.markStashUnlocked(stashStrId);
-                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", 0x55AAFF);
+                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", ItemColors.forApId(apId));
                         _logger.log(MOD_NAME, "  → Wizard stash key for " + stashStrId);
                     } else {
                         _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
@@ -2319,7 +2320,7 @@ package {
                         // Gempouches don't change in-game state — gating is
                         // handled by SessionData.getItemCount on the mod side
                         // and is read live by HollowGemInjector etc. Just toast.
-                        _receivedToast.addItem("Received Progressive Gempouch", 0xFF99FF);
+                        _receivedToast.addItem("Received Progressive Gempouch", ItemColors.forApId(apId));
                         _logger.log(MOD_NAME, "  → Progressive Gempouch (count="
                             + AV.sessionData.getItemCount(apId) + ")");
                         return;
@@ -2329,7 +2330,7 @@ package {
                     // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
                     var spAmount:int = apId - 1699;
                     _achievementUnlocker.awardSkillPoints(spAmount);
-                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", 0xFFCC44);
+                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", ItemColors.forApId(apId));
                     _logger.log(MOD_NAME, "  → Skillpoint bundle: +" + spAmount + " SP");
                     return;
                 }
@@ -2436,7 +2437,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
         }
 
@@ -2455,7 +2456,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", ItemColors.forApId(1548 + tier));
             _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
         }
 
@@ -2466,7 +2467,7 @@ package {
                 AV.sessionData.markStashUnlocked(sid);
                 count++;
             }
-            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", ItemColors.forApId(1561));
             _logger.log(MOD_NAME, "  → Master stash key unlocked " + count + " stashes");
         }
 
@@ -2485,7 +2486,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", 0xFFDD55);
+            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
         }
 
@@ -2505,7 +2506,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", 0xFFDD55);
+            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", ItemColors.forApId(1588 + tier));
             _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
         }
 
@@ -2565,7 +2566,7 @@ package {
             _stageUnlocker.unlockStage(sid);
             AV.sessionData.markFieldTokenHeld(sid);
             _sessionFieldStageProgressiveUnlocks.push(sid);
-            _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
+            _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
         }
 
@@ -2592,7 +2593,7 @@ package {
                 }
             }
             _receivedToast.addItem("Received Progressive Field Token — tile " + prefix
-                + " (" + count + " stages)", 0xFFDD55);
+                + " (" + count + " stages)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive field token (per-tile) #" + n
                 + " unlocks tile " + prefix + " (" + count + " stages)");
         }
@@ -2624,7 +2625,7 @@ package {
             var sid:String = String(order[n - 1]);
             AV.sessionData.markStashUnlocked(sid);
             _sessionStashStageProgressiveUnlocks.push(sid);
-            _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, 0x55AAFF);
+            _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive stash key (per-stage) #" + n + " unlocks " + sid);
         }
 
@@ -2650,7 +2651,7 @@ package {
                 }
             }
             _receivedToast.addItem("Received Progressive Stash Key — tile " + prefix
-                + " (" + count + " stashes)", 0x55AAFF);
+                + " (" + count + " stashes)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive stash key (per-tile) #" + n
                 + " unlocks tile " + prefix + " (" + count + " stashes)");
         }
