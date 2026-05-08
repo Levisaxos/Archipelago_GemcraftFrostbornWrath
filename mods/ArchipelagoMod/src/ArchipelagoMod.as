@@ -575,6 +575,40 @@ package {
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
         public function isStageUnlocked(stageStrId:String):Boolean { return _stageUnlocker.isStageUnlocked(stageStrId); }
 
+        /**
+         * Debug-menu entry point: simulate AP receiving an item. Routes through
+         * the same grantItem() pipeline as live AP traffic (which means the
+         * receivedToast, sessionData.onItem, logic re-evaluation, and
+         * offlineItemsCollector.markSeen all run, just like a real receipt).
+         *
+         * Idempotent per session: if the apId was already collected (whether
+         * via AP or a previous debug click), this is a no-op so a check is
+         * never granted twice — matching how AP only sends each item once.
+         *
+         * Returns true if the grant ran, false if it was skipped as duplicate.
+         */
+        public function debugGrantItem(apId:int):Boolean {
+            if (debugIsItemCollected(apId)) {
+                _logger.log(MOD_NAME, "debugGrantItem: apId=" + apId + " already collected — skipping");
+                return false;
+            }
+            grantItem(apId);
+            return true;
+        }
+
+        /** True if AV.sessionData has recorded apId as collected (live AP
+         *  receipt or a prior debugGrantItem call). */
+        public function debugIsItemCollected(apId:int):Boolean {
+            if (AV.sessionData == null || AV.sessionData.collectedItems == null) return false;
+            return AV.sessionData.collectedItems[String(apId)] == true;
+        }
+
+        /** Public log passthrough for UI helpers (e.g. ScrDebugOptions) that
+         *  don't hold their own Logger reference. */
+        public function debugLog(msg:String):void {
+            if (_logger != null) _logger.log(MOD_NAME, msg);
+        }
+
         public function getDisplayedWizardLevel():int {
             if (_levelUnlocker == null) return 1;
             return _levelUnlocker.getDisplayedWizardLevel();
@@ -2229,6 +2263,12 @@ package {
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
+                    var scLabel:String = (AV.serverData != null
+                            && AV.serverData.shadowCoreNameMap != null
+                            && AV.serverData.shadowCoreNameMap[String(apId)] != null)
+                        ? String(AV.serverData.shadowCoreNameMap[String(apId)])
+                        : "Shadow Cores";
+                    _receivedToast.addItem("Received " + scLabel, ItemColors.forApId(apId));
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {

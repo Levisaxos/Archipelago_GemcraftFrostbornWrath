@@ -10,11 +10,14 @@ package ui {
     import flash.text.TextFormatAlign;
 
     /**
-     * Horizontal drag slider for wizard level (1–1000).
+     * Compact horizontal drag slider for wizard level (1–1000).
      *
      * Designed to sit inside the McDebugOptions arrCntContents list.
      * Exposes a public `yReal` property so the viewport system can
      * reposition and show/hide it exactly like McOptTitle / McOptPanel.
+     *
+     * Layout: slider + label + value + ±1/±10 fine buttons on a single row,
+     * with four preset jump buttons (1 / 100 / 500 / 1000) on the row below.
      *
      * `onChange(newValue:int)` is called on every value change.
      * `setValue(v, false)` silently updates the knob (no callback).
@@ -24,13 +27,17 @@ package ui {
         public static const MIN_VALUE:int = 1;
         public static const MAX_VALUE:int = 1000;
 
-        // Track geometry — TRACK_X aligns with COL_LEFT_X in McDebugOptions.
-        private static const TRACK_X:Number = 250;
-        private static const TRACK_W:Number = 700;
+        // Total height the viewport system should reserve for this widget.
+        public static const TOTAL_HEIGHT:Number = 76;
+
+        // Track geometry (compact)
+        private static const TRACK_X:Number = 200;
+        private static const TRACK_W:Number = 480;
         private static const TRACK_H:Number = 6;
-        private static const KNOB_W:Number  = 16;
-        private static const KNOB_H:Number  = 28;
-        private static const MID_Y:Number   = 26; // vertical centre of the row
+        private static const KNOB_W:Number  = 12;
+        private static const KNOB_H:Number  = 22;
+        private static const ROW1_Y:Number  = 16;  // slider row centre
+        private static const ROW2_Y:Number  = 52;  // preset row centre
 
         // Colors
         private static const COL_TRACK:uint  = 0x443366;
@@ -45,8 +52,8 @@ package ui {
         // State
         private var _value:int       = 1;
         private var _isDragging:Boolean = false;
-        private var _dragOriginX:Number = 0; // mouse globalX when drag started
-        private var _dragOriginKnobX:Number = 0; // knob.x when drag started
+        private var _dragOriginX:Number = 0;
+        private var _dragOriginKnobX:Number = 0;
 
         // Display objects
         private var _fill:Shape;
@@ -64,11 +71,6 @@ package ui {
 
         public function get value():int { return _value; }
 
-        /**
-         * Set slider value.
-         * @param v       New value (clamped to MIN–MAX).
-         * @param notify  If true, fires onChange callback.
-         */
         public function setValue(v:int, notify:Boolean = false):void {
             _value = Math.max(MIN_VALUE, Math.min(MAX_VALUE, v));
             syncKnob();
@@ -98,7 +100,7 @@ package ui {
             lTf.textColor    = COL_LABEL;
             lTf.text         = "Wizard Level";
             lTf.x = 0;
-            lTf.y = MID_Y - 11;
+            lTf.y = ROW1_Y - 11;
             addChild(lTf);
 
             // ── Track background ────────────────────────────────────────────────
@@ -107,7 +109,7 @@ package ui {
             trackBg.graphics.drawRoundRect(0, 0, TRACK_W, TRACK_H, TRACK_H, TRACK_H);
             trackBg.graphics.endFill();
             trackBg.x = TRACK_X;
-            trackBg.y = MID_Y - TRACK_H * 0.5;
+            trackBg.y = ROW1_Y - TRACK_H * 0.5;
             addChild(trackBg);
 
             // ── Track fill (colored portion left of knob) ───────────────────────
@@ -119,9 +121,9 @@ package ui {
             // ── Knob ────────────────────────────────────────────────────────────
             _knob = new Sprite();
             _knob.graphics.beginFill(COL_KNOB);
-            _knob.graphics.drawRoundRect(-KNOB_W * 0.5, -KNOB_H * 0.5, KNOB_W, KNOB_H, 4, 4);
+            _knob.graphics.drawRoundRect(-KNOB_W * 0.5, -KNOB_H * 0.5, KNOB_W, KNOB_H, 3, 3);
             _knob.graphics.endFill();
-            _knob.y          = MID_Y;
+            _knob.y          = ROW1_Y;
             _knob.buttonMode = true;
             _knob.useHandCursor = true;
             _knob.addEventListener(MouseEvent.MOUSE_DOWN, onKnobDown, false, 0, true);
@@ -130,7 +132,7 @@ package ui {
             // ── Track click-target (wider hit area) ─────────────────────────────
             var trackHit:Sprite = new Sprite();
             trackHit.graphics.beginFill(0, 0);
-            trackHit.graphics.drawRect(0, -12, TRACK_W, TRACK_H + 24);
+            trackHit.graphics.drawRect(0, -10, TRACK_W, TRACK_H + 20);
             trackHit.graphics.endFill();
             trackHit.x = TRACK_X;
             trackHit.y = trackBg.y;
@@ -146,32 +148,42 @@ package ui {
             _valueTf.embedFonts   = false;
             _valueTf.selectable   = false;
             _valueTf.mouseEnabled = false;
-            _valueTf.width  = 55;
-            _valueTf.height = 28;
+            _valueTf.width  = 50;
+            _valueTf.height = 24;
             _valueTf.textColor = COL_VALUE;
-            _valueTf.x = TRACK_X + TRACK_W + 18;
-            _valueTf.y = MID_Y - 12;
+            _valueTf.x = TRACK_X + TRACK_W + 12;
+            _valueTf.y = ROW1_Y - 12;
             addChild(_valueTf);
 
-            // ── Fine-adjustment buttons ─────────────────────────────────────────
-            var btnBaseX:Number = TRACK_X + TRACK_W + 82;
-            addFineButton("-10", btnBaseX,        -10);
-            addFineButton("-1",  btnBaseX + 46,   -1);
-            addFineButton("+1",  btnBaseX + 88,   +1);
-            addFineButton("+10", btnBaseX + 130,  +10);
+            // ── Fine-adjustment buttons (same row) ──────────────────────────────
+            var fineX:Number = TRACK_X + TRACK_W + 70;
+            addBtn("-10", fineX,        ROW1_Y, 36, 22, function():void { setValue(_value - 10, true); });
+            addBtn("-1",  fineX + 42,   ROW1_Y, 36, 22, function():void { setValue(_value - 1,  true); });
+            addBtn("+1",  fineX + 84,   ROW1_Y, 36, 22, function():void { setValue(_value + 1,  true); });
+            addBtn("+10", fineX + 126,  ROW1_Y, 36, 22, function():void { setValue(_value + 10, true); });
+
+            // ── Preset jump buttons (second row) ────────────────────────────────
+            var presetLabels:Array  = ["1", "100", "500", "1000"];
+            var presetValues:Array  = [1, 100, 500, 1000];
+            var presetX:Number = TRACK_X;
+            for (var i:int = 0; i < presetLabels.length; i++) {
+                var captured:int = int(presetValues[i]);
+                addBtn(String(presetLabels[i]),
+                    presetX + i * 60, ROW2_Y, 50, 22,
+                    function(v:int):Function {
+                        return function():void { setValue(v, true); };
+                    }(captured));
+            }
 
             setValue(MIN_VALUE);
         }
 
         // -----------------------------------------------------------------------
-        // Fine buttons
+        // Generic button helper
 
-        private function addFineButton(label:String, bx:Number, delta:int):void {
-            var BTN_W:Number = 38;
-            var BTN_H:Number = 24;
-
+        private function addBtn(label:String, cx:Number, cy:Number, w:Number, h:Number, action:Function):void {
             var btn:Sprite = new Sprite();
-            drawButtonFace(btn, BTN_W, BTN_H, false);
+            drawButtonFace(btn, w, h, false);
 
             var fmt:TextFormat = new TextFormat("_sans", 11, 0xEECCFF, true);
             fmt.align = TextFormatAlign.CENTER;
@@ -179,27 +191,27 @@ package ui {
             tf.defaultTextFormat = fmt;
             tf.selectable   = false;
             tf.mouseEnabled = false;
-            tf.width  = BTN_W;
-            tf.height = BTN_H;
+            tf.width  = w;
+            tf.height = h;
             tf.textColor = 0xEECCFF;
             tf.text = label;
+            tf.y = (h - 14) * 0.5;
             btn.addChild(tf);
 
-            btn.x = bx;
-            btn.y = MID_Y - BTN_H * 0.5;
+            btn.x = cx;
+            btn.y = cy - h * 0.5;
             btn.buttonMode    = true;
             btn.useHandCursor = true;
 
-            // Capture BTN_W, BTN_H in closure via local vars
-            var w:Number = BTN_W, h:Number = BTN_H;
+            var capW:Number = w, capH:Number = h;
             btn.addEventListener(MouseEvent.CLICK,
-                function(e:MouseEvent):void { setValue(_value + delta, true); },
+                function(e:MouseEvent):void { action(); },
                 false, 0, true);
             btn.addEventListener(MouseEvent.MOUSE_OVER,
-                function(e:MouseEvent):void { drawButtonFace(btn, w, h, true); },
+                function(e:MouseEvent):void { drawButtonFace(btn, capW, capH, true); },
                 false, 0, true);
             btn.addEventListener(MouseEvent.MOUSE_OUT,
-                function(e:MouseEvent):void { drawButtonFace(btn, w, h, false); },
+                function(e:MouseEvent):void { drawButtonFace(btn, capW, capH, false); },
                 false, 0, true);
             addChild(btn);
         }
@@ -229,7 +241,7 @@ package ui {
             _dragOriginKnobX = _knob.x;
             stage.addEventListener(MouseEvent.MOUSE_MOVE, onKnobMove, false, 0, true);
             stage.addEventListener(MouseEvent.MOUSE_UP,   onKnobUp,   false, 0, true);
-            e.stopPropagation(); // prevent track click from firing too
+            e.stopPropagation();
         }
 
         private function onKnobMove(e:MouseEvent):void {

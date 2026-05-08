@@ -91,6 +91,26 @@ package ui {
             mc.btnScrollKnob.addEventListener(MouseEvent.MOUSE_DOWN, _ehScrollKnobDown, true, 0, true);
         }
 
+        /**
+         * Recompute scroll range from the panel's current arrCntContents and reset
+         * the viewport to the top. Call after the panel swaps tab content (the
+         * close button and scroll knob listeners stay wired from the original
+         * attach() so we don't re-register them here).
+         */
+        public function refreshContents():void {
+            if (_mc == null) return;
+            _vpYMin = 0;
+            _vpYMax = 0;
+            _vpY    = 0;
+            var contents:Array = _mc.arrCntContents;
+            if (contents != null) {
+                for (var i:int = 0; i < contents.length; i++) {
+                    _vpYMax = Math.max(_vpYMax, contents[i].yReal - VIEWPORT_HEIGHT);
+                }
+            }
+            if (_mc.btnScrollKnob != null) _mc.btnScrollKnob.y = KNOB_Y_MIN;
+        }
+
         // -----------------------------------------------------------------------
         // Wheel listeners — add on show, remove on hide.
 
