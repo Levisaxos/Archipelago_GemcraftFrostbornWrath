@@ -69,6 +69,7 @@ def load_apworld_data():
 # from the Count fields directly via FieldLogicEvaluator.
 _ELEMENT_COUNT_FIELDS = {
     "Abandoned Dwelling":   "AbandonedDwellingCount",
+    "Amplifier":            "AmplifierCount",
     "Apparition":           "ApparitionCount",
     "Barricade":            "BarricadeCount",
     "Beacon":               "BeaconCount",
@@ -76,9 +77,11 @@ _ELEMENT_COUNT_FIELDS = {
     "Drop Holder":          "DropHolderCount",
     "Gatekeeper":           "GatekeeperCount",
     "Jar of Wasps":         "JarOfWaspsCount",
+    "Lantern":              "LanternCount",
     "Mana Shard":           "ManaShardCount",
     "Monster Nest":         "MonsterNestCount",
     "Obelisk":              "ObeliskCount",
+    "Pylon":                "PylonCount",
     "Rain":                 "RainCount",
     "Sealed gem":           "SealedGemCount",
     "Shadow":               "ShadowCount",
@@ -89,6 +92,7 @@ _ELEMENT_COUNT_FIELDS = {
     "Spire":                "SpireCount",
     "Swarm Queen":          "SwarmQueenCount",
     "Tomb":                 "TombCount",
+    "Trap":                 "TrapCount",
     "Watchtower":           "WatchtowerCount",
     "Wizard Hunter":        "WizardHunterCount",
     "Wizard Tower":         "WizardTowerCount",

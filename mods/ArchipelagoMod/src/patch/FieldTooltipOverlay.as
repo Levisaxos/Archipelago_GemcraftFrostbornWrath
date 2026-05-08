@@ -1,7 +1,12 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.GemComponentType;
+    import com.giab.games.gcfw.entity.Gem;
     import flash.display.Bitmap;
+    import flash.display.DisplayObject;
+    import flash.filters.ColorMatrixFilter;
+    import flash.filters.GlowFilter;
     import flash.geom.Rectangle;
 
     import data.AV;
@@ -20,9 +25,12 @@ package patch {
      * stage is listed as "<Name>: <count>" coloured the same way (count
      * drops to just the name when stats aren't loaded).
      *
-     * Also removes the "Available gems" section for levels that are not W1-W4,
-     * since those gems reflect the original game state rather than the
-     * randomised AP state.
+     * Adjusts the "Available gems" section based on Gempouch ownership:
+     *   - Pouch held (or pouch gating off) → vanilla gem list shown as-is.
+     *   - No pouch on a free starter stage → vanilla gems removed and a
+     *     single colorless mana-leech gem injected, matching the in-game
+     *     HollowGemInjector button.
+     *   - No pouch on a non-free stage → gems hidden entirely.
      */
     public class FieldTooltipOverlay {
 
@@ -31,6 +39,15 @@ package patch {
 
         // Gem section extra height added by SelectorRenderer after the gem icons.
         private static const GEMS_EXTRA_HEIGHT:int = 46;
+
+        // Luminance-preserving desaturation matrix; mirrors HollowGemInjector
+        // so the tooltip's hollow gem icon matches the in-game button.
+        private static const _DESAT_FILTER:ColorMatrixFilter = new ColorMatrixFilter([
+            0.299, 0.587, 0.114, 0, 60,
+            0.299, 0.587, 0.114, 0, 60,
+            0.299, 0.587, 0.114, 0, 60,
+            0,     0,     0,     1, 0
+        ]);
 
         private var _logger:Logger;
         private var _modName:String;
@@ -88,17 +105,25 @@ package patch {
             if (meta == null) return;
             var strId:String = String(meta.strId);
 
-            // W1-W4 are the free stages whose gem lists match the AP state.
-            // All other levels should have the "Available gems" section hidden.
-            var isFreestage:Boolean = (strId == "W1" || strId == "W2" ||
-                                       strId == "W3" || strId == "W4");
-            var shouldRemoveGems:Boolean = !isFreestage;
+            // Decide gem display from real state instead of hardcoded stages:
+            //   pouch_off (mode 0):     vanilla list is correct → keep
+            //   has pouch for stage:    vanilla list reflects what player can create → keep
+            //   free stage, no pouch:   replace with single hollow gem icon
+            //   non-free, no pouch:     hide (vanilla list would mislead)
+            var pouchMode:int = (AV.serverData != null && AV.serverData.serverOptions != null)
+                    ? int(AV.serverData.serverOptions.gemPouchGranularity) : 0;
+            var hasPouch:Boolean = (pouchMode == 0)
+                    || AV.sessionData.hasPouchForStage(strId);
+            var isFree:Boolean = _evaluator.isFreeStage(strId);
+
+            var shouldRemoveGems:Boolean = !hasPouch;
+            var shouldInjectHollowGem:Boolean = !hasPouch && isFree;
 
             var base:int = int(ConnectionManager.stageLocIds[strId]);
             var shouldAddApOverlay:Boolean = base > 0;
 
             // Nothing for us to do on this tooltip.
-            if (!shouldRemoveGems && !shouldAddApOverlay) {
+            if (!shouldRemoveGems && !shouldInjectHollowGem && !shouldAddApOverlay) {
                 _appended = true;
                 return;
             }
@@ -116,14 +141,13 @@ package patch {
                 return;
             }
 
-            // For non-tutorial stages, remove gem icons from the panel.
-            // Two complementary approaches — whichever applies to McInfoPanel's internals:
+            // When hiding gems, take two complementary cleanup paths:
             //   1. Filter the internal render list to remove gem entries (and the "Available
             //      gems:" label). Textfield entries have a "text" property; image/preview
             //      entries have a "bitmapData"/"bitmap"/"image" property. Entries with none
             //      of these are gem icon entries and are removed.
             //   2. Hide any non-Bitmap display children (gem icons added as addChild).
-            if (!_evaluator.isFreeStage(strId)) {
+            if (shouldRemoveGems) {
                 _tryRemoveGemEntries(vIp);
                 for (var ci:int = 0; ci < vIp.numChildren; ci++) {
                     var ch:* = vIp.getChildAt(ci);
@@ -139,9 +163,16 @@ package patch {
                 if (zoom > 0) vIp.w = vIp.w / zoom;
             } catch (e2:Error) {}
 
-            // Strip the "Available gems" section from the panel data for non-W1-W4 levels.
+            // Strip the "Available gems" section from the panel data when no pouch.
             if (shouldRemoveGems) {
                 _removeAvailableGems(vIp);
+            }
+
+            // Free starter stage without pouch: add a single hollow gem icon
+            // back so the player sees what they can actually create on this
+            // stage (matches the in-game HollowGemInjector button).
+            if (shouldInjectHollowGem) {
+                _injectHollowGem(vIp);
             }
 
             // Append AP check-status lines.
@@ -236,6 +267,60 @@ package patch {
 
         // -----------------------------------------------------------------------
 
+        /**
+         * Add an "Available gems:" section containing a single colorless
+         * mana-leech gem to the tooltip. Mirrors SelectorRenderer's vanilla
+         * gem-rendering pattern (build Gem entity, call giveGemBitmaps, push
+         * mc into attachedMcs) so the hollow icon flows through doEnterFrame
+         * just like the game's own gem icons.
+         */
+        private function _injectHollowGem(vIp:*):void {
+            try {
+                vIp.addTextfield(0xFFE63B, "Available gems:", false, 11,
+                        [new GlowFilter(0, 1, 3, 3)]);
+
+                var gem:Gem = new Gem();
+                gem.elderComponents = [GemComponentType.MANA_LEECHING];
+                gem.manaValuesByComponent[GemComponentType.MANA_LEECHING].s(1);
+                GV.gemBitmapCreator.giveGemBitmaps(gem, false);
+                gem.hasColor = false;
+                gem.hueMain  = 0;
+
+                _applyDesatToGemMc(gem.mc);
+
+                var panelW:Number = Number(vIp.w);
+                if (!(panelW > 0))
+                    panelW = 400;
+                gem.mc.x = Math.round((panelW - Number(gem.mc.width)) * 0.5);
+                gem.mc.y = vIp.nextTfPos + 10;
+
+                if (vIp.attachedMcs == null)
+                    vIp.attachedMcs = [];
+                (vIp.attachedMcs as Array).push(gem.mc);
+
+                vIp.addExtraHeight(GEMS_EXTRA_HEIGHT);
+            } catch (e:Error) {
+                _logger.log(_modName,
+                        "FieldTooltipOverlay: _injectHollowGem error: " + e.message);
+            }
+        }
+
+        /** Apply the desaturate filter to every Bitmap descendant of the Gem MC. */
+        private function _applyDesatToGemMc(mc:*):void {
+            if (mc == null) return;
+            try {
+                var n:int = int(mc.numChildren);
+                for (var i:int = 0; i < n; i++) {
+                    var child:DisplayObject = mc.getChildAt(i) as DisplayObject;
+                    if (child is Bitmap) {
+                        (child as Bitmap).filters = [_DESAT_FILTER];
+                    }
+                }
+            } catch (e:Error) {}
+        }
+
+        // -----------------------------------------------------------------------
+
         private function _findHoveredToken(mc:*):* {
             var cnt:* = mc.cntFieldTokens;
             if (cnt == null) return null;
@@ -316,7 +401,7 @@ package patch {
             if (!_evaluator.isStageInLogic(strId)) {
                 var req:Object = _evaluator.getBlockingTokenReq(strId);
                 if (req != null && req.missingToken == true) {
-                    lines.push(["Missing field token", 0xFF4444]);
+                    lines.push([_evaluator.getMissingTokenLabel(strId), 0xFF4444]);
                 }
                 // Prereq stage / talisman / skillPoints requirements that aren't met.
                 for each (var bl:Array in _evaluator.getBlockingTierSkillLines(strId)) {

@@ -16,8 +16,16 @@ package data {
         public var tomeXpLevels:Object;          // { tattered, worn, ancient }
         public var xpTomeBonus:int;              // raw yaml % (50–300, default 150)
 
-        // Skill point pool scale (50–200% of the 2000 SP baseline).
+        // Skill point pool scale (50–200% of the 2500 SP baseline).
         public var skillpointMultiplier:int;
+
+        // Per-seed SP value granted by each Skillpoint Bundle tier, indexed
+        // by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
+        // apworld-side so total SP divides cleanly across actual filler-slot
+        // count (see compute_tier_distribution in items_skillpoints.py).
+        // Used for grant amounts (ArchipelagoMod.grantItem) and the in-mod
+        // skillPoints:N achievement-gate counter.
+        public var spBundleValues:Array;          // <int>[4]
 
         // Reserved for full_talisman goal — currently no yaml option, kept
         // wired so GoalManager.configure / FullTalismanGoal still compile.
@@ -34,9 +42,9 @@ package data {
         // fieldTokenGranularity: 0=per_stage, 1=per_stage_progressive,
         //                        2=per_tile,  3=per_tile_progressive,
         //                        4=per_tier,  5=per_tier_progressive
-        // stashKeyGranularity:   0=per_stage, 1=per_stage_progressive,
-        //                        2=per_tile,  3=per_tile_progressive,
-        //                        4=per_tier,  5=per_tier_progressive, 6=global
+        // stashKeyGranularity:   0=off, 1=per_stage, 2=per_stage_progressive,
+        //                        3=per_tile,  4=per_tile_progressive,
+        //                        5=per_tier,  6=per_tier_progressive, 7=global
         // gemPouchGranularity:   0=off, 1=per_tile, 2=per_tile_progressive,
         //                        3=per_tier, 4=per_tier_progressive, 5=global
         // gemPouchPlayOrder is the prefix list (W, S, V, R, ...) used by
@@ -99,6 +107,7 @@ package data {
             tomeXpLevels = { tattered: 1, worn: 2, ancient: 3 };
             xpTomeBonus = 150;
             skillpointMultiplier = 100;
+            spBundleValues = [0, 0, 0, 0];
             talismanMinRarity = 0;
 
             enemyMultipliers = {
@@ -162,6 +171,26 @@ package data {
                     || copies < 1 || copies > progressiveTileOrder.length)
                 return "?";
             return String(progressiveTileOrder[copies - 1]);
+        }
+
+        /** Per-seed SP value granted by a Skillpoint Bundle apId in 1700..1703.
+         *  Returns 0 if slot_data hasn't loaded yet or apId is out of range. */
+        public function getSpBundleValue(apId:int):int {
+            var idx:int = apId - 1700;
+            if (idx < 0 || idx > 3) return 0;
+            if (spBundleValues == null || idx >= spBundleValues.length) return 0;
+            return int(spBundleValues[idx]);
+        }
+
+        /** Tier label (Small/Medium/Large/Huge) for a bundle apId in 1700..1703. */
+        public function getSpBundleTierLabel(apId:int):String {
+            switch (apId) {
+                case 1700: return "Small";
+                case 1701: return "Medium";
+                case 1702: return "Large";
+                case 1703: return "Huge";
+            }
+            return "?";
         }
     }
 }

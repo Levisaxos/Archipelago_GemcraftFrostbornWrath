@@ -67,6 +67,12 @@ package patch {
         private var _groupPanel:AchievementGroupPanel;
         private var _searchField:AchievementSearchField;
 
+        // Source of truth for the cached sets above. The per-frame ticks pull
+        // from this every DOT_INTERVAL frames so the dots reflect current logic
+        // even when no external update*() call fires (e.g. trait acquired while
+        // panel is closed, level-stat changes mid-game).
+        private var _evaluator:AchievementLogicEvaluator;
+
         // -----------------------------------------------------------------------
 
         public function AchievementPanelPatcher(logger:Logger, modName:String) {
@@ -113,6 +119,7 @@ package patch {
         public function setAchievementLogicEvaluator(evaluator:AchievementLogicEvaluator):void {
             if (_tooltipOverlay == null || evaluator == null) return;
             var ev:AchievementLogicEvaluator = evaluator;
+            _evaluator = ev;
             _tooltipOverlay.achievementLogicEvaluator = ev;
             _tooltipOverlay.registerProvider(
                 function(ach:*, achName:String, apId:int,
@@ -380,14 +387,18 @@ package patch {
         /**
          * Called last in the update sequence (after updateExcluded / updateEffortExcluded /
          * updateLogicFlags).  Stores the requirements-met set, re-sorts the panel, and
-         * refreshes the group filter + counts.
+         * refreshes the group filter + counts. Also paints dots onto every
+         * achievement's mcAchi — including ones whose mcAchi isn't currently
+         * parented — so the in-game collect popup (which reuses mcAchi) shows
+         * a current dot even when the player never opens the panel.
          */
         public function updateDots(reqMetApIds:Object):void {
             _reqMetApIds = reqMetApIds || {};
-            _dotsDirty   = true;
+            _dotsDirty   = false;
             _applySortedOrder();
             _applyGroupFilter();
             _updateGroupCounts();
+            _applyLogicDots();
         }
 
         /**
@@ -441,6 +452,7 @@ package patch {
 
             _dotFrame  = 0;
             _dotsDirty = false;
+            _refreshFromEvaluator();
             _applyLogicDots();
         }
 
@@ -471,6 +483,7 @@ package patch {
                         // Rising edge: vanilla resetFilters() cleared our filter
                         // slot — reapply group/search filter, then force a list
                         // refresh + dots so the user sees them immediately.
+                        _refreshFromEvaluator();
                         _applyGroupFilter();
                         try {
                             panel.showAchiList();
@@ -488,6 +501,7 @@ package patch {
                         if (_dotsDirty || _dotFrame >= DOT_INTERVAL) {
                             _dotFrame  = 0;
                             _dotsDirty = false;
+                            _refreshFromEvaluator();
                             _applyLogicDots();
                         }
                     }
@@ -537,6 +551,33 @@ package patch {
 
         // -----------------------------------------------------------------------
 
+        /**
+         * Pull the latest logic state directly from the evaluator into our cached
+         * sets. Called from the per-frame ticks under the same DOT_INTERVAL throttle
+         * as _applyLogicDots(), so the dots stay live even when no external
+         * update*() call fires. The evaluator's _dirty flag gates the expensive
+         * recompute inside getInLogicAchApIds(); getRequirementsMetApIds() iterates
+         * but its per-achievement check is cheap once the evaluator is warm.
+         */
+        private function _refreshFromEvaluator():void {
+            if (_evaluator == null) return;
+            try {
+                _excludedApIds       = _evaluator.getExcludedAchApIds();
+                _effortExcludedApIds = _evaluator.getEffortExcludedAchApIds();
+                _maxEffortLabel      = _evaluator.getMaxEffortLabel();
+                _inLogicApIds        = _evaluator.getInLogicAchApIds();
+                _reqMetApIds         = _evaluator.getRequirementsMetApIds();
+
+                if (_tooltipOverlay != null) {
+                    _tooltipOverlay.excludedApIds       = _excludedApIds;
+                    _tooltipOverlay.effortExcludedApIds = _effortExcludedApIds;
+                    _tooltipOverlay.maxEffortLabel      = _maxEffortLabel;
+                }
+            } catch (e:Error) {
+                _logger.log(_modName, "_refreshFromEvaluator error: " + e.message);
+            }
+        }
+
         private function _applyLogicDots():void {
             if (!_patched || GV.achiCollection == null) return;
             var achis:Array = GV.achiCollection.achisByOrder;
@@ -555,7 +596,11 @@ package patch {
                 var mcAchi:* = _getAchMcAchi(ach);
                 if (mcAchi == null) { noMc++; continue; }
 
-                try { if (mcAchi.parent == null) continue; } catch (e:Error) { continue; }
+                // No mcAchi.parent guard: the dot is just a child of mcAchi,
+                // so it's harmless to attach when mcAchi is unparented and it
+                // rides along when the in-game collect popup later parents
+                // mcAchi to its container — giving the popup a current dot
+                // without requiring the player to open the panel first.
 
                 var apIdInt:int      = int(apId);
                 var excluded:Boolean = (_excludedApIds[apIdInt] === true || _effortExcludedApIds[apIdInt] === true);

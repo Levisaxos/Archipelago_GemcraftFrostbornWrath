@@ -141,33 +141,67 @@ package patch {
             var drops:Array = ending.dropIcons;
             if (drops == null || drops.length == 0) return false;
 
+            // Indices we want to wipe at the end. We can't blanket-clear the
+            // array because in-place-restart detection can re-enter this method
+            // while ending.dropIcons still holds the previous level's AP icons
+            // (defense-in-depth — _apIconsInjected normally gates that, but it
+            // gets reset on misfired restart detection).
+            var toRemove:Array = [];
+
             for (var i:int = 0; i < drops.length; i++) {
                 var di:* = drops[i];
                 if (di == null) continue;
+
+                // Don't touch our own injected icons. Vanilla McDropIconOutcome
+                // carries .type+.data as plain ints; our custom wrapper Sprites
+                // store an Object in .data and would crash the FIELD_TOKEN /
+                // MAP_TILE cases below if treated as vanilla.
+                if (di is XpTomeDropIcon || di is GempouchDropIcon
+                        || di is RemoteItemDropIcon || di is MapTileDropIcon
+                        || di is SkillPointDropIcon || di is WizStashKeyDropIcon
+                        || di is KeyPouchDropIcon || di is TilePouchDropIcon) {
+                    continue;
+                }
+
                 switch (di.type) {
                     case DropType.FIELD_TOKEN:
+                        if (!(di.data is Number) && !(di.data is int) && !(di.data is uint)) {
+                            // Unknown shape — leave it alone rather than NaN-index ppd.
+                            break;
+                        }
                         if (GV.ppd != null)
-                            GV.ppd.stageHighestXpsJourney[Number(di.data)].s(-1);
+                            GV.ppd.stageHighestXpsJourney[int(di.data)].s(-1);
                         _logger.log(_modName, "tickDropIcons: blocked FIELD_TOKEN id=" + di.data);
+                        toRemove.push(i);
                         break;
                     case DropType.MAP_TILE:
+                        if (!(di.data is Number) && !(di.data is int) && !(di.data is uint)) {
+                            break;
+                        }
                         if (GV.ppd != null)
-                            GV.ppd.gainedMapTiles[Number(di.data)] = false;
+                            GV.ppd.gainedMapTiles[int(di.data)] = false;
                         _logger.log(_modName, "tickDropIcons: blocked MAP_TILE id=" + di.data);
+                        toRemove.push(i);
                         break;
                     case DropType.ENDURANCE_WAVE_STONE:
                         // Vanilla updatePpdWithDrops already applied the amount to ppd —
                         // just remember it so we can re-inject the visual icon later.
                         _pendingEnduranceWaveStones += int(Number(di.data));
                         _logger.log(_modName, "tickDropIcons: captured ENDURANCE_WAVE_STONE amount=" + di.data);
+                        toRemove.push(i);
                         break;
                     default:
                         _logger.log(_modName, "tickDropIcons: suppressed drop type=" + di.type + " data=" + di.data);
+                        toRemove.push(i);
                         break;
                 }
             }
-            drops.splice(0, drops.length);
-            return true;
+
+            // Splice from the back so earlier indices stay valid.
+            for (var r:int = toRemove.length - 1; r >= 0; r--) {
+                drops.splice(int(toRemove[r]), 1);
+            }
+            return toRemove.length > 0;
         }
 
         // -----------------------------------------------------------------------

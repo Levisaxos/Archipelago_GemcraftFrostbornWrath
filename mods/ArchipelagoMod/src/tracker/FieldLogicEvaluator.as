@@ -1,5 +1,6 @@
 package tracker {
     import Bezel.Logger;
+    import com.giab.games.gcfw.GV;
     import data.AV;
     import data.SessionData;
 
@@ -477,24 +478,32 @@ package tracker {
 
             var lines:Array = [];
 
-            // Field_ prereqs — show as a single OR line if any are missing.
-            var missingFields:Array = [];
-            var anyFieldHeld:Boolean = false;
-            var anyFreePrereq:Boolean = false;
-            var tokens:Object = AV.sessionData.tokensByStrId;
-            for each (var req:String in flat) {
-                if (req == null || req.indexOf("Field_") != 0) continue;
-                var sid:String = req.substr(6);
-                if (_freeStages[sid] == true) {
-                    anyFreePrereq = true;
-                } else if (tokens != null && tokens[sid] == true) {
-                    anyFieldHeld = true;
-                } else {
-                    missingFields.push(sid);
+            // Field_ prereqs — show as a single OR line if no path is satisfied.
+            // A prereq path is satisfied when the prereq stage has actually
+            // been beaten in vanilla Journey mode. Holding the AP token alone
+            // doesn't help the player progress in-game — they still have to
+            // play the prereq stage. The hint tells them which level to clear.
+            // Skipped in progressive field-token modes: Field_<sid> chains are
+            // artificial there (Nth copy unlocks Nth stage), so naming a stage
+            // would point at an item they can't directly hunt for.
+            if (!_isFieldTokenProgressive()) {
+                var missingFields:Array = [];
+                var anyFieldBeaten:Boolean = false;
+                var anyFreePrereq:Boolean = false;
+                for each (var req:String in flat) {
+                    if (req == null || req.indexOf("Field_") != 0) continue;
+                    var sid:String = req.substr(6);
+                    if (_freeStages[sid] == true) {
+                        anyFreePrereq = true;
+                    } else if (_isFieldBeatenJourney(sid)) {
+                        anyFieldBeaten = true;
+                    } else {
+                        missingFields.push(sid);
+                    }
                 }
-            }
-            if (!anyFieldHeld && !anyFreePrereq && missingFields.length > 0) {
-                lines.push(["Requires field " + missingFields.join(" / "), 0x888888]);
+                if (!anyFieldBeaten && !anyFreePrereq && missingFields.length > 0) {
+                    lines.push(["Requires field " + missingFields.join(" / ") + " beaten", 0x888888]);
+                }
             }
 
             // Counter requirements that aren't met — one line each.
@@ -539,25 +548,55 @@ package tracker {
         }
 
         /**
-         * "Got pouch (X)" / "Needs pouch (X)" suffix for the Journey line.
+         * "Got pouch …" / "Needs pouch …" suffix for the Journey line.
          * Returns null when pouch gating is off or the stage has no
          * gempouch requirement, so the caller appends nothing in that case.
-         * The prefix in `gempouch:<X>` is the stage's tile letter regardless
-         * of granularity — `hasPouchForPrefix` handles granularity-aware
-         * coverage internally.
+         *
+         * Suffix shape mirrors the YAML gem_pouch_granularity option so
+         * the player sees the actual item to hunt for:
+         *   off (0)                   → null (caller skips line)
+         *   per_tile / progressive (1, 2)         → "pouch (X)"
+         *   per_tier / progressive (3, 4)         → "pouch (Tier N)"
+         *   global (5)                            → "pouch"   (no suffix)
+         *
+         * Verb (`Got` / `Needs`) is decided by `hasPouchForPrefix`, which
+         * is itself granularity-aware (SessionData.as) — so the verb
+         * always agrees with the live unlock check.
          */
         public function getPouchLabel(strId:String):String {
             if (_stageSkills == null) return null;
             var required:Array = _stageSkills[strId] as Array;
             if (required == null || required.length == 0) return null;
-            if (_pouchMode() == 0) return null;
+            var mode:int = _pouchMode();
+            if (mode == 0) return null;
             for each (var skillName:String in required) {
                 var lower:String = skillName.toLowerCase().split(" ").join("");
                 if (lower.indexOf("gempouch:") != 0) continue;
                 var prefix:String = skillName.split(":")[1];
                 if (prefix == null) continue;
                 prefix = _trimStr(prefix);
-                var verb:String = AV.sessionData.hasPouchForPrefix(prefix) ? "Got" : "Needs";
+                var hasPouch:Boolean = AV.sessionData.hasPouchForPrefix(prefix);
+                // Free starter stage without pouch yet: Hollow Gems get the
+                // player past the WIZLOCK gate (mirrors the carve-out in
+                // `_skillGateMet`). Hide the pouch suffix so the green
+                // Journey line doesn't look like a contradiction with a
+                // "Needs pouch" hint — the pouch isn't actually required
+                // to clear this level yet.
+                if (!hasPouch && _freeStages[strId] == true)
+                    return null;
+                var verb:String = hasPouch ? "Got" : "Needs";
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts == null)
+                    return verb + " pouch (" + prefix + ")";
+                if (mode == 5)
+                    return verb + " pouch";
+                if (mode == 3 || mode == 4) {
+                    var tierMap:Object = opts.stageTierByStrId;
+                    if (tierMap == null || tierMap[strId] == null)
+                        return verb + " pouch";
+                    return verb + " pouch (Tier " + int(tierMap[strId]) + ")";
+                }
+                // mode 1 / 2: per_tile (progressive) — tile letter is the right hint.
                 return verb + " pouch (" + prefix + ")";
             }
             return null;
@@ -578,17 +617,44 @@ package tracker {
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return verb + " key";
             var g:int = int(opts.stashKeyGranularity);
-            if (g == 2 || g == 3) {
+            if (g == 3 || g == 4) {
                 if (strId == null || strId.length == 0) return verb + " key";
                 return verb + " key (" + strId.charAt(0) + ")";
             }
-            if (g == 4 || g == 5) {
+            if (g == 5 || g == 6) {
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null || tierMap[strId] == null) return verb + " key";
                 return verb + " key (Tier " + int(tierMap[strId]) + ")";
             }
-            // 0 / 1 (per_stage variants) and 6 (global) — no extra suffix needed.
+            // 0 (off), 1/2 (per_stage variants), 7 (global) — no extra suffix needed.
             return verb + " key";
+        }
+
+        /**
+         * "Missing field token" tooltip line, shaped to the YAML
+         * field_token_granularity so the player knows which token to hunt:
+         *   per_stage / progressive (0, 1)        → "Missing field token"
+         *   per_tile / progressive (2, 3)         → "Missing tile token (X)"
+         *   per_tier / progressive (4, 5)         → "Missing tier token (Tier N)"
+         * Falls back to the plain string whenever opts/tier data isn't
+         * available, so a misconfigured seed never crashes the tooltip.
+         */
+        public function getMissingTokenLabel(strId:String):String {
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            if (opts == null) return "Missing field token";
+            var g:int = int(opts.fieldTokenGranularity);
+            if (g == 2 || g == 3) {
+                if (strId == null || strId.length == 0)
+                    return "Missing field token";
+                return "Missing tile token (" + strId.charAt(0) + ")";
+            }
+            if (g == 4 || g == 5) {
+                var tierMap:Object = opts.stageTierByStrId;
+                if (tierMap == null || tierMap[strId] == null)
+                    return "Missing field token";
+                return "Missing tier token (Tier " + int(tierMap[strId]) + ")";
+            }
+            return "Missing field token";
         }
 
         /**
@@ -656,41 +722,63 @@ package tracker {
             }
 
             // Iterate every stage we know about (free + non-free).
+            // _stageReachable memoises into _inLogicByStrId, so recursive
+            // visits via prerequisite chains are reused for free.
             for (var freeSid:String in _freeStages) {
-                _inLogicByStrId[freeSid] = _stageReachable(freeSid);
+                _stageReachable(freeSid);
             }
             for (var strId:String in _stageRequirements) {
-                if (_inLogicByStrId[strId] === undefined)
-                    _inLogicByStrId[strId] = _stageReachable(strId);
+                _stageReachable(strId);
             }
 
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
         }
 
-        /** Run the four-clause stage gate for one stage. */
+        /** Run the four-clause stage gate for one stage.
+         *  Memoised on `_inLogicByStrId`: undefined = not yet evaluated;
+         *  false (set BEFORE recursing into requirements) doubles as cycle
+         *  guard; true = confirmed reachable. Mirrors apworld
+         *  _can_clear_stage_cached (rules.py:653) so a Field_<sid> prereq
+         *  is only satisfied when <sid>'s full chain back to the starter
+         *  holds, not just when the player happens to hold its token. */
         private function _stageReachable(strId:String):Boolean {
+            if (_inLogicByStrId[strId] !== undefined)
+                return _inLogicByStrId[strId];
+
             // Free stage = the chosen starting stage. Mirrors apworld
             // set_rules, which skips the requirements + token gate for the
             // start (Menu connects directly to it).
-            if (_freeStages[strId] == true)
+            if (_freeStages[strId] == true) {
+                _inLogicByStrId[strId] = true;
                 return true;
+            }
             // Clause 1: own Field Token required.
             var tokens:Object = AV.sessionData.tokensByStrId;
-            if (tokens == null || tokens[strId] != true)
+            if (tokens == null || tokens[strId] != true) {
+                _inLogicByStrId[strId] = false;
                 return false;
+            }
             // Clause 2: WIZLOCK skill gate.
-            if (!_skillGateMet(strId))
+            if (!_skillGateMet(strId)) {
+                _inLogicByStrId[strId] = false;
                 return false;
-            // Clause 3 + 4: per-requirements list.
-            return _requirementsGateMet(strId);
+            }
+            // Pre-mark false before recursing into requirements — this is the
+            // cycle guard. The DAG should be acyclic by construction, but a
+            // broken edit would otherwise loop forever.
+            _inLogicByStrId[strId] = false;
+            var ok:Boolean = _requirementsGateMet(strId);
+            _inLogicByStrId[strId] = ok;
+            return ok;
         }
 
         /**
          * Evaluate stageRequirements[strId] in DNF: outer-OR of inner
          * AND-groups. The stage passes if any one AND-group passes; an
          * AND-group passes when every entry inside it does. Within a group:
-         *   - Field_<sid>: token <sid> held (or <sid> is a free stage).
+         *   - Field_<sid>: <sid> itself in logic (recursive _stageReachable
+         *     — chain back to the starter must hold, not just token held).
          *   - everything else: routed through _evalCounterReq.
          * Empty / missing requirements pass automatically (used by the
          * starting stage upstream, plus W1-style stages from older data).
@@ -713,16 +801,20 @@ package tracker {
                 groups = [reqs];
             }
 
-            var tokens:Object = AV.sessionData.tokensByStrId;
+            var progressive:Boolean = _isFieldTokenProgressive();
             for each (var group:Array in groups) {
                 if (group == null) continue;
                 var groupOk:Boolean = true;
                 for each (var req:String in group) {
                     if (req == null) continue;
                     if (req.indexOf("Field_") == 0) {
+                        if (progressive) continue;
                         var sid:String = req.substr(6);
-                        if (_freeStages[sid] != true
-                            && !(tokens != null && tokens[sid] == true)) {
+                        // Recursive: the prereq stage must itself be in logic
+                        // (full chain back to starter), not just have its
+                        // token. Free-stage / token / skill-gate checks live
+                        // inside _stageReachable, with memoisation.
+                        if (!_stageReachable(sid)) {
                             groupOk = false;
                             break;
                         }
@@ -779,13 +871,17 @@ package tracker {
             return n;
         }
 
-        /** Sum SP across collected Skillpoint Bundle items (1700-1709,
-         *  bundle apId-1699 = SP value). Counts each held bundle once. */
+        /** Sum SP across collected Skillpoint Bundle items (1700-1703, four
+         *  named tiers; per-tier SP value comes from slot_data via
+         *  ServerOptions.spBundleValues). Counts each held tier once. */
         private function _countSkillPoints():int {
             var total:int = 0;
-            for (var size:int = 1; size <= 10; size++) {
-                if (AV.sessionData.hasItem(1699 + size))
-                    total += size;
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            var opts:* = AV.serverData.serverOptions;
+            for (var apId:int = 1700; apId <= 1703; apId++) {
+                if (AV.sessionData.hasItem(apId))
+                    total += opts.getSpBundleValue(apId);
             }
             return total;
         }
@@ -859,6 +955,28 @@ package tracker {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             return int(AV.serverData.serverOptions.gemPouchGranularity);
+        }
+
+        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3, per_tier_progressive=5). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
+        private function _isFieldTokenProgressive():Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return false;
+            var g:int = int(AV.serverData.serverOptions.fieldTokenGranularity);
+            return g == 1 || g == 3 || g == 5;
+        }
+
+        // True iff the player has beaten this stage in vanilla Journey mode at
+        // least once. Mirrors BeatGameGoal / FieldPercentageGoal — XP > 0 means
+        // the stage was cleared (0 = available/unlocked-not-cleared, -1 = locked).
+        private function _isFieldBeatenJourney(strId:String):Boolean {
+            if (GV.ppd == null || GV.stageCollection == null) return false;
+            var stageId:int = GV.getFieldId(strId);
+            if (stageId < 0) return false;
+            var arr:Array = GV.ppd.stageHighestXpsJourney;
+            if (arr == null || stageId >= arr.length) return false;
+            var entry:* = arr[stageId];
+            if (entry == null) return false;
+            return entry.g() > 0;
         }
 
     }

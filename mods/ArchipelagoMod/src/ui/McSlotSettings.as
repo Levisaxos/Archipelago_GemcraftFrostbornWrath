@@ -202,8 +202,17 @@ package ui {
         }
 
         private function stashKeyGranularityName(g:int):String {
-            if (g == 6) return "Global";
-            return fieldTokenGranularityName(g);
+            switch (g) {
+                case 0:  return "Off";
+                case 1:  return "Per Stage";
+                case 2:  return "Per Stage (Progressive)";
+                case 3:  return "Per Tile";
+                case 4:  return "Per Tile (Progressive)";
+                case 5:  return "Per Tier";
+                case 6:  return "Per Tier (Progressive)";
+                case 7:  return "Global";
+                default: return "Unknown (" + g + ")";
+            }
         }
 
         private function gemPouchGranularityName(g:int):String {

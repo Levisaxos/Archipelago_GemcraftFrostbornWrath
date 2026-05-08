@@ -6,6 +6,7 @@ package unlockers {
     import data.EmbeddedData;
     import patch.ProgressionBlocker;
     import ui.ReceivedToast;
+    import ui.ItemColors;
 
     /**
      * Handles achievement detection, reporting, and skill-point rewards.
@@ -53,6 +54,16 @@ package unlockers {
          * Signature: ():void
          */
         public var onChecked:Function = null;
+
+        /**
+         * Called when an achievement is earned that's been excluded from AP
+         * generation (effort threshold, untrackable, Trial-only, Endurance
+         * disabled). ArchipelagoMod wires this to record the gameId so the
+         * level-end drop screen can still render an achievement icon for it,
+         * matching vanilla behaviour for excluded achievements.
+         * Signature: (gameId:int, skipReason:String):void
+         */
+        public var onAchievementSkipped:Function = null;
 
         // -----------------------------------------------------------------------
 
@@ -248,14 +259,25 @@ package unlockers {
                     var skipReason:String = getSkipReason(achData);
                     if (skipReason != null) {
                         _reportedAchievements[gameId] = true;  // don't re-check every frame
-                        // Toast it so the player can spot calibration mistakes
-                        // ("I just got this — should it really be excluded?").
+                        // Toast the bare title so the unlock surfaces in the
+                        // popup just like any other received item; the skip
+                        // reason is dropped from user-facing UI but still
+                        // logged for diagnostics.
                         if (_receivedToast != null) {
-                            _receivedToast.addItem(
-                                ach.title + " — " + skipReason, 0xFF8844);
+                            _receivedToast.addItem(ach.title, ItemColors.USEFUL);
                         }
                         _logger.log(_modName, "Achievement excluded from AP ('" + ach.title
                             + "'): " + skipReason);
+                        // Notify ArchipelagoMod so it can still render a
+                        // drop icon for the unlock at level end. Vanilla
+                        // SP flows naturally because we don't suppress it
+                        // for excluded achievements.
+                        if (onAchievementSkipped != null) {
+                            try { onAchievementSkipped(gameId, skipReason); }
+                            catch (eSkip:Error) {
+                                _logger.log(_modName, "onAchievementSkipped threw: " + eSkip.message);
+                            }
+                        }
                         continue;
                     }
 
@@ -273,7 +295,7 @@ package unlockers {
                                     String(ach.title), achData));
                             if (!inLogic && _receivedToast != null) {
                                 _receivedToast.addItem(
-                                    ach.title + " — out of logic", 0xFF8844);
+                                    ach.title , 0xFF8844);
                                 _logger.log(_modName, "Out-of-logic unlock: " + ach.title);
                             }
                         } catch (eLogic:Error) {
@@ -378,7 +400,7 @@ package unlockers {
 
         /**
          * Add `points` to the player's wizard skill-point pool.
-         * Used by Skillpoint Bundle items (apId 1700–1709).
+         * Used by Skillpoint Bundle items (apId 1700–1703, four named tiers).
          */
         public function awardSkillPoints(points:int):void {
             if (points <= 0 || GV.ppd == null) return;

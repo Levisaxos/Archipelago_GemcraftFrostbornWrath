@@ -10,7 +10,7 @@ package ui {
     import com.giab.games.gcfw.mcDyn.McDropIconOutcome;
 
     /**
-     * Custom drop icon for skillpoint bundles (apId 1700-1709, summed
+     * Custom drop icon for skillpoint bundles (apId 1700-1703, summed
      * across one ending). Reuses the vanilla shadow-core drop visual with
      * a cyan GlowFilter so it reads as "skill" energy without needing a
      * bespoke art asset.

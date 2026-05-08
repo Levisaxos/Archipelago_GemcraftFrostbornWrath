@@ -2,12 +2,16 @@ package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.Sprite;
+    import flash.events.MouseEvent;
     import flash.filters.DropShadowFilter;
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
 
+    import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+
+    import net.ConnectionManager;
 
     /**
      * Custom drop icon for individual Wizard Stash keys (apId 1400-1521 — one
@@ -25,13 +29,15 @@ package ui {
      * .type is set to DropType.FIELD_TOKEN so the vanilla reveal animation
      * picks the "sndoctoken" sound (no dedicated stash-key SFX exists).
      */
-    public class WizStashKeyDropIcon extends Sprite {
+    public dynamic class WizStashKeyDropIcon extends Sprite {
 
         public var cntInner:Sprite;
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var data:Object;
+        // Class is `dynamic` so vanilla cleanup can write `.data = null`
+        // without us declaring a `data` field that would shadow anything.
+        public var meta:Object;  // { apId:int }
 
         [Embed(source='../../resources/WizStashKey.png')]
         private static const WizStashKeyAsset:Class;
@@ -41,6 +47,7 @@ package ui {
 
             this.type = DropType.FIELD_TOKEN; // for the vanilla reveal sound
             this.data = { apId: apId };
+            this.meta = { apId: apId };
 
             this.cntInner = new Sprite();
             addChild(this.cntInner);
@@ -68,6 +75,51 @@ package ui {
             }
 
             this.cntInner.addChild(this.bmpIcon);
+
+            addEventListener(MouseEvent.MOUSE_OVER, _onMouseOver, false, 0, true);
+            addEventListener(MouseEvent.MOUSE_OUT,  _onMouseOut,  false, 0, true);
+        }
+
+        // -----------------------------------------------------------------------
+        // Tooltip — reverse-resolves the unlocked stage strId from
+        // ConnectionManager.stageLocIds so the user sees which stage this key
+        // is for. Falls back to the raw "#N" form if the map isn't populated
+        // (e.g. running offline / before slot data has loaded).
+
+        private function _onMouseOver(e:MouseEvent):void {
+            try {
+                if (this.meta == null)
+                    return;
+                var apId:int = int(this.meta.apId);
+                var stashLocId:int = apId - 1400 + 1;
+
+                var stageStrId:String = null;
+                var map:Object = ConnectionManager.stageLocIds;
+                if (map != null) {
+                    for (var sid:String in map) {
+                        if (int(map[sid]) == stashLocId) {
+                            stageStrId = sid;
+                            break;
+                        }
+                    }
+                }
+
+                var subtitle:String = (stageStrId != null)
+                    ? "Stage " + stageStrId
+                    : "Wizard Stash Key #" + stashLocId;
+
+                var vIp:* = GV.mcInfoPanel;
+                vIp.reset(280);
+                vIp.addTextfield(0xFFD700, "Wizard Stash Key", false, 13);
+                vIp.addTextfield(0xCCCCCC, subtitle, false, 11);
+                vIp.addTextfield(0x99FF99, "Unlocks the Wizard Stash on this stage.", false, 11);
+                GV.main.cntInfoPanel.addChild(vIp);
+                vIp.doEnterFrame();
+            } catch (err:Error) {}
+        }
+
+        private function _onMouseOut(e:MouseEvent):void {
+            try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
         }
     }
 }

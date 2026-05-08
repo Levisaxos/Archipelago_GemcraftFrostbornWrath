@@ -1,9 +1,10 @@
 """Lightweight phase + per-rule timing for fill diagnostics.
 
 All timing output goes to stderr with a `[gcfw timing]` prefix. Easy to grep
-for in Archipelago's generation log. Set GCFW_TIMING=0 in env to silence.
-
-Remove this module + its imports once perf work is done.
+for in Archipelago's generation log. Off by default — set GCFW_TIMING=1 in
+env to enable. The wrappers add a few µs per access-rule call, which adds
+up to seconds across the millions of evaluations during fill, so we keep
+this opt-in for production gens.
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import Callable
 
-ENABLED = os.environ.get("GCFW_TIMING", "1") != "0"
+ENABLED = os.environ.get("GCFW_TIMING", "0") == "1"
 
 
 def log(msg: str) -> None:

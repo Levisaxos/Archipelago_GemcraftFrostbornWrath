@@ -24,6 +24,7 @@ package {
     import ui.SystemToast;
     import ui.ReceivedToast;
     import ui.MessageLog;
+    import ui.ItemColors;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
     import ui.ConnectionPanel;
@@ -56,6 +57,7 @@ package {
     import patch.WizStashes;
     import patch.FirstPlayBypass;
     import patch.EarlyExitOutcome;
+    import patch.VictoryRestartButton;
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
     import patch.HollowGemInjector;
@@ -140,6 +142,7 @@ package {
         private var _achievementUnlocker:AchievementUnlocker;
         private var _firstPlayBypass:FirstPlayBypass;
         private var _earlyExitOutcome:EarlyExitOutcome;
+        private var _victoryRestartButton:VictoryRestartButton;
         private var _frostbornFreeBuildings:FrostbornFreeBuildings;
         private var _gemPouchSuppressor:GemPouchSuppressor;
         private var _hollowGemInjector:HollowGemInjector;
@@ -200,6 +203,13 @@ package {
         // in the corresponding _grant…ProgressivePerStage functions.
         private var _sessionFieldStageProgressiveUnlocks:Array = [];
         private var _sessionStashStageProgressiveUnlocks:Array = [];
+        // Internal achievement gameIds earned this level whose AP location was
+        // excluded at gen time (effort threshold, untrackable, Trial-only,
+        // Endurance disabled). _injectApDropIcons emits a vanilla achievement
+        // drop icon for each so the player still sees the unlock at level end;
+        // vanilla skill points already flow because we don't suppress SP for
+        // excluded achievements.
+        private var _sessionExcludedAchievementGameIds:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
 
 // Debug mode — toggled by Ctrl+Shift+Alt+End.
@@ -243,6 +253,7 @@ package {
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
+                _victoryRestartButton = new VictoryRestartButton(_logger, MOD_NAME);
                 _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
@@ -266,7 +277,14 @@ package {
                 _connectionManager.setMessageLog(_messageLog);
                 _connectionManager.onConnected             = onApConnected;
                 _connectionManager.onFullSync              = syncWithAP;
-                _connectionManager.onItemReceived          = grantItem;
+                // Wrap grantItem so every live receipt persists the updated
+                // AV.sessionData snapshot to the slot file. Field tokens and
+                // stash unlocks live only in AV.sessionData, so without this
+                // a token received between full-syncs would be lost on relaunch.
+                _connectionManager.onItemReceived          = function(apId:int):void {
+                    grantItem(apId);
+                    if (_saveManager != null) _saveManager.saveSlotData();
+                };
                 _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
                     _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
                     _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
@@ -294,6 +312,9 @@ package {
                 // When an achievement check is sent, immediately refresh the panel so the
                 // achievement leaves "In Logic" without waiting for the next item grant.
                 _achievementUnlocker.onChecked = _refreshAchievementPanel;
+                // Excluded-from-AP achievements still earn vanilla SP — record
+                // their gameIds so the level-end drop screen renders an icon.
+                _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
@@ -529,6 +550,7 @@ package {
             _sessionGrantedFragments = [];
             _sessionFieldStageProgressiveUnlocks = [];
             _sessionStashStageProgressiveUnlocks = [];
+            _sessionExcludedAchievementGameIds = [];
             _levelEndCountdown = -1;
             _needsConnection = false;
 
@@ -804,6 +826,7 @@ package {
                     _sessionGrantedFragments = [];
                     _sessionFieldStageProgressiveUnlocks = [];
                     _sessionStashStageProgressiveUnlocks = [];
+                    _sessionExcludedAchievementGameIds = [];
                     _levelEndCountdown = -1;
                 }
             }
@@ -872,6 +895,7 @@ package {
                 _hollowGemInjector.onIngameFrame();
                 _frostbornFreeBuildings.onIngameFrame();
                 _earlyExitOutcome.tryAttach();
+                _victoryRestartButton.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
@@ -1355,6 +1379,7 @@ package {
             _sessionGrantedFragments = [];
             _sessionFieldStageProgressiveUnlocks = [];
             _sessionStashStageProgressiveUnlocks = [];
+            _sessionExcludedAchievementGameIds = [];
             _levelEndCountdown = -1;
             if (_progressionBlocker != null) _progressionBlocker.resetApIconsState();
         }
@@ -1380,6 +1405,17 @@ package {
                 _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
                 _achPanelPatcher.refreshIfActive();
             }
+        }
+
+        /**
+         * Wired as `_achievementUnlocker.onAchievementSkipped`. Records the
+         * gameId so _injectApDropIcons can render a vanilla achievement icon
+         * for it at level end. Vanilla SP for these unlocks is not suppressed,
+         * so the icon stands in for the SP the player just received.
+         */
+        private function _onExcludedAchievementUnlocked(gameId:int, skipReason:String):void {
+            if (gameId < 0) return;
+            _sessionExcludedAchievementGameIds.push(gameId);
         }
 
         /**
@@ -1588,16 +1624,16 @@ package {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
-            // 5b. Skillpoint bundles (apId 1700-1709): sum across all bundles
-            // received this run into one cyan-glow icon. Each bundle grants
-            // (apId - 1699) skill points, i.e. 1700→1 .. 1709→10.
+            // 5b. Skillpoint bundles (apId 1700-1703, four named tiers): sum
+            // across all bundles received this run into one cyan-glow icon.
+            // Per-tier SP value is per-seed (slot_data spBundleValues).
             var totalSkillPoints:int = 0;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 1700 || apId > 1709) continue;
-                totalSkillPoints += (apId - 1699);
+                if (apId < 1700 || apId > 1703) continue;
+                totalSkillPoints += AV.serverData.serverOptions.getSpBundleValue(apId);
             }
             if (totalSkillPoints > 0) {
                 _progressionBlocker.addSkillPointDropIcon(totalSkillPoints);
@@ -1643,6 +1679,15 @@ package {
                 if (achGameId >= 0) {
                     _progressionBlocker.addAchievementDropIcon(achGameId);
                 }
+            }
+
+            // 8b. Excluded achievements — earned in-game but with no AP
+            // location. Render a vanilla achievement icon so the unlock is
+            // still visible; the player has already received vanilla SP for
+            // these (we don't suppress it).
+            for (i = 0; i < _sessionExcludedAchievementGameIds.length; i++) {
+                _progressionBlocker.addAchievementDropIcon(
+                    int(_sessionExcludedAchievementGameIds[i]));
             }
 
             // 9. Remote items: anything routed to another player gets a generic AP
@@ -1822,7 +1867,7 @@ package {
             // XP tomes
             if (apId >= 1100 && apId <= 1199) return 9;
             // Skill points
-            if (apId >= 1700 && apId <= 1709) return 10;
+            if (apId >= 1700 && apId <= 1703) return 10;
             // Achievements
             if (apId >= 2000 && apId <= 2636) return 11;
             // Other (other-game items, unmapped ranges)
@@ -1944,11 +1989,13 @@ package {
                     vIp.addTextfield(0x99FF99, grantText, false, 11);
                     return true;
                 }
-                // Skill point bundles (1700-1709) — same text SkillPointDropIcon shows.
-                if (apId >= 1700 && apId <= 1709) {
-                    var skp:int = apId - 1699;
+                // Skill point bundles (1700-1703, four named tiers) — value
+                // per tier is per-seed and arrives via slot_data.
+                if (apId >= 1700 && apId <= 1703) {
+                    var skp:int = AV.serverData.serverOptions.getSpBundleValue(apId);
+                    var tierName:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
                     vIp.reset(280);
-                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle", false, 13);
+                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle (" + tierName + ")", false, 13);
                     vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
                     vIp.addTextfield(0x99FF99, "+" + skp + " skill points.", false, 11);
                     return true;
@@ -2142,7 +2189,7 @@ package {
                 if (strId != null) {
                     _logger.log(MOD_NAME, "  → Field token for stage: " + strId);
                     _stageUnlocker.unlockStage(strId);
-                    _receivedToast.addItem("Received " + strId + " Field Token", 0xFFDD55);
+                    _receivedToast.addItem("Received " + strId + " Field Token", ItemColors.forApId(apId));
                     return;
                 }
                 if (apId >= 700 && apId <= 723) {
@@ -2176,13 +2223,11 @@ package {
                     _logger.log(MOD_NAME, "  → Talisman fragment apId: " + apId);
                     var grantedFrag:* = _talismanUnlocker.grantFragment(apId);
                     if (grantedFrag != null) _sessionGrantedFragments.push(grantedFrag);
-                    _saveManager.saveSlotData();
                     return;
                 }
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
-                    _saveManager.saveSlotData();
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {
@@ -2198,7 +2243,7 @@ package {
                     }
                     if (stashStrId != null) {
                         AV.sessionData.markStashUnlocked(stashStrId);
-                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", 0x55AAFF);
+                        _receivedToast.addItem("Received Wizard Stash " + stashStrId + " Key", ItemColors.forApId(apId));
                         _logger.log(MOD_NAME, "  → Wizard stash key for " + stashStrId);
                     } else {
                         _logger.log(MOD_NAME, "  grantItem: stash key apId=" + apId + " — no matching stage");
@@ -2277,18 +2322,20 @@ package {
                         // Gempouches don't change in-game state — gating is
                         // handled by SessionData.getItemCount on the mod side
                         // and is read live by HollowGemInjector etc. Just toast.
-                        _receivedToast.addItem("Received Progressive Gempouch", 0xFF99FF);
+                        _receivedToast.addItem("Received Progressive Gempouch", ItemColors.forApId(apId));
                         _logger.log(MOD_NAME, "  → Progressive Gempouch (count="
                             + AV.sessionData.getItemCount(apId) + ")");
                         return;
                     }
                 }
-                if (apId >= 1700 && apId <= 1709) {
-                    // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
-                    var spAmount:int = apId - 1699;
+                if (apId >= 1700 && apId <= 1703) {
+                    // Skillpoint Bundle: 4 named tiers (Small/Medium/Large/Huge).
+                    // Per-tier SP value is per-seed and arrives via slot_data.
+                    var spAmount:int = AV.serverData.serverOptions.getSpBundleValue(apId);
+                    var tierLbl:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
                     _achievementUnlocker.awardSkillPoints(spAmount);
-                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", 0xFFCC44);
-                    _logger.log(MOD_NAME, "  → Skillpoint bundle: +" + spAmount + " SP");
+                    _receivedToast.addItem("Received Skillpoint Bundle (" + tierLbl + ") (+" + spAmount + ")", ItemColors.forApId(apId));
+                    _logger.log(MOD_NAME, "  → Skillpoint bundle [" + tierLbl + "]: +" + spAmount + " SP");
                     return;
                 }
                 if (apId >= 2000 && apId <= 2636) {
@@ -2394,7 +2441,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Tile " + prefix + " Key (" + count + " stashes)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
         }
 
@@ -2413,7 +2460,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", ItemColors.forApId(1548 + tier));
             _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
         }
 
@@ -2424,7 +2471,7 @@ package {
                 AV.sessionData.markStashUnlocked(sid);
                 count++;
             }
-            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", 0x55AAFF);
+            _receivedToast.addItem("Received Wizard Stash Master Key (" + count + " stashes)", ItemColors.forApId(1561));
             _logger.log(MOD_NAME, "  → Master stash key unlocked " + count + " stashes");
         }
 
@@ -2443,7 +2490,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", 0xFFDD55);
+            _receivedToast.addItem("Received " + prefix + " Tile Field Token (" + count + " stages)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
         }
 
@@ -2463,7 +2510,7 @@ package {
                     count++;
                 }
             }
-            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", 0xFFDD55);
+            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", ItemColors.forApId(1588 + tier));
             _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
         }
 
@@ -2523,7 +2570,7 @@ package {
             _stageUnlocker.unlockStage(sid);
             AV.sessionData.markFieldTokenHeld(sid);
             _sessionFieldStageProgressiveUnlocks.push(sid);
-            _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, 0xFFDD55);
+            _receivedToast.addItem("Received Progressive Field Token — unlocks " + sid, ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive field token (per-stage) #" + n + " unlocks " + sid);
         }
 
@@ -2550,7 +2597,7 @@ package {
                 }
             }
             _receivedToast.addItem("Received Progressive Field Token — tile " + prefix
-                + " (" + count + " stages)", 0xFFDD55);
+                + " (" + count + " stages)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive field token (per-tile) #" + n
                 + " unlocks tile " + prefix + " (" + count + " stages)");
         }
@@ -2582,7 +2629,7 @@ package {
             var sid:String = String(order[n - 1]);
             AV.sessionData.markStashUnlocked(sid);
             _sessionStashStageProgressiveUnlocks.push(sid);
-            _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, 0x55AAFF);
+            _receivedToast.addItem("Received Progressive Stash Key — unlocks " + sid, ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive stash key (per-stage) #" + n + " unlocks " + sid);
         }
 
@@ -2608,7 +2655,7 @@ package {
                 }
             }
             _receivedToast.addItem("Received Progressive Stash Key — tile " + prefix
-                + " (" + count + " stashes)", 0x55AAFF);
+                + " (" + count + " stashes)", ItemColors.forApId(apId));
             _logger.log(MOD_NAME, "  → Progressive stash key (per-tile) #" + n
                 + " unlocks tile " + prefix + " (" + count + " stashes)");
         }
@@ -2627,8 +2674,9 @@ package {
 
         /** Re-apply stash unlocks from received items. Called from
          *  syncWithAP after sessionData.reset() so the unlocked state is
-         *  rebuilt from the full item list at every sync. Handles all four
-         *  stash_key_granularity modes:
+         *  rebuilt from the full item list at every sync. Handles every
+         *  stash_key_granularity mode:
+         *    off        → no keys exist; every stash is unlocked outright
          *    per_stage  → AP id 1400-1521 (one per stage's loc id)
          *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
          *    per_tier   → AP id 1548-1560 (one per tier 0..12)
@@ -2642,6 +2690,20 @@ package {
 
             _logger.log(MOD_NAME, "_syncStashLockState: stashKeyGranularity="
                 + (opts != null ? String(opts.stashKeyGranularity) : "?"));
+
+            // Off mode: no keys are issued, so unlock every stash up front
+            // and skip the per-mode key scans below.
+            if (opts != null && int(opts.stashKeyGranularity) == 0) {
+                for (var offSid:String in byStrId) {
+                    if (!AV.sessionData.isStashUnlocked(offSid)) {
+                        AV.sessionData.markStashUnlocked(offSid);
+                        changes++;
+                    }
+                }
+                _logger.log(MOD_NAME, "_syncStashLockState: off mode — unlocked "
+                    + changes + " stashes");
+                return changes;
+            }
 
             // Per-stage: walk the stageLocIds map, mark each stash whose
             // matching key item id is held.
@@ -3120,9 +3182,9 @@ package {
             if (apId >= 1588 && apId <= 1600) {
                 return "Tier " + (apId - 1588) + " Field Tokens";
             }
-            // Skill point bundles (1700-1709 — bundle size = apId - 1699).
-            if (apId >= 1700 && apId <= 1709) {
-                return "Skill Point Bundle (+" + (apId - 1699) + ")";
+            // Skill point bundles (1700-1703, four named tiers; per-seed SP value).
+            if (apId >= 1700 && apId <= 1703) {
+                return "Skillpoint Bundle (" + AV.serverData.serverOptions.getSpBundleTierLabel(apId) + ")";
             }
             // Progressive variants — singleton ids from slot_data.
             var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;

@@ -1,6 +1,7 @@
 package save {
     import Bezel.Logger;
 
+    import data.AV;
     import net.ConnectionManager;
     import unlockers.LevelUnlocker;
     import unlockers.ShadowCoreUnlocker;
@@ -16,7 +17,14 @@ package save {
      * Slot file fields: host, port, slot, password, bonusWizardLevel,
      *                   totalShadowCoresGranted, genericTalismansGranted,
      *                   completed, deathLinkEnabled, standalone,
-     *                   seenOfflineApIds.
+     *                   seenOfflineApIds, sessionState.
+     *
+     * sessionState is a snapshot of AV.sessionData (collected items, tokens,
+     * stash unlocks). Persisted so map tooltips and tile coloring remain
+     * correct across game restarts even before AP reconnect — every other
+     * AP-granted item type is baked into GV.ppd and survives via the vanilla
+     * save, but field tokens / stash unlocks live only in AV.sessionData and
+     * would otherwise reset to empty on every launch.
      */
     public class SaveManager {
 
@@ -79,6 +87,7 @@ package save {
             _levelUnlocker.bonusWizardLevel = 0;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
+            AV.sessionData.reset();
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
@@ -86,34 +95,37 @@ package save {
             _standaloneSet       = false;
             _seenOfflineApIds    = [];
 
-            var data:Object = _fileHandler.loadSlotData(slotId);
-            if (data != null) {
-                if (data.host             !== undefined) _connectionManager.apHost       = String(data.host);
-                if (data.port             !== undefined) _connectionManager.apPort       = int(data.port);
-                if (data.slot             !== undefined) _connectionManager.apSlot       = String(data.slot);
-                if (data.password         !== undefined) _connectionManager.apPassword   = String(data.password);
-                if (data.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(data.bonusWizardLevel);
-                if (data.totalShadowCoresGranted !== undefined && _shadowCoreUnlocker != null)
-                    _shadowCoreUnlocker.totalGranted = int(data.totalShadowCoresGranted);
-                if (data.grantedTalismanApIds !== undefined && _talismanUnlocker != null) {
+            var slotData:Object = _fileHandler.loadSlotData(slotId);
+            if (slotData != null) {
+                if (slotData.host             !== undefined) _connectionManager.apHost       = String(slotData.host);
+                if (slotData.port             !== undefined) _connectionManager.apPort       = int(slotData.port);
+                if (slotData.slot             !== undefined) _connectionManager.apSlot       = String(slotData.slot);
+                if (slotData.password         !== undefined) _connectionManager.apPassword   = String(slotData.password);
+                if (slotData.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(slotData.bonusWizardLevel);
+                if (slotData.totalShadowCoresGranted !== undefined && _shadowCoreUnlocker != null)
+                    _shadowCoreUnlocker.totalGranted = int(slotData.totalShadowCoresGranted);
+                if (slotData.grantedTalismanApIds !== undefined && _talismanUnlocker != null) {
                     var grantedObj:Object = {};
-                    for each (var talId:* in data.grantedTalismanApIds) grantedObj[String(int(talId))] = true;
+                    for each (var talId:* in slotData.grantedTalismanApIds) grantedObj[String(int(talId))] = true;
                     _talismanUnlocker.grantedApIds = grantedObj;
                 }
-                if (data.completed        !== undefined) _slotCompleted                  = data.completed === true;
-                if (data.deathLinkEnabled !== undefined) {
-                    _deathLinkEnabled    = data.deathLinkEnabled === true;
+                if (slotData.completed        !== undefined) _slotCompleted                  = slotData.completed === true;
+                if (slotData.deathLinkEnabled !== undefined) {
+                    _deathLinkEnabled    = slotData.deathLinkEnabled === true;
                     _deathLinkEnabledSet = true;
                 }
-                if (data.standalone !== undefined) {
-                    _standalone    = data.standalone === true;
+                if (slotData.standalone !== undefined) {
+                    _standalone    = slotData.standalone === true;
                     _standaloneSet = true;
                 }
-                if (data.seenOfflineApIds !== undefined && data.seenOfflineApIds is Array) {
-                    var ids:Array = data.seenOfflineApIds as Array;
+                if (slotData.seenOfflineApIds !== undefined && slotData.seenOfflineApIds is Array) {
+                    var ids:Array = slotData.seenOfflineApIds as Array;
                     var copy:Array = [];
                     for each (var rawId:* in ids) copy.push(int(rawId));
                     _seenOfflineApIds = copy;
+                }
+                if (slotData.sessionState !== undefined && slotData.sessionState != null) {
+                    AV.sessionData.restoreFromSnapshot(slotData.sessionState);
                 }
             }
         }
@@ -129,7 +141,19 @@ package save {
                 var talIds:Object = _talismanUnlocker.grantedApIds;
                 for (var k:String in talIds) grantedTalIds.push(int(k));
             }
-            var data:Object = {
+            // Snapshot AV.sessionData. If empty (we're between reset() and
+            // a full-sync repopulate, or AP hasn't connected yet), preserve
+            // whatever sessionState is already on disk so the reset/save
+            // dance during reconnect doesn't wipe the cached token state.
+            var sessionState:Object = AV.sessionData.toSnapshot();
+            if (AV.sessionData.isEmpty()) {
+                var existing:Object = _fileHandler.loadSlotData(_currentSlot);
+                if (existing != null && existing.sessionState != null) {
+                    sessionState = existing.sessionState;
+                }
+            }
+
+            var slotData:Object = {
                 host:             _connectionManager.apHost,
                 port:             _connectionManager.apPort,
                 slot:             _connectionManager.apSlot,
@@ -140,9 +164,10 @@ package save {
                 completed:        _slotCompleted,
                 deathLinkEnabled: _deathLinkEnabled,
                 standalone:       _standalone,
-                seenOfflineApIds: _seenOfflineApIds
+                seenOfflineApIds: _seenOfflineApIds,
+                sessionState:     sessionState
             };
-            _fileHandler.saveSlotData(_currentSlot, data);
+            _fileHandler.saveSlotData(_currentSlot, slotData);
         }
 
         /** Mark the current slot as completed and persist immediately. */
@@ -171,6 +196,7 @@ package save {
             _levelUnlocker.bonusWizardLevel = 0;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
+            AV.sessionData.reset();
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;

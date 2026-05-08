@@ -46,13 +46,14 @@ FIELD_PER_TILE_PROGRESSIVE  = 3
 FIELD_PER_TIER              = 4
 FIELD_PER_TIER_PROGRESSIVE  = 5
 
-STASH_PER_STAGE             = 0
-STASH_PER_STAGE_PROGRESSIVE = 1
-STASH_PER_TILE              = 2
-STASH_PER_TILE_PROGRESSIVE  = 3
-STASH_PER_TIER              = 4
-STASH_PER_TIER_PROGRESSIVE  = 5
-STASH_GLOBAL                = 6
+STASH_OFF                   = 0
+STASH_PER_STAGE             = 1
+STASH_PER_STAGE_PROGRESSIVE = 2
+STASH_PER_TILE              = 3
+STASH_PER_TILE_PROGRESSIVE  = 4
+STASH_PER_TIER              = 5
+STASH_PER_TIER_PROGRESSIVE  = 6
+STASH_GLOBAL                = 7
 
 POUCH_OFF                  = 0
 POUCH_PER_TILE             = 1
@@ -146,9 +147,13 @@ def pouch_tier_id(tier: int) -> int:
 # ----------------------------------------------------------------------- #
 # Stash keys
 # ----------------------------------------------------------------------- #
-def stash_key_for_stage(sid: str, granularity: int) -> str:
+def stash_key_for_stage(sid: str, granularity: int) -> str | None:
     """Item name whose presence (state.count >= stash_key_count_for_stage)
-    unlocks `sid`'s wizard stash check under the chosen granularity."""
+    unlocks `sid`'s wizard stash check under the chosen granularity. Returns
+    None when granularity is STASH_OFF — callers must treat the gate as
+    unconditionally satisfied."""
+    if granularity == STASH_OFF:
+        return None
     if granularity == STASH_PER_STAGE:
         return f"Wizard Stash {sid} Key"
     if granularity == STASH_PER_STAGE_PROGRESSIVE:
@@ -169,7 +174,9 @@ def stash_key_for_stage(sid: str, granularity: int) -> str:
 def stash_key_count_for_stage(sid: str, granularity: int, starter_sid: str = None) -> int:
     """Number of copies of `stash_key_for_stage(sid, granularity)` required to
     unlock `sid`'s stash. 1 for distinct/global, N=position-in-starter-aware-
-    order for progressive variants."""
+    order for progressive variants, 0 for STASH_OFF (no gate)."""
+    if granularity == STASH_OFF:
+        return 0
     if granularity == STASH_PER_STAGE_PROGRESSIVE:
         order = (progressive_stage_order_for_starter(starter_sid)
                  if starter_sid is not None else STAGE_PROGRESSIVE_ORDER)
@@ -186,6 +193,8 @@ def stash_key_count_for_stage(sid: str, granularity: int, starter_sid: str = Non
 
 
 def stash_keys_for_pool(granularity: int) -> List[str]:
+    if granularity == STASH_OFF:
+        return []
     if granularity == STASH_PER_STAGE:
         return [f"Wizard Stash {s['str_id']} Key" for s in GAME_DATA["stages"]]
     if granularity == STASH_PER_STAGE_PROGRESSIVE:

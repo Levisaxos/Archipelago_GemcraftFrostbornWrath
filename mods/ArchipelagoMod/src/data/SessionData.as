@@ -88,6 +88,59 @@ package data {
             achievementNamesInLogic  = [];
         }
 
+        /**
+         * True if no items have been recorded yet. Used by SaveManager to
+         * decide whether to overwrite or preserve the on-disk snapshot.
+         */
+        public function isEmpty():Boolean {
+            for (var k:String in collectedItems) return false;
+            return true;
+        }
+
+        /**
+         * Serialize collected state for slot-file persistence. Cached logic
+         * results (fieldsInLogic / achievementsInLogic) are excluded — they
+         * recompute lazily from the restored item state.
+         */
+        public function toSnapshot():Object {
+            return {
+                collectedItems:         _copyDict(collectedItems),
+                itemCounts:             _copyDict(itemCounts),
+                collectedSkills:        _copyDict(collectedSkills),
+                collectedTraits:        _copyDict(collectedTraits),
+                collectedAchievements:  _copyDict(collectedAchievements),
+                tokensByStrId:          _copyDict(tokensByStrId),
+                unlockedStashesByStrId: _copyDict(unlockedStashesByStrId),
+                skillCountByCategory:   _copyDict(skillCountByCategory)
+            };
+        }
+
+        /**
+         * Restore collected state from a snapshot produced by toSnapshot().
+         * Replaces every dict; null/missing fields fall back to empty.
+         * No-op when snap is null. Does not touch fieldsInLogic /
+         * achievementsInLogic — the evaluators recompute those when first
+         * read after restore.
+         */
+        public function restoreFromSnapshot(snap:Object):void {
+            if (snap == null) return;
+            collectedItems         = _copyDict(snap.collectedItems);
+            itemCounts             = _copyDict(snap.itemCounts);
+            collectedSkills        = _copyDict(snap.collectedSkills);
+            collectedTraits        = _copyDict(snap.collectedTraits);
+            collectedAchievements  = _copyDict(snap.collectedAchievements);
+            tokensByStrId          = _copyDict(snap.tokensByStrId);
+            unlockedStashesByStrId = _copyDict(snap.unlockedStashesByStrId);
+            skillCountByCategory   = _copyDict(snap.skillCountByCategory);
+        }
+
+        private static function _copyDict(src:Object):Object {
+            var out:Object = {};
+            if (src == null) return out;
+            for (var k:String in src) out[k] = src[k];
+            return out;
+        }
+
         /** Mark a stage's Wizard Stash unlock item as received. */
         public function markStashUnlocked(strId:String):void {
             if (strId != null) unlockedStashesByStrId[strId] = true;
@@ -110,14 +163,11 @@ package data {
          * Granularity-aware (matches gemPouchGranularity in slot_data):
          *   0 (off)                   → always true
          *   1 (per_tile)              → Gempouch (<prefix>) item present
-         *   2 (per_tile_progressive)  → N copies of Progressive Gempouch where
-         *                               N is 1-based index in progressiveTileOrder
+         *   2 (per_tile_progressive)  → N copies of Progressive Gempouch where N is 1-based index in progressiveTileOrder
          *   3 (per_tier)              → Tier <N> Gempouch item present
-         *   4 (per_tier_progressive)  → N copies of Progressive Gempouch (per-tier)
-         *                               where N is 1-based index in progressiveTierOrder
+         *   4 (per_tier_progressive)  → N copies of Progressive Gempouch (per-tier) where N is 1-based index in progressiveTierOrder
          *   5 (global)                → Master Gempouch item present
-         * Returns true on any unknown configuration so a misconfigured seed
-         * never deadlocks the player.
+         * Returns true on any unknown configuration so a misconfigured seed never deadlocks the player.
          */
         public function hasPouchForStage(stageStrId:String):Boolean {
             if (AV.serverData == null || AV.serverData.serverOptions == null)

@@ -17,13 +17,14 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 - 35 Shadow Core stashes (17 specific + 18 extras)
 - 40 XP Tomes (Tattered Scrolls, Worn Tomes, Ancient Grimoires)
 - Up to 26 Map Tiles
-- Gem Pouches, Wizard Stash Keys, and Skillpoint Bundles
+- Gem Pouches, Wizard Stash Keys
+- Skillpoint Bundles in four tiers (Small / Medium / Large / Huge), each with a per-seed SP value scaled to the actual filler-slot count
 
 ## Locations
 
 - 122 Journey-clear checks (one per stage)
 - 122 Wizard Stash checks (one per stage, stashes start locked)
-- Up to ~537 optional achievement checks
+- Up to ~636 optional achievement checks (5 selectable effort tiers)
 
 ## Goals
 
@@ -35,16 +36,16 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 ## YAML options
 
 - Choose your starting stage (W1–W4 / S1–S4 / random)
-- Field Token granularity: per-stage, per-tile, per-tier, or progressive
-- Wizard Stash Key granularity: same options
-- Gem Pouch granularity: same options, or off
+- Field Token granularity: per-stage, per-tile, or per-tier — each with a progressive sibling
+- Wizard Stash Key granularity: same families as Field Tokens, plus a single-master-key `global` option
+- Gem Pouch granularity: `off`, per-tile, per-tier (each with a progressive sibling), or `global`. Defaults to per-tile progressive.
 - Field Token placement: any world, own world only, or other worlds only
 - Tier-requirement percentage controls how strict logic is
 - XP tome bonus and starting wizard level are configurable
 - Optional starting Overcrowd trait
 - Skillpoint multiplier for filler skill points
 - Difficulty multipliers: enemy HP, armor, shield, count, and extra waves
-- Achievement effort tier: trivial / minor / major
+- Achievement effort tier: 5 levels — `1` Trivial only, `2` +Minor, `3` +Major, `4` +Extreme, `5` All
 - Toggle Endurance and Trial modes
 
 ## DeathLink
@@ -60,12 +61,13 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 ## In-game UI
 
 - Connection and disconnect panels
-- Achievement browser with search and group filtering
+- Achievement browser with search and group filtering; the in-game collect popup shows the current logic pip even before the panel is opened
 - Field tooltip showing in-logic status, stage elements, and stash lock state
 - Offline summary collector for checks completed while disconnected
 - Custom drop icons for every item category
-- Item-receive toasts with proper names
-- Persistent scrollable message log (toggle with `` ` ``)
+- Item-receive toasts colour-coded by Archipelago importance (progression / useful / trap / filler)
+- Outgoing-item toasts and log entries show "Sent X to Player (Found at Location)" — item names appear in their Archipelago importance colour, and foreign-game item/location names are resolved from the DataPackage
+- Persistent scrollable message log (toggle with `` ` ``) with item names rendered in their importance colour
 - Per-slot settings panel
 - In-game changelog viewer
 

@@ -27,7 +27,11 @@ from .options import (
     StashKeyGranularity,
     STARTING_STAGE_BY_VALUE,
 )
-from .items_skillpoints import generate_sp_bundles
+from .items_skillpoints import (
+    compute_tier_distribution as _compute_sp_bundle_distribution,
+    generate_sp_bundles,
+    TIER_NAMES as _SP_TIER_NAMES,
+)
 from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
 from .rulesdata import (
@@ -83,38 +87,92 @@ def _should_skip_achievement(ach_data: dict, options) -> bool:
     return False
 
 
+# Module-level cache for stage-stat counter ceilings used by the
+# structural-reachability filter.  Populated lazily on first call to
+# avoid import-order sensitivity; LEVEL_DATA never changes at runtime,
+# so the cache is set-once.
+_STAT_COUNTER_CEILINGS: dict | None = None
+
+
+def _get_stat_counter_ceilings() -> dict:
+    """Map of `level_stat_counters` head -> max value any stage carries
+    for that head's field(s).  A `<head>:N` requirement is structurally
+    unsatisfiable iff N exceeds this ceiling.  Mirrors the qualifying-
+    stage selection in rules.py `_eval_req` (level_stat_counters branch)."""
+    global _STAT_COUNTER_CEILINGS
+    if _STAT_COUNTER_CEILINGS is None:
+        from .requirement_tokens import level_stat_counters
+        result = {}
+        for head, fields in level_stat_counters.items():
+            if isinstance(fields, str):
+                fields = (fields,)
+            result[head] = max(
+                (max(d.get(f, 0) for f in fields) for d in LEVEL_DATA.values()),
+                default=0,
+            )
+        _STAT_COUNTER_CEILINGS = result
+    return _STAT_COUNTER_CEILINGS
+
+
 def _can_achievement_be_met(requirements: list) -> bool:
     """
     Check if an achievement can be met based on its requirements (DNF format).
     Returns True if any AND-group can be met, False only if all groups are blocked.
 
-    Element-handling convention (mirrors rules.py `_eval_req`):
-      An element is structurally reachable iff at least one stage in
-      LEVEL_DATA carries its <Pascal>Count field with a positive value.
-      Universal-presence elements (Tower / Wall / Wizard Stash / Marked
-      Monster — no Count field anywhere) fall through to "always satisfied"
-      and never block.
+    Two structural blockers are checked from level data:
+      * Element presence/count: the achievement names an element (eBeacon,
+        eShrine:2, ...) but no stage hosts it at the required count.
+        Universal-presence elements (Tower / Wall / Wizard Stash / Marked
+        Monster — no Count field anywhere) are never blocked.
+      * Stage-stat counter ceiling: the achievement names a counter
+        (minWave, minMonsters, markedMonster, ...) at a value no stage
+        actually reaches.  Frag Rain (minWave:245 with max WaveCount=100)
+        is the canonical case.
+
+    Mirrors the runtime check in rules.py `_eval_req`: a `<head>:N`
+    requirement passes iff at least one stage qualifies.
     """
     from .requirement_tokens import element_prefix_map
     from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
 
-    def _resolve_element_names(req: str):
-        """Return the list of element names a requirement refers to, or
-        None if the requirement isn't an element-style token."""
-        head = req.split(":", 1)[0].strip()
-        return element_prefix_map.get(head)
+    stat_ceilings = _get_stat_counter_ceilings()
 
-    def _element_blocked(elem_name: str) -> bool:
-        """True if this element is structurally unreachable — the element is
-        tracked per-stage but no stage actually hosts it.  Universal-presence
-        elements (no Count field anywhere) are never blocked."""
+    def _element_blocked(elem_name: str, count_needed: int) -> bool:
+        """True if this element is structurally unreachable at the required
+        count.  Universal-presence elements (no Count field anywhere) are
+        never blocked."""
         if elem_name == "Wizard Stash":
             return False  # gated by per-stage keys, not by stage presence
         field = _element_count_field(elem_name)
         if field not in _PRESENT_COUNT_FIELDS:
             return False  # universal / untracked — assume reachable
-        # Tracked but no stage carries a positive count -> unreachable.
-        return not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values())
+        return not any(d.get(field, 0) >= count_needed for d in LEVEL_DATA.values())
+
+    def _req_blocked(req: str) -> bool:
+        """True if a single requirement string is structurally unsatisfiable
+        from level data alone."""
+        head = req.split(":", 1)[0].strip()
+        count_needed = 1
+        if ":" in req:
+            try:
+                count_needed = int(req.split(":", 1)[1].strip())
+            except ValueError:
+                count_needed = 1
+
+        # Element / weather / group token (with or without count).
+        elem_names = element_prefix_map.get(head)
+        if elem_names is not None:
+            # Group tokens (eNonMonsters, multi-member) ignore count and
+            # pass if any single member is reachable — mirrors rules.py.
+            if len(elem_names) > 1:
+                return all(_element_blocked(n, 1) for n in elem_names)
+            return all(_element_blocked(n, count_needed) for n in elem_names)
+
+        # Stage-stat counter — block iff N exceeds the ceiling.
+        if head in stat_ceilings and ":" in req:
+            return count_needed > stat_ceilings[head]
+
+        return False  # other tokens (item-pool counters, modes, etc.)
 
     def _group_can_be_met(group: list) -> bool:
         for req in group:
@@ -122,12 +180,7 @@ def _can_achievement_be_met(requirements: list) -> bool:
                 if not _can_achievement_be_met(req):
                     return False
                 continue
-            req = req.strip()
-            elem_names = _resolve_element_names(req)
-            if elem_names is None:
-                continue
-            # Group passes if any one member is reachable.  All blocked = fail.
-            if all(_element_blocked(n) for n in elem_names):
+            if _req_blocked(req.strip()):
                 return False
         return True
 
@@ -142,10 +195,12 @@ def _can_achievement_be_met(requirements: list) -> bool:
 def _get_filter_reason(requirements: list) -> str:
     """
     Determine why an achievement was filtered out.
-    Returns a string describing the reason.
+    Returns a string describing the first blocker encountered.
     """
     from .requirement_tokens import element_prefix_map
     from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
+
+    stat_ceilings = _get_stat_counter_ceilings()
 
     def _flatten(reqs):
         for r in reqs:
@@ -157,14 +212,30 @@ def _get_filter_reason(requirements: list) -> str:
     for req in _flatten(requirements):
         req = str(req).strip()
         head = req.split(":", 1)[0].strip()
+        count_needed = 1
+        if ":" in req:
+            try:
+                count_needed = int(req.split(":", 1)[1].strip())
+            except ValueError:
+                count_needed = 1
+
+        # Element / weather / group token.
         elem_names = element_prefix_map.get(head)
-        if elem_names is None:
+        if elem_names is not None:
+            for elem_name in elem_names:
+                if elem_name == "Wizard Stash":
+                    continue
+                field = _element_count_field(elem_name)
+                if field in _PRESENT_COUNT_FIELDS:
+                    if not any(d.get(field, 0) >= count_needed for d in LEVEL_DATA.values()):
+                        return f"No stage hosts element '{elem_name}' (need >= {count_needed})"
             continue
-        for elem_name in elem_names:
-            field = _element_count_field(elem_name)
-            if field in _PRESENT_COUNT_FIELDS:
-                if not any(d.get(field, 0) > 0 for d in LEVEL_DATA.values()):
-                    return f"No stage hosts element '{elem_name}'"
+
+        # Stage-stat counter ceiling.
+        if head in stat_ceilings and ":" in req:
+            ceiling = stat_ceilings[head]
+            if count_needed > ceiling:
+                return f"No stage has {head} >= {count_needed} (max={ceiling})"
     return "Unknown reason"
 
 
@@ -215,11 +286,59 @@ class GemcraftFrostbornWrathWorld(World):
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+    _BIAS_FRACTION = 0.75
+
+    def _apply_progression_bias(self, include_tokens: bool, include_skills: bool) -> None:
+        """Pre-place a fraction of (tokens + skills) onto the player's own Journey/Stash locations to bias them away from achievements. Items that cannot be placed (access rules) are returned to the main pool."""
+        from Fill import fill_restrictive
+
+        fraction = self._BIAS_FRACTION
+
+        candidates = []
+        for item in self.multiworld.itempool:
+            if item.player != self.player:
+                continue
+            if include_tokens and item.name.endswith(" Field Token"):
+                candidates.append(item)
+            elif include_skills and item.name.endswith(" Skill"):
+                candidates.append(item)
+        if not candidates:
+            return
+
+        journey_stash_locs = [
+            loc for loc in self.multiworld.get_unfilled_locations(self.player)
+            if loc.name.startswith("Complete ")
+        ]
+        if not journey_stash_locs:
+            return
+
+        self.multiworld.random.shuffle(candidates)
+        self.multiworld.random.shuffle(journey_stash_locs)
+        sample_size = max(1, int(len(candidates) * fraction))
+        biased_items = candidates[:sample_size]
+        for it in biased_items:
+            self.multiworld.itempool.remove(it)
+
+        state = self.multiworld.get_all_state(use_cache=False)
+        fill_restrictive(self.multiworld, state, journey_stash_locs, biased_items,
+                         lock=True, allow_partial=True)
+        # Any items left in biased_items were not placed — return them to the pool.
+        if biased_items:
+            self.multiworld.itempool.extend(biased_items)
+
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
             from Fill import FillError, fill_restrictive
 
             placement = self.options.field_token_placement.value
+
+            # Apply progression bias before token placement.
+            # different_world tokens are placed into other players' worlds in
+            # stage_pre_fill; bias only their skills here. For own_world / any_world,
+            # bias both tokens and skills.
+            include_tokens = placement != FieldTokenPlacement.option_different_world
+            self._apply_progression_bias(include_tokens=include_tokens, include_skills=True)
+
             if placement != FieldTokenPlacement.option_own_world:
                 return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
@@ -403,17 +522,23 @@ class GemcraftFrostbornWrathWorld(World):
             pool.append(self.create_item(pouch_name))
 
         # SP bundle filler — fills all remaining unfilled location slots.
-        # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
-        # SkillpointMultiplier docstring for why default is 50%).
+        # Total SP scales with skillpoint_multiplier (default 100 → 2500 SP).
+        # Bundles are split across four named tiers (Small/Medium/Large/Huge)
+        # whose SP values are computed per-seed based on the actual filler-slot
+        # count — see compute_tier_distribution. Tier values are stored on self
+        # so fill_slot_data can ship them to the mod.
         # The -1 is for the Victory event location (filled by place_locked_item
         # in generate_basic — outside the regular pool).
         total_locations = sum(1 for region in self.multiworld.regions
                               if region.player == self.player
                               for _ in region.locations)
         remaining = total_locations - len(pool) - 1
+        self.sp_bundle_values: List[int] = [0, 0, 0, 0]
         if remaining > 0:
-            total_sp = 2000 * self.options.skillpoint_multiplier.value // 100
-            bundles = generate_sp_bundles(self.random, total_sp, remaining)
+            total_sp = 2500 * self.options.skillpoint_multiplier.value // 100
+            values, counts = _compute_sp_bundle_distribution(total_sp, remaining)
+            self.sp_bundle_values = values
+            bundles = generate_sp_bundles(self.random, counts)
             for name in bundles:
                 pool.append(self.create_item(name))
 
@@ -768,6 +893,13 @@ class GemcraftFrostbornWrathWorld(World):
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
             "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
+            # Per-seed SP value granted by each Skillpoint Bundle tier, indexed
+            # by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
+            # in create_items so the four piles divide cleanly across the actual
+            # filler-slot count. The mod uses this for grant amounts and for
+            # the in-mod skillPoints:N achievement-gate counter.
+            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [0, 0, 0, 0])),
+            "sp_bundle_tier_names":  list(_SP_TIER_NAMES),
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,
@@ -803,9 +935,9 @@ class GemcraftFrostbornWrathWorld(World):
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
             #                            2=per_tile,  3=per_tile_progressive,
             #                            4=per_tier,  5=per_tier_progressive
-            #   stash_key_granularity:   0=per_stage, 1=per_stage_progressive,
-            #                            2=per_tile,  3=per_tile_progressive,
-            #                            4=per_tier,  5=per_tier_progressive, 6=global
+            #   stash_key_granularity:   0=off, 1=per_stage, 2=per_stage_progressive,
+            #                            3=per_tile,  4=per_tile_progressive,
+            #                            5=per_tier,  6=per_tier_progressive, 7=global
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
             #                            3=per_tier, 4=per_tier_progressive, 5=global
             "field_token_granularity": self.options.field_token_granularity.value,

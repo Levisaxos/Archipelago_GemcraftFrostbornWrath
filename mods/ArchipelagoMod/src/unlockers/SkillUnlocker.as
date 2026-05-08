@@ -2,6 +2,7 @@ package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
     import ui.ReceivedToast;
+    import ui.ItemColors;
 
     /**
      * Handles unlocking skills by Archipelago item ID.
@@ -40,7 +41,7 @@ package unlockers {
             GV.ppd.setSkillLevel(gameId, Math.max(GV.ppd.getSkillLevel(gameId), 0));
             var skillName:String = SKILL_NAMES[gameId];
             logAction("Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
-            showToast("Received " + skillName, 0xDDA0FF);
+            showToast("Received " + skillName, ItemColors.forApId(apId));
             showPlusNodeOnSelector("mcPlusNodeSkills");
         }
 

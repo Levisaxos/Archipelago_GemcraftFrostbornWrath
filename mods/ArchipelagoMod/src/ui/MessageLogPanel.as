@@ -29,12 +29,14 @@ package ui {
         private static const HEADER_H:int     = 40;
         private static const SCROLL_STEP:int  = 3; // lines per wheel tick
 
-        // Visual style
-        private static const BG_COLOR:uint     = 0x0C0818;
+        // Visual style — neutral system-console palette so item-importance
+        // colours embedded inside individual entries stand out rather than
+        // fighting the panel chrome.
+        private static const BG_COLOR:uint     = 0x000000;
         private static const BG_ALPHA:Number   = 0.92;
-        private static const BORDER_COLOR:uint = 0x9966CC;
-        private static const HEADER_COLOR:uint = 0xCC99FF;
-        private static const TIME_COLOR:uint   = 0x887799;
+        private static const BORDER_COLOR:uint = 0x444444;
+        private static const HEADER_COLOR:uint = 0xFFFFFF;
+        private static const TIME_COLOR:uint   = 0x888888;
 
         private var _log:MessageLog;
         private var _bg:Shape;
@@ -190,9 +192,15 @@ package ui {
                 timeTf.y = yPos;
                 _content.addChild(timeTf);
 
-                // Message text
+                // Message text — rich entries render via htmlText so embedded
+                // <font color> tags from ItemSend messages can colour item
+                // names by importance; plain entries draw in entry.color.
                 var msgTf:TextField = makeField(fmt, entry.color);
-                msgTf.text = entry.text;
+                if (entry.html != null) {
+                    msgTf.htmlText = String(entry.html);
+                } else {
+                    msgTf.text = entry.text;
+                }
                 msgTf.x = PAD_X + 120;
                 msgTf.y = yPos;
                 _content.addChild(msgTf);

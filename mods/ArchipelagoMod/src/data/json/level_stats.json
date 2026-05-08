@@ -311,6 +311,7 @@
     "GiantMaxArmor": 2171,
     "MonstersBeforeWave12": 232,
     "MarkedMonsterCount": 156,
+    "LanternCount": 4,
     "ShadowCount": 1
   },
   "D1": {
@@ -422,7 +423,9 @@
     "GiantMaxArmor": 721,
     "MonstersBeforeWave12": 136,
     "MarkedMonsterCount": 49,
-    "BarricadeCount": 10
+    "BarricadeCount": 10,
+    "LanternCount": 4,
+    "PylonCount": 2
   },
   "E2": {
     "WaveCount": 62,
@@ -621,7 +624,8 @@
     "GiantMaxHP": 34701,
     "GiantMaxArmor": 323,
     "MonstersBeforeWave12": 219,
-    "MarkedMonsterCount": 48
+    "MarkedMonsterCount": 48,
+    "PylonCount": 4
   },
   "G2": {
     "WaveCount": 52,
@@ -676,7 +680,8 @@
     "GiantCount": 59,
     "GiantMaxHP": 59858,
     "GiantMaxArmor": 415,
-    "MonstersBeforeWave12": 146
+    "MonstersBeforeWave12": 146,
+    "AmplifierCount": 4
   },
   "H1": {
     "WaveCount": 64,
@@ -882,6 +887,7 @@
     "MarkedMonsterCount": 77,
     "AbandonedDwellingCount": 1,
     "DropHolderCount": 3,
+    "LanternCount": 4,
     "ManaShardCount": 4,
     "RainCount": 1,
     "ShrineCount": 1
@@ -903,6 +909,7 @@
     "GiantMaxArmor": 600,
     "MonstersBeforeWave12": 275,
     "MarkedMonsterCount": 62,
+    "AmplifierCount": 4,
     "RainCount": 1,
     "TombCount": 1
   },
@@ -945,6 +952,7 @@
     "GiantMaxArmor": 267,
     "MonstersBeforeWave12": 155,
     "MarkedMonsterCount": 33,
+    "LanternCount": 4,
     "WatchtowerCount": 1
   },
   "K2": {
@@ -1181,8 +1189,10 @@
     "MonstersBeforeWave12": 207,
     "MarkedMonsterCount": 22,
     "AbandonedDwellingCount": 2,
+    "AmplifierCount": 2,
     "BarricadeCount": 7,
     "DropHolderCount": 1,
+    "LanternCount": 2,
     "ManaShardCount": 2,
     "RainCount": 1,
     "TombCount": 2
@@ -1305,6 +1315,8 @@
     "GiantMaxHP": 117501,
     "GiantMaxArmor": 606,
     "MonstersBeforeWave12": 231,
+    "AmplifierCount": 1,
+    "PylonCount": 1,
     "RainCount": 1
   },
   "O1": {
@@ -1385,9 +1397,11 @@
     "GiantMaxArmor": 95,
     "MonstersBeforeWave12": 134,
     "AbandonedDwellingCount": 6,
+    "AmplifierCount": 1,
     "BarricadeCount": 9,
     "DropHolderCount": 2,
     "MonsterNestCount": 4,
+    "PylonCount": 1,
     "RainCount": 1
   },
   "P1": {
@@ -1426,6 +1440,7 @@
     "GiantMaxArmor": 152,
     "MonstersBeforeWave12": 141,
     "BeaconCount": 1,
+    "LanternCount": 3,
     "MonsterNestCount": 1,
     "RainCount": 1
   },
@@ -1525,7 +1540,9 @@
     "SwarmlingMaxHP": 43,
     "SwarmlingMaxArmor": 23,
     "MonstersBeforeWave12": 152,
-    "BarricadeCount": 6
+    "AmplifierCount": 1,
+    "BarricadeCount": 6,
+    "LanternCount": 1
   },
   "Q3": {
     "WaveCount": 24,
@@ -1542,7 +1559,8 @@
     "GiantCount": 5,
     "GiantMaxHP": 2530,
     "GiantMaxArmor": 54,
-    "MonstersBeforeWave12": 166
+    "MonstersBeforeWave12": 166,
+    "PylonCount": 1
   },
   "Q4": {
     "WaveCount": 26,
@@ -1563,6 +1581,7 @@
     "AbandonedDwellingCount": 5,
     "BarricadeCount": 4,
     "DropHolderCount": 3,
+    "LanternCount": 2,
     "RainCount": 1,
     "SnowCount": 1
   },
@@ -1583,7 +1602,8 @@
     "GiantMaxArmor": 44,
     "MonstersBeforeWave12": 151,
     "MarkedMonsterCount": 12,
-    "BarricadeCount": 11
+    "BarricadeCount": 11,
+    "TrapCount": 4
   },
   "R1": {
     "WaveCount": 22,
@@ -1597,7 +1617,9 @@
     "SwarmlingMaxHP": 39,
     "SwarmlingMaxArmor": 8,
     "MonstersBeforeWave12": 174,
-    "BarricadeCount": 11
+    "AmplifierCount": 1,
+    "BarricadeCount": 11,
+    "LanternCount": 2
   },
   "R2": {
     "WaveCount": 22,
@@ -1610,7 +1632,8 @@
     "SwarmlingCount": 207,
     "SwarmlingMaxHP": 39,
     "SwarmlingMaxArmor": 17,
-    "MonstersBeforeWave12": 205
+    "MonstersBeforeWave12": 205,
+    "TrapCount": 4
   },
   "R3": {
     "WaveCount": 30,
@@ -1650,6 +1673,7 @@
     "MonstersBeforeWave12": 169,
     "MarkedMonsterCount": 11,
     "AbandonedDwellingCount": 2,
+    "PylonCount": 2,
     "ShrineCount": 1
   },
   "R5": {
@@ -1668,7 +1692,8 @@
     "GiantMaxHP": 6253,
     "GiantMaxArmor": 89,
     "MonstersBeforeWave12": 144,
-    "MarkedMonsterCount": 15
+    "MarkedMonsterCount": 15,
+    "PylonCount": 4
   },
   "R6": {
     "WaveCount": 36,
@@ -1687,6 +1712,7 @@
     "GiantMaxArmor": 167,
     "MonstersBeforeWave12": 169,
     "AbandonedDwellingCount": 2,
+    "AmplifierCount": 6,
     "ApparitionCount": 1,
     "MonsterNestCount": 3,
     "RainCount": 1
@@ -1699,7 +1725,8 @@
     "ReaverMaxHP": 44,
     "ReaverMaxArmor": 10,
     "MonstersBeforeWave12": 137,
-    "MonsterNestCount": 1
+    "MonsterNestCount": 1,
+    "TrapCount": 4
   },
   "S2": {
     "WaveCount": 16,
@@ -1721,7 +1748,8 @@
     "ReaverMaxHP": 44,
     "ReaverMaxArmor": 10,
     "MonstersBeforeWave12": 133,
-    "MonsterNestCount": 1
+    "MonsterNestCount": 1,
+    "TrapCount": 3
   },
   "S4": {
     "WaveCount": 20,
@@ -1735,7 +1763,8 @@
     "SwarmlingMaxHP": 31,
     "SwarmlingMaxArmor": 14,
     "MonstersBeforeWave12": 135,
-    "BeaconCount": 1
+    "BeaconCount": 1,
+    "TrapCount": 6
   },
   "T1": {
     "WaveCount": 26,
@@ -1770,6 +1799,7 @@
     "GiantMaxHP": 3910,
     "GiantMaxArmor": 55,
     "MonstersBeforeWave12": 147,
+    "AmplifierCount": 3,
     "SnowCount": 1
   },
   "T3": {
@@ -1939,7 +1969,8 @@
     "SwarmlingCount": 255,
     "SwarmlingMaxHP": 43,
     "SwarmlingMaxArmor": 17,
-    "MonstersBeforeWave12": 197
+    "MonstersBeforeWave12": 197,
+    "AmplifierCount": 7
   },
   "W1": {
     "WaveCount": 6,
@@ -2019,6 +2050,7 @@
     "AbandonedDwellingCount": 6,
     "DropHolderCount": 1,
     "JarOfWaspsCount": 3,
+    "PylonCount": 1,
     "SnowCount": 1
   },
   "X3": {
@@ -2039,7 +2071,9 @@
     "MonstersBeforeWave12": 229,
     "MarkedMonsterCount": 29,
     "AbandonedDwellingCount": 5,
+    "AmplifierCount": 1,
     "BarricadeCount": 5,
+    "LanternCount": 1,
     "ManaShardCount": 1,
     "MonsterNestCount": 1,
     "SnowCount": 1
@@ -2062,7 +2096,9 @@
     "MonstersBeforeWave12": 121,
     "MarkedMonsterCount": 5,
     "BeaconCount": 4,
+    "LanternCount": 1,
     "ManaShardCount": 3,
+    "PylonCount": 1,
     "SnowCount": 1,
     "WraithCount": 1
   },
@@ -2102,7 +2138,9 @@
     "GiantMaxArmor": 64,
     "MonstersBeforeWave12": 199,
     "BarricadeCount": 6,
+    "LanternCount": 1,
     "ManaShardCount": 1,
+    "PylonCount": 2,
     "SnowCount": 1
   },
   "Y3": {

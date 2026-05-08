@@ -348,13 +348,10 @@ package tracker {
                     {
                         // Gem-skill tokens broaden: also pass when a stage
                         // with the matching starter pouch is reachable.
+                        // Building skills (sTraps etc.) stay strict — the
+                        // lenient form is `eTraps` and is dispatched below.
                         if (_GEM_SKILL_TO_GEM_NAME[sName] != null)
                             return _hasGemSkillBroadenedAP(sName);
-                        // Building-skill tokens broaden the same way: a
-                        // reachable stage that hosts the pre-placed building
-                        // (and whose gempouch is owned) satisfies the gate.
-                        if (_BUILDING_SKILL_TO_FIELD[sName] != null)
-                            return _hasBuildingSkillBroadenedAP(sName);
                         var sIdx:int = SessionData.SKILL_NAMES.indexOf(sName);
                         return sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx);
                     }
@@ -370,6 +367,17 @@ package tracker {
                 }
                 else if (firstChar == "e" || firstChar == "w")
                 {
+                    // Building elements (eTraps / eLanterns / ePylons /
+                    // eAmplifiers) also pass when the player holds the
+                    // matching skill — they can build the element on any
+                    // reachable stage themselves.  AP-logic check uses
+                    // item-held (not active level) to match server-side rules.
+                    var bSkill:String = _BUILDING_ELEMENT_TO_SKILL[req];
+                    if (bSkill != null) {
+                        var bIdx:int = SessionData.SKILL_NAMES.indexOf(bSkill);
+                        if (bIdx >= 0 && AV.sessionData.hasItem(700 + bIdx))
+                            return true;
+                    }
                     var elemMapped:String = _elementPrefixMap[req];
                     if (elemMapped != null)
                     {
@@ -549,9 +557,7 @@ package tracker {
                     return AV.sessionData.getItemCount(progId) >= idxP + 1;
                 }
                 if (mode == 3 || mode == 4) {
-                    // per_tier (3) and per_tier_progressive (4): without a
-                    // specific stage in scope, accept if ANY tier pouch is
-                    // held that covers a stage with this prefix.
+                    // per_tier (3) and per_tier_progressive (4): without a specific stage in scope, accept if ANY tier pouch is held that covers a stage with this prefix.
                     var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
                     if (tierMap == null) return true;
                     var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
@@ -631,7 +637,8 @@ package tracker {
                 return _countMatchingTalismanSets(false) >= tcNeed;
             }
             // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
-            // items (1700..1709, bundle apId-1699 = SP value).
+            // items (1700..1703 — four named tiers; per-tier SP value from
+            // slot_data ServerOptions.spBundleValues).
             if (lower.indexOf("skillpoints") == 0) {
                 var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countSkillPoints() >= spNeed;
@@ -795,12 +802,10 @@ package tracker {
                     {
                         // Gem-skill tokens broaden: also pass when the
                         // current stage's starter pouch contains the gem.
+                        // Building skills (sTraps etc.) stay strict — the
+                        // lenient `eTraps` form handles pre-placed buildings.
                         if (_GEM_SKILL_TO_GEM_NAME[sNameIL] != null)
                             return _hasGemSkillOnStage(sNameIL, currentStrId);
-                        // Building-skill tokens broaden: also pass when the
-                        // current stage hosts the matching pre-placed building.
-                        if (_BUILDING_SKILL_TO_FIELD[sNameIL] != null)
-                            return _hasBuildingSkillOnStage(sNameIL, currentStrId);
                         return _isSkillActive(sNameIL);
                     }
                 }
@@ -817,6 +822,11 @@ package tracker {
                 }
                 else if (firstCharIL == "e" || firstCharIL == "w")
                 {
+                    // Building elements (eTraps etc.) pass on any stage
+                    // when the player holds the matching skill.
+                    var bSkillIL:String = _BUILDING_ELEMENT_TO_SKILL[req];
+                    if (bSkillIL != null && _isSkillActive(bSkillIL))
+                        return true;
                     var elemMappedIL:String = _elementPrefixMap[req];
                     var lookupNameIL:String = (elemMappedIL != null) ? elemMappedIL : req.substring(1);
                     if (_elementStages != null)
@@ -1052,17 +1062,20 @@ package tracker {
         }
 
         /**
-         * Sum SP across collected Skillpoint Bundle items. Bundle apId-1699
-         * is the bundle's SP value (1..10). state.has equivalent is
-         * AV.sessionData.hasItem; we don't track per-AP-id duplicates, so
-         * each held bundle counts once. Mirrors apworld's _count_skill_points
-         * with the same approximation.
+         * Sum SP across collected Skillpoint Bundle items. Per-tier SP value
+         * is per-seed and arrives via slot_data (ServerOptions.spBundleValues
+         * indexed by apId-1700: Small/Medium/Large/Huge). hasItem only
+         * reports presence, not count, so each tier contributes at most once
+         * — matches apworld's _count_skill_points approximation.
          */
         private function _countSkillPoints():int {
             var total:int = 0;
-            for (var size:int = 1; size <= 10; size++) {
-                if (AV.sessionData.hasItem(1699 + size))
-                    total += size;
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            var opts:* = AV.serverData.serverOptions;
+            for (var apId:int = 1700; apId <= 1703; apId++) {
+                if (AV.sessionData.hasItem(apId))
+                    total += opts.getSpBundleValue(apId);
             }
             return total;
         }
@@ -1136,6 +1149,27 @@ package tracker {
             if (_elementPrefixMap["wSnow"] == null)
             {
                 _elementPrefixMap["wSnow"] = "Snow";
+            }
+            // Building elements use plural tokens (eTraps / eLanterns /
+            // ePylons / eAmplifiers) but element_stages keys are singular.
+            // Without these aliases the lookup falls through and
+            // _elementInLogic returns true for a missing key, making every
+            // building-element achievement appear in-logic.
+            if (_elementPrefixMap["eTraps"] == null)
+            {
+                _elementPrefixMap["eTraps"] = "Trap";
+            }
+            if (_elementPrefixMap["eLanterns"] == null)
+            {
+                _elementPrefixMap["eLanterns"] = "Lantern";
+            }
+            if (_elementPrefixMap["ePylons"] == null)
+            {
+                _elementPrefixMap["ePylons"] = "Pylon";
+            }
+            if (_elementPrefixMap["eAmplifiers"] == null)
+            {
+                _elementPrefixMap["eAmplifiers"] = "Amplifier";
             }
             for each (var skillName:String in SessionData.SKILL_NAMES)
             {
@@ -1293,69 +1327,21 @@ package tracker {
             return n;
         }
 
-        /** Skill name -> level-stat field tracking that pre-placed building
-         *  on each stage.  Used to broaden building-skill `sX` tokens so an
-         *  achievement requiring `sTraps` / `sLanterns` / `sPylons` /
-         *  `sAmplifiers` is satisfiable when a reachable stage already
-         *  hosts the building (and the player has its gempouch — gems are
-         *  required to charge the building).  Mirrors apworld
-         *  rules._BUILDING_TOKEN_TO_FIELD. */
-        private static const _BUILDING_SKILL_TO_FIELD:Object = {
-            "Traps":      "TrapCount",
-            "Lanterns":   "LanternCount",
-            "Pylons":     "PylonCount",
-            "Amplifiers": "AmplifierCount"
+        /** e-prefix building-element token -> matching skill name. Lets
+         *  `eTraps` / `eLanterns` / `ePylons` / `eAmplifiers` pass when the
+         *  player holds the skill (can build the element on any reachable
+         *  stage themselves) — independently of whether any reachable stage
+         *  has a pre-placed instance. The pre-placed-instance side is
+         *  handled by the standard element-reachability path
+         *  (`_elementInLogic` / `_elementStages`), which the generator now
+         *  populates from the per-stage `*Count` fields in
+         *  rulesdata_levels.py. Strict `sTraps` etc. stay item-only. */
+        private static const _BUILDING_ELEMENT_TO_SKILL:Object = {
+            "eTraps":      "Traps",
+            "eLanterns":   "Lanterns",
+            "ePylons":     "Pylons",
+            "eAmplifiers": "Amplifiers"
         };
-
-        /** True if any in-logic stage has `<field> > 0` AND the player has
-         *  the matching prefix's gempouch (when gating is on). */
-        private function _buildingReachableInLogic(field:String):Boolean {
-            if (AV.gameData == null || AV.gameData.levelStats == null)
-                return false;
-            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
-                return false;
-            var stats:Object = AV.gameData.levelStats;
-            var fields:Object = AV.sessionData.fieldsInLogic;
-            for (var sid:String in stats) {
-                if (fields[sid] != true) continue;
-                if (sid.length == 0 || !AV.sessionData.hasPouchForPrefix(sid.charAt(0))) continue;
-                if (int(stats[sid][field]) > 0) return true;
-            }
-            return false;
-        }
-
-        /** True if `stageStrId` has `<field> > 0` AND the player has the
-         *  matching prefix's gempouch. */
-        private function _buildingOnStage(stageStrId:String, field:String):Boolean {
-            if (AV.gameData == null || AV.gameData.levelStats == null)
-                return false;
-            if (stageStrId == null || stageStrId.length == 0)
-                return false;
-            if (!AV.sessionData.hasPouchForPrefix(stageStrId.charAt(0)))
-                return false;
-            var s:Object = AV.gameData.levelStats[stageStrId];
-            if (s == null) return false;
-            return int(s[field]) > 0;
-        }
-
-        /** AP-logic broadened check: skill item held OR any reachable stage
-         *  hosts the matching building. */
-        private function _hasBuildingSkillBroadenedAP(skillName:String):Boolean {
-            var idx:int = SessionData.SKILL_NAMES.indexOf(skillName);
-            if (idx >= 0 && AV.sessionData.hasItem(700 + idx)) return true;
-            var field:String = _BUILDING_SKILL_TO_FIELD[skillName];
-            if (field == null) return false;
-            return _buildingReachableInLogic(field);
-        }
-
-        /** In-level broadened check: skill item held OR THIS stage hosts
-         *  the matching building. */
-        private function _hasBuildingSkillOnStage(skillName:String, currentStrId:String):Boolean {
-            if (_isSkillActive(skillName)) return true;
-            var field:String = _BUILDING_SKILL_TO_FIELD[skillName];
-            if (field == null) return false;
-            return _buildingOnStage(currentStrId, field);
-        }
 
         /** Returns true if any reachable in-logic stage hosts the named element. */
         private function _elementInLogic(elemName:String):Boolean {

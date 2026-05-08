@@ -192,7 +192,7 @@ package ui {
             else if (apId >= 1100 && apId <= 1199) snd = "sndoutcomeskilltome";
             else if (apId >= 1400 && apId <= 1521) snd = "sndoctoken";
             else if (apId >= 1562 && apId <= 1600) snd = "sndoctoken";
-            else if (apId >= 1700 && apId <= 1709) snd = "sndoctoken";
+            else if (apId >= 1700 && apId <= 1703) snd = "sndoctoken";
             else if (apId >= 2000 && apId <= 2636) snd = "sndoutcomeachievement";
 
             try { SB.playSound(snd); } catch (err:Error) { /* SB not ready */ }

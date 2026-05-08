@@ -191,7 +191,7 @@ package ui {
             // Skill point bundles get the same cyan GlowFilter SkillPointDropIcon
             // applies to its Sprite at level-end. The filter lives on the Sprite,
             // not in bmpdIcon, so extracting bitmap loses it — re-apply here.
-            if (apId >= 1700 && apId <= 1709) {
+            if (apId >= 1700 && apId <= 1703) {
                 cell.filters = [new GlowFilter(0x33CCFF, 1, 16, 16, 3, 2)];
             }
 
@@ -268,8 +268,10 @@ package ui {
                     // since the player's getting "tokens for a group of stages",
                     // not a specific map tile.
                     return new TilePouchDropIcon(apId).bmpdIcon;
-                } else if (apId >= 1700 && apId <= 1709) {
-                    return new SkillPointDropIcon(apId - 1699).bmpdIcon;
+                } else if (apId >= 1700 && apId <= 1703) {
+                    var spVal:int = (AV.serverData != null && AV.serverData.serverOptions != null)
+                        ? AV.serverData.serverOptions.getSpBundleValue(apId) : 0;
+                    return new SkillPointDropIcon(spVal).bmpdIcon;
                 }
                 // ---------- Progressive variants (singleton apIds) ----------
                 // Each progressive's apId comes from slot_data, so we route

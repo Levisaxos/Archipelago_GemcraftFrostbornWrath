@@ -8,19 +8,19 @@ This document describes the full feature set of the randomizer: what is shuffled
 
 ## What gets randomized
 
-### Locations — 244 base + up to ~537 achievement locations
+### Locations — 244 base + up to ~636 achievement locations
 
 | Location type | Count | Trigger |
 |---|---|---|
 | Stage clear — Journey | 122 | Complete any stage in Journey mode |
 | Wizard Stash clear | 122 | Defeat the Wizard Stash on any stage |
-| Achievements | up to ~537 | Optional, scaled by `achievement_required_effort` |
+| Achievements | up to ~636 | Optional, scaled by `achievement_required_effort` (5 tiers, see below) |
 
 ### Items
 
 | Item | Count | Notes |
 |---|---|---|
-| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage, per-region, world-aligned, or progressive). |
+| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage, per-tile, or per-tier — each with a progressive sibling). |
 | Skills | 24 | Includes the 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
 | Battle Traits | 15 | Optional upgrades — one optionally moved to "starting" via YAML (Overcrowd) |
 | Talisman Fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries the field's original seed and rarity. Vanilla in-game wave drops still cover any additional fragments, so no "extras" are added to the pool. |
@@ -30,7 +30,7 @@ This document describes the full feature set of the randomizer: what is shuffled
 | Map Tiles | up to 26 | Optional terrain tiles, depending on starting stage |
 | Gem Pouches | variable | Configurable granularity — see below |
 | Wizard Stash Keys | variable | Configurable granularity — see below |
-| Skillpoint Bundles | filler | Sized 1–10 SP each, count scaled by `skillpoint_multiplier` |
+| Skillpoint Bundles | filler | Four named tiers (Small/Medium/Large/Huge), per-seed SP values; total scales by `skillpoint_multiplier` |
 
 ### Always free (not randomized)
 
@@ -61,7 +61,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 **Filler** — pure pool-padding once the real items are placed
 
-- Skillpoint Bundles (1–10 SP each, count scaled by `skillpoint_multiplier`)
+- Skillpoint Bundles — four named tiers (Small/Medium/Large/Huge); per-tier SP value is computed per-seed so the total (scaled by `skillpoint_multiplier`) divides cleanly across the actual filler-slot count
 
 ---
 
@@ -87,20 +87,19 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | `fields_required_percentage` | `66` | Used when `goal = fields_percentage` (40–100) |
 | `starting_stage` | `random` | Choose one of W1–W4 / S1–S4, or randomize per seed |
 | `field_token_placement` | `any_world` | Where Field Tokens may be placed: `any_world`, `own_world`, or `different_world` (multiplayer required) |
-| `field_token_granularity` | per-stage | How coarse Field Token items are — also has `_progressive` siblings that use a single fungible item type ordered by tier |
-| `tier_requirements_percent` | `75` | Percentage of earlier-tier stages that must be accessible before later tiers are considered in logic (40–100). Lower values may demand heavier Endurance use. |
+| `field_token_granularity` | `per_tile_progressive` | How coarse Field Token items are. Three families — `per_stage` (122 unique tokens), `per_tile` (26, one per map-tile prefix), `per_tier` (13, one per power tier) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
 | `enforce_logic` | `false` | When enabled, prevents starting out-of-logic stages in Journey mode |
 | `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tomes in a 1:2:3 ratio. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any tomes (1–100) |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
-| `skillpoint_multiplier` | `100` | Total skill points distributed as filler bundles, as a percentage of the 2000-SP baseline |
+| `skillpoint_multiplier` | `100` | Total skill points distributed as filler bundles, as a percentage of the 2500-SP baseline |
 
 ### Stash & gem gating
 
 | Option | Default | Description |
 |---|---|---|
-| `stash_key_granularity` | per-stage | Wizard Stashes start locked. Keys can be per-stage, per-region, world-aligned, or progressive. |
-| `gem_pouch_granularity` | `off` | When enabled, gem-orb spawns are gated behind Gem Pouch items (per-gem, per-region, or progressive) |
+| `stash_key_granularity` | `per_tile_progressive` | Wizard Stashes start locked. Same `per_stage` / `per_tile` / `per_tier` families as Field Tokens (each with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. |
+| `gem_pouch_granularity` | `per_tile_progressive` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `per_tier`, `per_tier_progressive`, `global`. |
 
 ### Difficulty
 
@@ -112,13 +111,13 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | `enemy_armor_multiplier` | `100` | Enemy armor as a percentage of normal (50–200) |
 | `enemy_shield_multiplier` | `100` | Enemy shield HP as a percentage of normal (50–200) |
 | `enemies_per_wave_multiplier` | `100` | Enemies per wave as a percentage of normal (50–200) |
-| `extra_wave_count` | `0` | Extra waves appended to each stage beyond its normal length (0–20) |
+| `extra_wave_count` | `0` | Extra waves appended to each stage beyond its normal length (0–24) |
 
 ### Achievements
 
 | Option | Default | Description |
 |---|---|---|
-| `achievement_required_effort` | none | Tier of achievements to include as locations: `trivial` (~362), `trivial+minor` (~453), `trivial+minor+major` (~537). Untrackable achievements are excluded. |
+| `achievement_required_effort` | `1` | Effort tier of achievements to include as locations. Integer `1`–`5`: `1` Trivial only (~362), `2` +Minor (~453), `3` +Major (~537), `4` +Extreme (~620), `5` All (~636). Untrackable achievements are excluded. |
 
 ### DeathLink
 
