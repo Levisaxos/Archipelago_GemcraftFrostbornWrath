@@ -17,7 +17,8 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 - 35 Shadow Core stashes (17 specific + 18 extras)
 - 40 XP Tomes (Tattered Scrolls, Worn Tomes, Ancient Grimoires)
 - Up to 26 Map Tiles
-- Gem Pouches, Wizard Stash Keys, and Skillpoint Bundles
+- Gem Pouches, Wizard Stash Keys
+- Skillpoint Bundles in four tiers (Small / Medium / Large / Huge), each with a per-seed SP value scaled to the actual filler-slot count
 
 ## Locations
 
@@ -60,12 +61,13 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 ## In-game UI
 
 - Connection and disconnect panels
-- Achievement browser with search and group filtering
+- Achievement browser with search and group filtering; the in-game collect popup shows the current logic pip even before the panel is opened
 - Field tooltip showing in-logic status, stage elements, and stash lock state
 - Offline summary collector for checks completed while disconnected
 - Custom drop icons for every item category
-- Item-receive toasts with proper names
-- Persistent scrollable message log (toggle with `` ` ``)
+- Item-receive toasts colour-coded by Archipelago importance (progression / useful / trap / filler)
+- Outgoing-item toasts and log entries show "Sent X to Player (Found at Location)" — item names appear in their Archipelago importance colour, and foreign-game item/location names are resolved from the DataPackage
+- Persistent scrollable message log (toggle with `` ` ``) with item names rendered in their importance colour
 - Per-slot settings panel
 - In-game changelog viewer
 
