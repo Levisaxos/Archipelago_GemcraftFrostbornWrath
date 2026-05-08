@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from BaseClasses import ItemClassification
 
@@ -8,74 +8,89 @@ from .items import ItemData
 
 
 SP_BUNDLE_BASE_ID = 1700
-SP_BUNDLE_SIZES: List[int] = list(range(1, 11))  # 1..10
 
-# Relative weights per bundle size, skewed toward small with rare big bundles.
-# Index 0 = size 1 SP, index 9 = size 10 SP.
-SP_BUNDLE_WEIGHTS: List[float] = [25, 22, 18, 12, 8, 6, 4, 3, 1.5, 0.5]
+# Four named bundle tiers. Order matters — index aligns with AP id offset
+# from SP_BUNDLE_BASE_ID and with the slot_data array sent to the mod.
+# (name, ap_id_offset, slot_pct, sp_pct)
+TIERS: Tuple[Tuple[str, int, float, float], ...] = (
+    ("Small",  0, 0.60, 0.30),
+    ("Medium", 1, 0.25, 0.30),
+    ("Large",  2, 0.12, 0.25),
+    ("Huge",   3, 0.03, 0.15),
+)
+TIER_NAMES: Tuple[str, ...] = tuple(t[0] for t in TIERS)
 
 
-def sp_bundle_item_name(size: int) -> str:
-    return f"Skillpoint Bundle {size}"
+def sp_bundle_item_name(tier: str) -> str:
+    return f"Skillpoint Bundle ({tier})"
+
+
+SP_BUNDLE_NAMES: Tuple[str, ...] = tuple(sp_bundle_item_name(t) for t in TIER_NAMES)
 
 
 def sp_bundle_item_table() -> Dict[str, ItemData]:
-    """Skillpoint bundle items, all `progression_skip_balancing` so 100% of
-    generated SP is visible to state.has/state.count and counts toward the
-    skillPoints:N achievement gate. `skip_balancing` keeps Archipelago's
-    cross-player balancing off (we ship many copies; balancing has no value).
+    """One AP item per tier at IDs 1700..1703. All progression_skip_balancing
+    so every bundle is visible to state.has/state.count for skillPoints:N
+    achievement gates without invoking AP's cross-player balancing.
 
-    History: previously only odd sizes were progression — that capped the
-    state-visible SP at ~half of generated, which made high-SP gates like
-    Mastery (skillPoints:200) randomly unsatisfiable depending on the
-    bundle-size lottery. Promoting all sizes to progression eliminates that
-    failure class without changing total SP."""
+    The SP value granted by each bundle is determined per-seed by
+    compute_tier_distribution and shipped to the mod via slot_data —
+    the AP item itself just identifies the tier slot."""
     table: Dict[str, ItemData] = {}
-    for size in SP_BUNDLE_SIZES:
-        ap_id = SP_BUNDLE_BASE_ID + (size - 1)
-        table[sp_bundle_item_name(size)] = ItemData(
-            ap_id, ItemClassification.progression_skip_balancing)
+    for name, offset, _slot_pct, _sp_pct in TIERS:
+        table[sp_bundle_item_name(name)] = ItemData(
+            SP_BUNDLE_BASE_ID + offset,
+            ItemClassification.progression_skip_balancing,
+        )
     return table
 
 
-def generate_sp_bundles(rng, total_sp: int, slot_count: int) -> List[str]:
-    """Pick exactly `slot_count` bundle sizes from SP_BUNDLE_SIZES whose sum equals
-    `total_sp`. Sizes are sampled with SP_BUNDLE_WEIGHTS, then corrected so the
-    final sum lands on `total_sp` (sizes stay clamped to [1, 10]).
+def compute_tier_distribution(total_sp: int, slot_count: int) -> Tuple[List[int], List[int]]:
+    """Return (values, counts) — both length 4, indexed in TIERS order.
 
-    If total_sp is unreachable inside [slot_count, 10*slot_count], returns the
-    closest achievable distribution (clamped to all-1s or all-10s)."""
-    if slot_count <= 0:
-        return []
+    counts[i] = number of bundle items of tier i to place; sums to slot_count.
+    values[i] = SP each bundle of that tier grants when collected.
 
-    min_sum = slot_count * SP_BUNDLE_SIZES[0]   # all 1s
-    max_sum = slot_count * SP_BUNDLE_SIZES[-1]  # all 10s
-    target = max(min_sum, min(max_sum, total_sp))
+    Slot allocation uses TIERS slot_pct; SP allocation uses TIERS sp_pct.
+    Per-tier SP value = round(pile / count). Empty tiers (count rounded to 0
+    on small filler pools) have their SP pile folded into the next-lower
+    populated tier so SP isn't lost. Some rounding drift between the resulting
+    sum(c*v) and total_sp is tolerated (typically < 2 %)."""
+    counts = [0, 0, 0, 0]
+    values = [0, 0, 0, 0]
+    if slot_count <= 0 or total_sp <= 0:
+        return values, counts
 
-    sizes: List[int] = [
-        rng.choices(SP_BUNDLE_SIZES, weights=SP_BUNDLE_WEIGHTS, k=1)[0]
-        for _ in range(slot_count)
-    ]
+    slot_pcts = [t[2] for t in TIERS]
+    sp_pcts = [t[3] for t in TIERS]
 
-    delta = target - sum(sizes)
-    # Walk indices in random order, nudging each ±1 until the sum lands.
-    order = list(range(slot_count))
-    while delta != 0:
-        rng.shuffle(order)
-        progressed = False
-        for i in order:
-            if delta == 0:
-                break
-            if delta > 0 and sizes[i] < SP_BUNDLE_SIZES[-1]:
-                sizes[i] += 1
-                delta -= 1
-                progressed = True
-            elif delta < 0 and sizes[i] > SP_BUNDLE_SIZES[0]:
-                sizes[i] -= 1
-                delta += 1
-                progressed = True
-        if not progressed:
-            # Saturated at floor or ceiling — can't move further.
-            break
+    # Slot counts: round, with Small absorbing the rounding remainder so the
+    # sum is exactly slot_count.
+    counts = [int(round(p * slot_count)) for p in slot_pcts]
+    counts[0] += slot_count - sum(counts)
+    counts[0] = max(0, counts[0])
 
-    return [sp_bundle_item_name(s) for s in sizes]
+    # SP piles. If a tier rounds out to 0 slots (very small filler pools),
+    # move its pile down to the next-lower tier rather than dropping SP.
+    piles = [sp_pcts[i] * total_sp for i in range(4)]
+    for i in (3, 2, 1):
+        if counts[i] == 0:
+            piles[i - 1] += piles[i]
+            piles[i] = 0
+
+    # Per-tier SP value (clamped >=1 so a populated tier never grants 0).
+    for i in range(4):
+        if counts[i] > 0:
+            values[i] = max(1, int(round(piles[i] / counts[i])))
+
+    return values, counts
+
+
+def generate_sp_bundles(rng, counts: List[int]) -> List[str]:
+    """Expand per-tier counts into a flat list of bundle item names and shuffle.
+    Counts come from compute_tier_distribution."""
+    names: List[str] = []
+    for i, tier_name in enumerate(TIER_NAMES):
+        names.extend([sp_bundle_item_name(tier_name)] * counts[i])
+    rng.shuffle(names)
+    return names

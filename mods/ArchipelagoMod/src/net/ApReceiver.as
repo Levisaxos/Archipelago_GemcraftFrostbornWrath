@@ -141,6 +141,13 @@ package net {
                     AV.serverData.serverOptions.xpTomeBonus = int(sd.xp_tome_bonus);
                 if (sd.skillpoint_multiplier !== undefined)
                     AV.serverData.serverOptions.skillpointMultiplier = int(sd.skillpoint_multiplier);
+                if (sd.sp_bundle_values !== undefined && sd.sp_bundle_values is Array) {
+                    var vSpVals:Array = sd.sp_bundle_values as Array;
+                    var vSpOut:Array = [0, 0, 0, 0];
+                    for (var iSp:int = 0; iSp < 4 && iSp < vSpVals.length; iSp++)
+                        vSpOut[iSp] = int(vSpVals[iSp]);
+                    AV.serverData.serverOptions.spBundleValues = vSpOut;
+                }
                 if (sd.field_token_placement !== undefined)
                     AV.serverData.serverOptions.fieldTokenPlacement = int(sd.field_token_placement);
                 if (sd.enforce_logic !== undefined)

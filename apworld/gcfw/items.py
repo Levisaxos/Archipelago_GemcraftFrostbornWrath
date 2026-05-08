@@ -193,6 +193,7 @@ def _load_item_table() -> Dict[str, ItemData]:
 
 item_table: Dict[str, ItemData] = _load_item_table()
 
-# SP bundle items (IDs 1700–1709) — filler that grants 1..10 skill points each.
+# SP bundle items (IDs 1700-1703) — four named tiers (Small/Medium/Large/Huge)
+# whose per-seed SP values are computed in compute_tier_distribution.
 from .items_skillpoints import sp_bundle_item_table
 item_table.update(sp_bundle_item_table())

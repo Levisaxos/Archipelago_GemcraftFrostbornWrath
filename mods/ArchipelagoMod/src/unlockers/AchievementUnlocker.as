@@ -400,7 +400,7 @@ package unlockers {
 
         /**
          * Add `points` to the player's wizard skill-point pool.
-         * Used by Skillpoint Bundle items (apId 1700–1709).
+         * Used by Skillpoint Bundle items (apId 1700–1703, four named tiers).
          */
         public function awardSkillPoints(points:int):void {
             if (points <= 0 || GV.ppd == null) return;

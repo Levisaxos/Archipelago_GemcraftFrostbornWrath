@@ -248,9 +248,9 @@
       "apId": 2023,
       "game_id": 142,
       "description": "Reach 1.000 gem wasp kills through all the battles.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
-        "fieldToken:1"
+        "fieldToken:15"
       ],
       "details": "Cumulative across all battles: 1,000 wasp kills."
     },
@@ -621,7 +621,7 @@
       "description": "Reach wizard level 100.",
       "required_effort": "Trivial",
       "requirements": [
-        "fieldToken:70"
+        "fieldToken:50"
       ],
       "details": "Reach wizard level 100."
     },
@@ -1046,7 +1046,7 @@
       "apId": 2100,
       "game_id": 80,
       "description": "Build 30 walls.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "eWall"
       ],
@@ -1086,7 +1086,7 @@
       "description": "Find 20 shadow cores.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:22"
+        "minWave:26"
       ]
     },
     "Core Pile": {
@@ -1266,7 +1266,7 @@
       "apId": 2123,
       "game_id": 143,
       "description": "Kill 666 swarmlings.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minSwarmlings:666"
       ]
@@ -2181,7 +2181,8 @@
       "description": "Drop 48 gem bombs on beacons.",
       "required_effort": "Trivial",
       "requirements": [
-        "eBeacon:4"
+        "eBeacon:4",
+        "tDarkMasonry"
       ],
       "details": "Throw 48 gem bombs at beacons in one battle."
     },
@@ -2189,9 +2190,10 @@
       "apId": 2213,
       "game_id": 53,
       "description": "Have a grade 1 gem with 1.500 hits.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
-        "sBeam"
+        "sBeam",
+        "minWave:20"
       ],
       "details": "Reach 1,500 hits on a grade-1 gem."
     },
@@ -2259,7 +2261,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "sManaLeech",
-        "sBeam"
+        "sBeam",
+        "minWave:40"
       ],
       "details": "Reach 4,500 hits on a pure mana-leech gem."
     },
@@ -2296,7 +2299,14 @@
       "description": "Have more than 75% of the monster kills caused by poison.",
       "required_effort": "Trivial",
       "requirements": [
-        "sPoison"
+        [
+          "sPoison",
+          "sTraps"
+        ],
+        [
+          "sPoison",
+          "eTraps"
+        ]
       ],
       "details": "In one battle, at least 75% of kills are from poison damage."
     },
@@ -2304,7 +2314,7 @@
       "apId": 2225,
       "game_id": 385,
       "description": "Reach wizard level 60.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:35"
       ]
@@ -2324,8 +2334,12 @@
       "description": "Demolish a trap.",
       "required_effort": "Trivial",
       "requirements": [
-        "eTraps",
-        "sDemolition"
+        [
+          "eTraps"
+        ],
+        [
+          "sTraps"
+        ]
       ],
       "details": "Demolish a trap."
     },
@@ -2715,7 +2729,7 @@
       "apId": 2265,
       "game_id": 434,
       "description": "Reach 500 strike spells cast through all the battles.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "strikeSpells:1"
       ]
@@ -2800,7 +2814,7 @@
           "eShrine"
         ],
         [
-          "fieldToken:5"
+          "fieldToken:20"
         ]
       ],
       "details": "Kill 100 monsters during a single time-frozen window."
@@ -3465,7 +3479,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "skills:1",
-        "skillPoints:200"
+        "skillPoints:2000"
       ],
       "details": "Raise any single skill to level 70."
     },
@@ -4126,7 +4140,12 @@
       "description": "Amplify a gem.",
       "required_effort": "Trivial",
       "requirements": [
-        "sAmplifiers"
+        [
+          "sAmplifiers"
+        ],
+        [
+          "eAmplifiers:1"
+        ]
       ],
       "details": "Place a gem inside an amplifier (i.e. amplify a gem at least once)."
     },
@@ -4597,7 +4616,8 @@
       "requirements": [
         "sManaLeech",
         "minGemGrade:1",
-        "eTraps"
+        "eTraps",
+        "fieldToken:40"
       ]
     },
     "Riding the Waves": {
@@ -4665,9 +4685,18 @@
       "apId": 2452,
       "game_id": 128,
       "description": "Kill 60 monsters with gems in traps.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
-        "eTraps"
+        [
+          "eTraps",
+          "minMonsters:60",
+          "sCriticalHit"
+        ],
+        [
+          "sTraps",
+          "minMonsters:60",
+          "sCriticalHit"
+        ]
       ]
     },
     "Round Cut": {
@@ -5454,8 +5483,8 @@
       "description": "Hit the same monster with traps 100 times.",
       "required_effort": "Trivial",
       "requirements": [
-        "eTraps",
-        "fieldToken:20"
+        "sTraps",
+        "minMonsterHP:300"
       ],
       "details": "Hit the same monster with traps 100 times."
     },
@@ -6215,7 +6244,9 @@
       "game_id": 331,
       "description": "Summon 20 monsters by enraging waves.",
       "required_effort": "Trivial",
-      "requirements": []
+      "requirements": [
+        "minWave:14"
+      ]
     },
     "Wave Smasher": {
       "apId": 2604,

@@ -871,13 +871,17 @@ package tracker {
             return n;
         }
 
-        /** Sum SP across collected Skillpoint Bundle items (1700-1709,
-         *  bundle apId-1699 = SP value). Counts each held bundle once. */
+        /** Sum SP across collected Skillpoint Bundle items (1700-1703, four
+         *  named tiers; per-tier SP value comes from slot_data via
+         *  ServerOptions.spBundleValues). Counts each held tier once. */
         private function _countSkillPoints():int {
             var total:int = 0;
-            for (var size:int = 1; size <= 10; size++) {
-                if (AV.sessionData.hasItem(1699 + size))
-                    total += size;
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            var opts:* = AV.serverData.serverOptions;
+            for (var apId:int = 1700; apId <= 1703; apId++) {
+                if (AV.sessionData.hasItem(apId))
+                    total += opts.getSpBundleValue(apId);
             }
             return total;
         }

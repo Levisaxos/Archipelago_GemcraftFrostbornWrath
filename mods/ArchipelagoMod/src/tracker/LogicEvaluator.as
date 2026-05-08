@@ -637,7 +637,8 @@ package tracker {
                 return _countMatchingTalismanSets(false) >= tcNeed;
             }
             // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
-            // items (1700..1709, bundle apId-1699 = SP value).
+            // items (1700..1703 — four named tiers; per-tier SP value from
+            // slot_data ServerOptions.spBundleValues).
             if (lower.indexOf("skillpoints") == 0) {
                 var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countSkillPoints() >= spNeed;
@@ -1061,17 +1062,20 @@ package tracker {
         }
 
         /**
-         * Sum SP across collected Skillpoint Bundle items. Bundle apId-1699
-         * is the bundle's SP value (1..10). state.has equivalent is
-         * AV.sessionData.hasItem; we don't track per-AP-id duplicates, so
-         * each held bundle counts once. Mirrors apworld's _count_skill_points
-         * with the same approximation.
+         * Sum SP across collected Skillpoint Bundle items. Per-tier SP value
+         * is per-seed and arrives via slot_data (ServerOptions.spBundleValues
+         * indexed by apId-1700: Small/Medium/Large/Huge). hasItem only
+         * reports presence, not count, so each tier contributes at most once
+         * — matches apworld's _count_skill_points approximation.
          */
         private function _countSkillPoints():int {
             var total:int = 0;
-            for (var size:int = 1; size <= 10; size++) {
-                if (AV.sessionData.hasItem(1699 + size))
-                    total += size;
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            var opts:* = AV.serverData.serverOptions;
+            for (var apId:int = 1700; apId <= 1703; apId++) {
+                if (AV.sessionData.hasItem(apId))
+                    total += opts.getSpBundleValue(apId);
             }
             return total;
         }
@@ -1145,6 +1149,27 @@ package tracker {
             if (_elementPrefixMap["wSnow"] == null)
             {
                 _elementPrefixMap["wSnow"] = "Snow";
+            }
+            // Building elements use plural tokens (eTraps / eLanterns /
+            // ePylons / eAmplifiers) but element_stages keys are singular.
+            // Without these aliases the lookup falls through and
+            // _elementInLogic returns true for a missing key, making every
+            // building-element achievement appear in-logic.
+            if (_elementPrefixMap["eTraps"] == null)
+            {
+                _elementPrefixMap["eTraps"] = "Trap";
+            }
+            if (_elementPrefixMap["eLanterns"] == null)
+            {
+                _elementPrefixMap["eLanterns"] = "Lantern";
+            }
+            if (_elementPrefixMap["ePylons"] == null)
+            {
+                _elementPrefixMap["ePylons"] = "Pylon";
+            }
+            if (_elementPrefixMap["eAmplifiers"] == null)
+            {
+                _elementPrefixMap["eAmplifiers"] = "Amplifier";
             }
             for each (var skillName:String in SessionData.SKILL_NAMES)
             {

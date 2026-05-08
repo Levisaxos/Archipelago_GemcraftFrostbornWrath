@@ -1624,16 +1624,16 @@ package {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
-            // 5b. Skillpoint bundles (apId 1700-1709): sum across all bundles
-            // received this run into one cyan-glow icon. Each bundle grants
-            // (apId - 1699) skill points, i.e. 1700→1 .. 1709→10.
+            // 5b. Skillpoint bundles (apId 1700-1703, four named tiers): sum
+            // across all bundles received this run into one cyan-glow icon.
+            // Per-tier SP value is per-seed (slot_data spBundleValues).
             var totalSkillPoints:int = 0;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 1700 || apId > 1709) continue;
-                totalSkillPoints += (apId - 1699);
+                if (apId < 1700 || apId > 1703) continue;
+                totalSkillPoints += AV.serverData.serverOptions.getSpBundleValue(apId);
             }
             if (totalSkillPoints > 0) {
                 _progressionBlocker.addSkillPointDropIcon(totalSkillPoints);
@@ -1867,7 +1867,7 @@ package {
             // XP tomes
             if (apId >= 1100 && apId <= 1199) return 9;
             // Skill points
-            if (apId >= 1700 && apId <= 1709) return 10;
+            if (apId >= 1700 && apId <= 1703) return 10;
             // Achievements
             if (apId >= 2000 && apId <= 2636) return 11;
             // Other (other-game items, unmapped ranges)
@@ -1989,11 +1989,13 @@ package {
                     vIp.addTextfield(0x99FF99, grantText, false, 11);
                     return true;
                 }
-                // Skill point bundles (1700-1709) — same text SkillPointDropIcon shows.
-                if (apId >= 1700 && apId <= 1709) {
-                    var skp:int = apId - 1699;
+                // Skill point bundles (1700-1703, four named tiers) — value
+                // per tier is per-seed and arrives via slot_data.
+                if (apId >= 1700 && apId <= 1703) {
+                    var skp:int = AV.serverData.serverOptions.getSpBundleValue(apId);
+                    var tierName:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
                     vIp.reset(280);
-                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle", false, 13);
+                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle (" + tierName + ")", false, 13);
                     vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
                     vIp.addTextfield(0x99FF99, "+" + skp + " skill points.", false, 11);
                     return true;
@@ -2326,12 +2328,14 @@ package {
                         return;
                     }
                 }
-                if (apId >= 1700 && apId <= 1709) {
-                    // Skillpoint Bundle: 1700→1 SP, 1709→10 SP.
-                    var spAmount:int = apId - 1699;
+                if (apId >= 1700 && apId <= 1703) {
+                    // Skillpoint Bundle: 4 named tiers (Small/Medium/Large/Huge).
+                    // Per-tier SP value is per-seed and arrives via slot_data.
+                    var spAmount:int = AV.serverData.serverOptions.getSpBundleValue(apId);
+                    var tierLbl:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
                     _achievementUnlocker.awardSkillPoints(spAmount);
-                    _receivedToast.addItem("Received Skillpoint Bundle (+" + spAmount + ")", ItemColors.forApId(apId));
-                    _logger.log(MOD_NAME, "  → Skillpoint bundle: +" + spAmount + " SP");
+                    _receivedToast.addItem("Received Skillpoint Bundle (" + tierLbl + ") (+" + spAmount + ")", ItemColors.forApId(apId));
+                    _logger.log(MOD_NAME, "  → Skillpoint bundle [" + tierLbl + "]: +" + spAmount + " SP");
                     return;
                 }
                 if (apId >= 2000 && apId <= 2636) {
@@ -3178,9 +3182,9 @@ package {
             if (apId >= 1588 && apId <= 1600) {
                 return "Tier " + (apId - 1588) + " Field Tokens";
             }
-            // Skill point bundles (1700-1709 — bundle size = apId - 1699).
-            if (apId >= 1700 && apId <= 1709) {
-                return "Skill Point Bundle (+" + (apId - 1699) + ")";
+            // Skill point bundles (1700-1703, four named tiers; per-seed SP value).
+            if (apId >= 1700 && apId <= 1703) {
+                return "Skillpoint Bundle (" + AV.serverData.serverOptions.getSpBundleTierLabel(apId) + ")";
             }
             // Progressive variants — singleton ids from slot_data.
             var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;

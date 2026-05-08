@@ -160,14 +160,19 @@ def _count_complete_talisman_columns(state, player: int) -> int:
 
 def _count_skill_points(state, player: int) -> int:
     """Sum SP across all collected Skillpoint Bundle items.
-    Each 'Skillpoint Bundle N' contributes N skill points; the pool may
-    contain multiple copies of the same bundle size."""
+    Each 'Skillpoint Bundle (Tier)' contributes the per-seed SP value for
+    that tier (computed in create_items, stored on the world). The pool
+    may contain many copies of each tier."""
     cache = _get_counter_cache(state, player)
     val = cache.get("sp")
     if val is None:
+        from .items_skillpoints import TIER_NAMES, sp_bundle_item_name
+        world = state.multiworld.worlds[player]
+        values = getattr(world, "sp_bundle_values", [0, 0, 0, 0])
         val = 0
-        for size in range(1, 11):
-            val += size * state.count(f"Skillpoint Bundle {size}", player)
+        for i, tier in enumerate(TIER_NAMES):
+            if values[i] > 0:
+                val += values[i] * state.count(sp_bundle_item_name(tier), player)
         cache["sp"] = val
     return val
 
@@ -928,8 +933,8 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
 # LEVEL_DATA once.
 _QUALIFYING_STAGES_CACHE: dict = {}
 
-# Pre-built SP-bundle name list, indexed by size 1..10.
-_SP_BUNDLE_NAMES: tuple = tuple(f"Skillpoint Bundle {n}" for n in range(1, 11))
+# Pre-built SP-bundle name list — one entry per tier (Small, Medium, Large, Huge).
+from .items_skillpoints import SP_BUNDLE_NAMES as _SP_BUNDLE_NAMES
 
 
 def _qualifying_stages_for_element(elem_pascal: str, count_needed: int):

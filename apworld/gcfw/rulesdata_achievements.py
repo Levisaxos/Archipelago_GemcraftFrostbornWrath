@@ -243,7 +243,7 @@ achievement_requirements = {
         "description": "Reach 1.000 gem wasp kills through all the battles.",
         "details": "Cumulative across all battles: 1,000 wasp kills.",
         "requirements": ["fieldToken:15"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     # AP ID: 2024
     "Antitheft": {
@@ -558,7 +558,7 @@ achievement_requirements = {
         "game_id": 386,
         "description": "Reach wizard level 100.",
         "details": "Reach wizard level 100.",
-        "requirements": ["fieldToken:70"],
+        "requirements": ["fieldToken:50"],
         "required_effort": "Trivial",
     },
     # AP ID: 2059
@@ -2017,7 +2017,10 @@ achievement_requirements = {
         "game_id": 204,
         "description": "Have more than 75% of the monster kills caused by poison.",
         "details": "In one battle, at least 75% of kills are from poison damage.",
-        "requirements": ["sPoison"],
+        "requirements": [
+            ["sPoison", "sTraps"],
+            ["sPoison", "eTraps"]
+        ],
         "required_effort": "Trivial",
     },
     # AP ID: 2225
@@ -2026,7 +2029,7 @@ achievement_requirements = {
         "game_id": 385,
         "description": "Reach wizard level 60.",
         "requirements": ["fieldToken:35"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     # AP ID: 2226
     "Ground Luck": {
@@ -2042,7 +2045,10 @@ achievement_requirements = {
         "game_id": 601,
         "description": "Demolish a trap.",
         "details": "Demolish a trap.",
-        "requirements": ["eTraps"],
+        "requirements": [
+            ["eTraps"],
+            ["sTraps"]
+        ],
         "required_effort": "Trivial",
     },
     # AP ID: 2228
@@ -2386,7 +2392,7 @@ achievement_requirements = {
         "game_id": 434,
         "description": "Reach 500 strike spells cast through all the battles.",
         "requirements": ["strikeSpells:1"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     # AP ID: 2266
     "Impaling Charges": {
@@ -2454,7 +2460,7 @@ achievement_requirements = {
         "details": "Kill 100 monsters during a single time-frozen window.",
         "requirements": [
             ["eShrine"],
-            ["fieldToken:5"]
+            ["fieldToken:20"]
         ],
         "required_effort": "Trivial",
     },
@@ -3019,7 +3025,7 @@ achievement_requirements = {
         "game_id": 564,
         "description": "Raise a skill to level 70.",
         "details": "Raise any single skill to level 70.",
-        "requirements": ["skills:1", "skillPoints:200"],
+        "requirements": ["skills:1", "skillPoints:2000"],
         "required_effort": "Trivial",
     },
     # AP ID: 2338
@@ -4044,7 +4050,10 @@ achievement_requirements = {
         "ap_id": 2452,
         "game_id": 128,
         "description": "Kill 60 monsters with gems in traps.",
-        "requirements": ["eTraps", "minMonsters:60"],
+        "requirements":[
+            ["eTraps", "minMonsters:60", "sCriticalHit"],
+            ["sTraps", "minMonsters:60", "sCriticalHit"],            
+        ],
         "required_effort": "Trivial",
     },
     # AP ID: 2453
@@ -5380,7 +5389,7 @@ achievement_requirements = {
         "ap_id": 2603,
         "game_id": 331,
         "description": "Summon 20 monsters by enraging waves.",
-        "requirements": [],
+        "requirements": ["minWave:14"],
         "required_effort": "Trivial",
     },
     # AP ID: 2604
@@ -5407,7 +5416,7 @@ achievement_requirements = {
         "game_id": 14,
         "description": "Reach 500 waves beaten through all the battles.",
         "requirements": ["fieldToken:12"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     # AP ID: 2607
     "We Just Wanna Be Free": {

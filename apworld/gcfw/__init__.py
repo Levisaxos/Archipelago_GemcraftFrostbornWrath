@@ -27,7 +27,11 @@ from .options import (
     StashKeyGranularity,
     STARTING_STAGE_BY_VALUE,
 )
-from .items_skillpoints import generate_sp_bundles
+from .items_skillpoints import (
+    compute_tier_distribution as _compute_sp_bundle_distribution,
+    generate_sp_bundles,
+    TIER_NAMES as _SP_TIER_NAMES,
+)
 from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
 from .rulesdata import (
@@ -518,17 +522,23 @@ class GemcraftFrostbornWrathWorld(World):
             pool.append(self.create_item(pouch_name))
 
         # SP bundle filler — fills all remaining unfilled location slots.
-        # Total SP scales with skillpoint_multiplier (default 50 → 1000 SP, see
-        # SkillpointMultiplier docstring for why default is 50%).
+        # Total SP scales with skillpoint_multiplier (default 100 → 2500 SP).
+        # Bundles are split across four named tiers (Small/Medium/Large/Huge)
+        # whose SP values are computed per-seed based on the actual filler-slot
+        # count — see compute_tier_distribution. Tier values are stored on self
+        # so fill_slot_data can ship them to the mod.
         # The -1 is for the Victory event location (filled by place_locked_item
         # in generate_basic — outside the regular pool).
         total_locations = sum(1 for region in self.multiworld.regions
                               if region.player == self.player
                               for _ in region.locations)
         remaining = total_locations - len(pool) - 1
+        self.sp_bundle_values: List[int] = [0, 0, 0, 0]
         if remaining > 0:
-            total_sp = 2000 * self.options.skillpoint_multiplier.value // 100
-            bundles = generate_sp_bundles(self.random, total_sp, remaining)
+            total_sp = 2500 * self.options.skillpoint_multiplier.value // 100
+            values, counts = _compute_sp_bundle_distribution(total_sp, remaining)
+            self.sp_bundle_values = values
+            bundles = generate_sp_bundles(self.random, counts)
             for name in bundles:
                 pool.append(self.create_item(name))
 
@@ -883,6 +893,13 @@ class GemcraftFrostbornWrathWorld(World):
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
             "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
+            # Per-seed SP value granted by each Skillpoint Bundle tier, indexed
+            # by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
+            # in create_items so the four piles divide cleanly across the actual
+            # filler-slot count. The mod uses this for grant amounts and for
+            # the in-mod skillPoints:N achievement-gate counter.
+            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [0, 0, 0, 0])),
+            "sp_bundle_tier_names":  list(_SP_TIER_NAMES),
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,
