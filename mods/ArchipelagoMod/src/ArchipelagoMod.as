@@ -2940,6 +2940,15 @@ package {
                 }
             }
 
+            // Mirror coarse / progressive coverage into AV.sessionData.tokensByStrId
+            // so FieldLogicEvaluator and downstream readers see the same unlocked
+            // set after a syncWithAP() (which calls reset() and then onItem(), and
+            // onItem only marks direct per-stage tokenMap entries).
+            for (var htSid:String in hasToken) {
+                if (hasToken[htSid] == true)
+                    AV.sessionData.markFieldTokenHeld(htSid);
+            }
+
             var changes:int = 0;
             var metas:Array = GV.stageCollection.stageMetas;
             for (var i:int = 0; i < metas.length; i++) {
