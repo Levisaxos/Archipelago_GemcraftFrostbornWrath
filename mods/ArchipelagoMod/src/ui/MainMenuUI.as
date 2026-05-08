@@ -1,10 +1,13 @@
 package ui {
     import flash.display.Sprite;
-    import flash.display.Stage;
     import flash.events.MouseEvent;
+    import flash.net.URLRequest;
+    import flash.net.navigateToURL;
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
+
+    import com.giab.games.gcfw.GV;
 
     import Bezel.Logger;
 
@@ -34,7 +37,19 @@ package ui {
         private var _updateChecker:UpdateChecker;
         private var _scrChangelog:ScrChangelog;
 
+        private static const FONT:String           = "Celtic Garamond for GemCraft";
+        private static const COL_VERSION:uint      = 0xD0D0D0;
+        private static const COL_DISCLAIMER:uint   = 0xA0A0A0;
+        private static const COL_FAN_PROJECT:uint  = 0xFFFFFF;
+        // Game logical resolution — GV.main is letterbox-scaled to fit the window.
+        private static const STAGE_W:Number        = 1920;
+        private static const STAGE_H:Number        = 1080;
+        private static const DISCLAIMER_URL:String =
+            "https://github.com/Levisaxos/Archipelago_GemcraftFrostbornWrath/blob/main/docs/disclaimer.md";
+
         private var _versionLabel:TextField;
+        private var _disclaimerLabel:TextField;
+        private var _fanProjectLabel:TextField;
         private var _updateBadge:Sprite;
         private var _isShowing:Boolean       = false;
         private var _fetchDone:Boolean       = false;
@@ -63,10 +78,10 @@ package ui {
         // Lifecycle
 
         /**
-         * Add the version label and update badge to the stage.
+         * Add the version label, disclaimer, and update badge to GV.main.
          * Also triggers auto-show changelog and fires the GitHub fetch (once per session).
          */
-        public function show(stage:Stage, version:String, apworldVersion:String):void {
+        public function show(version:String, apworldVersion:String, releaseChannel:String):void {
             if (_isShowing) return;
 
             // Read persisted config to decide whether to auto-show the changelog.
@@ -85,25 +100,60 @@ package ui {
                 }
             }
 
-            // Version label — bottom-left corner.
-            var labelFmt:TextFormat = new TextFormat("_sans", 12, 0xBBAADD);
+            // Version label — bottom-center, styled like the in-game credits.
+            // Parented to GV.main (game content root) so it sits on the same
+            // layer as the GiaB / BezelMod copyright text. Anything added later
+            // to GV.main (e.g. the changelog panel) will cover these labels.
+            // Coordinates are in GV.main's 1920x1080 logical space.
+            var labelFmt:TextFormat = new TextFormat(FONT, 14, COL_VERSION);
             _versionLabel = new TextField();
             _versionLabel.defaultTextFormat = labelFmt;
+            _versionLabel.embedFonts   = false;
             _versionLabel.selectable   = false;
             _versionLabel.mouseEnabled = false;
             _versionLabel.autoSize     = TextFieldAutoSize.LEFT;
-            _versionLabel.text         = "Mod v" + version + "  |  apworld v" + apworldVersion;
-            _versionLabel.x = 10;
-            _versionLabel.y = stage.stageHeight - 48;
-            stage.addChild(_versionLabel);
+            _versionLabel.text         = "Archipelago mod v" + version + " | apworld v" + apworldVersion + " | " + releaseChannel + " ";
+            _versionLabel.y = STAGE_H - 48;
 
-            // Update badge — to the right of the label, hidden until an update is found.
+            var disclaimerFmt:TextFormat = new TextFormat(FONT, 14, COL_DISCLAIMER, false, true, true);
+            _disclaimerLabel = new TextField();
+            _disclaimerLabel.defaultTextFormat = disclaimerFmt;
+            _disclaimerLabel.embedFonts   = false;
+            _disclaimerLabel.selectable   = false;
+            _disclaimerLabel.mouseEnabled = true;
+            _disclaimerLabel.autoSize     = TextFieldAutoSize.LEFT;
+            _disclaimerLabel.text         = "(disclaimer)";
+            _disclaimerLabel.y = STAGE_H - 48;
+            _disclaimerLabel.addEventListener(MouseEvent.CLICK, _onDisclaimerClick, false, 0, true);
+
+            // Center the version + (disclaimer) pair as one combined block.
+            var combinedWidth:Number = _versionLabel.width + _disclaimerLabel.width;
+            var startX:Number = (STAGE_W - combinedWidth) * 0.5;
+            _versionLabel.x    = startX;
+            _disclaimerLabel.x = startX + _versionLabel.width;
+            GV.main.addChild(_versionLabel);
+            GV.main.addChild(_disclaimerLabel);
+
+            // Update badge — to the right of the (disclaimer) link, hidden until an update is found.
             _updateBadge = _makeUpdateBadge();
-            _updateBadge.x = 10 + _versionLabel.textWidth + 12;
-            _updateBadge.y = stage.stageHeight - 50;
+            _updateBadge.x = _disclaimerLabel.x + _disclaimerLabel.width + 12;
+            _updateBadge.y = STAGE_H - 50;
             _updateBadge.visible = false;
             _updateBadge.addEventListener(MouseEvent.CLICK, _onBadgeClick, false, 0, true);
-            stage.addChild(_updateBadge);
+            GV.main.addChild(_updateBadge);
+
+            // Fan-project disclaimer — line below, white, non-interactive.
+            var fanFmt:TextFormat = new TextFormat(FONT, 12, COL_FAN_PROJECT);
+            _fanProjectLabel = new TextField();
+            _fanProjectLabel.defaultTextFormat = fanFmt;
+            _fanProjectLabel.embedFonts   = false;
+            _fanProjectLabel.selectable   = false;
+            _fanProjectLabel.mouseEnabled = false;
+            _fanProjectLabel.autoSize     = TextFieldAutoSize.LEFT;
+            _fanProjectLabel.text         = "fan project, not affiliated with Game in a Bottle";
+            _fanProjectLabel.x = (STAGE_W - _fanProjectLabel.width) * 0.5;
+            _fanProjectLabel.y = STAGE_H - 28;
+            GV.main.addChild(_fanProjectLabel);
 
             _isShowing = true;
 
@@ -129,6 +179,19 @@ package ui {
                 _versionLabel.parent.removeChild(_versionLabel);
             }
             _versionLabel = null;
+
+            if (_disclaimerLabel != null) {
+                _disclaimerLabel.removeEventListener(MouseEvent.CLICK, _onDisclaimerClick);
+                if (_disclaimerLabel.parent != null) {
+                    _disclaimerLabel.parent.removeChild(_disclaimerLabel);
+                }
+            }
+            _disclaimerLabel = null;
+
+            if (_fanProjectLabel != null && _fanProjectLabel.parent != null) {
+                _fanProjectLabel.parent.removeChild(_fanProjectLabel);
+            }
+            _fanProjectLabel = null;
 
             if (_updateBadge != null) {
                 _updateBadge.removeEventListener(MouseEvent.CLICK, _onBadgeClick);
@@ -210,6 +273,10 @@ package ui {
 
         private function _onBadgeClick(e:MouseEvent):void {
             openChangelog();
+        }
+
+        private function _onDisclaimerClick(e:MouseEvent):void {
+            navigateToURL(new URLRequest(DISCLAIMER_URL), "_blank");
         }
 
         // -----------------------------------------------------------------------

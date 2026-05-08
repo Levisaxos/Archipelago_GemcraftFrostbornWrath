@@ -6270,7 +6270,7 @@
       "apId": 2606,
       "game_id": 14,
       "description": "Reach 500 waves beaten through all the battles.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "fieldToken:12"
       ]
