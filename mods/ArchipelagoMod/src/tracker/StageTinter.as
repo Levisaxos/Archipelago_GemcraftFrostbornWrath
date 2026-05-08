@@ -160,8 +160,24 @@ package tracker {
 
                     var desired:int;
                     if (missingCount == 0) {
-                        // All checks done — let game render its completed lights.
-                        desired = STATE_NONE;
+                        // No AP checks left on this stage. Vanilla draws a
+                        // "completed" light only after the player actually
+                        // beats it (stageHighestXpsJourney > 0). If AP says
+                        // the checks are gone but the player hasn't beaten
+                        // the stage yet (e.g. seed re-rolled, manually
+                        // released, or released as a goal-complete check),
+                        // fall through to a logic-state tint so the
+                        // selector still indicates reachability instead of
+                        // looking blank.
+                        var beaten:Boolean = GV.ppd != null
+                            && meta.id < GV.ppd.stageHighestXpsJourney.length
+                            && GV.ppd.stageHighestXpsJourney[meta.id].g() > 0;
+                        if (beaten) {
+                            desired = STATE_NONE;
+                        } else {
+                            desired = _evaluator.canCompleteStage(strId)
+                                ? STATE_GREEN : STATE_RED;
+                        }
                     } else if (reachableCount == 0) {
                         // No missing check is reachable. If the stage is still
                         // playable we mark it purple (achievements grind);
