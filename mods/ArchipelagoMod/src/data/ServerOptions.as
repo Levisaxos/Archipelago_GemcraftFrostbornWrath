@@ -82,8 +82,12 @@ package data {
         public var stageTierByStrId:Object;
 
         // Goal-Specific Settings
-        public var fieldsRequired:int;           // for fields_count goal
-        public var fieldsRequiredPercentage:int; // for fields_percentage goal
+        // Resolved absolute stage threshold sent by the apworld. Use this for
+        // both fields_count and fields_percentage goal triggering — never
+        // recompute from the percentage on the mod side (would drift against
+        // the apworld's floor() formula).
+        public var fieldsRequiredCount:int;
+        public var fieldsRequiredPercentage:int; // raw percentage option, display only
         public var achievementRequiredEffort:int; // 0=Off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
 
         // Death Link Settings
@@ -139,7 +143,7 @@ package data {
             stashKeyPerTierProgressiveId = 0;
             stageTierByStrId = {};
 
-            fieldsRequired = 0;
+            fieldsRequiredCount = 0;
             fieldsRequiredPercentage = 0;
             achievementRequiredEffort = 0;
 

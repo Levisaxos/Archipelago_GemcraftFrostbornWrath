@@ -4,18 +4,23 @@ package goals {
 
     /**
      * Goal: complete a percentage of Journey stages.
-     * Required count = floor(percentage × total / 100).
+     * Threshold is computed by the apworld and shipped via slot_data
+     * (fields_required_count) so this side never recomputes — keeps mod
+     * and apworld evaluators in lockstep regardless of total stage count
+     * or floor/ceil drift. Percentage is kept only for the goal-name UI.
      * Checks GV.ppd.stageHighestXpsJourney — any stage with XPS > 0 counts.
      */
     public class FieldPercentageGoal implements IGoal {
 
         private var _logger:Logger;
         private var _modName:String;
+        private var _required:int;
         private var _percentage:int;
 
-        public function FieldPercentageGoal(logger:Logger, modName:String, percentage:int) {
+        public function FieldPercentageGoal(logger:Logger, modName:String, required:int, percentage:int) {
             _logger     = logger;
             _modName    = modName;
+            _required   = required;
             _percentage = percentage;
         }
 
@@ -30,12 +35,11 @@ package goals {
                 if (xps[i] != null && xps[i].g() > 0) completed++;
             }
 
-            var required:int = int(Math.ceil(xps.length * _percentage / 100.0));
-            return completed >= required;
+            return completed >= _required;
         }
 
         public function get goalName():String {
-            return "Fields Cleared (" + _percentage + "% required)";
+            return "Fields Cleared (" + _percentage + "% required, " + _required + " fields)";
         }
     }
 }

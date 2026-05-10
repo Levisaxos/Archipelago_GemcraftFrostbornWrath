@@ -67,6 +67,7 @@ package {
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
+    import patch.SaveSlotDeleteFix;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -158,6 +159,7 @@ package {
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
+        private var _saveSlotDeleteFix:SaveSlotDeleteFix;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -259,6 +261,7 @@ package {
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
                 _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
+                _saveSlotDeleteFix     = new SaveSlotDeleteFix(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
@@ -752,6 +755,12 @@ package {
             // be detected and the empty-slot ConnectionPanel never appears.
             if (screen == ScreenId.LOADGAME && _modeInterceptor != null && !_modeInterceptor.isHooked) {
                 _modeInterceptor.hook(this.stage);
+            }
+
+            // Quarantine vanilla save backups when the player deletes a slot,
+            // so the slot doesn't resurrect on next launch.
+            if (screen == ScreenId.LOADGAME && _saveSlotDeleteFix != null) {
+                _saveSlotDeleteFix.onLoadGameFrame();
             }
 
             // Routing trigger — fires once after the player leaves LOADGAME
@@ -1349,7 +1358,7 @@ package {
             _goalManager.configure(
                 AV.serverData.serverOptions.goal,
                 AV.serverData.serverOptions.talismanMinRarity,
-                AV.serverData.serverOptions.fieldsRequired,
+                AV.serverData.serverOptions.fieldsRequiredCount,
                 AV.serverData.serverOptions.fieldsRequiredPercentage);
 
             if (_saveManager.slotCompleted) {

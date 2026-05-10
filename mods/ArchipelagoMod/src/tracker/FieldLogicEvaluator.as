@@ -794,6 +794,16 @@ package tracker {
             if (reqs == null || reqs.length == 0)
                 return true;
 
+            // Progressive field-token modes: the Nth singleton token unlocks
+            // the Nth stage in the seed's randomized order, so the token
+            // count IS the prereq chain. Vanilla DNF (Field_* + counters)
+            // is artificial under progressive granularity. Apworld drops
+            // the DNF whole in this case (rules.py: `if requirements and
+            // not ft_progressive`), so we do the same — including non-Field
+            // counter clauses like skillPoints / talismanRow / talismanColumn.
+            if (_isFieldTokenProgressive())
+                return true;
+
             var groups:Array;
             if (reqs[0] is Array) {
                 groups = reqs;
@@ -801,14 +811,12 @@ package tracker {
                 groups = [reqs];
             }
 
-            var progressive:Boolean = _isFieldTokenProgressive();
             for each (var group:Array in groups) {
                 if (group == null) continue;
                 var groupOk:Boolean = true;
                 for each (var req:String in group) {
                     if (req == null) continue;
                     if (req.indexOf("Field_") == 0) {
-                        if (progressive) continue;
                         var sid:String = req.substr(6);
                         // Recursive: the prereq stage must itself be in logic
                         // (full chain back to starter), not just have its

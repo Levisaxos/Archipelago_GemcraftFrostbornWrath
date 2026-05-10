@@ -204,8 +204,8 @@ package net {
                     AV.serverData.serverOptions.enemyMultipliers.waves = int(sd.enemies_per_wave_multiplier);
                 if (sd.extra_wave_count !== undefined)
                     AV.serverData.serverOptions.enemyMultipliers.extraWaves = int(sd.extra_wave_count);
-                if (sd.fields_required !== undefined)
-                    AV.serverData.serverOptions.fieldsRequired = int(sd.fields_required);
+                if (sd.fields_required_count !== undefined)
+                    AV.serverData.serverOptions.fieldsRequiredCount = int(sd.fields_required_count);
                 if (sd.fields_required_percentage !== undefined)
                     AV.serverData.serverOptions.fieldsRequiredPercentage = int(sd.fields_required_percentage);
                 if (sd.achievement_required_effort !== undefined)

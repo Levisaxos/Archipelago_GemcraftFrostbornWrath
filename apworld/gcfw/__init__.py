@@ -47,6 +47,25 @@ def _load_game_data():
     return GAME_DATA
 
 
+def _resolve_fields_required_count(world) -> int:
+    """Resolved absolute stage threshold for the active goal.
+
+    Single source of truth so the mod doesn't have to recompute.
+    Must match the formulas in rules.py for the corresponding goal.
+    """
+    from math import floor
+    goal_value = world.options.goal.value
+    if goal_value == 3:
+        # fields_count: option already holds the absolute count.
+        return int(world.options.fields_required.value)
+    if goal_value == 4:
+        # fields_percentage: matches rules.py:1579 formula exactly.
+        pct = int(world.options.fields_required_percentage.value)
+        total = len(GAME_DATA["stages"])
+        return int(floor(pct * total / 100))
+    return 0
+
+
 def _load_stages():
     return _load_game_data()["stages"]
 
@@ -956,6 +975,11 @@ class GemcraftFrostbornWrathWorld(World):
             "extra_wave_count":             self.options.extra_wave_count.value,
             "fields_required":              self.options.fields_required.value,
             "fields_required_percentage":   self.options.fields_required_percentage.value,
+            # Resolved absolute stage count for the active goal. Mod uses this
+            # as the FieldCount/FieldPercentage threshold directly — no
+            # client-side math, no risk of floor/ceil drift against rules.py.
+            # 0 for goals that don't gate on a stage count.
+            "fields_required_count":        _resolve_fields_required_count(self),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,
