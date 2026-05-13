@@ -34,6 +34,14 @@ package tracker {
         private var _logger:Logger;
         private var _modName:String;
 
+        // Set once by ArchipelagoMod after both evaluators exist. Used by
+        // _requirementsGateMet to delegate skill / trait / element / counter
+        // token resolution back to the shared resolver in LogicEvaluator,
+        // keeping prefix maps in one place. Field_<sid> entries are still
+        // handled locally via _stageReachable so the recursion uses the
+        // live computation rather than the cached fieldsInLogic snapshot.
+        private var _logicEvaluator:LogicEvaluator;
+
         // Logic data from logic.json (loaded by ServerData.loadLogicFromJSON).
         private var _stageSkills:Object;         // strId -> Array<WIZLOCK skill string>
         private var _stageRequirements:Object;   // strId -> Array<requirement string>
@@ -60,6 +68,10 @@ package tracker {
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
+        }
+
+        public function setLogicEvaluator(le:LogicEvaluator):void {
+            _logicEvaluator = le;
         }
 
         /**
@@ -779,7 +791,13 @@ package tracker {
          * AND-group passes when every entry inside it does. Within a group:
          *   - Field_<sid>: <sid> itself in logic (recursive _stageReachable
          *     — chain back to the starter must hold, not just token held).
-         *   - everything else: routed through _evalCounterReq.
+         *     Skipped under progressive field-token granularity (chain is
+         *     artificial; see _strip_field_prereqs in apworld rules.py).
+         *   - skill / trait / element / counter tokens (sBeam, tHaste,
+         *     talismanRow:N, ...): delegated to LogicEvaluator.evaluateRequirement
+         *     so the prefix maps live in one place. L5 and P5 are currently
+         *     the only stages with non-Field clauses (sBeam/Bolt/Barrage/Freeze
+         *     and sTraps respectively).
          * Empty / missing requirements pass automatically (used by the
          * starting stage upstream, plus W1-style stages from older data).
          *
@@ -794,15 +812,14 @@ package tracker {
             if (reqs == null || reqs.length == 0)
                 return true;
 
-            // Progressive field-token modes: the Nth singleton token unlocks
-            // the Nth stage in the seed's randomized order, so the token
-            // count IS the prereq chain. Vanilla DNF (Field_* + counters)
-            // is artificial under progressive granularity. Apworld drops
-            // the DNF whole in this case (rules.py: `if requirements and
-            // not ft_progressive`), so we do the same — including non-Field
-            // counter clauses like skillPoints / talismanRow / talismanColumn.
-            if (_isFieldTokenProgressive())
-                return true;
+            // Under progressive field-token granularity the Field_<sid>
+            // chain is artificial — the Nth singleton token unlocks the
+            // Nth stage in the seed's randomized order. Skip Field_ entries
+            // (treat as auto-satisfied) but still enforce skill / trait /
+            // counter clauses inside the same AND-group (L5 → all four
+            // damage skills; P5 → Traps). Apworld does the same via
+            // _strip_field_prereqs in rules.py.
+            var ftProgressive:Boolean = _isFieldTokenProgressive();
 
             var groups:Array;
             if (reqs[0] is Array) {
@@ -817,6 +834,7 @@ package tracker {
                 for each (var req:String in group) {
                     if (req == null) continue;
                     if (req.indexOf("Field_") == 0) {
+                        if (ftProgressive) continue; // chain artificial under progressive
                         var sid:String = req.substr(6);
                         // Recursive: the prereq stage must itself be in logic
                         // (full chain back to starter), not just have its
@@ -826,9 +844,19 @@ package tracker {
                             groupOk = false;
                             break;
                         }
-                    } else if (!_evalCounterReq(req)) {
-                        groupOk = false;
-                        break;
+                    } else {
+                        // Delegate skill / trait / element / counter tokens
+                        // to the shared resolver in LogicEvaluator (single
+                        // source of truth for prefix maps). Fall back to the
+                        // local counter handler if the evaluator isn't wired
+                        // yet, so we never accidentally pass an unknown.
+                        var ok:Boolean = (_logicEvaluator != null)
+                            ? _logicEvaluator.evaluateRequirement(req)
+                            : _evalCounterReq(req);
+                        if (!ok) {
+                            groupOk = false;
+                            break;
+                        }
                     }
                 }
                 if (groupOk) return true;

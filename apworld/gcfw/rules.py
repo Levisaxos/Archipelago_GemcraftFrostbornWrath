@@ -665,6 +665,27 @@ def _normalize_requirements(requirements: list) -> list:
     return [requirements]
 
 
+def _strip_field_prereqs(normalized: list) -> list:
+    """Remove `Field_<sid>` entries from every AND-group in a normalized
+    DNF. Used under progressive field-token granularities, where the Nth
+    singleton token unlocks the Nth stage in randomized order, making the
+    vanilla Field_ chain artificial. Skill / counter clauses inside the
+    same AND-group are real prerequisites and stay.
+
+    An AND-group that empties out after stripping is kept as an empty
+    list: `_compile_dnf` treats it as unconditionally true, which makes
+    the whole DNF true — preserving the "any progressive token unlocks
+    the next stage" intent for stages whose only prereq was a Field_
+    chain (e.g. Z1 → [Field_W1])."""
+    out: list = []
+    for group in normalized:
+        if not isinstance(group, list):
+            out.append(group)
+            continue
+        out.append([r for r in group if not (isinstance(r, str) and r.startswith("Field_"))])
+    return out
+
+
 def _simplify_requirements(normalized: list) -> list:
     """Pass-through after the element-data refactor.  Previously stripped
     'X element' reqs when an AND-group also required a trait, with an
@@ -1602,7 +1623,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         key_check_w = wrap_rule(f"stash_key:{sid}", key_check)
 
         # ---- DNF prereq closure (mixed cost) + _STAGE_CLEAR_RULES entry ----
-        dnf_rule = None  # None means "no DNF gate" (start stage / progressive)
+        dnf_rule = None  # None means "no DNF gate" (start stage / free stage / empty reqs)
         if sid != start_sid:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             token_name  = _gating.field_token_for_stage(sid, ft_gran)
@@ -1617,19 +1638,34 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # also short-circuit — see pouch_free_sids comment above.
             pouch_ok = (_always_true if sid in pouch_free_sids
                         else _compile_gempouch_checker(world, sid))
-            # Skip the vanilla DNF for free stages too — the starter group
+            # Skip the vanilla DNF for free stages — the starter group
             # is reachable from sphere 0 by definition, regardless of any
             # vanilla `Field_<sid>` chains pointing at stages outside the
             # group. Mirrors FieldLogicEvaluator._stageReachable's blanket
             # `_freeStages` short-circuit.
-            if requirements and not ft_progressive and sid not in free_sids:
+            #
+            # Under progressive granularities the Field_<sid> chain is
+            # artificial (token count IS the chain), but skill / counter
+            # clauses inside the same AND-group are still real per-stage
+            # prereqs (L5 → all four damage skills; P5 → Traps). Strip
+            # only the Field_ entries and compile the rest.
+            if requirements and sid not in free_sids:
                 normalized = _normalize_requirements(requirements)
-                dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
-                _STAGE_CLEAR_RULES[(player, sid)] = (
-                    lambda state, tc=token_check, d=dnf_rule, p=pouch_ok:
-                        tc(state) and p(state) and d(state)
-                )
+                if ft_progressive:
+                    normalized = _strip_field_prereqs(normalized)
+                dnf_rule = _compile_dnf(normalized, world, is_progressive=ft_progressive)
+                if dnf_rule is _always_true:
+                    _STAGE_CLEAR_RULES[(player, sid)] = (
+                        lambda state, tc=token_check, p=pouch_ok:
+                            tc(state) and p(state)
+                    )
+                else:
+                    _STAGE_CLEAR_RULES[(player, sid)] = (
+                        lambda state, tc=token_check, d=dnf_rule, p=pouch_ok:
+                            tc(state) and p(state) and d(state)
+                    )
             else:
+                dnf_rule = None
                 _STAGE_CLEAR_RULES[(player, sid)] = (
                     lambda state, tc=token_check, p=pouch_ok:
                         tc(state) and p(state)

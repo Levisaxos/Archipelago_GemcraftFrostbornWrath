@@ -271,6 +271,7 @@ package {
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
                 _logicEvaluator             = new LogicEvaluator(_logger, MOD_NAME);
                 _achievementLogicEvaluator  = new AchievementLogicEvaluator(_logger, MOD_NAME);
+                _fieldLogicEvaluator.setLogicEvaluator(_logicEvaluator);
 
                 // WizStashes uses the field evaluator to decide whether to
                 // keep the stash locked / show the hover tooltip.
