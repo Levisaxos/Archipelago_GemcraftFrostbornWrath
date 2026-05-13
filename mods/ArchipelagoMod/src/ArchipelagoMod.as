@@ -3030,6 +3030,17 @@ package {
                 // Stage tokens fall through — they're tracked via AV.sessionData.
             }
 
+            // Yaml `starting_overcrowd: true` precollects Overcrowd Battle
+            // Trait (apId 803) on the apworld side. Materialize the grant
+            // defensively in case the AP server doesn't replay precollected
+            // items via ReceivedItems on every connect path — keeps logic
+            // (AV.sessionData.hasItem), _apGrantedTraits, and gainedBattleTraits
+            // all in sync with the playable state.
+            if (AV.serverData.serverOptions.startingOvercrowd && !apTraits[3]) {
+                apTraits[3] = true;
+                AV.sessionData.onItem(803);
+            }
+
             // --- Skills ---
             var skillChanges:int = 0;
             for (var i:int = 0; i < 24; i++) {

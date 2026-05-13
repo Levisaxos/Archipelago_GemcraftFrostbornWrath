@@ -55,7 +55,7 @@
       "apId": 2144,
       "game_id": 264,
       "description": "Activate shrines a total of 4 times.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eShrine",
         "minWave:30"
@@ -123,7 +123,7 @@
       "apId": 2425,
       "game_id": 632,
       "description": "Add 16 talisman fragments to your shape collection.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "talismanFragments:16"
       ]
@@ -158,7 +158,7 @@
       "apId": 2541,
       "game_id": 215,
       "description": "Banish a monster at least 5 times.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [],
       "details": "Banish the same monster 5 or more times."
     },
@@ -166,7 +166,7 @@
       "apId": 2447,
       "game_id": 584,
       "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "tRitual",
         "eWraith",
@@ -2768,7 +2768,7 @@
       "apId": 2064,
       "game_id": 208,
       "description": "Have 90 monsters frozen at the same time.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze"
       ],
@@ -3807,14 +3807,15 @@
       "description": "Kill 960 bleeding monsters.",
       "required_effort": "Extreme",
       "requirements": [
-        "sBleeding"
+        "sBleeding",
+        "minMonsters:960"
       ]
     },
     "Rage Control": {
       "apId": 2431,
       "game_id": 481,
       "description": "Kill 400 enraged swarmlings with barrage.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBarrage",
         "minSwarmlings:400"
@@ -3824,7 +3825,7 @@
       "apId": 2261,
       "game_id": 189,
       "description": "Kill 5 frozen monsters carrying orblets.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "sOrbOfPresence"
@@ -3835,7 +3836,7 @@
       "apId": 2496,
       "game_id": 193,
       "description": "Kill 95 frozen monsters while it's snowing.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "wSnow"
@@ -3846,7 +3847,7 @@
       "apId": 2495,
       "game_id": 178,
       "description": "Kill 20 frozen monsters with barrage.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBarrage",
         "sFreeze"
@@ -3867,7 +3868,7 @@
       "apId": 2596,
       "game_id": 177,
       "description": "Kill 20 frozen monsters with beam.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "sFreeze"
@@ -3889,7 +3890,7 @@
       "apId": 2474,
       "game_id": 179,
       "description": "Kill 90 frozen monsters with bolt.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBolt",
         "sFreeze",
@@ -3900,7 +3901,7 @@
       "apId": 2558,
       "game_id": 158,
       "description": "Kill 20 frozen monsters with gems in traps.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "eTraps"
@@ -3911,7 +3912,7 @@
       "apId": 2003,
       "game_id": 126,
       "description": "Kill 273 frozen monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze"
       ]
@@ -3920,7 +3921,7 @@
       "apId": 2112,
       "game_id": 206,
       "description": "Kill 160 frozen swarmlings.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze"
       ]
@@ -4482,7 +4483,8 @@
         "sManaLeech",
         "minGemGrade:1",
         "eTraps",
-        "fieldToken:40"
+        "fieldToken:40",
+        "sBeam"
       ]
     },
     "The Horror": {

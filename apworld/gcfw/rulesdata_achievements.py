@@ -76,7 +76,7 @@ achievement_requirements = {
         "description": "Activate shrines a total of 4 times.",
         "details": "Activate shrines 4 times total in one battle (any combination).",
         "requirements": ["eShrine", "minWave:30"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Addicted": {
         "ap_id": 2006,
@@ -125,7 +125,7 @@ achievement_requirements = {
         "game_id": 632,
         "description": "Add 16 talisman fragments to your shape collection.",
         "requirements": ["talismanFragments:16"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "In Focus": {
         "ap_id": 2272,
@@ -151,7 +151,7 @@ achievement_requirements = {
         "description": "Banish a monster at least 5 times.",
         "details": "Banish the same monster 5 or more times.",
         "requirements": [],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Rising Tide": {
         "ap_id": 2447,
@@ -159,7 +159,7 @@ achievement_requirements = {
         "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
         "details": "Banish 150 monsters with at least 2 wraiths alive.",
         "requirements": ["tRitual", "eWraith", "minMonsters:300"],
-        "required_effort": "Trivial",
+        "required_effort": "Major",
     },
     "Basic Gem Tactics": {
         "ap_id": 2033,
@@ -2111,7 +2111,7 @@ achievement_requirements = {
         "description": "Have 90 monsters frozen at the same time.",
         "details": "Have 90 monsters frozen at the same instant.",
         "requirements": ["sFreeze"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Meet the Spartans": {
         "ap_id": 2339,
@@ -2876,7 +2876,7 @@ achievement_requirements = {
         "ap_id": 2176,
         "game_id": 458,
         "description": "Kill 960 bleeding monsters.",
-        "requirements": ["sBleeding"],
+        "requirements": ["sBleeding", "minMonsters:960"],
         "required_effort": "Extreme",
     },
     "Rage Control": {
@@ -2884,7 +2884,7 @@ achievement_requirements = {
         "game_id": 481,
         "description": "Kill 400 enraged swarmlings with barrage.",
         "requirements": ["sBarrage", "minSwarmlings:400"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Ice Stand": {
         "ap_id": 2261,
@@ -2892,7 +2892,7 @@ achievement_requirements = {
         "description": "Kill 5 frozen monsters carrying orblets.",
         "details": "Kill 5 frozen monsters that are carrying orblets.",
         "requirements": ["sFreeze", "sOrbOfPresence"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Snow Dust": {
         "ap_id": 2496,
@@ -2900,14 +2900,14 @@ achievement_requirements = {
         "description": "Kill 95 frozen monsters while it's snowing.",
         "details": "Kill 95 frozen monsters during snow weather.",
         "requirements": ["sFreeze", "wSnow"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Snow Blower": {
         "ap_id": 2495,
         "game_id": 178,
         "description": "Kill 20 frozen monsters with barrage.",
         "requirements": ["sBarrage", "sFreeze"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Icecracker": {
         "ap_id": 2263,
@@ -2923,7 +2923,7 @@ achievement_requirements = {
         "description": "Kill 20 frozen monsters with beam.",
         "details": "Kill 20 frozen monsters using Beam-enhanced gems.",
         "requirements": ["sBeam", "sFreeze"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "White Ray": {
         "ap_id": 2618,
@@ -2938,7 +2938,7 @@ achievement_requirements = {
         "game_id": 179,
         "description": "Kill 90 frozen monsters with bolt.",
         "requirements": ["sBolt", "sFreeze", "minMonsters:90"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Thin Ice": {
         "ap_id": 2558,
@@ -2946,21 +2946,21 @@ achievement_requirements = {
         "description": "Kill 20 frozen monsters with gems in traps.",
         "details": "Kill 20 frozen monsters with traps.",
         "requirements": ["sFreeze", "eTraps"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Absolute Zero": {
         "ap_id": 2003,
         "game_id": 126,
         "description": "Kill 273 frozen monsters.",
         "requirements": ["sFreeze"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Crunchy Bites": {
         "ap_id": 2112,
         "game_id": 206,
         "description": "Kill 160 frozen swarmlings.",
         "requirements": ["sFreeze"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Purged": {
         "ap_id": 2421,
@@ -3364,7 +3364,7 @@ achievement_requirements = {
         "ap_id": 2445,
         "game_id": 597,
         "description": "Leech 900 mana with a grade 1 gem.",
-        "requirements": ["sManaLeech", "minGemGrade:1", "eTraps", "fieldToken:40"],
+        "requirements": ["sManaLeech", "minGemGrade:1", "eTraps", "fieldToken:40", 'sBeam'],
         "required_effort": "Trivial",
     },
     "The Horror": {

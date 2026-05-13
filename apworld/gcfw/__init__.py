@@ -300,6 +300,40 @@ class GemcraftFrostbornWrathWorld(World):
 
     def generate_early(self) -> None:
         with phase(f"p{self.player} generate_early"):
+            # Universal Tracker re-gen passthrough: when UT triggers a fresh
+            # generation via `interpret_slot_data` returning the slot_data
+            # dict, that dict lands here under `multiworld.re_gen_passthrough`.
+            # Overwrite YAML-rolled option values with the actual seed's
+            # resolved values so UT doesn't re-roll randomness (notably
+            # `starting_stage`) each reconnect. Every option that influences
+            # regions, rules, or item-pool composition is listed — omitting
+            # one means UT diverges from the server world along that axis.
+            re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+            if self.game in re_gen_passthrough:
+                slot_data = re_gen_passthrough[self.game]
+                for key in (
+                    "goal",
+                    "fields_required",
+                    "fields_required_percentage",
+                    "starting_stage",
+                    "field_token_placement",
+                    "field_token_granularity",
+                    "stash_key_granularity",
+                    "gem_pouch_granularity",
+                    "achievement_required_effort",
+                    "enforce_logic",
+                    "disable_endurance",
+                    "disable_trial",
+                    "starting_overcrowd",
+                    "starting_wizard_level",
+                    "xp_tome_bonus",
+                    "skillpoint_multiplier",
+                ):
+                    if key in slot_data:
+                        opt = getattr(self.options, key, None)
+                        if opt is not None:
+                            opt.value = slot_data[key]
+
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
@@ -744,6 +778,16 @@ class GemcraftFrostbornWrathWorld(World):
     #             progitempool.append(progitempool.pop(prog_idx))
 
 
+    @staticmethod
+    def interpret_slot_data(slot_data: dict) -> dict:
+        """Universal Tracker hook. Returning a non-None value tells UT to
+        restart generation with the returned dict accessible via
+        `multiworld.re_gen_passthrough[self.game]`. generate_early picks the
+        resolved option values up from there so UT does NOT re-roll YAML
+        randomness (notably `starting_stage`) on every reconnect."""
+        return slot_data
+
+
     def fill_slot_data(self) -> Dict:
         # Main fill happens between generate_basic and fill_slot_data, so this
         # is where we dump the per-rule call counters.
@@ -834,15 +878,34 @@ class GemcraftFrostbornWrathWorld(World):
         # is shipped via logic.json (generate_logic_json.py); slot_data here
         # only carries options + the per-achievement requirements list so the
         # mod's AchievementLogicEvaluator can mirror the in-logic display.
+        # Mirror exactly the same effort / skip / structural-reachability
+        # filters that create_regions applies when generating AP locations,
+        # so the mod's AchievementLogicEvaluator tracks the same set as
+        # Universal Tracker. Without these filters the mod shows
+        # achievements that don't exist as AP locations (e.g. untrackable,
+        # Trial-only, or structurally-impossible achievements), which
+        # makes its "in-logic count" diverge from UT's.
         achievement_requirements_map: Dict[str, list] = {}
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
 
+            effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_effort_idx = min(required_effort - 1, len(effort_hierarchy) - 1)
+
             for ach_name, ach_data in all_achievements.items():
+                ach_effort = ach_data.get("required_effort", "Trivial")
+                if ach_effort in effort_hierarchy:
+                    if effort_hierarchy.index(ach_effort) > max_effort_idx:
+                        continue
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
                 requirements = ach_data.get("requirements", [])
-                if requirements:
-                    achievement_requirements_map[ach_name] = requirements
+                if not requirements:
+                    continue
+                if not _can_achievement_be_met(requirements):
+                    continue
+                achievement_requirements_map[ach_name] = requirements
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
