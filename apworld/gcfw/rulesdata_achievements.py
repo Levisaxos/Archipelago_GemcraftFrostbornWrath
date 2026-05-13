@@ -2212,11 +2212,10 @@ achievement_requirements = {
         "ap_id": 2514,
         "game_id": 97,
         "description": "Have 15 or more beacons standing at the end of the battle.",
-        "requirements": 
-        [
+        "requirements": [
             ["tDarkMasonry", "minWave:20"],
-            ["tDarkMasonry", "minWave:10", "eBeacon:5"]
-        ]
+            ["tDarkMasonry", "minWave:10", "eBeacon:5"],
+        ],
         "required_effort": "Trivial",
     },
     "Put Those Down Now!": {
