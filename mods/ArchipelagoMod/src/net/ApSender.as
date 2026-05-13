@@ -105,5 +105,60 @@ package net {
             _logger.log(_modName, "AP >> GetDataPackage  game=" + gameName);
             _ws.send(packet);
         }
+
+        /**
+         * Write a value to AP DataStorage under `key`. Uses the replace operation
+         * so the stored value is fully overwritten each call. `valueJson` must be
+         * a valid JSON fragment ready to splice into the packet (e.g. an object
+         * literal or array). `want_reply` is false — we don't ack our own writes.
+         */
+        public function sendDataStorageSet(key:String, valueJson:String):void {
+            if (_ws == null || key == null || valueJson == null) return;
+            var safeKey:String = _jsonEscape(key);
+            var packet:String = '[{"cmd":"Set","key":"' + safeKey + '","default":{},"want_reply":false,' +
+                '"operations":[{"operation":"replace","value":' + valueJson + '}]}]';
+            _logger.log(_modName, "AP >> Set  key=" + key + "  bytes=" + valueJson.length);
+            _ws.send(packet);
+        }
+
+        /**
+         * Read values from AP DataStorage. Response arrives asynchronously as a
+         * `Retrieved` packet keyed by these same strings; missing keys come back
+         * as null. ApReceiver.handleRetrieved is responsible for dispatching.
+         */
+        public function sendDataStorageGet(keys:Array):void {
+            if (_ws == null || keys == null || keys.length == 0) return;
+            var parts:Array = [];
+            for each (var k:String in keys)
+                parts.push('"' + _jsonEscape(k) + '"');
+            var packet:String = '[{"cmd":"Get","keys":[' + parts.join(",") + ']}]';
+            _logger.log(_modName, "AP >> Get  keys=[" + keys.join(",") + "]");
+            _ws.send(packet);
+        }
+
+        /** Escape a string for embedding in a JSON string literal. */
+        private function _jsonEscape(s:String):String {
+            if (s == null) return "";
+            var out:String = "";
+            var len:int = s.length;
+            for (var i:int = 0; i < len; i++) {
+                var c:String = s.charAt(i);
+                var code:int = s.charCodeAt(i);
+                if (c == "\\") out += "\\\\";
+                else if (c == '"') out += '\\"';
+                else if (code == 8) out += "\\b";
+                else if (code == 9) out += "\\t";
+                else if (code == 10) out += "\\n";
+                else if (code == 12) out += "\\f";
+                else if (code == 13) out += "\\r";
+                else if (code < 32) {
+                    var hex:String = code.toString(16);
+                    while (hex.length < 4) hex = "0" + hex;
+                    out += "\\u" + hex;
+                }
+                else out += c;
+            }
+            return out;
+        }
     }
 }

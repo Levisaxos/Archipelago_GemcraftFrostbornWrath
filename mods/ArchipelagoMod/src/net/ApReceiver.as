@@ -29,6 +29,7 @@ package net {
 
         // AP slot data — populated by handleConnected
         private var _mySlot:int              = 0;
+        private var _myTeam:int              = 0;
         private var _tokenMap:Object         = {};
         private var _tokenStages:Object      = {};
         private var _talismanMap:Object      = {};
@@ -52,6 +53,9 @@ package net {
         public var onDeathLinkReceived:Function;
         /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
         public var onItemSent:Function;
+        /** Called when AP responds to a `Get` with a `Retrieved` packet. Signature: (keysMap:Object):void
+         *  keysMap is the `keys` object from the packet — { key:String → value:* (null if absent) }. */
+        public var onDataStorageRetrieved:Function;
 
         // -----------------------------------------------------------------------
 
@@ -72,6 +76,7 @@ package net {
         // Getters
 
         public function get mySlot():int               { return _mySlot; }
+        public function get myTeam():int               { return _myTeam; }
         public function get tokenMap():Object          { return _tokenMap; }
         public function get tokenStages():Object       { return _tokenStages; }
         public function get talismanMap():Object       { return _talismanMap; }
@@ -86,6 +91,7 @@ package net {
 
         public function handleConnected(p:Object):void {
             _mySlot = int(p.slot);
+            _myTeam = (p.team !== undefined) ? int(p.team) : 0;
             _requestedGames = {};
 
             // Build player registry
@@ -226,6 +232,18 @@ package net {
             // all read from a single shared reference without needing ConnectionManager.
             AV.saveData.missingLocations = _missingLocations;
 
+            // Checked locations — server-authoritative list of locations already
+            // completed on this slot. Used by AchievementUnlocker.restoreCheckedAchievements
+            // on a fresh slot (e.g. lost save file) so previously-earned
+            // achievements show as completed in the in-game panel instead of
+            // appearing as out-of-logic.
+            var checkedMap:Object = {};
+            if (checked != null) {
+                for each (var checkedLocId:int in checked)
+                    checkedMap[checkedLocId] = true;
+            }
+            AV.saveData.checkedLocations = checkedMap;
+
             _sender.sendLocationScouts(_missingLocations);
 
             if (onConnectionEstablished != null)
@@ -249,6 +267,26 @@ package net {
             } else {
                 for each (var networkItem:Object in items) {
                     if (onItemReceived != null) onItemReceived(int(networkItem.item));
+                }
+            }
+        }
+
+        /**
+         * Inbound `Retrieved` — async response to our `Get`. The `keys` object
+         * maps each requested key to its stored value (null when absent). We
+         * just forward the map to whoever registered onDataStorageRetrieved.
+         */
+        public function handleRetrieved(p:Object):void {
+            var keys:Object = p.keys;
+            if (keys == null) {
+                _logger.log(_modName, "Retrieved with no keys field — ignoring");
+                return;
+            }
+            if (onDataStorageRetrieved != null) {
+                try {
+                    onDataStorageRetrieved(keys);
+                } catch (e:Error) {
+                    _logger.log(_modName, "onDataStorageRetrieved threw: " + e.message);
                 }
             }
         }

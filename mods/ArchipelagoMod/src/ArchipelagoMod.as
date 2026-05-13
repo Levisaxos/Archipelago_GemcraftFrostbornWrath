@@ -46,6 +46,7 @@ package {
     import unlockers.ShadowCoreUnlocker;
     import unlockers.AchievementUnlocker;
 
+    import net.ApStateSync;
     import net.ConnectionManager;
 
     import tracker.FieldLogicEvaluator;
@@ -68,6 +69,7 @@ package {
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
+    import patch.SkillsTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -101,7 +103,7 @@ package {
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
         public function get APWORLD_VERSION():String   { return "0.1.0.0"; }
-        public function get RELEASE_CHANNEL():String   { return "RC4"; }
+        public function get RELEASE_CHANNEL():String   { return "RC5"; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
@@ -125,6 +127,7 @@ package {
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
+        private var _apStateSync:ApStateSync;
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
         private var _disconnectPanelOnStage:Boolean = false;
@@ -159,6 +162,7 @@ package {
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
+        private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
 
         private var _keyListenerAdded:Boolean  = false;
@@ -297,7 +301,29 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
+                _connectionManager.onDataStorageRetrieved  = function(keys:Object):void {
+                    if (_apStateSync == null) return;
+                    _apStateSync.onRetrieved(keys);
+                    // If syncWithAP already finished (Retrieved arrived late),
+                    // apply restored XP straight into GV.ppd and persist. The
+                    // syncWithAP path also drains pendingState — whichever
+                    // runs second is a no-op because pendingState is cleared.
+                    if (_apStateSync.pendingState != null) {
+                        var changes:int = _apStateSync.applyPendingState();
+                        if (changes > 0) {
+                            // Restored XP changes natural wizard level, so
+                            // applyBonusLevels has to recompute the A4-trial
+                            // bonus offset to keep the displayed level consistent.
+                            if (_levelUnlocker != null) _levelUnlocker.applyBonusLevels();
+                            if (_saveManager != null) _saveManager.saveSlotData();
+                        }
+                    }
+                };
                 _connectionManager.load();
+
+                // AP DataStorage sync — persists stage XP server-side so
+                // a fresh local slot can re-hydrate the game state.
+                _apStateSync = new ApStateSync(_logger, MOD_NAME, _connectionManager);
 
                 // Initialize achievement unlocker
                 _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _receivedToast);
@@ -322,6 +348,7 @@ package {
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
+                _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
 
                 // Button factory — owns all mod buttons on selector + main menu
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
@@ -542,6 +569,7 @@ package {
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
+            if (_apStateSync != null) _apStateSync.reset();
             if (_stageTinter != null) _stageTinter.reset();
             if (_modButtons != null) {
                 _modButtons.settingsVisible = false;
@@ -872,6 +900,12 @@ package {
                     _sessionStashStageProgressiveUnlocks = [];
                     _sessionExcludedAchievementGameIds = [];
                     _levelEndCountdown = -1;
+
+                    // Stage XP just settled — push the snapshot to AP
+                    // DataStorage so a future fresh-save player can restore
+                    // it. pushIfChanged hashes the payload, so no-op when
+                    // XP didn't actually improve.
+                    if (_apStateSync != null) _apStateSync.pushIfChanged();
                 }
             }
 
@@ -1005,6 +1039,7 @@ package {
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
                 if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
+                if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
@@ -1279,6 +1314,15 @@ package {
         private function onApConnected(p:Object):void
         {
             _needsConnection = false;
+
+            // Kick off the DataStorage fetch immediately. The Retrieved
+            // response will land async; syncWithAP picks up pendingState
+            // when it runs, or the onDataStorageRetrieved handler applies
+            // late if Retrieved arrives after sync.
+            if (_apStateSync != null) {
+                _apStateSync.reset();
+                _apStateSync.requestState();
+            }
 
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
@@ -3099,8 +3143,48 @@ package {
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
+            // --- Restore previously-checked achievements --- (lost-save recovery)
+            // AP's checked_locations list is the source of truth for what this
+            // slot has already completed. Restore them locally so the in-game
+            // achievement panel shows them as completed rather than out-of-logic.
+            // Runs BEFORE reconcileSkillPoints so the SP math sees the restored
+            // gainedAchis array.
+            var achievementsRestored:int = _achievementUnlocker.restoreCheckedAchievements();
+
+            // --- Restore stage XP --- (lost-save recovery)
+            // If a Retrieved came back before sync completed, apply the stored
+            // XP arrays here. Late-arriving Retrieved is handled by the
+            // onDataStorageRetrieved handler in bind(). Restoring XP changes
+            // normalXp, so applyBonusLevels has to recompute to keep the
+            // displayed wizard level consistent.
+            var stageXpRestored:int = 0;
+            if (_apStateSync != null) {
+                stageXpRestored = _apStateSync.applyPendingState();
+                if (stageXpRestored > 0) {
+                    _levelUnlocker.applyBonusLevels();
+                }
+            }
+
+            // --- Skill points --- (reconcile from canonical state; auto-heals
+            // any prior over-deduction from the pre-RC5 bug where the per-
+            // achievement suppression re-ran on every MAINMENU/LOADGAME entry)
+            _achievementUnlocker.reconcileSkillPoints();
+
             // (Free-stage unlocking is handled by _syncStageLockState above.)
             _saveManager.saveSlotData();
+
+            // Push the (possibly restored) state back so the snapshot stays
+            // current. Idempotent — pushIfChanged hashes the payload.
+            if (_apStateSync != null) _apStateSync.pushIfChanged();
+
+            // If achievements were restored, re-sort the panel buckets.
+            // _applySortedOrder (inside updateDots) reorders achisByOrder
+            // into in-logic / earned / rest buckets based on ach.status —
+            // without this, restored achievements stay in their pre-restore
+            // bucket and appear misplaced in the panel grid.
+            if (achievementsRestored > 0) {
+                _refreshAchievementPanel();
+            }
 
             if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
             if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
@@ -3108,7 +3192,9 @@ package {
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
                 " stashes:" + stashChanges +
-                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
+                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel +
+                " achiRestored:" + achievementsRestored +
+                " stageXpRestored:" + stageXpRestored);
 
             // Hand the full-sync items to the offline-items collector so the grid
             // popup will surface anything new the next time the player is on
