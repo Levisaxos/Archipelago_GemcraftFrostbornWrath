@@ -45,7 +45,7 @@ First public beta of the GemCraft: Frostborn Wrath Archipelago randomizer. See [
 - Optional starting Overcrowd trait
 - Skillpoint multiplier for filler skill points
 - Difficulty multipliers: enemy HP, armor, shield, count, and extra waves
-- Achievement effort tier: 5 levels — `1` Trivial only, `2` +Minor, `3` +Major, `4` +Extreme, `5` All
+- Achievement effort tier: 4 levels — `1` Trivial only, `2` +Minor, `3` +Major, `4` +Extreme
 - Toggle Endurance and Trial modes
 
 ## DeathLink

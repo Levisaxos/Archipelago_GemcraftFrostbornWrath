@@ -1064,9 +1064,9 @@ package tracker {
         /**
          * Sum SP across collected Skillpoint Bundle items. Per-tier SP value
          * is per-seed and arrives via slot_data (ServerOptions.spBundleValues
-         * indexed by apId-1700: Small/Medium/Large/Huge). hasItem only
-         * reports presence, not count, so each tier contributes at most once
-         * — matches apworld's _count_skill_points approximation.
+         * indexed by apId-1700: Small/Medium/Large/Huge). Bundles stack — apworld's
+         * _count_skill_points multiplies tier value by state.count(name), so the
+         * mod must mirror that with getItemCount(apId) to keep logic in agreement.
          */
         private function _countSkillPoints():int {
             var total:int = 0;
@@ -1074,8 +1074,9 @@ package tracker {
                 return 0;
             var opts:* = AV.serverData.serverOptions;
             for (var apId:int = 1700; apId <= 1703; apId++) {
-                if (AV.sessionData.hasItem(apId))
-                    total += opts.getSpBundleValue(apId);
+                var count:int = AV.sessionData.getItemCount(apId);
+                if (count > 0)
+                    total += count * opts.getSpBundleValue(apId);
             }
             return total;
         }

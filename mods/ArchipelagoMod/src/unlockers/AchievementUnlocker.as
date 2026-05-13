@@ -513,10 +513,17 @@ package unlockers {
             if (AV.serverData == null || AV.serverData.serverOptions == null) return null;
             if (AV.sessionData == null) return null;
 
+            // Bundles are stackable — the same apId can arrive multiple
+            // times per slot. sessionData.collectedItems is just a boolean
+            // ("seen at least once"), so multiply by getItemCount(apId) to
+            // get the true total. Without this, a slot that received four
+            // Small bundles would only credit one Small's worth of SP and
+            // the drop icon's total would diverge from the panel.
             var bundles:int = 0;
             for (var apId:int = 1700; apId <= 1703; apId++) {
-                if (AV.sessionData.hasItem(apId)) {
-                    bundles += int(AV.serverData.serverOptions.getSpBundleValue(apId));
+                var count:int = AV.sessionData.getItemCount(apId);
+                if (count > 0) {
+                    bundles += count * int(AV.serverData.serverOptions.getSpBundleValue(apId));
                 }
             }
 
