@@ -64,11 +64,10 @@ package ui {
             addSectionHeader("General", vY); vY += ROW_HEIGHT;
             addRow("Goal",                    goalName(opts.goal), vY);                                        vY += ROW_HEIGHT;
             if (opts.goal == 3)
-                { addRow("Fields Required",   opts.fieldsRequired + " fields", vY);                           vY += ROW_HEIGHT; }
+                { addRow("Fields Required",   opts.fieldsRequiredCount + " fields", vY);                      vY += ROW_HEIGHT; }
             if (opts.goal == 4) {
-                var pct:int = opts.fieldsRequiredPercentage;
-                var count:int = int(Math.ceil(pct * 122.0 / 100.0));
-                addRow("Fields Required", count + " (" + pct + "%)", vY);                                     vY += ROW_HEIGHT;
+                addRow("Fields Required",
+                    opts.fieldsRequiredCount + " (" + opts.fieldsRequiredPercentage + "%)", vY);              vY += ROW_HEIGHT;
             }
             addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;

@@ -99,6 +99,8 @@ package net {
         public var onItemSent:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
+        /** Called when AP responds to a Get with a Retrieved packet. Signature: (keysMap:Object):void */
+        public var onDataStorageRetrieved:Function;
         /** Called when the connection drops unexpectedly. Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
@@ -126,6 +128,9 @@ package net {
             _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
                 if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe);
             };
+            _receiver.onDataStorageRetrieved = function(keys:Object):void {
+                if (onDataStorageRetrieved != null) onDataStorageRetrieved(keys);
+            };
         }
 
         private function _onConnectionEstablished(p:Object):void {
@@ -148,6 +153,17 @@ package net {
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
         public function get missingLocations():Object      { return _receiver.missingLocations; }
         public function get mySlot():int                   { return _receiver.mySlot; }
+        public function get myTeam():int                   { return _receiver.myTeam; }
+
+        /** Public DataStorage proxy — read. Response arrives async via onDataStorageRetrieved. */
+        public function sendDataStorageGet(keys:Array):void {
+            _sender.sendDataStorageGet(keys);
+        }
+
+        /** Public DataStorage proxy — write. `valueJson` is a pre-encoded JSON fragment. */
+        public function sendDataStorageSet(key:String, valueJson:String):void {
+            _sender.sendDataStorageSet(key, valueJson);
+        }
 
         // -----------------------------------------------------------------------
         // Credentials
@@ -323,6 +339,15 @@ package net {
 
                 case "Bounced":
                     _receiver.handleBounced(p);
+                    break;
+
+                case "Retrieved":
+                    _receiver.handleRetrieved(p);
+                    break;
+
+                case "SetReply":
+                    // We send Set with want_reply=false, so SetReply only shows
+                    // up if AP echoes back anyway. Log and ignore.
                     break;
 
                 default:

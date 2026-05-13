@@ -46,6 +46,7 @@ package {
     import unlockers.ShadowCoreUnlocker;
     import unlockers.AchievementUnlocker;
 
+    import net.ApStateSync;
     import net.ConnectionManager;
 
     import tracker.FieldLogicEvaluator;
@@ -67,6 +68,8 @@ package {
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
+    import patch.SaveSlotDeleteFix;
+    import patch.SkillsTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -100,7 +103,7 @@ package {
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
         public function get APWORLD_VERSION():String   { return "0.1.0.0"; }
-        public function get RELEASE_CHANNEL():String   { return "RC4"; }
+        public function get RELEASE_CHANNEL():String   { return "RC5"; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
@@ -124,6 +127,7 @@ package {
         private var _debugOptions:ScrDebugOptions;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
+        private var _apStateSync:ApStateSync;
         private var _connectionPanel:ConnectionPanel;
         private var _disconnectPanel:DisconnectPanel;
         private var _disconnectPanelOnStage:Boolean = false;
@@ -158,6 +162,8 @@ package {
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
+        private var _skillsTooltipOverlay:SkillsTooltipOverlay;
+        private var _saveSlotDeleteFix:SaveSlotDeleteFix;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -259,6 +265,7 @@ package {
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
                 _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
+                _saveSlotDeleteFix     = new SaveSlotDeleteFix(_logger, MOD_NAME);
 
                 // In-game tracker (stage light tinting + logic evaluation)
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
@@ -294,7 +301,29 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
+                _connectionManager.onDataStorageRetrieved  = function(keys:Object):void {
+                    if (_apStateSync == null) return;
+                    _apStateSync.onRetrieved(keys);
+                    // If syncWithAP already finished (Retrieved arrived late),
+                    // apply restored XP straight into GV.ppd and persist. The
+                    // syncWithAP path also drains pendingState — whichever
+                    // runs second is a no-op because pendingState is cleared.
+                    if (_apStateSync.pendingState != null) {
+                        var changes:int = _apStateSync.applyPendingState();
+                        if (changes > 0) {
+                            // Restored XP changes natural wizard level, so
+                            // applyBonusLevels has to recompute the A4-trial
+                            // bonus offset to keep the displayed level consistent.
+                            if (_levelUnlocker != null) _levelUnlocker.applyBonusLevels();
+                            if (_saveManager != null) _saveManager.saveSlotData();
+                        }
+                    }
+                };
                 _connectionManager.load();
+
+                // AP DataStorage sync — persists stage XP server-side so
+                // a fresh local slot can re-hydrate the game state.
+                _apStateSync = new ApStateSync(_logger, MOD_NAME, _connectionManager);
 
                 // Initialize achievement unlocker
                 _achievementUnlocker = new AchievementUnlocker(_logger, MOD_NAME, _connectionManager, _receivedToast);
@@ -319,6 +348,7 @@ package {
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
+                _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
 
                 // Button factory — owns all mod buttons on selector + main menu
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
@@ -539,6 +569,7 @@ package {
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
+            if (_apStateSync != null) _apStateSync.reset();
             if (_stageTinter != null) _stageTinter.reset();
             if (_modButtons != null) {
                 _modButtons.settingsVisible = false;
@@ -574,6 +605,40 @@ package {
         public function unlockStage(stageStrId:String):void { _stageUnlocker.unlockStage(stageStrId); }
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
         public function isStageUnlocked(stageStrId:String):Boolean { return _stageUnlocker.isStageUnlocked(stageStrId); }
+
+        /**
+         * Debug-menu entry point: simulate AP receiving an item. Routes through
+         * the same grantItem() pipeline as live AP traffic (which means the
+         * receivedToast, sessionData.onItem, logic re-evaluation, and
+         * offlineItemsCollector.markSeen all run, just like a real receipt).
+         *
+         * Idempotent per session: if the apId was already collected (whether
+         * via AP or a previous debug click), this is a no-op so a check is
+         * never granted twice — matching how AP only sends each item once.
+         *
+         * Returns true if the grant ran, false if it was skipped as duplicate.
+         */
+        public function debugGrantItem(apId:int):Boolean {
+            if (debugIsItemCollected(apId)) {
+                _logger.log(MOD_NAME, "debugGrantItem: apId=" + apId + " already collected — skipping");
+                return false;
+            }
+            grantItem(apId);
+            return true;
+        }
+
+        /** True if AV.sessionData has recorded apId as collected (live AP
+         *  receipt or a prior debugGrantItem call). */
+        public function debugIsItemCollected(apId:int):Boolean {
+            if (AV.sessionData == null || AV.sessionData.collectedItems == null) return false;
+            return AV.sessionData.collectedItems[String(apId)] == true;
+        }
+
+        /** Public log passthrough for UI helpers (e.g. ScrDebugOptions) that
+         *  don't hold their own Logger reference. */
+        public function debugLog(msg:String):void {
+            if (_logger != null) _logger.log(MOD_NAME, msg);
+        }
 
         public function getDisplayedWizardLevel():int {
             if (_levelUnlocker == null) return 1;
@@ -720,6 +785,12 @@ package {
                 _modeInterceptor.hook(this.stage);
             }
 
+            // Quarantine vanilla save backups when the player deletes a slot,
+            // so the slot doesn't resurrect on next launch.
+            if (screen == ScreenId.LOADGAME && _saveSlotDeleteFix != null) {
+                _saveSlotDeleteFix.onLoadGameFrame();
+            }
+
             // Routing trigger — fires once after the player leaves LOADGAME
             // with a chosen slot. startConnectionForSlot inspects the slot
             // file and either activates AP, enters standalone, or shows
@@ -829,6 +900,12 @@ package {
                     _sessionStashStageProgressiveUnlocks = [];
                     _sessionExcludedAchievementGameIds = [];
                     _levelEndCountdown = -1;
+
+                    // Stage XP just settled — push the snapshot to AP
+                    // DataStorage so a future fresh-save player can restore
+                    // it. pushIfChanged hashes the payload, so no-op when
+                    // XP didn't actually improve.
+                    if (_apStateSync != null) _apStateSync.pushIfChanged();
                 }
             }
 
@@ -962,6 +1039,7 @@ package {
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
                 if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
+                if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
@@ -1237,6 +1315,15 @@ package {
         {
             _needsConnection = false;
 
+            // Kick off the DataStorage fetch immediately. The Retrieved
+            // response will land async; syncWithAP picks up pendingState
+            // when it runs, or the onDataStorageRetrieved handler applies
+            // late if Retrieved arrives after sync.
+            if (_apStateSync != null) {
+                _apStateSync.reset();
+                _apStateSync.requestState();
+            }
+
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
 
@@ -1315,7 +1402,7 @@ package {
             _goalManager.configure(
                 AV.serverData.serverOptions.goal,
                 AV.serverData.serverOptions.talismanMinRarity,
-                AV.serverData.serverOptions.fieldsRequired,
+                AV.serverData.serverOptions.fieldsRequiredCount,
                 AV.serverData.serverOptions.fieldsRequiredPercentage);
 
             if (_saveManager.slotCompleted) {
@@ -2229,6 +2316,12 @@ package {
                 if ((apId >= 1000 && apId <= 1016) || (apId >= 1300 && apId <= 1351)) {
                     _logger.log(MOD_NAME, "  → Shadow core apId: " + apId);
                     _shadowCoreUnlocker.grantShadowCores(apId);
+                    var scLabel:String = (AV.serverData != null
+                            && AV.serverData.shadowCoreNameMap != null
+                            && AV.serverData.shadowCoreNameMap[String(apId)] != null)
+                        ? String(AV.serverData.shadowCoreNameMap[String(apId)])
+                        : "Shadow Cores";
+                    _receivedToast.addItem("Received " + scLabel, ItemColors.forApId(apId));
                     return;
                 }
                 if (apId >= 1400 && apId <= 1521) {
@@ -2900,6 +2993,15 @@ package {
                 }
             }
 
+            // Mirror coarse / progressive coverage into AV.sessionData.tokensByStrId
+            // so FieldLogicEvaluator and downstream readers see the same unlocked
+            // set after a syncWithAP() (which calls reset() and then onItem(), and
+            // onItem only marks direct per-stage tokenMap entries).
+            for (var htSid:String in hasToken) {
+                if (hasToken[htSid] == true)
+                    AV.sessionData.markFieldTokenHeld(htSid);
+            }
+
             var changes:int = 0;
             var metas:Array = GV.stageCollection.stageMetas;
             for (var i:int = 0; i < metas.length; i++) {
@@ -2972,6 +3074,17 @@ package {
                 // Stage tokens fall through — they're tracked via AV.sessionData.
             }
 
+            // Yaml `starting_overcrowd: true` precollects Overcrowd Battle
+            // Trait (apId 803) on the apworld side. Materialize the grant
+            // defensively in case the AP server doesn't replay precollected
+            // items via ReceivedItems on every connect path — keeps logic
+            // (AV.sessionData.hasItem), _apGrantedTraits, and gainedBattleTraits
+            // all in sync with the playable state.
+            if (AV.serverData.serverOptions.startingOvercrowd && !apTraits[3]) {
+                apTraits[3] = true;
+                AV.sessionData.onItem(803);
+            }
+
             // --- Skills ---
             var skillChanges:int = 0;
             for (var i:int = 0; i < 24; i++) {
@@ -3030,8 +3143,48 @@ package {
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
+            // --- Restore previously-checked achievements --- (lost-save recovery)
+            // AP's checked_locations list is the source of truth for what this
+            // slot has already completed. Restore them locally so the in-game
+            // achievement panel shows them as completed rather than out-of-logic.
+            // Runs BEFORE reconcileSkillPoints so the SP math sees the restored
+            // gainedAchis array.
+            var achievementsRestored:int = _achievementUnlocker.restoreCheckedAchievements();
+
+            // --- Restore stage XP --- (lost-save recovery)
+            // If a Retrieved came back before sync completed, apply the stored
+            // XP arrays here. Late-arriving Retrieved is handled by the
+            // onDataStorageRetrieved handler in bind(). Restoring XP changes
+            // normalXp, so applyBonusLevels has to recompute to keep the
+            // displayed wizard level consistent.
+            var stageXpRestored:int = 0;
+            if (_apStateSync != null) {
+                stageXpRestored = _apStateSync.applyPendingState();
+                if (stageXpRestored > 0) {
+                    _levelUnlocker.applyBonusLevels();
+                }
+            }
+
+            // --- Skill points --- (reconcile from canonical state; auto-heals
+            // any prior over-deduction from the pre-RC5 bug where the per-
+            // achievement suppression re-ran on every MAINMENU/LOADGAME entry)
+            _achievementUnlocker.reconcileSkillPoints();
+
             // (Free-stage unlocking is handled by _syncStageLockState above.)
             _saveManager.saveSlotData();
+
+            // Push the (possibly restored) state back so the snapshot stays
+            // current. Idempotent — pushIfChanged hashes the payload.
+            if (_apStateSync != null) _apStateSync.pushIfChanged();
+
+            // If achievements were restored, re-sort the panel buckets.
+            // _applySortedOrder (inside updateDots) reorders achisByOrder
+            // into in-logic / earned / rest buckets based on ach.status —
+            // without this, restored achievements stay in their pre-restore
+            // bucket and appear misplaced in the panel grid.
+            if (achievementsRestored > 0) {
+                _refreshAchievementPanel();
+            }
 
             if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
             if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
@@ -3039,7 +3192,9 @@ package {
             _logger.log(MOD_NAME, "AP sync complete — skills:" + skillChanges +
                 " traits:" + traitChanges + " stages:" + stageChanges +
                 " stashes:" + stashChanges +
-                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel);
+                " apWizardLevel:" + _levelUnlocker.bonusWizardLevel +
+                " achiRestored:" + achievementsRestored +
+                " stageXpRestored:" + stageXpRestored);
 
             // Hand the full-sync items to the offline-items collector so the grid
             // popup will surface anything new the next time the player is on

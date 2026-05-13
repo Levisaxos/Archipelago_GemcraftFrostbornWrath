@@ -194,11 +194,21 @@ def _count_field_tokens(state, player: int) -> int:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
         starter_sid = world.start_sid
+        # Clearability check: free stages auto-pass the pouch gate because
+        # Hollow Gems substitute at runtime. Strict gem-availability uses
+        # _compile_gempouch_checker directly elsewhere.
+        pouch_mode = world.options.gem_pouch_granularity.value
+        pouch_free = (
+            set(_g.free_stages_for_starter(starter_sid, ft_gran))
+            if pouch_mode != _g.POUCH_OFF
+            else set()
+        )
         pairs = [
             (
                 _g.field_token_for_stage(s["str_id"], ft_gran),
                 _g.field_token_count_for_stage(s["str_id"], ft_gran, starter_sid),
-                _compile_gempouch_checker(world, s["str_id"]),
+                (_always_true if s["str_id"] in pouch_free
+                 else _compile_gempouch_checker(world, s["str_id"])),
             )
             for s in GAME_DATA["stages"]
         ]
@@ -355,11 +365,20 @@ def _sum_talisman_property(prop_id: int, state, player: int) -> int:
 # Count fields that appear on at least one stage in rulesdata_levels.py.
 # Used to distinguish "element tracked per-stage but not on any reachable
 # stage at the requested count" (block) from "element not tracked at all,
-# i.e. universally present like Tower / Wall" (always satisfied).
+# i.e. universally present like Tower" (always satisfied).
 _PRESENT_COUNT_FIELDS: frozenset = frozenset(
     f for d in LEVEL_DATA.values() for f, v in d.items()
     if f.endswith("Count") and isinstance(v, (int, float)) and v > 0
 )
+
+# Element tokens whose underlying mechanic isn't actually shipped in the
+# randomizer yet — the eX token exists in the achievement vocabulary but
+# evaluating against per-stage *Count fields would falsely block. Always
+# treat as available, matching the mod's `_elementInLogic` (empty
+# `_elementStages[name]` → True). Add new placeholders here as they
+# arrive; remove an entry once the mechanic is wired up and Count data
+# becomes meaningful for the gate.
+_STUB_ELEMENTS: frozenset = frozenset({"Wall"})
 
 
 def _element_count_field(elem_name: str) -> str:
@@ -545,8 +564,60 @@ _BUILDING_ELEMENT_TO_SKILL_ITEM: dict = {
 def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
     """Resolve eX:N form: a reachable stage exists where <X>Count >= N.
     If the element isn't tracked per-stage (no <X>Count field anywhere in
-    LEVEL_DATA), treat it as universally present (Tower / Wall / Marked
-    Monster fall here)."""
+    LEVEL_DATA), treat it as universally present (Tower / Marked Monster
+    fall here)."""
+    if elem_pascal in _STUB_ELEMENTS:
+        # Stub elements: the eX token is in the achievement vocabulary as a
+        # placeholder, but the underlying mechanic isn't implemented in the
+        # randomizer yet. Always pass to match the mod's `_elementInLogic`
+        # behavior (where an empty `_elementStages[name]` returns True).
+        return True
+    if elem_pascal == "WizardStash":
+        # Every stage has a wizard stash, so `WizardStashCount` is not a
+        # per-stage tracked field. Without this special-case the universal
+        # early-return below would let `eWizardStash:N` pass even with zero
+        # keys held — route through the same key + journey-reachability
+        # gate as the bare `eWizardStash` token (`_any_stash_reachable`)
+        # instead, counting distinct openable stashes for N > 1. Whether
+        # a stash actually requires a key depends on the seed's
+        # stash_key_granularity yaml option (STASH_OFF means no gate).
+        if count_needed <= 1:
+            return _any_stash_reachable(state, player)
+        from . import gating as _g
+        world = state.multiworld.worlds[player]
+        sk_gran = world.options.stash_key_granularity.value
+        if sk_gran == _g.STASH_OFF:
+            n = 0
+            for s in GAME_DATA["stages"]:
+                try:
+                    if state.can_reach(f"Complete {s['str_id']} - Journey",
+                                       "Location", player):
+                        n += 1
+                        if n >= count_needed:
+                            return True
+                except KeyError:
+                    continue
+            return False
+        starter_sid = world.start_sid
+        n = 0
+        for s in GAME_DATA["stages"]:
+            sid = s["str_id"]
+            key_name  = _g.stash_key_for_stage(sid, sk_gran)
+            key_count = _g.stash_key_count_for_stage(sid, sk_gran, starter_sid)
+            if key_count == 1:
+                if not state.has(key_name, player):
+                    continue
+            elif state.count(key_name, player) < key_count:
+                continue
+            try:
+                if state.can_reach(f"Complete {sid} - Journey", "Location", player):
+                    n += 1
+                    if n >= count_needed:
+                        return True
+            except KeyError:
+                continue
+        return False
+
     field = elem_pascal + "Count"
     if field not in _PRESENT_COUNT_FIELDS:
         return True
@@ -943,11 +1014,19 @@ def _qualifying_stages_for_element(elem_pascal: str, count_needed: int):
     key = ("elem", elem_pascal, count_needed)
     if key in _QUALIFYING_STAGES_CACHE:
         return _QUALIFYING_STAGES_CACHE[key]
-    field = elem_pascal + "Count"
-    if field not in _PRESENT_COUNT_FIELDS:
-        result = None  # element is universally present — no gate
+    if elem_pascal in _STUB_ELEMENTS:
+        # Stub element — token in the achievement vocabulary as a placeholder
+        # but the underlying mechanic isn't implemented yet. Force the
+        # "universally present" path so the compiled `_compile_element_or`
+        # short-circuits to `_always_true`. Mirrors the runtime `_STUB_ELEMENTS`
+        # bypass in `_eval_element_count`.
+        result = None
     else:
-        result = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
+        field = elem_pascal + "Count"
+        if field not in _PRESENT_COUNT_FIELDS:
+            result = None  # element is universally present — no gate
+        else:
+            result = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
     _QUALIFYING_STAGES_CACHE[key] = result
     return result
 
@@ -977,9 +1056,18 @@ def _always_false(state) -> bool:
 
 
 def _compile_gempouch_checker(world, sid: str):
-    """Return (state) -> bool: True iff the player has access to gems on
-    the given stage. Granularity-aware — uses gating helpers so the rule
-    automatically adapts to all variants (distinct + progressive + global)."""
+    """Return (state) -> bool: True iff the player owns the actual gempouch
+    item that grants the stage's listed gem types. Granularity-aware — uses
+    gating helpers so the rule adapts to all variants (distinct + progressive
+    + global).
+
+    STRICT variant — does *not* exempt free stages. Hollow Gems substitute
+    for a missing pouch at runtime so the stage can be *cleared*, but they
+    don't grant the stage's gem types and so don't make those gems available
+    for achievement requirements (e.g. sBolt broadening). For clearability
+    checks (journey/stash access, _STAGE_CLEAR_RULES), the call site applies
+    the free-stage exemption inline; do not move that exemption in here.
+    See _compile_gem_broadened for the canonical "no Hollow Gem credit" use."""
     from . import gating as _g
     mode = world.options.gem_pouch_granularity.value
     if mode == _g.POUCH_OFF:
@@ -1443,6 +1531,27 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         _gating.FIELD_PER_TILE_PROGRESSIVE,
         _gating.FIELD_PER_TIER_PROGRESSIVE,
     )
+    # Stages immediately playable at session start under the chosen
+    # field-token granularity (per_stage → just the starter; per_tile →
+    # the whole starter tile; per_tier → the whole starter tier). Their
+    # covering field token is precollected, the mod treats them as
+    # `_freeStages` with no DNF/skill gates, so apworld must too:
+    #   - Skip the gem-pouch WIZLOCK clause (HollowGemInjector substitutes
+    #     Hollow Gems at runtime when the matching pouch isn't held).
+    #   - Skip the per-stage vanilla DNF prereqs (e.g. S1's `Field_W1`)
+    #     so the whole starter group is in-logic from sphere 0, even when
+    #     individual stages have vanilla chains pointing outside the group.
+    # Without these exemptions UT shows the starter group's stages — and
+    # any elements on them — as out-of-logic, while the in-game mod (which
+    # does treat the whole _freeStages set as reachable) shows them in.
+    #
+    # NOTE: this only relaxes *clearability*. Hollow Gems do NOT grant the
+    # stage's listed gem types, so gem availability (gemSkills broadening,
+    # gem-typed achievement requirements) still goes through the strict
+    # _compile_gempouch_checker — see _compile_gem_broadened for the
+    # corresponding "no Hollow Gem credit" filter.
+    free_sids = set(_gating.free_stages_for_starter(start_sid, ft_gran))
+    pouch_free_sids = free_sids if pouch_mode != _g.POUCH_OFF else set()
     for stage in stages:
         sid = stage["str_id"]
         journey_loc = multiworld.get_location(f"Complete {sid} - Journey", player)
@@ -1458,6 +1567,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                     if group_name == "gemPouch":
                         if pouch_mode == _g.POUCH_OFF:
                             continue  # off — pouches don't gate
+                        if sid in pouch_free_sids:
+                            continue  # Hollow Gems substitute on free stages
                         pouch_item = _g.pouch_for_stage(sid, pouch_mode)
                         if pouch_item is None:
                             continue
@@ -1501,9 +1612,17 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             else:
                 token_check = lambda state, t=token_name, n=token_count: \
                     state.count(t, player) >= n
-            # Off mode short-circuits this to `_always_true`.
-            pouch_ok = _compile_gempouch_checker(world, sid)
-            if requirements and not ft_progressive:
+            # Off mode short-circuits this to `_always_true`. Free stages
+            # (whose pouch is covered by Hollow Gems for clearing purposes)
+            # also short-circuit — see pouch_free_sids comment above.
+            pouch_ok = (_always_true if sid in pouch_free_sids
+                        else _compile_gempouch_checker(world, sid))
+            # Skip the vanilla DNF for free stages too — the starter group
+            # is reachable from sphere 0 by definition, regardless of any
+            # vanilla `Field_<sid>` chains pointing at stages outside the
+            # group. Mirrors FieldLogicEvaluator._stageReachable's blanket
+            # `_freeStages` short-circuit.
+            if requirements and not ft_progressive and sid not in free_sids:
                 normalized = _normalize_requirements(requirements)
                 dnf_rule = _compile_dnf(normalized, world, is_progressive=False)
                 _STAGE_CLEAR_RULES[(player, sid)] = (

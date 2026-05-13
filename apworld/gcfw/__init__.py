@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from BaseClasses import ItemClassification, Region
+from BaseClasses import ItemClassification, LocationProgressType, Region
 from Options import DeathLink, OptionGroup
 
 from worlds.AutoWorld import WebWorld, World
@@ -45,6 +45,25 @@ from .rulesdata_levels import level_requirements as LEVEL_DATA
 
 def _load_game_data():
     return GAME_DATA
+
+
+def _resolve_fields_required_count(world) -> int:
+    """Resolved absolute stage threshold for the active goal.
+
+    Single source of truth so the mod doesn't have to recompute.
+    Must match the formulas in rules.py for the corresponding goal.
+    """
+    from math import floor
+    goal_value = world.options.goal.value
+    if goal_value == 3:
+        # fields_count: option already holds the absolute count.
+        return int(world.options.fields_required.value)
+    if goal_value == 4:
+        # fields_percentage: matches rules.py:1579 formula exactly.
+        pct = int(world.options.fields_required_percentage.value)
+        total = len(GAME_DATA["stages"])
+        return int(floor(pct * total / 100))
+    return 0
 
 
 def _load_stages():
@@ -281,64 +300,65 @@ class GemcraftFrostbornWrathWorld(World):
 
     def generate_early(self) -> None:
         with phase(f"p{self.player} generate_early"):
+            # Universal Tracker re-gen passthrough: when UT triggers a fresh
+            # generation via `interpret_slot_data` returning the slot_data
+            # dict, that dict lands here under `multiworld.re_gen_passthrough`.
+            # Overwrite YAML-rolled option values with the actual seed's
+            # resolved values so UT doesn't re-roll randomness (notably
+            # `starting_stage`) each reconnect. Every option that influences
+            # regions, rules, or item-pool composition is listed — omitting
+            # one means UT diverges from the server world along that axis.
+            re_gen_passthrough = getattr(self.multiworld, "re_gen_passthrough", {})
+            if self.game in re_gen_passthrough:
+                slot_data = re_gen_passthrough[self.game]
+                for key in (
+                    "goal",
+                    "fields_required",
+                    "fields_required_percentage",
+                    "starting_stage",
+                    "field_token_placement",
+                    "field_token_granularity",
+                    "stash_key_granularity",
+                    "gem_pouch_granularity",
+                    "achievement_required_effort",
+                    "enforce_logic",
+                    "disable_endurance",
+                    "disable_trial",
+                    "starting_overcrowd",
+                    "starting_wizard_level",
+                    "xp_tome_bonus",
+                    "skillpoint_multiplier",
+                ):
+                    if key in slot_data:
+                        opt = getattr(self.options, key, None)
+                        if opt is not None:
+                            opt.value = slot_data[key]
+
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
             if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
-    _BIAS_FRACTION = 0.75
-
-    def _apply_progression_bias(self, include_tokens: bool, include_skills: bool) -> None:
-        """Pre-place a fraction of (tokens + skills) onto the player's own Journey/Stash locations to bias them away from achievements. Items that cannot be placed (access rules) are returned to the main pool."""
-        from Fill import fill_restrictive
-
-        fraction = self._BIAS_FRACTION
-
-        candidates = []
-        for item in self.multiworld.itempool:
-            if item.player != self.player:
-                continue
-            if include_tokens and item.name.endswith(" Field Token"):
-                candidates.append(item)
-            elif include_skills and item.name.endswith(" Skill"):
-                candidates.append(item)
-        if not candidates:
-            return
-
-        journey_stash_locs = [
-            loc for loc in self.multiworld.get_unfilled_locations(self.player)
-            if loc.name.startswith("Complete ")
-        ]
-        if not journey_stash_locs:
-            return
-
-        self.multiworld.random.shuffle(candidates)
-        self.multiworld.random.shuffle(journey_stash_locs)
-        sample_size = max(1, int(len(candidates) * fraction))
-        biased_items = candidates[:sample_size]
-        for it in biased_items:
-            self.multiworld.itempool.remove(it)
-
-        state = self.multiworld.get_all_state(use_cache=False)
-        fill_restrictive(self.multiworld, state, journey_stash_locs, biased_items,
-                         lock=True, allow_partial=True)
-        # Any items left in biased_items were not placed — return them to the pool.
-        if biased_items:
-            self.multiworld.itempool.extend(biased_items)
+    _JOURNEY_PRIORITY_FRACTION = 0.75
 
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
             from Fill import FillError, fill_restrictive
 
+            # Bias 75% of Journey checks to hold progression items via main fill.
+            # priority_locations is multiworld-safe — items can come from any
+            # player's pool; only the destination is preferred.
+            journey_locs = [
+                loc for loc in self.multiworld.get_locations(self.player)
+                if loc.name.endswith(" - Journey")
+            ]
+            if journey_locs:
+                self.multiworld.random.shuffle(journey_locs)
+                sample_size = max(1, int(len(journey_locs) * self._JOURNEY_PRIORITY_FRACTION))
+                for loc in journey_locs[:sample_size]:
+                    loc.progress_type = LocationProgressType.PRIORITY
+
             placement = self.options.field_token_placement.value
-
-            # Apply progression bias before token placement.
-            # different_world tokens are placed into other players' worlds in
-            # stage_pre_fill; bias only their skills here. For own_world / any_world,
-            # bias both tokens and skills.
-            include_tokens = placement != FieldTokenPlacement.option_different_world
-            self._apply_progression_bias(include_tokens=include_tokens, include_skills=True)
-
             if placement != FieldTokenPlacement.option_own_world:
                 return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
@@ -758,6 +778,16 @@ class GemcraftFrostbornWrathWorld(World):
     #             progitempool.append(progitempool.pop(prog_idx))
 
 
+    @staticmethod
+    def interpret_slot_data(slot_data: dict) -> dict:
+        """Universal Tracker hook. Returning a non-None value tells UT to
+        restart generation with the returned dict accessible via
+        `multiworld.re_gen_passthrough[self.game]`. generate_early picks the
+        resolved option values up from there so UT does NOT re-roll YAML
+        randomness (notably `starting_stage`) on every reconnect."""
+        return slot_data
+
+
     def fill_slot_data(self) -> Dict:
         # Main fill happens between generate_basic and fill_slot_data, so this
         # is where we dump the per-rule call counters.
@@ -848,15 +878,34 @@ class GemcraftFrostbornWrathWorld(World):
         # is shipped via logic.json (generate_logic_json.py); slot_data here
         # only carries options + the per-achievement requirements list so the
         # mod's AchievementLogicEvaluator can mirror the in-logic display.
+        # Mirror exactly the same effort / skip / structural-reachability
+        # filters that create_regions applies when generating AP locations,
+        # so the mod's AchievementLogicEvaluator tracks the same set as
+        # Universal Tracker. Without these filters the mod shows
+        # achievements that don't exist as AP locations (e.g. untrackable,
+        # Trial-only, or structurally-impossible achievements), which
+        # makes its "in-logic count" diverge from UT's.
         achievement_requirements_map: Dict[str, list] = {}
         required_effort = self.options.achievement_required_effort.value
         if required_effort > 0:
             from .rulesdata_achievements import achievement_requirements as all_achievements
 
+            effort_hierarchy = ["Trivial", "Minor", "Major", "Extreme"]
+            max_effort_idx = min(required_effort - 1, len(effort_hierarchy) - 1)
+
             for ach_name, ach_data in all_achievements.items():
+                ach_effort = ach_data.get("required_effort", "Trivial")
+                if ach_effort in effort_hierarchy:
+                    if effort_hierarchy.index(ach_effort) > max_effort_idx:
+                        continue
+                if _should_skip_achievement(ach_data, self.options):
+                    continue
                 requirements = ach_data.get("requirements", [])
-                if requirements:
-                    achievement_requirements_map[ach_name] = requirements
+                if not requirements:
+                    continue
+                if not _can_achievement_be_met(requirements):
+                    continue
+                achievement_requirements_map[ach_name] = requirements
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
@@ -989,6 +1038,11 @@ class GemcraftFrostbornWrathWorld(World):
             "extra_wave_count":             self.options.extra_wave_count.value,
             "fields_required":              self.options.fields_required.value,
             "fields_required_percentage":   self.options.fields_required_percentage.value,
+            # Resolved absolute stage count for the active goal. Mod uses this
+            # as the FieldCount/FieldPercentage threshold directly — no
+            # client-side math, no risk of floor/ceil drift against rules.py.
+            # 0 for goals that don't gate on a stage count.
+            "fields_required_count":        _resolve_fields_required_count(self),
             "death_link":              bool(self.options.death_link.value),
             "death_link_punishment":   self.options.death_link_punishment.value,
             "gem_loss_percent":        self.options.gem_loss_percent.value,

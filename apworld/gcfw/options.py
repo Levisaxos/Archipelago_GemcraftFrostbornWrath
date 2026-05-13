@@ -335,11 +335,10 @@ class StartingOvercrowd(Toggle):
 class AchievementRequiredEffort(Choice):
     """How many of the in-game achievements count as Archipelago checks.
 
-    1:    Trivial achievements only (~362 checks).
-    2:    Trivial + Minor (~453 checks).
-    3:    Trivial + Minor + Major (~537 checks).
-    4:    Trivial + Minor + Major + Extreme (~620 checks).
-    5:    All achievements (~636 checks).
+    1:    Trivial achievements only. (Collectable by normal play).
+    2:    +Minor achievements (Require some special actions).
+    3:    +Major (Requires some time investment).
+    4:    +Extreme (Required massive time investment and luck on levels) (~620 checks).
 
     Selecting level N includes every achievement up to and including level N. More achievements means more checks to find and a longer seed. Trivial achievements are always included so the randomizer has enough room for the progression items.
     """
@@ -348,7 +347,6 @@ class AchievementRequiredEffort(Choice):
     option_2   = 2
     option_3   = 3
     option_4   = 4
-    option_5   = 5
     default = 1
 
 

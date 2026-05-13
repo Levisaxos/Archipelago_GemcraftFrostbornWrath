@@ -21,6 +21,13 @@ package unlockers {
      *   1. loadData()                 — after bind(), loads achievement_logic.json
      *   2. detectAndReport()          — every 30 frames while connected
      *   3. resetReportedAchievements() — when entering MAINMENU or LOADGAME
+     *
+     * Skill-point economy: skillPtsFromLoot is treated as a derived value,
+     * reconciled from canonical sources (sessionData bundles + gainedAchis)
+     * via reconcileSkillPoints(). It is never incremented/decremented
+     * directly — non-idempotent writes were the cause of a bug where each
+     * MAINMENU/LOADGAME round-trip re-deducted achievement SP because
+     * _reportedAchievements resets but gainedAchis does not.
      */
     public class AchievementUnlocker {
 
@@ -212,6 +219,8 @@ package unlockers {
                     return;
                 }
 
+                var newlyDetected:Boolean = false;
+
                 // Per-slot authoritative source. GV.achiCollection.achisByOrder[i].status
                 // is GLOBAL state and carries across slot loads (vanilla bug) — so a
                 // standalone session that earned achievements leaves status >= 2 on those
@@ -282,6 +291,7 @@ package unlockers {
                     }
 
                     _reportedAchievements[gameId] = true;
+                    newlyDetected = true;
                     _logger.log(_modName, "Sending achievement: " + ach.title + "  apId=" + apId + "  gameId=" + gameId);
                     unlockAchievement(String(ach.title), apId, gameId);
 
@@ -304,16 +314,17 @@ package unlockers {
                         }
                     }
 
-                    // Vanilla SP suppression: PnlSkills.calculateAvailableSkillPoints
-                    // adds pnlAchievements.calculateSkillPtBonus() — a live walk over
-                    // gainedAchis[i] summing Achievement.skillPtValue — into the total.
-                    // We deduct each newly-completed achievement's SP from
-                    // skillPtsFromLoot here so the bonus exactly cancels in-formula.
-                    // SP-bundle items still write positively to the same field, so
-                    // the visible balance equals (bundles - achievement-bonus) and the
-                    // panel sees (achi + bundles - achi) = bundles. Net: AP controls
-                    // the SP economy via bundles, vanilla achievement SP is hidden.
-                    suppressVanillaAchievementSp(ach);
+                }
+
+                // Vanilla SP suppression: PnlSkills.calculateAvailableSkillPoints
+                // adds pnlAchievements.calculateSkillPtBonus() — a live walk over
+                // gainedAchis[i] summing Achievement.skillPtValue — into the total.
+                // skillPtsFromLoot is set so the bonus exactly cancels in-formula
+                // and only bundles affect the visible balance. Reconciled rather
+                // than incrementally adjusted so MAINMENU/LOADGAME round-trips
+                // (which reset _reportedAchievements) cannot re-deduct.
+                if (newlyDetected) {
+                    reconcileSkillPoints();
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "detectAndReport error: " + err.message);
@@ -374,43 +385,176 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
-        // Skill-point grants
+        // Restore from AP server checked_locations
 
         /**
-         * Deduct an achievement's vanilla skill-point reward from
-         * GV.ppd.skillPtsFromLoot so it exactly offsets the in-formula
-         * contribution from PnlAchievements.calculateSkillPtBonus().
-         * Called once per achievement per session right after AP detection.
+         * Mark every achievement that AP says is already checked as locally
+         * gained, so a fresh slot on a server with prior progress shows
+         * those achievements as completed in-game rather than out-of-logic.
+         *
+         * Source of truth: AV.saveData.checkedLocations (populated by
+         * ApReceiver.handleConnected from the Connected packet).
+         *
+         * For each AP-tracked achievement gameId already on the checked
+         * list, sets:
+         *   - GV.ppd.gainedAchis[gameId] = true   (slot save commitment)
+         *   - achisByOrder[i].status = 3          (WAS_ALREADY_UNLOCKED —
+         *                                          matches vanilla
+         *                                          IngameInitializer2.resetAchis
+         *                                          for previously-completed
+         *                                          achievements; status=2
+         *                                          would mean "just earned
+         *                                          this run, win to keep")
+         *   - _reportedAchievements[gameId] = true (no re-send to server)
+         *
+         * The status write is global (vanilla bug noted in detectAndReport)
+         * but harmless: detectAndReport's gainedAchis cross-check stops it
+         * from being interpreted as a brand-new check next session.
+         *
+         * Returns the number of achievements restored.
          */
-        public function suppressVanillaAchievementSp(ach:*):void {
-            if (ach == null || GV.ppd == null)
-                return;
+        public function restoreCheckedAchievements():int {
+            if (GV.ppd == null || GV.achiCollection == null) return 0;
+            var achisByOrder:Array = GV.achiCollection.achisByOrder;
+            var gainedAchis:Array = GV.ppd.gainedAchis;
+            if (achisByOrder == null || gainedAchis == null) return 0;
+
+            var checked:Object = (AV.saveData != null) ? AV.saveData.checkedLocations : null;
+            if (checked == null) return 0;
+
+            var restored:int = 0;
+            for (var i:int = 0; i < achisByOrder.length; i++) {
+                var ach:* = achisByOrder[i];
+                if (!ach) continue;
+                var gameId:int = int(ach.id);
+                if (gameId < 0 || gameId >= gainedAchis.length) continue;
+                if (gainedAchis[gameId] === true) continue;
+
+                var achData:Object = _gameIdToData[gameId];
+                if (!achData) continue;
+                var apId:int = int(achData.apId);
+                if (apId < 2000 || apId > 2636) continue;
+                if (checked[apId] !== true) continue;
+
+                gainedAchis[gameId] = true;
+                try { ach.status = 3; } catch (eStatus:Error) {}
+                _reportedAchievements[gameId] = true;
+                restored++;
+            }
+
+            if (restored > 0) {
+                _logger.log(_modName, "restoreCheckedAchievements: marked " + restored
+                    + " AP-checked achievements as locally gained");
+
+                // Refresh the selector panel's visual flags. The "locked"
+                // overlay (mc.mcLocked2 / iconLocked) is driven by
+                // filterFlags[1], populated by setAchiLockStatusesOnLoad
+                // from gainedAchis at load time — well before our restore
+                // runs. Without re-calling it the icons stay greyed out
+                // even though gainedAchis is now true.
+                try {
+                    if (GV.selectorCore != null && GV.selectorCore.pnlAchievements != null) {
+                        GV.selectorCore.pnlAchievements.setAchiLockStatusesOnLoad();
+                    }
+                } catch (eFlags:Error) {
+                    _logger.log(_modName, "restoreCheckedAchievements: setAchiLockStatusesOnLoad threw: " + eFlags.message);
+                }
+            }
+            return restored;
+        }
+
+        // -----------------------------------------------------------------------
+        // Skill-point reconciliation
+
+        /**
+         * Recompute GV.ppd.skillPtsFromLoot from canonical state. Idempotent.
+         *
+         *   skillPtsFromLoot = sum(SP for received bundles 1700-1703)
+         *                    - sum(skillPtValue for AP-tracked gainedAchis)
+         *
+         * The achievement term cancels PnlAchievements.calculateSkillPtBonus()
+         * in the panel formula so the visible economy is bundles only.
+         * Excluded achievements (effort/Trial/etc.) keep their vanilla SP —
+         * they're skipped here, matching the detection branch above.
+         *
+         * Call after sync, after a bundle is granted, and after newly-detected
+         * achievements. Safe to call repeatedly.
+         */
+        public function reconcileSkillPoints():void {
+            if (GV.ppd == null) return;
+            var breakdown:Object = getSkillPointBreakdown();
+            if (breakdown == null) return;
+
             try {
-                var spValue:int = int(ach.skillPtValue);
-                if (spValue <= 0)
-                    return;
-                var current:int = int(GV.ppd.skillPtsFromLoot.g());
-                GV.ppd.skillPtsFromLoot.s(current - spValue);
-                _logger.log(_modName, "Suppressed vanilla achievement SP: -" + spValue
-                    + " (skillPtsFromLoot now " + (current - spValue) + ")");
+                var target:int = int(breakdown.bundles) - int(breakdown.achievementsAp);
+                GV.ppd.skillPtsFromLoot.s(target);
+                _logger.log(_modName, "reconcileSkillPoints: bundles=" + breakdown.bundles
+                    + " achiAp=" + breakdown.achievementsAp
+                    + " achiExcluded=" + breakdown.achievementsExcluded
+                    + " skillPtsFromLoot=" + target);
             } catch (err:Error) {
-                _logger.log(_modName, "suppressVanillaAchievementSp error: " + err.message);
+                _logger.log(_modName, "reconcileSkillPoints error: " + err.message);
             }
         }
 
         /**
-         * Add `points` to the player's wizard skill-point pool.
-         * Used by Skillpoint Bundle items (apId 1700–1703, four named tiers).
+         * Returns { bundles, achievementsAp, achievementsExcluded } — the
+         * canonical SP contributions used both for reconcile and for the
+         * Skills-panel tooltip breakdown. Returns null if state isn't ready.
+         *
+         *   bundles              — sum(SP for received bundles 1700-1703)
+         *   achievementsAp       — sum(skillPtValue for gainedAchis that are AP-tracked)
+         *   achievementsExcluded — sum(skillPtValue for gainedAchis NOT in AP
+         *                          (effort/Trial/Endurance/untrackable);
+         *                          these still flow through vanilla SP)
+         */
+        public function getSkillPointBreakdown():Object {
+            if (GV.ppd == null) return null;
+            if (AV.serverData == null || AV.serverData.serverOptions == null) return null;
+            if (AV.sessionData == null) return null;
+
+            var bundles:int = 0;
+            for (var apId:int = 1700; apId <= 1703; apId++) {
+                if (AV.sessionData.hasItem(apId)) {
+                    bundles += int(AV.serverData.serverOptions.getSpBundleValue(apId));
+                }
+            }
+
+            var achiAp:int = 0;
+            var achiExcluded:int = 0;
+            var gainedAchis:Array = GV.ppd.gainedAchis;
+            if (GV.achiCollection != null && GV.achiCollection.achisByOrder != null && gainedAchis != null) {
+                var achisByOrder:Array = GV.achiCollection.achisByOrder;
+                for (var i:int = 0; i < achisByOrder.length; i++) {
+                    var ach:* = achisByOrder[i];
+                    if (!ach) continue;
+                    var gameId:int = int(ach.id);
+                    if (gameId < 0 || gameId >= gainedAchis.length) continue;
+                    if (gainedAchis[gameId] !== true) continue;
+
+                    var spValue:int = int(ach.skillPtValue);
+                    if (spValue <= 0) continue;
+
+                    var achData:Object = _gameIdToData[gameId];
+                    if (achData != null && getSkipReason(achData) == null) {
+                        achiAp += spValue;
+                    } else {
+                        achiExcluded += spValue;
+                    }
+                }
+            }
+
+            return {bundles: bundles, achievementsAp: achiAp, achievementsExcluded: achiExcluded};
+        }
+
+        /**
+         * Bundle item grant hook. Bundle's apId is already in
+         * sessionData.collectedItems (set in ArchipelagoMod.grantItem before
+         * this call), so reconcile picks it up. The `points` argument is
+         * kept for log compatibility but the math is derived, not additive.
          */
         public function awardSkillPoints(points:int):void {
-            if (points <= 0 || GV.ppd == null) return;
-            try {
-                var current:int = int(GV.ppd.skillPtsFromLoot.g());
-                GV.ppd.skillPtsFromLoot.s(current + points);
-                _logger.log(_modName, "Awarded " + points + " skill points (total: " + (current + points) + ")");
-            } catch (err:Error) {
-                _logger.log(_modName, "Error awarding skill points: " + err.message);
-            }
+            reconcileSkillPoints();
         }
     }
 }

@@ -304,7 +304,8 @@ package patch {
 
                     if (passes && q.length > 0) {
                         var title:String = (ach.title != null) ? String(ach.title).toLowerCase() : "";
-                        if (title.indexOf(q) < 0) passes = false;
+                        var description:String = (ach.description != null) ? String(ach.description).toLowerCase() : "";
+                        if (title.indexOf(q) < 0 && description.indexOf(q) < 0) passes = false;
                     }
 
                     while (ach.filterFlags.length <= _ourFilterIndex) ach.filterFlags.push(false);
