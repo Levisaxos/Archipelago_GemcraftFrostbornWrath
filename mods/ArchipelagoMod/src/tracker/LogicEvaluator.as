@@ -85,30 +85,77 @@ package tracker {
         // -----------------------------------------------------------------------
 
         /** Returns true iff every requirement in the array passes.
-         *  Supports DNF: if the first element is an Array, treats outer as OR of inner AND-groups. */
+         *  Supports DNF: if the first element is an Array, treats outer as OR of inner AND-groups.
+         *
+         *  Same-stage binding: every per-stage token in an inner AND-group
+         *  must be satisfied by a SINGLE stage.  Tokens like `eShrine`,
+         *  `eApparition`, `minWave:50`, `Field_A4`, and `eX:N` all carry a
+         *  candidate stage list; the binding intersects them and requires
+         *  at least one stage in the intersection to be in-logic.  Without
+         *  this, multi-token requirements (Prismatic family, "in a battle"
+         *  achievements like Flying Multikill) would falsely pass when
+         *  each token was satisfied by a different stage. */
         public function evaluateRequirements(requirements:Array):Boolean {
             if (requirements == null || requirements.length == 0) return true;
             if (requirements[0] is Array) {
-                // DNF format: outer = OR, inner = AND-groups
                 for each (var group:* in requirements) {
                     var andGroup:Array = group as Array;
                     if (andGroup == null) continue;
-                    var groupPasses:Boolean = true;
-                    for each (var groupReq:* in andGroup) {
-                        if (!evaluateRequirement(_trim(String(groupReq)))) {
-                            groupPasses = false;
-                            break;
-                        }
-                    }
-                    if (groupPasses) return true;
+                    if (_evaluateAndGroupBound(andGroup)) return true;
                 }
                 return false;
             }
-            // Flat list = single AND-group (backward compatibility)
-            for each (var req:* in requirements) {
-                if (!evaluateRequirement(_trim(String(req)))) return false;
+            return _evaluateAndGroupBound(requirements);
+        }
+
+        /** AND-group with same-stage binding.  See evaluateRequirements doc. */
+        private function _evaluateAndGroupBound(andGroup:Array):Boolean {
+            var staticCandidates:Array = null;  // null = no per-stage constraint yet
+            for each (var groupReq:* in andGroup) {
+                var rs:String = _trim(String(groupReq));
+                var stages:Array = _qualifyingStagesForToken(rs);
+                if (stages == null) {
+                    if (!evaluateRequirement(rs)) return false;
+                } else {
+                    if (staticCandidates == null) {
+                        staticCandidates = stages.concat();
+                    } else {
+                        staticCandidates = _intersectStages(staticCandidates, stages);
+                        if (staticCandidates.length == 0) return false;
+                    }
+                }
             }
-            return true;
+            if (staticCandidates == null) return true;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return false;
+            var fil:Object = AV.sessionData.fieldsInLogic;
+            for each (var sid:String in staticCandidates) {
+                if (fil[sid] == true) return true;
+            }
+            return false;
+        }
+
+        /** Count of stages currently in logic.  Used by the `fieldToken:N`
+         *  achievement-requirement token — mirrors apworld semantic. */
+        private function _countFieldsInLogic():int {
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return 0;
+            var n:int = 0;
+            var fil:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in fil) {
+                if (fil[sid] == true) n++;
+            }
+            return n;
+        }
+
+        private function _intersectStages(a:Array, b:Array):Array {
+            var bSet:Object = {};
+            for each (var x:String in b) bSet[x] = true;
+            var out:Array = [];
+            for each (var y:String in a) {
+                if (bSet[y] === true) out.push(y);
+            }
+            return out;
         }
 
         /**
@@ -136,7 +183,12 @@ package tracker {
                             passCount++;
                         }
                     }
-                    if (failing.length == 0) return []; // group fully passes
+                    // Group fully passes only if every token AND the
+                    // same-stage binding hold; individual reqs can pass
+                    // while binding fails (no single stage satisfies all
+                    // per-stage tokens).
+                    if (failing.length == 0 && _evaluateAndGroupBound(andGroup))
+                        return [];
                     if (passCount > bestPassCount) {
                         bestPassCount = passCount;
                         bestFailing = failing;
@@ -509,13 +561,14 @@ package tracker {
                 return AV.sessionData.countItemsInRange(715, 717) >= eNeed;
             }
             if (lower.indexOf("gemskills") == 0) {
-                // gemSkills:N broadens like the bare gem-skill tokens — a
-                // skill counts as available if held OR a stage with the
-                // matching starter pouch is reachable.  When pouch gating
-                // is active, this gate still works against the gem-skill
-                // items (706-711) that remain in the pool.
+                // gemSkills:N uses a per-stage max: a gem counts on stage
+                // `s` if held OR `s` has it in `stageAvailableGems`, and
+                // the requirement passes if any in-logic stage hits the
+                // count.  Prismatic-class achievements need the N colors
+                // to coexist on a single stage, not be scattered across
+                // reachable stages.
                 var gNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                return _countGemSkillsBroadenedAP() >= gNeed;
+                return _countGemSkillsPerStageMaxAP() >= gNeed;
             }
 
             // "gemPouch:<prefix>" — per-prefix gem-orb gate. Granularity-aware:
@@ -598,10 +651,14 @@ package tracker {
                     && _fieldEvaluator.hasInLogicFieldWithMinWaves(wNeed);
             }
 
-            // "fieldToken: N"
+            // "fieldToken: N" — N stages currently in logic (full
+            // clearability), not N token items held.  Stage-prereq skills
+            // (e.g. L5 needs sBeam/sBolt/sBarrage/sFreeze) and pouches
+            // are factored in via `FieldLogicEvaluator`'s output, mirroring
+            // the apworld's `_count_clearable_stages` semantic.
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
-                return AV.sessionData.countItemsInRange(1, 122) >= ftNeed;
+                return _countFieldsInLogic() >= ftNeed;
             }
 
             // "shadowCore: N" — sum core amounts of held shadow-core stash
@@ -1251,6 +1308,124 @@ package tracker {
             "Armor Tearing", "Poison", "Slowing"
         ];
 
+        /** Per-stage element names whose evaluator has state-dependent
+         *  semantics (stash key checks, bolt-skill requirement, etc.) — these
+         *  stay GLOBAL for AND-group binding purposes so their existing
+         *  closures still drive the answer. */
+        private static const _NON_BINDABLE_ELEMENTS:Object = {
+            "Wizard Stash":    true,
+            "Wizard Tower":    true,
+            "Tower":           true,
+            "Wall":            true,
+            "Marked Monster":  true,
+            "Drop Holder":     true
+        };
+
+        /** Returns a candidate stage str_id list for `req` if it's a
+         *  per-stage STATIC token (eX, eX:N, Field_<sid>, minWave/minMonsters/
+         *  etc.).  Returns null for global tokens, dynamic tokens (gem `sX`
+         *  broadening, building `eX` w/ skill held, gemSkills:N) and special
+         *  elements.  The AND-group walker intersects these lists to enforce
+         *  the same-stage binding. */
+        private function _qualifyingStagesForToken(req:String):Array {
+            if (req == null || req.length == 0) return null;
+            var lower:String = req.toLowerCase();
+
+            if (req.indexOf("Field_") == 0) {
+                var fSid:String = req.substring(6);
+                if (fSid.length == 0) return null;
+                return [fSid];
+            }
+
+            var firstChar:String = req.charAt(0);
+            if ((firstChar == "e" || firstChar == "w") && req.length >= 2
+                    && _isUpper(req.charAt(1))) {
+                if (req.indexOf(":") < 0) {
+                    if (_BUILDING_ELEMENT_TO_SKILL[req] != null) return null;
+                    var elemName:String = _elementPrefixMap[req];
+                    if (elemName == null) return null;
+                    if (_NON_BINDABLE_ELEMENTS[elemName] === true) return null;
+                    if (_elementStages == null) return null;
+                    var stages:Array = _elementStages[elemName] as Array;
+                    if (stages == null || stages.length == 0) return null;
+                    return stages.concat();
+                }
+                var ec:int = req.indexOf(":");
+                var ehead:String = req.substring(0, ec);
+                var ecount:int = int(_trim(req.substring(ec + 1)));
+                var enameMapped:String = _elementPrefixMap[ehead];
+                var pascalName:String = (enameMapped != null)
+                                            ? _pascalNoSpaces(enameMapped)
+                                            : ehead.substring(1);
+                if (pascalName == "WizardTower" || pascalName == "WizardStash"
+                        || pascalName == "DropHolder")
+                    return null;
+                return _qualifyingStagesWithStatAtLeast(pascalName + "Count", ecount);
+            }
+
+            // Composite — must be checked BEFORE plain minMonsters which
+            // shares the "minmonsters" prefix.
+            if (lower.indexOf("minmonstersbeforewave12") == 0) {
+                var mbwIdx:int = lower.indexOf(":");
+                if (mbwIdx < 0) return null;
+                var mbwN:int = int(_trim(lower.substring(mbwIdx + 1)));
+                return _qualifyingStagesWithComposite("MonsterCount", mbwN,
+                                                      "WaveCount", 12);
+            }
+
+            var statKey:String = _statKeyForCounter(lower);
+            if (statKey != null) {
+                var colonIdx:int = lower.indexOf(":");
+                if (colonIdx < 0) return null;
+                var threshold:int = int(_trim(lower.substring(colonIdx + 1)));
+                return _qualifyingStagesWithStatAtLeast(statKey, threshold);
+            }
+
+            return null;
+        }
+
+        /** Map a lowercased counter-token head to its `levelStats` field name.
+         *  Returns null for tokens that aren't simple per-stage stats. */
+        private function _statKeyForCounter(lower:String):String {
+            if (lower.indexOf("minwave") == 0)          return "WaveCount";
+            if (lower.indexOf("beforewave") == 0)       return "WaveCount";
+            if (lower.indexOf("minmonsterhp") == 0)     return "MonsterHP";
+            if (lower.indexOf("minmonsterarmor") == 0)  return "MonsterArmor";
+            if (lower.indexOf("minmonsters") == 0)      return "MonsterCount";
+            if (lower.indexOf("minswarmlingarmor") == 0) return "SwarmlingMaxArmor";
+            if (lower.indexOf("minswarmlings") == 0)    return "SwarmlingCount";
+            if (lower.indexOf("mingiants") == 0)        return "GiantCount";
+            if (lower.indexOf("minreavers") == 0)       return "ReaverCount";
+            if (lower.indexOf("markedmonster") == 0)    return "MarkedMonsterCount";
+            return null;
+        }
+
+        private function _qualifyingStagesWithStatAtLeast(statKey:String,
+                                                          threshold:int):Array {
+            var result:Array = [];
+            if (AV.gameData == null || AV.gameData.levelStats == null) return result;
+            var allStats:Object = AV.gameData.levelStats;
+            for (var sid:String in allStats) {
+                var stats:Object = allStats[sid];
+                if (stats != null && int(stats[statKey]) >= threshold)
+                    result.push(sid);
+            }
+            return result;
+        }
+
+        private function _qualifyingStagesWithComposite(k1:String, v1:int,
+                                                        k2:String, v2:int):Array {
+            var result:Array = [];
+            if (AV.gameData == null || AV.gameData.levelStats == null) return result;
+            var allStats:Object = AV.gameData.levelStats;
+            for (var sid:String in allStats) {
+                var stats:Object = allStats[sid];
+                if (stats != null && int(stats[k1]) >= v1 && int(stats[k2]) >= v2)
+                    result.push(sid);
+            }
+            return result;
+        }
+
         /** True if any in-logic stage's `availableGems` lists `gemName` AND
          *  the player has the matching prefix's gempouch (when gating is on). */
         private function _gemReachableInLogic(gemName:String):Boolean {
@@ -1308,14 +1483,42 @@ package tracker {
             return _gemOnStage(currentStrId, gemName);
         }
 
-        /** Count of gem skills 'available' under the AP-logic broadened
-         *  rule (each one held OR reachable via some pouch). */
-        private function _countGemSkillsBroadenedAP():int {
-            var n:int = 0;
+        /** Per-stage max count for the AP-logic `gemSkills:N` counter.
+         *  A gem color counts on stage `s` iff the skill item is held
+         *  (works on any stage) OR `s` lists the gem in its starter pouch
+         *  (`stageAvailableGems[sid]`).  Returns the max over all in-logic
+         *  stages of |held ∪ stage_gems|.  Held-only is the floor when no
+         *  stage is in logic.  Prismatic-class requirements need the N
+         *  colors to coexist on a single stage. */
+        private function _countGemSkillsPerStageMaxAP():int {
+            var held:Object = {};
+            var heldCount:int = 0;
             for each (var skillName:String in _GEM_SKILL_NAMES) {
-                if (_hasGemSkillBroadenedAP(skillName)) n++;
+                var sIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx)) {
+                    held[skillName] = true;
+                    heldCount++;
+                }
             }
-            return n;
+            if (heldCount == 6) return 6;
+            var maxN:int = heldCount;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return maxN;
+            var fields:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in fields) {
+                if (fields[sid] != true) continue;
+                var n:int = heldCount;
+                for each (var sk:String in _GEM_SKILL_NAMES) {
+                    if (held[sk]) continue;
+                    var gn:String = _GEM_SKILL_TO_GEM_NAME[sk];
+                    if (gn != null && _gemOnStage(sid, gn)) n++;
+                }
+                if (n > maxN) {
+                    maxN = n;
+                    if (maxN == 6) return 6;
+                }
+            }
+            return maxN;
         }
 
         /** Count of gem skills 'available' on a specific stage (held OR

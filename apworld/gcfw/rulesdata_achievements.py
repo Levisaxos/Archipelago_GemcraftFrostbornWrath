@@ -4414,7 +4414,7 @@ achievement_requirements = {
         "game_id": 103,
         "description": "Unlock a wizard tower.",
         "details": "Unlock a wizard tower.",
-        "requirements": ["Field:L5"],
+        "requirements": ["Field_L5"],
         "required_effort": "Trivial",
     },
     "Need More Rage": {

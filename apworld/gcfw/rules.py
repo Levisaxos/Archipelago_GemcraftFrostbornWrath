@@ -223,6 +223,25 @@ def _count_field_tokens(state, player: int) -> int:
     return val
 
 
+def _count_clearable_stages(state, player: int) -> int:
+    """Count stages currently in logic — full reachability via
+    `_can_clear_stage_cached`, not just token + pouch.  Used by the
+    `fieldToken:N` achievement-requirement token where the player needs N
+    stages they can actually play through.  Distinct from
+    `_count_field_tokens` which is the floor-gate metric (token + pouch,
+    no per-stage skill prereqs) used to phase progression items."""
+    cache = _get_counter_cache(state, player)
+    val = cache.get("clear")
+    if val is not None:
+        return val
+    val = sum(
+        1 for s in GAME_DATA["stages"]
+        if _can_clear_stage_cached(state, player, s["str_id"])
+    )
+    cache["clear"] = val
+    return val
+
+
 # Prefix-encoded requirement vocabulary + counter dispatch tables live in
 # requirement_tokens.py (skill / trait / element prefix maps,
 # mode_tokens, level_stat_counters).  Adding a new token / counter is
@@ -532,18 +551,49 @@ def _has_gem_token(req: str, state, player: int) -> bool:
     return _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, []))
 
 
-def _count_gem_skills_broadened(state, player: int) -> int:
-    """Count of the 6 gem skills 'available' under the broadened rule —
-    each one counts iff the skill item is held OR a starter-gem stage is
-    reachable.  Used for the `gemSkills:N` counter."""
-    n = 0
+# Forward map: stage str_id -> frozenset of gem display names available on
+# that stage.  Derived once from `_STAGES_BY_GEM` for the per-stage gem-skill
+# counter below.
+_GEMS_BY_STAGE: dict = {}
+for _gem_disp, _sids in _STAGES_BY_GEM.items():
+    for _sid in _sids:
+        _GEMS_BY_STAGE.setdefault(_sid, set()).add(_gem_disp)
+_GEMS_BY_STAGE = {_sid: frozenset(_gems) for _sid, _gems in _GEMS_BY_STAGE.items()}
+if "_gem_disp" in dir():
+    del _gem_disp
+if "_sids" in dir():
+    del _sids
+if "_sid" in dir():
+    del _sid
+if "_gems" in dir():
+    del _gems
+
+
+def _count_gem_skills_per_stage_max(state, player: int) -> int:
+    """Per-stage max count for the `gemSkills:N` counter.
+
+    A gem color counts on stage `s` iff the skill item is held (works on any
+    stage) OR `s.AvailableGems` lists it (starter pouch).  Returns the max
+    over all reachable stages of |held ∪ stage_gems|.  Held-only is the
+    floor when no stage is reachable.  This is the correct rule for
+    prismatic-style requirements: the N colors must coexist on one stage."""
+    held = set()
     for token, gem_name in _GEM_TOKEN_TO_GEM_NAME.items():
         if state.has(item_prefix_map[token], player):
-            n += 1
+            held.add(gem_name)
+    held_count = len(held)
+    if held_count == 6:
+        return 6
+    max_n = held_count
+    for sid, stage_gems in _GEMS_BY_STAGE.items():
+        if not _can_reach_any_stage(state, player, [sid]):
             continue
-        if _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, [])):
-            n += 1
-    return n
+        n = len(held | stage_gems)
+        if n > max_n:
+            max_n = n
+            if max_n == 6:
+                return 6
+    return max_n
 
 
 # Building-element broadening: bare `eTraps` / `eLanterns` / `ePylons` /
@@ -910,13 +960,16 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         # gemSkills, BattleTraits / battleTraits, GemSkills, OtherSkills,
         # skills / Skills.
         if group_name in skill_counter_pools:
-            # `gemSkills:N` / `GemSkills:N` broaden the same way as the
-            # bare `sX` tokens — a gem skill counts as "available" if
-            # held OR a starter-gem stage is reachable.  All other
-            # counter pools (strikeSpells, enhancementSpells,
-            # BattleTraits, OtherSkills, skills) stay strict-item-count.
+            # `gemSkills:N` / `GemSkills:N` use a per-stage max: a gem skill
+            # counts on stage `s` if held OR `s` has it in `AvailableGems`,
+            # and the requirement passes if any reachable stage hits the
+            # count.  Prismatic-class achievements need the N colors to
+            # coexist on a single stage, not be scattered across reachable
+            # stages.  All other counter pools (strikeSpells,
+            # enhancementSpells, BattleTraits, OtherSkills, skills) stay
+            # strict-item-count.
             if group_name in ("gemSkills", "GemSkills"):
-                if _count_gem_skills_broadened(state, player) < count_needed:
+                if _count_gem_skills_per_stage_max(state, player) < count_needed:
                     return False
             else:
                 pool = skill_counter_pools[group_name]
@@ -962,7 +1015,12 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
 
         # Other item-collection counters — each counts a different pool.
         if group_name == "fieldToken":
-            return _count_field_tokens(state, player) >= count_needed
+            # Stages in logic (full clearability), not just tokens held.
+            # The floor-gate semantic (token + pouch) lives in
+            # `_count_field_tokens` and is used elsewhere for progression
+            # phasing; for the achievement-requirement token we want
+            # "stages the player can actually play".
+            return _count_clearable_stages(state, player) >= count_needed
         if group_name == "shadowCore":
             # Sum core amounts of held shadow-core stash items.  All stashes
             # are progression so the full collected total counts toward the gate.
@@ -1140,13 +1198,29 @@ _COST_REACH:   int = 3
 def _compile_element_or(elem_names, player: int):
     """Compile an "any of these elements is reachable" check.
 
+    Returns just the closure for backwards compatibility.  See
+    `_compile_element_or_full` for the AND-group-binding-aware version.
+    """
+    fn, _static = _compile_element_or_full(elem_names, player)
+    return fn
+
+
+def _compile_element_or_full(elem_names, player: int):
+    """Compile an "any of these elements is reachable" check, returning
+    `(fn, static_set_or_None)`.
+
+    `static_set` is the union of qualifying stage str_ids if the disjunction
+    is purely data-driven (no STASH, no universally-true member).  None
+    signals "not bindable in an AND-group" — either because the closure is
+    `_always_true`/`_always_false`, or because it routes through a
+    state-dependent path (`_any_stash_reachable`) that doesn't reduce to a
+    fixed stage set.
+
     Each element is one of:
       - "Wizard Stash" → any wizard-stash key held AND its stage clearable
       - present in level data → reachable iff any qualifying stage reachable
       - universally present (not in _PRESENT_COUNT_FIELDS) → always True
     """
-    # Resolution: each member becomes either "STASH" sentinel, an "ALWAYS"
-    # short-circuit, or a precomputed list of qualifying stage str_ids.
     members: list = []
     for n in elem_names:
         if n == "Wizard Stash":
@@ -1155,18 +1229,21 @@ def _compile_element_or(elem_names, player: int):
         elem_pascal = _element_count_field(n)[:-len("Count")]
         stages = _qualifying_stages_for_element(elem_pascal, 1)
         if stages is None:
-            return _always_true  # one universal member → whole disjunction true
+            return _always_true, None  # one universal member → whole disjunction true
         members.append(("STAGES", stages))
 
     if not members:
-        return _always_false
+        return _always_false, None
+
+    has_stash = any(k == "STASH" for k, _ in members)
 
     # Specialise common shapes.
     if len(members) == 1:
         kind, stages = members[0]
         if kind == "STASH":
-            return lambda state: _any_stash_reachable(state, player)
-        return lambda state: _can_reach_any_stage(state, player, stages)
+            return lambda state: _any_stash_reachable(state, player), None
+        return (lambda state: _can_reach_any_stage(state, player, stages),
+                frozenset(stages))
 
     def _multi(state):
         for kind, stages in members:
@@ -1176,11 +1253,17 @@ def _compile_element_or(elem_names, player: int):
             elif _can_reach_any_stage(state, player, stages):
                 return True
         return False
-    return _multi
+
+    if has_stash:
+        return _multi, None
+    union = set()
+    for _kind, stages in members:
+        union.update(stages)
+    return _multi, frozenset(union)
 
 
 def _compile_req(req: str, world, is_progressive: bool):
-    """Compile a single requirement string to a `((state) -> bool, cost)` pair.
+    """Compile a single requirement string to `((state) -> bool, cost, static_set)`.
 
     Mirrors `_eval_req` branch-for-branch — keep them in sync. The returned
     closure binds all per-call constants (item names, qualifying stage lists,
@@ -1188,6 +1271,14 @@ def _compile_req(req: str, world, is_progressive: bool):
     The cost is one of `_COST_CONST` / `_COST_HAS` / `_COST_COUNTER` /
     `_COST_REACH` and lets `_compile_dnf` sort cheap predicates first so AND
     short-circuits earlier in the common (False) case during fill.
+
+    `static_set` carries the same-stage-binding hint:
+      * `None` — token is global (no stage constraint).  The closure is the
+        full answer.
+      * `frozenset` of stage str_ids — token is per-stage and is satisfied
+        iff a reachable stage in that frozen set exists.  `_compile_dnf`
+        intersects these across an AND-group so multi-token requirements
+        like `[eApparition, eShrine, minWave:50]` bind to a single stage.
 
     Takes `world` (not just player) so gem-skill broadening can build the
     per-stage gempouch checker — the broadening must respect the player's
@@ -1200,21 +1291,21 @@ def _compile_req(req: str, world, is_progressive: bool):
     if req.startswith("Field_"):
         sid = req[len("Field_"):]
         return (lambda state: _can_clear_stage_cached(state, player, sid),
-                _COST_REACH)
+                _COST_REACH, frozenset({sid}))
 
     if req.startswith("Achievement:"):
         if not is_progressive:
-            return (_always_true, _COST_CONST)
+            return (_always_true, _COST_CONST, None)
         loc_name = req
         def _ach_reachable(state):
             try:
                 return state.can_reach(loc_name, "Location", player)
             except KeyError:
                 return False
-        return (_ach_reachable, _COST_REACH)
+        return (_ach_reachable, _COST_REACH, None)
 
     if req in mode_tokens:
-        return (_always_false, _COST_CONST)
+        return (_always_false, _COST_CONST, None)
 
     if req in item_prefix_map:
         item_name = item_prefix_map[req]
@@ -1227,29 +1318,32 @@ def _compile_req(req: str, world, is_progressive: bool):
                     if not (state.has(n, player) or b(state)):
                         return False
                     return _count_field_tokens(state, player) >= f
-                return (_gem_token_floored, _COST_REACH)
+                return (_gem_token_floored, _COST_REACH, None)
             def _gem_token(state, n=item_name, b=broaden):
                 if state.has(n, player):
                     return True
                 return b(state)
-            return (_gem_token, _COST_REACH)
+            return (_gem_token, _COST_REACH, None)
         if floor:
             return (lambda state, n=item_name, f=floor: (
                 state.has(n, player) and _count_field_tokens(state, player) >= f
-            ), _COST_COUNTER)
-        return (lambda state, n=item_name: state.has(n, player), _COST_HAS)
+            ), _COST_COUNTER, None)
+        return (lambda state, n=item_name: state.has(n, player), _COST_HAS, None)
 
     if req in element_prefix_map:
-        fn = _compile_element_or(element_prefix_map[req], player)
         # Building elements (eTraps etc.) also pass when the matching skill
-        # is held — broaden the compiled disjunction.
+        # is held — broaden the compiled disjunction.  Holding the skill
+        # makes the token satisfied on any stage, so it's not bindable.
         skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
         if skill_item is not None:
-            inner = fn
-            def _bld_elem(state, n=skill_item, f=inner):
+            fn = _compile_element_or(element_prefix_map[req], player)
+            def _bld_elem(state, n=skill_item, f=fn):
                 return state.has(n, player) or f(state)
-            return (_bld_elem, _COST_REACH)
-        return (fn, _COST_CONST if fn is _always_true else _COST_REACH)
+            return (_bld_elem, _COST_REACH, None)
+        fn, static_set = _compile_element_or_full(element_prefix_map[req], player)
+        return (fn,
+                _COST_CONST if fn is _always_true else _COST_REACH,
+                static_set)
 
     if ":" in req:
         group_name, count_str = req.split(":", 1)
@@ -1257,21 +1351,24 @@ def _compile_req(req: str, world, is_progressive: bool):
         try:
             count_needed = int(count_str.strip())
         except ValueError:
-            return (_always_true, _COST_CONST)
+            return (_always_true, _COST_CONST, None)
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _eval_req. Reachable iff any group member is reachable.
         if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
-            fn = _compile_element_or(element_prefix_map[group_name], player)
-            return (fn, _COST_CONST if fn is _always_true else _COST_REACH)
+            fn, static_set = _compile_element_or_full(element_prefix_map[group_name], player)
+            return (fn,
+                    _COST_CONST if fn is _always_true else _COST_REACH,
+                    static_set)
 
         if _is_prefix_token(group_name, "e"):
             elem_pascal = group_name[1:]
             stages = _qualifying_stages_for_element(elem_pascal, count_needed)
             if stages is None:
-                return (_always_true, _COST_CONST)
+                return (_always_true, _COST_CONST, None)
+            stages_fs = frozenset(stages)
             return (lambda state: _can_reach_any_stage(state, player, stages),
-                    _COST_REACH)
+                    _COST_REACH, stages_fs)
 
         if group_name in skill_counter_pools:
             floor_table = _SKILL_COUNTER_FLOORS.get(group_name)
@@ -1290,7 +1387,7 @@ def _compile_req(req: str, world, is_progressive: bool):
                             if state.has(item_name, player) or broaden(state):
                                 n += 1
                         return n >= count_needed
-                    return (_gemskills_count_check, _COST_REACH)
+                    return (_gemskills_count_check, _COST_REACH, None)
                 def _gemskills_count_check_floored(state, fl=counter_floor):
                     n = 0
                     for item_name, broaden in pairs:
@@ -1299,20 +1396,21 @@ def _compile_req(req: str, world, is_progressive: bool):
                     if n < count_needed:
                         return False
                     return _count_field_tokens(state, player) >= fl
-                return (_gemskills_count_check_floored, _COST_REACH)
+                return (_gemskills_count_check_floored, _COST_REACH, None)
             pool = tuple(skill_counter_pools[group_name])
             if counter_floor is None:
                 return (lambda state: sum(1 for n in pool if state.has(n, player)) >= count_needed,
-                        _COST_COUNTER)
+                        _COST_COUNTER, None)
             return (lambda state, fl=counter_floor: (
                 sum(1 for n in pool if state.has(n, player)) >= count_needed
                 and _count_field_tokens(state, player) >= fl
-            ), _COST_COUNTER)
+            ), _COST_COUNTER, None)
 
         if group_name in level_stat_counters:
             stages = _qualifying_stages_for_stat(group_name, count_needed)
+            stages_fs = frozenset(stages)
             return (lambda state: _can_reach_any_stage(state, player, stages),
-                    _COST_REACH)
+                    _COST_REACH, stages_fs)
 
         if group_name in _TALISMAN_FRAGMENT_COUNTERS:
             names = _TALISMAN_FRAGMENT_COUNTERS[group_name]
@@ -1320,52 +1418,53 @@ def _compile_req(req: str, world, is_progressive: bool):
                      if group_name == "talismanFragments" else None)
             if floor is None:
                 return (lambda state: _count_talisman_fragments(state, player, names) >= count_needed,
-                        _COST_COUNTER)
+                        _COST_COUNTER, None)
             return (lambda state: (
                 _count_talisman_fragments(state, player, names) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            ), _COST_COUNTER)
+            ), _COST_COUNTER, None)
 
         if group_name in _TALISMAN_PROPERTY_TOKENS:
             prop_id = _TALISMAN_PROPERTY_TOKENS[group_name]
             return (lambda state: _sum_talisman_property(prop_id, state, player) >= count_needed,
-                    _COST_COUNTER)
+                    _COST_COUNTER, None)
 
         if group_name == "fieldToken":
-            return (lambda state: _count_field_tokens(state, player) >= count_needed,
-                    _COST_COUNTER)
+            # Stages in logic, not tokens held — see `_eval_req` comment.
+            return (lambda state: _count_clearable_stages(state, player) >= count_needed,
+                    _COST_REACH, None)
         if group_name == "shadowCore":
             return (lambda state: _sum_shadow_cores(state, player) >= count_needed,
-                    _COST_COUNTER)
+                    _COST_COUNTER, None)
         if group_name == "wizardLevel":
             needed_items = (count_needed + 1) // 2
             return (lambda state: _count_xp_items(state, player) >= needed_items,
-                    _COST_COUNTER)
+                    _COST_COUNTER, None)
         if group_name == "talismanRow":
             floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
             if floor is None:
                 return (lambda state: _count_complete_talisman_rows(state, player) >= count_needed,
-                        _COST_COUNTER)
+                        _COST_COUNTER, None)
             return (lambda state: (
                 _count_complete_talisman_rows(state, player) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            ), _COST_COUNTER)
+            ), _COST_COUNTER, None)
         if group_name == "talismanColumn":
             floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
             if floor is None:
                 return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
-                        _COST_COUNTER)
+                        _COST_COUNTER, None)
             return (lambda state: (
                 _count_complete_talisman_columns(state, player) >= count_needed
                 and _count_field_tokens(state, player) >= floor
-            ), _COST_COUNTER)
+            ), _COST_COUNTER, None)
         if group_name == "skillPoints":
             return (lambda state: _count_skill_points(state, player) >= count_needed,
-                    _COST_COUNTER)
+                    _COST_COUNTER, None)
 
-        return (_always_true, _COST_CONST)  # Unknown counter
+        return (_always_true, _COST_CONST, None)  # Unknown counter
 
-    return (_always_true, _COST_CONST)  # Metadata
+    return (_always_true, _COST_CONST, None)  # Metadata
 
 
 def _compose_and(compiled):
@@ -1411,36 +1510,69 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
       * Outer OR: groups sorted by their cheapest member so a True on a
         cheap group skips the expensive groups entirely. Stable-sort keeps
         author-intent order among groups with equal min-cost.
+
+    Same-stage binding: tokens that compile with a `static_set` (per-stage
+    qualifying stage list — eX, eX:N, multi-element OR, minWave:N, Field_X,
+    etc.) collapse into a single consolidated reach check on the
+    intersection of their stage sets.  This implements the rule that all
+    per-stage requirements in an inner AND-group must be satisfied on the
+    same stage — fixes false-positives where multiple eX tokens were each
+    individually satisfied on different reachable stages.  Dynamic
+    per-stage tokens (gem `sX` broadening, building `eX` with skill held,
+    `gemSkills:N`) keep their individual closures and run alongside the
+    consolidated check.
     """
     if not groups:
         return _always_true
 
+    player = world.player
     compiled_groups: list = []
     group_min_costs: list = []
     for group in groups:
         items = [_compile_req(r, world, is_progressive) for r in group]
-        # Drop unconditionally-true predicates inside an AND-group: they
-        # contribute nothing and would waste a function call. If an
-        # always_false slips in we collapse the whole group right away.
-        filtered: list = []
+        # Partition into globals (no per-stage binding) and static per-stage
+        # tokens (carry a frozenset that AND-binds across the group).
+        # Drop _always_true entries; collapse on _always_false.
+        globals_list: list = []
+        static_sets: list = []
         dead_group = False
-        for fn, cost in items:
+        for fn, cost, static_set in items:
             if fn is _always_true:
                 continue
             if fn is _always_false:
                 dead_group = True
                 break
-            filtered.append((fn, cost))
+            if static_set is not None:
+                static_sets.append(static_set)
+            else:
+                globals_list.append((fn, cost))
         if dead_group:
             continue  # this AND-group can never satisfy
-        if not filtered:
+        if not globals_list and not static_sets:
             # All predicates were always_true → group is unconditionally true,
             # so the whole DNF is true regardless of other groups.
             return _always_true
+        if static_sets:
+            intersection = static_sets[0]
+            for s in static_sets[1:]:
+                intersection = intersection & s
+                if not intersection:
+                    break
+            if not intersection:
+                # No stage satisfies all per-stage tokens in this AND-group.
+                continue
+            intersection = frozenset(intersection)
+            # One consolidated reach check replaces every individual static
+            # per-stage closure in this AND-group.
+            globals_list.append(
+                ((lambda state, _stages=intersection:
+                      _can_reach_any_stage(state, player, _stages)),
+                 _COST_REACH)
+            )
         # Sort cheap predicates first inside the group.
-        filtered.sort(key=lambda t: t[1])
-        compiled_groups.append([fn for fn, _ in filtered])
-        group_min_costs.append(filtered[0][1])
+        globals_list.sort(key=lambda t: t[1])
+        compiled_groups.append([fn for fn, _ in globals_list])
+        group_min_costs.append(globals_list[0][1])
 
     if not compiled_groups:
         # Every group was dead (always_false somewhere) → DNF is unsat.

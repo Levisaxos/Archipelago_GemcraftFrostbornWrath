@@ -66,7 +66,7 @@
       "apId": 2006,
       "game_id": 265,
       "description": "Activate shrines a total of 12 times.",
-      "required_effort": "Major",
+      "required_effort": "Extreme",
       "requirements": [
         [
           "eShrine:1",
@@ -104,7 +104,7 @@
       "apId": 2462,
       "game_id": 401,
       "description": "Add a different enhancement on an enhanced gem.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "enhancementSpells:2"
       ],
@@ -248,7 +248,7 @@
       "apId": 2150,
       "game_id": 569,
       "description": "Beat 30 waves using at most grade 2 gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:30"
       ],
@@ -359,7 +359,7 @@
       "apId": 2512,
       "game_id": 136,
       "description": "Beat 60 waves.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:60"
       ]
@@ -417,7 +417,7 @@
       "apId": 2540,
       "game_id": 88,
       "description": "Break 3 tombs open.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "eTomb:3"
       ],
@@ -427,7 +427,7 @@
       "apId": 2572,
       "game_id": 63,
       "description": "Break 4 tombs open.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "eTomb:4"
       ],
@@ -448,20 +448,20 @@
       "apId": 2409,
       "game_id": 76,
       "description": "Build 15 amplifiers.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "sAmplifiers",
-        "talismanRow:3"
+        "talismanRow:1"
       ]
     },
     "Power Exchange": {
       "apId": 2408,
       "game_id": 77,
       "description": "Build 25 amplifiers.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "requirements": [
         "sAmplifiers",
-        "talismanCount:25"
+        "talismanRow:2"
       ]
     },
     "Amplifinity": {
@@ -573,7 +573,7 @@
       "apId": 2433,
       "game_id": 493,
       "description": "Build 100 walls and start 100 enraged waves.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eWall",
         "minWave:100"
@@ -615,7 +615,7 @@
       "apId": 2523,
       "game_id": 282,
       "description": "Build 240 walls.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "requirements": [
         "eWall",
         "fieldToken:25",
@@ -660,7 +660,7 @@
       "apId": 2444,
       "game_id": 324,
       "description": "Call 35 waves early.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:35"
       ],
@@ -670,7 +670,7 @@
       "apId": 2012,
       "game_id": 325,
       "description": "Call 70 waves early.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:70"
       ],
@@ -700,7 +700,7 @@
       "apId": 2511,
       "game_id": 531,
       "description": "Cast freeze on an apparition 3 times.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "tRitual"
@@ -710,7 +710,7 @@
       "apId": 2132,
       "game_id": 589,
       "description": "Cast 2 ice shards on the same monster.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sIceShards"
       ],
@@ -720,7 +720,7 @@
       "apId": 2427,
       "game_id": 590,
       "description": "Cast 4 ice shards on the same monster.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sIceShards"
       ]
@@ -739,7 +739,7 @@
       "apId": 2080,
       "game_id": 592,
       "description": "Cast 8 ice shards on the same monster.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "requirements": [
         "sIceShards",
         "minWave:50"
@@ -836,7 +836,7 @@
       "apId": 2148,
       "game_id": 527,
       "description": "Crack a monster egg open while time is frozen.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eSwarmQueen:1"
       ],
@@ -856,7 +856,7 @@
       "apId": 2415,
       "game_id": 29,
       "description": "Create a gem of 6 components.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "gemSkills:6"
       ],
@@ -876,7 +876,7 @@
       "apId": 2174,
       "game_id": 44,
       "description": "Create a grade 5 gem.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:10"
       ],
@@ -908,7 +908,7 @@
       "apId": 2490,
       "game_id": 414,
       "description": "Deal 10.000 poison damage to a monster.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "minMonsterHP:15000"
@@ -988,7 +988,7 @@
       "apId": 2396,
       "game_id": 214,
       "description": "Deal 100 gem wasp stings to the same monster.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minMonsterHP:1000"
       ]
@@ -1037,7 +1037,7 @@
       "description": "Deliver 100 banishments with your orb.",
       "required_effort": "Trivial",
       "requirements": [
-        "minMonsters:200"
+        "minMonsters:100"
       ],
       "details": "Banish 100 monsters using the orb (orb gem with banishment effect)."
     },
@@ -1047,7 +1047,7 @@
       "description": "Deliver 400 banishments with your orb.",
       "required_effort": "Minor",
       "requirements": [
-        "minMonsters:800"
+        "minMonsters:400"
       ],
       "details": "Banish 400 monsters using the orb."
     },
@@ -1055,7 +1055,7 @@
       "apId": 2520,
       "game_id": 203,
       "description": "Deliver gem bomb and wasp kills only.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "fieldToken:10"
       ],
@@ -1107,8 +1107,12 @@
       "description": "Demolish a pylon.",
       "required_effort": "Trivial",
       "requirements": [
-        "sPylons",
-        "sDemolition"
+        [
+          "ePylons"
+        ],
+        [
+          "sPylons"
+        ]
       ]
     },
     "Groundfill": {
@@ -1150,7 +1154,7 @@
       "apId": 2295,
       "game_id": 580,
       "description": "Deplete a mana shard while there is a shadow on the battlefield.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tRitual",
         "eManaShard",
@@ -1162,7 +1166,7 @@
       "apId": 2323,
       "game_id": 461,
       "description": "Deplete a shard when there are more than 300 swarmlings on the battlefield.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eManaShard",
         "minSwarmlings:300"
@@ -1188,7 +1192,7 @@
       "apId": 2385,
       "game_id": 578,
       "description": "Destroy a building and a non-monster creature with one gem bomb.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "tRitual",
@@ -1209,7 +1213,7 @@
       "apId": 2593,
       "game_id": 579,
       "description": "Destroy a dwelling and kill a monster with one gem bomb.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eAbandonedDwelling"
       ],
@@ -1228,7 +1232,7 @@
       "apId": 2072,
       "game_id": 593,
       "description": "Destroy a full health possession obelisk with one gem bomb blast.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eObelisk",
         "fieldToken:25",
@@ -1240,7 +1244,7 @@
       "apId": 2084,
       "game_id": 521,
       "description": "Destroy a jar of wasps, but don't have any wasp kills.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eJarOfWasps:1"
       ]
@@ -1296,7 +1300,7 @@
       "apId": 2375,
       "game_id": 522,
       "description": "Destroy a watchtower before it could fire.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "sBolt",
         "eWatchtower",
@@ -1331,7 +1335,7 @@
       "apId": 2068,
       "game_id": 96,
       "description": "Destroy 8 beacons before wave 8.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eBeacon:8"
       ],
@@ -1404,7 +1408,7 @@
         "tDarkMasonry",
         "minWave:30"
       ],
-      "details": "Healing beacons spawn from a mod feature; not statically placed."
+      "details": "Healing beacons spawn from a dark masonry"
     },
     "Nest Blaster": {
       "apId": 2362,
@@ -1439,7 +1443,7 @@
       "apId": 2320,
       "game_id": 60,
       "description": "Destroy 3 monster nests.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "eMonsterNest:3"
       ]
@@ -1448,7 +1452,7 @@
       "apId": 2120,
       "game_id": 62,
       "description": "Destroy 5 monster nests.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "eMonsterNest:5"
       ]
@@ -1504,7 +1508,7 @@
       "apId": 2564,
       "game_id": 261,
       "description": "Don't let any monster touch your orb for 60 beaten waves.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:60"
       ],
@@ -1536,7 +1540,7 @@
       "apId": 2212,
       "game_id": 344,
       "description": "Drop 48 gem bombs on beacons.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eBeacon:4",
         "tDarkMasonry"
@@ -1608,7 +1612,7 @@
       "apId": 2049,
       "game_id": 523,
       "description": "Enhance a pure bleeding gem having random priority with beam.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "sBleeding"
@@ -1618,7 +1622,7 @@
       "apId": 2290,
       "game_id": 524,
       "description": "Enhance a pure poison gem having random priority with beam.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "sPoison"
@@ -1629,7 +1633,7 @@
       "apId": 2491,
       "game_id": 525,
       "description": "Enhance a pure slowing gem having random priority with beam.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "sSlowing"
@@ -1657,7 +1661,7 @@
       "apId": 2432,
       "game_id": 336,
       "description": "Enrage 30 waves.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:30"
       ]
@@ -1666,7 +1670,7 @@
       "apId": 2434,
       "game_id": 337,
       "description": "Enrage 80 waves.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:80"
       ],
@@ -1715,7 +1719,7 @@
       "apId": 2021,
       "game_id": 359,
       "description": "Fill all the sockets in your talisman.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "talismanFragments:25",
         "shadowCore:15000"
@@ -1769,7 +1773,7 @@
       "apId": 2226,
       "game_id": 366,
       "description": "Find 3 talisman fragments.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minWave:100"
       ]
@@ -1838,7 +1842,7 @@
       "apId": 2440,
       "game_id": 314,
       "description": "Freeze 111 frozen monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "sFreeze"
       ],
@@ -1848,7 +1852,7 @@
       "apId": 2246,
       "game_id": 313,
       "description": "Freeze 130 whited out monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "sFreeze",
         "sWhiteout"
@@ -1957,7 +1961,7 @@
       "required_effort": "Trivial",
       "requirements": [
         [
-          "eDropHolder"
+          "eDropHolder:2"
         ]
       ]
     },
@@ -2103,7 +2107,7 @@
       "apId": 2614,
       "game_id": 224,
       "description": "Have 20.000 initial mana.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:40",
         "talismanRow:2"
@@ -2113,7 +2117,7 @@
       "apId": 2331,
       "game_id": 229,
       "description": "Have 40.000 initial mana.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:50",
         "talismanRow:2"
@@ -2124,7 +2128,7 @@
       "apId": 2325,
       "game_id": 285,
       "description": "Have 80.000 initial mana.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "talismanRow:3",
         "fieldToken:50"
@@ -2135,7 +2139,7 @@
       "apId": 2284,
       "game_id": 284,
       "description": "Have 1.200 monsters on the battlefield at the same time.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "minMonsters:1200"
       ],
@@ -2154,7 +2158,7 @@
       "apId": 2248,
       "game_id": 422,
       "description": "Have 5.000 shadow cores at the start of the battle.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "shadowCore:5000"
       ],
@@ -2164,7 +2168,7 @@
       "apId": 2152,
       "game_id": 423,
       "description": "Have 25.000 shadow cores at the start of the battle.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "shadowCore:25000"
       ],
@@ -2195,7 +2199,7 @@
       "apId": 2213,
       "game_id": 53,
       "description": "Have a grade 1 gem with 1.500 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "minWave:20"
@@ -2206,7 +2210,7 @@
       "apId": 2567,
       "game_id": 57,
       "description": "Have a grade 1 gem with 4.500 hits.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "requirements": [
         "minGemGrade:1",
         "sBeam",
@@ -2227,7 +2231,6 @@
       "description": "Have a grade 1 gem with 500 hits.",
       "required_effort": "Trivial",
       "requirements": [
-        "minGemGrade:1",
         "sBeam"
       ],
       "details": "Reach 500 hits on a grade-1 gem."
@@ -2236,7 +2239,7 @@
       "apId": 2032,
       "game_id": 321,
       "description": "Have a Maximum Charge of 300% for the Barrage Spell.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBarrage",
         "tmBarrageCharge:100"
@@ -2247,7 +2250,7 @@
       "apId": 2258,
       "game_id": 320,
       "description": "Have a Maximum Charge of 300% for the Freeze Spell.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "tmFreezeCharge:100"
@@ -2258,7 +2261,7 @@
       "apId": 2481,
       "game_id": 475,
       "description": "Have a pure armor tearing gem with 3.000 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sArmorTearing",
         "sBeam"
@@ -2269,7 +2272,7 @@
       "apId": 2113,
       "game_id": 474,
       "description": "Have a pure bleeding gem with 2.500 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBleeding",
         "sBeam"
@@ -2280,7 +2283,7 @@
       "apId": 2318,
       "game_id": 473,
       "description": "Have a pure critical hit gem with 2.000 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sCriticalHit",
         "sBeam"
@@ -2290,7 +2293,7 @@
       "apId": 2220,
       "game_id": 478,
       "description": "Have a pure mana leeching gem with 4.500 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "sBeam",
@@ -2302,7 +2305,7 @@
       "apId": 2163,
       "game_id": 476,
       "description": "Have a pure poison gem with 3.500 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "sBeam"
@@ -2313,7 +2316,7 @@
       "apId": 2026,
       "game_id": 477,
       "description": "Have a pure slowing gem with 4.000 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sSlowing",
         "sBeam"
@@ -2390,7 +2393,7 @@
       "apId": 2209,
       "game_id": 499,
       "description": "Have a watchtower kill 39 monsters.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "eWatchtower"
       ],
@@ -2411,7 +2414,7 @@
       "description": "Have at least 5 different talisman properties.",
       "required_effort": "Trivial",
       "requirements": [
-        "talismanFragments:2"
+        "tmProperties:5"
       ]
     },
     "Versatile Charm": {
@@ -2456,7 +2459,7 @@
       "apId": 2369,
       "game_id": 425,
       "description": "Have 4 barrage enhanced gems at the same time.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "sBarrage"
       ]
@@ -2506,7 +2509,7 @@
       "apId": 2194,
       "game_id": 295,
       "description": "Have 4 beam enhanced gems at the same time.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "sBeam"
       ]
@@ -2585,7 +2588,7 @@
       "apId": 2626,
       "game_id": 514,
       "description": "Have 40 fields lit in Endurance mode.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "mEndurance",
         "fieldToken:40"
@@ -2595,7 +2598,7 @@
       "apId": 2316,
       "game_id": 515,
       "description": "Have 60 fields lit in Endurance mode.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "mEndurance",
         "fieldToken:60"
@@ -2605,7 +2608,7 @@
       "apId": 2153,
       "game_id": 516,
       "description": "Have 80 fields lit in Endurance mode.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "mEndurance",
         "fieldToken:80"
@@ -2624,7 +2627,7 @@
       "apId": 2102,
       "game_id": 510,
       "description": "Have 50 fields lit in Journey mode.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:50"
       ]
@@ -2633,7 +2636,7 @@
       "apId": 2308,
       "game_id": 511,
       "description": "Have 70 fields lit in Journey mode.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:70"
       ]
@@ -2642,7 +2645,7 @@
       "apId": 2082,
       "game_id": 512,
       "description": "Have 90 fields lit in Journey mode.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:90"
       ]
@@ -2671,7 +2674,7 @@
       "apId": 2167,
       "game_id": 519,
       "description": "Have 50 fields lit in Trial mode.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "mTrial",
         "fieldToken:50"
@@ -2797,7 +2800,7 @@
       "apId": 2300,
       "game_id": 212,
       "description": "Have 900 monsters on the battlefield at the same time.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "minMonsters:900"
       ],
@@ -2810,8 +2813,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "sSlowing",
-        "minMonsters:90",
-        "fieldToken:15"
+        "minMonsters:90"
       ],
       "details": "Have 90 monsters slowed at the same instant."
     },
@@ -2819,7 +2821,7 @@
       "apId": 2224,
       "game_id": 204,
       "description": "Have more than 75% of the monster kills caused by poison.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "sPoison",
@@ -2908,15 +2910,22 @@
       "description": "Have 15 or more beacons standing at the end of the battle.",
       "required_effort": "Trivial",
       "requirements": [
-        "tDarkMasonry",
-        "minWave:20"
+        [
+          "tDarkMasonry",
+          "minWave:20"
+        ],
+        [
+          "tDarkMasonry",
+          "minWave:10",
+          "eBeacon:5"
+        ]
       ]
     },
     "Put Those Down Now!": {
       "apId": 2424,
       "game_id": 595,
       "description": "Have 10 orblets carried by monsters at the same time.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sOrbOfPresence"
       ],
@@ -2926,7 +2935,7 @@
       "apId": 2312,
       "game_id": 596,
       "description": "Have 3 pylons charged up to 3 shots each.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sPylons"
       ]
@@ -3162,7 +3171,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "sTraps",
-        "minMonsterHP:300"
+        "minMonsterHP:400"
       ],
       "details": "Hit the same monster with traps 100 times."
     },
@@ -3294,7 +3303,7 @@
       "apId": 2079,
       "game_id": 482,
       "description": "Kill a bleeding giant with poison.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBleeding",
         "sPoison",
@@ -3429,7 +3438,7 @@
       "apId": 2130,
       "game_id": 159,
       "description": "Kill a possessed giant with barrage.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBarrage",
         "ePossessedMonster",
@@ -3440,7 +3449,7 @@
       "apId": 2157,
       "game_id": 529,
       "description": "Kill a shadow while time is frozen.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eShadow"
       ]
@@ -3449,7 +3458,7 @@
       "apId": 2469,
       "game_id": 576,
       "description": "Kill a shadow with a shot fired by a gem having at least 5.000 hits.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eShadow",
         "sBeam"
@@ -3674,7 +3683,7 @@
       "apId": 2368,
       "game_id": 545,
       "description": "Kill 60 banished monsters with shrines.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eShrine",
         "minMonsters:120"
@@ -3718,7 +3727,7 @@
       "apId": 2097,
       "game_id": 549,
       "description": "Kill 190 banished monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minMonsters:380"
       ]
@@ -3785,7 +3794,7 @@
       "apId": 2251,
       "game_id": 456,
       "description": "Kill 240 bleeding monsters.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "sBleeding"
       ],
@@ -3805,7 +3814,7 @@
       "apId": 2176,
       "game_id": 458,
       "description": "Kill 960 bleeding monsters.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "requirements": [
         "sBleeding",
         "minMonsters:960"
@@ -3940,10 +3949,10 @@
       "apId": 2061,
       "game_id": 150,
       "description": "Kill 600 monsters before wave 12 starts.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "requirements": [
         "mEndurance",
-        "minMonstersBeforeWave12:300"
+        "minMonstersBeforeWave12:600"
       ],
       "details": "Kill 600 monsters before wave 12 starts. ."
     },
@@ -3983,7 +3992,7 @@
       "apId": 2584,
       "game_id": 532,
       "description": "Kill 170 monsters while there are at least 2 wraiths in the air.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tRitual",
         "eWraith"
@@ -4032,7 +4041,7 @@
       "apId": 2309,
       "game_id": 198,
       "description": "Kill 25 monsters with frozen corpse explosion.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze"
       ],
@@ -4239,7 +4248,7 @@
       "apId": 2532,
       "game_id": 144,
       "description": "Kill 999 swarmlings.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "requirements": [
         "minSwarmlings:999"
       ],
@@ -4279,7 +4288,7 @@
       "apId": 2077,
       "game_id": 184,
       "description": "Kill 30 whited out monsters with barrage.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBarrage",
         "sWhiteout"
@@ -4289,7 +4298,7 @@
       "apId": 2050,
       "game_id": 183,
       "description": "Kill 30 whited out monsters with beam.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBeam",
         "sWhiteout"
@@ -4299,7 +4308,7 @@
       "apId": 2288,
       "game_id": 182,
       "description": "Kill 30 whited out monsters with bolt.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBolt",
         "sWhiteout"
@@ -4320,7 +4329,7 @@
       "apId": 2016,
       "game_id": 104,
       "description": "Leave a monster nest at 1 hit point at the end of the battle.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eMonsterNest:1"
       ],
@@ -4434,7 +4443,7 @@
       "apId": 2632,
       "game_id": 232,
       "description": "Leech 10.000 mana with gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "talismanRow:1",
@@ -4445,7 +4454,7 @@
       "apId": 2438,
       "game_id": 447,
       "description": "Leech 700 mana from bleeding monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBleeding",
         "sManaLeech",
@@ -4457,7 +4466,7 @@
       "apId": 2303,
       "game_id": 451,
       "description": "Leech 500 mana from poisoned monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "sPoison"
@@ -4467,7 +4476,7 @@
       "apId": 2321,
       "game_id": 585,
       "description": "Leech 900 mana from whited out monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "sWhiteout"
@@ -4478,7 +4487,7 @@
       "apId": 2445,
       "game_id": 597,
       "description": "Leech 900 mana with a grade 1 gem.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "minGemGrade:1",
@@ -4574,7 +4583,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "eTomb:1",
-        "eSpire"
+        "eSpire",
+        "tRitual"
       ],
       "details": "Open a tomb while a spire is active on the field."
     },
@@ -4592,7 +4602,7 @@
       "apId": 2242,
       "game_id": 100,
       "description": "Open 3 drop holders before wave 3.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eDropHolder:3"
       ]
@@ -4618,7 +4628,7 @@
       "apId": 2275,
       "game_id": 316,
       "description": "Poison 111 frozen monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "sPoison"
@@ -4629,7 +4639,7 @@
       "apId": 2489,
       "game_id": 315,
       "description": "Poison 130 whited out monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "sWhiteout"
@@ -4658,7 +4668,7 @@
       "apId": 2095,
       "game_id": 252,
       "description": "Reach -12% decreased banishment cost with your orb.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "sAmplifiers",
         "fieldToken:20",
@@ -4824,9 +4834,7 @@
       "game_id": 118,
       "description": "Reach 20.000 monsters killed through all the battles.",
       "required_effort": "Major",
-      "requirements": [
-        "fieldToken:20"
-      ]
+      "requirements": []
     },
     "Crimson Journal": {
       "apId": 2109,
@@ -5214,15 +5222,13 @@
       "game_id": 7,
       "description": "Reach 50 battles won.",
       "required_effort": "Major",
-      "requirements": [
-        "fieldToken:5"
-      ]
+      "requirements": []
     },
     "Forged in Battle": {
       "apId": 2189,
       "game_id": 8,
       "description": "Reach 200 battles won.",
-      "required_effort": "Major",
+      "required_effort": "Extreme",
       "requirements": []
     },
     "Well Earned": {
@@ -5467,7 +5473,7 @@
       "apId": 2627,
       "game_id": 383,
       "description": "Reach wizard level 20.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "fieldToken:5"
       ],
@@ -5489,7 +5495,7 @@
       "description": "Reach wizard level 60.",
       "required_effort": "Trivial",
       "requirements": [
-        "fieldToken:35"
+        "fieldToken:45"
       ]
     },
     "Blue Wand": {
@@ -5498,7 +5504,7 @@
       "description": "Reach wizard level 100.",
       "required_effort": "Trivial",
       "requirements": [
-        "fieldToken:50"
+        "fieldToken:60"
       ],
       "details": "Reach wizard level 100."
     },
@@ -5598,7 +5604,7 @@
       "apId": 2587,
       "game_id": 396,
       "description": "Shoot down 340 shadow projectiles.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tRitual",
         "eShadow"
@@ -5693,7 +5699,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "sAmplifiers",
-        "minWave:60"
+        "talismanRow:2"
       ],
       "details": "Have 7 gems in amplifiers connected to the orb."
     },
@@ -5806,7 +5812,7 @@
       "description": "Unlock a wizard tower.",
       "required_effort": "Trivial",
       "requirements": [
-        "eWizardTower:1"
+        "Field_L5"
       ],
       "details": "Unlock a wizard tower."
     },
@@ -5832,7 +5838,7 @@
       "apId": 2164,
       "game_id": 312,
       "description": "Whiteout 120 frozen monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze",
         "sWhiteout"
@@ -5842,7 +5848,7 @@
       "apId": 2002,
       "game_id": 311,
       "description": "Whiteout 111 whited out monsters.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sWhiteout",
         "skillPoints:50"

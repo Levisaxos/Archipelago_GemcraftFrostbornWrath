@@ -1497,13 +1497,16 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_P1"
+          "Field_P1",
+          "sTraps"
         ],
         [
-          "Field_R6"
+          "Field_R6",
+          "sTraps"
         ],
         [
-          "Field_O2"
+          "Field_O2",
+          "sTraps"
         ]
       ]
     },
