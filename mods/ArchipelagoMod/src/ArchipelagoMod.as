@@ -3102,6 +3102,9 @@ package {
                     skillChanges++;
                 }
             }
+            // Retroactive trigger: existing saves that crossed the 5-skill threshold
+            // before this fix shipped won't get a fresh unlockSkill() call.
+            _skillUnlocker.maybeFireRegainingKnowledge();
 
             // --- Traits ---
             var traitChanges:int = 0;
