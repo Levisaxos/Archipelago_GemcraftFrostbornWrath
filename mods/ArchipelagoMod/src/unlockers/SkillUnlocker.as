@@ -75,7 +75,15 @@ package unlockers {
             if (count >= SKILLS_FOR_REGAINING_KNOWLEDGE) {
                 try {
                     ach.status = 2;
-                    logAction("Forced achievement 367 (Regaining Knowledge) to status=2 — " + count + " skills unlocked");
+                    // AchievementUnlocker.detectAndReport also gates on
+                    // GV.ppd.gainedAchis[gameId] === true (the per-slot earned
+                    // flag), which vanilla only sets via the battle-win drop
+                    // flow. We skipped the loot-queue push (battle-only side
+                    // effects), so flip the flag directly here.
+                    if (GV.ppd.gainedAchis != null && ACHI_REGAINING_KNOWLEDGE < GV.ppd.gainedAchis.length) {
+                        GV.ppd.gainedAchis[ACHI_REGAINING_KNOWLEDGE] = true;
+                    }
+                    logAction("Forced achievement 367 (Regaining Knowledge) earned — " + count + " skills unlocked");
                 } catch (e:Error) {
                     logAction("maybeFireRegainingKnowledge: failed to set status: " + e);
                 }
