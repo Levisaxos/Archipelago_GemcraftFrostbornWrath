@@ -490,30 +490,34 @@ package tracker {
 
             var lines:Array = [];
 
-            // Field_ prereqs — show as a single OR line if no path is satisfied.
-            // A prereq path is satisfied when the prereq stage has actually
-            // been beaten in vanilla Journey mode. Holding the AP token alone
-            // doesn't help the player progress in-game — they still have to
-            // play the prereq stage. The hint tells them which level to clear.
+            // Field_ prereqs — show as a single OR line when no path is in
+            // logic. "In logic" must match the gate's recursive _stageReachable
+            // check: a prereq stage that's been beaten OUT of logic doesn't
+            // satisfy the chain (its own prereqs are still broken), so the
+            // gate still rejects it and we must still surface the hint.
+            // Earlier this branch used _isFieldBeatenJourney, which made the
+            // display disagree with the gate — beating a prereq out of logic
+            // would silently suppress the hint while the gate kept this stage
+            // out of logic, leaving the player with no visible blocker.
             // Skipped in progressive field-token modes: Field_<sid> chains are
             // artificial there (Nth copy unlocks Nth stage), so naming a stage
             // would point at an item they can't directly hunt for.
             if (!_isFieldTokenProgressive()) {
                 var missingFields:Array = [];
-                var anyFieldBeaten:Boolean = false;
+                var anyFieldInLogic:Boolean = false;
                 var anyFreePrereq:Boolean = false;
                 for each (var req:String in flat) {
                     if (req == null || req.indexOf("Field_") != 0) continue;
                     var sid:String = req.substr(6);
                     if (_freeStages[sid] == true) {
                         anyFreePrereq = true;
-                    } else if (_isFieldBeatenJourney(sid)) {
-                        anyFieldBeaten = true;
+                    } else if (_stageReachable(sid)) {
+                        anyFieldInLogic = true;
                     } else {
                         missingFields.push(sid);
                     }
                 }
-                if (!anyFieldBeaten && !anyFreePrereq && missingFields.length > 0) {
+                if (!anyFieldInLogic && !anyFreePrereq && missingFields.length > 0) {
                     lines.push(["Requires field " + missingFields.join(" / ") + " beaten", 0x888888]);
                 }
             }

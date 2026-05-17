@@ -321,6 +321,15 @@ def _build_skill_trait_floors(world) -> None:
     schedule = schedule[:len(items)]
     world.random.shuffle(items)
     world._skill_trait_floors = dict(zip(items, schedule))
+    # Precollected skill/trait items (e.g. Overcrowd via `starting_overcrowd`)
+    # are owned from frame 0; the floor was designed to stretch progression
+    # for items received during play, so applying it to starting inventory
+    # incorrectly hides their requirements from logic (visible in UT, which
+    # runs this same set_rules path; the mod tracker has no floor system).
+    precollected = world.multiworld.precollected_items[world.player]
+    for item in precollected:
+        if item.name in world._skill_trait_floors:
+            world._skill_trait_floors[item.name] = 0
 
 
 def _count_talisman_fragments(state, player: int, names) -> int:
@@ -610,6 +619,20 @@ _BUILDING_ELEMENT_TO_SKILL_ITEM: dict = {
     "eAmplifiers": skill_prefix_map["sAmplifiers"],
 }
 
+# Elements that require a specific skill to interact with at runtime — the
+# player can only act on the pre-placed element on a reachable stage AND must
+# hold the skill. Unlike building elements above, the skill does NOT broaden
+# the stage set; it's an additional AND-gate, not an OR. Drop Holders are
+# only openable by Bolt shots (DropHolder.takeDamage requires a TowerBolt
+# origin; without Bolt the holder is inert). Any achievement that names
+# eDropHolder thus needs Bolt held in addition to reaching a drop-holder stage.
+_ELEMENT_INTERACT_SKILL: dict = {
+    "eDropHolder": "Bolt Skill",
+}
+_ELEMENT_PASCAL_INTERACT_SKILL: dict = {
+    req[1:]: skill for req, skill in _ELEMENT_INTERACT_SKILL.items()
+}
+
 
 def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
     """Resolve eX:N form: a reachable stage exists where <X>Count >= N.
@@ -671,9 +694,8 @@ def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int)
     field = elem_pascal + "Count"
     if field not in _PRESENT_COUNT_FIELDS:
         return True
-    if elem_pascal == "DropHolder" and not state.has("Bolt Skill", player):
-        # Drop Holders are only opened by Bolt shots (DropHolder.takeDamage
-        # requires a TowerBolt origin, decrements pBoltShotsNeeded).
+    interact_skill = _ELEMENT_PASCAL_INTERACT_SKILL.get(elem_pascal)
+    if interact_skill is not None and not state.has(interact_skill, player):
         return False
     qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
     if elem_pascal == "WizardTower":
@@ -930,6 +952,13 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
         skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
         if skill_item is not None and state.has(skill_item, player):
             return True
+        # Interact-skill elements (eDropHolder → Bolt) are AND-gated: the
+        # element-reach must hold AND the player must own the skill that
+        # actually enables interaction. Without the skill the element is
+        # inert no matter how many stages host it.
+        interact_skill = _ELEMENT_INTERACT_SKILL.get(req)
+        if interact_skill is not None and not state.has(interact_skill, player):
+            return False
         return any(_eval_element_reachable(n, state, player)
                    for n in element_prefix_map[req])
 
@@ -1341,6 +1370,14 @@ def _compile_req(req: str, world, is_progressive: bool):
                 return state.has(n, player) or f(state)
             return (_bld_elem, _COST_REACH, None)
         fn, static_set = _compile_element_or_full(element_prefix_map[req], player)
+        # Interact-skill elements (eDropHolder → Bolt) AND-gate the stage
+        # reach with the skill. Static_set is preserved so AND-group stage
+        # binding still works; the skill is just an additional state check.
+        interact_skill = _ELEMENT_INTERACT_SKILL.get(req)
+        if interact_skill is not None:
+            def _interact_elem(state, n=interact_skill, f=fn):
+                return state.has(n, player) and f(state)
+            return (_interact_elem, _COST_REACH, static_set)
         return (fn,
                 _COST_CONST if fn is _always_true else _COST_REACH,
                 static_set)
@@ -1367,6 +1404,11 @@ def _compile_req(req: str, world, is_progressive: bool):
             if stages is None:
                 return (_always_true, _COST_CONST, None)
             stages_fs = frozenset(stages)
+            interact_skill = _ELEMENT_PASCAL_INTERACT_SKILL.get(elem_pascal)
+            if interact_skill is not None:
+                return (lambda state, n=interact_skill, s=stages: (
+                    state.has(n, player) and _can_reach_any_stage(state, player, s)
+                ), _COST_REACH, stages_fs)
             return (lambda state: _can_reach_any_stage(state, player, stages),
                     _COST_REACH, stages_fs)
 

@@ -2059,7 +2059,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "sAmplifiers",
-        "sPoison"
+        "sPoison",
+        "talismanRow:3"
       ]
     },
     "Not Worth It": {
