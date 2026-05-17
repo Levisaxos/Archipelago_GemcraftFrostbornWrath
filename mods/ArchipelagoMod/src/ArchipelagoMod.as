@@ -109,6 +109,12 @@ package {
         private static const TOAST_OFFSET_Y:Number      = 10;
         private static const ITEM_TOAST_OFFSET_Y:Number = 18; // game pixels from top edge
 
+        // L5 entry requires Bolt (715), Beam (716), Barrage (717), Freeze (712).
+        // When the L5 field token arrives we send a free LocationScouts(hint)
+        // for whichever of these the player doesn't yet own, so the publicly-
+        // visible hint shows where each missing skill is.
+        private static const L5_SKILL_AP_IDS:Array = [712, 715, 716, 717];
+
         private var _logger:Logger;
         private var _bezel:Bezel;
         private var _modButtons:ModButtons;
@@ -302,7 +308,16 @@ package {
                 _connectionManager.onError                 = onConnectionError;
                 _connectionManager.onPanelReset            = onConnectionPanelReset;
                 _connectionManager.onUnexpectedDisconnect  = onApUnexpectedlyDisconnected;
+                // Scout cache may land after L5 was already unlocked (full-sync
+                // path). Re-check the trigger once names/locations are resolved.
+                _connectionManager.onScoutsUpdated         = _maybeSendL5SkillHints;
                 _connectionManager.onDataStorageRetrieved  = function(keys:Object):void {
+                    // L5 hint state — keyed off _read_hints_T_S; populated
+                    // server-side whenever any LocationScouts(hint) is issued
+                    // for this slot. Set the in-memory flag if our 4 skill
+                    // items are already publicly hinted so we don't re-issue.
+                    _applyL5HintStateFromKeys(keys);
+
                     if (_apStateSync == null) return;
                     _apStateSync.onRetrieved(keys);
                     // If syncWithAP already finished (Retrieved arrived late),
@@ -348,7 +363,7 @@ package {
                 _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
-                _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator);
+                _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
 
                 // Button factory — owns all mod buttons on selector + main menu
@@ -1325,6 +1340,13 @@ package {
                 _apStateSync.requestState();
             }
 
+            // Ask AP whether we've already published the free L5 skill hints
+            // for this slot. The server tracks all hints under
+            // _read_hints_{team}_{slot}; if any of our 4 skill item ids appear
+            // there already we suppress the re-send. Response parsed in the
+            // onDataStorageRetrieved handler.
+            _connectionManager.sendDataStorageGet([_l5HintsStorageKey()]);
+
             // Load server data from JSON files (itemdata.json for AP ID mappings, logic.json for rules).
             AV.loadServerDataFromJSON();
 
@@ -2254,6 +2276,7 @@ package {
 
         private function grantItem(apId:int):void {
             try {
+                try {
                 _logger.log(MOD_NAME, "grantItem called with apId=" + apId);
 
                 // Mark this apId as seen so it doesn't reappear in the
@@ -2441,6 +2464,12 @@ package {
                     return;
                 }
                 _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
+                } finally {
+                    // Runs even when one of the dispatch branches returned —
+                    // every item-grant path can transitively unlock L5, so we
+                    // re-check the trigger after each receipt.
+                    _maybeSendL5SkillHints();
+                }
             } catch (err:Error) {
                 _logger.log(MOD_NAME, "ERROR in grantItem(" + apId + "): " + err.message);
                 _logger.log(MOD_NAME, "  Stack: " + err.getStackTrace());
@@ -3155,6 +3184,19 @@ package {
             // gainedAchis array.
             var achievementsRestored:int = _achievementUnlocker.restoreCheckedAchievements();
 
+            // --- Reconcile missing location checks --- (lost-network recovery)
+            // restoreCheckedAchievements only handles the case where the
+            // server already knows a check is done; the reverse — local
+            // state says done but server doesn't — was previously stuck.
+            // Walk gainedAchis + stageHighestXpsJourney + stageWizStashStauses,
+            // diff against _missingLocations, and batch-send the delta.
+            // AP server is idempotent on duplicate LocationChecks so this
+            // is safe to run on every sync. Runs after restoreCheckedAchievements
+            // so any server-side restorations to gainedAchis are included
+            // (currently a no-op on that field but keeps the ordering robust).
+            var earnedAchiApIds:Array = _achievementUnlocker.scanLocallyEarnedAchievementApIds();
+            _connectionManager.reconcileLocationChecks(earnedAchiApIds);
+
             // --- Restore stage XP --- (lost-save recovery)
             // If a Retrieved came back before sync completed, apply the stored
             // XP arrays here. Late-arriving Retrieved is handled by the
@@ -3207,6 +3249,11 @@ package {
             if (_offlineItemsCollector != null) {
                 _offlineItemsCollector.onSyncCompleted(items, _resolveOfflineItemEntry);
             }
+
+            // syncWithAP bypasses grantItem's per-item _maybeSendL5SkillHints
+            // call, so trigger it once at the end of the bulk grant. Safe to
+            // call even before scout data arrives — guarded inside.
+            _maybeSendL5SkillHints();
 
             } finally {
                 // Resume normal toast behavior for any live (index>0) items received later.
@@ -3261,6 +3308,75 @@ package {
         }
 
         public function get deathLinkEnabled():Boolean { return _saveManager.deathLinkEnabled; }
+
+        // -----------------------------------------------------------------------
+        // L5 free skill hints
+
+        /** Standard AP DataStorage key holding all hints visible to this slot. */
+        private function _l5HintsStorageKey():String {
+            return "_read_hints_" + _connectionManager.myTeam + "_" + _connectionManager.mySlot;
+        }
+
+        /**
+         * Inspect a Retrieved packet for the _read_hints key and set
+         * AV.sessionData.l5HintsSent if any of our 4 L5-prereq skill items
+         * are already publicly hinted. Idempotent — only flips false → true.
+         *
+         * Hint object fields used: receiving_player (our slot owns the item)
+         * and item (AP id in our game).
+         */
+        private function _applyL5HintStateFromKeys(keys:Object):void {
+            if (keys == null || AV.sessionData == null) return;
+            var key:String = _l5HintsStorageKey();
+            if (!keys.hasOwnProperty(key)) return;
+            var hints:* = keys[key];
+            if (!(hints is Array)) return;
+            var mySlot:int = _connectionManager.mySlot;
+            for each (var h:Object in hints as Array) {
+                if (h == null) continue;
+                if (int(h.receiving_player) != mySlot) continue;
+                var itemId:int = int(h.item);
+                for each (var skillId:int in L5_SKILL_AP_IDS) {
+                    if (itemId == skillId) {
+                        AV.sessionData.l5HintsSent = true;
+                        _logger.log(MOD_NAME, "L5 skill hint already published on server (item "
+                            + itemId + ") — suppressing re-send");
+                        return;
+                    }
+                }
+            }
+        }
+
+        /**
+         * If the player now holds the L5 field token AND we haven't already
+         * published the free skill-location hints, scout-cache-lookup each
+         * missing skill and send a single LocationScouts(hint) packet.
+         *
+         * Skipped silently when L5 isn't unlocked, when the flag is already
+         * set, or when the scout cache hasn't resolved the skill items yet
+         * (caller re-invokes on every grantItem / syncWithAP completion).
+         */
+        private function _maybeSendL5SkillHints():void {
+            if (AV.sessionData == null || _connectionManager == null) return;
+            if (AV.sessionData.l5HintsSent) return;
+            if (!AV.sessionData.tokensByStrId["L5"]) return;
+
+            var ids:Array = [];
+            for each (var skillId:int in L5_SKILL_AP_IDS) {
+                if (AV.sessionData.hasItem(skillId)) continue;  // already collected — no hint needed
+                var locId:int = _connectionManager.findLocationForItem(skillId);
+                if (locId > 0) ids.push(locId);
+            }
+            if (ids.length == 0) {
+                // Either every skill already collected (nothing to hint), or
+                // scouts haven't landed yet. In the latter case the next
+                // grantItem / sync completion will retry.
+                return;
+            }
+            _connectionManager.sendCreateLocationHints(ids);
+            AV.sessionData.l5HintsSent = true;
+            _logger.log(MOD_NAME, "L5 free skill hints requested for locations: " + ids.join(","));
+        }
 
         // -----------------------------------------------------------------------
         // Helpers

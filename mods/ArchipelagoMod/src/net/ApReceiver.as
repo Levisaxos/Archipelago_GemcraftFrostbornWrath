@@ -56,6 +56,11 @@ package net {
         /** Called when AP responds to a `Get` with a `Retrieved` packet. Signature: (keysMap:Object):void
          *  keysMap is the `keys` object from the packet — { key:String → value:* (null if absent) }. */
         public var onDataStorageRetrieved:Function;
+        /** Called after a LocationInfo packet has been processed and the scout
+         *  cache (`_pendingChecks` / AV.archipelagoData.checks) is up to date.
+         *  Signature: ():void. Used by triggers that depend on scout data,
+         *  e.g. L5 skill-location hints that may arrive before the cache lands. */
+        public var onScoutsUpdated:Function;
 
         // -----------------------------------------------------------------------
 
@@ -87,18 +92,21 @@ package net {
         public function get missingLocations():Object  { return _missingLocations; }
 
         /**
-         * Reverse lookup: find the AP locationId currently scouted to contain
-         * the given item AP id (in our slot's game). Returns -1 if no scout
-         * cache entry holds that item — caller should treat as "not known yet".
+         * Reverse lookup: find the AP locationId scouted to contain the given
+         * item AP id, where the item is destined for OUR slot. Returns -1 if
+         * no scout cache entry matches — caller should treat as "not known".
          *
-         * Only matches scout entries for OUR slot (receiving_player == _mySlot);
-         * a hint for a foreign player's same-numbered item is not what we want.
+         * Filters by receiving slot so a foreign game's coincidentally-numbered
+         * item can't shadow our own. Only finds items placed in our own world
+         * (we only scout our own missing_locations); items placed in another
+         * player's world are unreachable via this lookup.
          */
         public function findLocationForItem(apItemId:int):int {
             for (var locIdStr:String in _pendingChecks) {
                 var entry:Object = _pendingChecks[locIdStr];
                 if (entry == null) continue;
                 if (int(entry.item) != apItemId) continue;
+                if (int(entry.player) != _mySlot) continue;
                 return int(locIdStr);
             }
             return -1;
@@ -271,6 +279,13 @@ package net {
             AV.saveData.checkedLocations = checkedMap;
 
             _sender.sendLocationScouts(_missingLocations);
+
+            // Request our own game's DataPackage so location names (Journey,
+            // Stash, achievements) resolve from the AP server's authoritative
+            // table — same source foreign games use. Without this,
+            // gamesLocations["GemCraft: Frostborn Wrath"] stays empty and
+            // resolveLocationName falls back to numeric "Location #N" strings.
+            _requestDataPackage("GemCraft: Frostborn Wrath");
 
             if (onConnectionEstablished != null)
                 onConnectionEstablished(p);
@@ -453,6 +468,11 @@ package net {
 
             _logger.log(_modName, "LocationInfo: scouted " + locations.length
                 + " locations, requested " + _countKeys(uniqueGames) + " DataPackage(s).");
+
+            if (onScoutsUpdated != null) {
+                try { onScoutsUpdated(); }
+                catch (e:Error) { _logger.log(_modName, "onScoutsUpdated threw: " + e.message); }
+            }
         }
 
         // -----------------------------------------------------------------------

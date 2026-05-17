@@ -1577,7 +1577,7 @@ achievement_requirements = {
         "ap_id": 2083,
         "game_id": 50,
         "description": "Give a Gem 200 Poison Damage by Amplification.",
-        "requirements": ["sAmplifiers", "sPoison"],
+        "requirements": ["sAmplifiers", "sPoison", "talismanRow:3"],
         "required_effort": "Trivial",
     },
     "Not Worth It": {
