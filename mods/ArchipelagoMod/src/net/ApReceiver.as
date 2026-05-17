@@ -86,6 +86,32 @@ package net {
         public function get wizStashTalData():Object   { return _wizStashTalData; }
         public function get missingLocations():Object  { return _missingLocations; }
 
+        /**
+         * Reverse lookup: find the AP locationId currently scouted to contain
+         * the given item AP id (in our slot's game). Returns -1 if no scout
+         * cache entry holds that item — caller should treat as "not known yet".
+         *
+         * Only matches scout entries for OUR slot (receiving_player == _mySlot);
+         * a hint for a foreign player's same-numbered item is not what we want.
+         */
+        public function findLocationForItem(apItemId:int):int {
+            for (var locIdStr:String in _pendingChecks) {
+                var entry:Object = _pendingChecks[locIdStr];
+                if (entry == null) continue;
+                if (int(entry.item) != apItemId) continue;
+                return int(locIdStr);
+            }
+            return -1;
+        }
+
+        /** Scout-cache entry as stored by handleLocationInfo:
+         *  {id:int, name:String, game:String, playerName:String}.
+         *  Looked up by the same int locationId returned from findLocationForItem.
+         *  Returns null if not yet scouted. */
+        public function getScoutEntry(locId:int):Object {
+            return AV.archipelagoData.checks[locId];
+        }
+
         // -----------------------------------------------------------------------
         // Packet handlers — called by ConnectionManager._dispatchPacket
 

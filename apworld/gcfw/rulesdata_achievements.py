@@ -1818,7 +1818,7 @@ achievement_requirements = {
         "game_id": 498,
         "description": "Have a watchtower kill a wizard hunter.",
         "details": "Have a watchtower kill a wizard hunter.",
-        "requirements": ["eWatchtower", "eWizardHunter"],
+        "requirements": ["eWatchtower", "eWizardHunter", 'tRitual'],
         "required_effort": "Trivial",
     },
     "Get Them": {
@@ -4298,7 +4298,7 @@ achievement_requirements = {
         "game_id": 492,
         "description": "Start an enraged wave early while there is a wizard hunter on the battlefield.",
         "details": "Call an enraged wave early while a Wizard Hunter is on the battlefield.",
-        "requirements": ["eWizardHunter"],
+        "requirements": ["eWizardHunter", "tRitual"],
         "required_effort": "Trivial",
     },
     "Armored Orb": {

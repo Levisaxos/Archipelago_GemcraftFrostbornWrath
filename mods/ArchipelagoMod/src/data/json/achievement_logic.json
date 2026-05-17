@@ -2385,7 +2385,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "eWatchtower",
-        "eWizardHunter"
+        "eWizardHunter",
+        "tRitual"
       ],
       "details": "Have a watchtower kill a wizard hunter."
     },
@@ -5670,7 +5671,8 @@
       "description": "Start an enraged wave early while there is a wizard hunter on the battlefield.",
       "required_effort": "Trivial",
       "requirements": [
-        "eWizardHunter"
+        "eWizardHunter",
+        "tRitual"
       ],
       "details": "Call an enraged wave early while a Wizard Hunter is on the battlefield."
     },

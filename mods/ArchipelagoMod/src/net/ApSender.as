@@ -72,6 +72,19 @@ package net {
             _ws.send(packet);
         }
 
+        /**
+         * Scout specific locations and create AP hints for them. Free — hint
+         * points are only consumed by `!hint` text commands, not by
+         * LocationScouts with create_as_hint set.
+         */
+        public function sendCreateLocationHints(locationIds:Array):void {
+            if (_ws == null || locationIds == null || locationIds.length == 0) return;
+            var packet:String = '[{"cmd":"LocationScouts","locations":['
+                + locationIds.join(",") + '],"create_as_hint":1}]';
+            _logger.log(_modName, "AP >> LocationScouts(hint)  ids=" + locationIds.join(","));
+            _ws.send(packet);
+        }
+
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
         public function sendDeathLink(source:String):void {
             if (_ws == null) return;
