@@ -1441,6 +1441,24 @@ package {
             hideDisconnectPanel();
             _modeInterceptor.redispatchPendingClick();
 
+            // Pre-seed `starting_overcrowd` into sessionData BEFORE the first
+            // in-logic computation. syncWithAP's own materialization (and its
+            // sessionData.reset()) runs later when ReceivedItems lands; until
+            // then the panel computes inLogic from whatever's in sessionData
+            // right now. Without this seed, achievements gated on `tOvercrowd`
+            // or `battleTraits:N` flicker out-of-logic on first paint even
+            // though Overcrowd is starting inventory. Idempotent — if the
+            // restored snapshot already has 803, hasItem() short-circuits.
+            if (AV.serverData != null
+                    && AV.serverData.serverOptions != null
+                    && AV.serverData.serverOptions.startingOvercrowd
+                    && AV.sessionData != null
+                    && !AV.sessionData.hasItem(803)) {
+                AV.sessionData.onItem(803);
+                if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+                if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+            }
+
             if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
                 _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
                 _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());

@@ -605,20 +605,6 @@ def _count_gem_skills_per_stage_max(state, player: int) -> int:
     return max_n
 
 
-# Building-element broadening: bare `eTraps` / `eLanterns` / `ePylons` /
-# `eAmplifiers` tokens pass if the player owns the matching skill item
-# (lets them build the element on any reachable stage) OR can reach a
-# stage that already hosts the pre-placed building.  Strict `sTraps`
-# etc. still mean "Traps Skill held"; achievements that genuinely need
-# the player to *build* a trap (Sparse Snares / Entrenched / etc.) keep
-# the strict s-form.
-_BUILDING_ELEMENT_TO_SKILL_ITEM: dict = {
-    "eTraps":      skill_prefix_map["sTraps"],
-    "eLanterns":   skill_prefix_map["sLanterns"],
-    "ePylons":     skill_prefix_map["sPylons"],
-    "eAmplifiers": skill_prefix_map["sAmplifiers"],
-}
-
 # Elements that require a specific skill to interact with at runtime — the
 # player can only act on the pre-placed element on a reachable stage AND must
 # hold the skill. Unlike building elements above, the skill does NOT broaden
@@ -946,12 +932,9 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
     if req in element_prefix_map:
         # Element/group/weather token (single-element lists for `eBeacon`,
         # multi-element list for `eNonMonsters`). Reachable if any member is.
-        # Building elements (eTraps / eLanterns / ePylons / eAmplifiers)
-        # also pass when the player holds the matching skill — they can
-        # build the element on any reachable stage.
-        skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
-        if skill_item is not None and state.has(skill_item, player):
-            return True
+        # `e`-form is strictly element-on-reachable-stage; holding the
+        # matching `s`-skill does NOT satisfy it. Achievement DNFs that
+        # accept either form list `[[eX], [sX]]` explicitly.
         # Interact-skill elements (eDropHolder → Bolt) are AND-gated: the
         # element-reach must hold AND the player must own the skill that
         # actually enables interaction. Without the skill the element is
@@ -978,10 +961,18 @@ def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
             return any(_eval_element_reachable(n, state, player)
                        for n in element_prefix_map[group_name])
 
-        # eX:N — single-element with count.  The token body is already
-        # PascalCase so the level-data field is just `<body>Count`.
+        # eX:N — single-element with count. Canonical PascalCase comes from
+        # the display name in element_prefix_map (handles singular/plural
+        # mismatches like eAmplifiers → "Amplifier" → "AmplifierCount").
+        # Tokens not in the map fall back to the raw suffix.
         if _is_prefix_token(group_name, "e"):
-            return _eval_element_count(group_name[1:], count_needed, state, player)
+            if group_name in element_prefix_map:
+                elem_pascal = _element_count_field(
+                    element_prefix_map[group_name][0]
+                )[:-len("Count")]
+            else:
+                elem_pascal = group_name[1:]
+            return _eval_element_count(elem_pascal, count_needed, state, player)
 
         # Skill / trait / category / total counters — all unified into
         # one pool table (built in requirement_tokens.py from skill_groups
@@ -1360,15 +1351,6 @@ def _compile_req(req: str, world, is_progressive: bool):
         return (lambda state, n=item_name: state.has(n, player), _COST_HAS, None)
 
     if req in element_prefix_map:
-        # Building elements (eTraps etc.) also pass when the matching skill
-        # is held — broaden the compiled disjunction.  Holding the skill
-        # makes the token satisfied on any stage, so it's not bindable.
-        skill_item = _BUILDING_ELEMENT_TO_SKILL_ITEM.get(req)
-        if skill_item is not None:
-            fn = _compile_element_or(element_prefix_map[req], player)
-            def _bld_elem(state, n=skill_item, f=fn):
-                return state.has(n, player) or f(state)
-            return (_bld_elem, _COST_REACH, None)
         fn, static_set = _compile_element_or_full(element_prefix_map[req], player)
         # Interact-skill elements (eDropHolder → Bolt) AND-gate the stage
         # reach with the skill. Static_set is preserved so AND-group stage
@@ -1399,7 +1381,62 @@ def _compile_req(req: str, world, is_progressive: bool):
                     static_set)
 
         if _is_prefix_token(group_name, "e"):
-            elem_pascal = group_name[1:]
+            # Canonical PascalCase comes from the display name in element_prefix_map when present.
+            # Stripping just the "e" prefix would mis-pluralise building elements: eAmplifiers / eLanterns / ePylons / eTraps map to singular display names ("Amplifier" etc.) whose LEVEL_DATA fields are also singular ("AmplifierCount"). The plural "AmplifiersCount" doesn't exist, so the gate falls through to `_always_true`.
+            if group_name in element_prefix_map:
+                elem_pascal = _element_count_field(
+                    element_prefix_map[group_name][0]
+                )[:-len("Count")]
+            else:
+                elem_pascal = group_name[1:]
+            if elem_pascal == "WizardStash":
+                # Every stage has a wizard stash, so `WizardStashCount` isn't a tracked per-stage field — `_qualifying_stages_for_element` would return None and fall through to `_always_true`, letting `eWizardStash:N` pass with zero keys held.
+                # Mirror `_eval_element_count`'s special-case: route the count-≤1 form through `_any_stash_reachable`, and the count-N form through a per-seed key + journey-reachability check.
+                if count_needed <= 1:
+                    return (lambda state: _any_stash_reachable(state, player),
+                            _COST_REACH, None)
+                from . import gating as _g
+                sk_gran = world.options.stash_key_granularity.value
+                all_sids = tuple(s["str_id"] for s in GAME_DATA["stages"])
+                if sk_gran == _g.STASH_OFF:
+                    def _stash_count_no_keys(state, sids=all_sids, n_needed=count_needed):
+                        n = 0
+                        for sid in sids:
+                            try:
+                                if state.can_reach(f"Complete {sid} - Journey",
+                                                   "Location", player):
+                                    n += 1
+                                    if n >= n_needed:
+                                        return True
+                            except KeyError:
+                                continue
+                        return False
+                    return (_stash_count_no_keys, _COST_REACH, None)
+                starter_sid = world.start_sid
+                stash_specs = tuple(
+                    (sid,
+                     _g.stash_key_for_stage(sid, sk_gran),
+                     _g.stash_key_count_for_stage(sid, sk_gran, starter_sid))
+                    for sid in all_sids
+                )
+                def _stash_count_keyed(state, specs=stash_specs, n_needed=count_needed):
+                    n = 0
+                    for sid, key_name, key_count in specs:
+                        if key_count == 1:
+                            if not state.has(key_name, player):
+                                continue
+                        elif state.count(key_name, player) < key_count:
+                            continue
+                        try:
+                            if state.can_reach(f"Complete {sid} - Journey",
+                                               "Location", player):
+                                n += 1
+                                if n >= n_needed:
+                                    return True
+                        except KeyError:
+                            continue
+                    return False
+                return (_stash_count_keyed, _COST_REACH, None)
             stages = _qualifying_stages_for_element(elem_pascal, count_needed)
             if stages is None:
                 return (_always_true, _COST_CONST, None)

@@ -1108,10 +1108,10 @@
       "required_effort": "Trivial",
       "requirements": [
         [
-          "ePylons"
+          "sPylons"
         ],
         [
-          "sPylons"
+          "ePylons:1"
         ]
       ]
     },
@@ -1122,7 +1122,7 @@
       "required_effort": "Trivial",
       "requirements": [
         [
-          "eTraps"
+          "eTraps:1"
         ],
         [
           "sTraps"
@@ -1584,8 +1584,14 @@
       "description": "Enhance a gem in an amplifier.",
       "required_effort": "Trivial",
       "requirements": [
-        "sAmplifiers",
-        "enhancementSpells:1"
+        [
+          "sAmplifiers",
+          "enhancementSpells:1"
+        ],
+        [
+          "EAmplifiers:1",
+          "enhancementSpells:1"
+        ]
       ],
       "details": "Cast Bolt/Beam/Barrage on a gem inside an amplifier."
     },
@@ -2192,8 +2198,14 @@
       "description": "Have a gem of 6 components in a lantern.",
       "required_effort": "Trivial",
       "requirements": [
-        "sLanterns",
-        "gemSkills:6"
+        [
+          "sLanterns",
+          "gemSkills:6"
+        ],
+        [
+          "eLanterns:1",
+          "gemSkills:6"
+        ]
       ]
     },
     "Getting Serious": {
@@ -2831,7 +2843,7 @@
         ],
         [
           "sPoison",
-          "eTraps"
+          "eTraps:1"
         ]
       ],
       "details": "In one battle, at least 75% of kills are from poison damage."
@@ -2939,7 +2951,12 @@
       "description": "Have 3 pylons charged up to 3 shots each.",
       "required_effort": "Minor",
       "requirements": [
-        "sPylons"
+        [
+          "sPylons"
+        ],
+        [
+          "ePylons:3"
+        ]
       ]
     },
     "Core Pouch": {
@@ -3172,8 +3189,14 @@
       "description": "Hit the same monster with traps 100 times.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps",
-        "minMonsterHP:400"
+        [
+          "sTraps",
+          "minMonsterHP:400"
+        ],
+        [
+          "eTraps:1",
+          "minMonsterHP:400"
+        ]
       ],
       "details": "Hit the same monster with traps 100 times."
     },
@@ -3231,8 +3254,14 @@
       "description": "Kill 1.500 monsters with gems in traps.",
       "required_effort": "Extreme",
       "requirements": [
-        "sTraps",
-        "minMonsters:1500"
+        [
+          "sTraps",
+          "minMonsters:1500"
+        ],
+        [
+          "eTraps:1",
+          "minMonsters:1500"
+        ]
       ],
       "details": "Kill 1,500 monsters with traps in one battle."
     },
@@ -4090,14 +4119,12 @@
       "required_effort": "Trivial",
       "requirements": [
         [
-          "eTraps",
-          "minMonsters:60",
-          "sCriticalHit"
+          "eTraps:2",
+          "minMonsters:60"
         ],
         [
           "sTraps",
-          "minMonsters:60",
-          "sCriticalHit"
+          "minMonsters:60"
         ]
       ]
     },
@@ -4107,8 +4134,14 @@
       "description": "Kill 300 monsters with gems in traps.",
       "required_effort": "Major",
       "requirements": [
-        "sTraps",
-        "minMonsters:300"
+        [
+          "sTraps",
+          "minMonsters:300"
+        ],
+        [
+          "eTraps:2",
+          "minMonsters:300"
+        ]
       ],
       "details": "Kill 300 monsters with traps in one battle."
     },
@@ -4672,9 +4705,14 @@
       "description": "Reach -12% decreased banishment cost with your orb.",
       "required_effort": "Trivial",
       "requirements": [
-        "sAmplifiers",
-        "fieldToken:20",
-        "talismanRow:1"
+        [
+          "sAmplifiers",
+          "talismanRow:1"
+        ],
+        [
+          "sOrbOfPresence",
+          "skillPoints:50"
+        ]
       ]
     },
     "Desperate Clash": {
@@ -4683,9 +4721,14 @@
       "description": "Reach -16% decreased banishment cost with your orb.",
       "required_effort": "Major",
       "requirements": [
-        "sAmplifiers",
-        "talismanRow:3",
-        "fieldToken:40"
+        [
+          "sAmplifiers",
+          "talismanRow:2"
+        ],
+        [
+          "sOrbOfPresence",
+          "skillPoints:100"
+        ]
       ]
     },
     "Insane Investment": {
@@ -4694,9 +4737,14 @@
       "description": "Reach -20% decreased banishment cost with your orb.",
       "required_effort": "Extreme",
       "requirements": [
-        "sAmplifiers",
-        "minWave:80",
-        "talismanRow:3"
+        [
+          "sAmplifiers",
+          "talismanRow:3"
+        ],
+        [
+          "sOrbOfPresence",
+          "skillPoints:150"
+        ]
       ],
       "details": "Reach -20% banishment cost on the orb."
     },
@@ -4953,7 +5001,12 @@
       "description": "Reach 1.000 pylon kills through all the battles.",
       "required_effort": "Minor",
       "requirements": [
-        "sPylons"
+        [
+          "sPylons"
+        ],
+        [
+          "ePylons:1"
+        ]
       ],
       "details": "Cumulative across all battles: kill 1,000 monsters with pylons."
     },
@@ -4963,7 +5016,12 @@
       "description": "Reach 2.000 pylon kills through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "sPylons"
+        [
+          "sPylons"
+        ],
+        [
+          "ePylons:1"
+        ]
       ],
       "details": "Cumulative across all battles: kill 2,000 monsters with pylons."
     },
@@ -4973,7 +5031,12 @@
       "description": "Reach 5.000 pylon kills through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        "sPylons"
+        [
+          "sPylons"
+        ],
+        [
+          "ePylons:1"
+        ]
       ],
       "details": "Cumulative across all battles: kill 5,000 monsters with pylons."
     },
@@ -5415,7 +5478,12 @@
       "description": "Reach 200 pylon kills through all the battles.",
       "required_effort": "Trivial",
       "requirements": [
-        "sPylons"
+        [
+          "sPylons"
+        ],
+        [
+          "ePylons:1"
+        ]
       ]
     },
     "Icy Fingers": {
@@ -5701,8 +5769,13 @@
       "description": "Strengthen your orb with 7 gems in amplifiers.",
       "required_effort": "Trivial",
       "requirements": [
-        "sAmplifiers",
-        "talismanRow:2"
+        [
+          "sAmplifiers",
+          "talismanRow:2"
+        ],
+        [
+          "eAmplifiers:7"
+        ]
       ],
       "details": "Have 7 gems in amplifiers connected to the orb."
     },

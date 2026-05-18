@@ -148,7 +148,6 @@ def _stages_for_req(req: str):
         _qualifying_stages_for_element,
         _qualifying_stages_for_stat,
         _element_count_field,
-        _BUILDING_ELEMENT_TO_SKILL_ITEM,
     )
 
     req = req.strip()
@@ -178,8 +177,6 @@ def _stages_for_req(req: str):
         return frozenset(union)
 
     if req in element_prefix_map:
-        if req in _BUILDING_ELEMENT_TO_SKILL_ITEM:
-            return None  # broadens via skill held — not stage-bound
         return _disjunction_stages(element_prefix_map[req], 1)
 
     if ":" in req:
@@ -192,9 +189,17 @@ def _stages_for_req(req: str):
         if head in element_prefix_map and len(element_prefix_map[head]) > 1:
             return _disjunction_stages(element_prefix_map[head], 1)
         if len(head) >= 2 and head[0] == "e" and head[1].isupper():
-            # head[1:] strips the "e" prefix, leaving PascalCase already
-            # (eApparition -> Apparition). No further conversion needed.
-            stages = _qualifying_stages_for_element(head[1:], count_needed)
+            # Canonical PascalCase comes from the display name in
+            # element_prefix_map (eAmplifiers → "Amplifier" → "AmplifierCount").
+            # Stripping just the "e" leaves the plural for building elements
+            # and misses the singular Count field.
+            if head in element_prefix_map:
+                elem_pascal = _element_count_field(
+                    element_prefix_map[head][0]
+                )[:-len("Count")]
+            else:
+                elem_pascal = head[1:]
+            stages = _qualifying_stages_for_element(elem_pascal, count_needed)
             if stages is None:
                 return None
             return frozenset(stages)

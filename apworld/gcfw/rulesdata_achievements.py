@@ -863,8 +863,8 @@ achievement_requirements = {
         "game_id": 602,
         "description": "Demolish a pylon.",
         "requirements": [
-            ["ePylons"],
-            ["sPylons"]
+            ["sPylons"],
+            ["ePylons:1"],
         ],
         "required_effort": "Trivial",
     },
@@ -874,7 +874,7 @@ achievement_requirements = {
         "description": "Demolish a trap.",
         "details": "Demolish a trap.",
         "requirements": [
-            ["eTraps"],
+            ["eTraps:1"],
             ["sTraps"]
         ],
         "required_effort": "Trivial",
@@ -1214,7 +1214,11 @@ achievement_requirements = {
         "game_id": 462,
         "description": "Enhance a gem in an amplifier.",
         "details": "Cast Bolt/Beam/Barrage on a gem inside an amplifier.",
-        "requirements": ["sAmplifiers", "enhancementSpells:1"],
+        "requirements": 
+        [
+            ["sAmplifiers", "enhancementSpells:1"],
+            ["EAmplifiers:1", "enhancementSpells:1"],
+        ],
         "required_effort": "Trivial",
     },
     "Why Not": {
@@ -1577,7 +1581,7 @@ achievement_requirements = {
         "ap_id": 2083,
         "game_id": 50,
         "description": "Give a Gem 200 Poison Damage by Amplification.",
-        "requirements": ["sAmplifiers", "sPoison", "talismanRow:3"],
+        "requirements": ["sAmplifiers", "sPoison", "talismanRow:3"],        
         "required_effort": "Trivial",
     },
     "Not Worth It": {
@@ -1678,7 +1682,10 @@ achievement_requirements = {
         "ap_id": 2126,
         "game_id": 526,
         "description": "Have a gem of 6 components in a lantern.",
-        "requirements": ["sLanterns", "gemSkills:6"],
+        "requirements": [
+            ["sLanterns", "gemSkills:6"],
+            ["eLanterns:1", "gemSkills:6"]
+        ],
         "required_effort": "Trivial",
     },
     "Getting Serious": {
@@ -2154,7 +2161,7 @@ achievement_requirements = {
         "details": "In one battle, at least 75% of kills are from poison damage.",
         "requirements": [
             ["sPoison", "sTraps"],
-            ["sPoison", "eTraps"]
+            ["sPoison", "eTraps:1"]
         ],
         "required_effort": "Minor",
     },
@@ -2230,7 +2237,10 @@ achievement_requirements = {
         "ap_id": 2312,
         "game_id": 596,
         "description": "Have 3 pylons charged up to 3 shots each.",
-        "requirements": ["sPylons"],
+        "requirements": [
+            ["sPylons"],
+            ["ePylons:3"]
+        ],
         "required_effort": "Minor",
     },
     "Core Pouch": {
@@ -2409,7 +2419,10 @@ achievement_requirements = {
         "game_id": 213,
         "description": "Hit the same monster with traps 100 times.",
         "details": "Hit the same monster with traps 100 times.",
-        "requirements": ["sTraps", "minMonsterHP:400"],
+        "requirements": [
+            ["sTraps", "minMonsterHP:400"],
+            ["eTraps:1", "minMonsterHP:400"],
+        ],
         "required_effort": "Trivial",
     },
     "Salvation": {
@@ -2455,7 +2468,10 @@ achievement_requirements = {
         "game_id": 407,
         "description": "Kill 1.500 monsters with gems in traps.",
         "details": "Kill 1,500 monsters with traps in one battle.",
-        "requirements": ["sTraps", "minMonsters:1500"],
+        "requirements": [
+            ["sTraps", "minMonsters:1500"],
+            ["eTraps:1", "minMonsters:1500"]
+        ],
         "required_effort": "Extreme",
     },
     "Multinerf": {
@@ -3082,8 +3098,8 @@ achievement_requirements = {
         "game_id": 128,
         "description": "Kill 60 monsters with gems in traps.",
         "requirements":[
-            ["eTraps", "minMonsters:60", "sCriticalHit"],
-            ["sTraps", "minMonsters:60", "sCriticalHit"],            
+            ["eTraps:2", "minMonsters:60"],
+            ["sTraps", "minMonsters:60"],            
         ],
         "required_effort": "Trivial",
     },
@@ -3092,7 +3108,10 @@ achievement_requirements = {
         "game_id": 129,
         "description": "Kill 300 monsters with gems in traps.",
         "details": "Kill 300 monsters with traps in one battle.",
-        "requirements": ["sTraps", "minMonsters:300"],
+        "requirements":[
+             ["sTraps", "minMonsters:300"],
+             ["eTraps:2", "minMonsters:300"]
+        ],
         "required_effort": "Major",
     },
     "Couldn't Decide": {
@@ -3507,14 +3526,21 @@ achievement_requirements = {
         "ap_id": 2095,
         "game_id": 252,
         "description": "Reach -12% decreased banishment cost with your orb.",
-        "requirements": ["sAmplifiers", "fieldToken:20", "talismanRow:1"],
+        "requirements": 
+        [
+            ["sAmplifiers", "talismanRow:1"],
+            ["sOrbOfPresence", "skillPoints:50"]
+        ],
         "required_effort": "Trivial",
     },
     "Desperate Clash": {
         "ap_id": 2122,
         "game_id": 253,
         "description": "Reach -16% decreased banishment cost with your orb.",
-        "requirements": ["sAmplifiers", "talismanRow:3", "fieldToken:40"],
+        "requirements": [
+            ["sAmplifiers", "talismanRow:2"],
+            ["sOrbOfPresence", "skillPoints:100"]
+        ],
         "required_effort": "Major",
     },
     "Insane Investment": {
@@ -3522,7 +3548,10 @@ achievement_requirements = {
         "game_id": 279,
         "description": "Reach -20% decreased banishment cost with your orb.",
         "details": "Reach -20% banishment cost on the orb.",
-        "requirements": ["sAmplifiers", "minWave:80", "talismanRow:3"],
+        "requirements": [
+            ["sAmplifiers", "talismanRow:3"],
+            ["sOrbOfPresence", "skillPoints:150"]
+        ],
         "required_effort": "Extreme",
     },
     "Shatter Them All": {
@@ -3717,7 +3746,10 @@ achievement_requirements = {
         "game_id": 201,
         "description": "Reach 1.000 pylon kills through all the battles.",
         "details": "Cumulative across all battles: kill 1,000 monsters with pylons.",
-        "requirements": ["sPylons"],
+        "requirements": [
+            ["sPylons"],
+            ["ePylons:1"],
+        ],
         "required_effort": "Minor",
     },
     "Bouncy Zap": {
@@ -3725,7 +3757,10 @@ achievement_requirements = {
         "game_id": 222,
         "description": "Reach 2.000 pylon kills through all the battles.",
         "details": "Cumulative across all battles: kill 2,000 monsters with pylons.",
-        "requirements": ["sPylons"],
+        "requirements": [
+            ["sPylons"],
+            ["ePylons:1"],
+        ],
         "required_effort": "Major",
     },
     "Pylons of Destruction": {
@@ -3733,7 +3768,10 @@ achievement_requirements = {
         "game_id": 231,
         "description": "Reach 5.000 pylon kills through all the battles.",
         "details": "Cumulative across all battles: kill 5,000 monsters with pylons.",
-        "requirements": ["sPylons"],
+        "requirements": [
+            ["sPylons"],
+            ["ePylons:1"],
+        ],
         "required_effort": "Extreme",
     },
     "Blastwave": {
@@ -4089,7 +4127,10 @@ achievement_requirements = {
         "ap_id": 2088,
         "game_id": 165,
         "description": "Reach 200 pylon kills through all the battles.",
-        "requirements": ["sPylons"],
+        "requirements": [
+            ["sPylons"],
+            ["ePylons:1"],
+        ],
         "required_effort": "Trivial",
     },
     "Icy Fingers": {
@@ -4322,7 +4363,10 @@ achievement_requirements = {
         "game_id": 259,
         "description": "Strengthen your orb with 7 gems in amplifiers.",
         "details": "Have 7 gems in amplifiers connected to the orb.",
-        "requirements": ["sAmplifiers", "talismanRow:2"],
+        "requirements": [
+            ["sAmplifiers", "talismanRow:2"],
+            ["eAmplifiers:7"],
+        ],
         "required_effort": "Trivial",
     },
     "Near Death": {
