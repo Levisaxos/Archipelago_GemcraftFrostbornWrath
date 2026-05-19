@@ -532,6 +532,10 @@ package tracker {
         public function getFieldPrereqLine(strId:String):Array {
             if (_stageRequirements == null) return null;
             if (_isFieldTokenProgressive()) return null;
+            // Free stages (the seed's starter and the W1-W4 tutorials) are
+            // always reachable regardless of any Field_<sid> prereqs listed
+            // in the stage data — the prereq line would be misleading there.
+            if (_freeStages[strId] == true) return null;
             var reqs:Array = _stageRequirements[strId] as Array;
             if (reqs == null || reqs.length == 0) return null;
 

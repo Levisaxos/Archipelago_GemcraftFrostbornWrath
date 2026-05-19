@@ -2756,7 +2756,10 @@ achievement_requirements = {
         "game_id": 489,
         "description": "Kill an apparition with a gem bomb.",
         "details": "Kill an apparition using a gem bomb.",
-        "requirements": ["tRitual", "eApparition"],
+        "requirements": [
+            ["tRitual"], 
+            ["eApparition:1"]
+        ],
         "required_effort": "Trivial",
     },
     "End of the Tunnel": {
@@ -2771,15 +2774,21 @@ achievement_requirements = {
         "ap_id": 2171,
         "game_id": 496,
         "description": "Kill an apparition with one hit.",
-        "requirements": ["tRitual", "eApparition"],
-        "required_effort": "Trivial",
+        "requirements": [
+            ["tRitual"], 
+            ["eApparition:1"]
+        ],
+        "required_effort": "Minor",
     },
     "I Saw Something": {
         "ap_id": 2255,
         "game_id": 163,
         "description": "Kill an apparition.",
         "details": "Kill an apparition.",
-        "requirements": ["tRitual", "eApparition"],
+        "requirements": [
+            ["tRitual"], 
+            ["eApparition:1"]
+        ],
         "required_effort": "Trivial",
     },
     "They Are Still Here": {
@@ -2787,7 +2796,10 @@ achievement_requirements = {
         "game_id": 167,
         "description": "Kill 2 apparitions.",
         "details": "Kill 2 apparitions in one battle.",
-        "requirements": ["tRitual", "eApparition"],
+        "requirements": [
+            ["tRitual"], 
+            ["eApparition:2"]
+        ],
         "required_effort": "Trivial",
     },
     "Popped": {
@@ -3287,7 +3299,10 @@ achievement_requirements = {
         "game_id": 413,
         "description": "Leave an apparition alive.",
         "details": "End a battle with at least one apparition still alive.",
-        "requirements": ["tRitual", "eApparition"],
+        "requirements": [
+            ["tRitual"], 
+            ["eApparition:1"]
+        ],
         "required_effort": "Trivial",
     },
     "Tapped Essence": {

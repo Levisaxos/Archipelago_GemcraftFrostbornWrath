@@ -31,7 +31,9 @@ package patch {
 
         // Special-case creatures.
         private static const WIZARD_HUNTER_LEVELS:Array = ["L4"];
-        private static const APPARITION_LEVELS:Array    = ["Q1", "R6"];
+        // Apparitions are intentionally always allowed to spawn so Ritual keeps
+        // a baseline threat even when no original creature levels are in logic.
+        // Their HP scales with the current stage via IngameCreator.createApparition.
 
         private var _logger:Logger;
         private var _modName:String;
@@ -96,7 +98,6 @@ package patch {
             var spireUnlocked:Boolean   = _anyInLogic(SPIRE_LEVELS);
             var wraithUnlocked:Boolean  = _anyInLogic(WRAITH_LEVELS);
             var wizardUnlocked:Boolean  = _anyInLogic(WIZARD_HUNTER_LEVELS);
-            var apparitionUnlocked:Boolean = _anyInLogic(APPARITION_LEVELS);
 
             // Build pool of arrays the standard redistribution can target.
             var stdPool:Array = [];
@@ -143,11 +144,8 @@ package patch {
                 (dm.wizardHuntersComingAtWaveNums_scriptedArmors as Array).length = 0;
             }
 
-            // ---- Apparitions: independent count; just clear if locked. ----
+            // ---- Apparitions: always allowed; HP auto-scales with stage. ----
             var inApparition:int = (dm.apparitionsComingAtWaveNums_rnd as Array).length;
-            if (!apparitionUnlocked) {
-                (dm.apparitionsComingAtWaveNums_rnd as Array).length = 0;
-            }
 
             _logger.log(_modName,
                 "RitualSpawnPatcher: unlocked="
@@ -156,7 +154,7 @@ package patch {
                       + (wraithUnlocked  ? "wraith "  : "")
                       + (specterUnlocked ? "specter " : "")
                       + (wizardUnlocked  ? "wizardHunter " : "")
-                      + (apparitionUnlocked ? "apparition" : "")
+                      + "apparition"
                 + "]"
                 + "  in: shadow=" + inShadow + " spire=" + inSpire
                 + " wraith=" + inWraith + " specter=" + inSpecter

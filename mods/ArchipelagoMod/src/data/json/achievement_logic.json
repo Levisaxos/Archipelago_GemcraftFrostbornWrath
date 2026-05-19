@@ -3649,8 +3649,12 @@
       "description": "Kill an apparition with a gem bomb.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual",
-        "eApparition"
+        [
+          "tRitual"
+        ],
+        [
+          "eApparition:1"
+        ]
       ],
       "details": "Kill an apparition using a gem bomb."
     },
@@ -3670,10 +3674,14 @@
       "apId": 2171,
       "game_id": 496,
       "description": "Kill an apparition with one hit.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
-        "tRitual",
-        "eApparition"
+        [
+          "tRitual"
+        ],
+        [
+          "eApparition:1"
+        ]
       ]
     },
     "I Saw Something": {
@@ -3682,8 +3690,12 @@
       "description": "Kill an apparition.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual",
-        "eApparition"
+        [
+          "tRitual"
+        ],
+        [
+          "eApparition:1"
+        ]
       ],
       "details": "Kill an apparition."
     },
@@ -3693,8 +3705,12 @@
       "description": "Kill 2 apparitions.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual",
-        "eApparition"
+        [
+          "tRitual"
+        ],
+        [
+          "eApparition:2"
+        ]
       ],
       "details": "Kill 2 apparitions in one battle."
     },
@@ -4378,8 +4394,12 @@
       "description": "Leave an apparition alive.",
       "required_effort": "Trivial",
       "requirements": [
-        "tRitual",
-        "eApparition"
+        [
+          "tRitual"
+        ],
+        [
+          "eApparition:1"
+        ]
       ],
       "details": "End a battle with at least one apparition still alive."
     },
