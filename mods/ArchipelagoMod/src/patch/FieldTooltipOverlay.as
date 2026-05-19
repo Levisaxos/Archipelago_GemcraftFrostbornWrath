@@ -399,12 +399,18 @@ package patch {
                 // elements the player actually cares about.
                 if (elem == "Tower" || elem == "Wall") continue;
                 var elemInLogic:Boolean = stageReachable;
+                var elemSuffix:String = null;
                 if (elem == "Wizard Tower") {
                     elemInLogic = elemInLogic && stashUnlockedForElems;
                 } else if (elem == "Drop Holder") {
                     elemInLogic = elemInLogic && hasBolt;
+                    // Bolt is the Drop Holder-specific gate. Surface it as a
+                    // suffix when missing; drop the hint once it's held.
+                    if (!hasBolt)
+                        elemSuffix = "Needs bolt";
                 }
-                lines.push(_countLine(elem, _evaluator.getStageElementCount(strId, elem), elemInLogic));
+                lines.push(_countLine(elem, _evaluator.getStageElementCount(strId, elem),
+                                      elemInLogic, elemSuffix));
             }
             for each (var mon:String in _evaluator.getStageMonsters(strId)) {
                 lines.push(_countLine(mon, _evaluator.getStageElementCount(strId, mon),
@@ -433,13 +439,22 @@ package patch {
                 lines.push(_checkLine("Stash", stashDone, stashInLogic, keySuffix));
             }
 
-            // Stage out of logic: show why.
-            if (!_evaluator.isStageInLogic(strId)) {
+            // Field_<sid> prereq status. Shown even when the stage is in
+            // logic so the green "Requirement met" banner stays visible.
+            // Line carries its own colour (green met / red missing).
+            var prereq:Array = _evaluator.getFieldPrereqLine(strId);
+            if (prereq != null && prereq.length >= 2) {
+                lines.push([String(prereq[0]), uint(prereq[1])]);
+            }
+
+            // Stage out of logic: surface remaining blockers (missing token,
+            // unmet counter requirements like talismanRow / skillPoints).
+            if (!_evaluator.isStageInLogic(strId))
+            {
                 var req:Object = _evaluator.getBlockingTokenReq(strId);
                 if (req != null && req.missingToken == true) {
                     lines.push([_evaluator.getMissingTokenLabel(strId), 0xFF4444]);
                 }
-                // Prereq stage / talisman / skillPoints requirements that aren't met.
                 for each (var bl:Array in _evaluator.getBlockingTierSkillLines(strId)) {
                     if (bl != null && bl.length >= 2) {
                         lines.push([String(bl[0]), 0xFF4444]);
@@ -458,8 +473,11 @@ package patch {
             return [text, inLogic ? 0x44FF44 : 0xFF4444];
         }
 
-        private function _countLine(label:String, count:int, inLogic:Boolean):Array {
+        private function _countLine(label:String, count:int, inLogic:Boolean,
+                                    suffix:String = null):Array {
             var text:String = count > 0 ? (label + ": " + count) : label;
+            if (suffix != null && suffix.length > 0)
+                text += " (" + suffix + ")";
             return [text, inLogic ? 0x44FF44 : 0xFF4444];
         }
 

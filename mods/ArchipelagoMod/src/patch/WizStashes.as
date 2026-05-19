@@ -368,10 +368,15 @@ package patch {
                 if (!keyHeld) {
                     lines.push(["Requires Wizard Stash " + strId + " Key", 0xCCCCCC]);
                 }
-                if (!stageInLogic && _evaluator != null) {
-                    var blockingLines:Array = _evaluator.getBlockingTierSkillLines(strId);
-                    for each (var bl:Array in blockingLines) {
-                        if (bl != null && bl.length >= 2) lines.push(bl);
+                if (_evaluator != null) {
+                    var prereqLine:Array = _evaluator.getFieldPrereqLine(strId);
+                    if (prereqLine != null && prereqLine.length >= 2)
+                        lines.push(prereqLine);
+                    if (!stageInLogic) {
+                        var blockingLines:Array = _evaluator.getBlockingTierSkillLines(strId);
+                        for each (var bl:Array in blockingLines) {
+                            if (bl != null && bl.length >= 2) lines.push(bl);
+                        }
                     }
                 }
 

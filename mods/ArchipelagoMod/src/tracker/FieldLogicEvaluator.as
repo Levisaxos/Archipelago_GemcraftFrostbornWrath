@@ -456,10 +456,12 @@ package tracker {
 
         /**
          * Returns [text, color] line pairs describing why this stage isn't
-         * in logic. Used by FieldTooltipOverlay. Lines cover:
-         *   - Missing prereq stages (Field_<sid>) — "Requires field X / Y / Z"
-         *   - Unmet counter requirements (talismanRow:N etc.) — "Requires N matching rows"
-         * Returns empty array when stage is in logic or has no rules.
+         * in logic. Used by FieldTooltipOverlay. Lines cover unmet counter
+         * requirements (talismanRow:N etc.) — "Requires N matching rows".
+         * Field_<sid> prereq status lives in getFieldPrereqLine so callers
+         * can render the green "Requirement met" banner independently of
+         * overall in-logic state. Returns empty array when stage has no
+         * rules or no unmet counter requirements.
          */
         public function getBlockingTierSkillLines(strId:String):Array {
             if (_stageRequirements == null) return [];
@@ -490,38 +492,6 @@ package tracker {
 
             var lines:Array = [];
 
-            // Field_ prereqs — show as a single OR line when no path is in
-            // logic. "In logic" must match the gate's recursive _stageReachable
-            // check: a prereq stage that's been beaten OUT of logic doesn't
-            // satisfy the chain (its own prereqs are still broken), so the
-            // gate still rejects it and we must still surface the hint.
-            // Earlier this branch used _isFieldBeatenJourney, which made the
-            // display disagree with the gate — beating a prereq out of logic
-            // would silently suppress the hint while the gate kept this stage
-            // out of logic, leaving the player with no visible blocker.
-            // Skipped in progressive field-token modes: Field_<sid> chains are
-            // artificial there (Nth copy unlocks Nth stage), so naming a stage
-            // would point at an item they can't directly hunt for.
-            if (!_isFieldTokenProgressive()) {
-                var missingFields:Array = [];
-                var anyFieldInLogic:Boolean = false;
-                var anyFreePrereq:Boolean = false;
-                for each (var req:String in flat) {
-                    if (req == null || req.indexOf("Field_") != 0) continue;
-                    var sid:String = req.substr(6);
-                    if (_freeStages[sid] == true) {
-                        anyFreePrereq = true;
-                    } else if (_stageReachable(sid)) {
-                        anyFieldInLogic = true;
-                    } else {
-                        missingFields.push(sid);
-                    }
-                }
-                if (!anyFieldInLogic && !anyFreePrereq && missingFields.length > 0) {
-                    lines.push(["Requires field " + missingFields.join(" / ") + " beaten", 0x888888]);
-                }
-            }
-
             // Counter requirements that aren't met — one line each.
             for each (var creq:String in flat) {
                 if (creq == null || creq.indexOf("Field_") == 0) continue;
@@ -541,6 +511,60 @@ package tracker {
                 }
             }
             return lines;
+        }
+
+        /**
+         * Returns a single [text, color] line summarising this stage's
+         * Field_<sid> prereq status, or null when no Field_ prereqs exist
+         * (or the seed uses progressive field-token granularity, where the
+         * Field_ chain is artificial — see _requirementsGateMet).
+         *
+         * Green "Requirement met: X / Y" — listed prereqs are satisfied
+         * (free or reachable via the gate's recursive _stageReachable check).
+         * Red "Requires field X / Y / Z beaten" — none of the OR alternatives
+         * are satisfied yet.
+         *
+         * Beating a prereq OUT of logic does NOT count as satisfied: the
+         * gate still rejects it (its own chain is broken), so we'd lie to
+         * the player by showing green. Matches the gate semantics in
+         * _requirementsGateMet.
+         */
+        public function getFieldPrereqLine(strId:String):Array {
+            if (_stageRequirements == null) return null;
+            if (_isFieldTokenProgressive()) return null;
+            var reqs:Array = _stageRequirements[strId] as Array;
+            if (reqs == null || reqs.length == 0) return null;
+
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
+            var seen:Object = {};
+            var metFields:Array = [];
+            var missingFields:Array = [];
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                for each (var entry:String in group) {
+                    if (entry == null || entry.indexOf("Field_") != 0) continue;
+                    var sid:String = entry.substr(6);
+                    if (seen[sid]) continue;
+                    seen[sid] = true;
+                    if (_freeStages[sid] == true || _stageReachable(sid)) {
+                        metFields.push(sid);
+                    } else {
+                        missingFields.push(sid);
+                    }
+                }
+            }
+            if (metFields.length > 0) {
+                return ["Requirement met: " + metFields.join(" / "), 0x44FF44];
+            }
+            if (missingFields.length > 0) {
+                return ["Requires field " + missingFields.join(" / ") + " beaten", 0xFF4444];
+            }
+            return null;
         }
 
         /**

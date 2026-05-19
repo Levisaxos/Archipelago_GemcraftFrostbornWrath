@@ -928,8 +928,7 @@ achievement_requirements = {
         "description": "Destroy a building and a non-monster creature with one gem bomb.",
         "details": "Destroy a building AND kill a non-monster with the same gem bomb.",
         "requirements": [
-            ["tRitual", "eBeacon:1"],
-            ["tRitual", "eDropHolder:1"],
+            ["tRitual", "eBeacon:1"],            
             ["tRitual", "eMonsterNest:1"],
         ],
         "required_effort": "Minor",
@@ -1150,7 +1149,7 @@ achievement_requirements = {
         "ap_id": 2611,
         "game_id": 260,
         "description": "Don't let any monster touch your orb for 20 beaten waves.",
-        "requirements": ["minWave:20"],
+        "requirements": ["minWave:21"],
         "required_effort": "Trivial",
     },
     "Tightly Secured": {
@@ -1504,9 +1503,7 @@ achievement_requirements = {
         "ap_id": 2178,
         "game_id": 233,
         "description": "Gain 200 mana from drops.",
-        "requirements": [
-            ["eDropHolder:2"],
-        ],
+        "requirements": ["eDropHolder:3", "sBolt"],
         "required_effort": "Trivial",
     },
     "Keepers": {
@@ -1514,7 +1511,7 @@ achievement_requirements = {
         "game_id": 234,
         "description": "Gain 800 mana from drops.",
         "details": "Gain 800 mana from drops in one battle.",
-        "requirements": ["eDropHolder"],
+        "requirements": ["eDropHolder:4", "sBolt"],
         "required_effort": "Minor",
     },
     "Adventurer": {
@@ -1567,7 +1564,7 @@ achievement_requirements = {
         "game_id": 111,
         "description": "Get a gem from a drop holder.",
         "details": "Get a free gem from a drop holder.",
-        "requirements": ["eDropHolder"],
+        "requirements": ["eDropHolder:1", "sBolt"],
         "required_effort": "Trivial",
     },
     "Zapped": {
@@ -3090,7 +3087,11 @@ achievement_requirements = {
         "ap_id": 2160,
         "game_id": 127,
         "description": "Kill 12 monsters with gems in traps.",
-        "requirements": ["eTraps"],
+        "requirements": 
+        [
+            ["eTraps:1"],
+            ["sTraps"]
+        ],
         "required_effort": "Trivial",
     },
     "Rough Path": {
@@ -3450,7 +3451,7 @@ achievement_requirements = {
         "game_id": 390,
         "description": "Open a drop holder.",
         "details": "Open a drop holder.",
-        "requirements": ["eDropHolder"],
+        "requirements": ["eDropHolder:1", "sBolt"],
         "required_effort": "Trivial",
     },
     "Tomb No Matter What": {
@@ -3473,14 +3474,14 @@ achievement_requirements = {
         "ap_id": 2242,
         "game_id": 100,
         "description": "Open 3 drop holders before wave 3.",
-        "requirements": ["eDropHolder:3"],
+        "requirements": ["eDropHolder:3", "sBolt"],
         "required_effort": "Minor",
     },
     "No Stone Unturned": {
         "ap_id": 2371,
         "game_id": 99,
         "description": "Open 5 drop holders.",
-        "requirements": ["eDropHolder:5"],
+        "requirements": ["eDropHolder:5", "sBolt"],
         "required_effort": "Trivial",
     },
     "A Shrubbery!": {
@@ -4630,7 +4631,7 @@ achievement_requirements = {
         "game_id": 162,
         "description": "And it's bloody too",
         "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
-        "requirements": ["eTraps"],
+        "requirements": ["eTraps:1"],
         "required_effort": "Trivial",
         "untrackable": True,
     },
@@ -4813,7 +4814,7 @@ achievement_requirements = {
         "game_id": 268,
         "description": "Gain 1.600 mana from drops.",
         "details": "Gain 1,600 mana from drops in one battle.",
-        "requirements": ["eDropHolder"],
+        "requirements": ["eDropHolder:19", "sBolt"],
         "required_effort": "Major",
         "untrackable": True,
     },
@@ -4822,7 +4823,7 @@ achievement_requirements = {
         "game_id": 287,
         "description": "Gain 3.200 mana from drops.",
         "details": "Gain 3,200 mana from drops in one battle.",
-        "requirements": ["eDropHolder"],
+        "requirements": ["eDropHolder:19", "sBolt"],
         "required_effort": "Extreme",
         "untrackable": True,
     },

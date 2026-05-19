@@ -1200,10 +1200,6 @@
         ],
         [
           "tRitual",
-          "eDropHolder:1"
-        ],
-        [
-          "tRitual",
           "eMonsterNest:1"
         ]
       ],
@@ -1501,7 +1497,7 @@
       "description": "Don't let any monster touch your orb for 20 beaten waves.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:20"
+        "minWave:21"
       ]
     },
     "Tightly Secured": {
@@ -1966,9 +1962,8 @@
       "description": "Gain 200 mana from drops.",
       "required_effort": "Trivial",
       "requirements": [
-        [
-          "eDropHolder:2"
-        ]
+        "eDropHolder:3",
+        "sBolt"
       ]
     },
     "Keepers": {
@@ -1977,7 +1972,8 @@
       "description": "Gain 800 mana from drops.",
       "required_effort": "Minor",
       "requirements": [
-        "eDropHolder"
+        "eDropHolder:4",
+        "sBolt"
       ],
       "details": "Gain 800 mana from drops in one battle."
     },
@@ -2045,7 +2041,8 @@
       "description": "Get a gem from a drop holder.",
       "required_effort": "Trivial",
       "requirements": [
-        "eDropHolder"
+        "eDropHolder:1",
+        "sBolt"
       ],
       "details": "Get a free gem from a drop holder."
     },
@@ -4109,7 +4106,12 @@
       "description": "Kill 12 monsters with gems in traps.",
       "required_effort": "Trivial",
       "requirements": [
-        "eTraps"
+        [
+          "eTraps:1"
+        ],
+        [
+          "sTraps"
+        ]
       ]
     },
     "Rough Path": {
@@ -4607,7 +4609,8 @@
       "description": "Open a drop holder.",
       "required_effort": "Trivial",
       "requirements": [
-        "eDropHolder"
+        "eDropHolder:1",
+        "sBolt"
       ],
       "details": "Open a drop holder."
     },
@@ -4639,7 +4642,8 @@
       "description": "Open 3 drop holders before wave 3.",
       "required_effort": "Minor",
       "requirements": [
-        "eDropHolder:3"
+        "eDropHolder:3",
+        "sBolt"
       ]
     },
     "No Stone Unturned": {
@@ -4648,7 +4652,8 @@
       "description": "Open 5 drop holders.",
       "required_effort": "Trivial",
       "requirements": [
-        "eDropHolder:5"
+        "eDropHolder:5",
+        "sBolt"
       ]
     },
     "A Shrubbery!": {
@@ -6093,7 +6098,7 @@
       "description": "And it's bloody too",
       "required_effort": "Trivial",
       "requirements": [
-        "eTraps"
+        "eTraps:1"
       ],
       "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
       "untrackable": true
@@ -6322,7 +6327,8 @@
       "description": "Gain 1.600 mana from drops.",
       "required_effort": "Major",
       "requirements": [
-        "eDropHolder"
+        "eDropHolder:19",
+        "sBolt"
       ],
       "details": "Gain 1,600 mana from drops in one battle.",
       "untrackable": true
@@ -6333,7 +6339,8 @@
       "description": "Gain 3.200 mana from drops.",
       "required_effort": "Extreme",
       "requirements": [
-        "eDropHolder"
+        "eDropHolder:19",
+        "sBolt"
       ],
       "details": "Gain 3,200 mana from drops in one battle.",
       "untrackable": true
