@@ -4379,10 +4379,7 @@ achievement_requirements = {
         "game_id": 259,
         "description": "Strengthen your orb with 7 gems in amplifiers.",
         "details": "Have 7 gems in amplifiers connected to the orb.",
-        "requirements": [
-            ["sAmplifiers", "talismanRow:2"],
-            ["eAmplifiers:7"],
-        ],
+        "requirements": ["sAmplifiers", "talismanRow:2"],
         "required_effort": "Trivial",
     },
     "Near Death": {

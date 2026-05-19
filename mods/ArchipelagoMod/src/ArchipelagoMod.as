@@ -59,6 +59,7 @@ package {
     import patch.FirstPlayBypass;
     import patch.EarlyExitOutcome;
     import patch.VictoryRestartButton;
+    import patch.RetryButtonSkillPointsRefresh;
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
     import patch.HollowGemInjector;
@@ -154,6 +155,7 @@ package {
         private var _firstPlayBypass:FirstPlayBypass;
         private var _earlyExitOutcome:EarlyExitOutcome;
         private var _victoryRestartButton:VictoryRestartButton;
+        private var _retryButtonSkillPointsRefresh:RetryButtonSkillPointsRefresh;
         private var _frostbornFreeBuildings:FrostbornFreeBuildings;
         private var _gemPouchSuppressor:GemPouchSuppressor;
         private var _hollowGemInjector:HollowGemInjector;
@@ -267,6 +269,7 @@ package {
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
                 _victoryRestartButton = new VictoryRestartButton(_logger, MOD_NAME);
+                _retryButtonSkillPointsRefresh = new RetryButtonSkillPointsRefresh(_logger, MOD_NAME);
                 _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
@@ -990,6 +993,7 @@ package {
                 _frostbornFreeBuildings.onIngameFrame();
                 _earlyExitOutcome.tryAttach();
                 _victoryRestartButton.tryAttach();
+                _retryButtonSkillPointsRefresh.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
