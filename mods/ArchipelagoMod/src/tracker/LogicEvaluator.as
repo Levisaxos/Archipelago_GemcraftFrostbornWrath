@@ -97,6 +97,15 @@ package tracker {
          *  each token was satisfied by a different stage. */
         public function evaluateRequirements(requirements:Array):Boolean {
             if (requirements == null || requirements.length == 0) return true;
+            // Ensure AV.sessionData.fieldsInLogic is current before any
+            // same-stage binding or fieldToken:N counter consults it. The
+            // field evaluator's recompute is a no-op when not dirty, so this
+            // is cheap on repeat calls within the same achievement pass.
+            // Without this, callers that drive recompute via markDirty +
+            // lazy query (the achievement panel's dot poll, the in-game
+            // refresh) can serve a stale answer when no other consumer has
+            // forced the field evaluator to recompute yet.
+            if (_fieldEvaluator != null) _fieldEvaluator.recompute();
             if (requirements[0] is Array) {
                 for each (var group:* in requirements) {
                     var andGroup:Array = group as Array;
@@ -1239,9 +1248,24 @@ package tracker {
             }
         }
 
-        /** Group every talisman fragment AP id into edge/corner/inner buckets
-         *  by parsing the talismanMap value (slash-separated; index 2 is type:
-         *  0=EDGE, 1=CORNER, 2=INNER). */
+        /** Group talisman fragment AP ids into edge/corner/inner buckets by
+         *  parsing the talismanMap value (slash-separated; index 1 is rarity,
+         *  index 2 is type: 0=EDGE, 1=CORNER, 2=INNER).
+         *
+         *  Restricted to apworld's 25 progression names: top 4 corners + top
+         *  12 edges + top 9 inner by descending rarity, str_id as tiebreak
+         *  (mirrors talismans.py `_build_progression_corner_edge_names` and
+         *  `_build_matching_talisman_grid`). Useful (non-progression)
+         *  fragments arrive as AP filler and must not count toward
+         *  `talismanFragments:N` or the typed counters — otherwise the
+         *  achievement panel would mark talisman-gated achievements
+         *  (e.g. "Gearing Up") in logic before apworld considers them
+         *  reachable.
+         *
+         *  Computed locally because the underlying tal_data is static across
+         *  seeds (bit-identical between apworld game_data.json and the mod's
+         *  embedded itemdata.json), so no slot_data plumbing is needed.
+         */
         private function _buildTalismanIdBuckets():void {
             _edgeFragIds   = [];
             _cornerFragIds = [];
@@ -1252,6 +1276,10 @@ package tracker {
             {
                 return;
             }
+            var byApId:Object = (AV.serverData != null) ? AV.serverData.talismansByApId : null;
+            var edgeCandidates:Array = [];
+            var cornerCandidates:Array = [];
+            var innerCandidates:Array = [];
             for (var apIdStr:String in talMap)
             {
                 var apId:int = int(apIdStr);
@@ -1260,21 +1288,41 @@ package tracker {
                 {
                     continue;
                 }
+                var rarity:int = int(parts[1]);
                 var typeId:int = int(parts[2]);
-                _allFragIds.push(apId);
-                if (typeId == 0)
-                {
-                    _edgeFragIds.push(apId);
-                }
-                else if (typeId == 1)
-                {
-                    _cornerFragIds.push(apId);
-                }
-                else if (typeId == 2)
-                {
-                    _innerFragIds.push(apId);
-                }
+                // str_id tiebreak matches apworld's sort key. Fall back to a
+                // stable string when we can't resolve it; AP IDs are unique
+                // so the bucket result is still deterministic.
+                var strId:String = (byApId != null && byApId[apId] != null)
+                    ? String(byApId[apId].strId)
+                    : ("ap" + apId);
+                var entry:Object = { apId: apId, rarity: rarity, strId: strId };
+                if (typeId == 0) edgeCandidates.push(entry);
+                else if (typeId == 1) cornerCandidates.push(entry);
+                else if (typeId == 2) innerCandidates.push(entry);
             }
+            _selectProgressionBucket(cornerCandidates, 4, _cornerFragIds);
+            _selectProgressionBucket(edgeCandidates,   12, _edgeFragIds);
+            _selectProgressionBucket(innerCandidates,   9, _innerFragIds);
+            _allFragIds = _cornerFragIds.concat(_edgeFragIds, _innerFragIds);
+        }
+
+        /** Sort by descending rarity, str_id ascending (apworld parity), then
+         *  take the top `take` AP ids into `out`. If we have fewer candidates
+         *  than `take` we take what we have; pool sizing in game_data.json
+         *  guarantees enough fragments per type for the standard 4/12/9 cut.
+         */
+        private function _selectProgressionBucket(candidates:Array, take:int, out:Array):void {
+            candidates.sort(_compareByRarityDescStrIdAsc);
+            var n:int = Math.min(take, candidates.length);
+            for (var i:int = 0; i < n; i++) out.push(int(candidates[i].apId));
+        }
+
+        private static function _compareByRarityDescStrIdAsc(a:Object, b:Object):int {
+            if (a.rarity != b.rarity) return int(b.rarity) - int(a.rarity);
+            if (String(a.strId) < String(b.strId)) return -1;
+            if (String(a.strId) > String(b.strId)) return 1;
+            return 0;
         }
 
         private function _countItemsInList(ids:Array):int {

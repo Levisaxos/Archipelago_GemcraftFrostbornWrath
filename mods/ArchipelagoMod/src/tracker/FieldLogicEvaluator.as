@@ -757,6 +757,7 @@ package tracker {
          *     AND every non-Field requirement (talismanRow:N etc.) is met.
          */
         public function recompute():void {
+            if (!_dirty) return;
             _inLogicByStrId = {};
 
             if (_stageRequirements == null) {

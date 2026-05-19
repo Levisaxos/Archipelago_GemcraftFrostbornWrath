@@ -3301,7 +3301,7 @@ achievement_requirements = {
         "details": "End a battle with at least one apparition still alive.",
         "requirements": [
             ["tRitual"], 
-            ["eApparition:1"]
+            ["eApparition:1h"]
         ],
         "required_effort": "Trivial",
     },
@@ -4557,7 +4557,7 @@ achievement_requirements = {
         "game_id": 543,
         "description": "Win a battle with at least 10 orblets remaining.",
         "details": "Win a battle with at least 10 orblets remaining unharvested.",
-        "requirements": ["sOrbOfPresence"],
+        "requirements": ["sOrbOfPresence", "fieldToken:50"],
         "required_effort": "Trivial",
     },
     "Mana is All I Need": {
