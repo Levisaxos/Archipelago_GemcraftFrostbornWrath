@@ -104,7 +104,7 @@ package {
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
         public function get APWORLD_VERSION():String   { return "0.1.0.1"; }
-        public function get RELEASE_CHANNEL():String   { return "RC5"; }
+        public function get RELEASE_CHANNEL():String   { return "RC6"; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
