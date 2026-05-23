@@ -2077,9 +2077,9 @@ level_requirements = {
         "MonsterNestCount": 1,
         "RainCount": 1,
         "requirements": [
-            ["Field_P1"],
-            ["Field_R6"],
-            ["Field_O2"],
+            ["Field_P1", "sTraps"],
+            ["Field_R6", "sTraps"],
+            ["Field_O2", "sTraps"],
         ],
     },
     "P6": {

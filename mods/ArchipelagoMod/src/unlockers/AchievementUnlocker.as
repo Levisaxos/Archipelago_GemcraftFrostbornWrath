@@ -411,7 +411,23 @@ package unlockers {
          * but harmless: detectAndReport's gainedAchis cross-check stops it
          * from being interpreted as a brand-new check next session.
          *
-         * Returns the number of achievements restored.
+         * Second pass — excluded achievements (effort / Trial / disabled-
+         * Endurance / untrackable): for any already in gainedAchis, seed
+         * _reportedAchievements so detectAndReport doesn't re-fire the
+         * toast + drop-icon for them on every reconnect. We also stamp
+         * ach.status = 3 to match the AP-tracked path: vanilla's
+         * IngameInitializer2.resetAchis only runs when entering a stage,
+         * so on the selector screen ach.status would otherwise stay at
+         * its initial 0 (or whatever previous slot left it), causing
+         * _applySortedOrder to bucket the achievement into "rest" (g3)
+         * and _applyLogicDots to paint a red "out of logic" dot even
+         * though the achievement is collected. SP is left alone —
+         * vanilla SP for excluded achis flows naturally from gainedAchis
+         * via PnlAchievements.calculateSkillPtBonus.
+         *
+         * Returns the total number of achievements processed (AP-tracked
+         * + excluded-seeded). Caller uses this to decide whether to
+         * refresh the achievement panel.
          */
         public function restoreCheckedAchievements():int {
             if (GV.ppd == null || GV.achiCollection == null) return 0;
@@ -442,6 +458,35 @@ package unlockers {
                 restored++;
             }
 
+            // Second pass — silence previously-gained excluded achievements
+            // and stamp them WAS_ALREADY_UNLOCKED so the panel sort + dot
+            // logic treat them as earned. gainedAchis persists across
+            // sessions, but _reportedAchievements is wiped on every
+            // MAINMENU / LOADGAME entry; without this seed detectAndReport
+            // would re-toast and re-icon every excluded unlock on every
+            // reconnect. Only seed game IDs already committed to gainedAchis
+            // — newly-earned excluded achievements in the current session
+            // must still surface their toast + drop icon.
+            var excludedSeeded:int = 0;
+            for (i = 0; i < achisByOrder.length; i++) {
+                var achEx:* = achisByOrder[i];
+                if (!achEx) continue;
+                var gidEx:int = int(achEx.id);
+                if (gidEx < 0 || gidEx >= gainedAchis.length) continue;
+                if (gainedAchis[gidEx] !== true) continue;
+                if (_reportedAchievements[gidEx]) continue;  // already covered by AP-tracked pass
+                var achDataEx:Object = _gameIdToData[gidEx];
+                if (achDataEx == null) continue;
+                if (getSkipReason(achDataEx) == null) continue;
+                try { achEx.status = 3; } catch (eExStatus:Error) {}
+                _reportedAchievements[gidEx] = true;
+                excludedSeeded++;
+            }
+            if (excludedSeeded > 0) {
+                _logger.log(_modName, "restoreCheckedAchievements: silenced " + excludedSeeded
+                    + " previously-gained excluded achievements");
+            }
+
             if (restored > 0) {
                 _logger.log(_modName, "restoreCheckedAchievements: marked " + restored
                     + " AP-checked achievements as locally gained");
@@ -452,6 +497,9 @@ package unlockers {
                 // from gainedAchis at load time — well before our restore
                 // runs. Without re-calling it the icons stay greyed out
                 // even though gainedAchis is now true.
+                // Only the AP-tracked pass mutates gainedAchis; the excluded
+                // pass leaves it untouched (it was already true from save),
+                // so the lock-status refresh is gated on `restored`.
                 try {
                     if (GV.selectorCore != null && GV.selectorCore.pnlAchievements != null) {
                         GV.selectorCore.pnlAchievements.setAchiLockStatusesOnLoad();
@@ -460,7 +508,39 @@ package unlockers {
                     _logger.log(_modName, "restoreCheckedAchievements: setAchiLockStatusesOnLoad threw: " + eFlags.message);
                 }
             }
-            return restored;
+            return restored + excludedSeeded;
+        }
+
+        /**
+         * Return apIds of every AP-tracked achievement that gainedAchis says
+         * is locally earned. Excluded achievements (effort / Trial /
+         * Endurance-disabled / untrackable) are filtered out — they have no
+         * AP location to check. Used by ConnectionManager.reconcileLocationChecks
+         * to re-send checks the server may have missed (network drop,
+         * detection skipped a tick, earned-while-disconnected).
+         */
+        public function scanLocallyEarnedAchievementApIds():Array {
+            var result:Array = [];
+            if (GV.ppd == null)
+                return result;
+            var gainedAchis:Array = GV.ppd.gainedAchis;
+            if (gainedAchis == null)
+                return result;
+
+            for (var gameId:int = 0; gameId < gainedAchis.length; gameId++) {
+                if (gainedAchis[gameId] !== true)
+                    continue;
+                var achData:Object = _gameIdToData[gameId];
+                if (!achData)
+                    continue;
+                var apId:int = int(achData.apId);
+                if (apId < 2000 || apId > 2636)
+                    continue;
+                if (getSkipReason(achData) != null)
+                    continue;
+                result.push(apId);
+            }
+            return result;
         }
 
         // -----------------------------------------------------------------------
@@ -513,10 +593,17 @@ package unlockers {
             if (AV.serverData == null || AV.serverData.serverOptions == null) return null;
             if (AV.sessionData == null) return null;
 
+            // Bundles are stackable — the same apId can arrive multiple
+            // times per slot. sessionData.collectedItems is just a boolean
+            // ("seen at least once"), so multiply by getItemCount(apId) to
+            // get the true total. Without this, a slot that received four
+            // Small bundles would only credit one Small's worth of SP and
+            // the drop icon's total would diverge from the panel.
             var bundles:int = 0;
             for (var apId:int = 1700; apId <= 1703; apId++) {
-                if (AV.sessionData.hasItem(apId)) {
-                    bundles += int(AV.serverData.serverOptions.getSpBundleValue(apId));
+                var count:int = AV.sessionData.getItemCount(apId);
+                if (count > 0) {
+                    bundles += count * int(AV.serverData.serverOptions.getSpBundleValue(apId));
                 }
             }
 

@@ -133,12 +133,88 @@ def _get_stat_counter_ceilings() -> dict:
     return _STAT_COUNTER_CEILINGS
 
 
+def _stages_for_req(req: str):
+    """Mirror rules._compile_req's static_set: return the frozenset of stage
+    str_ids that satisfy a per-stage token, or None if the token is global
+    (no stage binding). Used by _group_can_be_met to detect AND-groups
+    whose per-stage tokens have empty stage-set intersection — those
+    compile to _always_false in rules._compile_dnf (lines 1555-1563), so
+    the achievement location is permanently unreachable in this seed.
+    """
+    from .requirement_tokens import (
+        item_prefix_map, element_prefix_map, level_stat_counters,
+    )
+    from .rules import (
+        _qualifying_stages_for_element,
+        _qualifying_stages_for_stat,
+        _element_count_field,
+    )
+
+    req = req.strip()
+
+    if req.startswith("Field_"):
+        return frozenset({req[len("Field_"):]})
+
+    if req.startswith("Achievement:"):
+        return None  # state-dependent ach-reachable closure
+
+    if req in item_prefix_map:
+        return None  # item/trait token — global
+
+    def _disjunction_stages(elem_names, count_needed: int):
+        union = set()
+        for n in elem_names:
+            if n == "Wizard Stash":
+                return None  # state-dependent stash path
+            # _qualifying_stages_for_element takes the PascalCase form
+            # ("WizardHunter"), not the display name ("Wizard Hunter").
+            # Same conversion rules.py:1229 does inline.
+            elem_pascal = _element_count_field(n)[:-len("Count")]
+            stages = _qualifying_stages_for_element(elem_pascal, count_needed)
+            if stages is None:
+                return None  # universally present — no constraint
+            union.update(stages)
+        return frozenset(union)
+
+    if req in element_prefix_map:
+        return _disjunction_stages(element_prefix_map[req], 1)
+
+    if ":" in req:
+        head, count_str = req.split(":", 1)
+        head = head.strip()
+        try:
+            count_needed = int(count_str.strip())
+        except ValueError:
+            return None
+        if head in element_prefix_map and len(element_prefix_map[head]) > 1:
+            return _disjunction_stages(element_prefix_map[head], 1)
+        if len(head) >= 2 and head[0] == "e" and head[1].isupper():
+            # Canonical PascalCase comes from the display name in
+            # element_prefix_map (eAmplifiers → "Amplifier" → "AmplifierCount").
+            # Stripping just the "e" leaves the plural for building elements
+            # and misses the singular Count field.
+            if head in element_prefix_map:
+                elem_pascal = _element_count_field(
+                    element_prefix_map[head][0]
+                )[:-len("Count")]
+            else:
+                elem_pascal = head[1:]
+            stages = _qualifying_stages_for_element(elem_pascal, count_needed)
+            if stages is None:
+                return None
+            return frozenset(stages)
+        if head in level_stat_counters:
+            return frozenset(_qualifying_stages_for_stat(head, count_needed))
+
+    return None  # everything else is global / has no stage binding
+
+
 def _can_achievement_be_met(requirements: list) -> bool:
     """
     Check if an achievement can be met based on its requirements (DNF format).
     Returns True if any AND-group can be met, False only if all groups are blocked.
 
-    Two structural blockers are checked from level data:
+    Three structural blockers are checked from level data:
       * Element presence/count: the achievement names an element (eBeacon,
         eShrine:2, ...) but no stage hosts it at the required count.
         Universal-presence elements (Tower / Wall / Wizard Stash / Marked
@@ -147,9 +223,15 @@ def _can_achievement_be_met(requirements: list) -> bool:
         (minWave, minMonsters, markedMonster, ...) at a value no stage
         actually reaches.  Frag Rain (minWave:245 with max WaveCount=100)
         is the canonical case.
+      * Same-stage AND-binding: per-stage tokens inside an AND-group must
+        all be satisfied on a single stage (rules._compile_dnf intersects
+        their static_sets). "Flying Multikill" needs tRitual + 4 monsters
+        on one stage; if no such stage exists the access rule compiles to
+        _always_false and the location becomes a dead slot for fill.
 
-    Mirrors the runtime check in rules.py `_eval_req`: a `<head>:N`
-    requirement passes iff at least one stage qualifies.
+    Mirrors the runtime check in rules.py `_eval_req` / `_compile_dnf`:
+    a `<head>:N` requirement passes iff at least one stage qualifies, AND
+    every per-stage token in an AND-group shares at least one stage.
     """
     from .requirement_tokens import element_prefix_map
     from .rules import _element_count_field, _PRESENT_COUNT_FIELDS
@@ -194,6 +276,7 @@ def _can_achievement_be_met(requirements: list) -> bool:
         return False  # other tokens (item-pool counters, modes, etc.)
 
     def _group_can_be_met(group: list) -> bool:
+        # Per-token block check (presence/count + counter ceilings).
         for req in group:
             if isinstance(req, list):
                 if not _can_achievement_be_met(req):
@@ -201,6 +284,26 @@ def _can_achievement_be_met(requirements: list) -> bool:
                 continue
             if _req_blocked(req.strip()):
                 return False
+        # Same-stage AND-binding: intersect per-stage tokens' stage-sets.
+        # Mirrors rules._compile_dnf:1555-1563 — without this, achievements
+        # whose AND-groups need multiple per-stage tokens (eShrine + eWraith
+        # + tRitual, etc.) pass the per-token check but compile to
+        # _always_false because no single stage hosts every required token
+        # together. Dead access rules leave the location unfillable in
+        # remaining_fill and cause FillError once junk runs out of homes.
+        intersection = None
+        for req in group:
+            if isinstance(req, list):
+                continue
+            stages = _stages_for_req(req)
+            if stages is None:
+                continue
+            if intersection is None:
+                intersection = set(stages)
+            else:
+                intersection &= stages
+                if not intersection:
+                    return False
         return True
 
     if not requirements:

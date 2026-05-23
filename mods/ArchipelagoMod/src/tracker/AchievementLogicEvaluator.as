@@ -256,6 +256,15 @@ package tracker {
                 return;
             }
 
+            // Force field recompute first so AV.sessionData.fieldsInLogic is
+            // current before we evaluate any same-stage-bound requirement.
+            // LogicEvaluator._evaluateAndGroupBound (and a couple of other
+            // gates) read fieldsInLogic directly without going through the
+            // field evaluator's lazy gate, so if the field evaluator is
+            // dirty when we start iterating, the first per-stage-bound ach
+            // we hit will get a stale answer and cache it for the session.
+            if (_fieldEvaluator != null) _fieldEvaluator.recompute();
+
             var missing: Object = AV.saveData.missingLocations;
             var requiredEffort: int = AV.serverData.serverOptions.achievementRequiredEffort;
             var effortHierarchy: Array = ["Trivial", "Minor", "Major", "Extreme"];

@@ -34,6 +34,14 @@ package tracker {
         private var _logger:Logger;
         private var _modName:String;
 
+        // Set once by ArchipelagoMod after both evaluators exist. Used by
+        // _requirementsGateMet to delegate skill / trait / element / counter
+        // token resolution back to the shared resolver in LogicEvaluator,
+        // keeping prefix maps in one place. Field_<sid> entries are still
+        // handled locally via _stageReachable so the recursion uses the
+        // live computation rather than the cached fieldsInLogic snapshot.
+        private var _logicEvaluator:LogicEvaluator;
+
         // Logic data from logic.json (loaded by ServerData.loadLogicFromJSON).
         private var _stageSkills:Object;         // strId -> Array<WIZLOCK skill string>
         private var _stageRequirements:Object;   // strId -> Array<requirement string>
@@ -60,6 +68,10 @@ package tracker {
         public function FieldLogicEvaluator(logger:Logger, modName:String) {
             _logger  = logger;
             _modName = modName;
+        }
+
+        public function setLogicEvaluator(le:LogicEvaluator):void {
+            _logicEvaluator = le;
         }
 
         /**
@@ -444,10 +456,12 @@ package tracker {
 
         /**
          * Returns [text, color] line pairs describing why this stage isn't
-         * in logic. Used by FieldTooltipOverlay. Lines cover:
-         *   - Missing prereq stages (Field_<sid>) — "Requires field X / Y / Z"
-         *   - Unmet counter requirements (talismanRow:N etc.) — "Requires N matching rows"
-         * Returns empty array when stage is in logic or has no rules.
+         * in logic. Used by FieldTooltipOverlay. Lines cover unmet counter
+         * requirements (talismanRow:N etc.) — "Requires N matching rows".
+         * Field_<sid> prereq status lives in getFieldPrereqLine so callers
+         * can render the green "Requirement met" banner independently of
+         * overall in-logic state. Returns empty array when stage has no
+         * rules or no unmet counter requirements.
          */
         public function getBlockingTierSkillLines(strId:String):Array {
             if (_stageRequirements == null) return [];
@@ -478,34 +492,6 @@ package tracker {
 
             var lines:Array = [];
 
-            // Field_ prereqs — show as a single OR line if no path is satisfied.
-            // A prereq path is satisfied when the prereq stage has actually
-            // been beaten in vanilla Journey mode. Holding the AP token alone
-            // doesn't help the player progress in-game — they still have to
-            // play the prereq stage. The hint tells them which level to clear.
-            // Skipped in progressive field-token modes: Field_<sid> chains are
-            // artificial there (Nth copy unlocks Nth stage), so naming a stage
-            // would point at an item they can't directly hunt for.
-            if (!_isFieldTokenProgressive()) {
-                var missingFields:Array = [];
-                var anyFieldBeaten:Boolean = false;
-                var anyFreePrereq:Boolean = false;
-                for each (var req:String in flat) {
-                    if (req == null || req.indexOf("Field_") != 0) continue;
-                    var sid:String = req.substr(6);
-                    if (_freeStages[sid] == true) {
-                        anyFreePrereq = true;
-                    } else if (_isFieldBeatenJourney(sid)) {
-                        anyFieldBeaten = true;
-                    } else {
-                        missingFields.push(sid);
-                    }
-                }
-                if (!anyFieldBeaten && !anyFreePrereq && missingFields.length > 0) {
-                    lines.push(["Requires field " + missingFields.join(" / ") + " beaten", 0x888888]);
-                }
-            }
-
             // Counter requirements that aren't met — one line each.
             for each (var creq:String in flat) {
                 if (creq == null || creq.indexOf("Field_") == 0) continue;
@@ -525,6 +511,64 @@ package tracker {
                 }
             }
             return lines;
+        }
+
+        /**
+         * Returns a single [text, color] line summarising this stage's
+         * Field_<sid> prereq status, or null when no Field_ prereqs exist
+         * (or the seed uses progressive field-token granularity, where the
+         * Field_ chain is artificial — see _requirementsGateMet).
+         *
+         * Green "Requirement met: X / Y" — listed prereqs are satisfied
+         * (free or reachable via the gate's recursive _stageReachable check).
+         * Red "Requires field X / Y / Z beaten" — none of the OR alternatives
+         * are satisfied yet.
+         *
+         * Beating a prereq OUT of logic does NOT count as satisfied: the
+         * gate still rejects it (its own chain is broken), so we'd lie to
+         * the player by showing green. Matches the gate semantics in
+         * _requirementsGateMet.
+         */
+        public function getFieldPrereqLine(strId:String):Array {
+            if (_stageRequirements == null) return null;
+            if (_isFieldTokenProgressive()) return null;
+            // Free stages (the seed's starter and the W1-W4 tutorials) are
+            // always reachable regardless of any Field_<sid> prereqs listed
+            // in the stage data — the prereq line would be misleading there.
+            if (_freeStages[strId] == true) return null;
+            var reqs:Array = _stageRequirements[strId] as Array;
+            if (reqs == null || reqs.length == 0) return null;
+
+            var groups:Array;
+            if (reqs[0] is Array) {
+                groups = reqs;
+            } else {
+                groups = [reqs];
+            }
+            var seen:Object = {};
+            var metFields:Array = [];
+            var missingFields:Array = [];
+            for each (var group:Array in groups) {
+                if (group == null) continue;
+                for each (var entry:String in group) {
+                    if (entry == null || entry.indexOf("Field_") != 0) continue;
+                    var sid:String = entry.substr(6);
+                    if (seen[sid]) continue;
+                    seen[sid] = true;
+                    if (_freeStages[sid] == true || _stageReachable(sid)) {
+                        metFields.push(sid);
+                    } else {
+                        missingFields.push(sid);
+                    }
+                }
+            }
+            if (metFields.length > 0) {
+                return ["Requirement met: " + metFields.join(" / "), 0x44FF44];
+            }
+            if (missingFields.length > 0) {
+                return ["Requires field " + missingFields.join(" / ") + " beaten", 0xFF4444];
+            }
+            return null;
         }
 
         /**
@@ -713,6 +757,7 @@ package tracker {
          *     AND every non-Field requirement (talismanRow:N etc.) is met.
          */
         public function recompute():void {
+            if (!_dirty) return;
             _inLogicByStrId = {};
 
             if (_stageRequirements == null) {
@@ -779,7 +824,13 @@ package tracker {
          * AND-group passes when every entry inside it does. Within a group:
          *   - Field_<sid>: <sid> itself in logic (recursive _stageReachable
          *     — chain back to the starter must hold, not just token held).
-         *   - everything else: routed through _evalCounterReq.
+         *     Skipped under progressive field-token granularity (chain is
+         *     artificial; see _strip_field_prereqs in apworld rules.py).
+         *   - skill / trait / element / counter tokens (sBeam, tHaste,
+         *     talismanRow:N, ...): delegated to LogicEvaluator.evaluateRequirement
+         *     so the prefix maps live in one place. L5 and P5 are currently
+         *     the only stages with non-Field clauses (sBeam/Bolt/Barrage/Freeze
+         *     and sTraps respectively).
          * Empty / missing requirements pass automatically (used by the
          * starting stage upstream, plus W1-style stages from older data).
          *
@@ -794,15 +845,14 @@ package tracker {
             if (reqs == null || reqs.length == 0)
                 return true;
 
-            // Progressive field-token modes: the Nth singleton token unlocks
-            // the Nth stage in the seed's randomized order, so the token
-            // count IS the prereq chain. Vanilla DNF (Field_* + counters)
-            // is artificial under progressive granularity. Apworld drops
-            // the DNF whole in this case (rules.py: `if requirements and
-            // not ft_progressive`), so we do the same — including non-Field
-            // counter clauses like skillPoints / talismanRow / talismanColumn.
-            if (_isFieldTokenProgressive())
-                return true;
+            // Under progressive field-token granularity the Field_<sid>
+            // chain is artificial — the Nth singleton token unlocks the
+            // Nth stage in the seed's randomized order. Skip Field_ entries
+            // (treat as auto-satisfied) but still enforce skill / trait /
+            // counter clauses inside the same AND-group (L5 → all four
+            // damage skills; P5 → Traps). Apworld does the same via
+            // _strip_field_prereqs in rules.py.
+            var ftProgressive:Boolean = _isFieldTokenProgressive();
 
             var groups:Array;
             if (reqs[0] is Array) {
@@ -817,6 +867,7 @@ package tracker {
                 for each (var req:String in group) {
                     if (req == null) continue;
                     if (req.indexOf("Field_") == 0) {
+                        if (ftProgressive) continue; // chain artificial under progressive
                         var sid:String = req.substr(6);
                         // Recursive: the prereq stage must itself be in logic
                         // (full chain back to starter), not just have its
@@ -826,9 +877,19 @@ package tracker {
                             groupOk = false;
                             break;
                         }
-                    } else if (!_evalCounterReq(req)) {
-                        groupOk = false;
-                        break;
+                    } else {
+                        // Delegate skill / trait / element / counter tokens
+                        // to the shared resolver in LogicEvaluator (single
+                        // source of truth for prefix maps). Fall back to the
+                        // local counter handler if the evaluator isn't wired
+                        // yet, so we never accidentally pass an unknown.
+                        var ok:Boolean = (_logicEvaluator != null)
+                            ? _logicEvaluator.evaluateRequirement(req)
+                            : _evalCounterReq(req);
+                        if (!ok) {
+                            groupOk = false;
+                            break;
+                        }
                     }
                 }
                 if (groupOk) return true;
@@ -881,15 +942,17 @@ package tracker {
 
         /** Sum SP across collected Skillpoint Bundle items (1700-1703, four
          *  named tiers; per-tier SP value comes from slot_data via
-         *  ServerOptions.spBundleValues). Counts each held tier once. */
+         *  ServerOptions.spBundleValues). Bundles stack — same apId can
+         *  arrive multiple times, so multiply tier value by per-apId count. */
         private function _countSkillPoints():int {
             var total:int = 0;
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return 0;
             var opts:* = AV.serverData.serverOptions;
             for (var apId:int = 1700; apId <= 1703; apId++) {
-                if (AV.sessionData.hasItem(apId))
-                    total += opts.getSpBundleValue(apId);
+                var count:int = AV.sessionData.getItemCount(apId);
+                if (count > 0)
+                    total += count * opts.getSpBundleValue(apId);
             }
             return total;
         }

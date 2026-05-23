@@ -47,6 +47,11 @@ package data {
         public var achievementsInLogic:Object = {};        // apId (int) -> true
         public var achievementNamesInLogic:Array = [];     // sorted achievement names
 
+        // True once the free L5-skill hint scout has been sent for this slot.
+        // Derived from AP's _read_hints DataStorage on connect — not persisted
+        // locally. See ArchipelagoMod._queryL5HintState / _maybeSendL5SkillHints.
+        public var l5HintsSent:Boolean = false;
+
         // -----------------------------------------------------------------------
         // Setup
 
@@ -86,6 +91,7 @@ package data {
             fieldsInLogic            = {};
             achievementsInLogic      = {};
             achievementNamesInLogic  = [];
+            l5HintsSent              = false;
         }
 
         /**

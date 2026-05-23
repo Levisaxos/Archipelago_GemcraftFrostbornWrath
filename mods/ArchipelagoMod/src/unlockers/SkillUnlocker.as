@@ -20,6 +20,13 @@ package unlockers {
             "Pylons", "Lanterns", "Traps", "Seeker Sense"
         ];
 
+        // Vanilla achievement 367 "Regaining Knowledge" auto-fires at 7 unlocked skills
+        // because vanilla pre-unlocks Mana Stream + Fusion. The AP mod locks all starters,
+        // so the vanilla check never trips. Fire it ourselves at 5 received skills to
+        // match the apworld rule (skills:5).
+        private static const ACHI_REGAINING_KNOWLEDGE:int = 367;
+        private static const SKILLS_FOR_REGAINING_KNOWLEDGE:int = 5;
+
         public function SkillUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
         }
@@ -43,6 +50,44 @@ package unlockers {
             logAction("Unlocked skill game_id=" + gameId + " (AP ID=" + apId + ")");
             showToast("Received " + skillName, ItemColors.forApId(apId));
             showPlusNodeOnSelector("mcPlusNodeSkills");
+            maybeFireRegainingKnowledge();
+        }
+
+        /**
+         * Force-complete game_id 367 ("Regaining Knowledge") when the player has received
+         * SKILLS_FOR_REGAINING_KNOWLEDGE skill tomes. AchievementUnlocker observes the
+         * resulting status>=2 and sends the AP location check on its next frame tick.
+         * Safe to call any time — guarded against null collection and re-trigger.
+         */
+        public function maybeFireRegainingKnowledge():void {
+            if (GV.achiCollection == null)
+                return;
+            var ach:* = GV.achiCollection.achisById[ACHI_REGAINING_KNOWLEDGE];
+            if (ach == null || ach.status >= 2)
+                return;
+            if (GV.ppd == null || GV.ppd.gainedSkillTomes == null)
+                return;
+            var count:int = 0;
+            for (var i:int = 0; i < 24; i++) {
+                if (GV.ppd.gainedSkillTomes[i])
+                    count++;
+            }
+            if (count >= SKILLS_FOR_REGAINING_KNOWLEDGE) {
+                try {
+                    ach.status = 2;
+                    // AchievementUnlocker.detectAndReport also gates on
+                    // GV.ppd.gainedAchis[gameId] === true (the per-slot earned
+                    // flag), which vanilla only sets via the battle-win drop
+                    // flow. We skipped the loot-queue push (battle-only side
+                    // effects), so flip the flag directly here.
+                    if (GV.ppd.gainedAchis != null && ACHI_REGAINING_KNOWLEDGE < GV.ppd.gainedAchis.length) {
+                        GV.ppd.gainedAchis[ACHI_REGAINING_KNOWLEDGE] = true;
+                    }
+                    logAction("Forced achievement 367 (Regaining Knowledge) earned — " + count + " skills unlocked");
+                } catch (e:Error) {
+                    logAction("maybeFireRegainingKnowledge: failed to set status: " + e);
+                }
+            }
         }
 
         /** Returns the human-readable skill name for an AP ID (700-723), or null if out of range. */

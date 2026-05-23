@@ -14,7 +14,7 @@ This document describes the full feature set of the randomizer: what is shuffled
 |---|---|---|
 | Stage clear — Journey | 122 | Complete any stage in Journey mode |
 | Wizard Stash clear | 122 | Defeat the Wizard Stash on any stage |
-| Achievements | up to ~636 | Optional, scaled by `achievement_required_effort` (5 tiers, see below) |
+| Achievements | up to ~636 | Optional, scaled by `achievement_required_effort` (4 tiers, see below) |
 
 ### Items
 
@@ -117,7 +117,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 | Option | Default | Description |
 |---|---|---|
-| `achievement_required_effort` | `1` | Effort tier of achievements to include as locations. Integer `1`–`5`: `1` Trivial only (~362), `2` +Minor (~453), `3` +Major (~537), `4` +Extreme (~620), `5` All (~636). Untrackable achievements are excluded. |
+| `achievement_required_effort` | `1` | Effort tier of achievements to include as locations. Integer `1`–`4`: `1` Trivial only (~362), `2` +Minor (~453), `3` +Major (~537), `4` +Extreme (~636). Untrackable achievements are excluded. |
 
 ### DeathLink
 

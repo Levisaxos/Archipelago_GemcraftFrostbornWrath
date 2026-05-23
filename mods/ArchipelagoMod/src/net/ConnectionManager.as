@@ -101,6 +101,8 @@ package net {
         public var onDeathLinkReceived:Function;
         /** Called when AP responds to a Get with a Retrieved packet. Signature: (keysMap:Object):void */
         public var onDataStorageRetrieved:Function;
+        /** Called after a LocationInfo response refreshes the scout cache. Signature: ():void */
+        public var onScoutsUpdated:Function;
         /** Called when the connection drops unexpectedly. Signature: ():void */
         public var onUnexpectedDisconnect:Function;
 
@@ -130,6 +132,9 @@ package net {
             };
             _receiver.onDataStorageRetrieved = function(keys:Object):void {
                 if (onDataStorageRetrieved != null) onDataStorageRetrieved(keys);
+            };
+            _receiver.onScoutsUpdated = function():void {
+                if (onScoutsUpdated != null) onScoutsUpdated();
             };
         }
 
@@ -163,6 +168,42 @@ package net {
         /** Public DataStorage proxy — write. `valueJson` is a pre-encoded JSON fragment. */
         public function sendDataStorageSet(key:String, valueJson:String):void {
             _sender.sendDataStorageSet(key, valueJson);
+        }
+
+        /** Create AP hints (free — no hint points consumed) for the given locations. */
+        public function sendCreateLocationHints(locationIds:Array):void {
+            _sender.sendCreateLocationHints(locationIds);
+        }
+
+        /** Reverse-scout lookup: find AP locationId containing the given item id, or -1. */
+        public function findLocationForItem(apItemId:int):int {
+            return _receiver.findLocationForItem(apItemId);
+        }
+
+        /** Scout-cache entry for the given locationId, or null if not scouted yet. */
+        public function getScoutEntry(locId:int):Object {
+            return _receiver.getScoutEntry(locId);
+        }
+
+        /**
+         * Resolve a locationId to a display name using AP's DataPackage
+         * (`AV.archipelagoData.gamesLocations[gameName]`). gameName must be
+         * the game that OWNS the location — i.e. the finding-player's game,
+         * not necessarily ours. Falls back to "Location #N" until the
+         * relevant DataPackage arrives.
+         *
+         * For our own slot the DataPackage is requested at connect-time in
+         * ApReceiver.handleConnected; for foreign games it's requested on
+         * the first LocationInfo entry that references them.
+         */
+        public function resolveLocationName(locId:int, gameName:String):String {
+            if (gameName == null || gameName.length == 0) return "Location #" + locId;
+            var locs:Object = AV.archipelagoData.gamesLocations[gameName];
+            if (locs != null) {
+                var name:String = locs[String(locId)];
+                if (name != null && name.length > 0) return name;
+            }
+            return "Location #" + locId;
         }
 
         // -----------------------------------------------------------------------
@@ -413,41 +454,9 @@ package net {
                 var hasMetas:Boolean = GV.stageCollection != null && GV.stageCollection.stageMetas != null;
                 if (!hasPpd || !hasMetas) return;
 
-                var metas:Array = GV.stageCollection.stageMetas;
-
-                var toSend:Array = [];
                 _lastCheckedLocations = [];
-
                 var missing:Object = _receiver.missingLocations;
-
-                for (var i:int = 0; i < metas.length; i++) {
-                    var meta:* = metas[i];
-                    if (meta == null) continue;
-                    var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
-                    if (xp <= 0) continue;
-                    var locId:int        = int(STAGE_LOC_AP_IDS[meta.strId]);
-                    var wizStashLocId:int = locId + 399;
-                    var journeyNew:Boolean = missing[locId] == true;
-                    _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
-                        + "  xp=" + xp + "  locId=" + locId
-                        + "  wizStashLocId=" + wizStashLocId
-                        + "  journeyNew=" + journeyNew
-                        + "  stashNew=" + (missing[wizStashLocId] == true));
-                    if (locId <= 0) continue;
-                    if (journeyNew) {
-                        toSend.push(locId);
-                        _lastCheckedLocations.push({strId: meta.strId, locType: "journey"});
-                        _logger.log(_modName, "Pending: " + meta.strId + " (field journey)  locId=" + locId);
-                    }
-                    if (missing[wizStashLocId] == true) {
-                        var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
-                        if (stashStatus == 1 || stashStatus == 2) {
-                            toSend.push(wizStashLocId);
-                            _lastCheckedLocations.push({strId: meta.strId, locType: "stash"});
-                            _logger.log(_modName, "Pending: " + meta.strId + " (field stash)  locId=" + wizStashLocId);
-                        }
-                    }
-                }
+                var toSend:Array = _scanCompletedStages(missing, _lastCheckedLocations, true);
 
                 _logger.log(_modName, "  toSend=" + toSend.join(",") + "  (" + toSend.length + " new checks)");
                 if (toSend.length > 0) {
@@ -457,6 +466,138 @@ package net {
                 }
             } catch (err:Error) {
                 _logger.log(_modName, "checkCompletedLocations ERROR: " + err.message + "\n" + err.getStackTrace());
+            }
+        }
+
+        /**
+         * Walk stageCollection.stageMetas and return AP locationIds for any
+         * journey/stash location that is locally completed AND still in the
+         * `missing` set (i.e. not yet checked on server).
+         *
+         * Shared by checkCompletedLocations (post-battle, verbose=true to
+         * keep per-stage log lines) and reconcileLocationChecks (connect-time,
+         * verbose=false to avoid spamming the log with every completed stage).
+         *
+         * `lastChecked` is appended with {strId, locType} entries for each
+         * id pushed; pass null if the caller doesn't need post-battle UI data.
+         *
+         * Caller must guarantee GV.ppd and GV.stageCollection.stageMetas
+         * are non-null.
+         */
+        private function _scanCompletedStages(missing:Object, lastChecked:Array, verbose:Boolean):Array {
+            var toSend:Array = [];
+            var metas:Array = GV.stageCollection.stageMetas;
+            for (var i:int = 0; i < metas.length; i++) {
+                var meta:* = metas[i];
+                if (meta == null)
+                    continue;
+                var xp:int = GV.ppd.stageHighestXpsJourney[meta.id].g();
+                if (xp <= 0)
+                    continue;
+                var locId:int = int(STAGE_LOC_AP_IDS[meta.strId]);
+                if (locId <= 0)
+                    continue;
+                var wizStashLocId:int = locId + 399;
+                var journeyNew:Boolean = missing[locId] == true;
+                var stashNew:Boolean = missing[wizStashLocId] == true;
+                if (verbose) {
+                    _logger.log(_modName, "PLAYER_COMPLETED_STAGE stage=" + meta.strId
+                        + "  xp=" + xp + "  locId=" + locId
+                        + "  wizStashLocId=" + wizStashLocId
+                        + "  journeyNew=" + journeyNew
+                        + "  stashNew=" + stashNew);
+                }
+                if (journeyNew) {
+                    toSend.push(locId);
+                    if (lastChecked != null)
+                        lastChecked.push({strId: meta.strId, locType: "journey"});
+                    if (verbose)
+                        _logger.log(_modName, "Pending: " + meta.strId + " (field journey)  locId=" + locId);
+                }
+                if (stashNew) {
+                    var stashStatus:int = int(GV.ppd.stageWizStashStauses[meta.id]);
+                    if (stashStatus == 1 || stashStatus == 2) {
+                        toSend.push(wizStashLocId);
+                        if (lastChecked != null)
+                            lastChecked.push({strId: meta.strId, locType: "stash"});
+                        if (verbose)
+                            _logger.log(_modName, "Pending: " + meta.strId + " (field stash)  locId=" + wizStashLocId);
+                    }
+                }
+            }
+            return toSend;
+        }
+
+        /**
+         * Connect-time reconciliation. Walks every local source of
+         * "I completed this" (gainedAchis via the supplied achievementApIds,
+         * journey field tokens, wizard stashes), diffs against
+         * _missingLocations, and sends a single batched LocationChecks
+         * packet for the delta. AP server is idempotent on duplicate
+         * checks, so this is safe to run on every sync.
+         *
+         * Caller (ArchipelagoMod.syncWithAP) passes locally-earned
+         * achievement apIds — AchievementUnlocker owns that scan because
+         * it holds the gameId↔apId map and the skip-reason filter.
+         */
+        public function reconcileLocationChecks(achievementApIds:Array):void {
+            if (!_isConnected) return;
+            if (GV.ppd == null || GV.stageCollection == null || GV.stageCollection.stageMetas == null) {
+                _logger.log(_modName, "reconcileLocationChecks: game state not ready, skipping");
+                return;
+            }
+            try {
+                var missing:Object = _receiver.missingLocations;
+                if (missing == null) {
+                    _logger.log(_modName, "reconcileLocationChecks: no missingLocations, skipping");
+                    return;
+                }
+
+                var stageIds:Array = _scanCompletedStages(missing, null, false);
+                var journeyCount:int = 0;
+                var stashCount:int = 0;
+                for each (var sId:int in stageIds) {
+                    if (sId >= 400)
+                        stashCount++;
+                    else
+                        journeyCount++;
+                }
+
+                var seen:Object = {};
+                var toSend:Array = [];
+                for each (var jsId:int in stageIds) {
+                    if (seen[jsId])
+                        continue;
+                    seen[jsId] = true;
+                    toSend.push(jsId);
+                }
+                var achiCount:int = 0;
+                if (achievementApIds != null) {
+                    for each (var aId:int in achievementApIds) {
+                        if (missing[aId] !== true)
+                            continue;
+                        if (seen[aId])
+                            continue;
+                        seen[aId] = true;
+                        toSend.push(aId);
+                        achiCount++;
+                    }
+                }
+
+                if (toSend.length == 0) {
+                    _logger.log(_modName, "reconcileLocationChecks: nothing to send");
+                    return;
+                }
+
+                for each (var sentId:int in toSend)
+                    delete missing[sentId];
+                _sender.sendLocationChecks(toSend);
+                _logger.log(_modName, "reconcileLocationChecks: sent " + toSend.length
+                    + " missing checks (J=" + journeyCount
+                    + " A=" + achiCount
+                    + " S=" + stashCount + ")");
+            } catch (err:Error) {
+                _logger.log(_modName, "reconcileLocationChecks ERROR: " + err.message + "\n" + err.getStackTrace());
             }
         }
     }

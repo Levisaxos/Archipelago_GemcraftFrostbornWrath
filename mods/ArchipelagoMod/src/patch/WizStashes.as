@@ -368,10 +368,19 @@ package patch {
                 if (!keyHeld) {
                     lines.push(["Requires Wizard Stash " + strId + " Key", 0xCCCCCC]);
                 }
-                if (!stageInLogic && _evaluator != null) {
-                    var blockingLines:Array = _evaluator.getBlockingTierSkillLines(strId);
-                    for each (var bl:Array in blockingLines) {
-                        if (bl != null && bl.length >= 2) lines.push(bl);
+                if (_evaluator != null) {
+                    // Only surface the prereq line on stash tooltips when prereqs
+                    // are MISSING (red). The green "Requirement met" banner is
+                    // reserved for stage tooltips on the journey map.
+                    var prereqLine:Array = _evaluator.getFieldPrereqLine(strId);
+                    if (prereqLine != null && prereqLine.length >= 2
+                            && String(prereqLine[0]).indexOf("Requirement met") != 0)
+                        lines.push(prereqLine);
+                    if (!stageInLogic) {
+                        var blockingLines:Array = _evaluator.getBlockingTierSkillLines(strId);
+                        for each (var bl:Array in blockingLines) {
+                            if (bl != null && bl.length >= 2) lines.push(bl);
+                        }
                     }
                 }
 

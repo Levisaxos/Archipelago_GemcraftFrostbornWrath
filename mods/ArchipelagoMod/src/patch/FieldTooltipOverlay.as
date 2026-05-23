@@ -40,6 +40,16 @@ package patch {
         // Gem section extra height added by SelectorRenderer after the gem icons.
         private static const GEMS_EXTRA_HEIGHT:int = 46;
 
+        // L5 prerequisite skills with display names + AP item ids.
+        // Mirrors L5_SKILL_AP_IDS in ArchipelagoMod (kept separate so the
+        // overlay isn't coupled to the orchestrator).
+        private static const L5_SKILLS:Array = [
+            {name: "Bolt",    apId: 715},
+            {name: "Beam",    apId: 716},
+            {name: "Barrage", apId: 717},
+            {name: "Freeze",  apId: 712}
+        ];
+
         // Luminance-preserving desaturation matrix; mirrors HollowGemInjector
         // so the tooltip's hollow gem icon matches the in-game button.
         private static const _DESAT_FILTER:ColorMatrixFilter = new ColorMatrixFilter([
@@ -52,6 +62,7 @@ package patch {
         private var _logger:Logger;
         private var _modName:String;
         private var _evaluator:FieldLogicEvaluator;
+        private var _cm:ConnectionManager;  // for scout-cache reverse lookup on L5
 
         // True after we've appended our lines to the current tooltip.
         // Cleared when isImageRendered goes false (game reset or panel closed),
@@ -61,10 +72,12 @@ package patch {
         // -----------------------------------------------------------------------
 
         public function FieldTooltipOverlay(logger:Logger, modName:String,
-                                            evaluator:FieldLogicEvaluator) {
+                                            evaluator:FieldLogicEvaluator,
+                                            cm:ConnectionManager) {
             _logger    = logger;
             _modName   = modName;
             _evaluator = evaluator;
+            _cm        = cm;
         }
 
         // -----------------------------------------------------------------------
@@ -122,8 +135,14 @@ package patch {
             var base:int = int(ConnectionManager.stageLocIds[strId]);
             var shouldAddApOverlay:Boolean = base > 0;
 
+            // L5 vanilla tooltip hard-codes "Get the Bolt skill tome first on
+            // field Q1!" etc. — wrong in any randomized seed. We strip those
+            // lines and append AP-derived ones showing the actual scouted
+            // skill locations.
+            var isL5:Boolean = (strId == "L5");
+
             // Nothing for us to do on this tooltip.
-            if (!shouldRemoveGems && !shouldInjectHollowGem && !shouldAddApOverlay) {
+            if (!shouldRemoveGems && !shouldInjectHollowGem && !shouldAddApOverlay && !isL5) {
                 _appended = true;
                 return;
             }
@@ -168,6 +187,15 @@ package patch {
                 _removeAvailableGems(vIp);
             }
 
+            // On L5, drop the four hard-coded vanilla "Get the X skill tome
+            // first on field Y!" textfields. Their field IDs are vanilla
+            // (Q1/X4/M3/Y3) and don't reflect where the skill actually lives
+            // in this seed. The replacement lines go in below alongside AP
+            // overlay content.
+            if (isL5) {
+                _removeVanillaL5SkillWarnings(vIp);
+            }
+
             // Free starter stage without pouch: add a single hollow gem icon
             // back so the player sees what they can actually create on this
             // stage (matches the in-game HollowGemInjector button).
@@ -201,6 +229,14 @@ package patch {
                     _logger.log(_modName, "FieldTooltipOverlay: addTextfield error: " + e3.message);
                     return;
                 }
+            }
+
+            // L5 prereq-skill hint lines — one per missing skill, drawn from
+            // the AP scout cache. Skips skills the player has already
+            // collected and skips entries the scout cache hasn't resolved yet
+            // (the player will see them once LocationInfo arrives).
+            if (isL5) {
+                _appendL5SkillHintLines(vIp);
             }
 
             _appended = true;
@@ -363,12 +399,18 @@ package patch {
                 // elements the player actually cares about.
                 if (elem == "Tower" || elem == "Wall") continue;
                 var elemInLogic:Boolean = stageReachable;
+                var elemSuffix:String = null;
                 if (elem == "Wizard Tower") {
                     elemInLogic = elemInLogic && stashUnlockedForElems;
                 } else if (elem == "Drop Holder") {
                     elemInLogic = elemInLogic && hasBolt;
+                    // Bolt is the Drop Holder-specific gate. Surface it as a
+                    // suffix when missing; drop the hint once it's held.
+                    if (!hasBolt)
+                        elemSuffix = "Needs bolt";
                 }
-                lines.push(_countLine(elem, _evaluator.getStageElementCount(strId, elem), elemInLogic));
+                lines.push(_countLine(elem, _evaluator.getStageElementCount(strId, elem),
+                                      elemInLogic, elemSuffix));
             }
             for each (var mon:String in _evaluator.getStageMonsters(strId)) {
                 lines.push(_countLine(mon, _evaluator.getStageElementCount(strId, mon),
@@ -397,13 +439,22 @@ package patch {
                 lines.push(_checkLine("Stash", stashDone, stashInLogic, keySuffix));
             }
 
-            // Stage out of logic: show why.
-            if (!_evaluator.isStageInLogic(strId)) {
+            // Field_<sid> prereq status. Shown even when the stage is in
+            // logic so the green "Requirement met" banner stays visible.
+            // Line carries its own colour (green met / red missing).
+            var prereq:Array = _evaluator.getFieldPrereqLine(strId);
+            if (prereq != null && prereq.length >= 2) {
+                lines.push([String(prereq[0]), uint(prereq[1])]);
+            }
+
+            // Stage out of logic: surface remaining blockers (missing token,
+            // unmet counter requirements like talismanRow / skillPoints).
+            if (!_evaluator.isStageInLogic(strId))
+            {
                 var req:Object = _evaluator.getBlockingTokenReq(strId);
                 if (req != null && req.missingToken == true) {
                     lines.push([_evaluator.getMissingTokenLabel(strId), 0xFF4444]);
                 }
-                // Prereq stage / talisman / skillPoints requirements that aren't met.
                 for each (var bl:Array in _evaluator.getBlockingTierSkillLines(strId)) {
                     if (bl != null && bl.length >= 2) {
                         lines.push([String(bl[0]), 0xFF4444]);
@@ -422,9 +473,121 @@ package patch {
             return [text, inLogic ? 0x44FF44 : 0xFF4444];
         }
 
-        private function _countLine(label:String, count:int, inLogic:Boolean):Array {
+        private function _countLine(label:String, count:int, inLogic:Boolean,
+                                    suffix:String = null):Array {
             var text:String = count > 0 ? (label + ": " + count) : label;
+            if (suffix != null && suffix.length > 0)
+                text += " (" + suffix + ")";
             return [text, inLogic ? 0x44FF44 : 0xFF4444];
+        }
+
+        /**
+         * Remove the four vanilla L5 skill-warning textfields. SelectorRenderer
+         * adds them with text like "Get the Bolt skill tome first on field Q1!"
+         * (see do not commit/gcfw/scripts/com/giab/games/gcfw/selector/SelectorRenderer.as
+         * around lines 960–986). We match on the leading "Get the " and the
+         * "skill tome first on field " substring so locale changes in the
+         * suffix don't break detection.
+         *
+         * Also rolls back the addExtraHeight(12) the vanilla branch tacks on
+         * when at least one of the four warnings fires, by subtracting the
+         * removed lines' total height from nextTfPos / h.
+         */
+        private function _removeVanillaL5SkillWarnings(vIp:*):void {
+            try {
+                var textfields:Array = vIp.textfields as Array;
+                if (textfields == null) return;
+
+                var removedCount:int = 0;
+                var firstRemovedY:Number = Number.MAX_VALUE;
+                var bottomY:Number       = -1;  // y of bottom edge of furthest-down warning
+
+                // Walk backwards so splice() doesn't disturb the iteration.
+                for (var i:int = textfields.length - 1; i >= 0; i--) {
+                    var tf:* = textfields[i];
+                    var txt:String = (tf != null && tf.text != null) ? String(tf.text) : "";
+                    if (txt.indexOf("Get the ") != 0) continue;
+                    if (txt.indexOf("skill tome first on field ") < 0) continue;
+
+                    if (tf.y < firstRemovedY) firstRemovedY = tf.y;
+                    var thisBottom:Number = tf.y + tf.height;
+                    if (thisBottom > bottomY) bottomY = thisBottom;
+                    removedCount++;
+                    textfields.splice(i, 1);
+                }
+                if (removedCount == 0) return;
+
+                // Shift any textfields that originally sat below the warning
+                // block upward to close the gap. (Vanilla L5 puts warnings at
+                // the bottom, so this is almost always a no-op — guards
+                // against future re-orderings.)
+                var shift:Number = bottomY - firstRemovedY;
+                for (var j:int = 0; j < textfields.length; j++) {
+                    if (textfields[j].y >= bottomY)
+                        textfields[j].y -= shift;
+                }
+
+                // Set the panel's content cursor back to where the first
+                // removed warning began. doEnterFrame uses nextTfPos as the
+                // y-coordinate of the next addTextfield, so this ensures our
+                // replacement lines start exactly where the vanilla warnings
+                // did — no gap, no overlap regardless of font/leading math.
+                vIp.nextTfPos = firstRemovedY;
+                vIp.h         = firstRemovedY;
+            } catch (e:Error) {
+                _logger.log(_modName, "FieldTooltipOverlay: _removeVanillaL5SkillWarnings error: " + e.message);
+            }
+        }
+
+        /**
+         * For each L5-prereq skill the player doesn't yet own, append a single
+         * tooltip line showing where the skill is in the seed (Player's
+         * LocName, plus game name if it's not GCFW). Skills with no scout-cache
+         * entry are silently skipped so the tooltip doesn't lie about an
+         * "unknown" location.
+         *
+         * Colours: muted yellow header, warning red per skill line. Matches
+         * the existing AP-overlay text styling.
+         */
+        private function _appendL5SkillHintLines(vIp:*):void {
+            if (_cm == null || AV.archipelagoData == null) return;
+
+            var lines:Array = [];
+            for each (var sk:Object in L5_SKILLS) {
+                var apId:int = int(sk.apId);
+                if (AV.sessionData != null && AV.sessionData.hasItem(apId)) continue;
+                var locId:int = _cm.findLocationForItem(apId);
+                if (locId <= 0) continue;
+                var entry:Object = _cm.getScoutEntry(locId);
+                if (entry == null) continue;
+
+                var playerLabel:String = (entry.playerName != null && String(entry.playerName).length > 0)
+                        ? String(entry.playerName) : "another player";
+                // entry.name is the ITEM name from the DataPackage (e.g.
+                // "Bolt Skill"). For the LOCATION name we look up AP's
+                // DataPackage via ConnectionManager — the owning game is
+                // entry.game (the game that holds this location).
+                var gameLabel:String = (entry.game != null) ? String(entry.game) : null;
+                var locLabel:String = _cm.resolveLocationName(locId, gameLabel);
+
+                var text:String = String(sk.name) + " Skill — " + playerLabel + " · " + locLabel;
+                if (gameLabel != null && gameLabel != "GemCraft: Frostborn Wrath") {
+                    text += " (" + gameLabel + ")";
+                }
+                lines.push(text);
+            }
+            if (lines.length == 0) return;
+
+            try {
+                vIp.addExtraHeight(7);
+                vIp.addSeparator(-2);
+                vIp.addTextfield(0xE5AD0A, "Skills to unlock L5:", false, 10);
+                for each (var line:String in lines) {
+                    vIp.addTextfield(0xFFB060, line, false, 10);
+                }
+            } catch (e:Error) {
+                _logger.log(_modName, "FieldTooltipOverlay: _appendL5SkillHintLines error: " + e.message);
+            }
         }
 
         /**

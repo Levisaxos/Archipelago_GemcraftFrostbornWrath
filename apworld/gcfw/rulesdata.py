@@ -111,17 +111,43 @@ del stage, sid
 # every progressive granularity (gempouches, field tokens, stash keys).
 #
 # The Nth received copy of a progressive item unlocks the Nth tile prefix
-# below. Edit this list to retune the unlock order — all three categories
-# pick it up automatically.
+# below. Pick exactly one variant to be active; the others stay commented
+# out for easy switching. All three categories pick up the active list
+# automatically.
 #
-# Roughly the natural game progression: W (tutorial) → S → V → R → ... with
-# A intentionally last so the toughest tile is the final unlock regardless
-# of how stages happen to be ordered in game_data.json.
+# Candidate orderings (derived in `do not commit/py-scripts/tile_difficulty_analysis.py`):
+#   - canonical    : hand-curated, A intentionally last. Roughly natural
+#                    progression but mis-ranks tiles 21–25 (Z/Y/X/U/T).
+#   - avg_waves    : tiles sorted by mean wave_count across their stages.
+#   - avg_hp_enemy : tiles sorted by mean per-enemy HP (hpFirstWave * hpMult^i).
+#   - sum_hp_tile  : tiles sorted by total HP of every enemy on the tile.
 # ---------------------------------------------------------------------------
+
+# Active ordering: by average waves per tile.
 PROGRESSIVE_TILE_ORDER: List[str] = [
-    "W", "S", "V", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H",
-    "G", "F", "E", "D", "C", "B", "Z", "Y", "X", "U", "T", "A",
+    "W", "S", "V", "Q", "R", "T", "U", "O", "Y", "P", "X", "Z", "K",
+    "N", "L", "G", "J", "M", "H", "E", "D", "F", "I", "B", "C", "A",
 ]
+
+# --- Alternative orderings (uncomment one and comment out the active one above) ---
+
+# Canonical hand-curated order (W → S → V → R → ... → A last):
+# PROGRESSIVE_TILE_ORDER: List[str] = [
+#     "W", "S", "V", "R", "Q", "P", "O", "N", "M", "L", "K", "J", "I", "H",
+#     "G", "F", "E", "D", "C", "B", "Z", "Y", "X", "U", "T", "A",
+# ]
+
+# By average HP per enemy (asc):
+# PROGRESSIVE_TILE_ORDER: List[str] = [
+#     "W", "S", "V", "Q", "R", "U", "T", "Y", "O", "P", "X", "K", "Z",
+#     "G", "L", "N", "J", "M", "H", "E", "D", "I", "B", "C", "F", "A",
+# ]
+
+# By total HP per tile (asc):
+# PROGRESSIVE_TILE_ORDER: List[str] = [
+#     "W", "S", "V", "Q", "U", "R", "T", "O", "Y", "X", "P", "K", "Z",
+#     "G", "L", "J", "N", "M", "H", "E", "D", "I", "B", "C", "F", "A",
+# ]
 
 # Backward-compatible alias — old code still references this name. Both
 # point to the same list, so editing PROGRESSIVE_TILE_ORDER updates both.
