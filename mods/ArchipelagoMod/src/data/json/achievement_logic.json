@@ -1391,8 +1391,13 @@
       "description": "Destroy 3 healing beacons.",
       "required_effort": "Trivial",
       "requirements": [
-        "tDarkMasonry",
-        "minWave:30"
+        [
+          "tDarkMasonry",
+          "minWave:30"
+        ],
+        [
+          "Field_T3"
+        ]
       ],
       "details": "Healing beacons spawn from a dark masonry"
     },
@@ -3191,7 +3196,7 @@
       "apId": 2459,
       "game_id": 271,
       "description": "Hit 150 whited out monsters with shrines.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sWhiteout",
         "eShrine"
@@ -3204,7 +3209,8 @@
       "description": "In field T4, destroy all 8 dwellings.",
       "required_effort": "Trivial",
       "requirements": [
-        "Field_T4"
+        "Field_T4",
+        "talismanRow:3"
       ]
     },
     "Quicksave": {

@@ -437,13 +437,52 @@ def _any_stash_reachable(state, player: int) -> bool:
 
 
 def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
-    """Resolve element-presence reachability — equivalent to eX:1."""
+    """Resolve element-presence reachability — equivalent to eX:1.
+
+    Apparition gets an extra OR path via the Ritual Battle Trait: the
+    Ritual scripted-spawn block in IngameInitializer.as:1612-1653 always
+    pushes 2 Apparitions on any stage with waves.length > 3, and the
+    `patch/RitualSpawnPatcher.as` mod-patch leaves that path intact even
+    when no Apparition-pre-placed stage is in logic (it only gates the
+    other 5 specials). The other Ritual creatures (Shadow / Specter /
+    Wraith / Spire / Wizard Hunter) stay strict pre-placed — the patcher
+    redistributes their slots away from them when their pre-placed stages
+    aren't reachable, so the only Ritual-path access to those creatures
+    requires the same pre-placed-stage reachability as the direct check.
+    """
     if elem_name == "Wizard Stash" or elem_name == "Wizard Tower":
         # Wizard towers are the visual structure of wizard stashes — the
         # player can only interact with a wizard tower by opening its
         # containing stash, which requires the stash key.
         return _any_stash_reachable(state, player)
-    return _eval_element_count(_element_count_field(elem_name)[:-len("Count")], 1, state, player)
+    if _eval_element_count(_element_count_field(elem_name)[:-len("Count")], 1, state, player):
+        return True
+    if elem_name == "Apparition" \
+            and state.has(_RITUAL_TRAIT_ITEM, player) \
+            and _any_reachable_stage_with_min_waves(_RITUAL_MIN_WAVES, state, player):
+        return True
+    return False
+
+
+# Ritual Battle Trait grants an unconditional 2-Apparition scripted spawn
+# in IngameInitializer.as:1612-1653, gated only on `waves.length > 3`.
+# See _eval_element_reachable / _compile_element_or_full + the mod's
+# patch/RitualSpawnPatcher.as for the matching runtime behavior.
+_RITUAL_TRAIT_ITEM: str = "Ritual Battle Trait"
+_RITUAL_MIN_WAVES: int  = 4
+
+
+def _any_reachable_stage_with_min_waves(min_waves: int, state, player: int) -> bool:
+    """True iff at least one stage with WaveCount >= min_waves is journey-reachable."""
+    for sid, data in LEVEL_DATA.items():
+        if int(data.get("WaveCount", 0)) < min_waves:
+            continue
+        try:
+            if state.can_reach(f"Complete {sid} - Journey", "Location", player):
+                return True
+        except KeyError:
+            continue
+    return False
 
 
 # Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
@@ -1177,6 +1216,12 @@ def _compile_element_or_full(elem_names, player: int):
       - universally present (not in _PRESENT_COUNT_FIELDS) → always True
     """
     members: list = []
+    # Apparition gets the same Ritual-trait broadening as in
+    # `_eval_element_reachable`: any reachable stage long enough for
+    # the Ritual scripted-spawn block to fire (waves > 3) satisfies it
+    # whenever Ritual is owned. Other Ritual creatures stay strict
+    # pre-placed — see the comment in `_eval_element_reachable`.
+    has_apparition = "Apparition" in elem_names
     for n in elem_names:
         if n == "Wizard Stash":
             members.append(("STASH", None))
@@ -1192,8 +1237,18 @@ def _compile_element_or_full(elem_names, player: int):
 
     has_stash = any(k == "STASH" for k, _ in members)
 
+    # Stage set used by the Apparition+Ritual state-dependent path
+    # (IngameInitializer.as:1612 gates the Ritual block on waves.length > 3).
+    if has_apparition:
+        ritual_stages = frozenset(
+            sid for sid, d in LEVEL_DATA.items()
+            if int(d.get("WaveCount", 0)) >= _RITUAL_MIN_WAVES
+        )
+    else:
+        ritual_stages = None
+
     # Specialise common shapes.
-    if len(members) == 1:
+    if len(members) == 1 and not has_apparition:
         kind, stages = members[0]
         if kind == "STASH":
             return lambda state: _any_stash_reachable(state, player), None
@@ -1207,9 +1262,16 @@ def _compile_element_or_full(elem_names, player: int):
                     return True
             elif _can_reach_any_stage(state, player, stages):
                 return True
+        if has_apparition \
+                and state.has(_RITUAL_TRAIT_ITEM, player) \
+                and _can_reach_any_stage(state, player, ritual_stages):
+            return True
         return False
 
-    if has_stash:
+    # Apparition's broadening is state-dependent (Ritual-trait ownership),
+    # so static_set has to be None — AND-group stage-binding can't tighten
+    # on a state-dependent member. Same convention as STASH.
+    if has_stash or has_apparition:
         return _multi, None
     union = set()
     for _kind, stages in members:
