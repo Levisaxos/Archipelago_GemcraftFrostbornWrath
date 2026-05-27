@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, DeathLink, PerGameCommonOptions, Range, Toggle
+from Options import Choice, DeathLink, OptionSet, PerGameCommonOptions, Range, Toggle
 
 
 class EnforceLogic(Toggle):
@@ -108,14 +108,18 @@ class XpTomeBonus(Range):
 class DeathLinkPunishment(Choice):
     """What happens when a DeathLink signal is received.
 
-    gem_loss:    A percentage of placed gems (and their towers/traps) are destroyed.
-    wave_surge:  A set of enraged waves is injected immediately.
+    gem_loss:     A percentage of placed gems (and their towers/traps) are destroyed.
+    wave_surge:   A set of enraged waves is injected immediately.
     instant_fail: The current level fails immediately (traditional DeathLink).
+    spawn_horde:  A flood of vanilla-strength monsters from the current wave is spawned at once.
+    spawn_special: A burst of special enemies (Apparitions / Specters / etc.) is spawned with HP scaled to ~10 waves above the current one.
     """
     display_name = "DeathLink Punishment"
-    option_gem_loss    = 0
-    option_wave_surge  = 1
+    option_gem_loss     = 0
+    option_wave_surge   = 1
     option_instant_fail = 2
+    option_spawn_horde  = 3
+    option_spawn_special = 4
     default = 0
 
 
@@ -142,6 +146,38 @@ class WaveSurgeGemLevel(Range):
     display_name = "Wave Surge Gem Level"
     range_start = 1
     range_end   = 9
+    default     = 3
+
+
+class SpawnHordeCount(Range):
+    """Number of vanilla-strength monsters spawned from the current wave on a DeathLink (spawn_horde only)."""
+    display_name = "Spawn Horde Count"
+    range_start = 50
+    range_end   = 500
+    default     = 100
+
+
+class SpawnSpecialElements(OptionSet):
+    """Special enemy types that may be spawned on a DeathLink (spawn_special only).
+
+    Each of the N spawns picks a random type from this set. Leave the default to allow all five types.
+    """
+    display_name = "Spawn Special Elements"
+    valid_keys = frozenset({
+        "Apparition",
+        "Specter",
+        "Wraith",
+        "Spire",
+        "Wizard Hunter",
+    })
+    default = frozenset({"Apparition", "Specter", "Wraith", "Spire", "Wizard Hunter"})
+
+
+class SpawnSpecialCount(Range):
+    """Number of specials spawned on a DeathLink (spawn_special only)."""
+    display_name = "Spawn Special Count"
+    range_start = 1
+    range_end   = 10
     default     = 5
 
 
@@ -391,5 +427,8 @@ class GCFWOptions(PerGameCommonOptions):
     gem_loss_percent:          GemLossPercent
     wave_surge_count:          WaveSurgeCount
     wave_surge_gem_level:      WaveSurgeGemLevel
+    spawn_horde_count:         SpawnHordeCount
+    spawn_special_elements:    SpawnSpecialElements
+    spawn_special_count:       SpawnSpecialCount
     death_link_grace_period:   DeathLinkGracePeriod
     death_link_cooldown:       DeathLinkCooldown

@@ -116,6 +116,14 @@ package ui {
                 } else if (dl.punishment == DeathLinkHandler.PUNISHMENT_WAVE_SURGE) {
                     addRow("Surge Count",     String(dl.waveSurgeCount),    vY); vY += ROW_HEIGHT;
                     addRow("Surge Gem Level", String(dl.waveSurgeGemLevel), vY); vY += ROW_HEIGHT;
+                } else if (dl.punishment == DeathLinkHandler.PUNISHMENT_SPAWN_HORDE) {
+                    addRow("Horde Count", String(dl.spawnHordeCount), vY); vY += ROW_HEIGHT;
+                } else if (dl.punishment == DeathLinkHandler.PUNISHMENT_SPAWN_SPECIAL) {
+                    var elements:Array = dl.spawnSpecialElements;
+                    var elementsStr:String = (elements != null && elements.length > 0)
+                        ? elements.join(", ") : "(none)";
+                    addRow("Special Count",    String(dl.spawnSpecialCount), vY); vY += ROW_HEIGHT;
+                    addRow("Special Elements", elementsStr,                  vY); vY += ROW_HEIGHT;
                 }
 
                 addRow("Grace Period", dl.gracePeriodSec + "s", vY); vY += ROW_HEIGHT;
@@ -228,9 +236,11 @@ package ui {
 
         private function punishmentName(p:int):String {
             switch (p) {
-                case DeathLinkHandler.PUNISHMENT_GEM_LOSS:     return "Gem Loss";
-                case DeathLinkHandler.PUNISHMENT_WAVE_SURGE:   return "Wave Surge";
-                case DeathLinkHandler.PUNISHMENT_INSTANT_FAIL: return "Instant Fail";
+                case DeathLinkHandler.PUNISHMENT_GEM_LOSS:      return "Gem Loss";
+                case DeathLinkHandler.PUNISHMENT_WAVE_SURGE:    return "Wave Surge";
+                case DeathLinkHandler.PUNISHMENT_INSTANT_FAIL:  return "Instant Fail";
+                case DeathLinkHandler.PUNISHMENT_SPAWN_HORDE:   return "Spawn Horde";
+                case DeathLinkHandler.PUNISHMENT_SPAWN_SPECIAL: return "Spawn Special";
                 default: return "Unknown (" + p + ")";
             }
         }
