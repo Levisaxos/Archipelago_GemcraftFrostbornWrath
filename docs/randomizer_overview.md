@@ -124,10 +124,13 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | Option | Default | Description |
 |---|---|---|
 | `death_link` | `false` | Enables DeathLink with other players in the session |
-| `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, or `instant_fail` |
+| `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, `instant_fail`, `spawn_horde`, or `spawn_special` |
 | `gem_loss_percent` | `20` | Percentage of placed gems destroyed on `gem_loss` (10–50) |
 | `wave_surge_count` | `3` | Number of enraged waves injected on `wave_surge` (1–10) |
-| `wave_surge_gem_level` | `5` | Gem level used for the surge enrage multiplier (1–9) |
+| `wave_surge_gem_level` | `3` | Gem level used for the surge enrage multiplier (1–9) |
+| `spawn_horde_count` | `100` | Number of vanilla-strength monsters spawned on `spawn_horde` (50–500) |
+| `spawn_special_elements` | all five | Special enemy types eligible for `spawn_special`: `Apparition`, `Specter`, `Wraith`, `Spire`, `Wizard Hunter` |
+| `spawn_special_count` | `5` | Number of specials spawned on `spawn_special` (1–10), each picked at random from `spawn_special_elements` and scaled to ~10 waves above the current one |
 | `death_link_grace_period` | `15` | Seconds of immunity at the start of each stage (10–30) |
 | `death_link_cooldown` | `20` | Minimum seconds between two punishments (10–30) |
 
