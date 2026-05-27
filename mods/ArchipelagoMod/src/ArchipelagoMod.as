@@ -100,11 +100,11 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.1.0.1"; }
+        public function get VERSION():String           { return "0.0.5"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.1.0.1"; }
-        public function get RELEASE_CHANNEL():String   { return "RC6"; }
+        public function get APWORLD_VERSION():String   { return "0.0.5"; }
+        public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
@@ -974,12 +974,10 @@ package {
                     "Cleared willStartNewGame — player will land on selector");
             }
 
-            // DeathLink: detect player death (send), drain punishment queue (receive),
-            // and maintain any active wave-surge.
+            // DeathLink: detect player death (send) and drain punishment queue (receive).
             if (screen == ScreenId.INGAME) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
-                _deathLinkHandler.checkWaveSurge();
             }
 
             // Inject skill gems for first-play stages (every frame until done once).
@@ -1431,6 +1429,19 @@ package {
                 AV.serverData.serverOptions.talismanMinRarity,
                 AV.serverData.serverOptions.fieldsRequiredCount,
                 AV.serverData.serverOptions.fieldsRequiredPercentage);
+
+            // DeathLink: pull punishment / grace / cooldown from slot_data,
+            // and seed the enabled flag from the yaml death_link option on
+            // every connect. The in-game toggle remains a session-level
+            // override — re-connecting reasserts the yaml default.
+            if (p.slot_data != null) {
+                _deathLinkHandler.configure(p.slot_data);
+                _saveManager.deathLinkEnabled = AV.serverData.serverOptions.deathLinkEnabled;
+                _saveManager.saveSlotData();
+                _deathLinkHandler.enabled = _saveManager.deathLinkEnabled;
+                _connectionManager.sendConnectUpdate(
+                    _saveManager.deathLinkEnabled ? ["DeathLink"] : []);
+            }
 
             if (_saveManager.slotCompleted) {
                 _goalManager.markAlreadyCompleted();
@@ -3306,7 +3317,12 @@ package {
         }
 
         private function onPunishmentReceived(source:String):void {
-            _systemToast.addMessage("DeathLink from " + source + "!", 0xFFFF4444);
+            var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
+            var msg:String = "DeathLink from " + source + "!";
+            if (waitMs > 0) {
+                msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+            }
+            _systemToast.addMessage(msg, 0xFFFF4444);
         }
 
         private function onDeathLinkReceived(source:String):void {

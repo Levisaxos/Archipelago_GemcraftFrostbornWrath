@@ -342,14 +342,6 @@ achievement_requirements = {
         "requirements": ["eTomb:3"],
         "required_effort": "Trivial",
     },
-    "Tomb Stomping": {
-        "ap_id": 2572,
-        "game_id": 63,
-        "description": "Break 4 tombs open.",
-        "details": "Break 4 tombs in one battle.",
-        "requirements": ["eTomb:4"],
-        "required_effort": "Trivial",
-    },
     "Power Sharing": {
         "ap_id": 2412,
         "game_id": 75,
@@ -4662,6 +4654,21 @@ achievement_requirements = {
         "description": "Blast like a fireball",
         "details": "Reference: Ultima 'fireball' spell. Throw 1000 gem bombs across all battles.",
         "requirements": [],
+        "required_effort": "Trivial",
+        "untrackable": True,
+    },
+    "Tomb Stomping": {
+        "ap_id": 2572,
+        "game_id": 63,
+        "description": "Break 4 tombs open.",
+        "details": "Break 4 tombs in one battle.",
+        # Game requires openedTombs >= 4 (IngameAchiChecker0.as:506),
+        # and only !isBrokenOpen tombs increment openedTombs
+        # (IngameDestroyer.as:1325-1336). No Journey stage has 4
+        # destroyable tombs (E5 has 4 total but 1 spawns isBrokenOpen);
+        # earnable only in Trial mode (E5, M3 both have 4 alive). Mark
+        # untrackable so apworld doesn't depend on it for Journey logic.
+        "requirements": ["eTomb:4"],
         "required_effort": "Trivial",
         "untrackable": True,
     },

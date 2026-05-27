@@ -112,7 +112,11 @@ package ui {
             _versionLabel.selectable   = false;
             _versionLabel.mouseEnabled = false;
             _versionLabel.autoSize     = TextFieldAutoSize.LEFT;
-            _versionLabel.text         = "Archipelago mod v" + version + " | apworld v" + apworldVersion + " | " + releaseChannel + " ";
+            var label:String = "Archipelago mod v" + version + " | apworld v" + apworldVersion;
+            if (releaseChannel != null && releaseChannel.length > 0) {
+                label += " | " + releaseChannel;
+            }
+            _versionLabel.text = label + " ";
             _versionLabel.y = STAGE_H - 48;
 
             var disclaimerFmt:TextFormat = new TextFormat(FONT, 14, COL_DISCLAIMER, false, true, true);

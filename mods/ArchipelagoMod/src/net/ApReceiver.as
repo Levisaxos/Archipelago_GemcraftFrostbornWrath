@@ -250,6 +250,8 @@ package net {
                     AV.serverData.serverOptions.fieldsRequiredPercentage = int(sd.fields_required_percentage);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.death_link !== undefined)
+                    AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }
 
             // Missing locations
@@ -336,6 +338,12 @@ package net {
             var tags:Array = p.tags as Array;
             if (tags == null || tags.indexOf("DeathLink") < 0) return;
             var source:String = (p.data && p.data.source) ? String(p.data.source) : "unknown";
+            // The server bounces Bounce packets to every DeathLink-tagged client,
+            // including us. Drop the echo of our own death so the punishment
+            // doesn't get applied to the killer.
+            if (AV.currentSlot != null && AV.currentSlot.length > 0 && source == AV.currentSlot) {
+                return;
+            }
             _logger.log(_modName, "DeathLink received from " + source);
             if (onDeathLinkReceived != null) onDeathLinkReceived(source);
         }

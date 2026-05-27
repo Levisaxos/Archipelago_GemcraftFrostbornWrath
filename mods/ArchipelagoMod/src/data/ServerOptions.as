@@ -92,9 +92,6 @@ package data {
 
         // Death Link Settings
         public var deathLinkEnabled:Boolean;
-        public var deathLinkRound:Boolean;
-        public var deathLinkCoup:Boolean;
-        public var deathLinkAnyBonus:Boolean;
 
         public function ServerOptions() {
             initialize();
@@ -148,9 +145,6 @@ package data {
             achievementRequiredEffort = 0;
 
             deathLinkEnabled = false;
-            deathLinkRound = false;
-            deathLinkCoup = false;
-            deathLinkAnyBonus = false;
         }
 
         /**
