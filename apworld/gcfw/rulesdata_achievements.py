@@ -1067,7 +1067,10 @@ achievement_requirements = {
         "game_id": 467,
         "description": "Destroy 3 healing beacons.",
         "details": "Healing beacons spawn from a dark masonry",
-        "requirements": ["tDarkMasonry", "minWave:30"],
+        "requirements": [
+            ["tDarkMasonry", "minWave:30"],
+            ["Field_T3"]
+        ],
         "required_effort": "Trivial",
     },
     "Nest Blaster": {
@@ -2420,13 +2423,13 @@ achievement_requirements = {
         "description": "Hit 150 whited out monsters with shrines.",
         "details": "Hit 150 whited-out monsters with shrines.",
         "requirements": ["sWhiteout", "eShrine"],
-        "required_effort": "Trivial",
+        "required_effort": "Minor",
     },
     "Hope has fallen": {
         "ap_id": 2247,
         "game_id": 622,
         "description": "In field T4, destroy all 8 dwellings.",
-        "requirements": ["Field_T4"],
+        "requirements": ["Field_T4", "talismanRow:3"],
         "required_effort": "Trivial",
     },
     "Quicksave": {

@@ -650,11 +650,20 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N" / "beforeWave: N" — same gate (a stage with N+ waves
-            // exists). beforeWave is kept distinct in data because its semantic
-            // is "must happen before wave N", but the gen-time reachability gate
-            // is identical.
-            if (lower.indexOf("minwave") == 0 || lower.indexOf("beforewave") == 0) {
+            // "minWave: N" — player must be able to call N waves early on
+            // some in-logic stage. Linked-wave pairs only count as ONE call
+            // (the follower spawns automatically with the leader), so we
+            // gate on CallableWaveCount, not total WaveCount. Matches the
+            // apworld split in requirement_tokens.py.
+            if (lower.indexOf("minwave") == 0) {
+                var cwNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMinCallableWaves(cwNeed);
+            }
+            // "beforeWave: N" — must beat the stage before wave N starts;
+            // gates on the stage actually having N+ waves at all. Stays
+            // on total WaveCount.
+            if (lower.indexOf("beforewave") == 0) {
                 var wNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithMinWaves(wNeed);

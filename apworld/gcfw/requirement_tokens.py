@@ -124,7 +124,17 @@ mode_tokens = frozenset({"mTrial", "mEndurance"})
 # To add a new stage-stat gate: one entry here + the field on each
 # applicable stage in rulesdata_levels.py. No evaluator change.
 level_stat_counters = {
-    "minWave":           "WaveCount",
+    # "minWave:N" means "player must be able to call N waves early on this
+    # stage in a single battle". The cap is NOT total WaveCount — waves with
+    # isLinkedToNext=true cause their follower to auto-spawn with the leader,
+    # so the player only gets credit for one call per pair. CallableWaveCount
+    # (derived per-stage via PRNG replay in extract_level_monster_data.py) is
+    # the achievable maximum and the correct logic gate for the "Call N waves
+    # early" achievement family (Short Tempered / Restless / Agitated / ...).
+    "minWave":           "CallableWaveCount",
+    # "beforeWave:N" is a different semantic — "must happen before wave N" —
+    # which gates on the stage actually having N+ waves at all. Stays on
+    # total WaveCount.
     "beforeWave":        "WaveCount",
     "minMonsters":       "MonsterCount",
     "minSwarmlings":     "SwarmlingCount",
