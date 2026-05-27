@@ -142,26 +142,45 @@ package update {
         // Static helpers
 
         /**
-         * Compare two version strings (with optional leading "v").
+         * Compare two version strings (with optional leading "v" and optional
+         * "-suffix" tag — e.g. "v0.0.5.1-logic-hotfix").
+         *
          * Returns  1 if a > b (a is newer),
          *          0 if equal,
          *         -1 if a < b (a is older).
+         *
+         * Comparison is numeric per dot-segment over the longer of the two
+         * versions (shorter is right-padded with zeros), so "0.0.5.1" is
+         * correctly newer than "0.0.5". Suffix tags after the first "-" are
+         * stripped before splitting, so "v0.0.5-alpha" parses as "0.0.5" and
+         * doesn't get poisoned by AS3's int("5-alpha") = 0 behaviour.
          */
         public static function compareVersions(a:String, b:String):int {
-            a = a.replace(/^v/i, "");
-            b = b.replace(/^v/i, "");
+            a = _normalizeVersionForCompare(a);
+            b = _normalizeVersionForCompare(b);
             var aParts:Array = a.split(".");
             var bParts:Array = b.split(".");
-            // Pad to at least 3 segments.
-            while (aParts.length < 3) aParts.push("0");
-            while (bParts.length < 3) bParts.push("0");
-            for (var i:int = 0; i < 3; i++) {
+            var len:int = (aParts.length > bParts.length)
+                ? aParts.length : bParts.length;
+            while (aParts.length < len) aParts.push("0");
+            while (bParts.length < len) bParts.push("0");
+            for (var i:int = 0; i < len; i++) {
                 var av:int = int(aParts[i]);
                 var bv:int = int(bParts[i]);
                 if (av > bv) return  1;
                 if (av < bv) return -1;
             }
             return 0;
+        }
+
+        /** Strip leading "v" / "V" and any "-suffix" so "v0.0.5.1-logic-hotfix"
+         *  reduces to "0.0.5.1" before dot-splitting. */
+        private static function _normalizeVersionForCompare(v:String):String {
+            v = v.replace(/^v/i, "");
+            var dashIdx:int = v.indexOf("-");
+            if (dashIdx >= 0)
+                v = v.substr(0, dashIdx);
+            return v;
         }
 
         /**
