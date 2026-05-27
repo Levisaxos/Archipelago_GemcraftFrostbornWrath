@@ -54,6 +54,10 @@ package ui {
         private var _isShowing:Boolean       = false;
         private var _fetchDone:Boolean       = false;
         private var _cachedReleases:Array    = null;
+        private var _latestUpdateTag:String  = null;
+
+        private static const RELEASE_TAG_URL_PREFIX:String =
+            "https://github.com/Levisaxos/Archipelago_GemcraftFrostbornWrath/releases/tag/";
 
         // -----------------------------------------------------------------------
 
@@ -230,7 +234,11 @@ package ui {
                 ? _cachedReleases
                 : [{ tag: "", name: "Could not reach GitHub", date: "",
                      body: "Release notes are unavailable.\nPlease check your internet connection." }];
-            _scrChangelog.populate(releases);
+            var updateUrl:String = null;
+            if (_latestUpdateTag != null && _latestUpdateTag.length > 0) {
+                updateUrl = RELEASE_TAG_URL_PREFIX + _latestUpdateTag;
+            }
+            _scrChangelog.populate(releases, updateUrl);
             _scrChangelog.show();
         }
 
@@ -261,14 +269,18 @@ package ui {
             _fileHandler.saveModConfig(config);
             // Refresh changelog if it's currently open.
             if (_scrChangelog != null && _scrChangelog.isShowing) {
-                _scrChangelog.populate(releases);
-                _scrChangelog.show();
+                openChangelog();
             }
         }
 
         private function _onUpdateAvailable(latestTag:String):void {
             _logger.log(_modName, "MainMenuUI: update available — " + latestTag);
+            _latestUpdateTag = latestTag;
             if (_updateBadge != null) _updateBadge.visible = true;
+            // Refresh the changelog if it's already open so the download button shows up.
+            if (_scrChangelog != null && _scrChangelog.isShowing) {
+                openChangelog();
+            }
         }
 
         private function _onFetchFailed():void {

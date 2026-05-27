@@ -2,9 +2,14 @@ package ui {
     import com.giab.games.gcfw.mcDyn.McOptTitle;
     import flash.display.DisplayObjectContainer;
     import flash.display.MovieClip;
+    import flash.display.Sprite;
+    import flash.events.MouseEvent;
     import flash.geom.Rectangle;
+    import flash.net.URLRequest;
+    import flash.net.navigateToURL;
     import flash.text.StaticText;
     import flash.text.TextField;
+    import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
     import flash.utils.getDefinitionByName;
 
@@ -18,6 +23,8 @@ package ui {
     public class McChangelog extends MovieClip {
 
         private var _inner:*;
+        private var _updateUrl:String;
+        private var _downloadBtn:Sprite;
 
         // Expose McOptions chrome members to ScrChangelog (same as McSlotSettings)
         public function get arrCntContents():Array       { return _inner.arrCntContents; }
@@ -41,8 +48,9 @@ package ui {
         private static const BODY_X:Number          = 200; // left edge of body text
         private static const BODY_W:Number          = 1520; // spans full stage width
 
-        public function McChangelog(releases:Array) {
+        public function McChangelog(releases:Array, updateUrl:String = null) {
             super();
+            _updateUrl = updateUrl;
 
             var McOptionsClass:Class =
                 getDefinitionByName("com.giab.games.gcfw.mcStat.McOptions") as Class;
@@ -51,11 +59,22 @@ package ui {
 
             overlayTitle("Archipelago Changelog");
 
+            if (_updateUrl != null && _updateUrl.length > 0) {
+                _downloadBtn = makeDownloadButton();
+                _downloadBtn.x = HEADER_X - _downloadBtn.width * 0.5;
+                _downloadBtn.y = 98;
+                _downloadBtn.addEventListener(MouseEvent.CLICK, onDownloadClick, false, 0, true);
+                _inner.addChild(_downloadBtn);
+            }
+
             // Clear any default content from the chrome
             while (_inner.cnt.numChildren > 0) _inner.cnt.removeChildAt(0);
             _inner.arrCntContents = new Array();
 
             var vY:Number = CONTENT_START_Y;
+            if (_updateUrl != null && _updateUrl.length > 0) {
+                vY += 40;
+            }
 
             var list:Array = (releases != null && releases.length > 0)
                 ? releases
@@ -129,6 +148,42 @@ package ui {
 
             // textHeight gives the actual rendered height; add a small gap below.
             return tf.textHeight + 6;
+        }
+
+        // -----------------------------------------------------------------------
+        // Download-update button (shown only when MainMenuUI passes an updateUrl)
+
+        private function makeDownloadButton():Sprite {
+            var btn:Sprite = new Sprite();
+            var label:String = "↓ Download update";
+
+            var fmt:TextFormat = new TextFormat("_sans", 14, 0xFFEE66, true);
+            var tf:TextField = new TextField();
+            tf.defaultTextFormat = fmt;
+            tf.selectable   = false;
+            tf.mouseEnabled = false;
+            tf.autoSize     = TextFieldAutoSize.LEFT;
+            tf.text         = label;
+
+            var bw:Number = tf.textWidth + 24;
+            var bh:Number = 26;
+
+            btn.graphics.beginFill(0x2A1000, 0.95);
+            btn.graphics.lineStyle(1, 0xCC8800);
+            btn.graphics.drawRoundRect(0, 0, bw, bh, 6, 6);
+            btn.graphics.endFill();
+
+            tf.x = 12;
+            tf.y = 3;
+            btn.addChild(tf);
+
+            btn.buttonMode    = true;
+            btn.useHandCursor = true;
+            return btn;
+        }
+
+        private function onDownloadClick(e:MouseEvent):void {
+            navigateToURL(new URLRequest(_updateUrl), "_blank");
         }
 
         // -----------------------------------------------------------------------
