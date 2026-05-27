@@ -33,11 +33,11 @@ package ui {
          * Build (or rebuild) the panel from a releases array.
          * Safe to call while showing — closes and reopens with fresh content.
          */
-        public function populate(releases:Array):void {
+        public function populate(releases:Array, updateUrl:String = null):void {
             var wasShowing:Boolean = _isShowing;
             if (wasShowing) dismiss();
 
-            _mc = new McChangelog(releases);
+            _mc = new McChangelog(releases, updateUrl);
             _scroll.attach(_mc, dismiss);
 
             if (wasShowing) show();
