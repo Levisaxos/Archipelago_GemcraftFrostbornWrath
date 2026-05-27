@@ -1604,6 +1604,18 @@ package tracker {
             "eAmplifiers": "Amplifiers"
         };
 
+        // Ritual Battle Trait (BattleTraitId.RITUAL = 14, AP id 814) grants
+        // an unconditional 2-Apparition scripted spawn on any stage with
+        // waves.length > 3 (IngameInitializer.as:1612-1653). The
+        // patch/RitualSpawnPatcher.as leaves that path intact even when no
+        // Apparition-pre-placed stage is in logic — it only gates the
+        // other 5 specials (Shadow / Specter / Wraith / Spire / Wizard
+        // Hunter) to their pre-placed-stage availability. So Apparition is
+        // the ONLY Ritual creature that gets logic broadening here. The
+        // others' reachability still requires a pre-placed reachable stage.
+        private static const _RITUAL_TRAIT_AP_ID:int     = 814;
+        private static const _RITUAL_TRAIT_MIN_WAVES:int = 4;
+
         /** Returns true if any reachable in-logic stage hosts the named element. */
         private function _elementInLogic(elemName:String):Boolean {
             if (elemName == "Drop Holder"
@@ -1618,17 +1630,32 @@ package tracker {
                 return true;
             }
             var stages:Array = _elementStages[elemName] as Array;
-            if (stages == null || stages.length == 0)
+            if (stages != null && stages.length > 0)
+            {
+                for each (var stId:String in stages)
+                {
+                    if (AV.sessionData.fieldsInLogic[stId] == true)
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
             {
                 // No mapping or empty mapping = always available (Tower / Wall etc.).
-                return true;
-            }
-            for each (var stId:String in stages)
-            {
-                if (AV.sessionData.fieldsInLogic[stId] == true)
-                {
+                // Apparition is NOT in this bucket — apworld ships it
+                // explicitly in stage_monsters when it has pre-placed counts.
+                if (elemName != "Apparition")
                     return true;
-                }
+            }
+            // Apparition+Ritual broadening, mirroring apworld
+            // `_eval_element_reachable` for parity.
+            if (elemName == "Apparition"
+                    && AV.sessionData.hasItem(_RITUAL_TRAIT_AP_ID)
+                    && _fieldEvaluator != null
+                    && _fieldEvaluator.hasInLogicFieldWithMinWaves(_RITUAL_TRAIT_MIN_WAVES))
+            {
+                return true;
             }
             return false;
         }
