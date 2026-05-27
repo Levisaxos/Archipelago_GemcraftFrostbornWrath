@@ -163,12 +163,13 @@ package tracker {
         }
 
         /**
-         * True if any in-logic stage has at least minWaveCount waves.
+         * True if any in-logic stage has at least minWaveCount total waves.
          *
          * Reads WaveCount directly from _levelStats so the check sees free
          * stages (W1-W4) too — they aren't in _stageRequirements but are in _levelStats
-         * and _inLogicByStrId, so a tier-table-driven version would miss them
-         * (e.g. "Short Tempered" needs only minWave: 5, which W1 satisfies).
+         * and _inLogicByStrId, so a tier-table-driven version would miss them.
+         * Used by "beforeWave:N" (must beat the stage before wave N) — gates
+         * on the stage actually having N+ waves to happen-before.
          */
         public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
             if (_dirty) recompute();
@@ -176,6 +177,23 @@ package tracker {
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true
                         && int(_levelStats[sid].WaveCount) >= minWaveCount) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * True if any in-logic stage lets the player call at least minCount waves early in a single battle.
+         *
+         * Distinct from hasInLogicFieldWithMinWaves: linked-wave pairs (game's isLinkedToNext) only count as ONE call — the linked follower auto-spawns with its leader and the player only earns one wavesCalledEarly++ per button press. CallableWaveCount is precomputed per stage in rulesdata_levels.py by replaying the IngamePopulator PRNG. Used by the "Call N waves early" achievement family (minWave:N).
+         */
+        public function hasInLogicFieldWithMinCallableWaves(minCount:int):Boolean {
+            if (_dirty) recompute();
+            if (_levelStats == null) return false;
+            for (var sid:String in _levelStats) {
+                if (_inLogicByStrId[sid] == true
+                        && int(_levelStats[sid].CallableWaveCount) >= minCount) {
                     return true;
                 }
             }

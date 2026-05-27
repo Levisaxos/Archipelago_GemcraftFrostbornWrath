@@ -2318,17 +2318,18 @@ package {
                 // unseen on next reconnect and re-pop in the panel.
                 if (_offlineItemsCollector != null) _offlineItemsCollector.markSeen(apId);
 
-                // Feed the in-game tracker (idempotent — safe to call before dispatch).
+                // Feed the in-game tracker. onItem MUST run before the dispatch
+                // because progressive paths read getItemCount(apId) to decide
+                // which entry of progressive*Order to grant — but evaluator
+                // recompute + UI refresh have to wait until AFTER the dispatch
+                // (see finally block below). Marking the evaluators dirty here
+                // and triggering an eager logic read (e.g. via the achievement
+                // panel) would cache a pre-dispatch `_inLogicByStrId` and clear
+                // _dirty, leaving every subsequent stage check returning the
+                // stale "before this item was applied" answer until the next
+                // item arrives. The bug that manifested for per-tile progressive
+                // field tokens (tile + pouch owned but stages stuck out of logic).
                 AV.sessionData.onItem(apId);
-                if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
-                if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
-                if (_achPanelPatcher != null && _achievementLogicEvaluator != null) {
-                    _achPanelPatcher.updateExcluded(_achievementLogicEvaluator.getExcludedAchApIds());
-                    _achPanelPatcher.updateEffortExcluded(_achievementLogicEvaluator.getEffortExcludedAchApIds(), _achievementLogicEvaluator.getMaxEffortLabel());
-                    _achPanelPatcher.updateLogicFlags(_achievementLogicEvaluator.getInLogicAchApIds());
-                    _achPanelPatcher.updateDots(_achievementLogicEvaluator.getRequirementsMetApIds());
-                    _achPanelPatcher.refreshIfActive();
-                }
 
                 var strId:String = AV.serverData.tokenMap[String(apId)];
                 if (strId != null) {
@@ -2498,6 +2499,31 @@ package {
                 }
                 _logger.log(MOD_NAME, "  grantItem: no handler for AP ID " + apId);
                 } finally {
+                    // Post-dispatch invalidation: the dispatch mutates
+                    // SessionData (tokensByStrId, itemCounts, stash unlocks,
+                    // skills, traits...), so we mark the logic evaluators
+                    // dirty AFTER it runs — never before. A pre-dispatch
+                    // markDirty + eager logic read (the old shape of this
+                    // block) would cache pre-dispatch state and clear _dirty,
+                    // leaving every later read returning stale answers.
+                    //
+                    // We deliberately do NOT eagerly refresh any UI here.
+                    // The two screens that display logic state — the selector
+                    // (StageTinter via onSelectorFrame at ArchipelagoMod.as:1058)
+                    // and the achievement panel (AchievementPanelPatcher's
+                    // onSelectorFrame / onIngameFrame) — both poll the
+                    // evaluators every frame they're visible and short-circuit
+                    // via _dirty when nothing changed. So: if the player is on
+                    // one of those screens, the next frame picks up the new
+                    // state. If they're elsewhere (battle, main menu), no UI
+                    // work fires until they next open one of those screens.
+                    // markDotsDirty() bypasses the patcher's 30-frame throttle
+                    // so a mid-screen item appears within one frame instead of
+                    // half a second later.
+                    if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+                    if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+                    if (_achPanelPatcher != null) _achPanelPatcher.markDotsDirty();
+
                     // Runs even when one of the dispatch branches returned —
                     // every item-grant path can transitively unlock L5, so we
                     // re-check the trigger after each receipt.

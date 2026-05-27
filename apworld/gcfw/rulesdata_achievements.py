@@ -2426,7 +2426,7 @@ achievement_requirements = {
         "ap_id": 2247,
         "game_id": 622,
         "description": "In field T4, destroy all 8 dwellings.",
-        "requirements": ["Field_T4"],
+        "requirements": ["Field_T4", "talismanRow:3"],
         "required_effort": "Trivial",
     },
     "Quicksave": {

@@ -403,6 +403,19 @@ package patch {
         }
 
         /**
+         * Signal that cached logic state is stale and the panel should pull
+         * fresh values on its next frame instead of waiting up to DOT_INTERVAL
+         * (30) frames for the throttled re-poll. Called from grantItem after
+         * every item receive — if the panel is currently visible, its next
+         * onSelectorFrame / onIngameFrame will re-pull from the evaluator;
+         * if it's not visible, the flag stays set until it next opens, which
+         * is harmless and self-clearing.
+         */
+        public function markDotsDirty():void {
+            _dotsDirty = true;
+        }
+
+        /**
          * If the achievement panel is currently on screen, refresh its display.
          */
         public function refreshIfActive():void {
