@@ -1388,6 +1388,17 @@ package tracker {
             if (req == null || req.length == 0) return null;
             var lower:String = req.toLowerCase();
 
+            // Group token eNonMonsters[:N] is state-dependent (its Apparition
+            // member broadens via the Ritual trait), so it can't bind to a
+            // fixed stage set — treat it as global. Mirrors apworld's
+            // _compile_element_or_full returning static_set=None when the
+            // group contains Apparition. The global eNonMonsters handler in
+            // evaluateRequirement then decides reachability. Without this the
+            // generic eX:N branch below would chase a non-existent
+            // "NonMonstersCount" stat field and wrongly return an empty list.
+            if (req == "eNonMonsters" || req.indexOf("eNonMonsters:") == 0)
+                return null;
+
             if (req.indexOf("Field_") == 0) {
                 var fSid:String = req.substring(6);
                 if (fSid.length == 0) return null;
@@ -1430,6 +1441,27 @@ package tracker {
                                                       "WaveCount", 12);
             }
 
+            // minMonsterHP / minMonsterArmor aggregate across multiple
+            // monster-type fields. apworld's level_stat_counters maps each to a
+            // tuple of fields, max-aggregated; level_stats.json has no single
+            // "MonsterHP"/"MonsterArmor" key. These MUST be handled here (not
+            // via _statKeyForCounter) so the binding path mirrors apworld's
+            // _qualifying_stages_for_stat instead of chasing a missing field.
+            if (lower.indexOf("minmonsterhp") == 0) {
+                var mhpColon:int = lower.indexOf(":");
+                if (mhpColon < 0) return null;
+                return _qualifyingStagesWithMaxStatAtLeast(
+                    ["GiantMaxHP", "ReaverMaxHP"],
+                    int(_trim(lower.substring(mhpColon + 1))));
+            }
+            if (lower.indexOf("minmonsterarmor") == 0) {
+                var marmColon:int = lower.indexOf(":");
+                if (marmColon < 0) return null;
+                return _qualifyingStagesWithMaxStatAtLeast(
+                    ["GiantMaxArmor", "ReaverMaxArmor"],
+                    int(_trim(lower.substring(marmColon + 1))));
+            }
+
             var statKey:String = _statKeyForCounter(lower);
             if (statKey != null) {
                 var colonIdx:int = lower.indexOf(":");
@@ -1446,8 +1478,9 @@ package tracker {
         private function _statKeyForCounter(lower:String):String {
             if (lower.indexOf("minwave") == 0)          return "WaveCount";
             if (lower.indexOf("beforewave") == 0)       return "WaveCount";
-            if (lower.indexOf("minmonsterhp") == 0)     return "MonsterHP";
-            if (lower.indexOf("minmonsterarmor") == 0)  return "MonsterArmor";
+            // minMonsterHP / minMonsterArmor are multi-field (max-aggregated)
+            // tokens handled directly in _qualifyingStagesForToken; they never
+            // reach here.
             if (lower.indexOf("minmonsters") == 0)      return "MonsterCount";
             if (lower.indexOf("minswarmlingarmor") == 0) return "SwarmlingMaxArmor";
             if (lower.indexOf("minswarmlings") == 0)    return "SwarmlingCount";
@@ -1466,6 +1499,29 @@ package tracker {
                 var stats:Object = allStats[sid];
                 if (stats != null && int(stats[statKey]) >= threshold)
                     result.push(sid);
+            }
+            return result;
+        }
+
+        /** Like _qualifyingStagesWithStatAtLeast but max-aggregates across
+         *  several level-stat fields (for tokens like minMonsterHP that map to
+         *  a tuple of fields in apworld). A stage qualifies iff the max of the
+         *  listed fields >= threshold. Mirrors apworld's
+         *  _qualifying_stages_for_stat over a multi-field counter. */
+        private function _qualifyingStagesWithMaxStatAtLeast(statKeys:Array,
+                                                            threshold:int):Array {
+            var result:Array = [];
+            if (AV.gameData == null || AV.gameData.levelStats == null) return result;
+            var allStats:Object = AV.gameData.levelStats;
+            for (var sid:String in allStats) {
+                var stats:Object = allStats[sid];
+                if (stats == null) continue;
+                var m:int = 0;
+                for each (var k:String in statKeys) {
+                    var v:int = int(stats[k]);
+                    if (v > m) m = v;
+                }
+                if (m >= threshold) result.push(sid);
             }
             return result;
         }

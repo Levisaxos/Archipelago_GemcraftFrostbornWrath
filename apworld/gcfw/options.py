@@ -3,16 +3,6 @@ from dataclasses import dataclass
 from Options import Choice, DeathLink, OptionSet, PerGameCommonOptions, Range, Toggle
 
 
-class EnforceLogic(Toggle):
-    """When enabled, prevents starting out-of-logic stages in Journey mode.
-
-    Journey mode is where Archipelago check locations live. With this on, the Journey start button is disabled for stages whose tier gate is not yet met, forcing the player to follow the randomizer's intended progression order.
-    Endurance and Trial modes are unaffected (they have no AP checks).
-    """
-    display_name = "Enforce Logic"
-    default = 0
-
-
 class StartingStage(Choice):
     """Which early-game stage you start the run on.
 
@@ -78,7 +68,7 @@ class FieldsRequired(Range):
     The game has 122 stages total.
     """
     display_name = "Fields Required"
-    range_start = 50
+    range_start = 12
     range_end   = 122
     default     = 80
 
@@ -90,7 +80,7 @@ class FieldsRequiredPercentage(Range):
     Rounded up if it doesn't divide evenly. Default of 66% requires 80 of the 122 stages.
     """
     display_name = "Fields Required Percentage"
-    range_start = 40
+    range_start = 10
     range_end   = 100
     default     = 66
 
@@ -412,8 +402,7 @@ class GCFWOptions(PerGameCommonOptions):
     achievement_required_effort: AchievementRequiredEffort        
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial
-    enforce_logic:             EnforceLogic
-    xp_tome_bonus:             XpTomeBonus            
+    xp_tome_bonus:             XpTomeBonus
     starting_overcrowd:        StartingOvercrowd    
     starting_wizard_level:     StartingWizardLevel
     skillpoint_multiplier:     SkillpointMultiplier

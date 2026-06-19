@@ -8,7 +8,6 @@ package data {
         public var goal:int;                     // 0=beat_game, 2=swarm_queen, 3=fields_count, 4=fields_percentage
         public var startingStage:int;            // 0=W1..3=W4, 4=S1..7=S4 (StartingStage option order)
         public var fieldTokenPlacement:int;      // 0=own_world, 1=any_world, 2=different_world
-        public var enforce_logic:Boolean;
         public var disable_endurance:Boolean;
         public var disable_trial:Boolean;
 
@@ -101,7 +100,6 @@ package data {
             goal = 0;
             startingStage = 0;
             fieldTokenPlacement = 1;
-            enforce_logic = true;
             disable_endurance = false;
             disable_trial = true;
 

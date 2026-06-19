@@ -72,7 +72,6 @@ package ui {
             addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
             addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
-            addRow("Enforce Logic",           opts.enforce_logic    ? "Yes" : "No", vY);                      vY += ROW_HEIGHT;
             addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Trial Mode",              opts.disable_trial     ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Starting Wizard Level",   opts.startingWizardLevel == 1 ? "Off" : "Level " + opts.startingWizardLevel, vY); vY += ROW_HEIGHT;

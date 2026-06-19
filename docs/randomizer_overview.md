@@ -83,12 +83,11 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | Option | Default | Description |
 |---|---|---|
 | `goal` | `kill_gatekeeper` | Win condition (see above) |
-| `fields_required` | `80` | Used when `goal = fields_count` (50–122) |
-| `fields_required_percentage` | `66` | Used when `goal = fields_percentage` (40–100) |
+| `fields_required` | `80` | Used when `goal = fields_count` (12–122) |
+| `fields_required_percentage` | `66` | Used when `goal = fields_percentage` (10–100) |
 | `starting_stage` | `random` | Choose one of W1–W4 / S1–S4, or randomize per seed |
 | `field_token_placement` | `any_world` | Where Field Tokens may be placed: `any_world`, `own_world`, or `different_world` (multiplayer required) |
 | `field_token_granularity` | `per_tile_progressive` | How coarse Field Token items are. Three families — `per_stage` (122 unique tokens), `per_tile` (26, one per map-tile prefix), `per_tier` (13, one per power tier) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
-| `enforce_logic` | `false` | When enabled, prevents starting out-of-logic stages in Journey mode |
 | `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tomes in a 1:2:3 ratio. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any tomes (1–100) |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |

@@ -47,7 +47,7 @@ package patch {
             _modName = modName;
         }
 
-        /** Call once after AP connects (same place LogicEnforcer is configured). */
+        /** Call once after AP connects, after the field logic evaluator is built. */
         public function configure(logicEval:FieldLogicEvaluator):void {
             _logicEval = logicEval;
         }

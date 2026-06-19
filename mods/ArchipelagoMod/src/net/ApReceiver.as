@@ -190,8 +190,6 @@ package net {
                 }
                 if (sd.field_token_placement !== undefined)
                     AV.serverData.serverOptions.fieldTokenPlacement = int(sd.field_token_placement);
-                if (sd.enforce_logic !== undefined)
-                    AV.serverData.serverOptions.enforce_logic = Boolean(sd.enforce_logic);
                 if (sd.disable_endurance !== undefined)
                     AV.serverData.serverOptions.disable_endurance = Boolean(sd.disable_endurance);
                 if (sd.disable_trial !== undefined)

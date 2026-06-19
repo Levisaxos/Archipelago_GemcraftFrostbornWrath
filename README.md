@@ -189,7 +189,6 @@ Please include this file when reporting issues.
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
 | `tier_requirements_percent` | `75` | Percentage of stages in earlier tiers that must be accessible before later tiers are considered in logic (40–100). Lower values may require heavier use of Endurance mode. |
 | `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tome values in a 1:2:3 ratio. |
-| `enforce_logic` | `false` | When enabled, prevents starting out-of-logic stages in Journey mode. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
 

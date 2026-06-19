@@ -64,7 +64,6 @@ package {
     import patch.GemPouchSuppressor;
     import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
-    import patch.LogicEnforcer;
     import patch.WavePrePatcher;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
@@ -100,10 +99,10 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.1"; }
+        public function get VERSION():String           { return "0.0.5.2"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.1"; }
+        public function get APWORLD_VERSION():String   { return "0.0.5.2"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
@@ -160,7 +159,6 @@ package {
         private var _gemPouchSuppressor:GemPouchSuppressor;
         private var _hollowGemInjector:HollowGemInjector;
         private var _startingGemSuppressor:StartingGemSuppressor;
-        private var _logicEnforcer:LogicEnforcer;
         private var _wavePrePatcher:WavePrePatcher;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
@@ -263,7 +261,6 @@ package {
                 _talismanUnlocker   = new TalismanUnlocker(_logger, MOD_NAME, _receivedToast);
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _receivedToast);
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
-                _logicEnforcer      = new LogicEnforcer(_logger, MOD_NAME);
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
@@ -1052,7 +1049,6 @@ package {
 
             try {
                 if (_firstPlayBypass != null) _firstPlayBypass.onSelectorFrame(mc);
-                if (_logicEnforcer != null) _logicEnforcer.onSelectorFrame(mc);
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
@@ -1385,7 +1381,6 @@ package {
                 _achievementUnlocker.setAchievementLogicEvaluator(_achievementLogicEvaluator);
                 _logger.log(MOD_NAME, "  tracker configured — logic_rules_version="
                     + p.slot_data.logic_rules_version);
-                _logicEnforcer.configure(_fieldLogicEvaluator, AV.serverData.serverOptions.enforce_logic);
                 _ritualSpawnPatcher.configure(_fieldLogicEvaluator);
             }
             _firstPlayBypass.configure(AV.serverData.serverOptions.disable_endurance, AV.serverData.serverOptions.disable_trial, AV.serverData.freeStages);
