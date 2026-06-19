@@ -62,6 +62,7 @@ package {
     import patch.RetryButtonSkillPointsRefresh;
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
+    import patch.SteamAchievementSuppressor;
     import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
     import patch.WavePrePatcher;
@@ -99,10 +100,10 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.2"; }
+        public function get VERSION():String           { return "0.0.5.3"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.2"; }
+        public function get APWORLD_VERSION():String   { return "0.0.5.3"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
@@ -157,6 +158,7 @@ package {
         private var _retryButtonSkillPointsRefresh:RetryButtonSkillPointsRefresh;
         private var _frostbornFreeBuildings:FrostbornFreeBuildings;
         private var _gemPouchSuppressor:GemPouchSuppressor;
+        private var _steamAchSuppressor:SteamAchievementSuppressor;
         private var _hollowGemInjector:HollowGemInjector;
         private var _startingGemSuppressor:StartingGemSuppressor;
         private var _wavePrePatcher:WavePrePatcher;
@@ -269,6 +271,7 @@ package {
                 _retryButtonSkillPointsRefresh = new RetryButtonSkillPointsRefresh(_logger, MOD_NAME);
                 _frostbornFreeBuildings = new FrostbornFreeBuildings(_logger, MOD_NAME);
                 _gemPouchSuppressor = new GemPouchSuppressor(_logger, MOD_NAME);
+                _steamAchSuppressor = new SteamAchievementSuppressor(_logger, MOD_NAME);
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
                 _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
                 _saveSlotDeleteFix     = new SaveSlotDeleteFix(_logger, MOD_NAME);
@@ -511,6 +514,11 @@ package {
             // Game hooks
             _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             _progressionBlocker.enable(_bezel);
+            // Block Steam achievement unlocks for the AP session. Runs here
+            // (before the interceptor re-dispatches the slot click and the
+            // vanilla save-load fires) so the on-load Steam sync is suppressed
+            // too — not just the battle-end path.
+            if (_steamAchSuppressor != null) _steamAchSuppressor.suppress();
             // EXIT_FRAME fires after every ENTER_FRAME handler on the
             // stage has completed, so vanilla's redrawHighBuildings (which
             // can run inside Main.doEnterFrame on level-load frames) is
@@ -551,6 +559,9 @@ package {
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_progressionBlocker != null) _progressionBlocker.disable();
             removeEventListener(Event.EXIT_FRAME, onExitFrame);
+            // Re-enable Steam achievements so a standalone/vanilla slot loaded
+            // next earns them normally.
+            if (_steamAchSuppressor != null) _steamAchSuppressor.restore();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();

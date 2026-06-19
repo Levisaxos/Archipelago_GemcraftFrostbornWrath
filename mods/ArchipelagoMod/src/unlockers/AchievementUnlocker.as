@@ -411,11 +411,17 @@ package unlockers {
          * but harmless: detectAndReport's gainedAchis cross-check stops it
          * from being interpreted as a brand-new check next session.
          *
-         * Second pass — excluded achievements (effort / Trial / disabled-
-         * Endurance / untrackable): for any already in gainedAchis, seed
-         * _reportedAchievements so detectAndReport doesn't re-fire the
-         * toast + drop-icon for them on every reconnect. We also stamp
-         * ach.status = 3 to match the AP-tracked path: vanilla's
+         * Second pass — EVERY achievement already in gainedAchis (AP-tracked
+         * and excluded alike): seed _reportedAchievements so detectAndReport
+         * doesn't re-fire the location check + out-of-logic toast + drop-icon
+         * for them on every reconnect. The first pass only seeds the
+         * achievements it RESTORES (server-checked but not yet locally
+         * gained); it bails out on entries already in gainedAchis before the
+         * seed, which is what left previously-earned AP-tracked achievements
+         * re-firing each session. Server-missing checks are not lost — the
+         * reconcileLocationChecks pass that runs right after re-sends any
+         * locally-earned achievement the server hasn't recorded. We also
+         * stamp ach.status = 3 to match the AP-tracked path: vanilla's
          * IngameInitializer2.resetAchis only runs when entering a stage,
          * so on the selector screen ach.status would otherwise stay at
          * its initial 0 (or whatever previous slot left it), causing
@@ -458,33 +464,40 @@ package unlockers {
                 restored++;
             }
 
-            // Second pass — silence previously-gained excluded achievements
-            // and stamp them WAS_ALREADY_UNLOCKED so the panel sort + dot
-            // logic treat them as earned. gainedAchis persists across
-            // sessions, but _reportedAchievements is wiped on every
-            // MAINMENU / LOADGAME entry; without this seed detectAndReport
-            // would re-toast and re-icon every excluded unlock on every
-            // reconnect. Only seed game IDs already committed to gainedAchis
-            // — newly-earned excluded achievements in the current session
-            // must still surface their toast + drop icon.
-            var excludedSeeded:int = 0;
+            // Second pass — silence EVERY previously-gained achievement
+            // (AP-tracked and excluded alike) and stamp it
+            // WAS_ALREADY_UNLOCKED so the panel sort + dot logic treat it as
+            // earned. gainedAchis persists across sessions, but
+            // _reportedAchievements is wiped on every MAINMENU / LOADGAME
+            // entry. The first pass only seeds _reportedAchievements for
+            // achievements it RESTORES (server-checked but not yet locally
+            // gained) — it bails out early on entries already in gainedAchis,
+            // before the seed. Without this pass, detectAndReport would
+            // re-fire (re-send the location check + re-run the out-of-logic
+            // toast) for every achievement already committed to the save on
+            // every reconnect. Server-missing checks are NOT lost: the
+            // reconcileLocationChecks pass that runs immediately after this
+            // re-sends any locally-earned achievement the server doesn't yet
+            // have (it diffs against the missing set). detectAndReport's job
+            // is purely to catch achievements earned DURING this session, so
+            // newly-earned achievements (not yet in gainedAchis) are left
+            // unseeded and still surface their toast + drop icon.
+            var seeded:int = 0;
             for (i = 0; i < achisByOrder.length; i++) {
                 var achEx:* = achisByOrder[i];
                 if (!achEx) continue;
                 var gidEx:int = int(achEx.id);
                 if (gidEx < 0 || gidEx >= gainedAchis.length) continue;
                 if (gainedAchis[gidEx] !== true) continue;
-                if (_reportedAchievements[gidEx]) continue;  // already covered by AP-tracked pass
-                var achDataEx:Object = _gameIdToData[gidEx];
-                if (achDataEx == null) continue;
-                if (getSkipReason(achDataEx) == null) continue;
+                if (_reportedAchievements[gidEx]) continue;  // already covered by the restore pass
+                if (_gameIdToData[gidEx] == null) continue;
                 try { achEx.status = 3; } catch (eExStatus:Error) {}
                 _reportedAchievements[gidEx] = true;
-                excludedSeeded++;
+                seeded++;
             }
-            if (excludedSeeded > 0) {
-                _logger.log(_modName, "restoreCheckedAchievements: silenced " + excludedSeeded
-                    + " previously-gained excluded achievements");
+            if (seeded > 0) {
+                _logger.log(_modName, "restoreCheckedAchievements: silenced " + seeded
+                    + " previously-gained achievements (no re-send on reconnect)");
             }
 
             if (restored > 0) {
@@ -508,7 +521,7 @@ package unlockers {
                     _logger.log(_modName, "restoreCheckedAchievements: setAchiLockStatusesOnLoad threw: " + eFlags.message);
                 }
             }
-            return restored + excludedSeeded;
+            return restored + seeded;
         }
 
         /**
