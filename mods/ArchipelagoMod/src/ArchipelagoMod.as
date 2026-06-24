@@ -66,6 +66,7 @@ package {
     import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
     import patch.WavePrePatcher;
+    import patch.LinkedWaveEarlyCredit;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
@@ -162,6 +163,7 @@ package {
         private var _hollowGemInjector:HollowGemInjector;
         private var _startingGemSuppressor:StartingGemSuppressor;
         private var _wavePrePatcher:WavePrePatcher;
+        private var _linkedWaveEarlyCredit:LinkedWaveEarlyCredit;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
@@ -264,6 +266,7 @@ package {
                 _shadowCoreUnlocker = new ShadowCoreUnlocker(_logger, MOD_NAME, _receivedToast);
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
+                _linkedWaveEarlyCredit = new LinkedWaveEarlyCredit(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
@@ -1001,6 +1004,7 @@ package {
                 _victoryRestartButton.tryAttach();
                 _retryButtonSkillPointsRefresh.tryAttach();
                 _wavePrePatcher.applyIfReady();
+                _linkedWaveEarlyCredit.onIngameFrame();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
@@ -1498,6 +1502,7 @@ package {
             skipAllTutorials();
             _deathLinkHandler.resetForNewStage();
             _wavePrePatcher.resetForNewStage();
+            _linkedWaveEarlyCredit.resetForNewStage();
             _ritualSpawnPatcher.resetForNewStage();
             _startingGemSuppressor.applyIfReady();
             // Refresh achievement-panel pips so they're current even if the
