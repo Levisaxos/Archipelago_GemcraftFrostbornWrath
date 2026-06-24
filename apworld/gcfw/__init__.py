@@ -444,10 +444,18 @@ class GemcraftFrostbornWrathWorld(World):
 
             # Under Universal Tracker the multiworld is regenerated as a single
             # player (just the tracked slot), so `players == 1` even for a real
-            # multiplayer seed. Detect that via the same re_gen_passthrough signal
-            # used above and skip the player-count guards, otherwise UT crashes on
-            # a 'different_world'/'own_world' slot.
-            generation_for_UT = self.game in re_gen_passthrough
+            # multiplayer seed. Skip the player-count guards in that case, or UT
+            # crashes on a 'different_world'/'own_world' slot when it regenerates
+            # with a single yaml.
+            #
+            # Both signals are valid here: `generation_is_fake` is set
+            # unconditionally by UT on the regenerated multiworld, and our
+            # `interpret_slot_data` hook means `re_gen_passthrough` is populated
+            # too. We check both for robustness across UT versions.
+            generation_for_UT = (
+                getattr(self.multiworld, "generation_is_fake", False)
+                or self.game in re_gen_passthrough
+            )
 
             if (not generation_for_UT
                     and self.options.field_token_placement.value == FieldTokenPlacement.option_different_world
