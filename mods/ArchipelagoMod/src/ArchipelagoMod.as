@@ -100,10 +100,10 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.3"; }
+        public function get VERSION():String           { return "0.0.5.4"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.3"; }
+        public function get APWORLD_VERSION():String   { return "0.0.5.4"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;

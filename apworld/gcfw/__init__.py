@@ -442,9 +442,20 @@ class GemcraftFrostbornWrathWorld(World):
                         if opt is not None:
                             opt.value = slot_data[key]
 
-            if (self.options.field_token_placement.value == FieldTokenPlacement.option_different_world and self.multiworld.players == 1):
+            # Under Universal Tracker the multiworld is regenerated as a single
+            # player (just the tracked slot), so `players == 1` even for a real
+            # multiplayer seed. Detect that via the same re_gen_passthrough signal
+            # used above and skip the player-count guards, otherwise UT crashes on
+            # a 'different_world'/'own_world' slot.
+            generation_for_UT = self.game in re_gen_passthrough
+
+            if (not generation_for_UT
+                    and self.options.field_token_placement.value == FieldTokenPlacement.option_different_world
+                    and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'different_world' requires more than one player.")
-            if (self.options.field_token_placement.value == FieldTokenPlacement.option_own_world and self.multiworld.players == 1):
+            if (not generation_for_UT
+                    and self.options.field_token_placement.value == FieldTokenPlacement.option_own_world
+                    and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
     _JOURNEY_PRIORITY_FRACTION = 0.75
