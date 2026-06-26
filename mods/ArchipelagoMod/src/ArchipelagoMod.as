@@ -380,6 +380,7 @@ package {
                 _modButtons.onSettingsClick  = onSettingsClicked;
                 _modButtons.onApDebugClick   = _toggleDebugOptions;
                 _modButtons.onChangelogClick = openChangelog;
+                _modButtons.onCreditsClick   = openCredits;
 
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
@@ -1164,6 +1165,12 @@ package {
         private function openChangelog():void {
             if (int(GV.main.currentScreen) != ScreenId.MAINMENU) return;
             _mainMenuUI.openChangelog();
+        }
+
+        /** Open (or refresh) the credits panel. Only valid on the main menu. */
+        private function openCredits():void {
+            if (int(GV.main.currentScreen) != ScreenId.MAINMENU) return;
+            _mainMenuUI.openCredits();
         }
 
 

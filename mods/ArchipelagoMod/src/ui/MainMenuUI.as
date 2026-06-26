@@ -36,6 +36,7 @@ package ui {
         private var _modButtons:ModButtons;
         private var _updateChecker:UpdateChecker;
         private var _scrChangelog:ScrChangelog;
+        private var _scrCredits:ScrCredits;
 
         private static const FONT:String           = "Celtic Garamond for GemCraft";
         private static const COL_VERSION:uint      = 0xD0D0D0;
@@ -71,6 +72,7 @@ package ui {
             _modButtons  = modButtons;
 
             _scrChangelog = new ScrChangelog();
+            _scrCredits   = new ScrCredits();
 
             _updateChecker = new UpdateChecker(_logger, _modName);
             _updateChecker.onReleasesLoaded  = _onReleasesLoaded;
@@ -209,6 +211,7 @@ package ui {
 
             if (_modButtons != null) _modButtons.removeFromMainMenu();
             if (_scrChangelog != null) _scrChangelog.dismiss();
+            if (_scrCredits != null) _scrCredits.dismiss();
 
             _isShowing = false;
         }
@@ -222,6 +225,9 @@ package ui {
             if (_modButtons != null) _modButtons.onMainMenuFrame();
             if (_scrChangelog != null && _scrChangelog.isShowing) {
                 _scrChangelog.doEnterFrame();
+            }
+            if (_scrCredits != null && _scrCredits.isShowing) {
+                _scrCredits.doEnterFrame();
             }
         }
 
@@ -243,6 +249,15 @@ package ui {
         }
 
         /**
+         * Open (or refresh) the credits panel. Only valid while showing.
+         */
+        public function openCredits():void {
+            if (_scrCredits == null) _scrCredits = new ScrCredits();
+            _scrCredits.populate(CreditsData.getSections());
+            _scrCredits.show();
+        }
+
+        /**
          * Dispose of long-lived resources. Call from ArchipelagoMod.unload().
          */
         public function dispose():void {
@@ -254,6 +269,10 @@ package ui {
             if (_scrChangelog != null) {
                 _scrChangelog.dismiss();
                 _scrChangelog = null;
+            }
+            if (_scrCredits != null) {
+                _scrCredits.dismiss();
+                _scrCredits = null;
             }
         }
 

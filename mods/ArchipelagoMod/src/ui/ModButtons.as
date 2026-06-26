@@ -28,6 +28,8 @@ package ui {
         public var onApDebugClick:Function;
         /** Open the changelog panel. */
         public var onChangelogClick:Function;
+        /** Open the credits panel. */
+        public var onCreditsClick:Function;
 
         private var _logger:Logger;
         private var _modName:String;
@@ -46,8 +48,9 @@ package ui {
         private var _settingsDesiredVisible:Boolean = false;
         private var _apDebugDesiredVisible:Boolean = false;
 
-        // Main-menu button
+        // Main-menu buttons
         private var _changelogBtn:CustomButton;
+        private var _creditsBtn:CustomButton;
         private var _changelogBtnFrameDelay:Number = 5;
         private var _changelogBtnCreated:Boolean = false;
         private var _startBtnOriginalY:Number = NaN; // saved so we can restore Start Game on remove
@@ -171,16 +174,28 @@ package ui {
          * keep it centred between the Start Game and Exit buttons (needed because
          * ScrMainMenu repositions its buttons after this method runs).
          */
-        public function createChangelogButton():void {           
+        public function createChangelogButton():void {
             var mc:*   = GV.main.scrMainMenu.mc;
             var tmpl:* = mc.btnExit;
 
             _startBtnOriginalY    = tmpl.y;
             _changelogBtn         = new CustomButton(tmpl, "Changelog");
             _changelogBtn.onClick = function():void {
-                if (onChangelogClick != null) onChangelogClick();
+                if (onChangelogClick != null)
+                {
+                    onChangelogClick();
+                }
             };
-            mc.addChild(_changelogBtn);            
+            mc.addChild(_changelogBtn);
+
+            _creditsBtn         = new CustomButton(tmpl, "Credits");
+            _creditsBtn.onClick = function():void {
+                if (onCreditsClick != null)
+                {
+                    onCreditsClick();
+                }
+            };
+            mc.addChild(_creditsBtn);
         }
 
         /**
@@ -203,10 +218,12 @@ package ui {
             var exitBtn:*  = mc.btnExit;
             var gap:Number = 8;
 
-            // // Exit stays put. Place Changelog just above it, Start Game above that.
-             _changelogBtn.x = exitBtn.x;
-             _changelogBtn.y = exitBtn.y - _changelogBtn.height - gap;
-             startBtn.y      = _changelogBtn.y - startBtn.height - gap;             
+            // Exit stays put. Stack upward: Exit, Credits, Changelog, Start Game.
+            _creditsBtn.x   = exitBtn.x;
+            _creditsBtn.y   = exitBtn.y - _creditsBtn.height - gap;
+            _changelogBtn.x = exitBtn.x;
+            _changelogBtn.y = _creditsBtn.y - _changelogBtn.height - gap;
+            startBtn.y      = _changelogBtn.y - startBtn.height - gap;
         }
 
         /**
@@ -221,6 +238,8 @@ package ui {
             }
             _remove(_changelogBtn);
             _changelogBtn = null;
+            _remove(_creditsBtn);
+            _creditsBtn = null;
             _changelogBtnFrameDelay = 5;
         }
 
