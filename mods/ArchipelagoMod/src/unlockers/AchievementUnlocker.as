@@ -354,6 +354,65 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
+        // Debug menu support
+
+        /**
+         * Whole trackable achievement pool for the debug "Achievements" tab:
+         * every achievement that has a real AP location (getSkipReason == null —
+         * i.e. not untrackable, not above the effort threshold, not Trial-only,
+         * not Endurance-disabled) and is still missing on the server. Returns an
+         * Array of { apId:int, name:String } sorted by name.
+         *
+         * Reachability is NOT considered — this is the full pool, not the
+         * in-logic subset (AchievementLogicEvaluator.getInLogicAchApIds()).
+         */
+        public function getTrackableMissingAchievements():Array {
+            var result:Array = [];
+            if (AV.saveData == null) return result;
+            var missing:Object = AV.saveData.missingLocations;
+            if (missing == null) return result;
+
+            for (var name:String in _achievementData) {
+                var achData:Object = _achievementData[name];
+                if (!achData || achData.apId == null) continue;
+                var apId:int = int(achData.apId);
+                if (apId < 2000 || apId > 2636) continue;
+                if (missing[apId] != true) continue;
+                if (getSkipReason(achData) != null) continue;
+                result.push({ apId: apId, name: name });
+            }
+            result.sortOn("name", Array.CASEINSENSITIVE);
+            return result;
+        }
+
+        /**
+         * Debug-menu entry point: send the AP location check for an achievement
+         * WITHOUT marking it earned in-game. Routes through unlockAchievement,
+         * which records the check AP-side (sessionData) and releases the item
+         * behind the location to its owner (sendLocationChecks) — but never
+         * writes gainedAchis or fires the in-game / Steam achievement, so the
+         * player does not actually unlock it.
+         *
+         * Idempotent per session: skips if the achievement is already collected
+         * (live receipt or a prior debug send). Returns true if a check was
+         * sent, false if skipped (invalid apId or already collected).
+         */
+        public function debugSendAchievementCheck(apId:int):Boolean {
+            if (apId < 2000 || apId > 2636) return false;
+            if (AV.sessionData != null && AV.sessionData.isAchievementCollected(apId)) {
+                _logger.log(_modName, "debugSendAchievementCheck: apId=" + apId + " already collected — skipping");
+                return false;
+            }
+            if (!_connectionManager.isConnected) {
+                _logger.log(_modName, "debugSendAchievementCheck: not connected — check will not reach the server");
+            }
+            var name:String = findAchievementNameByApId(apId);
+            if (name == null) name = "Achievement " + apId;
+            unlockAchievement(name, apId, -1);
+            return true;
+        }
+
+        // -----------------------------------------------------------------------
         // Lookups
 
         /**

@@ -72,6 +72,7 @@ package {
     import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
     import patch.SkillsTooltipOverlay;
+    import patch.SkillTypeTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -101,10 +102,10 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.4"; }
+        public function get VERSION():String           { return "0.0.5.5"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.4"; }
+        public function get APWORLD_VERSION():String   { return "0.0.5.5"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
@@ -173,6 +174,7 @@ package {
         private var _achPanelPatcher:AchievementPanelPatcher;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
+        private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
 
         private var _keyListenerAdded:Boolean  = false;
@@ -371,6 +373,7 @@ package {
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
+                _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
 
                 // Button factory — owns all mod buttons on selector + main menu
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
@@ -662,6 +665,25 @@ package {
         public function debugIsItemCollected(apId:int):Boolean {
             if (AV.sessionData == null || AV.sessionData.collectedItems == null) return false;
             return AV.sessionData.collectedItems[String(apId)] == true;
+        }
+
+        /**
+         * Debug-menu "Achievements" tab: the whole trackable, still-missing
+         * achievement pool as Array of { apId, name }. Untrackables and
+         * gen-excluded achievements (effort / Trial / Endurance) are filtered
+         * out by the unlocker. Empty before AP connect.
+         */
+        public function getDebugAchievementPool():Array {
+            return (_achievementUnlocker != null) ? _achievementUnlocker.getTrackableMissingAchievements() : [];
+        }
+
+        /**
+         * Debug-menu entry point: send the AP location check for an achievement
+         * (releases the item behind it) WITHOUT unlocking the achievement for
+         * the player in-game. Returns true if sent, false if skipped.
+         */
+        public function debugSendAchievementCheck(apId:int):Boolean {
+            return (_achievementUnlocker != null) ? _achievementUnlocker.debugSendAchievementCheck(apId) : false;
         }
 
         /** Public log passthrough for UI helpers (e.g. ScrDebugOptions) that
@@ -1069,6 +1091,7 @@ package {
                 if (_stageTinter != null) _stageTinter.apply(mc);
                 if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
                 if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
+                if (_skillTypeTooltipOverlay != null) _skillTypeTooltipOverlay.onSelectorFrame();
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {

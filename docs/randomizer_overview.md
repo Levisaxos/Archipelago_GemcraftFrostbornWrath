@@ -71,8 +71,8 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 |---|---|
 | `kill_gatekeeper` *(default)* | Kill the Gatekeeper on stage A4 |
 | `kill_swarm_queen` | Kill the Swarm Queen on stage K4 |
-| `fields_count` | Complete a fixed number of Journey stages (`fields_required`, 50–122) |
-| `fields_percentage` | Complete a percentage of all Journey stages (`fields_required_percentage`, 40–100) |
+| `fields_count` | Complete a fixed number of Journey stages (`fields_required`, 12–122) |
+| `fields_percentage` | Complete a percentage of all Journey stages (`fields_required_percentage`, 10–100) |
 
 ---
 

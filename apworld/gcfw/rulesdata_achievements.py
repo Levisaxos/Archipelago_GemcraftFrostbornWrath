@@ -1669,6 +1669,7 @@ achievement_requirements = {
         "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
         "requirements": ["mEndurance", "mTrial"],
         "required_effort": "Extreme",
+        "untrackable": True,
     },
     "Disco Ball": {
         "ap_id": 2126,
@@ -2023,6 +2024,7 @@ achievement_requirements = {
         "description": "Have 10 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:10"],
         "required_effort": "Trivial",
+                "untrackable": True,
     },
     "Adept": {
         "ap_id": 2007,
@@ -2030,6 +2032,7 @@ achievement_requirements = {
         "description": "Have 30 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:30"],
         "required_effort": "Trivial",
+                "untrackable": True,
     },
     "Expert": {
         "ap_id": 2167,
@@ -2037,6 +2040,7 @@ achievement_requirements = {
         "description": "Have 50 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:50"],
         "required_effort": "Trivial",
+                "untrackable": True,
     },
     "Stockpile": {
         "ap_id": 2521,
@@ -4575,6 +4579,7 @@ achievement_requirements = {
         "details": "Win a Trial battle with at least 3 waves called early.",
         "requirements": ["minWave:3", "mTrial"],
         "required_effort": "Trivial",
+        "untrackable": True,
     },
     "Impressive": {
         "ap_id": 2269,
@@ -4582,6 +4587,7 @@ achievement_requirements = {
         "description": "Win a Trial battle without any monster reaching your Orb.",
         "requirements": ["mTrial"],
         "required_effort": "Trivial",
+                "untrackable": True,
     },
     "So Attached": {
         "ap_id": 2499,
@@ -4589,6 +4595,7 @@ achievement_requirements = {
         "description": "Win a Trial battle without losing any orblets.",
         "requirements": ["mTrial"],
         "required_effort": "Trivial",
+                "untrackable": True,
     },
     "Heavily Modified": {
         "ap_id": 2237,
@@ -4664,13 +4671,7 @@ achievement_requirements = {
         "ap_id": 2572,
         "game_id": 63,
         "description": "Break 4 tombs open.",
-        "details": "Break 4 tombs in one battle.",
-        # Game requires openedTombs >= 4 (IngameAchiChecker0.as:506),
-        # and only !isBrokenOpen tombs increment openedTombs
-        # (IngameDestroyer.as:1325-1336). No Journey stage has 4
-        # destroyable tombs (E5 has 4 total but 1 spawns isBrokenOpen);
-        # earnable only in Trial mode (E5, M3 both have 4 alive). Mark
-        # untrackable so apworld doesn't depend on it for Journey logic.
+        "details": "Break 4 tombs in one battle.",        
         "requirements": ["eTomb:4"],
         "required_effort": "Trivial",
         "untrackable": True,

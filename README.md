@@ -170,8 +170,8 @@ Please include this file when reporting issues.
 | Option | Default | Description |
 |---|---|---|
 | `goal` | `kill_gatekeeper` | Win condition. See values below. |
-| `fields_required` | `80` | Number of Journey stages to complete. Only used when `goal` is `fields_count` (50–122). |
-| `fields_required_percentage` | `66` | Percentage of Journey stages to complete. Only used when `goal` is `fields_percentage` (40–100). |
+| `fields_required` | `80` | Number of Journey stages to complete. Only used when `goal` is `fields_count` (12–122). |
+| `fields_required_percentage` | `66` | Percentage of Journey stages to complete. Only used when `goal` is `fields_percentage` (10–100). |
 
 **Goal values:**
 

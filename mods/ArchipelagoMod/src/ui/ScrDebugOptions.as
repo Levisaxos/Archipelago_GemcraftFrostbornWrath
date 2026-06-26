@@ -74,6 +74,25 @@ package ui {
         }
 
         /**
+         * Wire click + hover handlers for the Achievements tab. Unlike the grant
+         * panels (built once in the constructor), achievement panels are rebuilt
+         * on every open() from the current pool, so this must run after each
+         * rebuildAchievementsContents() to bind the fresh panel instances.
+         */
+        private function _wireAchievementPanels():void {
+            var arr:Array = _mc.achievementPanels;
+            if (arr == null) return;
+            for (var i:int = 0; i < arr.length; i++) {
+                var entry:Object = arr[i];
+                var pnl:McOptPanel = McOptPanel(entry.panel);
+                var apId:int = int(entry.apId);
+                pnl.addEventListener(MouseEvent.CLICK, _makeAchievementHandler(apId), false, 0, true);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+            }
+        }
+
+        /**
          * Wire click + hover handlers for the Stages tab in its current mode.
          * Idempotent per mode — each mode's panels get wired exactly once.
          */
@@ -135,6 +154,12 @@ package ui {
             var desiredMode:String = _resolveStageMode();
             _mc.setStageMode(desiredMode);
             _wireStageModeHandlers(desiredMode);
+
+            // Achievements tab — the trackable pool depends on AP state (missing
+            // locations, server options), so rebuild every open and (re)wire the
+            // fresh panels.
+            _mc.rebuildAchievementsContents(_mod.getDebugAchievementPool());
+            _wireAchievementPanels();
 
             GV.main.addChildAt(_mc, GV.main.numChildren);
             _scroll.addWheelListener();
@@ -271,6 +296,12 @@ package ui {
             _renderDebugOptions();
         }
 
+        private function _onAchievementClick(apId:int):void {
+            _mod.debugLog("[Debug] achievement check click apId=" + apId);
+            _mod.debugSendAchievementCheck(apId);
+            _renderDebugOptions();
+        }
+
         // Closures
         private function _makeSkillClickHandler(gameId:int):Function {
             return function(e:MouseEvent):void { _onSkillClick(gameId); };
@@ -289,6 +320,9 @@ package ui {
         }
         private function _makeGrantHandler(handler:Function, apId:int):Function {
             return function(e:MouseEvent):void { handler(apId); };
+        }
+        private function _makeAchievementHandler(apId:int):Function {
+            return function(e:MouseEvent):void { _onAchievementClick(apId); };
         }
 
         // -----------------------------------------------------------------------
@@ -344,6 +378,10 @@ package ui {
 
                 case McDebugOptions.TAB_CORES:
                     _renderGrantPanelsCollected(_mc.corePanels);
+                    break;
+
+                case McDebugOptions.TAB_ACHIEVEMENTS:
+                    _renderGrantPanelsCollected(_mc.achievementPanels);
                     break;
 
                 default:

@@ -533,7 +533,16 @@ if "_gem_disp" in dir():
 
 
 def _has_gem_token(req: str, state, player: int) -> bool:
-    """Broadened evaluator for gem-skill `s*` tokens."""
+    """Broadened evaluator for gem-skill `s*` tokens.
+
+    Reference/legacy path only — the live logic runs through `_compile_req`
+    (`_gem_token` + `_compile_gem_broadened` + `_compile_can_create_any_gem`),
+    which is gempouch- and clearability-aware. This signature only has
+    `player`, not `world`, so it can't build the pouch checkers; it
+    approximates with bare stage-reach and is intentionally looser. Do not
+    rely on it for fielding semantics — the skill alone does NOT prove the
+    player can create real gems (that needs a pouch on a reachable field).
+    """
     item_name = item_prefix_map.get(req)
     if item_name and state.has(item_name, player):
         return True
@@ -1176,6 +1185,28 @@ def _compile_gem_broadened(world, gem_name: str):
     return _check
 
 
+def _compile_can_create_any_gem(world):
+    """Compile a checker: True iff the player can field real (non-hollow)
+    gems on some in-logic stage — i.e. owns the gempouch for a clearable
+    stage (or pouch gating is off, in which case any clearable stage works).
+
+    Owning a gem-component skill (sManaLeech, sPoison, ...) is useless on its
+    own: without a pouch to create real gems on a reachable field, the player
+    only has the free Hollow Gem, which carries no components. So the
+    gem-skill broadening AND-gates the skill branch against this check. The
+    pouch test is cheap (`state.has`) and runs before the cached clear test,
+    so the no-pouch case stays inexpensive even though it scans every stage.
+    """
+    player = world.player
+    pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in LEVEL_DATA]
+    def _check(state):
+        for sid, pouch_ok in pairs:
+            if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
+                return True
+        return False
+    return _check
+
+
 # Per-predicate cost ranks used by `_compile_dnf` to short-circuit cheap
 # checks first. Tiers reflect average per-call work in a typical fill:
 #   0 = constant (always_true / always_false)
@@ -1329,8 +1360,15 @@ def _compile_req(req: str, world, is_progressive: bool):
         if req in _GEM_TOKEN_TO_GEM_NAME:
             gem_name = _GEM_TOKEN_TO_GEM_NAME[req]
             broaden = _compile_gem_broadened(world, gem_name)
-            def _gem_token(state, n=item_name, b=broaden):
-                if state.has(n, player):
+            can_create = _compile_can_create_any_gem(world)
+            def _gem_token(state, n=item_name, b=broaden, c=can_create):
+                # The skill grants the gem its component, but the player can
+                # only act on it if they can create a real gem somewhere —
+                # a clearable stage whose gempouch they own. Owning the skill
+                # with no pouch on any reachable field leaves only the free
+                # Hollow Gem, which has no components. `b` covers the no-skill
+                # case where a stage's starter pouch already lists this gem.
+                if state.has(n, player) and c(state):
                     return True
                 return b(state)
             return (_gem_token, _COST_REACH, None)

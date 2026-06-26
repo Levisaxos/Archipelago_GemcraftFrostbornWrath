@@ -44,6 +44,7 @@ package ui {
         public static const TAB_STAGES:int    = 3;
         public static const TAB_TALISMANS:int = 4;
         public static const TAB_CORES:int     = 5;
+        public static const TAB_ACHIEVEMENTS:int = 6;
 
         // ── Public state for ScrDebugOptions handlers ───────────────────────────
         public var wizardSlider:McWizardLevelSlider;
@@ -57,6 +58,7 @@ package ui {
         public var talismanPanels:Array;     // Array of { panel:McOptPanel, apId:int }
         public var corePanels:Array;         // Array of { panel:McOptPanel, apId:int }
         public var xpPanels:Array;           // Array of { panel:McOptPanel, apId:int }
+        public var achievementPanels:Array;  // Array of { panel:McOptPanel, apId:int }
         public var stageMode:String = "stage"; // "stage" | "tile" | "tier"
 
         public var tabStrip:DebugTabStrip;
@@ -133,10 +135,13 @@ package ui {
             _tabContents[TAB_STAGES]    = _stagesByMode.stage;
             _tabContents[TAB_TALISMANS] = _buildTalismansTab();
             _tabContents[TAB_CORES]     = _buildCoresTab();
+            // Achievements pool depends on AP connection state; built empty here
+            // and repopulated on open() via rebuildAchievementsContents().
+            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(null);
 
             // Tab strip (sits on _inner above the scrollable cnt area)
             tabStrip = new DebugTabStrip(
-                ["Levels","Skills","Traits","Stages","Talismans","Cores"],
+                ["Levels","Skills","Traits","Stages","Talismans","Cores","Achievements"],
                 TAB_STRIP_X, TAB_STRIP_Y, TAB_STRIP_W);
             _inner.addChild(tabStrip);
 
@@ -194,6 +199,20 @@ package ui {
             _tabContents[TAB_STAGES] = _stagesByMode[stageMode] as Array;
             if (tabStrip != null && tabStrip.activeIndex == TAB_STAGES) {
                 _showTab(TAB_STAGES);
+            }
+        }
+
+        /**
+         * Rebuild the Achievements tab from the supplied trackable pool
+         * (Array of { apId, name }). Call on open() — the pool depends on AP
+         * state (missing locations, server options) that isn't available when
+         * the menu is first constructed. Caller is responsible for (re)wiring
+         * the freshly-built achievementPanels.
+         */
+        public function rebuildAchievementsContents(pool:Array):void {
+            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool);
+            if (tabStrip != null && tabStrip.activeIndex == TAB_ACHIEVEMENTS) {
+                _showTab(TAB_ACHIEVEMENTS);
             }
         }
 
@@ -411,6 +430,38 @@ package ui {
             vY += SECTION_GAP;
             _appendGrantSection(arr, corePanels, "Extra Shadow Cores (1300-1351)",
                 1300, 1351, nameMap, "Shadow Cores", vY);
+            return arr;
+        }
+
+        /**
+         * Achievements tab: one click-to-send panel per achievement in the
+         * trackable pool. Clicking a panel sends the AP location check (releases
+         * the item behind it) without unlocking the achievement in-game — see
+         * ScrDebugOptions._onAchievementClick. `pool` is Array of { apId, name };
+         * null/empty renders a placeholder prompting the player to connect.
+         */
+        private function _buildAchievementsTab(pool:Array):Array {
+            var arr:Array = [];
+            achievementPanels = [];
+
+            var vY:Number = CONTENT_START_Y;
+            arr.push(new McOptTitle("Send Achievement Checks", TITLE_X, vY));
+            vY += ROW_HEIGHT_NORM;
+
+            if (pool == null || pool.length == 0) {
+                arr.push(new McOptTitle("(connect to AP to list achievements)", TITLE_X, vY));
+                return arr;
+            }
+
+            for (var i:int = 0; i < pool.length; i++) {
+                var apId:int = int(pool[i].apId);
+                var label:String = String(pool[i].name);
+                var px:Number = (i % 2 == 0) ? COL_LEFT_X : COL_RIGHT_X;
+                var pnl:McOptPanel = new McOptPanel(label, px, vY, false);
+                achievementPanels.push({ panel: pnl, apId: apId });
+                arr.push(pnl);
+                if (i % 2 == 1) vY += ROW_HEIGHT_NORM;
+            }
             return arr;
         }
 
