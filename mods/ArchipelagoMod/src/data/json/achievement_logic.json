@@ -2182,7 +2182,8 @@
         "mEndurance",
         "mTrial"
       ],
-      "details": "Have one field beaten in all three modes (Journey, Endurance, Trial)."
+      "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
+      "untrackable": true
     },
     "Disco Ball": {
       "apId": 2126,
@@ -2664,7 +2665,8 @@
       "requirements": [
         "mTrial",
         "fieldToken:10"
-      ]
+      ],
+      "untrackable": true
     },
     "Adept": {
       "apId": 2007,
@@ -2674,7 +2676,8 @@
       "requirements": [
         "mTrial",
         "fieldToken:30"
-      ]
+      ],
+      "untrackable": true
     },
     "Expert": {
       "apId": 2167,
@@ -2684,7 +2687,8 @@
       "requirements": [
         "mTrial",
         "fieldToken:50"
-      ]
+      ],
+      "untrackable": true
     },
     "Stockpile": {
       "apId": 2521,
@@ -6041,7 +6045,8 @@
         "minWave:3",
         "mTrial"
       ],
-      "details": "Win a Trial battle with at least 3 waves called early."
+      "details": "Win a Trial battle with at least 3 waves called early.",
+      "untrackable": true
     },
     "Impressive": {
       "apId": 2269,
@@ -6050,7 +6055,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "mTrial"
-      ]
+      ],
+      "untrackable": true
     },
     "So Attached": {
       "apId": 2499,
@@ -6059,7 +6065,8 @@
       "required_effort": "Trivial",
       "requirements": [
         "mTrial"
-      ]
+      ],
+      "untrackable": true
     },
     "Heavily Modified": {
       "apId": 2237,

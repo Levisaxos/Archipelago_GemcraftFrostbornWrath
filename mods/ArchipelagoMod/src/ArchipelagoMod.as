@@ -20,6 +20,7 @@ package {
     import goals.GoalManager;
 
     import ui.ModButtons;
+    import ui.IconTooltipPreview;
     import ui.ScrSlotSettings;
     import ui.SystemToast;
     import ui.ReceivedToast;
@@ -173,6 +174,7 @@ package {
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
+        private var _iconTooltipPreview:IconTooltipPreview;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
@@ -372,6 +374,7 @@ package {
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
+                _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
                 _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
 
@@ -1019,6 +1022,8 @@ package {
             // adds skill-unlock gems back, the former wipes them when the
             // current stage's Gempouch is missing.
             if (screen == ScreenId.INGAME) {
+                // Keep the world-map icon-tooltip preview off the battle screen.
+                if (_iconTooltipPreview != null) _iconTooltipPreview.hide();
                 _firstPlayBypass.onIngameFrame();
                 _gemPouchSuppressor.onIngameFrame();
                 _hollowGemInjector.onIngameFrame();
@@ -1091,6 +1096,9 @@ package {
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
                 if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
+                // PREVIEW of the proposed icon tooltip — live data for the hovered
+                // stage, pinned top-left alongside vanilla for comparison.
+                if (_iconTooltipPreview != null) _iconTooltipPreview.onSelectorFrame(mc);
                 if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
                 if (_skillTypeTooltipOverlay != null) _skillTypeTooltipOverlay.onSelectorFrame();
 
