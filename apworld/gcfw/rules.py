@@ -1904,6 +1904,46 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     from ._timing import log as _tlog
     _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
+    # === WIZARD-LEVEL GATING (revamp) ===
+    # Override the token/prereq stage rules built above with pure wizard-level
+    # gates: a stage unlocks once wl(state) >= gate[sid]. Clearing a stage grants
+    # its difficulty-scaled XP via the "Beat <sid>" event; wl(state) is the curve
+    # of total beaten XP. This drives the sphere expansion (clear what you can ->
+    # gain WL -> unlock more), replacing field-token / Field_X gating.
+    from . import difficulty_gates as _dg
+    _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
+    _eff = _dg.EFF_XP[_diff]
+    _xp_items = [(f"Beat {s}", x) for s, x in _eff.items() if x]
+
+    def _wl_of(state, _items=_xp_items, _p=player):
+        total = 0
+        for _name, _x in _items:
+            if state.has(_name, _p):
+                total += _x
+        return _dg.level_from_xp(total)
+
+    def _wl_rule(sid):
+        # The start stage is always reachable (you begin there), regardless of gate.
+        if sid == start_sid:
+            return _always_true
+        g = int(_dg.GATE.get(sid, 0))
+        if g <= 0:
+            return _always_true
+        return lambda state, _g=g: _wl_of(state) >= _g
+
+    for _stage in stages:
+        _sid = _stage["str_id"]
+        _r = _wl_rule(_sid)
+        for _ent in multiworld.get_region(_sid, player).entrances:
+            _ent.access_rule = _r
+        for _ln in (f"Complete {_sid} - Journey",
+                    f"Complete {_sid} - Wizard stash",
+                    f"Beat {_sid}"):
+            try:
+                multiworld.get_location(_ln, player).access_rule = _r
+            except KeyError:
+                pass
+
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
 
@@ -1975,18 +2015,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
             try:
                 location = multiworld.get_location(f"Achievement: {ach_name}", player)
-                raw = ach_data.get("requirements", [])
-                normalized = _simplify_requirements(_normalize_requirements(raw))
 
-                has_gating = any(
-                    _is_gating_req(req, is_progressive)
-                    for group in normalized
-                    for req in group
-                )
-                if has_gating:
-                    location.access_rule = wrap_rule(
-                        f"ach:{ach_name}",
-                        _compile_dnf(normalized, world, is_progressive))
+                # Difficulty gating: the achievement's real requirements are
+                # enforced in-game by the mod; the apworld just paces WHEN it
+                # becomes expected, via a min wizard level keyed to its effort
+                # tier. (The old token-era _compile_dnf is intentionally not
+                # used here — it referenced the stage-clear system the WL revamp
+                # bypasses.)
+                _min_wl = int(_dg.ACH_MIN_WL.get(ach_effort, 0))
+                if _min_wl > 0:
+                    location.access_rule = lambda state, _m=_min_wl: _wl_of(state) >= _m
                     _ach_rules_added += 1
 
                 # Achievements are filler-quality and reachable across the

@@ -49,6 +49,7 @@ package tracker {
         private var _freeStages:Object = {};     // strId -> true
 
         private var _dirty:Boolean = true;
+        private var _lastWL:int = -1;             // wizard level at last recompute (for staleness)
         private var _inLogicByStrId:Object = {};
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
         private var _stageElements:Object = {};  // strId -> Array<String>
@@ -96,6 +97,16 @@ package tracker {
 
         public function markDirty():void { _dirty = true; }
 
+        /** The player's current actual wizard level (the game's own value).
+         *  This is what every stage/achievement gate compares against, so the
+         *  in-game tracker uses the exact same thresholds as the apworld. */
+        public function currentWizardLevel():int {
+            try {
+                if (GV.ppd != null) return int(GV.ppd.getWizLevel());
+            } catch (e:Error) {}
+            return 0;
+        }
+
         public function get hasRules():Boolean { return _stageRequirements != null; }
 
         /** True if this stage is a free/tutorial stage (W1-W4, always reachable). */
@@ -117,8 +128,7 @@ package tracker {
 
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
-            if (_stageRequirements == null) return true;
-            if (_dirty) recompute();
+            recompute();
             return _inLogicByStrId[strId] == true;
         }
 
@@ -135,31 +145,17 @@ package tracker {
                                                stashMissing:Boolean):Boolean {
             if (!(journeyMissing || stashMissing))
                 return false;
-            if (_stageRequirements == null)
-                return true;
-            if (!canCompleteStage(strId))
-                return false;
-
-            if (journeyMissing) {
-                // A4-only: Journey additionally needs all 24 skills.
-                var journeyOk:Boolean = !(ALL_SKILLS_STAGES[strId] == true
-                        && AV.sessionData.totalSkillsCollected < 24);
-                if (journeyOk)
-                    return true;
-            }
-            // Stash needs the key item AND stage gate met.
-            if (stashMissing && isStashGateMet(strId))
-                return true;
-            return false;
+            // WL gating: Journey and Wizard stash share the stage's single
+            // wizard-level gate (mirrors the apworld, which gates both the same).
+            return canCompleteStage(strId);
         }
 
         /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
          *  Mirrors apworld's location access_rule, which applies the same skill
          *  conditions to Journey and Wizard stash on a given stage. */
         public function canCompleteStage(strId:String):Boolean {
-            if (_dirty) recompute();
-            if (_inLogicByStrId[strId] != true) return false;
-            return _skillGateMet(strId);
+            recompute();
+            return _inLogicByStrId[strId] == true;
         }
 
         /**
@@ -172,7 +168,7 @@ package tracker {
          * on the stage actually having N+ waves to happen-before.
          */
         public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             if (_levelStats == null) return false;
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true
@@ -189,7 +185,7 @@ package tracker {
          * Distinct from hasInLogicFieldWithMinWaves: linked-wave pairs (game's isLinkedToNext) only count as ONE call — the linked follower auto-spawns with its leader and the player only earns one wavesCalledEarly++ per button press. CallableWaveCount is precomputed per stage in rulesdata_levels.py by replaying the IngamePopulator PRNG. Used by the "Call N waves early" achievement family (minWave:N).
          */
         public function hasInLogicFieldWithMinCallableWaves(minCount:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             if (_levelStats == null) return false;
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true
@@ -317,7 +313,7 @@ package tracker {
 
         /** True if any in-logic field has max(GiantMaxHP, ReaverMaxHP) >= threshold. */
         public function hasInLogicFieldWithMinMonsterHP(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
@@ -329,7 +325,7 @@ package tracker {
 
         /** True if any in-logic field has max(GiantMaxArmor, ReaverMaxArmor) >= threshold. */
         public function hasInLogicFieldWithMinMonsterArmor(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
@@ -341,7 +337,7 @@ package tracker {
 
         /** True if any in-logic field has MonsterCount >= threshold. */
         public function hasInLogicFieldWithMinMonsters(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonsterCount) >= threshold) return true;
             }
@@ -350,7 +346,7 @@ package tracker {
 
         /** True if any in-logic field has SwarmlingMaxArmor >= threshold. */
         public function hasInLogicFieldWithMinSwarmlingArmor(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingMaxArmor) >= threshold) return true;
             }
@@ -359,7 +355,7 @@ package tracker {
 
         /** True if any in-logic field has SwarmlingCount >= threshold. */
         public function hasInLogicFieldWithMinSwarmlings(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingCount) >= threshold) return true;
             }
@@ -368,7 +364,7 @@ package tracker {
 
         /** True if any in-logic field has GiantCount >= threshold. */
         public function hasInLogicFieldWithMinGiants(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].GiantCount) >= threshold)
@@ -381,7 +377,7 @@ package tracker {
 
         /** True if any in-logic field has ReaverCount >= threshold. */
         public function hasInLogicFieldWithMinReavers(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].ReaverCount) >= threshold)
@@ -398,7 +394,7 @@ package tracker {
         public function hasInLogicFieldWithElementCount(fieldNamePascal:String, threshold:int):Boolean {
             if (fieldNamePascal == "DropHolder" && !hasBoltSkill())
                 return false;
-            if (_dirty) recompute();
+            recompute();
             var key:String = fieldNamePascal + "Count";
             for (var sid:String in _levelStats)
             {
@@ -446,7 +442,7 @@ package tracker {
          *  The dedicated field is populated by a simulator from the
          *  decompiled stage data; mirrors the apworld gate exactly. */
         public function hasInLogicFieldWithMinMonstersBeforeWave12(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonstersBeforeWave12) >= threshold)
@@ -461,7 +457,7 @@ package tracker {
          *  Like MonstersBeforeWave12, this is a simulator-derived expected
          *  value (marked = monsters with 1 attribute, per buffPower). */
         public function hasInLogicFieldWithMarkedMonsterCount(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MarkedMonsterCount) >= threshold)
@@ -598,8 +594,7 @@ package tracker {
         public function getBlockingTokenReq(strId:String):Object {
             if (_stageRequirements == null || _freeStages[strId] == true)
                 return null;
-            if (_dirty)
-                recompute();
+            recompute();
             if (_inLogicByStrId[strId] == true)
                 return null;
 
@@ -774,24 +769,31 @@ package tracker {
          *          OR at least one Field_<sid> prereq token is held)
          *     AND every non-Field requirement (talismanRow:N etc.) is met.
          */
+        /**
+         * Recompute which stages are in logic. Self-guarding: only rebuilds when
+         * the dirty flag is set OR the player's wizard level changed since the
+         * last pass (so callers can invoke it freely each frame).
+         *
+         * WL gating (mirrors the apworld exactly): a stage is in logic iff the
+         * player's current wizard level >= stageGates[str_id]. Starters (gate 0)
+         * are always in logic. The gate values ship in slot_data.
+         */
         public function recompute():void {
-            if (!_dirty) return;
+            var wl:int = currentWizardLevel();
+            if (!_dirty && wl == _lastWL) return;
+            _lastWL = wl;
             _inLogicByStrId = {};
 
-            if (_stageRequirements == null) {
-                _dirty = false;
-                AV.sessionData.fieldsInLogic = _inLogicByStrId;
-                return;
+            var gates:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
+                    ? AV.serverData.serverOptions.stageGates : null;
+            if (gates != null) {
+                for (var sid:String in gates) {
+                    _inLogicByStrId[sid] = (wl >= int(gates[sid]));
+                }
             }
-
-            // Iterate every stage we know about (free + non-free).
-            // _stageReachable memoises into _inLogicByStrId, so recursive
-            // visits via prerequisite chains are reused for free.
+            // Starter/free stages are always reachable (gate 0).
             for (var freeSid:String in _freeStages) {
-                _stageReachable(freeSid);
-            }
-            for (var strId:String in _stageRequirements) {
-                _stageReachable(strId);
+                _inLogicByStrId[freeSid] = true;
             }
 
             _dirty = false;
@@ -987,8 +989,8 @@ package tracker {
          * plus the per-stage Wizard Stash Key item.
          */
         public function isStashGateMet(strId:String):Boolean {
-            if (AV.sessionData == null || !AV.sessionData.isStashUnlocked(strId))
-                return false;
+            // WL world: the wizard stash shares the stage's wizard-level gate;
+            // no separate stash-key item gates it (mirrors the apworld).
             return canCompleteStage(strId);
         }
 

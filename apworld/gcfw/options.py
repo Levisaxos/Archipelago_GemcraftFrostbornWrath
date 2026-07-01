@@ -369,10 +369,29 @@ class AchievementRequiredEffort(Choice):
     Selecting level N includes every achievement up to and including level N. More achievements means more checks to find and a longer seed. Trivial achievements are always included so the randomizer has enough room for the progression items.
     """
     display_name = "Achievement Required Effort"
+    option_off = 0
     option_1   = 1
     option_2   = 2
     option_3   = 3
     option_4   = 4
+    default = 1
+
+
+class Difficulty(Choice):
+    """Overall randomizer difficulty.
+
+    Levels unlock based on your wizard level, which you raise by clearing levels.
+    Harder difficulties enrage with stronger gems, so each clear is worth more XP
+    and you reach a higher wizard level overall — Extreme ends highest, Easy
+    lowest. The unlock gates themselves are the same on every difficulty; Easy is
+    the slowest, most gradual climb to each gate, Extreme blows past them in big
+    batches.
+    """
+    display_name = "Difficulty"
+    option_easy    = 0
+    option_medium  = 1
+    option_hard    = 2
+    option_extreme = 3
     default = 1
 
 
@@ -399,7 +418,8 @@ class GCFWOptions(PerGameCommonOptions):
     stash_key_granularity:     StashKeyGranularity
     gem_pouch_granularity:     GemPouchGranularity
     starting_stage:              StartingStage
-    achievement_required_effort: AchievementRequiredEffort        
+    achievement_required_effort: AchievementRequiredEffort
+    difficulty:                Difficulty
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial
     xp_tome_bonus:             XpTomeBonus

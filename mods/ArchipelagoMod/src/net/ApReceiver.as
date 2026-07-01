@@ -248,6 +248,12 @@ package net {
                     AV.serverData.serverOptions.fieldsRequiredPercentage = int(sd.fields_required_percentage);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.difficulty !== undefined)
+                    AV.serverData.serverOptions.difficulty = int(sd.difficulty);
+                if (sd.stage_gates !== undefined)
+                    AV.serverData.serverOptions.stageGates = sd.stage_gates;
+                if (sd.achievement_min_wl !== undefined)
+                    AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
                 if (sd.death_link !== undefined)
                     AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }

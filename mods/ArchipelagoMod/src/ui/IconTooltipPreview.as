@@ -363,22 +363,38 @@ package ui {
             return "#" + s;
         }
 
-        /** Body line for the Journey check, reflecting state + pouch settings. */
+        /** Body line for the Journey check. WL gating: in logic once the
+         *  player's wizard level reaches this stage's gate. */
         private function journeyBody(strId:String, done:Boolean, inLogic:Boolean):String {
             if (done) return "Completed";
-            if (!inLogic) return _pouchShuffled() ? ("Needs " + pouchName(strId)) : "Blocked";
-            if (!_pouchShuffled()) return "In Logic";
-            var hasPouch:Boolean = (AV.sessionData != null && AV.sessionData.hasPouchForStage(strId));
-            if (!hasPouch && _evaluator != null && _evaluator.isFreeStage(strId))
-                return "In logic - Hollow Gem";
-            return "In logic - " + pouchName(strId);
+            if (inLogic) return "In Logic";
+            return wlNeededBody(strId);
         }
 
-        /** Body line for the Stash check (a key is always required). */
+        /** Body line for the Stash check. Same WL gate as Journey. */
         private function stashBody(strId:String, done:Boolean, inLogic:Boolean):String {
             if (done) return "Completed";
             if (inLogic) return "In Logic";
-            return "Needs " + stashKeyName(strId);
+            return wlNeededBody(strId);
+        }
+
+        /** "Needs Wizard Level N (you are M)" for an out-of-logic stage. */
+        private function wlNeededBody(strId:String):String {
+            var gate:int = stageGate(strId);
+            if (gate <= 0) return "Blocked";
+            var cur:int = (_evaluator != null) ? _evaluator.currentWizardLevel() : 0;
+            return "Needs Wizard Level " + gate + " (you are " + cur + ")";
+        }
+
+        /** Required wizard level for a stage, from shipped slot_data gates. */
+        private function stageGate(strId:String):int {
+            try {
+                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+                if (opts != null && opts.stageGates != null
+                        && opts.stageGates[strId] !== undefined)
+                    return int(opts.stageGates[strId]);
+            } catch (e:Error) {}
+            return 0;
         }
 
         /** Hardcoded placeholder achievement list (real data later). */
@@ -389,51 +405,6 @@ package ui {
                 entryHtml("Giant Slayer",    "Kill 3 giants with a single beam", COL_GREEN)
             ];
             return parts.join("<br>");
-        }
-
-        /** Granularity-aware Gem Pouch item name for this stage. */
-        private function pouchName(strId:String):String {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var g:int = int(opts.gemPouchGranularity);
-                    if (g == 1 || g == 2) return strId.charAt(0) + " Gem Pouch";   // per tile
-                    if (g == 3 || g == 4) {                                        // per tier
-                        var tm:Object = opts.stageTierByStrId;
-                        if (tm != null && tm[strId] != null)
-                            return "Tier " + int(tm[strId]) + " Gem Pouch";
-                    }
-                    if (g == 5) return "Master Gem Pouch";                         // global
-                }
-            } catch (e:Error) {}
-            return "Gem Pouch";
-        }
-
-        /** Granularity-aware Wizard Stash Key item name for this stage. */
-        private function stashKeyName(strId:String):String {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var g:int = int(opts.stashKeyGranularity);
-                    if (g == 1 || g == 2) return strId + " Stash Key";             // per stage
-                    if (g == 3 || g == 4) return strId.charAt(0) + " Stash Key";   // per tile
-                    if (g == 5 || g == 6) {                                        // per tier
-                        var tm:Object = opts.stageTierByStrId;
-                        if (tm != null && tm[strId] != null)
-                            return "Tier " + int(tm[strId]) + " Stash Key";
-                    }
-                    if (g == 7) return "Master Stash Key";                         // global
-                }
-            } catch (e:Error) {}
-            return "Stash Key";
-        }
-
-        private function _pouchShuffled():Boolean {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                return opts != null && int(opts.gemPouchGranularity) != 0;
-            } catch (e:Error) {}
-            return false;
         }
 
         /** Escape text for use inside htmlText. */
