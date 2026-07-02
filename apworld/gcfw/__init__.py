@@ -466,6 +466,16 @@ class GemcraftFrostbornWrathWorld(World):
                     and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+            # Progression talisman: deterministically build the 25-fragment set
+            # for this seed. Seed a DEDICATED RNG from a single world.random draw
+            # so the (thousands of) search rolls don't perturb the rest of
+            # generation, while staying reproducible (UT regen draws the same
+            # value). Stored on self for both slot_data and later logic use.
+            import random as _random
+            from .talisman_gen import generate_progression_set
+            self.talisman_set = generate_progression_set(
+                _random.Random(self.random.getrandbits(64)))
+
     _JOURNEY_PRIORITY_FRACTION = 0.75
 
     def pre_fill(self) -> None:
@@ -674,12 +684,15 @@ class GemcraftFrostbornWrathWorld(World):
         # whose SP values are computed per-seed based on the actual filler-slot
         # count — see compute_tier_distribution. Tier values are stored on self
         # so fill_slot_data can ship them to the mod.
-        # The -1 is for the Victory event location (filled by place_locked_item
-        # in generate_basic — outside the regular pool).
+        # Count only REAL (addressed) locations — Journey / Wizard stash /
+        # achievements. Event locations (Victory, goal victories, and the
+        # per-stage "Beat <sid>" XP events) have address=None and are filled by
+        # place_locked_item in generate_basic, so they must NOT inflate the pool.
         total_locations = sum(1 for region in self.multiworld.regions
                               if region.player == self.player
-                              for _ in region.locations)
-        remaining = total_locations - len(pool) - 1
+                              for loc in region.locations
+                              if loc.address is not None)
+        remaining = total_locations - len(pool)
         self.sp_bundle_values: List[int] = [0, 0, 0, 0]
         if remaining > 0:
             total_sp = 2500 * self.options.skillpoint_multiplier.value // 100
@@ -720,6 +733,9 @@ class GemcraftFrostbornWrathWorld(World):
             wiz_loc_name = f"Complete {str_id} - Wizard stash"
             wiz_loc_data = location_table[wiz_loc_name]
             region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
+            # WL-gating: a "Beat <sid>" event (no AP address) grants this stage's
+            # XP when cleared, driving the wizard-level progression.
+            region.locations.append(GCFWLocation(self.player, f"Beat {str_id}", None, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
@@ -817,6 +833,17 @@ class GemcraftFrostbornWrathWorld(World):
         victory_loc.place_locked_item(
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
+
+        # Difficulty gating: place each stage's "Beat <sid>" XP event item (locked).
+        from .difficulty_gates import GATE as _WL_GATE
+        for sid in _WL_GATE:
+            try:
+                loc = self.multiworld.get_location(f"Beat {sid}", self.player)
+            except KeyError:
+                continue
+            loc.place_locked_item(
+                GCFWItem(f"Beat {sid}", ItemClassification.progression, None, self.player)
+            )
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
         _timing_log(f"p{self.player} generate_basic: {(_t.perf_counter()-_t0)*1000:.1f} ms")
@@ -1034,6 +1061,16 @@ class GemcraftFrostbornWrathWorld(World):
                     continue
                 achievement_requirements_map[ach_name] = requirements
 
+        # --- Difficulty / wizard-level gating data for the mod tracker ---
+        # The mod compares the game's actual wizard level (GV.ppd.getWizLevel)
+        # against these gates — identical thresholds to the apworld logic.
+        #   stage_gates:        {str_id: required wizard level}
+        #   achievement_min_wl: {effort tier: required wizard level} — the mod
+        #                       looks up each achievement's effort to gate it.
+        from .difficulty_gates import GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH
+        stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
+        achievement_min_wl = {k: int(v) for k, v in _DG_ACH.items()}
+
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
         # Members of eNonMonsters (Shadow / Specter / etc.) feed the
@@ -1065,6 +1102,9 @@ class GemcraftFrostbornWrathWorld(World):
         _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
+            "difficulty":            self.options.difficulty.value,
+            "stage_gates":           stage_gates,
+            "achievement_min_wl":    achievement_min_wl,
             "starting_stage":        self.options.starting_stage.value,
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
@@ -1092,6 +1132,11 @@ class GemcraftFrostbornWrathWorld(World):
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
+            # Progression talisman: the 25-fragment set the mod unlocks + slots
+            # at start. Each entry: {slot, seed, rarity, type, upgrade_level,
+            # tal_data:"seed/rarity/type/upgradeLevel"}. Deterministic per seed
+            # (built in generate_early). Mod feeds tal_data to TalismanFragment.
+            "progression_talisman_set": getattr(self, "talisman_set", []),
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
             "achievement_required_effort": self.options.achievement_required_effort.value,

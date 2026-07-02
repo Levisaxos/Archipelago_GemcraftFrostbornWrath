@@ -6,6 +6,12 @@ package data {
     public class ServerOptions {
         // Goal and Primary Settings
         public var goal:int;                     // 0=beat_game, 2=swarm_queen, 3=fields_count, 4=fields_percentage
+        public var difficulty:int;               // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
+        // Wizard-level gating (mirrors the apworld exactly). A stage is in logic
+        // once the player's actual wizard level >= stageGates[str_id]; an
+        // achievement once wizard level >= achievementMinWl[effort tier].
+        public var stageGates:Object;            // str_id -> required wizard level
+        public var achievementMinWl:Object;      // effort tier name -> required wizard level
         public var startingStage:int;            // 0=W1..3=W4, 4=S1..7=S4 (StartingStage option order)
         public var fieldTokenPlacement:int;      // 0=own_world, 1=any_world, 2=different_world
         public var disable_endurance:Boolean;
@@ -98,6 +104,9 @@ package data {
 
         public function initialize():void {
             goal = 0;
+            difficulty = 1;
+            stageGates = {};
+            achievementMinWl = {};
             startingStage = 0;
             fieldTokenPlacement = 1;
             disable_endurance = false;

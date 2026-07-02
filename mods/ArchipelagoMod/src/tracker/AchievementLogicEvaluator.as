@@ -35,6 +35,8 @@ package tracker {
 
         private
         var _dirty: Boolean = true;
+        private
+        var _lastWL: int = -1; // wizard level at last recompute (for staleness)
 
         public
         function AchievementLogicEvaluator(logger: Logger, modName: String) {
@@ -103,7 +105,8 @@ package tracker {
          */
         public
         function getInLogicAchApIds(): Object {
-            if (_dirty) _recompute();
+            var wl: int = (_fieldEvaluator != null) ? _fieldEvaluator.currentWizardLevel() : 0;
+            if (_dirty || wl != _lastWL) _recompute();
             return AV.sessionData.achievementsInLogic;
         }
 
@@ -168,14 +171,26 @@ package tracker {
             return _fieldEvaluator;
         }
 
-        /** Check requirements for a single achievement without using the cache. */
+        /** Minimum wizard level for an achievement, by its effort tier
+         *  (shipped in slot_data — same value the apworld gates on). */
+        private
+        function achMinWl(achData: Object): int {
+            var effort: String = (achData && achData.required_effort)
+                ? String(achData.required_effort) : "Trivial";
+            var map: Object = (AV.serverData != null && AV.serverData.serverOptions != null)
+                ? AV.serverData.serverOptions.achievementMinWl : null;
+            if (map != null && map[effort] !== undefined) return int(map[effort]);
+            return 0;
+        }
+
+        /** WL gating (mirrors the apworld): an achievement is in logic once the
+         *  player's wizard level reaches the min-WL for its effort tier. The
+         *  achievement's real in-game requirements are enforced by the game. */
         public
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
-            if (!achData.requirements) return true;
-            var reqs: Array = achData.requirements as Array;
-            if (!reqs || reqs.length == 0) return true;
-            return _logicEvaluator != null && _logicEvaluator.evaluateRequirements(reqs);
+            if (_fieldEvaluator == null) return true;
+            return _fieldEvaluator.currentWizardLevel() >= achMinWl(achData);
         }
 
         /**
@@ -298,6 +313,7 @@ package tracker {
             names.sort(Array.CASEINSENSITIVE);
             AV.sessionData.achievementsInLogic = result;
             AV.sessionData.achievementNamesInLogic = names;
+            _lastWL = (_fieldEvaluator != null) ? _fieldEvaluator.currentWizardLevel() : 0;
             _dirty = false;
         }
     }

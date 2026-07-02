@@ -166,6 +166,10 @@ package net {
             if (p.slot_data && p.slot_data.free_stages)
                 AV.serverData.freeStages = p.slot_data.free_stages as Array;
 
+            // Progression talisman set (25 fragments the mod unlocks + slots).
+            if (p.slot_data && p.slot_data.progression_talisman_set)
+                AV.serverData.progressionTalismanSet = p.slot_data.progression_talisman_set as Array;
+
             if (p.slot_data) {
                 var sd:Object = p.slot_data;
                 AV.serverData.serverOptions.goal              = int(sd.goal);
@@ -248,6 +252,12 @@ package net {
                     AV.serverData.serverOptions.fieldsRequiredPercentage = int(sd.fields_required_percentage);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.difficulty !== undefined)
+                    AV.serverData.serverOptions.difficulty = int(sd.difficulty);
+                if (sd.stage_gates !== undefined)
+                    AV.serverData.serverOptions.stageGates = sd.stage_gates;
+                if (sd.achievement_min_wl !== undefined)
+                    AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
                 if (sd.death_link !== undefined)
                     AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }

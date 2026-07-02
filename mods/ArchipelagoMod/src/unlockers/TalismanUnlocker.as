@@ -74,6 +74,55 @@ package unlockers {
         }
 
         // -----------------------------------------------------------------------
+        // Progression talisman set (slot_data.progression_talisman_set)
+
+        /**
+         * Unlock all 25 talisman slots and socket the AP-generated progression
+         * set directly into the active grid.  Each entry is
+         * {slot, seed, rarity, type, upgrade_level, tal_data:"seed/rarity/type/upgradeLevel"}.
+         * Fragments are reconstructed natively from tal_data, so they are
+         * bit-identical to what the game would generate from that seed.  The set
+         * is a legal tiling (see talisman_gen.py) so it sockets without any
+         * shape change.  Idempotent — re-applying re-places the same fragments.
+         */
+        public function applyProgressionSet(set:Array):void {
+            if (set == null || set.length == 0) {
+                return;
+            }
+            if (!ensurePpdExists("applyProgressionSet")) {
+                return;
+            }
+            var slots:Array = GV.ppd.talismanSlots;
+            var unlocks:Array = GV.ppd.talSlotUnlockStatuses;
+            if (slots == null || unlocks == null) {
+                logAction("applyProgressionSet: talismanSlots/talSlotUnlockStatuses null");
+                return;
+            }
+            var n:int = GV.TALISMAN_ACTIVESLOT_NUM;
+            var i:int;
+            for (i = 0; i < n; i++) {
+                unlocks[i] = true;
+            }
+            var placed:int = 0;
+            for each (var entry:Object in set) {
+                var slot:int = int(entry.slot);
+                if (slot < 0 || slot >= n) {
+                    continue;
+                }
+                var parts:Array = String(entry.tal_data).split("/");
+                if (parts.length < 4) {
+                    continue;
+                }
+                slots[slot] = new TalismanFragment(int(parts[0]), int(parts[1]),
+                                                   int(parts[2]), int(parts[3]));
+                placed++;
+            }
+            logAction("applyProgressionSet: unlocked " + n + " slots, placed "
+                + placed + " fragments");
+            showPlusNodeOnSelector("mcPlusNodeTalisman");
+        }
+
+        // -----------------------------------------------------------------------
         // Helpers
 
         private function addFragmentFromTalData(talData:String, apId:int):* {
