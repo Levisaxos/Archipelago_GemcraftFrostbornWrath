@@ -466,6 +466,16 @@ class GemcraftFrostbornWrathWorld(World):
                     and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+            # Progression talisman: deterministically build the 25-fragment set
+            # for this seed. Seed a DEDICATED RNG from a single world.random draw
+            # so the (thousands of) search rolls don't perturb the rest of
+            # generation, while staying reproducible (UT regen draws the same
+            # value). Stored on self for both slot_data and later logic use.
+            import random as _random
+            from .talisman_gen import generate_progression_set
+            self.talisman_set = generate_progression_set(
+                _random.Random(self.random.getrandbits(64)))
+
     _JOURNEY_PRIORITY_FRACTION = 0.75
 
     def pre_fill(self) -> None:
@@ -1122,6 +1132,11 @@ class GemcraftFrostbornWrathWorld(World):
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
+            # Progression talisman: the 25-fragment set the mod unlocks + slots
+            # at start. Each entry: {slot, seed, rarity, type, upgrade_level,
+            # tal_data:"seed/rarity/type/upgradeLevel"}. Deterministic per seed
+            # (built in generate_early). Mod feeds tal_data to TalismanFragment.
+            "progression_talisman_set": getattr(self, "talisman_set", []),
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
             "achievement_required_effort": self.options.achievement_required_effort.value,

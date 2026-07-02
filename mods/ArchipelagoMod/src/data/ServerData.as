@@ -37,6 +37,7 @@ package data {
         public var stageUnlocks:Object;          // stage str_id → Array<down-stream str_ids> (vanilla overworld map)
         public var freeStages:Array;             // Array of stage str_ids without field tokens (W1-W4)
         public var matchingTalismans:Object;     // { grid:[apId*9], rows:[[apId*3]*3], columns:[[apId*3]*3] }
+        public var progressionTalismanSet:Array; // 25 entries {slot, seed, rarity, type, upgrade_level, tal_data}
 
         // Game Options (from slot_data)
         public var serverOptions:ServerOptions;
@@ -70,6 +71,7 @@ package data {
             stageUnlocks = {};
             freeStages = [];
             matchingTalismans = null;
+            progressionTalismanSet = [];
             serverOptions = new ServerOptions();
         }
 

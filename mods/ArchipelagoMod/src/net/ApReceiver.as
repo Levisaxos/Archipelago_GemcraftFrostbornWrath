@@ -166,6 +166,10 @@ package net {
             if (p.slot_data && p.slot_data.free_stages)
                 AV.serverData.freeStages = p.slot_data.free_stages as Array;
 
+            // Progression talisman set (25 fragments the mod unlocks + slots).
+            if (p.slot_data && p.slot_data.progression_talisman_set)
+                AV.serverData.progressionTalismanSet = p.slot_data.progression_talisman_set as Array;
+
             if (p.slot_data) {
                 var sd:Object = p.slot_data;
                 AV.serverData.serverOptions.goal              = int(sd.goal);

@@ -3281,6 +3281,9 @@ package {
             // --- Talisman fragments ---
             _talismanUnlocker.syncTalismans(apTalismans);
 
+            // --- Progression talisman: unlock all 25 slots + socket the set ---
+            _talismanUnlocker.applyProgressionSet(AV.serverData.progressionTalismanSet);
+
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
