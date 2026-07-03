@@ -569,6 +569,10 @@ package {
             // Re-enable Steam achievements so a standalone/vanilla slot loaded
             // next earns them normally.
             if (_steamAchSuppressor != null) _steamAchSuppressor.restore();
+            // Detach the Endurance/Trial button block listeners + stage-token
+            // interceptor. Otherwise they survive into a standalone save and
+            // keep Trial unclickable via stale _disableTrial.
+            if (_firstPlayBypass != null) _firstPlayBypass.deactivate();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
