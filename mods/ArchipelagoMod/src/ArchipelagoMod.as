@@ -195,10 +195,6 @@ package {
         // for the current slot (auto-reconnect from saved creds, or Connect on the
         // ConnectionPanel). All game-modifying hooks are gated by this.
         private var _active:Boolean            = false;
-        // Set true once WizStashes.apply() has run for the current game-process.
-        // The mutation is global to GV.stageCollection and not currently revertible,
-        // so we apply it once on first activation and skip it on subsequent ones.
-        private var _wizStashesApplied:Boolean = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
         private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
@@ -504,9 +500,9 @@ package {
         //   - All UI panels       (toasts, log, disconnect, offline items)
         //   - All per-frame patcher work (gated in onEnterFrame)
         //
-        // _deactivateApMode reverses everything reversible. WizStashes.apply
-        // mutates GV.stageCollection irreversibly, so it runs at most once
-        // per game-process — see _wizStashesApplied.
+        // _deactivateApMode reverses everything, including the global
+        // GV.stageCollection stash relocation (WizStashes.apply/revert), so a
+        // standalone slot loaded next runs fully vanilla — no AP state leftover.
 
         /**
          * Activate Archipelago mode for the current slot. Idempotent.
@@ -535,14 +531,11 @@ package {
             addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
 
             // WizStashes.apply mutates GV.stageCollection (moves stashes from
-            // Endurance to Journey mode). The mutation is global and not
-            // currently reversible, so we run it once per game-process even
-            // if the player later loads a standalone slot. Fresh launch =
-            // fresh state.
-            if (!_wizStashesApplied) {
-                patchWizStashModes();
-                _wizStashesApplied = true;
-            }
+            // Endurance to Journey mode). The mutation is global (per-process,
+            // not per-save), so _deactivateApMode calls WizStashes.revert to
+            // put it back — otherwise a standalone slot loaded next keeps the
+            // relocated stashes. apply() is idempotent (self-guarded).
+            patchWizStashModes();
 
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
@@ -573,6 +566,15 @@ package {
             // interceptor. Otherwise they survive into a standalone save and
             // keep Trial unclickable via stale _disableTrial.
             if (_firstPlayBypass != null) _firstPlayBypass.deactivate();
+            // Put the wizard stashes back into Endurance mode. GV.stageCollection
+            // is global (per-process), so without this a standalone slot loaded
+            // next would keep the AP-run stash relocation.
+            WizStashes.revert(_logger, MOD_NAME);
+            // Remove the injected achievements-panel UI (group filter, search
+            // field, hidden filter slot) and un-hide the vanilla Reset button.
+            // pnlAchievements is persistent, so it would otherwise leak into a
+            // standalone save's achievements screen.
+            if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();

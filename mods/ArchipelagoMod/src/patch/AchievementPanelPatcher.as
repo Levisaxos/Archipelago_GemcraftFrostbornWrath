@@ -221,6 +221,80 @@ package patch {
         // -----------------------------------------------------------------------
 
         /**
+         * Reverse tryPatch()/patchResetButton(): remove the hidden filter slot,
+         * the injected group panel + search field, and un-hide the vanilla Reset
+         * button. GV.selectorCore.pnlAchievements is persistent, so without this
+         * the AP achievements UI survives into a standalone save. Logic dots are
+         * left to self-heal — vanilla showAchiList() rebuilds the rows without
+         * them the next time the panel opens. Called from _deactivateApMode;
+         * tryPatch re-installs on the next AP activation. No-op if never patched.
+         */
+        public function unpatch():void {
+            try {
+                var panel:PnlAchievements = (GV.selectorCore != null)
+                    ? GV.selectorCore.pnlAchievements : null;
+
+                // Our index == the original filter count (tryPatch pushed at the
+                // end). Both the panel's filterBtns AND every achievement's
+                // filterFlags were extended by one; vanilla showAchiList() loops
+                // filterFlags.length and indexes filterBtns[j], so the two MUST
+                // stay the same length or it NPEs. Undo both.
+                var origFilterCount:int = _ourFilterIndex;
+
+                // Drop our hidden filter button from the panel's filter list.
+                if (_ourFilterButton != null && panel != null && panel.filterBtns != null) {
+                    var fi:int = panel.filterBtns.indexOf(_ourFilterButton);
+                    if (fi != -1) panel.filterBtns.splice(fi, 1);
+                }
+
+                // Drop the trailing filterFlags entry we appended to every
+                // achievement. filterFlags lives on GV.achiCollection (global,
+                // per-process), so this leak survives even a slot change.
+                if (origFilterCount >= 0 && GV.achiCollection != null
+                        && GV.achiCollection.achisByOrder != null) {
+                    var achis:Array = GV.achiCollection.achisByOrder;
+                    for each (var a:* in achis) {
+                        if (a != null && a.filterFlags != null
+                                && a.filterFlags.length > origFilterCount) {
+                            a.filterFlags.length = origFilterCount;
+                        }
+                    }
+                }
+                _ourFilterButton = null;
+                _ourFilterIndex  = -1;
+
+                // Strip the logic dots. They're children of each achievement's
+                // persistent icon (part of GV.achiCollection), NOT of the panel
+                // rows showAchiList() rebuilds — so they do NOT self-heal and
+                // must be removed explicitly or they linger in standalone.
+                _removeAllLogicDots();
+
+                // Remove injected UI and restore the vanilla Reset button.
+                if (_groupPanel != null && _groupPanel.parent != null) {
+                    _groupPanel.parent.removeChild(_groupPanel);
+                }
+                _groupPanel = null;
+                if (_searchField != null && _searchField.parent != null) {
+                    _searchField.parent.removeChild(_searchField);
+                }
+                _searchField = null;
+                if (panel != null && panel.mc != null && panel.mc.btnResetAchievements != null) {
+                    panel.mc.btnResetAchievements.visible = true;
+                }
+
+                _patched                  = false;
+                _resetButtonPatched       = false;
+                _dotsDirty                = false;
+                _lastIngameAchPanelActive = false;
+                _logger.log(_modName, "AchievementPanelPatcher: unpatched");
+            } catch (err:Error) {
+                _logger.log(_modName, "AchievementPanelPatcher.unpatch ERROR: " + err.message);
+            }
+        }
+
+        // -----------------------------------------------------------------------
+
+        /**
          * Called when the group panel selection changes.
          * Recomputes filterFlags (OR union of selected groups) and refreshes the panel.
          */
@@ -641,6 +715,30 @@ package patch {
 
             if (noMc > 0 && applied == 0) {
                 _logger.log(_modName, "applyLogicDots: no McAchi found. noMc=" + noMc);
+            }
+        }
+
+        /**
+         * Remove the apLogicDot from every achievement icon. Used by unpatch()
+         * — the dots are children of the persistent achievement icons, so a
+         * vanilla showAchiList() rebuild never clears them.
+         */
+        private function _removeAllLogicDots():void {
+            try {
+                if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) return;
+                var achis:Array = GV.achiCollection.achisByOrder;
+                for (var i:int = 0; i < achis.length; i++) {
+                    var ach:* = achis[i];
+                    if (ach == null) continue;
+                    var mcAchi:* = _getAchMcAchi(ach);
+                    if (mcAchi == null) continue;
+                    try {
+                        var dot:* = mcAchi.getChildByName(DOT_NAME);
+                        if (dot != null) mcAchi.removeChild(dot);
+                    } catch (e:Error) {}
+                }
+            } catch (err:Error) {
+                _logger.log(_modName, "AchievementPanelPatcher._removeAllLogicDots ERROR: " + err.message);
             }
         }
 
