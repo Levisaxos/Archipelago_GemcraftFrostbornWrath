@@ -31,6 +31,8 @@ package patch {
         private var _logger:Logger;
         private var _modName:String;
         private var _attached:Boolean = false;
+        // Kept so detach() can remove the listener when leaving AP mode.
+        private var _btnRetry:* = null;
 
         public function RetryButtonSkillPointsRefresh(logger:Logger, modName:String) {
             _logger  = logger;
@@ -54,6 +56,7 @@ package patch {
 
                 panel.btnRetry.addEventListener(
                     MouseEvent.MOUSE_UP, _onRetryUp, false, 100, true);
+                _btnRetry = panel.btnRetry;
                 _attached = true;
                 _logger.log(_modName,
                     "RetryButtonSkillPointsRefresh: attached to btnRetry");
@@ -61,6 +64,17 @@ package patch {
                 _logger.log(_modName,
                     "RetryButtonSkillPointsRefresh.tryAttach ERROR: " + err.message);
             }
+        }
+
+        /** Remove the btnRetry listener so a standalone save runs vanilla.
+         *  Called from _deactivateApMode; tryAttach re-installs on next AP run. */
+        public function detach():void {
+            try {
+                if (_btnRetry != null)
+                    _btnRetry.removeEventListener(MouseEvent.MOUSE_UP, _onRetryUp, false);
+            } catch (err:Error) {}
+            _btnRetry = null;
+            _attached = false;
         }
 
         private function _onRetryUp(e:MouseEvent):void {

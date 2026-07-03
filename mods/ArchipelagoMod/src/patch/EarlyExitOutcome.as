@@ -42,6 +42,11 @@ package patch {
         private var _logger:Logger;
         private var _modName:String;
         private var _attached:Boolean = false;
+        // Kept so detach() can remove the listeners. scrOptions is a persistent
+        // Main singleton, so without teardown these hijack the vanilla pause-menu
+        // buttons in a standalone save. See [[feedback_standalone_clean_slate]].
+        private var _btnReturn:* = null;
+        private var _btnRetry:*  = null;
 
         public function EarlyExitOutcome(logger:Logger, modName:String) {
             _logger  = logger;
@@ -68,6 +73,8 @@ package patch {
                 // so we run first and can stopImmediatePropagation the chain.
                 btnReturn.addEventListener(MouseEvent.MOUSE_UP, _onConfirmReturn, true, 100, true);
                 btnRetry.addEventListener(MouseEvent.MOUSE_UP, _onConfirmRetry,   true, 100, true);
+                _btnReturn = btnReturn;
+                _btnRetry  = btnRetry;
                 _attached = true;
                 _logger.log(_modName,
                     "EarlyExitOutcome: attached to btnConfirmReturn + btnConfirmRetry");
@@ -75,6 +82,20 @@ package patch {
                 _logger.log(_modName,
                     "EarlyExitOutcome.tryAttach ERROR: " + err.message);
             }
+        }
+
+        /** Remove the pause-menu listeners so a standalone save runs vanilla.
+         *  Called from _deactivateApMode; tryAttach re-installs on next AP run. */
+        public function detach():void {
+            try {
+                if (_btnReturn != null)
+                    _btnReturn.removeEventListener(MouseEvent.MOUSE_UP, _onConfirmReturn, true);
+                if (_btnRetry != null)
+                    _btnRetry.removeEventListener(MouseEvent.MOUSE_UP, _onConfirmRetry, true);
+            } catch (err:Error) {}
+            _btnReturn = null;
+            _btnRetry  = null;
+            _attached  = false;
         }
 
         // -----------------------------------------------------------------------

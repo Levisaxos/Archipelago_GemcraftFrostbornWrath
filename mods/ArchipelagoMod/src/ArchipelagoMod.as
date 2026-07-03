@@ -575,6 +575,13 @@ package {
             // pnlAchievements is persistent, so it would otherwise leak into a
             // standalone save's achievements screen.
             if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
+            // Detach the outcome / pause-menu button listeners. EarlyExitOutcome
+            // sits on the persistent scrOptions singleton and would otherwise
+            // hijack the vanilla pause-menu Return/Restart buttons in a
+            // standalone battle; the other two ride the outcome panel.
+            if (_earlyExitOutcome != null) _earlyExitOutcome.detach();
+            if (_victoryRestartButton != null) _victoryRestartButton.detach();
+            if (_retryButtonSkillPointsRefresh != null) _retryButtonSkillPointsRefresh.detach();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
