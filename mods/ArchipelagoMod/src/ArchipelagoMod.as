@@ -3,7 +3,6 @@ package {
     import flash.display.Stage;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
-    import flash.ui.Keyboard;
 
     import Bezel.Bezel;
     import Bezel.BezelMod;
@@ -103,7 +102,7 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.5"; }
+        public function get VERSION():String           { return "0.0.5.6"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
         public function get APWORLD_VERSION():String   { return "0.0.5.5"; }
@@ -197,10 +196,6 @@ package {
         // for the current slot (auto-reconnect from saved creds, or Connect on the
         // ConnectionPanel). All game-modifying hooks are gated by this.
         private var _active:Boolean            = false;
-        // Set true once WizStashes.apply() has run for the current game-process.
-        // The mutation is global to GV.stageCollection and not currently revertible,
-        // so we apply it once on first activation and skip it on subsequent ones.
-        private var _wizStashesApplied:Boolean = false;
         private var _pendingSyncItems:Array    = null; // deferred full-sync when GV.ppd was null
         private var _lastPpd:Object            = null; // tracks ppd identity to detect slot changes
         private var _stagesPopulated:Boolean   = false; // tracks if stage data has been loaded into AV
@@ -232,10 +227,6 @@ package {
         // excluded achievements.
         private var _sessionExcludedAchievementGameIds:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
-
-// Debug mode — toggled by Ctrl+Shift+Alt+End.
-        private static const DEBUG_MODE_DEFAULT:Boolean = false;
-        private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
 
         public function ArchipelagoMod() {
             super();
@@ -507,9 +498,9 @@ package {
         //   - All UI panels       (toasts, log, disconnect, offline items)
         //   - All per-frame patcher work (gated in onEnterFrame)
         //
-        // _deactivateApMode reverses everything reversible. WizStashes.apply
-        // mutates GV.stageCollection irreversibly, so it runs at most once
-        // per game-process — see _wizStashesApplied.
+        // _deactivateApMode reverses everything, including the global
+        // GV.stageCollection stash relocation (WizStashes.apply/revert), so a
+        // standalone slot loaded next runs fully vanilla — no AP state leftover.
 
         /**
          * Activate Archipelago mode for the current slot. Idempotent.
@@ -538,14 +529,11 @@ package {
             addEventListener(Event.EXIT_FRAME, onExitFrame, false, 0, true);
 
             // WizStashes.apply mutates GV.stageCollection (moves stashes from
-            // Endurance to Journey mode). The mutation is global and not
-            // currently reversible, so we run it once per game-process even
-            // if the player later loads a standalone slot. Fresh launch =
-            // fresh state.
-            if (!_wizStashesApplied) {
-                patchWizStashModes();
-                _wizStashesApplied = true;
-            }
+            // Endurance to Journey mode). The mutation is global (per-process,
+            // not per-save), so _deactivateApMode calls WizStashes.revert to
+            // put it back — otherwise a standalone slot loaded next keeps the
+            // relocated stashes. apply() is idempotent (self-guarded).
+            patchWizStashModes();
 
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
@@ -572,6 +560,26 @@ package {
             // Re-enable Steam achievements so a standalone/vanilla slot loaded
             // next earns them normally.
             if (_steamAchSuppressor != null) _steamAchSuppressor.restore();
+            // Detach the Endurance/Trial button block listeners + stage-token
+            // interceptor. Otherwise they survive into a standalone save and
+            // keep Trial unclickable via stale _disableTrial.
+            if (_firstPlayBypass != null) _firstPlayBypass.deactivate();
+            // Put the wizard stashes back into Endurance mode. GV.stageCollection
+            // is global (per-process), so without this a standalone slot loaded
+            // next would keep the AP-run stash relocation.
+            WizStashes.revert(_logger, MOD_NAME);
+            // Remove the injected achievements-panel UI (group filter, search
+            // field, hidden filter slot) and un-hide the vanilla Reset button.
+            // pnlAchievements is persistent, so it would otherwise leak into a
+            // standalone save's achievements screen.
+            if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
+            // Detach the outcome / pause-menu button listeners. EarlyExitOutcome
+            // sits on the persistent scrOptions singleton and would otherwise
+            // hijack the vanilla pause-menu Return/Restart buttons in a
+            // standalone battle; the other two ride the outcome panel.
+            if (_earlyExitOutcome != null) _earlyExitOutcome.detach();
+            if (_victoryRestartButton != null) _victoryRestartButton.detach();
+            if (_retryButtonSkillPointsRefresh != null) _retryButtonSkillPointsRefresh.detach();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
@@ -613,6 +621,10 @@ package {
                 _modButtons.removeFromSelector();
             }
             if (_slotSettings != null && _slotSettings.isOpen) _slotSettings.close();
+            // Drop the debug menu so the next AP activation rebuilds it fresh.
+            // Without this it survives AP → standalone → AP and its stale display
+            // list / listeners leave the reopened menu unclickable.
+            if (_debugOptions != null) _debugOptions.dispose();
             if (_mainMenuUI != null) _mainMenuUI.hide();
 
             _sessionDrops = [];
@@ -679,6 +691,15 @@ package {
          */
         public function getDebugAchievementPool():Array {
             return (_achievementUnlocker != null) ? _achievementUnlocker.getTrackableMissingAchievements() : [];
+        }
+
+        /**
+         * Debug-menu "Achievements" tab, alternate view: every non-excluded
+         * achievement the player has NOT yet earned in-game (ignores whether the
+         * AP check was already sent). Empty before AP connect.
+         */
+        public function getUnearnedAchievementPool():Array {
+            return (_achievementUnlocker != null) ? _achievementUnlocker.getUnearnedTrackableAchievements() : [];
         }
 
         /**
@@ -1195,14 +1216,6 @@ package {
                     }
                 }
                 return;
-            }
-            if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
-                _debugMode = !_debugMode;
-                _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
-                if (_modButtons != null) _modButtons.apDebugVisible = _debugMode;
-                if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
-                    _debugOptions.close();
-                }
             }
         }
 

@@ -46,7 +46,6 @@ package ui {
         // calls made while the buttons don't exist yet (e.g. onApConnected
         // sets settingsVisible=true before SELECTOR has been reached).
         private var _settingsDesiredVisible:Boolean = false;
-        private var _apDebugDesiredVisible:Boolean = false;
 
         // Main-menu buttons
         private var _changelogBtn:CustomButton;
@@ -73,11 +72,6 @@ package ui {
         public function set settingsVisible(v:Boolean):void {
             _settingsDesiredVisible = v;
             if (_settingsBtn != null) _settingsBtn.visible = v;
-        }
-
-        public function set apDebugVisible(v:Boolean):void {
-            _apDebugDesiredVisible = v;
-            if (_apDebugBtn != null) _apDebugBtn.visible = v;
         }
 
         // -----------------------------------------------------------------------
@@ -117,11 +111,11 @@ package ui {
             _fieldsBtn.y = tmpl.y + stepY * 3;
             mc.addChild(_fieldsBtn);
 
-            // ---- Archipelago debug (hidden until Ctrl+Alt+Shift+End) ----
-            _apDebugBtn         = new CustomButton(tmpl, "Archipelago");
+            // ---- AP Debug Menu (always available in AP mode) ----
+            _apDebugBtn         = new CustomButton(tmpl, "AP Debug Menu");
             _apDebugBtn.x       = tmpl.x;
             _apDebugBtn.y       = tmpl.y + stepY * 4;
-            _apDebugBtn.visible = _apDebugDesiredVisible;
+            _apDebugBtn.visible = true;
             _apDebugBtn.onClick = function():void {
                 if (onApDebugClick != null) onApDebugClick();
             };

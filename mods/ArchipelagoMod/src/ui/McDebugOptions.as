@@ -38,13 +38,14 @@ package ui {
     public class McDebugOptions extends MovieClip {
 
         // ── Tab indices ─────────────────────────────────────────────────────────
-        public static const TAB_LEVELS:int    = 0; // Wizard slider + XP tomes
-        public static const TAB_SKILLS:int    = 1;
-        public static const TAB_TRAITS:int    = 2;
-        public static const TAB_STAGES:int    = 3;
-        public static const TAB_TALISMANS:int = 4;
-        public static const TAB_CORES:int     = 5;
-        public static const TAB_ACHIEVEMENTS:int = 6;
+        public static const TAB_DISCLAIMER:int   = 0; // Usage / cheating notice
+        public static const TAB_LEVELS:int       = 1; // Wizard slider + XP tomes
+        public static const TAB_SKILLS:int       = 2;
+        public static const TAB_TRAITS:int       = 3;
+        public static const TAB_STAGES:int       = 4;
+        public static const TAB_TALISMANS:int    = 5;
+        public static const TAB_CORES:int        = 6;
+        public static const TAB_ACHIEVEMENTS:int = 7;
 
         // ── Public state for ScrDebugOptions handlers ───────────────────────────
         public var wizardSlider:McWizardLevelSlider;
@@ -59,6 +60,7 @@ package ui {
         public var corePanels:Array;         // Array of { panel:McOptPanel, apId:int }
         public var xpPanels:Array;           // Array of { panel:McOptPanel, apId:int }
         public var achievementPanels:Array;  // Array of { panel:McOptPanel, apId:int }
+        public var achievementModeBtn:McOptPanel; // toggles the achievements view mode
         public var stageMode:String = "stage"; // "stage" | "tile" | "tier"
 
         public var tabStrip:DebugTabStrip;
@@ -116,7 +118,7 @@ package ui {
             _inner = new McOptionsClass();
             addChild(_inner);
 
-            overlayTitle("Archipelago Debug");
+            overlayTitle("AP Debug Menu");
 
             // Clear normal options content.
             while (_inner.cnt.numChildren > 0) _inner.cnt.removeChildAt(0);
@@ -124,6 +126,7 @@ package ui {
 
             // Build all tab contents up-front (lists are small, easier to reason about).
             _tabContents = [];
+            _tabContents[TAB_DISCLAIMER] = _buildDisclaimerTab();
             _tabContents[TAB_LEVELS]    = _buildLevelsTab();
             _tabContents[TAB_SKILLS]    = _buildSkillsTab();
             _tabContents[TAB_TRAITS]    = _buildTraitsTab();
@@ -141,12 +144,12 @@ package ui {
 
             // Tab strip (sits on _inner above the scrollable cnt area)
             tabStrip = new DebugTabStrip(
-                ["Levels","Skills","Traits","Stages","Talismans","Cores","Achievements"],
+                ["Disclaimer","Levels","Skills","Traits","Stages","Talismans","Cores","Achievements"],
                 TAB_STRIP_X, TAB_STRIP_Y, TAB_STRIP_W);
             _inner.addChild(tabStrip);
 
             // Show first tab
-            _showTab(TAB_LEVELS);
+            _showTab(TAB_DISCLAIMER);
         }
 
         // -----------------------------------------------------------------------
@@ -209,8 +212,8 @@ package ui {
          * the menu is first constructed. Caller is responsible for (re)wiring
          * the freshly-built achievementPanels.
          */
-        public function rebuildAchievementsContents(pool:Array):void {
-            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool);
+        public function rebuildAchievementsContents(pool:Array, showingUnearned:Boolean = false):void {
+            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool, showingUnearned);
             if (tabStrip != null && tabStrip.activeIndex == TAB_ACHIEVEMENTS) {
                 _showTab(TAB_ACHIEVEMENTS);
             }
@@ -218,6 +221,12 @@ package ui {
 
         // -----------------------------------------------------------------------
         // Tab builders
+
+        private function _buildDisclaimerTab():Array {
+            var arr:Array = [];
+            arr.push(new DebugDisclaimerView(200, CONTENT_START_Y, 760));
+            return arr;
+        }
 
         private function _buildLevelsTab():Array {
             var arr:Array = [];
@@ -440,7 +449,7 @@ package ui {
          * ScrDebugOptions._onAchievementClick. `pool` is Array of { apId, name };
          * null/empty renders a placeholder prompting the player to connect.
          */
-        private function _buildAchievementsTab(pool:Array):Array {
+        private function _buildAchievementsTab(pool:Array, showingUnearned:Boolean = false):Array {
             var arr:Array = [];
             achievementPanels = [];
 
@@ -448,8 +457,20 @@ package ui {
             arr.push(new McOptTitle("Send Achievement Checks", TITLE_X, vY));
             vY += ROW_HEIGHT_NORM;
 
+            // View-mode toggle: "missing checks only" (server missing set) vs
+            // "not yet earned" (every non-excluded achievement not earned in-game).
+            var toggleLabel:String = showingUnearned
+                ? "Show: Not yet earned  (tap for missing only)"
+                : "Show: Missing checks only  (tap for not yet earned)";
+            achievementModeBtn = new McOptPanel(toggleLabel, TITLE_X, vY, false);
+            arr.push(achievementModeBtn);
+            vY += ROW_HEIGHT_NORM;
+
             if (pool == null || pool.length == 0) {
-                arr.push(new McOptTitle("(connect to AP to list achievements)", TITLE_X, vY));
+                var emptyMsg:String = showingUnearned
+                    ? "(no un-earned achievements to show)"
+                    : "(connect to AP to list achievements)";
+                arr.push(new McOptTitle(emptyMsg, TITLE_X, vY));
                 return arr;
             }
 

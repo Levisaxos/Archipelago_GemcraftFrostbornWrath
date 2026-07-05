@@ -40,6 +40,18 @@ package patch {
         private static var _hiddenStashes:Array = [];
         private static var _hiddenStashesStageId:int = -1;
 
+        // True once apply() has moved the stashes for the current game-process.
+        // revert() clears it, so the next AP activation re-applies cleanly.
+        private static var _applied:Boolean = false;
+
+        // Undo log for apply(): one record per moved stash so revert() can put
+        // GV.stageCollection back exactly as it was. Each entry:
+        //   {i, entry, eIdx, prevMode, modeWasSet}
+        // GV.stageCollection is global (per-process, not per-save), so without
+        // this a standalone slot loaded after an AP run would keep the relocated
+        // stashes. See [[feedback_standalone_clean_slate]].
+        private static var _moves:Array = [];
+
         // Shield value applied each frame to locked stashes. Re-applied every
         // frame so a manual bomb-spell that decrements shield by N per hit can't
         // ever drain it across frames. 1000 is high enough to absorb any plausible
@@ -56,10 +68,12 @@ package patch {
 
         public static function apply(logger:Logger, modName:String):void {
             try {
+                if (_applied) return; // idempotent — already moved this process
                 if (GV.stageCollection == null) {
                     logger.log(modName, "WizStashes.apply: stageCollection not ready");
                     return;
                 }
+                _moves = [];
                 var moved:int = 0;
                 var n:int = GV.stageCollection.stageMetas.length;
                 for (var i:int = 0; i < n; i++) {
@@ -76,16 +90,69 @@ package patch {
                     }
                     if (wizIdx == -1) continue;
 
+                    var modeWasSet:Boolean = GV.wizStashesInModes != null && i < GV.wizStashesInModes.length;
+                    var prevMode:int       = modeWasSet ? int(GV.wizStashesInModes[i]) : -1;
+
                     var entry:String = eData.buildings.splice(wizIdx, 1)[0];
                     jData.buildings.push(entry);
-                    if (GV.wizStashesInModes != null && i < GV.wizStashesInModes.length) {
+                    if (modeWasSet) {
                         GV.wizStashesInModes[i] = 0; // BattleMode.JOURNEY
                     }
+                    _moves.push({i: i, entry: entry, eIdx: wizIdx, prevMode: prevMode, modeWasSet: modeWasSet});
                     moved++;
                 }
+                _applied = true;
                 logger.log(modName, "WizStashes.apply: moved " + moved + " wizard stashes to Journey mode");
             } catch (err:Error) {
                 logger.log(modName, "WizStashes.apply ERROR: " + err.message + "\n" + err.getStackTrace());
+            }
+        }
+
+        /**
+         * Reverse apply(): put every moved wizard stash back into its original
+         * Endurance-mode slot (at its original index) and restore
+         * GV.wizStashesInModes, so a standalone save loaded next sees vanilla
+         * stage data. Also clears the per-battle runtime caches. Called from
+         * _deactivateApMode. No-op if apply() never ran.
+         */
+        public static function revert(logger:Logger, modName:String):void {
+            try {
+                if (!_applied) return;
+                var restored:int = 0;
+                // Undo in reverse so earlier splice indices stay valid.
+                for (var k:int = _moves.length - 1; k >= 0; k--) {
+                    var m:Object = _moves[k];
+                    var i:int    = int(m.i);
+                    var jData:*  = GV.stageCollection != null ? GV.stageCollection.stageDatasJ[i] : null;
+                    var eData:*  = GV.stageCollection != null ? GV.stageCollection.stageDatasE[i] : null;
+                    if (jData == null || eData == null) continue;
+
+                    // Pull the entry back out of Journey.
+                    var jIdx:int = jData.buildings.indexOf(m.entry);
+                    if (jIdx != -1) jData.buildings.splice(jIdx, 1);
+
+                    // Re-insert into Endurance at its original position.
+                    var eIdx:int = int(m.eIdx);
+                    if (eIdx < 0 || eIdx > eData.buildings.length) eIdx = eData.buildings.length;
+                    eData.buildings.splice(eIdx, 0, m.entry);
+
+                    if (Boolean(m.modeWasSet) && GV.wizStashesInModes != null
+                            && i < GV.wizStashesInModes.length) {
+                        GV.wizStashesInModes[i] = int(m.prevMode);
+                    }
+                    restored++;
+                }
+                _moves = [];
+                _applied = false;
+
+                // Drop per-battle runtime caches so a re-activation starts clean.
+                _hiddenStashes.length = 0;
+                _hiddenStashesStageId = -1;
+                _originalShield = new Dictionary(true);
+
+                logger.log(modName, "WizStashes.revert: restored " + restored + " wizard stashes to Endurance mode");
+            } catch (err:Error) {
+                logger.log(modName, "WizStashes.revert ERROR: " + err.message + "\n" + err.getStackTrace());
             }
         }
 

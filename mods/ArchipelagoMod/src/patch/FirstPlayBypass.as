@@ -36,6 +36,14 @@ package patch {
         private var _disableEndurance:Boolean      = false;
         private var _disableTrial:Boolean          = true;
         private var _freeStages:Object             = {}; // strId → true
+
+        // Objects we attached capture-phase listeners to, kept so deactivate()
+        // can detach them cleanly when the player leaves AP mode. Without this
+        // the Endurance/Trial block listeners survive into a standalone save
+        // and keep those buttons unclickable (stale _disableTrial).
+        private var _fieldTokensRef:*  = null;
+        private var _enduranceBtnRef:* = null;
+        private var _trialBtnRef:*      = null;
         // Tracks the availableGemTypes array reference we last injected into.
         // When the game rebuilds this array (on restart or new stage) the
         // reference changes and we re-inject automatically.
@@ -90,6 +98,37 @@ package patch {
             }
         }
 
+        /**
+         * Detach every capture-phase listener and reset install state. Called
+         * from _deactivateApMode so a standalone save loaded next runs vanilla:
+         * the Endurance/Trial block listeners and the stage-token interceptor
+         * must not survive AP mode (otherwise stale _disableTrial keeps Trial
+         * unclickable). onSelectorFrame re-installs on the next AP activation.
+         */
+        public function deactivate():void {
+            if (_captureListenerAdded && _fieldTokensRef != null) {
+                _fieldTokensRef.removeEventListener(MouseEvent.CLICK, _onFieldTokenClick, true);
+            }
+            _fieldTokensRef       = null;
+            _captureListenerAdded = false;
+
+            if (_blockListenersAdded) {
+                if (_enduranceBtnRef != null) {
+                    _enduranceBtnRef.removeEventListener(MouseEvent.MOUSE_DOWN, _onLockedBtnBlock, true);
+                    _enduranceBtnRef.removeEventListener(MouseEvent.MOUSE_UP,   _onLockedBtnBlock, true);
+                }
+                if (_trialBtnRef != null) {
+                    _trialBtnRef.removeEventListener(MouseEvent.MOUSE_DOWN, _onLockedBtnBlock, true);
+                    _trialBtnRef.removeEventListener(MouseEvent.MOUSE_UP,   _onLockedBtnBlock, true);
+                }
+            }
+            _enduranceBtnRef     = null;
+            _trialBtnRef         = null;
+            _blockListenersAdded = false;
+
+            _hideTooltip();
+        }
+
         // -----------------------------------------------------------------------
         // Selector frame hook
 
@@ -102,6 +141,7 @@ package patch {
                 if (cntFT != null) {
                     cntFT.addEventListener(MouseEvent.CLICK, _onFieldTokenClick,
                                            true, 100, true);
+                    _fieldTokensRef       = cntFT;
                     _captureListenerAdded = true;
                 }
             }
@@ -119,6 +159,8 @@ package patch {
                                                 _onLockedBtnBlock, true, 101, true);
                     ss.btnTrial.addEventListener(MouseEvent.MOUSE_UP,
                                                 _onLockedBtnBlock, true, 101, true);
+                    _enduranceBtnRef     = ss.btnEndurance;
+                    _trialBtnRef         = ss.btnTrial;
                     _blockListenersAdded = true;
                     _logger.log(_modName, "FirstPlayBypass: block listeners installed");
                 }

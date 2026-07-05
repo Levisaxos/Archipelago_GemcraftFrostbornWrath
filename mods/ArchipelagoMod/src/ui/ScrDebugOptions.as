@@ -18,6 +18,9 @@ package ui {
         private var _scroll:ScrollablePanel;
         private var _isOpen:Boolean = false;
         private var _wiredStageModes:Object = {}; // mode -> true once wired
+        // Achievements tab view mode: false = still-missing checks only,
+        // true = every non-excluded achievement not yet earned in-game.
+        private var _showUnearnedAchievements:Boolean = false;
 
         public function get isOpen():Boolean { return _isOpen; }
 
@@ -93,6 +96,34 @@ package ui {
         }
 
         /**
+         * Rebuild the Achievements tab from the current view mode + (re)wire the
+         * fresh panels and the view-mode toggle button. Called on open() and
+         * whenever the toggle flips.
+         */
+        private function _rebuildAchievementsTab():void {
+            var pool:Array = _showUnearnedAchievements
+                ? _mod.getUnearnedAchievementPool()
+                : _mod.getDebugAchievementPool();
+            _mc.rebuildAchievementsContents(pool, _showUnearnedAchievements);
+            _wireAchievementPanels();
+
+            // Wire the freshly-built view-mode toggle button.
+            if (_mc.achievementModeBtn != null) {
+                _mc.achievementModeBtn.addEventListener(MouseEvent.CLICK, _onAchievementModeToggle, false, 0, true);
+                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
+                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+            }
+        }
+
+        private function _onAchievementModeToggle(e:MouseEvent):void {
+            _showUnearnedAchievements = !_showUnearnedAchievements;
+            _rebuildAchievementsTab();
+            _scroll.refreshContents();
+            _scroll.renderViewport();
+            _renderDebugOptions();
+        }
+
+        /**
          * Wire click + hover handlers for the Stages tab in its current mode.
          * Idempotent per mode — each mode's panels get wired exactly once.
          */
@@ -158,8 +189,12 @@ package ui {
             // Achievements tab — the trackable pool depends on AP state (missing
             // locations, server options), so rebuild every open and (re)wire the
             // fresh panels.
-            _mc.rebuildAchievementsContents(_mod.getDebugAchievementPool());
-            _wireAchievementPanels();
+            _rebuildAchievementsTab();
+
+            // Always land on the Disclaimer tab so the usage / cheating notice
+            // is seen every time the menu is opened. setActive(..., true) fires
+            // _onTabSelect, which swaps content + refreshes the scroll range.
+            _mc.tabStrip.setActive(McDebugOptions.TAB_DISCLAIMER, true);
 
             GV.main.addChildAt(_mc, GV.main.numChildren);
             _scroll.addWheelListener();
@@ -175,10 +210,33 @@ package ui {
             _scroll.removeWheelListener();
         }
 
+        /**
+         * Drop the built panel so the next open() rebuilds it from scratch.
+         * Called from ArchipelagoMod._deactivateApMode so the menu never carries
+         * state (or a stale display list) across an AP → standalone → AP cycle —
+         * a fresh build on the next activation is identical to a first-ever open.
+         * See [[feedback_standalone_clean_slate]].
+         */
+        public function dispose():void {
+            close();
+            _mc = null;
+            _wiredStageModes = {};
+            _scroll = new ScrollablePanel();
+        }
+
         // -----------------------------------------------------------------------
         // Per-frame update
 
         public function doEnterFrame():void {
+            // Keep the panel on top of GV.main. Granting a received item (e.g. a
+            // field token / stage unlock, when checking an achievement releases
+            // an item for us) makes the game add selector content to GV.main
+            // ABOVE this panel — added once at open() — which leaves it visible
+            // but unclickable. Re-raising each frame makes it immune, mirroring
+            // how the stage-level toasts / message log are kept on top.
+            if (_mc != null && _mc.parent != null) {
+                _mc.parent.setChildIndex(_mc, _mc.parent.numChildren - 1);
+            }
             _scroll.doEnterFrame();
             _renderDebugOptions();
         }

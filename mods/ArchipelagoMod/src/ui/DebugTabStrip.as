@@ -9,7 +9,7 @@ package ui {
     import flash.text.TextFormatAlign;
 
     /**
-     * Horizontal tab strip used at the top of the Archipelago Debug menu.
+     * Horizontal tab strip used at the top of the AP Debug Menu.
      *
      * Built once with a list of label strings; clicking a tab fires onSelect(index).
      * The owner is responsible for swapping the visible content list when notified.

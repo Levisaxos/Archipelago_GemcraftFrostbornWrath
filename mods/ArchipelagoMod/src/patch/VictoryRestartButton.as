@@ -35,6 +35,8 @@ package patch {
         private var _logger:Logger;
         private var _modName:String;
         private var _attached:Boolean = false;
+        // Kept so detach() can remove the listener when leaving AP mode.
+        private var _panel:* = null;
 
         public function VictoryRestartButton(logger:Logger, modName:String) {
             _logger  = logger;
@@ -59,6 +61,7 @@ package patch {
                 // Capture-phase, priority 100 — runs after endGame() has set
                 // visibility but at the moment addChild fires ADDED_TO_STAGE.
                 panel.addEventListener(Event.ADDED_TO_STAGE, _onPanelAdded, true, 100, true);
+                _panel = panel;
                 _attached = true;
                 _logger.log(_modName,
                     "VictoryRestartButton: attached to mcOutcomePanel");
@@ -66,6 +69,18 @@ package patch {
                 _logger.log(_modName,
                     "VictoryRestartButton.tryAttach ERROR: " + err.message);
             }
+        }
+
+        /** Remove the outcome-panel listener so a standalone save runs vanilla
+         *  (no AP "Restart Battle" button forced on victory). Called from
+         *  _deactivateApMode; tryAttach re-installs on the next AP run. */
+        public function detach():void {
+            try {
+                if (_panel != null)
+                    _panel.removeEventListener(Event.ADDED_TO_STAGE, _onPanelAdded, true);
+            } catch (err:Error) {}
+            _panel = null;
+            _attached = false;
         }
 
         private function _onPanelAdded(e:Event):void {
