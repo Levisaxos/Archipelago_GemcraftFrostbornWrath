@@ -169,9 +169,13 @@ for _name, _cat in game_skills_categories.items():
     skill_counter_pools[_name] = _items
     skill_counter_pools[_name[0].lower() + _name[1:]] = _items
 
-# `skills:N` / `Skills:N` — total across every skill category.
+# `skills:N` / `Skills:N` — the 24 in-game SKILLS only (GemSkills + OtherSkills).
+# Battle traits are NOT skills and must NOT be counted here: including them let
+# `skills:24` (Skillful = "raise all skills to level 5") pass with any 24 of
+# skills+traits instead of all 24 actual skills. The vanilla checker
+# (IngameAchiChecker3 case 368) loops exactly the 24 selectedSkillLevels.
 _all_items = []
-for _cat_name in ("BattleTraits", "GemSkills", "OtherSkills"):
+for _cat_name in ("GemSkills", "OtherSkills"):
     _all_items.extend(skill_counter_pools[_cat_name])
 skill_counter_pools["skills"] = _all_items
 skill_counter_pools["Skills"] = _all_items

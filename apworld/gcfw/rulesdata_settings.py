@@ -59,6 +59,7 @@ game_skills_categories = {
             "Bolt",
             "Demolition",
             "Freeze",
+            "Fury",
             "Fusion",
             "Ice Shards",
             "Lanterns",
@@ -66,12 +67,18 @@ game_skills_categories = {
             "Orb of Presence",
             "Pylons",
             "Resonance",
+            "Seeker Sense",
             "Traps",
             "True Colors",
             "Whiteout",
         ],
     },
 }
+# GemSkills (6) + OtherSkills (18) = the 24 in-game skills (SkillId 0..23).
+# This total must stay 24: the `skills:24` achievement (Skillful) means "all
+# skills", matching the vanilla checker that loops all 24 selectedSkillLevels.
+# Fury (18) and Seeker Sense (23) were previously missing here, which forced
+# the skills counter to pad with battle traits — see requirement_tokens.py.
 
 # =====================================================================
 # SKILL GROUP COUNTERS — Requirement Type

@@ -386,6 +386,39 @@ package unlockers {
         }
 
         /**
+         * Every non-excluded achievement the player has NOT yet earned in-game,
+         * regardless of whether the AP location check has been sent. Used by the
+         * debug menu's "not yet earned" achievements view. Filters:
+         *   - has a real AP location (getSkipReason == null)
+         *   - GV.ppd.gainedAchis[game_id] !== true (not earned in this slot)
+         * Returns an Array of { apId:int, name:String } sorted by name.
+         *
+         * Differs from getTrackableMissingAchievements, which filters on the
+         * AP server's missing-locations set (i.e. hides already-checked ones);
+         * this filters on the game's own earned state instead.
+         */
+        public function getUnearnedTrackableAchievements():Array {
+            var result:Array = [];
+            var gainedAchis:Array = (GV.ppd != null) ? GV.ppd.gainedAchis : null;
+
+            for (var name:String in _achievementData) {
+                var achData:Object = _achievementData[name];
+                if (!achData || achData.apId == null) continue;
+                var apId:int = int(achData.apId);
+                if (apId < 2000 || apId > 2636) continue;
+                if (getSkipReason(achData) != null) continue;
+                if (achData.game_id != null && gainedAchis != null) {
+                    var gameId:int = int(achData.game_id);
+                    if (gameId >= 0 && gameId < gainedAchis.length && gainedAchis[gameId] === true)
+                        continue;
+                }
+                result.push({ apId: apId, name: name });
+            }
+            result.sortOn("name", Array.CASEINSENSITIVE);
+            return result;
+        }
+
+        /**
          * Debug-menu entry point: send the AP location check for an achievement
          * WITHOUT marking it earned in-game. Routes through unlockAchievement,
          * which records the check AP-side (sessionData) and releases the item

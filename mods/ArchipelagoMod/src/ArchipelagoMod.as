@@ -3,7 +3,6 @@ package {
     import flash.display.Stage;
     import flash.events.Event;
     import flash.events.KeyboardEvent;
-    import flash.ui.Keyboard;
 
     import Bezel.Bezel;
     import Bezel.BezelMod;
@@ -226,10 +225,6 @@ package {
         // excluded achievements.
         private var _sessionExcludedAchievementGameIds:Array = [];
         private var _levelEndCountdown:int = -1; // frames remaining; -1 = inactive
-
-// Debug mode — toggled by Ctrl+Shift+Alt+End.
-        private static const DEBUG_MODE_DEFAULT:Boolean = false;
-        private var _debugMode:Boolean = DEBUG_MODE_DEFAULT;
 
         public function ArchipelagoMod() {
             super();
@@ -623,6 +618,10 @@ package {
                 _modButtons.removeFromSelector();
             }
             if (_slotSettings != null && _slotSettings.isOpen) _slotSettings.close();
+            // Drop the debug menu so the next AP activation rebuilds it fresh.
+            // Without this it survives AP → standalone → AP and its stale display
+            // list / listeners leave the reopened menu unclickable.
+            if (_debugOptions != null) _debugOptions.dispose();
             if (_mainMenuUI != null) _mainMenuUI.hide();
 
             _sessionDrops = [];
@@ -689,6 +688,15 @@ package {
          */
         public function getDebugAchievementPool():Array {
             return (_achievementUnlocker != null) ? _achievementUnlocker.getTrackableMissingAchievements() : [];
+        }
+
+        /**
+         * Debug-menu "Achievements" tab, alternate view: every non-excluded
+         * achievement the player has NOT yet earned in-game (ignores whether the
+         * AP check was already sent). Empty before AP connect.
+         */
+        public function getUnearnedAchievementPool():Array {
+            return (_achievementUnlocker != null) ? _achievementUnlocker.getUnearnedTrackableAchievements() : [];
         }
 
         /**
@@ -1200,14 +1208,6 @@ package {
                     }
                 }
                 return;
-            }
-            if (e.keyCode == Keyboard.END && e.ctrlKey && e.shiftKey && e.altKey) {
-                _debugMode = !_debugMode;
-                _logger.log(MOD_NAME, "Debug mode " + (_debugMode ? "ON" : "OFF"));
-                if (_modButtons != null) _modButtons.apDebugVisible = _debugMode;
-                if (!_debugMode && _debugOptions != null && _debugOptions.isOpen) {
-                    _debugOptions.close();
-                }
             }
         }
 
