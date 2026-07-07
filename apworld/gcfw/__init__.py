@@ -1210,9 +1210,10 @@ class GemcraftFrostbornWrathWorld(World):
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
             #                            2=per_tile,  3=per_tile_progressive,
             #                            4=per_tier,  5=per_tier_progressive
-            #   stash_key_granularity:   0=off, 1=per_stage, 2=per_stage_progressive,
-            #                            3=per_tile,  4=per_tile_progressive,
+            #   stash_key_granularity:   0=off, 3=per_tile, 4=per_tile_progressive,
             #                            5=per_tier,  6=per_tier_progressive, 7=global
+            #     (1=per_stage / 2=per_stage_progressive retired in the apworld;
+            #      values preserved so the mod's decode stays valid)
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
             #                            3=per_tier, 4=per_tier_progressive, 5=global
             "field_token_granularity": self.options.field_token_granularity.value,

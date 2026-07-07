@@ -88,6 +88,7 @@ class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes you'll find combined.
 
     XP tomes come as Tattered Scrolls, Worn Tomes, and Ancient Grimoires (40 in total), with progressively larger level rewards. This option scales their combined value. Lower for a slower XP curve, higher for a faster one.
+    These levels are "bonus" and not counted towards progression; adding more XP tomes makes the game easier.
     """
     display_name = "XP Tome Bonus"
     range_start = 50
@@ -293,7 +294,7 @@ class GemPouchGranularity(Choice):
     option_per_tier             = 3
     option_per_tier_progressive = 4
     option_global               = 5
-    default = 2
+    default = 1
 
 
 class FieldTokenGranularity(Choice):
@@ -317,7 +318,7 @@ class FieldTokenGranularity(Choice):
     option_per_tile_progressive  = 3
     option_per_tier              = 4
     option_per_tier_progressive  = 5
-    default = 3
+    default = 2
 
 
 class StashKeyGranularity(Choice):
@@ -327,26 +328,26 @@ class StashKeyGranularity(Choice):
 
     Like Field Tokens, each granularity has a "_progressive" sibling that uses a generic key. The Nth copy unlocks the Nth stash in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
 
-    off:                   Stashes are not gated. Every Wizard Stash is open from the start — no keys exist.
-    per_stage:             One key per stage (122 keys). Each stash has its own key.
-    per_stage_progressive: 122 generic keys. Each one unlocks the next stash in a randomized order.
-    per_tile:              One key per map tile (26 keys). A tile's key unlocks every stash on that tile.
-    per_tile_progressive:  26 generic keys. Each one unlocks the next tile's stashes.
-    per_tier:              One key per power tier (13 keys). A tier's key unlocks every stash in that tier.
-    per_tier_progressive:  13 generic keys. Each one unlocks the next tier's stashes.
-    global:                A single master key unlocks every stash at once.
+    off:                  Stashes are not gated. Every Wizard Stash is open from the start — no keys exist.
+    per_tile:             One key per map tile (26 keys). A tile's key unlocks every stash on that tile.
+    per_tile_progressive: 26 generic keys. Each one unlocks the next tile's stashes.
+    per_tier:             One key per power tier (13 keys). A tier's key unlocks every stash in that tier.
+    per_tier_progressive: 13 generic keys. Each one unlocks the next tier's stashes.
+    global:               A single master key unlocks every stash at once.
     """
     display_name = "Stash Key Granularity"
-    option_off                   = 0
-    option_per_stage             = 1
-    option_per_stage_progressive = 2
-    option_per_tile              = 3
-    option_per_tile_progressive  = 4
-    option_per_tier              = 5
-    option_per_tier_progressive  = 6
-    option_global                = 7
-    
-    default = 4
+    # per_stage (1) and per_stage_progressive (2) were retired — per-stage keys
+    # put 122 progression items in the pool for little gameplay gain. The values
+    # 1/2 are intentionally left unused so the surviving encodings still match
+    # the mod's slot_data decode (ServerOptions.as) and any existing yamls.
+    option_off                  = 0
+    option_per_tile             = 3
+    option_per_tile_progressive = 4
+    option_per_tier             = 5
+    option_per_tier_progressive = 6
+    option_global               = 7
+
+    default = 3
 
 
 class StartingOvercrowd(Toggle):
@@ -360,8 +361,8 @@ class StartingOvercrowd(Toggle):
 
 class AchievementRequiredEffort(Choice):
     """How many of the in-game achievements count as Archipelago checks.
-
-    1:    Trivial achievements only. (Collectable by normal play).
+    0:    Off - No achievements means less locations. Some mix of settings might fail due to lack of locations.
+    1:    Trivial achievements only. (Collectable by normal vanilla play).
     2:    +Minor achievements (Require some special actions).
     3:    +Major (Requires some time investment).
     4:    +Extreme (Required massive time investment and luck on levels) (~620 checks).

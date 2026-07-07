@@ -1695,6 +1695,19 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
 ENABLE_ACH_SKILL_TRAIT_GATE = True
 GATE_ALL_SKILLS_ACHIEVEMENT  = True
 
+# Whole-pool achievements that may NOT hold progression items. Their in-game
+# condition demands an entire item pool at once (Skillful = all 24 skills;
+# Peek Into The Abyss = 12 battle traits), so a progression item placed here
+# would be walled behind that whole pool — the one real FillError source (see
+# feedback_fill_errors). They REMAIN Archipelago checks (still gated + reachable
+# once the pool is collected) but fill may only drop useful/filler here.
+# The ~124 single/double-skill achievements are intentionally NOT listed — a
+# progression item behind one or two skills is a trivial ordering for fill.
+_NO_PROGRESSION_ACHIEVEMENTS = frozenset({
+    "Skillful",             # skills:24
+    "Peek Into The Abyss",  # battleTraits:12
+})
+
 
 def _compile_skill_trait_gate(requirements, player):
     """(state)->bool gating on ONLY the skill/trait tokens in `requirements`
@@ -2147,6 +2160,17 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 # spectrum. Exclude edge/corner talismans so they end up at
                 # higher-tier stage locations (where the player has cores).
                 _restrict_talisman_shapes(location, True, True)
+
+                # Whole-pool achievements (Skillful, Peek Into The Abyss) may
+                # only hold useful/filler — never progression — so no critical
+                # item is ever walled behind the entire skill/trait pool.
+                # Composes with the talisman rule set just above.
+                if ach_name in _NO_PROGRESSION_ACHIEVEMENTS:
+                    prev_rule = location.item_rule
+                    location.item_rule = (
+                        lambda item, p=prev_rule:
+                            (not item.advancement) and p(item)
+                    )
 
             except Exception:
                 pass

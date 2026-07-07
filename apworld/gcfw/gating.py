@@ -47,8 +47,9 @@ FIELD_PER_TIER              = 4
 FIELD_PER_TIER_PROGRESSIVE  = 5
 
 STASH_OFF                   = 0
-STASH_PER_STAGE             = 1
-STASH_PER_STAGE_PROGRESSIVE = 2
+# 1, 2 (per_stage / per_stage_progressive) retired — stash keys can no longer be
+# per-stage. The remaining values keep their original encoding so the mod's
+# slot_data decode (data/ServerOptions.as) and existing yamls stay valid.
 STASH_PER_TILE              = 3
 STASH_PER_TILE_PROGRESSIVE  = 4
 STASH_PER_TIER              = 5
@@ -154,10 +155,6 @@ def stash_key_for_stage(sid: str, granularity: int) -> str | None:
     unconditionally satisfied."""
     if granularity == STASH_OFF:
         return None
-    if granularity == STASH_PER_STAGE:
-        return f"Wizard Stash {sid} Key"
-    if granularity == STASH_PER_STAGE_PROGRESSIVE:
-        return PROG_STASH_PER_STAGE_NAME
     if granularity == STASH_PER_TILE:
         return f"Wizard Stash Tile {sid[0]} Key"
     if granularity == STASH_PER_TILE_PROGRESSIVE:
@@ -177,10 +174,6 @@ def stash_key_count_for_stage(sid: str, granularity: int, starter_sid: str = Non
     order for progressive variants, 0 for STASH_OFF (no gate)."""
     if granularity == STASH_OFF:
         return 0
-    if granularity == STASH_PER_STAGE_PROGRESSIVE:
-        order = (progressive_stage_order_for_starter(starter_sid)
-                 if starter_sid is not None else STAGE_PROGRESSIVE_ORDER)
-        return order.index(sid) + 1
     if granularity == STASH_PER_TILE_PROGRESSIVE:
         order = (progressive_tile_order_for_starter(starter_sid)
                  if starter_sid is not None else TILE_PREFIXES)
@@ -195,10 +188,6 @@ def stash_key_count_for_stage(sid: str, granularity: int, starter_sid: str = Non
 def stash_keys_for_pool(granularity: int) -> List[str]:
     if granularity == STASH_OFF:
         return []
-    if granularity == STASH_PER_STAGE:
-        return [f"Wizard Stash {s['str_id']} Key" for s in GAME_DATA["stages"]]
-    if granularity == STASH_PER_STAGE_PROGRESSIVE:
-        return [PROG_STASH_PER_STAGE_NAME] * len(STAGE_PROGRESSIVE_ORDER)
     if granularity == STASH_PER_TILE:
         return [f"Wizard Stash Tile {p} Key" for p in TILE_PREFIXES]
     if granularity == STASH_PER_TILE_PROGRESSIVE:
