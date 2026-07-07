@@ -93,18 +93,77 @@ package tracker {
                 }
             }
             _dirty = true;
+
+            // Invariant-1 parity check: confirm the ported WL curve reproduces
+            // the apworld's reference values. Logs once per connect; a non-empty
+            // result means the AS3 transcription drifted from difficulty_gates.py.
+            var wlErr:String = WizardLevelCalc.selfTest();
+            if (_logger != null) {
+                if (wlErr.length == 0)
+                    _logger.log(_modName, "WizardLevelCalc self-test: OK");
+                else
+                    _logger.log(_modName, "WizardLevelCalc self-test FAILED: " + wlErr);
+            }
         }
 
         public function markDirty():void { _dirty = true; }
 
-        /** The player's current actual wizard level (the game's own value).
-         *  This is what every stage/achievement gate compares against, so the
-         *  in-game tracker uses the exact same thresholds as the apworld. */
+        /** The player's LIVE in-game wizard level (the game's own value).
+         *  NOTE: logic gates NO LONGER use this — they use derivedWizardLevel()
+         *  so the tracker matches the apworld (which computes WL from cleared
+         *  fields, not the live level). Kept as a fallback + for display. */
         public function currentWizardLevel():int {
             try {
                 if (GV.ppd != null) return int(GV.ppd.getWizLevel());
             } catch (e:Error) {}
             return 0;
+        }
+
+        /**
+         * DERIVED wizard level — the logic WL. Mirrors apworld
+         * difficulty_gates.derived_wl bit-for-bit (validated by wl_test_vectors):
+         *   levelFromXp( sum(wlEffXp[strId] over cleared fields) * mult[n] )
+         * "cleared" = stageHighestXpsJourney[meta.id] > 0 (0 = unlocked-not-cleared,
+         * -1 = locked). n = how many of xpTraitApIds are held (cap 4). This is
+         * what every stage/achievement gate compares against.
+         *
+         * Falls back to the live level only if slot_data hasn't shipped wlEffXp
+         * yet (pre-Connected), so early UI never divides by null.
+         */
+        public function derivedWizardLevel():int {
+            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var effXp:Object = (opts != null) ? opts.wlEffXp : null;
+            if (effXp == null || GV.ppd == null || GV.stageCollection == null)
+                return currentWizardLevel();
+
+            var base:Number = 0;
+            var metas:Array = GV.stageCollection.stageMetas;
+            if (metas != null) {
+                for each (var meta:* in metas) {
+                    if (meta == null)
+                        continue;
+                    var x:* = effXp[meta.strId];
+                    if (x == null)
+                        continue;
+                    var xp:int = 0;
+                    try {
+                        xp = int(GV.ppd.stageHighestXpsJourney[meta.id].g());
+                    } catch (e:Error) {}
+                    if (xp > 0)
+                        base += Number(x);
+                }
+            }
+
+            var n:int = 0;
+            var traitIds:Array = (opts != null) ? (opts.xpTraitApIds as Array) : null;
+            if (traitIds != null && AV.sessionData != null) {
+                for each (var tid:* in traitIds) {
+                    if (AV.sessionData.getItemCount(int(tid)) > 0)
+                        n++;
+                }
+            }
+            var mult:Array = (opts != null) ? (opts.xpTraitMultiplier as Array) : null;
+            return WizardLevelCalc.derivedWl(base, n, mult);
         }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
@@ -774,26 +833,40 @@ package tracker {
          * the dirty flag is set OR the player's wizard level changed since the
          * last pass (so callers can invoke it freely each frame).
          *
-         * WL gating (mirrors the apworld exactly): a stage is in logic iff the
-         * player's current wizard level >= stageGates[str_id]. Starters (gate 0)
-         * are always in logic. The gate values ship in slot_data.
+         * Gating mirrors the apworld (rules.set_rules after the WL block):
+         * field-in-logic = HARD gate AND SOFT gate.
+         *   HARD: own field token + WIZLOCK skills + prereq chain (_stageReachable).
+         *   SOFT: derivedWizardLevel() >= stageGates[str_id].
+         * The apworld COMPOSES the WL soft gate onto the token/WIZLOCK/prereq
+         * hard gate; we do the same here — run the hard gate, then drop any
+         * hard-reachable stage whose WL is still below its gate. Starters
+         * (free stages, gate 0) always pass both.
          */
         public function recompute():void {
-            var wl:int = currentWizardLevel();
+            var wl:int = derivedWizardLevel();
             if (!_dirty && wl == _lastWL) return;
             _lastWL = wl;
             _inLogicByStrId = {};
 
             var gates:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
                     ? AV.serverData.serverOptions.stageGates : null;
+
+            // HARD gate: token + WIZLOCK + prereq, recursive + memoised into
+            // _inLogicByStrId (see _stageReachable). Free stages short-circuit true.
             if (gates != null) {
-                for (var sid:String in gates) {
-                    _inLogicByStrId[sid] = (wl >= int(gates[sid]));
-                }
+                for (var hsid:String in gates)
+                    _stageReachable(hsid);
             }
-            // Starter/free stages are always reachable (gate 0).
-            for (var freeSid:String in _freeStages) {
+            for (var freeSid:String in _freeStages)
                 _inLogicByStrId[freeSid] = true;
+
+            // SOFT gate overlay: derived WL >= gate. A hard-reachable stage
+            // drops out of logic when WL is too low. Gate 0 (starters) passes.
+            if (gates != null) {
+                for (var gsid:String in gates) {
+                    if (_inLogicByStrId[gsid] === true && wl < int(gates[gsid]))
+                        _inLogicByStrId[gsid] = false;
+                }
             }
 
             _dirty = false;

@@ -686,7 +686,7 @@ class GemcraftFrostbornWrathWorld(World):
         # so fill_slot_data can ship them to the mod.
         # Count only REAL (addressed) locations — Journey / Wizard stash /
         # achievements. Event locations (Victory, goal victories, and the
-        # per-stage "Beat <sid>" XP events) have address=None and are filled by
+        # per-stage "Clear <sid>" XP events) have address=None and are filled by
         # place_locked_item in generate_basic, so they must NOT inflate the pool.
         total_locations = sum(1 for region in self.multiworld.regions
                               if region.player == self.player
@@ -733,9 +733,9 @@ class GemcraftFrostbornWrathWorld(World):
             wiz_loc_name = f"Complete {str_id} - Wizard stash"
             wiz_loc_data = location_table[wiz_loc_name]
             region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
-            # WL-gating: a "Beat <sid>" event (no AP address) grants this stage's
-            # XP when cleared, driving the wizard-level progression.
-            region.locations.append(GCFWLocation(self.player, f"Beat {str_id}", None, region))
+            # WL-gating: a "Clear <sid>" event (no AP address) holds the
+            # "<sid> Cleared" XP marker, driving the wizard-level progression.
+            region.locations.append(GCFWLocation(self.player, f"Clear {str_id}", None, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
@@ -834,15 +834,17 @@ class GemcraftFrostbornWrathWorld(World):
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
 
-        # Difficulty gating: place each stage's "Beat <sid>" XP event item (locked).
+        # WL-gating: place each stage's "<sid> Cleared" XP marker (locked) on
+        # its "Clear <sid>" event location. Named as a location:item pair so the
+        # spoiler reads "Clear S1: S1 Cleared" instead of "Beat S1: Beat S1".
         from .difficulty_gates import GATE as _WL_GATE
         for sid in _WL_GATE:
             try:
-                loc = self.multiworld.get_location(f"Beat {sid}", self.player)
+                loc = self.multiworld.get_location(f"Clear {sid}", self.player)
             except KeyError:
                 continue
             loc.place_locked_item(
-                GCFWItem(f"Beat {sid}", ItemClassification.progression, None, self.player)
+                GCFWItem(f"{sid} Cleared", ItemClassification.progression, None, self.player)
             )
 
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
@@ -998,6 +1000,32 @@ class GemcraftFrostbornWrathWorld(World):
             for frag in gd["talisman_fragments"]
         }
 
+        # Static talisman: pair each of the 25 PROGRESSION fragment ITEMS to one
+        # synthetic slot. The synthetic set (self.talisman_set) is a legal tiling
+        # (talisman_gen.py); when the player FINDS the fragment item mapped to a
+        # slot, the mod unlocks that slot and sockets the synthetic fragment for
+        # it (the item is the trigger; the socketed fragment is the synthetic
+        # one so the grid always tiles). We tag each set entry with `ap_id` here.
+        from .talismans import (
+            MATCHING_TALISMAN_NAMES,
+            PROGRESSION_CORNER_TALISMAN_NAMES,
+            PROGRESSION_EDGE_TALISMAN_NAMES,
+        )
+        _prog_frag_names = (MATCHING_TALISMAN_NAMES
+                            | PROGRESSION_CORNER_TALISMAN_NAMES
+                            | PROGRESSION_EDGE_TALISMAN_NAMES)
+        _prog_frag_apids = sorted(
+            frag["item_ap_id"] for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in _prog_frag_names
+        )
+        _tal_set_sorted = sorted(getattr(self, "talisman_set", []),
+                                 key=lambda e: e["slot"])
+        if len(_prog_frag_apids) != len(_tal_set_sorted):
+            _timing_log(f"p{self.player} WARN talisman pairing mismatch: "
+                        f"{len(_prog_frag_apids)} items vs {len(_tal_set_sorted)} slots")
+        for _apid, _entry in zip(_prog_frag_apids, _tal_set_sorted):
+            _entry["ap_id"] = _apid
+
         # Shadow core map: item AP ID (str) → amount (IDs 1000–1016, 1300–1317)
         shadow_core_map = {
             str(sc["item_ap_id"]): sc["total"]
@@ -1062,14 +1090,37 @@ class GemcraftFrostbornWrathWorld(World):
                 achievement_requirements_map[ach_name] = requirements
 
         # --- Difficulty / wizard-level gating data for the mod tracker ---
-        # The mod compares the game's actual wizard level (GV.ppd.getWizLevel)
-        # against these gates — identical thresholds to the apworld logic.
+        # The mod computes a DERIVED wizard level from cleared fields (identical
+        # to the apworld's _wl_of / difficulty_gates.derived_wl) and compares it
+        # against these gates — NOT the game's live GV.ppd.getWizLevel().
         #   stage_gates:        {str_id: required wizard level}
-        #   achievement_min_wl: {effort tier: required wizard level} — the mod
-        #                       looks up each achievement's effort to gate it.
-        from .difficulty_gates import GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH
+        #   achievement_min_wl: {effort tier: required wizard level}
+        #   wl_eff_xp:          {str_id: per-field XP for THIS difficulty} — the
+        #                       mod sums these over cleared fields for derived WL.
+        #   xp_trait_ap_ids:    AP item ids of the 4 XP-scaling traits; the mod
+        #                       counts how many are held to pick the multiplier.
+        #   xp_trait_multiplier:[1.0,1.2,1.44,1.728,2.0736] — index = count held.
+        # See difficulty_gates.py for the canonical formula + wl_test_vectors.json
+        # (the parity contract the mod's ported level_from_xp must reproduce).
+        from .difficulty_gates import (
+            GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH,
+            EFF_XP as _DG_EFF, DIFFICULTIES as _DG_DIFFS,
+            XP_TRAIT_ITEM_NAMES as _DG_XPT, XP_TRAIT_MULTIPLIER as _DG_XPM,
+        )
         stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
+        # The starter GROUP — the start stage plus its immediately-playable
+        # tile/tier mates (free_stages, tokens precollected) — is always
+        # reachable, so ship gate 0 for all of them. Without this a non-W
+        # starter tile (curve gates > 0) reads out-of-logic at WL 0 and no
+        # journey is available. The apworld's WL rule exempts the same set
+        # (see set_rules _wl_rule), so both sides agree.
+        for _fsid in free_stages:
+            stage_gates[_fsid] = 0
         achievement_min_wl = {k: int(v) for k, v in _DG_ACH.items()}
+        _wl_diff_name = _DG_DIFFS[self.options.difficulty.value]
+        wl_eff_xp = {sid: int(x) for sid, x in _DG_EFF[_wl_diff_name].items()}
+        xp_trait_ap_ids = [item_table[n].id for n in _DG_XPT]
+        xp_trait_multiplier = list(_DG_XPM)
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
@@ -1105,6 +1156,10 @@ class GemcraftFrostbornWrathWorld(World):
             "difficulty":            self.options.difficulty.value,
             "stage_gates":           stage_gates,
             "achievement_min_wl":    achievement_min_wl,
+            # Derived-WL inputs for the mod (mirror difficulty_gates.derived_wl).
+            "wl_eff_xp":             wl_eff_xp,
+            "xp_trait_ap_ids":       xp_trait_ap_ids,
+            "xp_trait_multiplier":   xp_trait_multiplier,
             "starting_stage":        self.options.starting_stage.value,
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,

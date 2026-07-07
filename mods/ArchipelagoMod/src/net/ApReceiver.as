@@ -258,6 +258,12 @@ package net {
                     AV.serverData.serverOptions.stageGates = sd.stage_gates;
                 if (sd.achievement_min_wl !== undefined)
                     AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
+                if (sd.wl_eff_xp !== undefined)
+                    AV.serverData.serverOptions.wlEffXp = sd.wl_eff_xp;
+                if (sd.xp_trait_ap_ids !== undefined)
+                    AV.serverData.serverOptions.xpTraitApIds = sd.xp_trait_ap_ids as Array;
+                if (sd.xp_trait_multiplier !== undefined)
+                    AV.serverData.serverOptions.xpTraitMultiplier = sd.xp_trait_multiplier as Array;
                 if (sd.death_link !== undefined)
                     AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }

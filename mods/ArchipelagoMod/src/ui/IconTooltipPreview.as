@@ -382,7 +382,7 @@ package ui {
         private function wlNeededBody(strId:String):String {
             var gate:int = stageGate(strId);
             if (gate <= 0) return "Blocked";
-            var cur:int = (_evaluator != null) ? _evaluator.currentWizardLevel() : 0;
+            var cur:int = (_evaluator != null) ? _evaluator.derivedWizardLevel() : 0;
             return "Needs Wizard Level " + gate + " (you are " + cur + ")";
         }
 

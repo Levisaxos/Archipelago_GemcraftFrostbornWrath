@@ -376,10 +376,32 @@ package patch {
             return null;
         }
 
+        /** Debug lines shown ONLY for the tester slot "Levisaxos": the field's
+         *  expected XP (wlEffXp), the current derived wizard level, and this
+         *  field's gate. Empty array for everyone else. */
+        private function _debugWlLines(strId:String):Array {
+            var out:Array = [];
+            if (AV.currentSlot != "Levisaxos")
+                return out;
+            var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var xp:* = (opts != null && opts.wlEffXp != null) ? opts.wlEffXp[strId] : null;
+            var gate:int = (opts != null && opts.stageGates != null
+                    && opts.stageGates[strId] !== undefined) ? int(opts.stageGates[strId]) : 0;
+            var cur:int = (_evaluator != null) ? _evaluator.derivedWizardLevel() : 0;
+            var xpStr:String = (xp != null) ? String(int(xp)) : "?";
+            out.push(["[dbg] Field XP: " + xpStr, 0x66CCFF]);
+            out.push(["[dbg] WL " + cur + " / gate " + gate, 0x66CCFF]);
+            return out;
+        }
+
         private function _buildLines(strId:String,
                                      journeyMissing:Boolean, journeyDone:Boolean,
                                      stashMissing:Boolean,   stashDone:Boolean):Array {
             var lines:Array = [["Archipelago", 0xE5AD0A]];
+
+            // Tester-only (Levisaxos) debug readout: expected field XP + WL.
+            for each (var dl:Array in _debugWlLines(strId))
+                lines.push(dl);
 
             // One colour-coded line per element / monster on this stage.
             // Per-stage view: green iff THIS stage is completable (tier + WIZLOCK).

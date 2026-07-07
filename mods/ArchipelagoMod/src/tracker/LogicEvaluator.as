@@ -117,6 +117,61 @@ package tracker {
             return _evaluateAndGroupBound(requirements);
         }
 
+        /**
+         * Skill/trait-only gate — mirrors apworld rules._compile_skill_trait_gate
+         * (Phase 5). Evaluates ONLY the skill/trait tokens in a DNF requirement
+         * list; element / stat-counter / mode / Field_ / Achievement tokens are
+         * IGNORED (the WL gate + in-game play handle them). Returns true when
+         * there are no skill/trait tokens, so the achievement stays WL-only —
+         * matching the apworld's "None => no extra gate" behaviour.
+         *
+         * Used by the achievement in-logic gate so the tracker matches exactly
+         * what the apworld gates on for fill (derived WL AND required skills/traits).
+         */
+        public function evaluateSkillTraitGate(requirements:Array):Boolean {
+            if (requirements == null || requirements.length == 0) return true;
+            var groups:Array = (requirements[0] is Array) ? requirements : [requirements];
+            for each (var group:* in groups) {
+                var andGroup:Array = group as Array;
+                if (andGroup == null) continue;
+                var groupOk:Boolean = true;
+                for each (var tok:* in andGroup) {
+                    if (!(tok is String)) continue;
+                    var t:String = _trim(String(tok));
+                    if (!_isSkillTraitToken(t)) continue; // ignore non-skill/trait
+                    if (!evaluateRequirement(t)) {
+                        groupOk = false;
+                        break;
+                    }
+                }
+                // A group whose skill/trait tokens all pass (or that has none)
+                // satisfies the OR — matches apworld's _always_true empty group.
+                if (groupOk) return true;
+            }
+            return false;
+        }
+
+        /** True iff `t` is a skill token (sX), a trait token (tX), or a
+         *  skill/trait counter (skills:/gemSkills:/strikeSpells:/
+         *  enhancementSpells:/battleTraits:). Mirrors the token classes the
+         *  apworld's skill_prefix_map / trait_prefix_map / skill_counter_pools
+         *  cover; stat / talisman / field counters are NOT included. */
+        private function _isSkillTraitToken(t:String):Boolean {
+            if (_skillPrefixMap[t] != null) return true;
+            if (_traitPrefixMap[t] != null) return true;
+            var ci:int = t.indexOf(":");
+            if (ci > 0) {
+                var head:String = t.substring(0, ci);
+                if (head == "skills" || head == "Skills"
+                        || head == "gemSkills" || head == "GemSkills"
+                        || head == "otherSkills" || head == "OtherSkills"
+                        || head == "strikeSpells" || head == "enhancementSpells"
+                        || head == "battleTraits" || head == "BattleTraits")
+                    return true;
+            }
+            return false;
+        }
+
         /** AND-group with same-stage binding.  See evaluateRequirements doc. */
         private function _evaluateAndGroupBound(andGroup:Array):Boolean {
             var staticCandidates:Array = null;  // null = no per-stage constraint yet

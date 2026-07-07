@@ -47,10 +47,13 @@ if TYPE_CHECKING:
 # `_get_world_token_map` and `_get_world_stash_key_map` for accessors.
 
 
-# XP item names — every registered XP item, both progression and useful.
-# Half are progression (see items.py _xp_cls); state.has only sees those.
-# The wizardLevel:N gate counts how many progression XP items the player
-# has collected — passes when (N+1)//2 items are in state.
+# XP item names — every registered XP item. LEGACY: under the WL-derived
+# model all XP items are `filler` (items.py _xp_cls) and logic wizard level
+# comes from cleared-field "Beat <sid>" events, not XP items. This name list
+# and _count_xp_items feed the wizardLevel:N gate inside _compile_dnf, whose
+# output is discarded when the WL block overrides stage/journey/stash rules
+# (see the "=== WIZARD-LEVEL GATING ===" section). Kept until _compile_dnf is
+# retired in the rules rework; not referenced by any surviving access rule.
 XP_ITEM_NAMES: List[str] = (
     [f"Tattered Scroll #{i+1}" for i in range(32)]
     + [f"Worn Tome #{i+1}" for i in range(6)]
@@ -59,9 +62,10 @@ XP_ITEM_NAMES: List[str] = (
 )
 
 
-# Shadow core stash item names → core amount they grant.  Used by the
-# shadowCore:N gate (sums amounts of held progression stashes; useful and
-# filler items are invisible to state.has so contribute 0).
+# Shadow core stash item names → core amount they grant. LEGACY: shadow-core
+# stashes are `useful` now (items.py), so the shadowCore:N gate below is only
+# reachable via _compile_dnf, whose output the WL override discards. Kept until
+# _compile_dnf is retired; not referenced by any surviving access rule.
 SHADOW_CORE_AMOUNT_BY_NAME: dict[str, int] = {}
 for _sc in GAME_DATA.get("shadow_core_stashes", []):
     SHADOW_CORE_AMOUNT_BY_NAME[f"{_sc['str_id']} Shadow Cores"] = int(_sc["total"])
@@ -80,8 +84,10 @@ def _count_xp_items(state, player: int) -> int:
 
 
 def _sum_shadow_cores(state, player: int) -> int:
-    """Sum of core amounts for held shadow-core stash items.  All shadow-core
-    stashes are progression so the held total reflects every collected stash."""
+    """Sum of core amounts for held shadow-core stash items. LEGACY (see
+    SHADOW_CORE_AMOUNT_BY_NAME): stashes are `useful` now, so in the generation
+    sweep state.has sees none and this returns 0; only kept for _compile_dnf,
+    whose output the WL override discards."""
     cache = _get_counter_cache(state, player)
     val = cache.get("sc")
     if val is None:
@@ -1669,6 +1675,76 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
     return _compose_or(group_fns)
 
 
+# Phase 5 — achievement progression-by-exception. When True, each included
+# achievement is additionally gated on the SKILL/TRAIT tokens in its
+# requirements (sFreeze, tRitual, skills:N, gemSkills:N, ...), so those skills
+# and traits become genuinely required progression (justifying their
+# `progression` class). Element / stat-counter / mode / Field_ / Achievement:
+# tokens are deliberately IGNORED here — the WL gate and in-game play handle
+# them — keeping the added constraint minimal.
+#
+# WARNING (see feedback_fill_errors): `skills:24` (Skillful) becomes an
+# all-24-skills gate on that one location; if fill can't route all skills before
+# it, generation FillErrors. Two switches so you can bisect:
+#   ENABLE_ACH_SKILL_TRAIT_GATE   — master; False = WL-only achievement gating.
+#   GATE_ALL_SKILLS_ACHIEVEMENT   — False skips "need the ENTIRE pool" counters
+#                                   (Skillful's skills:24) while keeping every
+#                                   other, easily-satisfiable skill/trait gate.
+# At default (Trivial) effort the ONLY whole-pool gate is Skillful; the other
+# ~124 gated achievements are single skills/traits or small-pool counters.
+ENABLE_ACH_SKILL_TRAIT_GATE = True
+GATE_ALL_SKILLS_ACHIEVEMENT  = True
+
+
+def _compile_skill_trait_gate(requirements, player):
+    """(state)->bool gating on ONLY the skill/trait tokens in `requirements`
+    (DNF: OR of AND-groups). Returns None when there are no such tokens, so the
+    caller adds no extra gate. Non-skill/trait tokens are treated as satisfied."""
+    from .requirement_tokens import (
+        skill_prefix_map, trait_prefix_map, skill_counter_pools,
+    )
+    if not requirements:
+        return None
+    groups = requirements if isinstance(requirements[0], list) else [requirements]
+    any_token = False
+    group_fns = []
+    for group in groups:
+        conds = []
+        for tok in group:
+            if not isinstance(tok, str):
+                continue
+            t = tok.strip()
+            if t in skill_prefix_map:
+                conds.append(lambda s, i=skill_prefix_map[t]: s.has(i, player))
+                any_token = True
+            elif t in trait_prefix_map:
+                conds.append(lambda s, i=trait_prefix_map[t]: s.has(i, player))
+                any_token = True
+            elif ":" in t:
+                head, _, cnt = t.partition(":")
+                head = head.strip()
+                if head in skill_counter_pools:
+                    try:
+                        need = int(cnt.strip())
+                    except ValueError:
+                        need = 1
+                    pool = tuple(skill_counter_pools[head])
+                    # Whole-pool gate (e.g. skills:24) is the FillError risk —
+                    # skip it when GATE_ALL_SKILLS_ACHIEVEMENT is off.
+                    if need >= len(pool) and not GATE_ALL_SKILLS_ACHIEVEMENT:
+                        continue
+                    conds.append(
+                        lambda s, p=pool, n=need:
+                            sum(1 for it in p if s.has(it, player)) >= n)
+                    any_token = True
+        # A group with no skill/trait tokens is freely satisfiable through that
+        # OR-branch, so the achievement isn't skill/trait-gated at all.
+        group_fns.append(_compose_and(conds) if conds else _always_true)
+    if not any_token:
+        return None
+    return _compose_or(group_fns)
+
+
 def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     """
     Apply access rules to all regions and locations.
@@ -1904,27 +1980,48 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     from ._timing import log as _tlog
     _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
-    # === WIZARD-LEVEL GATING (revamp) ===
-    # Override the token/prereq stage rules built above with pure wizard-level
-    # gates: a stage unlocks once wl(state) >= gate[sid]. Clearing a stage grants
-    # its difficulty-scaled XP via the "Beat <sid>" event; wl(state) is the curve
-    # of total beaten XP. This drives the sphere expansion (clear what you can ->
-    # gain WL -> unlock more), replacing field-token / Field_X gating.
+    # === WIZARD-LEVEL SOFT GATE (orthogonal to the field-token hard gate) ===
+    # Field access has two independent gates:
+    #   HARD: the field token (+ WIZLOCK skills / gem pouch / stash key / DNF
+    #         prereqs) built into the stage rules above — what you must COLLECT.
+    #   SOFT: wizard level — wl(state) >= gate[sid] — derived from cleared fields.
+    # We COMPOSE the WL gate ONTO the existing hard-gate rules (we do NOT replace
+    # them). A stage is in logic iff its token/WIZLOCK/prereq rules pass AND
+    # wl(state) >= gate[sid]. Clearing a stage grants its difficulty-scaled XP via
+    # the "Beat <sid>" event; wl(state) is the curve of total beaten XP, so
+    # clearing what you can raises WL and opens more stages.
+    # The 4 XP-scaling traits (Haste/Overcrowd/Ritual/Dark Masonry) multiply the
+    # summed XP by 1.2^(count held) — RETROACTIVELY over all cleared fields — so
+    # collecting one is a WL power spike. Inlined here for fill speed but must
+    # equal difficulty_gates.derived_wl bit-for-bit (validated by the 280 vectors
+    # in wl_test_vectors.json): base_xp * XP_TRAIT_MULTIPLIER[n], then the curve.
     from . import difficulty_gates as _dg
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
-    _xp_items = [(f"Beat {s}", x) for s, x in _eff.items() if x]
+    _xp_items = [(f"{s} Cleared", x) for s, x in _eff.items() if x]
+    _xp_trait_names = _dg.XP_TRAIT_ITEM_NAMES
+    _xp_mult = _dg.XP_TRAIT_MULTIPLIER
 
-    def _wl_of(state, _items=_xp_items, _p=player):
-        total = 0
+    def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names, _mu=_xp_mult, _p=player):
+        base = 0
         for _name, _x in _items:
             if state.has(_name, _p):
-                total += _x
-        return _dg.level_from_xp(total)
+                base += _x
+        n = 0
+        for _t in _tn:
+            if state.has(_t, _p):
+                n += 1
+        if n > 4:
+            n = 4
+        return _dg.level_from_xp(base * _mu[n])
 
     def _wl_rule(sid):
-        # The start stage is always reachable (you begin there), regardless of gate.
-        if sid == start_sid:
+        # The starter GROUP is always reachable: the start stage AND its
+        # immediately-playable tile/tier mates (free_sids, tokens precollected).
+        # Exempting the whole group from the WL soft gate matches "play the
+        # starter tile right away" and keeps parity with the shipped stage_gates
+        # (fill_slot_data ships gate 0 for exactly this set).
+        if sid == start_sid or sid in free_sids:
             return _always_true
         g = int(_dg.GATE.get(sid, 0))
         if g <= 0:
@@ -1933,16 +2030,25 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     for _stage in stages:
         _sid = _stage["str_id"]
-        _r = _wl_rule(_sid)
-        for _ent in multiworld.get_region(_sid, player).entrances:
-            _ent.access_rule = _r
-        for _ln in (f"Complete {_sid} - Journey",
-                    f"Complete {_sid} - Wizard stash",
-                    f"Beat {_sid}"):
-            try:
-                multiworld.get_location(_ln, player).access_rule = _r
-            except KeyError:
-                pass
+        _wl = _wl_rule(_sid)
+        # Compose the WL soft gate onto the stage-entry connection(s), which
+        # already carry the field-token hard gate. Region reachability then
+        # enforces token AND WL for every location in the stage. Skip the
+        # compose when the stage has no WL gate (start stage / gate 0) so we
+        # don't pay an extra always-true call.
+        if _wl is not _always_true:
+            for _ent in multiworld.get_region(_sid, player).entrances:
+                _ent.access_rule = _compose_and([_ent.access_rule, _wl])
+        # The "Clear <sid>" XP event fires on CLEAR, so it mirrors the Journey
+        # location's clearability rule (WIZLOCK skills + pouch + DNF prereqs);
+        # region reachability already supplies token + WL. Without this the
+        # event would be collectable on mere reach, over-estimating WL.
+        try:
+            _journey = multiworld.get_location(f"Complete {_sid} - Journey", player)
+            _beat = multiworld.get_location(f"Clear {_sid}", player)
+            _beat.access_rule = _journey.access_rule
+        except KeyError:
+            pass
 
     # --- Victory location rules ---
     # References goal_requirements from rulesdata_goals.py for definitions
@@ -2016,15 +2122,25 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             try:
                 location = multiworld.get_location(f"Achievement: {ach_name}", player)
 
-                # Difficulty gating: the achievement's real requirements are
-                # enforced in-game by the mod; the apworld just paces WHEN it
-                # becomes expected, via a min wizard level keyed to its effort
-                # tier. (The old token-era _compile_dnf is intentionally not
-                # used here — it referenced the stage-clear system the WL revamp
-                # bypasses.)
+                # Two gates, composed (AND):
+                #   SOFT: derived WL >= ACH_MIN_WL[effort] — paces WHEN the
+                #         achievement is expected (the old token-era _compile_dnf
+                #         is intentionally not used; it referenced the stage-clear
+                #         system the WL revamp bypasses).
+                #   SKILL/TRAIT: the specific skills/traits the achievement needs
+                #         (Phase 5, ENABLE_ACH_SKILL_TRAIT_GATE). Element/counter
+                #         tokens stay unenforced here.
+                _components = []
                 _min_wl = int(_dg.ACH_MIN_WL.get(ach_effort, 0))
                 if _min_wl > 0:
-                    location.access_rule = lambda state, _m=_min_wl: _wl_of(state) >= _m
+                    _components.append(lambda state, _m=_min_wl: _wl_of(state) >= _m)
+                if ENABLE_ACH_SKILL_TRAIT_GATE:
+                    _st = _compile_skill_trait_gate(
+                        ach_data.get("requirements", []), player)
+                    if _st is not None:
+                        _components.append(_st)
+                if _components:
+                    location.access_rule = _compose_and(_components)
                     _ach_rules_added += 1
 
                 # Achievements are filler-quality and reachable across the

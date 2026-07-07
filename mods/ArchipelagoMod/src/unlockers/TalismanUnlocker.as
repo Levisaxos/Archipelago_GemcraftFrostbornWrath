@@ -5,6 +5,7 @@ package unlockers {
     import ui.ReceivedToast;
     import ui.ItemColors;
     import utils.ApIdMapper;
+    import data.AV;
 
     /**
      * Grants Archipelago talisman fragment items to the player's talisman inventory.
@@ -27,6 +28,13 @@ package unlockers {
         private var _talNameMap:Object;            // AP ID string → display name
         private var _grantedApIds:Object = {};     // String(apId) → true; persisted via SaveManager
 
+        // Static talisman: apId(str) → progression-set entry {slot, tal_data, ap_id}.
+        // The 25 progression fragment ITEMS each map to one synthetic slot (paired
+        // in the apworld). Finding the item unlocks that slot + sockets the
+        // synthetic fragment; slots for unfound items stay locked.
+        private var _slotEntryByApId:Object = {};
+        private var _slotMapBuilt:Boolean = false;
+
         public function TalismanUnlocker(logger:Logger, modName:String, itemToast:ReceivedToast) {
             super(logger, modName, itemToast);
             _talDataMapper = null;
@@ -46,8 +54,14 @@ package unlockers {
         // Incremental grant (ReceivedItems index > 0)
 
         /** Grant a single talisman fragment by AP ID (900–999).
-         *  Returns the created TalismanFragment on success, or null on failure. */
+         *  A mapped (static-talisman) fragment unlocks+sockets its slot; any
+         *  other (useful) fragment goes to the inventory as before.
+         *  Returns the created TalismanFragment for inventory grants, else null. */
         public function grantFragment(apId:int):* {
+            if (isMappedFragment(apId)) {
+                _grantMapped(apId);
+                return null;
+            }
             var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
             return addFragmentFromTalData(talData, apId);
         }
@@ -61,8 +75,17 @@ package unlockers {
          * Call after resetGrants().
          */
         public function syncTalismans(apIds:Array):void {
+            _ensureSlotMap();
             for each (var apId:int in apIds) {
                 if (!((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246))) continue;
+                // Mapped (static-talisman) fragment: unlock+socket its slot.
+                // Re-socketing every sync is intentional (no removal), so this
+                // is NOT skipped on the already-granted check.
+                if (isMappedFragment(apId)) {
+                    _grantedApIds[String(apId)] = true;
+                    _socketMappedFragment(apId);
+                    continue;
+                }
                 if (_grantedApIds[String(apId)] == true) continue; // already granted; persisted check
                 var talData:String = _talDataMapper != null ? String(_talDataMapper.getValue(apId, null)) : null;
                 if (talData == null) continue;
@@ -77,48 +100,80 @@ package unlockers {
         // Progression talisman set (slot_data.progression_talisman_set)
 
         /**
-         * Unlock all 25 talisman slots and socket the AP-generated progression
-         * set directly into the active grid.  Each entry is
-         * {slot, seed, rarity, type, upgrade_level, tal_data:"seed/rarity/type/upgradeLevel"}.
-         * Fragments are reconstructed natively from tal_data, so they are
-         * bit-identical to what the game would generate from that seed.  The set
-         * is a legal tiling (see talisman_gen.py) so it sockets without any
-         * shape change.  Idempotent — re-applying re-places the same fragments.
+         * Static talisman: (re-)socket the synthetic fragment for every FOUND
+         * slot. Slots whose fragment item hasn't been received stay LOCKED and
+         * empty — the talisman is built up from AP unlocks, not handed over whole.
+         * Called on every sync so removed fragments get re-placed (no removal).
+         * The AP fragment item is the trigger; the socketed fragment is the
+         * synthetic one so the grid always tiles (see talisman_gen.py). The `set`
+         * param is ignored — the map is read from AV.serverData.progressionTalismanSet.
          */
         public function applyProgressionSet(set:Array):void {
-            if (set == null || set.length == 0) {
-                return;
-            }
+            _ensureSlotMap();
             if (!ensurePpdExists("applyProgressionSet")) {
                 return;
             }
+            var placed:int = 0;
+            for (var apIdStr:String in _grantedApIds) {
+                if (_grantedApIds[apIdStr] != true) continue;
+                if (_slotEntryByApId[apIdStr] == null) continue; // useful frag → no slot
+                if (_socketMappedFragment(int(apIdStr))) placed++;
+            }
+            if (placed > 0) {
+                logAction("applyProgressionSet: socketed " + placed + " found slots");
+                showPlusNodeOnSelector("mcPlusNodeTalisman");
+            }
+        }
+
+        /** Build apId(str) → progression-set entry from the shipped set (each
+         *  entry tagged with ap_id by the apworld). Lazy; safe to re-call. */
+        private function _ensureSlotMap():void {
+            if (_slotMapBuilt) return;
+            var set:Array = (AV.serverData != null) ? AV.serverData.progressionTalismanSet : null;
+            if (set == null || set.length == 0) return; // not shipped yet
+            _slotEntryByApId = {};
+            for each (var entry:Object in set) {
+                if (entry == null || entry.ap_id === undefined) continue;
+                _slotEntryByApId[String(int(entry.ap_id))] = entry;
+            }
+            _slotMapBuilt = true;
+        }
+
+        /** True iff apId is one of the 25 static-talisman fragment items. */
+        private function isMappedFragment(apId:int):Boolean {
+            _ensureSlotMap();
+            return _slotEntryByApId[String(apId)] != null;
+        }
+
+        /** Unlock the slot for a mapped fragment and socket its synthetic
+         *  fragment. Idempotent — re-sockets on every call (no removal). */
+        private function _socketMappedFragment(apId:int):Boolean {
+            _ensureSlotMap();
+            var entry:Object = _slotEntryByApId[String(apId)];
+            if (entry == null) return false;
+            if (!ensurePpdExists("socketMappedFragment")) return false;
             var slots:Array = GV.ppd.talismanSlots;
             var unlocks:Array = GV.ppd.talSlotUnlockStatuses;
-            if (slots == null || unlocks == null) {
-                logAction("applyProgressionSet: talismanSlots/talSlotUnlockStatuses null");
-                return;
-            }
-            var n:int = GV.TALISMAN_ACTIVESLOT_NUM;
-            var i:int;
-            for (i = 0; i < n; i++) {
-                unlocks[i] = true;
-            }
-            var placed:int = 0;
-            for each (var entry:Object in set) {
-                var slot:int = int(entry.slot);
-                if (slot < 0 || slot >= n) {
-                    continue;
-                }
-                var parts:Array = String(entry.tal_data).split("/");
-                if (parts.length < 4) {
-                    continue;
-                }
-                slots[slot] = new TalismanFragment(int(parts[0]), int(parts[1]),
-                                                   int(parts[2]), int(parts[3]));
-                placed++;
-            }
-            logAction("applyProgressionSet: unlocked " + n + " slots, placed "
-                + placed + " fragments");
+            if (slots == null || unlocks == null) return false;
+            var slot:int = int(entry.slot);
+            if (slot < 0 || slot >= GV.TALISMAN_ACTIVESLOT_NUM) return false;
+            var parts:Array = String(entry.tal_data).split("/");
+            if (parts.length < 4) return false;
+            unlocks[slot] = true;
+            slots[slot] = new TalismanFragment(int(parts[0]), int(parts[1]),
+                                               int(parts[2]), int(parts[3]));
+            return true;
+        }
+
+        /** Grant a mapped (static-talisman) fragment: mark received, unlock +
+         *  socket its slot, toast. */
+        private function _grantMapped(apId:int):void {
+            _grantedApIds[String(apId)] = true;
+            _socketMappedFragment(apId);
+            var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
+                ? String(_talNameMap[String(apId)])
+                : ("Talisman Fragment #" + apId);
+            showToast("Received " + label, ItemColors.forApId(apId));
             showPlusNodeOnSelector("mcPlusNodeTalisman");
         }
 

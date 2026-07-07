@@ -105,7 +105,7 @@ package tracker {
          */
         public
         function getInLogicAchApIds(): Object {
-            var wl: int = (_fieldEvaluator != null) ? _fieldEvaluator.currentWizardLevel() : 0;
+            var wl: int = (_fieldEvaluator != null) ? _fieldEvaluator.derivedWizardLevel() : 0;
             if (_dirty || wl != _lastWL) _recompute();
             return AV.sessionData.achievementsInLogic;
         }
@@ -183,14 +183,20 @@ package tracker {
             return 0;
         }
 
-        /** WL gating (mirrors the apworld): an achievement is in logic once the
-         *  player's wizard level reaches the min-WL for its effort tier. The
-         *  achievement's real in-game requirements are enforced by the game. */
+        /** In-logic gate — mirrors the apworld achievement access rule:
+         *    derived WL >= ACH_MIN_WL[effort]  AND  required skills/traits held.
+         *  The skill/trait gate (Phase 5b) evaluates only the skill/trait tokens
+         *  in the requirements (element/counter tokens stay enforced in-game). */
         public
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
             if (_fieldEvaluator == null) return true;
-            return _fieldEvaluator.currentWizardLevel() >= achMinWl(achData);
+            if (_fieldEvaluator.derivedWizardLevel() < achMinWl(achData))
+                return false;
+            if (_logicEvaluator != null
+                    && !_logicEvaluator.evaluateSkillTraitGate(achData.requirements as Array))
+                return false;
+            return true;
         }
 
         /**
@@ -313,7 +319,7 @@ package tracker {
             names.sort(Array.CASEINSENSITIVE);
             AV.sessionData.achievementsInLogic = result;
             AV.sessionData.achievementNamesInLogic = names;
-            _lastWL = (_fieldEvaluator != null) ? _fieldEvaluator.currentWizardLevel() : 0;
+            _lastWL = (_fieldEvaluator != null) ? _fieldEvaluator.derivedWizardLevel() : 0;
             _dirty = false;
         }
     }

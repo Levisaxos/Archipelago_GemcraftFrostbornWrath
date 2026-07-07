@@ -29,9 +29,12 @@ SP_BUNDLE_NAMES: Tuple[str, ...] = tuple(sp_bundle_item_name(t) for t in TIER_NA
 
 
 def sp_bundle_item_table() -> Dict[str, ItemData]:
-    """One AP item per tier at IDs 1700..1703. All progression_skip_balancing
-    so every bundle is visible to state.has/state.count for skillPoints:N
-    achievement gates without invoking AP's cross-player balancing.
+    """One AP item per tier at IDs 1700..1703. All `filler`: under the
+    WL-derived model, achievement access rules are pure wizard-level, so
+    skillPoints:N is no longer a generation gate and bundles gate nothing.
+    They're the pool balancer that fills leftover location slots. The mod
+    still tracks them client-side for the skillPoints:N tooltip display
+    regardless of classification.
 
     The SP value granted by each bundle is determined per-seed by
     compute_tier_distribution and shipped to the mod via slot_data —
@@ -40,7 +43,7 @@ def sp_bundle_item_table() -> Dict[str, ItemData]:
     for name, offset, _slot_pct, _sp_pct in TIERS:
         table[sp_bundle_item_name(name)] = ItemData(
             SP_BUNDLE_BASE_ID + offset,
-            ItemClassification.progression_skip_balancing,
+            ItemClassification.filler,
         )
     return table
 

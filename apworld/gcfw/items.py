@@ -53,12 +53,11 @@ def _load_item_table() -> Dict[str, ItemData]:
     # Extra: 60 additional XP filler items for future expansion
     # Per-tome level values are configured from slot_data (xp_tome_bonus option).
     #
-    # Half of each tier is `progression` so AP fill respects wizardLevel:N
-    # gates; the other half is `useful` (still placed, just not state-tracked).
-    # Convention: odd-numbered (#1, #3, #5...) = progression; even = useful.
-    # That keeps the split roughly 50/50 within each tier.
+    # All `filler`: under the WL-derived model, logic wizard level comes only
+    # from cleared fields (the "Beat <sid>" events), NOT from XP items. XP tomes
+    # are pure in-game power now, so nothing in generation references them.
     def _xp_cls(idx: int) -> ItemClassification:
-        return ItemClassification.progression if idx % 2 == 0 else ItemClassification.useful
+        return ItemClassification.filler
 
     xp_id = 1100
     # 32 Tattered Scrolls (1100–1131): 16 progression + 16 useful
@@ -108,19 +107,19 @@ def _load_item_table() -> Dict[str, ItemData]:
     for frag in data["extra_talisman_fragments"]:
         table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
 
-    # Shadow core stashes — all progression so the shadowCore:N gate can sum
-    # the full collected total. Combined base (10,100) + 18 extras (sum 18,900)
-    # = 29,000 cores, comfortably above the 25,000 cap from the
-    # "Endgame Balance" achievement.
+    # Shadow core stashes — `useful`. Achievements no longer gate on shadowCore:N
+    # in generation (achievement access rules are pure wizard-level now), so cores
+    # gate nothing; they're economy/power. The mod still tracks them client-side
+    # for the shadowCore:N achievement-tooltip display regardless of classification.
     # Specific shadow core stashes — named by original field (IDs 1000–1016).
     for sc in data["shadow_core_stashes"]:
         table[f"{sc['str_id']} Shadow Cores"] = ItemData(
-            sc["item_ap_id"], ItemClassification.progression)
+            sc["item_ap_id"], ItemClassification.useful)
 
     # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1317).
     for sc in data["extra_shadow_core_stashes"]:
         table[sc["name"]] = ItemData(
-            sc["item_ap_id"], ItemClassification.progression)
+            sc["item_ap_id"], ItemClassification.useful)
 
     # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
     # gates its matching "Complete {strId} - Wizard stash" location.
