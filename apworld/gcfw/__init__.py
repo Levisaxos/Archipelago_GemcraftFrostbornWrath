@@ -29,6 +29,18 @@ from .options import (
     FieldTokenGranularity,
     StashKeyGranularity,
     STARTING_STAGE_BY_VALUE,
+    FieldsRequired,
+    StartingStage,
+    Difficulty,
+    DisableEndurance,
+    DisableTrial,
+    StartingOvercrowd,
+    StartingWizardLevel,
+    EnemyHpMultiplier,
+    EnemyArmorMultiplier,
+    EnemyShieldMultiplier,
+    EnemiesPerWaveMultiplier,
+    ExtraWaveCount,
 )
 from .items_skillpoints import (
     compute_tier_distribution as _compute_sp_bundle_distribution,
@@ -56,16 +68,10 @@ def _resolve_fields_required_count(world) -> int:
     Single source of truth so the mod doesn't have to recompute.
     Must match the formulas in rules.py for the corresponding goal.
     """
-    from math import floor
     goal_value = world.options.goal.value
-    if goal_value == 3:
+    if goal_value == 2:
         # fields_count: option already holds the absolute count.
         return int(world.options.fields_required.value)
-    if goal_value == 4:
-        # fields_percentage: matches rules.py:1579 formula exactly.
-        pct = int(world.options.fields_required_percentage.value)
-        total = len(GAME_DATA["stages"])
-        return int(floor(pct * total / 100))
     return 0
 
 
@@ -367,28 +373,39 @@ def _get_filter_reason(requirements: list) -> str:
 class GCFWWebWorld(WebWorld):
     theme = "ocean"
 
-
-class GemcraftFrostbornWrathWorld(World):
-    """GemCraft: Frostborn Wrath is a hex-grid tower defense game with gem crafting.
-    Complete stages to receive field tokens that unlock further stages, all shuffled
-    into an Archipelago multiworld."""
-
-    game = "GemCraft: Frostborn Wrath"
-    web = GCFWWebWorld()
-    options_dataclass = GCFWOptions
-    options: GCFWOptions
-    topology_present = True
-
+    # YAML template grouping. AP's Options.get_option_groups reads
+    # `world.web.option_groups` (i.e. this attribute on the WebWorld), NOT the
+    # World class — so it must live here. Each OptionGroup renders as a
+    # `#### <name> ####` header block in the generated template; options not
+    # listed in any group fall under an auto-generated "Game Options" block.
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldsRequired,
+            StartingStage,
+            Difficulty,
+            AchievementRequiredEffort,
+            DisableEndurance,
+            DisableTrial,
+        ]),
+        OptionGroup("Field Options", [
             FieldTokenGranularity,
             StashKeyGranularity,
             GemPouchGranularity,
             FieldTokenPlacement,
+        ]),
+        OptionGroup("Difficulty Multipliers", [
+            StartingWizardLevel,
+            StartingOvercrowd,
             XpTomeBonus,
-            AchievementRequiredEffort,
             SkillpointMultiplier,
+        ]),
+        OptionGroup("Enemy Manipulation Options", [
+            EnemyHpMultiplier,
+            EnemyArmorMultiplier,
+            EnemyShieldMultiplier,
+            EnemiesPerWaveMultiplier,
+            ExtraWaveCount,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -403,6 +420,18 @@ class GemcraftFrostbornWrathWorld(World):
             DeathLinkCooldown,
         ]),
     ]
+
+
+class GemcraftFrostbornWrathWorld(World):
+    """GemCraft: Frostborn Wrath is a hex-grid tower defense game with gem crafting.
+    Complete stages to receive field tokens that unlock further stages, all shuffled
+    into an Archipelago multiworld."""
+
+    game = "GemCraft: Frostborn Wrath"
+    web = GCFWWebWorld()
+    options_dataclass = GCFWOptions
+    options: GCFWOptions
+    topology_present = True
 
     item_name_to_id: Dict[str, int] = {name: data.id for name, data in item_table.items()}
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
@@ -423,7 +452,6 @@ class GemcraftFrostbornWrathWorld(World):
                 for key in (
                     "goal",
                     "fields_required",
-                    "fields_required_percentage",
                     "starting_stage",
                     "field_token_placement",
                     "field_token_granularity",
@@ -779,33 +807,20 @@ class GemcraftFrostbornWrathWorld(World):
             kill_gatekeeper_region = Region("Kill Gatekeeper Goal", self.player, self.multiworld)
             kill_gatekeeper_region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, kill_gatekeeper_region))
             self.multiworld.regions.append(kill_gatekeeper_region)
-            menu_region.connect(kill_gatekeeper_region, "Kill Gatekeeper")            
+            menu_region.connect(kill_gatekeeper_region, "Kill Gatekeeper")
 
-        if self.options.goal.value == 2:
+        if self.options.goal.value == 1:
             kill_swarm_queen_region = Region("Kill Swarm Queen Goal", self.player, self.multiworld)
             kill_swarm_queen_region.locations.append(GCFWLocation(self.player, "Kill Swarm Queen Victory", None, kill_swarm_queen_region))
             self.multiworld.regions.append(kill_swarm_queen_region)
-            menu_region.connect(kill_swarm_queen_region, "Kill swarm")            
+            menu_region.connect(kill_swarm_queen_region, "Kill swarm")
 
-        # full_talisman goal: victory event in a dedicated region (no item requirements)
-        if self.options.goal.value == 1:
-            talisman_region = Region("Talisman Goal", self.player, self.multiworld)
-            talisman_region.locations.append(GCFWLocation(self.player, "Full Talisman Victory", None, talisman_region))
-            self.multiworld.regions.append(talisman_region)
-            menu_region.connect(talisman_region, "Talisman")
-
-        # fields_count / fields_percentage goals: victory in dedicated regions
-        if self.options.goal.value == 3:
+        # fields_count goal: victory in a dedicated region
+        if self.options.goal.value == 2:
             fields_count_region = Region("Fields Count Goal", self.player, self.multiworld)
             fields_count_region.locations.append(GCFWLocation(self.player, "Fields Count Victory", None, fields_count_region))
             self.multiworld.regions.append(fields_count_region)
             menu_region.connect(fields_count_region, "Fields Count")
-
-        if self.options.goal.value == 4:
-            fields_pct_region = Region("Fields Percentage Goal", self.player, self.multiworld)
-            fields_pct_region.locations.append(GCFWLocation(self.player, "Fields Percentage Victory", None, fields_pct_region))
-            self.multiworld.regions.append(fields_pct_region)
-            menu_region.connect(fields_pct_region, "Fields Percentage")
 
         # Connect Menu → starting stage. All other stages connect from the
         # starting stage in set_rules.
@@ -819,16 +834,12 @@ class GemcraftFrostbornWrathWorld(World):
     def generate_basic(self) -> None:
         import time as _t; _t0 = _t.perf_counter()
         # Place the Victory event at the goal-appropriate location.
-        if self.options.goal.value == 0:
-            victory_name = "Complete A4 - Frostborn Wrath Victory"
-        elif self.options.goal.value == 2:
+        if self.options.goal.value == 1:
             victory_name = "Kill Swarm Queen Victory"
-        elif self.options.goal.value == 3:
+        elif self.options.goal.value == 2:
             victory_name = "Fields Count Victory"
-        elif self.options.goal.value == 4:
-            victory_name = "Fields Percentage Victory"
         else:
-            victory_name = "Full Talisman Victory"
+            victory_name = "Complete A4 - Frostborn Wrath Victory"
         victory_loc = self.multiworld.get_location(victory_name, self.player)
         victory_loc.place_locked_item(
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
@@ -1210,10 +1221,9 @@ class GemcraftFrostbornWrathWorld(World):
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
             #                            2=per_tile,  3=per_tile_progressive,
             #                            4=per_tier,  5=per_tier_progressive
-            #   stash_key_granularity:   0=off, 3=per_tile, 4=per_tile_progressive,
-            #                            5=per_tier,  6=per_tier_progressive, 7=global
-            #     (1=per_stage / 2=per_stage_progressive retired in the apworld;
-            #      values preserved so the mod's decode stays valid)
+            #   stash_key_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
+            #                            3=per_tier, 4=per_tier_progressive, 5=global
+            #     (per_stage retired; encoding now mirrors gem_pouch_granularity)
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
             #                            3=per_tier, 4=per_tier_progressive, 5=global
             "field_token_granularity": self.options.field_token_granularity.value,
@@ -1264,7 +1274,6 @@ class GemcraftFrostbornWrathWorld(World):
             "enemies_per_wave_multiplier":  self.options.enemies_per_wave_multiplier.value,
             "extra_wave_count":             self.options.extra_wave_count.value,
             "fields_required":              self.options.fields_required.value,
-            "fields_required_percentage":   self.options.fields_required_percentage.value,
             # Resolved absolute stage count for the active goal. Mod uses this
             # as the FieldCount/FieldPercentage threshold directly — no
             # client-side math, no risk of floor/ceil drift against rules.py.

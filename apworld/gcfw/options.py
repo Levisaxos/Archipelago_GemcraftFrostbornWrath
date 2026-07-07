@@ -49,15 +49,13 @@ class Goal(Choice):
     """What counts as completing GemCraft: Frostborn Wrath.
 
     kill_gatekeeper:    Kill the Gatekeeper on A4.
-    kill_swarm_queen:   Kill the Swarm Queen on K4.                        
+    kill_swarm_queen:   Kill the Swarm Queen on K4.
     fields_count:       Complete a fixed number of Journey stages (set by Fields Required).
-    fields_percentage:  Complete a percentage of all Journey stages (set by Fields Required Percentage).
     """
     display_name = "Goal"
-    option_kill_gatekeeper    = 0
-    option_kill_swarm_queen   = 2
-    option_fields_count       = 3
-    option_fields_percentage  = 4
+    option_kill_gatekeeper  = 0
+    option_kill_swarm_queen = 1
+    option_fields_count     = 2
     default = 0
 
 
@@ -73,17 +71,6 @@ class FieldsRequired(Range):
     default     = 80
 
 
-class FieldsRequiredPercentage(Range):
-    """Percentage of Journey stages that must be completed to win.
-    Only used when Goal is set to 'fields_percentage'.
-
-    Rounded up if it doesn't divide evenly. Default of 66% requires 80 of the 122 stages.
-    """
-    display_name = "Fields Required Percentage"
-    range_start = 10
-    range_end   = 100
-    default     = 66
-
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes you'll find combined.
 
@@ -91,9 +78,9 @@ class XpTomeBonus(Range):
     These levels are "bonus" and not counted towards progression; adding more XP tomes makes the game easier.
     """
     display_name = "XP Tome Bonus"
-    range_start = 50
+    range_start = 0
     range_end   = 300
-    default     = 150
+    default     = 50
 
 
 class DeathLinkPunishment(Choice):
@@ -336,18 +323,16 @@ class StashKeyGranularity(Choice):
     global:               A single master key unlocks every stash at once.
     """
     display_name = "Stash Key Granularity"
-    # per_stage (1) and per_stage_progressive (2) were retired — per-stage keys
-    # put 122 progression items in the pool for little gameplay gain. The values
-    # 1/2 are intentionally left unused so the surviving encodings still match
-    # the mod's slot_data decode (ServerOptions.as) and any existing yamls.
+    # per_stage was retired — per-stage keys put 122 progression items in the
+    # pool for little gameplay gain. Values mirror Gem Pouch Granularity.
     option_off                  = 0
-    option_per_tile             = 3
-    option_per_tile_progressive = 4
-    option_per_tier             = 5
-    option_per_tier_progressive = 6
-    option_global               = 7
+    option_per_tile             = 1
+    option_per_tile_progressive = 2
+    option_per_tier             = 3
+    option_per_tier_progressive = 4
+    option_global               = 5
 
-    default = 3
+    default = 1
 
 
 class StartingOvercrowd(Toggle):
@@ -370,23 +355,19 @@ class AchievementRequiredEffort(Choice):
     Selecting level N includes every achievement up to and including level N. More achievements means more checks to find and a longer seed. Trivial achievements are always included so the randomizer has enough room for the progression items.
     """
     display_name = "Achievement Required Effort"
-    option_off = 0
-    option_1   = 1
-    option_2   = 2
-    option_3   = 3
-    option_4   = 4
+    option_off      = 0
+    option_trivial  = 1
+    option_minor    = 2
+    option_major    = 3
+    option_extreme  = 4
     default = 1
 
 
 class Difficulty(Choice):
     """Overall randomizer difficulty.
 
-    Levels unlock based on your wizard level, which you raise by clearing levels.
-    Harder difficulties enrage with stronger gems, so each clear is worth more XP
-    and you reach a higher wizard level overall — Extreme ends highest, Easy
-    lowest. The unlock gates themselves are the same on every difficulty; Easy is
-    the slowest, most gradual climb to each gate, Extreme blows past them in big
-    batches.
+    Fields unlock based on your wizard level, which you raise by clearing fields. Difficulty acts as a bonus or penalty on how much wizard-level progress each clear is worth: Easy clears grant the most, Extreme clears the least, with Medium and Hard in between.
+    So the two ends trade off against each other. Easy makes battles forgiving and each win pushes your wizard level up the fastest, so you blow through the unlock gates quickly. Extreme makes battles punishing and each win is worth the least, so the climb to each gate is the slowest and most gradual. The gates themselves sit at the same wizard levels on every difficulty.
     """
     display_name = "Difficulty"
     option_easy    = 0
@@ -413,7 +394,6 @@ class SkillpointMultiplier(Range):
 class GCFWOptions(PerGameCommonOptions):
     goal:                        Goal
     fields_required:             FieldsRequired
-    fields_required_percentage:  FieldsRequiredPercentage
     field_token_placement:       FieldTokenPlacement
     field_token_granularity:   FieldTokenGranularity
     stash_key_granularity:     StashKeyGranularity

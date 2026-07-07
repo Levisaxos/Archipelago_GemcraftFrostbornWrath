@@ -10,6 +10,7 @@ do not commit/py-scripts/export_difficulty_gates.py (re-run after changing the
 difficulty tuning in rulesdata_settings.py).
 """
 
+import bisect
 import json
 import math
 from importlib.resources import files
@@ -32,12 +33,20 @@ def player_level_xp_req(level: int) -> int:
     return -10 + 10 * math.floor(0.8 * (300 + d / 2 * (level - 1)) / 10 + 0.5)
 
 
-def level_from_xp(xp: float, _cap: int = 3000) -> int:
+# Precomputed monotonic XP thresholds for levels 1.._LEVEL_CAP. `level_from_xp`
+# is on the fill hot path (called once per WL gate check, ~60k times per seed);
+# the old level-by-level climb called player_level_xp_req ~150x per call (millions
+# of calls per generation). A binary search over this table is O(log n) and
+# returns the EXACT same value — the thresholds are the exact player_level_xp_req
+# outputs, so WL stays bit-identical (parity with the mod's WizardLevelCalc).
+_LEVEL_CAP = 3000
+_LEVEL_XP_REQ = [player_level_xp_req(_l) for _l in range(1, _LEVEL_CAP + 1)]
+
+
+def level_from_xp(xp: float, _cap: int = _LEVEL_CAP) -> int:
     """Highest wizard level whose XP requirement is <= xp."""
-    lvl = 0
-    while lvl < _cap and player_level_xp_req(lvl + 1) <= xp:
-        lvl += 1
-    return lvl
+    n = bisect.bisect_right(_LEVEL_XP_REQ, xp)
+    return n if n <= _cap else _cap
 
 
 # ---------------------------------------------------------------------------

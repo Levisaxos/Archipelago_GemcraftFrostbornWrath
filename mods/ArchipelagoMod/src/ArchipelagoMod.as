@@ -1487,9 +1487,7 @@ package {
 
             _goalManager.configure(
                 AV.serverData.serverOptions.goal,
-                AV.serverData.serverOptions.talismanMinRarity,
-                AV.serverData.serverOptions.fieldsRequiredCount,
-                AV.serverData.serverOptions.fieldsRequiredPercentage);
+                AV.serverData.serverOptions.fieldsRequiredCount);
 
             // DeathLink: pull punishment / grace / cooldown from slot_data,
             // and seed the enabled flag from the yaml death_link option on

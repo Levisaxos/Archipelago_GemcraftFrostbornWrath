@@ -46,15 +46,15 @@ FIELD_PER_TILE_PROGRESSIVE  = 3
 FIELD_PER_TIER              = 4
 FIELD_PER_TIER_PROGRESSIVE  = 5
 
+# per_stage retired — stash keys can no longer be per-stage. Values are
+# contiguous and mirror the gem-pouch encoding below; the mod decodes the same
+# ints (data/ServerOptions.as, FieldLogicEvaluator.as, McSlotSettings.as).
 STASH_OFF                   = 0
-# 1, 2 (per_stage / per_stage_progressive) retired — stash keys can no longer be
-# per-stage. The remaining values keep their original encoding so the mod's
-# slot_data decode (data/ServerOptions.as) and existing yamls stay valid.
-STASH_PER_TILE              = 3
-STASH_PER_TILE_PROGRESSIVE  = 4
-STASH_PER_TIER              = 5
-STASH_PER_TIER_PROGRESSIVE  = 6
-STASH_GLOBAL                = 7
+STASH_PER_TILE              = 1
+STASH_PER_TILE_PROGRESSIVE  = 2
+STASH_PER_TIER              = 3
+STASH_PER_TIER_PROGRESSIVE  = 4
+STASH_GLOBAL                = 5
 
 POUCH_OFF                  = 0
 POUCH_PER_TILE             = 1

@@ -112,39 +112,37 @@ skill_groups = {
 # Stages the player always begins with (the W tile). Required wizard level 0.
 starter_stages = ["W1", "W2", "W3", "W4"]
 
-# Difficulty changes how much XP you earn per field. On harder difficulties you
-# enrage with stronger gems, so each field grants MORE XP and you reach a higher
-# wizard level overall. The per-field shape comes from the real wave simulation
-# (extract_level_monster_data.field_xp_by_difficulty); the numbers below say
-# what wizard level a player is expected to reach after clearing the whole map
-# on each difficulty. The exporter scales the simulated per-field XP so the
-# full-map total lands on these wizard levels — i.e. these ARE the calibration
-# targets, matching real in-game wizard levels from actual playthroughs.
+# NEW MODEL: difficulty no longer scales the averages. Logic/gating uses a single
+# baseline = the RAW wave-sim XP per field (`minxp` in difficulty_gates.json), the
+# same on every difficulty. Difficulty is instead a multiplier on the player's
+# REAL earned XP, applied mod-side (Easy earns more, Extreme ~= the raw sim). So
+# every difficulty targets the SAME full-map WL, which is exactly what the raw sim
+# yields (~86). The exporter should emit `eff_xp = minxp` (scale factor 1.0).
 #
-# Because even the lowest target (Easy) is well above 100, every achievement
-# WL:x gate (which tops out around 100) is reachable on every difficulty.
+# NOTE: data/difficulty_gates.json has been hand-updated to this model (eff_xp =
+# minxp, gates rescaled). Re-running the OLD exporter that scales to per-difficulty
+# targets would OVERWRITE it — update the exporter to the minxp model first.
 difficulty_target_final_wl = {
-    "Easy":    120,
-    "Medium":  147,
-    "Hard":    164,
-    "Extreme": 199,
+    "Easy":    86,
+    "Medium":  86,
+    "Hard":    86,
+    "Extreme": 86,
 }
 
 # There is ONE gate (required wizard level) per level, the same on every
-# difficulty. It is pinned to the SLOWEST difficulty's pace (Easy — the lowest
-# final wizard level) so every difficulty can reach it (the seed is always
-# solvable), times a small safety factor for head-room. Harder difficulties earn
-# XP faster and simply blow past it; Easy is the intended/binding pace.
+# difficulty. With a single baseline it's simply derived from the raw-sim
+# cumulative XP, times a small safety factor for head-room. Since real earned XP
+# (bare minimum, no traits) already runs ~1.5x the raw sim, every difficulty can
+# reach the gates; Extreme (0.5x real) is the binding/tightest pace.
 gate_safety = 0.9
 
 # Minimum wizard level before an achievement enters logic, by its effort tier.
 # Achievements keep their real in-game requirements (enforced by the mod); the
-# apworld just paces WHEN they become expected, via this WL gate. Must stay
-# below the slowest difficulty's reachable WL (Easy, ~119) so every difficulty
-# can reach them.
+# apworld just paces WHEN they become expected, via this WL gate. On the raw-sim
+# baseline the full-map WL is ~86, so these stay below it and remain reachable.
 achievement_min_wl = {
     "Trivial": 0,
-    "Minor":   15,
-    "Major":   35,
-    "Extreme": 55,
+    "Minor":   8,
+    "Major":   23,
+    "Extreme": 38,
 }

@@ -722,10 +722,9 @@ package tracker {
          * "Got key (X)" / "Needs key (X)" suffix for the Stash line.
          * Stashes always require a key so this always returns a label —
          * granularity-aware so the player knows which item it points at:
-         *   per_stage(_progressive)  → "key" (this stage's key, no suffix)
-         *   per_tile(_progressive)   → "key (W)"
-         *   per_tier(_progressive)   → "key (Tier 1)"
-         *   global                   → "key" (master, no suffix)
+         *   per_tile(_progressive)   → "key (W)"        (g==1/2)
+         *   per_tier(_progressive)   → "key (Tier 1)"   (g==3/4)
+         *   off / global             → "key" (no suffix)
          */
         public function getStashKeyLabel(strId:String):String {
             var verb:String = (AV.sessionData != null
@@ -733,16 +732,16 @@ package tracker {
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return verb + " key";
             var g:int = int(opts.stashKeyGranularity);
-            if (g == 3 || g == 4) {
+            if (g == 1 || g == 2) {
                 if (strId == null || strId.length == 0) return verb + " key";
                 return verb + " key (" + strId.charAt(0) + ")";
             }
-            if (g == 5 || g == 6) {
+            if (g == 3 || g == 4) {
                 var tierMap:Object = opts.stageTierByStrId;
                 if (tierMap == null || tierMap[strId] == null) return verb + " key";
                 return verb + " key (Tier " + int(tierMap[strId]) + ")";
             }
-            // 0 (off), 1/2 (per_stage variants), 7 (global) — no extra suffix needed.
+            // 0 (off), 5 (global) — no extra suffix needed.
             return verb + " key";
         }
 
@@ -1130,8 +1129,8 @@ package tracker {
         }
 
         // True iff the player has beaten this stage in vanilla Journey mode at
-        // least once. Mirrors BeatGameGoal / FieldPercentageGoal — XP > 0 means
-        // the stage was cleared (0 = available/unlocked-not-cleared, -1 = locked).
+        // least once. XP > 0 means the stage was cleared
+        // (0 = available/unlocked-not-cleared, -1 = locked).
         private function _isFieldBeatenJourney(strId:String):Boolean {
             if (GV.ppd == null || GV.stageCollection == null) return false;
             var stageId:int = GV.getFieldId(strId);

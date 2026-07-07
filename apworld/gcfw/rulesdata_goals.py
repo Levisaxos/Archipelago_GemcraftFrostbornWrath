@@ -31,16 +31,6 @@ goal_requirements = {
         "tier": 4,
     },
 
-    "full_talisman": {
-        "display_name": "Full Talisman",
-        "description": "Collect all pieces of the Talisman (Crafted Talisman)",
-        "requirements": [
-            "Collect all 99 Talisman Fragments",
-        ],
-        "notes": "Talisman pieces drop from battles in any stage. No specific stage progression required.",
-        "tier": 0,
-    },
-
     "fields_count": {
         "display_name": "Fields Count",
         "description": "Complete a specific number of Journey stages",
@@ -48,16 +38,6 @@ goal_requirements = {
             "Fields Required: Set by player (default 80/122 stages)",
         ],
         "notes": "Requires completing N Journey mode stages. Count is set by the 'Fields Required' option.",
-        "tier": 0,
-    },
-
-    "fields_percentage": {
-        "display_name": "Fields Percentage",
-        "description": "Complete a percentage of all Journey stages",
-        "requirements": [
-            "Fields Required Percentage: Set by player (default 66% = 80 stages)",
-        ],
-        "notes": "Requires completing X% of all 122 Journey stages. Percentage is set by 'Fields Required Percentage' option.",
         "tier": 0,
     },
 }
@@ -68,10 +48,8 @@ goal_requirements = {
 # Players select a goal in their YAML file:
 #
 # goal: 0  → Kill Gatekeeper (hardest, tier 12)
-# goal: 1  → Full Talisman
-# goal: 2  → Kill Swarm Queen (medium, tier 4)
-# goal: 3  → Complete N fields
-# goal: 4  → Complete X% of fields
+# goal: 1  → Kill Swarm Queen (medium, tier 4)
+# goal: 2  → Complete N fields
 #
 
 # =====================================================================

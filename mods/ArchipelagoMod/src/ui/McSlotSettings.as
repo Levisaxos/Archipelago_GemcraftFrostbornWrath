@@ -63,12 +63,8 @@ package ui {
             // ── General settings ─────────────────────────────────────────────
             addSectionHeader("General", vY); vY += ROW_HEIGHT;
             addRow("Goal",                    goalName(opts.goal), vY);                                        vY += ROW_HEIGHT;
-            if (opts.goal == 3)
+            if (opts.goal == 2)
                 { addRow("Fields Required",   opts.fieldsRequiredCount + " fields", vY);                      vY += ROW_HEIGHT; }
-            if (opts.goal == 4) {
-                addRow("Fields Required",
-                    opts.fieldsRequiredCount + " (" + opts.fieldsRequiredPercentage + "%)", vY);              vY += ROW_HEIGHT;
-            }
             addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
             addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
             addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
@@ -152,9 +148,8 @@ package ui {
         private function goalName(goal:int):String {
             switch (goal) {
                 case 0:  return "Kill Gatekeeper (A4)";
-                case 2:  return "Beat Swarm Queen (K4)";
-                case 3:  return "Fields Cleared (Count)";
-                case 4:  return "Fields Cleared (Percentage)";
+                case 1:  return "Beat Swarm Queen (K4)";
+                case 2:  return "Fields Cleared (Count)";
                 default: return "Unknown (" + goal + ")";
             }
         }
@@ -210,13 +205,11 @@ package ui {
         private function stashKeyGranularityName(g:int):String {
             switch (g) {
                 case 0:  return "Off";
-                case 1:  return "Per Stage";
-                case 2:  return "Per Stage (Progressive)";
-                case 3:  return "Per Tile";
-                case 4:  return "Per Tile (Progressive)";
-                case 5:  return "Per Tier";
-                case 6:  return "Per Tier (Progressive)";
-                case 7:  return "Global";
+                case 1:  return "Per Tile";
+                case 2:  return "Per Tile (Progressive)";
+                case 3:  return "Per Tier";
+                case 4:  return "Per Tier (Progressive)";
+                case 5:  return "Global";
                 default: return "Unknown (" + g + ")";
             }
         }

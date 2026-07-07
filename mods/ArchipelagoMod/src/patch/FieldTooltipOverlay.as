@@ -381,7 +381,10 @@ package patch {
          *  field's gate. Empty array for everyone else. */
         private function _debugWlLines(strId:String):Array {
             var out:Array = [];
-            if (AV.currentSlot != "Levisaxos")
+            // Tester slots: any name starting with "Levisaxos" (e.g. Levisaxos_easy,
+            // Levisaxos_medium) so all four difficulty test-slots show the readout.
+            if (AV.currentSlot == null
+                    || AV.currentSlot.toLowerCase().indexOf("levisaxos") != 0)
                 return out;
             var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
             var xp:* = (opts != null && opts.wlEffXp != null) ? opts.wlEffXp[strId] : null;

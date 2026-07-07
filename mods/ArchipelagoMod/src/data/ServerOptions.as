@@ -5,7 +5,7 @@ package data {
      */
     public class ServerOptions {
         // Goal and Primary Settings
-        public var goal:int;                     // 0=beat_game, 2=swarm_queen, 3=fields_count, 4=fields_percentage
+        public var goal:int;                     // 0=beat_game, 1=swarm_queen, 2=fields_count
         public var difficulty:int;               // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
         // Wizard-level gating (mirrors the apworld exactly). A stage is in logic
         // once the player's DERIVED wizard level >= stageGates[str_id]; an
@@ -38,10 +38,6 @@ package data {
         // skillPoints:N achievement-gate counter.
         public var spBundleValues:Array;          // <int>[4]
 
-        // Reserved for full_talisman goal — currently no yaml option, kept
-        // wired so GoalManager.configure / FullTalismanGoal still compile.
-        public var talismanMinRarity:int;
-
         // Difficulty Multipliers
         public var enemyMultipliers:Object;      // { hp, armor, shield, waves, extraWaves }
 
@@ -53,9 +49,9 @@ package data {
         // fieldTokenGranularity: 0=per_stage, 1=per_stage_progressive,
         //                        2=per_tile,  3=per_tile_progressive,
         //                        4=per_tier,  5=per_tier_progressive
-        // stashKeyGranularity:   0=off, 1=per_stage, 2=per_stage_progressive,
-        //                        3=per_tile,  4=per_tile_progressive,
-        //                        5=per_tier,  6=per_tier_progressive, 7=global
+        // stashKeyGranularity:   0=off, 1=per_tile, 2=per_tile_progressive,
+        //                        3=per_tier, 4=per_tier_progressive, 5=global
+        //                        (per_stage retired; now mirrors gemPouchGranularity)
         // gemPouchGranularity:   0=off, 1=per_tile, 2=per_tile_progressive,
         //                        3=per_tier, 4=per_tier_progressive, 5=global
         // gemPouchPlayOrder is the prefix list (W, S, V, R, ...) used by
@@ -98,7 +94,6 @@ package data {
         // recompute from the percentage on the mod side (would drift against
         // the apworld's floor() formula).
         public var fieldsRequiredCount:int;
-        public var fieldsRequiredPercentage:int; // raw percentage option, display only
         public var achievementRequiredEffort:int; // 0=Off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
 
         // Death Link Settings
@@ -125,7 +120,6 @@ package data {
             xpTomeBonus = 150;
             skillpointMultiplier = 100;
             spBundleValues = [0, 0, 0, 0];
-            talismanMinRarity = 0;
 
             enemyMultipliers = {
                 hp: 1.0,
@@ -157,7 +151,6 @@ package data {
             stageTierByStrId = {};
 
             fieldsRequiredCount = 0;
-            fieldsRequiredPercentage = 0;
             achievementRequiredEffort = 0;
 
             deathLinkEnabled = false;

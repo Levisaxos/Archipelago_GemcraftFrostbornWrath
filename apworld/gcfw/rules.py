@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
 from .requirement_tokens import (
@@ -45,56 +45,6 @@ if TYPE_CHECKING:
 # Per-world (sid, item-name) maps for field tokens and stash keys are
 # granularity-dependent and built lazily at set_rules time. See
 # `_get_world_token_map` and `_get_world_stash_key_map` for accessors.
-
-
-# XP item names — every registered XP item. LEGACY: under the WL-derived
-# model all XP items are `filler` (items.py _xp_cls) and logic wizard level
-# comes from cleared-field "Beat <sid>" events, not XP items. This name list
-# and _count_xp_items feed the wizardLevel:N gate inside _compile_dnf, whose
-# output is discarded when the WL block overrides stage/journey/stash rules
-# (see the "=== WIZARD-LEVEL GATING ===" section). Kept until _compile_dnf is
-# retired in the rules rework; not referenced by any surviving access rule.
-XP_ITEM_NAMES: List[str] = (
-    [f"Tattered Scroll #{i+1}" for i in range(32)]
-    + [f"Worn Tome #{i+1}" for i in range(6)]
-    + [f"Ancient Grimoire #{i+1}" for i in range(2)]
-    + [f"Extra XP Item #{i+1}" for i in range(60)]
-)
-
-
-# Shadow core stash item names → core amount they grant. LEGACY: shadow-core
-# stashes are `useful` now (items.py), so the shadowCore:N gate below is only
-# reachable via _compile_dnf, whose output the WL override discards. Kept until
-# _compile_dnf is retired; not referenced by any surviving access rule.
-SHADOW_CORE_AMOUNT_BY_NAME: dict[str, int] = {}
-for _sc in GAME_DATA.get("shadow_core_stashes", []):
-    SHADOW_CORE_AMOUNT_BY_NAME[f"{_sc['str_id']} Shadow Cores"] = int(_sc["total"])
-for _sc in GAME_DATA.get("extra_shadow_core_stashes", []):
-    SHADOW_CORE_AMOUNT_BY_NAME[_sc["name"]] = int(_sc["amount"])
-del _sc
-
-
-def _count_xp_items(state, player: int) -> int:
-    cache = _get_counter_cache(state, player)
-    val = cache.get("xp")
-    if val is None:
-        val = sum(1 for n in XP_ITEM_NAMES if state.has(n, player))
-        cache["xp"] = val
-    return val
-
-
-def _sum_shadow_cores(state, player: int) -> int:
-    """Sum of core amounts for held shadow-core stash items. LEGACY (see
-    SHADOW_CORE_AMOUNT_BY_NAME): stashes are `useful` now, so in the generation
-    sweep state.has sees none and this returns 0; only kept for _compile_dnf,
-    whose output the WL override discards."""
-    cache = _get_counter_cache(state, player)
-    val = cache.get("sc")
-    if val is None:
-        val = sum(amt for name, amt in SHADOW_CORE_AMOUNT_BY_NAME.items()
-                  if state.has(name, player))
-        cache["sc"] = val
-    return val
 
 
 # State-signature + per-state counter cache.
@@ -442,53 +392,12 @@ def _any_stash_reachable(state, player: int) -> bool:
     return False
 
 
-def _eval_element_reachable(elem_name: str, state, player: int) -> bool:
-    """Resolve element-presence reachability — equivalent to eX:1.
-
-    Apparition gets an extra OR path via the Ritual Battle Trait: the
-    Ritual scripted-spawn block in IngameInitializer.as:1612-1653 always
-    pushes 2 Apparitions on any stage with waves.length > 3, and the
-    `patch/RitualSpawnPatcher.as` mod-patch leaves that path intact even
-    when no Apparition-pre-placed stage is in logic (it only gates the
-    other 5 specials). The other Ritual creatures (Shadow / Specter /
-    Wraith / Spire / Wizard Hunter) stay strict pre-placed — the patcher
-    redistributes their slots away from them when their pre-placed stages
-    aren't reachable, so the only Ritual-path access to those creatures
-    requires the same pre-placed-stage reachability as the direct check.
-    """
-    if elem_name == "Wizard Stash" or elem_name == "Wizard Tower":
-        # Wizard towers are the visual structure of wizard stashes — the
-        # player can only interact with a wizard tower by opening its
-        # containing stash, which requires the stash key.
-        return _any_stash_reachable(state, player)
-    if _eval_element_count(_element_count_field(elem_name)[:-len("Count")], 1, state, player):
-        return True
-    if elem_name == "Apparition" \
-            and state.has(_RITUAL_TRAIT_ITEM, player) \
-            and _any_reachable_stage_with_min_waves(_RITUAL_MIN_WAVES, state, player):
-        return True
-    return False
-
-
 # Ritual Battle Trait grants an unconditional 2-Apparition scripted spawn
 # in IngameInitializer.as:1612-1653, gated only on `waves.length > 3`.
-# See _eval_element_reachable / _compile_element_or_full + the mod's
+# See _compile_element_or_full + the mod's
 # patch/RitualSpawnPatcher.as for the matching runtime behavior.
 _RITUAL_TRAIT_ITEM: str = "Ritual Battle Trait"
 _RITUAL_MIN_WAVES: int  = 4
-
-
-def _any_reachable_stage_with_min_waves(min_waves: int, state, player: int) -> bool:
-    """True iff at least one stage with WaveCount >= min_waves is journey-reachable."""
-    for sid, data in LEVEL_DATA.items():
-        if int(data.get("WaveCount", 0)) < min_waves:
-            continue
-        try:
-            if state.can_reach(f"Complete {sid} - Journey", "Location", player):
-                return True
-        except KeyError:
-            continue
-    return False
 
 
 # Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
@@ -536,26 +445,6 @@ if "_gem_const" in dir():
     del _gem_const
 if "_gem_disp" in dir():
     del _gem_disp
-
-
-def _has_gem_token(req: str, state, player: int) -> bool:
-    """Broadened evaluator for gem-skill `s*` tokens.
-
-    Reference/legacy path only — the live logic runs through `_compile_req`
-    (`_gem_token` + `_compile_gem_broadened` + `_compile_can_create_any_gem`),
-    which is gempouch- and clearability-aware. This signature only has
-    `player`, not `world`, so it can't build the pouch checkers; it
-    approximates with bare stage-reach and is intentionally looser. Do not
-    rely on it for fielding semantics — the skill alone does NOT prove the
-    player can create real gems (that needs a pouch on a reachable field).
-    """
-    item_name = item_prefix_map.get(req)
-    if item_name and state.has(item_name, player):
-        return True
-    gem_name = _GEM_TOKEN_TO_GEM_NAME.get(req)
-    if gem_name is None:
-        return False
-    return _can_reach_any_stage(state, player, _STAGES_BY_GEM.get(gem_name, []))
 
 
 # Forward map: stage str_id -> frozenset of gem display names available on
@@ -626,99 +515,6 @@ _ELEMENT_PASCAL_INTERACT_SKILL: dict = {
 }
 
 
-def _eval_element_count(elem_pascal: str, count_needed: int, state, player: int) -> bool:
-    """Resolve eX:N form: a reachable stage exists where <X>Count >= N.
-    If the element isn't tracked per-stage (no <X>Count field anywhere in
-    LEVEL_DATA), treat it as universally present (Tower / Marked Monster
-    fall here)."""
-    if elem_pascal in _STUB_ELEMENTS:
-        # Stub elements: the eX token is in the achievement vocabulary as a
-        # placeholder, but the underlying mechanic isn't implemented in the
-        # randomizer yet. Always pass to match the mod's `_elementInLogic`
-        # behavior (where an empty `_elementStages[name]` returns True).
-        return True
-    if elem_pascal == "WizardStash":
-        # Every stage has a wizard stash, so `WizardStashCount` is not a
-        # per-stage tracked field. Without this special-case the universal
-        # early-return below would let `eWizardStash:N` pass even with zero
-        # keys held — route through the same key + journey-reachability
-        # gate as the bare `eWizardStash` token (`_any_stash_reachable`)
-        # instead, counting distinct openable stashes for N > 1. Whether
-        # a stash actually requires a key depends on the seed's
-        # stash_key_granularity yaml option (STASH_OFF means no gate).
-        if count_needed <= 1:
-            return _any_stash_reachable(state, player)
-        from . import gating as _g
-        world = state.multiworld.worlds[player]
-        sk_gran = world.options.stash_key_granularity.value
-        if sk_gran == _g.STASH_OFF:
-            n = 0
-            for s in GAME_DATA["stages"]:
-                try:
-                    if state.can_reach(f"Complete {s['str_id']} - Journey",
-                                       "Location", player):
-                        n += 1
-                        if n >= count_needed:
-                            return True
-                except KeyError:
-                    continue
-            return False
-        starter_sid = world.start_sid
-        n = 0
-        for s in GAME_DATA["stages"]:
-            sid = s["str_id"]
-            key_name  = _g.stash_key_for_stage(sid, sk_gran)
-            key_count = _g.stash_key_count_for_stage(sid, sk_gran, starter_sid)
-            if key_count == 1:
-                if not state.has(key_name, player):
-                    continue
-            elif state.count(key_name, player) < key_count:
-                continue
-            try:
-                if state.can_reach(f"Complete {sid} - Journey", "Location", player):
-                    n += 1
-                    if n >= count_needed:
-                        return True
-            except KeyError:
-                continue
-        return False
-
-    field = elem_pascal + "Count"
-    if field not in _PRESENT_COUNT_FIELDS:
-        return True
-    interact_skill = _ELEMENT_PASCAL_INTERACT_SKILL.get(elem_pascal)
-    if interact_skill is not None and not state.has(interact_skill, player):
-        return False
-    qualifying = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
-    if elem_pascal == "WizardTower":
-        # Wizard towers are the visual structure of wizard stashes — even if
-        # the stage is reachable, the player can only "unlock" the tower by
-        # opening its stash, which requires the per-stage stash key. So gate
-        # on both (stage reachable, stash key held) for any qualifying stage.
-        # When stash keys are off, the key check is dropped.
-        from . import gating as _g
-        world = state.multiworld.worlds[player]
-        sk_gran = world.options.stash_key_granularity.value
-        if sk_gran == _g.STASH_OFF:
-            return _can_reach_any_stage(state, player, qualifying)
-        starter_sid = world.start_sid
-        for sid in qualifying:
-            key_name  = _g.stash_key_for_stage(sid, sk_gran)
-            key_count = _g.stash_key_count_for_stage(sid, sk_gran, starter_sid)
-            if key_count == 1:
-                if not state.has(key_name, player):
-                    continue
-            elif state.count(key_name, player) < key_count:
-                continue
-            try:
-                if state.can_reach(f"Complete {sid} - Journey", "Location", player):
-                    return True
-            except KeyError:
-                continue
-        return False
-    return _can_reach_any_stage(state, player, qualifying)
-
-
 def _normalize_requirements(requirements: list) -> list:
     """Convert requirements to DNF: list of AND-groups (outer=OR, inner=AND).
     Flat list of strings is treated as a single AND-group for backward compatibility."""
@@ -748,16 +544,6 @@ def _strip_field_prereqs(normalized: list) -> list:
             continue
         out.append([r for r in group if not (isinstance(r, str) and r.startswith("Field_"))])
     return out
-
-
-def _simplify_requirements(normalized: list) -> list:
-    """Pass-through after the element-data refactor.  Previously stripped
-    'X element' reqs when an AND-group also required a trait, with an
-    exception for non-monster elements (Shadow / Specter / Wraith etc.)
-    that had restricted level lists.  Per game behaviour all elements have
-    restricted level sets and elements are independent of trait state, so
-    keeping every requirement matches the mod-side semantics exactly."""
-    return normalized
 
 
 def _can_reach_any_stage(state, player: int, stages) -> bool:
@@ -854,221 +640,13 @@ def _can_clear_any_stage(state, player: int, stages) -> bool:
     return False
 
 
-# Item-collection counter heads that aren't covered by any of the
-# requirement_tokens tables.  Each is handled inline in _eval_req.
-_OTHER_COUNTER_HEADS: frozenset = frozenset({
-    "fieldToken", "shadowCore", "wizardLevel",
-    "skillPoints", "talismanRow", "talismanColumn",
-})
-
-
-def _is_gating_req(req: str, is_progressive: bool) -> bool:
-    """Return True if this requirement string actually gates access to something."""
-    req = req.strip()
-    if req.startswith("Field_"):
-        return True
-    if req.startswith("Achievement:"):
-        return is_progressive
-    # Prefix vocabulary — single lookup across all maps.
-    if (req in mode_tokens
-            or req in item_prefix_map
-            or req in element_prefix_map):
-        return True
-    if ":" in req:
-        head = req.split(":", 1)[0].strip()
-        if head in element_prefix_map or _is_prefix_token(head, "e"):
-            return True  # element / weather / group with count
-        if (head in level_stat_counters
-                or head in _TALISMAN_FRAGMENT_COUNTERS
-                or head in _TALISMAN_PROPERTY_TOKENS
-                or head in skill_counter_pools):
-            return True
-        return head in _OTHER_COUNTER_HEADS
-    return False
-
-
-def _eval_req(req: str, state, player: int, is_progressive: bool) -> bool:
-    """Evaluate a single requirement string against the current collection state."""
-    req = req.strip()
-
-    # Field_<sid> means "stage <sid>'s Journey is reachable" (i.e. the player
-    # can clear it in-logic). NOT just "has Field Token <sid>" — token
-    # possession alone doesn't guarantee the prereq stage is beatable. Cached
-    # via _can_clear_stage_cached so deeper chains don't re-evaluate ancestors.
-    if req.startswith("Field_"):
-        return _can_clear_stage_cached(state, player, req[len("Field_"):])
-
-    if req.startswith("Achievement:"):
-        if not is_progressive:
-            return True
-        # Achievement items no longer exist (SP is filler instead). For
-        # progressive chains, check that the parent achievement's LOCATION
-        # is reachable — equivalent to "the player could have collected it".
-        try:
-            return state.can_reach(req, "Location", player)
-        except KeyError:
-            return False
-
-    # --- Prefix vocabulary (s/t/e/w/m) -------------------------------
-    # Tokens without a colon are dispatched by the maps in requirement_tokens.
-    # Mode gates always-fail in this journey-only mod.
-    if req in mode_tokens:
-        return False
-    if req in item_prefix_map:
-        # Direct AP-item check.  Map values are full item names ("Bolt
-        # Skill" / "Haste Battle Trait") so no string construction here.
-        # Gem-skill `sX` tokens broaden to also pass when a stage with
-        # the matching starter gem is reachable.  Building skills (sTraps
-        # etc.) stay strict — achievements that need pre-placed traps to
-        # count use the lenient `eTraps` form instead.
-        item_name = item_prefix_map[req]
-        if req in _GEM_TOKEN_TO_GEM_NAME:
-            if state.has(item_name, player):
-                return True
-            return _has_gem_token(req, state, player)
-        return state.has(item_name, player)
-    if req in element_prefix_map:
-        # Element/group/weather token (single-element lists for `eBeacon`,
-        # multi-element list for `eNonMonsters`). Reachable if any member is.
-        # `e`-form is strictly element-on-reachable-stage; holding the
-        # matching `s`-skill does NOT satisfy it. Achievement DNFs that
-        # accept either form list `[[eX], [sX]]` explicitly.
-        # Interact-skill elements (eDropHolder → Bolt) are AND-gated: the
-        # element-reach must hold AND the player must own the skill that
-        # actually enables interaction. Without the skill the element is
-        # inert no matter how many stages host it.
-        interact_skill = _ELEMENT_INTERACT_SKILL.get(req)
-        if interact_skill is not None and not state.has(interact_skill, player):
-            return False
-        return any(_eval_element_reachable(n, state, player)
-                   for n in element_prefix_map[req])
-
-    if ":" in req:
-        group_name, count_str = req.split(":", 1)
-        group_name = group_name.strip()
-        try:
-            count_needed = int(count_str.strip())
-        except ValueError:
-            return True
-
-        # Group token with count (e.g. eNonMonsters:1) — the count is
-        # ignored; we just check whether any group member is reachable.
-        # Has to be checked BEFORE the generic eX:N count branch, since
-        # `eNonMonsters` is also an "e"-prefix token.
-        if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
-            return any(_eval_element_reachable(n, state, player)
-                       for n in element_prefix_map[group_name])
-
-        # eX:N — single-element with count. Canonical PascalCase comes from
-        # the display name in element_prefix_map (handles singular/plural
-        # mismatches like eAmplifiers → "Amplifier" → "AmplifierCount").
-        # Tokens not in the map fall back to the raw suffix.
-        if _is_prefix_token(group_name, "e"):
-            if group_name in element_prefix_map:
-                elem_pascal = _element_count_field(
-                    element_prefix_map[group_name][0]
-                )[:-len("Count")]
-            else:
-                elem_pascal = group_name[1:]
-            return _eval_element_count(elem_pascal, count_needed, state, player)
-
-        # Skill / trait / category / total counters — all unified into
-        # one pool table (built in requirement_tokens.py from skill_groups
-        # + game_skills_categories).  Covers strikeSpells, enhancementSpells,
-        # gemSkills, BattleTraits / battleTraits, GemSkills, OtherSkills,
-        # skills / Skills.
-        if group_name in skill_counter_pools:
-            # `gemSkills:N` / `GemSkills:N` use a per-stage max: a gem skill
-            # counts on stage `s` if held OR `s` has it in `AvailableGems`,
-            # and the requirement passes if any reachable stage hits the
-            # count.  Prismatic-class achievements need the N colors to
-            # coexist on a single stage, not be scattered across reachable
-            # stages.  All other counter pools (strikeSpells,
-            # enhancementSpells, BattleTraits, OtherSkills, skills) stay
-            # strict-item-count.
-            if group_name in ("gemSkills", "GemSkills"):
-                return _count_gem_skills_per_stage_max(state, player) >= count_needed
-            pool = skill_counter_pools[group_name]
-            return sum(1 for name in pool if state.has(name, player)) >= count_needed
-
-        # Stage-stat gates: "<counter>:N" passes if any reachable stage's
-        # field(s) >= N.  Tuple values are max-aggregated across the fields.
-        # Add new gates by adding entries to level_stat_counters in
-        # requirement_tokens.py — no code change needed.
-        if group_name in level_stat_counters:
-            fields = level_stat_counters[group_name]
-            if isinstance(fields, str):
-                fields = (fields,)
-            qualifying = [sid for sid, d in LEVEL_DATA.items()
-                          if max(d.get(f, 0) for f in fields) >= count_needed]
-            return _can_reach_any_stage(state, player, qualifying)
-
-        # Talisman-fragment counters by type.
-        if group_name in _TALISMAN_FRAGMENT_COUNTERS:
-            if _count_talisman_fragments(
-                state, player, _TALISMAN_FRAGMENT_COUNTERS[group_name],
-            ) < count_needed:
-                return False
-            if group_name == "talismanFragments":
-                floor = _TALISMAN_FRAGMENTS_TOKEN_FLOOR.get(count_needed)
-                if floor is not None and _count_field_tokens(state, player) < floor:
-                    return False
-            return True
-
-        # Talisman-property contribution gates: tm<Foo>:N — sum the property
-        # values of held progression fragments at max upgrade and compare to N.
-        if group_name in _TALISMAN_PROPERTY_TOKENS:
-            return _sum_talisman_property(
-                _TALISMAN_PROPERTY_TOKENS[group_name], state, player,
-            ) >= count_needed
-
-        # Other item-collection counters — each counts a different pool.
-        if group_name == "fieldToken":
-            # Stages in logic (full clearability), not just tokens held.
-            # The floor-gate semantic (token + pouch) lives in
-            # `_count_field_tokens` and is used elsewhere for progression
-            # phasing; for the achievement-requirement token we want
-            # "stages the player can actually play".
-            return _count_clearable_stages(state, player) >= count_needed
-        if group_name == "shadowCore":
-            # Sum core amounts of held shadow-core stash items.  All stashes
-            # are progression so the full collected total counts toward the gate.
-            return _sum_shadow_cores(state, player) >= count_needed
-        if group_name == "wizardLevel":
-            # Half of XP items are progression; player needs ceil(N/2) of
-            # those collected before the wizardLevel:N gate opens.  Max
-            # reachable N at default settings: 40 (20 progression XP items).
-            needed_items = (count_needed + 1) // 2
-            return _count_xp_items(state, player) >= needed_items
-        if group_name == "talismanRow":
-            if _count_complete_talisman_rows(state, player) < count_needed:
-                return False
-            floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
-            if floor is not None and _count_field_tokens(state, player) < floor:
-                return False
-            return True
-        if group_name == "talismanColumn":
-            if _count_complete_talisman_columns(state, player) < count_needed:
-                return False
-            floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
-            if floor is not None and _count_field_tokens(state, player) < floor:
-                return False
-            return True
-        if group_name == "skillPoints":
-            return _count_skill_points(state, player) >= count_needed
-
-        return True  # Unknown counter (minGemGrade, etc.) — metadata only
-
-    return True  # Metadata requirement — not gated
-
-
 # ---------------------------------------------------------------------------
 # Pre-compiled requirement closures.
 #
-# `_eval_req` runs the full token-dispatch ladder on every state evaluation —
-# string startswith / dict-membership / split / int-parse / and N more dict
-# checks — just to figure out *what kind* of token the string is. With ~2M
-# rule calls per generation, that dispatch dominates fill time.
+# An interpreted token-dispatch ladder (string startswith / dict-membership /
+# split / int-parse / and N more dict checks) would run on every state
+# evaluation just to figure out *what kind* of token the string is. With ~2M
+# rule calls per generation, that dispatch would dominate fill time.
 #
 # `_compile_req` runs the dispatch ONCE at set_rules time and returns a
 # closure that does only the work for that specific token. Per-call cost
@@ -1319,8 +897,7 @@ def _compile_element_or_full(elem_names, player: int):
 def _compile_req(req: str, world, is_progressive: bool):
     """Compile a single requirement string to `((state) -> bool, cost, static_set)`.
 
-    Mirrors `_eval_req` branch-for-branch — keep them in sync. The returned
-    closure binds all per-call constants (item names, qualifying stage lists,
+    The returned closure binds all per-call constants (item names, qualifying stage lists,
     counter pools) so the only runtime work is the actual state lookups.
     The cost is one of `_COST_CONST` / `_COST_HAS` / `_COST_COUNTER` /
     `_COST_REACH` and lets `_compile_dnf` sort cheap predicates first so AND
@@ -1518,16 +1095,9 @@ def _compile_req(req: str, world, is_progressive: bool):
                     _COST_COUNTER, None)
 
         if group_name == "fieldToken":
-            # Stages in logic, not tokens held — see `_eval_req` comment.
+            # Stages in logic, not tokens held (full clearability).
             return (lambda state: _count_clearable_stages(state, player) >= count_needed,
                     _COST_REACH, None)
-        if group_name == "shadowCore":
-            return (lambda state: _sum_shadow_cores(state, player) >= count_needed,
-                    _COST_COUNTER, None)
-        if group_name == "wizardLevel":
-            needed_items = (count_needed + 1) // 2
-            return (lambda state: _count_xp_items(state, player) >= needed_items,
-                    _COST_COUNTER, None)
         if group_name == "talismanRow":
             floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
             if floor is None:
@@ -2016,6 +1586,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     _xp_mult = _dg.XP_TRAIT_MULTIPLIER
 
     def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names, _mu=_xp_mult, _p=player):
+        # Memoise on the state signature: WL is a pure function of the collected
+        # "<sid> Cleared" events + XP traits (all progression), so it only needs
+        # recomputing when prog_items change. Without this the full XP sum +
+        # curve is redone on every WL gate check — the fill hot path (~60k calls).
+        cache = _get_counter_cache(state, _p)
+        v = cache.get("wl")
+        if v is not None:
+            return v
         base = 0
         for _name, _x in _items:
             if state.has(_name, _p):
@@ -2026,7 +1604,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 n += 1
         if n > 4:
             n = 4
-        return _dg.level_from_xp(base * _mu[n])
+        v = _dg.level_from_xp(base * _mu[n])
+        cache["wl"] = v
+        return v
 
     def _wl_rule(sid):
         # The starter GROUP is always reachable: the start stage AND its
@@ -2076,32 +1656,18 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         victory_location.access_rule = lambda state, loc=a4_journey_loc: state.can_reach(loc, "Location", player)
 
     elif goal_value == 1:
-        # full_talisman: No access rule — fragments drop from any battle, player chooses when to claim
-        pass
-
-    elif goal_value == 2:
         # kill_swarm_queen: Requires completing K4 - Journey (tier 4)
         req = goal_requirements["kill_swarm_queen"]
         k4_journey_loc = "Complete K4 - Journey"
         victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)
         victory_location.access_rule = lambda state, loc=k4_journey_loc: state.can_reach(loc, "Location", player)
 
-    elif goal_value == 3:
+    elif goal_value == 2:
         # fields_count: Complete N specific stages (configurable)
         req = goal_requirements["fields_count"]
         required = world.options.fields_required.value
         journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
         victory_location = multiworld.get_location("Fields Count Victory", player)
-        victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
-            sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
-
-    elif goal_value == 4:
-        # fields_percentage: Complete X% of all stages (configurable)
-        from math import floor
-        req = goal_requirements["fields_percentage"]
-        required = floor(world.options.fields_required_percentage.value * len(stages) / 100)
-        journey_locs = [f"Complete {s['str_id']} - Journey" for s in stages]
-        victory_location = multiworld.get_location("Fields Percentage Victory", player)
         victory_location.access_rule = lambda state, locs=journey_locs, req=required: \
             sum(1 for loc in locs if state.can_reach(loc, "Location", player)) >= req
 
