@@ -42,6 +42,18 @@ package tracker {
             "Apparition", "Shadow", "Specter", "Spire", "Wizard Hunter", "Wraith",
         ];
 
+        // `tm<Spell>Charge:N` token head → TalismanPropertyId (Max-*-Charge).
+        // Mirrors apworld rules._TALISMAN_PROPERTY_TOKENS; the per-fragment
+        // values ship in AV.serverData.talismanChargeMap.
+        private static const TM_CHARGE_PROP:Object = {
+            "tmFreezeCharge":    21,
+            "tmWhiteoutCharge":  22,
+            "tmIceshardsCharge": 23,
+            "tmBoltCharge":      24,
+            "tmBeamCharge":      25,
+            "tmBarrageCharge":   26
+        };
+
         private var _logger:Logger;
         private var _modName:String;
         private var _fieldEvaluator:FieldLogicEvaluator;
@@ -335,6 +347,14 @@ package tracker {
                 }
                 return "Requires stage with " + ecountD + "+ " + elemNameD;
             }
+            if (req.indexOf("tm") == 0 && req.indexOf("Charge:") > 0
+                    && TM_CHARGE_PROP[req.substring(0, req.indexOf(":"))] != null)
+            {
+                var tccD:int = req.indexOf(":");
+                var spellD:String = req.substring(2, tccD - "Charge".length);
+                return "Requires +" + int(_trim(req.substring(tccD + 1)))
+                    + "% max " + spellD + " charge from talisman fragments";
+            }
             // -------------------------------------------------------------
 
             if (lower.indexOf(" skill") >= 0) {
@@ -529,6 +549,22 @@ package tracker {
                 }
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
+            }
+            // tm<Spell>Charge:N — sum the Max-*-Charge value of the held
+            // progression talisman fragments and require >= N. The per-fragment
+            // values ship in AV.serverData.talismanChargeMap; holding the
+            // fragment counts at its fully-upgraded value, mirroring apworld
+            // rules._sum_talisman_property (same full-upgrade assumption as
+            // talismanFragments:N) so the tracker dot matches generation.
+            if (req.indexOf("tm") == 0 && req.indexOf("Charge:") > 0)
+            {
+                var tmc:int = req.indexOf(":");
+                var tmPid:* = TM_CHARGE_PROP[req.substring(0, tmc)];
+                if (tmPid != null)
+                {
+                    var tmNeed:int = int(_trim(req.substring(tmc + 1)));
+                    return _sumTalismanCharge(int(tmPid)) >= tmNeed;
+                }
             }
             // -------------------------------------------------------------
 
@@ -855,6 +891,25 @@ package tracker {
 
             // Unknown requirement — don't block
             return true;
+        }
+
+        /** Sum the Max-*-Charge value (talisman property `propId`) across the
+         *  progression talisman fragments the player currently holds. Data ships
+         *  in AV.serverData.talismanChargeMap (propId str → {fragApId str →
+         *  value at max upgrade}). Mirrors apworld rules._sum_talisman_property:
+         *  a held fragment contributes its fully-upgraded value (same assumption
+         *  talismanFragments:N makes about socketing). */
+        private function _sumTalismanCharge(propId:int):int {
+            if (AV.serverData == null || AV.serverData.talismanChargeMap == null)
+                return 0;
+            var contribs:Object = AV.serverData.talismanChargeMap[String(propId)];
+            if (contribs == null) return 0;
+            var total:int = 0;
+            for (var apIdStr:String in contribs) {
+                if (AV.sessionData.hasItem(int(apIdStr)))
+                    total += int(contribs[apIdStr]);
+            }
+            return total;
         }
 
         // -----------------------------------------------------------------------
@@ -1460,6 +1515,21 @@ package tracker {
                 return [fSid];
             }
 
+            // gemSkills:N (prismatic) — bind to the SAME stage as the other
+            // per-stage tokens in the AND-group. Held gem-skill items give
+            // their colour on EVERY stage, so if they alone meet N the token
+            // doesn't constrain the stage (null = global). Otherwise the
+            // remaining colours must all come from ONE stage's pouch, so return
+            // the stages whose pouch (unioned with held skills) reaches N. Without
+            // this, "eSpecter AND gemSkills:6" (etc.) turned green when a specter
+            // field AND a *different* 6-gem field were both in logic — impossible
+            // to actually complete.
+            if (lower.indexOf("gemskills") == 0) {
+                var gsColon:int = lower.indexOf(":");
+                if (gsColon < 0) return null;
+                return _qualifyingStagesForGemSkills(int(_trim(lower.substring(gsColon + 1))));
+            }
+
             var firstChar:String = req.charAt(0);
             if ((firstChar == "e" || firstChar == "w") && req.length >= 2
                     && _isUpper(req.charAt(1))) {
@@ -1687,6 +1757,41 @@ package tracker {
                 }
             }
             return maxN;
+        }
+
+        /** Candidate stages for `gemSkills:N` same-stage binding. Held gem-skill
+         *  items give their colour on EVERY stage, so if the player already holds
+         *  >= N gem skills the token doesn't constrain the stage (returns null =
+         *  global). Otherwise the missing colours must all come from a single
+         *  stage's pouch, so returns every stage whose pouch (unioned with the
+         *  held skills) reaches N. The AND-group walker intersects this with the
+         *  other tokens' stages and applies the final in-logic check. Mirrors
+         *  _countGemSkillsPerStageMaxAP's per-stage math. */
+        private function _qualifyingStagesForGemSkills(need:int):Array {
+            if (need <= 0) return null;
+            var held:Object = {};
+            var heldCount:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                var sIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx)) {
+                    held[skillName] = true;
+                    heldCount++;
+                }
+            }
+            if (heldCount >= need) return null; // satisfiable on any stage — no constraint
+            var out:Array = [];
+            var fields:Object = (AV.sessionData != null) ? AV.sessionData.fieldsInLogic : null;
+            if (fields == null) return out;
+            for (var sid:String in fields) {
+                var n:int = heldCount;
+                for each (var sk:String in _GEM_SKILL_NAMES) {
+                    if (held[sk]) continue;
+                    var gn:String = _GEM_SKILL_TO_GEM_NAME[sk];
+                    if (gn != null && _gemOnStage(sid, gn)) n++;
+                }
+                if (n >= need) out.push(sid);
+            }
+            return out;
         }
 
         /** Count of gem skills 'available' on a specific stage (held OR

@@ -131,14 +131,18 @@ package ui {
                 return;
             }
 
+            // Suppress the vanilla tooltip the instant a field is hovered —
+            // BEFORE building ours — so it never flashes, even if the build
+            // throws or AP data isn't fully loaded yet.
+            suppressVanilla();
+
             var sid:int = int(tok.id);
             if (sid != _shownSid) {
-                buildFor(sid);
+                try { buildFor(sid); } catch (eBuild:Error) {}
                 _shownSid = sid;
                 anchorNear(tok);   // pin the panel beside this token (static)
             }
             ensureAttached();
-            suppressVanilla();
             updateHover();
         }
 
@@ -293,26 +297,27 @@ package ui {
                     var missing:Object = AV.saveData.missingLocations;
                     var checked:Object = AV.saveData.checkedLocations;
 
+                    // Journey + Stash orbs ALWAYS show for a real stage (the check
+                    // exists). "Done" = checked, or no longer in missingLocations
+                    // (beating a level drops it from missing but doesn't add it to
+                    // the connect-time checked snapshot — so !missing means done).
+                    // grey = done, green = in logic, red = blocked.
                     var jMiss:Boolean = missing[base] == true;
-                    var jDone:Boolean = checked[base] == true;
-                    showJ = jMiss || jDone;
-                    if (showJ) {
-                        var jIn:Boolean = jMiss && _evaluator != null
-                                && _evaluator.stageHasInLogicMissing(strId, true, false);
-                        jColor = jDone ? COL_GREY : (jIn ? COL_GREEN : COL_RED);
-                        jHtml  = entryHtml("Journey", journeyBody(strId, jDone, jIn), jColor);
-                    }
+                    var jDone:Boolean = (checked[base] == true) || !jMiss;
+                    var jIn:Boolean = jMiss && _evaluator != null
+                            && _evaluator.stageHasInLogicMissing(strId, true, false);
+                    showJ  = true;
+                    jColor = jDone ? COL_GREY : (jIn ? COL_GREEN : COL_RED);
+                    jHtml  = entryHtml("Journey", journeyBody(strId, jDone, jIn), jColor);
 
                     var sLoc:int = base + 399;
                     var sMiss:Boolean = missing[sLoc] == true;
-                    var sDone:Boolean = checked[sLoc] == true;
-                    showS = sMiss || sDone;
-                    if (showS) {
-                        var sIn:Boolean = sMiss && _evaluator != null
-                                && _evaluator.stageHasInLogicMissing(strId, false, true);
-                        sColor = sDone ? COL_GREY : (sIn ? COL_GREEN : COL_RED);
-                        sHtml  = entryHtml("Stash", stashBody(strId, sDone, sIn), sColor);
-                    }
+                    var sDone:Boolean = (checked[sLoc] == true) || !sMiss;
+                    var sIn:Boolean = sMiss && _evaluator != null
+                            && _evaluator.stageHasInLogicMissing(strId, false, true);
+                    showS  = true;
+                    sColor = sDone ? COL_GREY : (sIn ? COL_GREEN : COL_RED);
+                    sHtml  = entryHtml("Stash", stashBody(strId, sDone, sIn), sColor);
                 }
             } catch (e:Error) {}
 
@@ -371,10 +376,16 @@ package ui {
             return wlNeededBody(strId);
         }
 
-        /** Body line for the Stash check. Same WL gate as Journey. */
+        /** Body line for the Stash check. Blocked either by the stage's WL/tier
+         *  gate or by a missing Wizard Stash Key — distinguish the two so the
+         *  line reads "Needs key (…)" rather than a generic "Blocked". */
         private function stashBody(strId:String, done:Boolean, inLogic:Boolean):String {
             if (done) return "Completed";
             if (inLogic) return "In Logic";
+            // If the stage itself is clearable, the only remaining blocker is
+            // the stash key — show the granularity-aware key label.
+            if (_evaluator != null && _evaluator.canCompleteStage(strId))
+                return _evaluator.getStashKeyLabel(strId);
             return wlNeededBody(strId);
         }
 

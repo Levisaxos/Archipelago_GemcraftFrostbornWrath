@@ -153,6 +153,7 @@ package net {
         public function get tokenStages():Object           { return _receiver.tokenStages; }
         public function get talismanMap():Object           { return _receiver.talismanMap; }
         public function get talismanNameMap():Object       { return _receiver.talismanNameMap; }
+        public function get talismanChargeMap():Object     { return _receiver.talismanChargeMap; }
         public function get shadowCoreMap():Object         { return _receiver.shadowCoreMap; }
         public function get shadowCoreNameMap():Object     { return _receiver.shadowCoreNameMap; }
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }

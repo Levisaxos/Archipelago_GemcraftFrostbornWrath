@@ -34,6 +34,7 @@ package net {
         private var _tokenStages:Object      = {};
         private var _talismanMap:Object      = {};
         private var _talismanNameMap:Object  = {};
+        private var _talismanChargeMap:Object = {}; // propId(str) → {fragApId(str) → value}
         private var _shadowCoreMap:Object    = {};
         private var _shadowCoreNameMap:Object = {};
         private var _wizStashTalData:Object  = {};
@@ -86,6 +87,7 @@ package net {
         public function get tokenStages():Object       { return _tokenStages; }
         public function get talismanMap():Object       { return _talismanMap; }
         public function get talismanNameMap():Object   { return _talismanNameMap; }
+        public function get talismanChargeMap():Object { return _talismanChargeMap; }
         public function get shadowCoreMap():Object     { return _shadowCoreMap; }
         public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
         public function get wizStashTalData():Object   { return _wizStashTalData; }
@@ -155,6 +157,8 @@ package net {
                 _talismanMap = p.slot_data.talisman_map;
             if (p.slot_data && p.slot_data.talisman_name_map)
                 _talismanNameMap = p.slot_data.talisman_name_map;
+            if (p.slot_data && p.slot_data.talisman_charge_map)
+                _talismanChargeMap = p.slot_data.talisman_charge_map;
             if (p.slot_data && p.slot_data.shadow_core_map)
                 _shadowCoreMap = p.slot_data.shadow_core_map;
             if (p.slot_data && p.slot_data.shadow_core_name_map)

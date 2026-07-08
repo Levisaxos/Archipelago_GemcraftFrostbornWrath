@@ -214,9 +214,16 @@ package tracker {
         }
 
         /** In-logic gate — mirrors the apworld achievement access rule:
-         *    derived WL >= ACH_MIN_WL[effort]  AND  required skills/traits held.
-         *  The skill/trait gate (Phase 5b) evaluates only the skill/trait tokens
-         *  in the requirements (element/counter tokens stay enforced in-game). */
+         *    derived WL >= ACH_MIN_WL[effort]  AND  every requirement satisfiable.
+         *  Runs the FULL requirement check (elements, counters, Field_ prereqs,
+         *  skills, traits) via LogicEvaluator.evaluateRequirements, so "in logic"
+         *  means the achievement is actually reachable with the player's current
+         *  items — matching the apworld rule, which compiles ALL requirement
+         *  tokens. (This replaces the old skill/trait-only gate, which turned the
+         *  green dot on as soon as skills/traits + WL were met, even when an
+         *  element/counter/field requirement was still unmet.)
+         *  min_wl stays a top-level WL floor here; inside evaluateRequirements it
+         *  falls through as an unknown token, so it must be checked separately. */
         public
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
@@ -224,7 +231,7 @@ package tracker {
             if (_fieldEvaluator.derivedWizardLevel() < achMinWl(achData))
                 return false;
             if (_logicEvaluator != null
-                    && !_logicEvaluator.evaluateSkillTraitGate(achData.requirements as Array))
+                    && !_logicEvaluator.evaluateRequirements(achData.requirements as Array))
                 return false;
             return true;
         }

@@ -1008,6 +1008,27 @@ class GemcraftFrostbornWrathWorld(World):
             for frag in gd["talisman_fragments"]
         }
 
+        # Talisman charge map: property_id (str) → { fragment AP id (str) → value
+        # at max upgrade }. Only the six Max-*-Charge properties (21–26) are
+        # shipped — they're what the `tm<Spell>Charge:N` achievement tokens gate
+        # on. Lets the mod's LogicEvaluator sum a held fragment set's charge
+        # contribution the same way the apworld's `_sum_talisman_property` does
+        # (rules.py), so the tracker's in-logic dots match generation.
+        # Built over ALL progression fragments (unfiltered), exactly mirroring
+        # rules._TALISMAN_PROPERTY_CONTRIBUTIONS / _sum_talisman_property; the
+        # mod's hasItem() guard naturally ignores any fragment not actually in
+        # the item pool, so the sums stay identical to the apworld gate.
+        from .rulesdata_talisman import progression_talismans as _prog_tal
+        _CHARGE_PROP_IDS = (21, 22, 23, 24, 25, 26)
+        talisman_charge_map = {}
+        for _frag_name, _frag in _prog_tal.items():
+            _frag_apid = _frag.get("ap_id")
+            if _frag_apid is None:
+                continue
+            for _pid, _pval in _frag.get("properties_at_max", []):
+                if _pid in _CHARGE_PROP_IDS and _pval > 0:
+                    talisman_charge_map.setdefault(str(_pid), {})[str(_frag_apid)] = _pval
+
         # Static talisman: pair each of the 25 PROGRESSION fragment ITEMS to one
         # synthetic slot. The synthetic set (self.talisman_set) is a legal tiling
         # (talisman_gen.py); when the player FINDS the fragment item mapped to a
@@ -1188,6 +1209,7 @@ class GemcraftFrostbornWrathWorld(World):
             "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
+            "talisman_charge_map":   talisman_charge_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
             # Progression talisman: the 25-fragment set the mod unlocks + slots
             # at start. Each entry: {slot, seed, rarity, type, upgrade_level,

@@ -93,6 +93,12 @@ package ui {
         // rebuilt under a stationary pointer). Each: {frag, entry, x, y, w, h}.
         private var _cells:Array = [];
         private var _hoveredKey:String = null;
+        // True only while WE have a fragment tooltip attached to the shared
+        // GV.mcInfoPanel. Guards _hideTooltip so we never rip out the game's own
+        // info panel (e.g. the in-battle gem/wall/monster tooltip) — the selector
+        // frame loop runs during battle too, so an unconditional removeChild here
+        // stripped every battle tooltip every frame.
+        private var _tooltipShown:Boolean = false;
 
         private var _injectedMc:*;            // the McPnlTalisman we injected into
         private var _captureAdded:Boolean = false;
@@ -298,6 +304,7 @@ package ui {
                     GV.main.cntInfoPanel.addChild(vIp);
                     vIp.doEnterFrame();
                 }
+                _tooltipShown = true; // we now own the shared panel
             } catch (e:Error) {}
         }
 
@@ -602,6 +609,8 @@ package ui {
         // Tooltip (reuses the vanilla fragment info panel; see _updateTooltip)
 
         private function _hideTooltip():void {
+            if (!_tooltipShown) return; // never touch the panel unless WE showed it
+            _tooltipShown = false;
             try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (e:Error) {}
         }
 

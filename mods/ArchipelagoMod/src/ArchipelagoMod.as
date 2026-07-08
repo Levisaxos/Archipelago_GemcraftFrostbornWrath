@@ -1439,6 +1439,7 @@ package {
             AV.serverData.shadowCoreMap      = _connectionManager.shadowCoreMap;
             AV.serverData.shadowCoreNameMap  = _connectionManager.shadowCoreNameMap;
             AV.serverData.talismanNameMap    = _connectionManager.talismanNameMap;
+            AV.serverData.talismanChargeMap  = _connectionManager.talismanChargeMap;
             AV.serverData.wizStashTalData    = _connectionManager.wizStashTalData;
 
             // Reset + configure the in-game tracker from slot_data.  Must happen

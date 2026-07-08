@@ -202,11 +202,16 @@ package tracker {
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || stashMissing))
-                return false;
-            // WL gating: Journey and Wizard stash share the stage's single
-            // wizard-level gate (mirrors the apworld, which gates both the same).
-            return canCompleteStage(strId);
+            // Journey: stage clearable (tier + WIZLOCK / WL gate).
+            if (journeyMissing && canCompleteStage(strId))
+                return true;
+            // Stash: same clearability PLUS the Wizard Stash Key item
+            // (isStashGateMet) — mirrors the apworld, which gates the stash
+            // location on state.has(stash_key). Without this the stash orb / line
+            // showed green even with no key.
+            if (stashMissing && isStashGateMet(strId))
+                return true;
+            return false;
         }
 
         /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
@@ -1061,9 +1066,16 @@ package tracker {
          * plus the per-stage Wizard Stash Key item.
          */
         public function isStashGateMet(strId:String):Boolean {
-            // WL world: the wizard stash shares the stage's wizard-level gate;
-            // no separate stash-key item gates it (mirrors the apworld).
-            return canCompleteStage(strId);
+            // Stash shares the stage's clearability gate (tier + WIZLOCK / WL)...
+            if (!canCompleteStage(strId)) return false;
+            // ...AND requires the per-stage Wizard Stash Key item, exactly like
+            // the apworld's stash access rule (state.has(stash_key)). The only
+            // exception is stash_key_granularity == OFF, where the apworld uses
+            // an always-true key check — then no key is needed.
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            var g:int = (opts != null) ? int(opts.stashKeyGranularity) : 0;
+            if (g == 0) return true; // OFF — stashes need no key
+            return AV.sessionData != null && AV.sessionData.isStashUnlocked(strId);
         }
 
         // -----------------------------------------------------------------------

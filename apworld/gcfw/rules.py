@@ -1267,6 +1267,60 @@ _NO_PROGRESSION_ACHIEVEMENTS = frozenset({
 })
 
 
+# Bounded AP-item pools a counter token can demand (near-)fully. Gating a
+# location on collecting most/all of one of these is the classic FillError
+# shape — the item placed there is walled behind that whole pool — so such
+# achievements are forced filler-only (see _ach_progression_blocked). The
+# talisman-set counters matter especially: the full-requirement DNF gate now
+# hard-enforces them (the old skill/trait-only gate did not), so without this
+# they would silently become progression-eligible whole-pool gates. Values are
+# pool maxima; only the FRACTION is used.
+_DEADLOCK_COUNTER_POOLS = {
+    "skills": 24, "Skills": 24,
+    "otherSkills": 18, "OtherSkills": 18,
+    "gemSkills": 6, "GemSkills": 6,
+    "strikeSpells": 3, "enhancementSpells": 3,
+    "battleTraits": 15, "BattleTraits": 15,
+    "talismanFragments": 25,
+    "talismanRow": 3, "talismanColumn": 3,
+    "talismanCornerFragment": 4, "talismanEdgeFragment": 12,
+    "talismanCenterFragment": 9,
+}
+_DEADLOCK_POOL_FRACTION = 0.6  # >= 60% of a pool in a branch => deadlock-prone
+
+
+def _branch_has_wholepool_counter(group) -> bool:
+    """True if an AND-group requires >= _DEADLOCK_POOL_FRACTION of any bounded
+    AP-item pool in _DEADLOCK_COUNTER_POOLS."""
+    for tok in group:
+        if not isinstance(tok, str) or ":" not in tok:
+            continue
+        head, _, cnt = tok.partition(":")
+        pool = _DEADLOCK_COUNTER_POOLS.get(head.strip())
+        if pool is None:
+            continue
+        try:
+            n = int(cnt.strip())
+        except ValueError:
+            continue
+        if n >= max(2, _DEADLOCK_POOL_FRACTION * pool):
+            return True
+    return False
+
+
+def _ach_progression_blocked(requirements) -> bool:
+    """An achievement may NOT hold progression when EVERY OR-branch is gated on
+    a large fraction of a bounded AP-item pool — otherwise a progression item
+    could be walled behind most/all of that pool (the one real FillError source,
+    see feedback_fill_errors). Generalises the hand-listed
+    _NO_PROGRESSION_ACHIEVEMENTS and auto-covers the talisman-set counters that
+    the DNF achievement gate newly hard-enforces."""
+    if not requirements:
+        return False
+    groups = requirements if isinstance(requirements[0], list) else [requirements]
+    return bool(groups) and all(_branch_has_wholepool_counter(g) for g in groups)
+
+
 def _extract_min_wl(requirements):
     """Return the per-achievement WL floor from a `min_wl:N` token in
     `requirements`, or None if absent. Scans both flat (`["a", "b"]`) and DNF
@@ -1716,27 +1770,34 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 location = multiworld.get_location(f"Achievement: {ach_name}", player)
 
                 # Two gates, composed (AND):
-                #   SOFT: derived WL floor — paces WHEN the achievement is
-                #         expected. A per-achievement `min_wl:N` token in the
-                #         requirements OVERRIDES the effort-tier default
-                #         (ACH_MIN_WL[effort]); otherwise the tier default
-                #         applies. (The old token-era _compile_dnf is
-                #         intentionally not used; it referenced the stage-clear
-                #         system the WL revamp bypasses.)
-                #   SKILL/TRAIT: the specific skills/traits the achievement needs
-                #         (Phase 5, ENABLE_ACH_SKILL_TRAIT_GATE). Element/counter
-                #         tokens stay unenforced here.
+                #   SOFT (WL floor): derived WL >= the achievement's floor —
+                #         paces WHEN the achievement is expected. A per-
+                #         achievement `min_wl:N` token OVERRIDES the effort-tier
+                #         default (ACH_MIN_WL[effort]); otherwise the tier
+                #         default applies. `min_wl:N` compiles to _always_true
+                #         inside the DNF below, so it's enforced only here.
+                #   HARD (full requirement DNF): the SAME `_compile_dnf` used
+                #         for stage-clear rules — elements (with same-stage
+                #         binding), gemSkills:N / monster-stat counters,
+                #         skills, traits, and Field_ clearability. This mirrors
+                #         the mod's LogicEvaluator.evaluateRequirements so a
+                #         progression item is only placed where the achievement
+                #         is actually earnable in-game. is_progressive stays
+                #         False (see above) so cross-achievement `Achievement:`
+                #         tokens are ignored, matching the mod's don't-block
+                #         behaviour for those.
                 _components = []
-                _wl_override = _extract_min_wl(ach_data.get("requirements", []))
+                _reqs = ach_data.get("requirements", [])
+                _wl_override = _extract_min_wl(_reqs)
                 _min_wl = (_wl_override if _wl_override is not None
                            else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
                 if _min_wl > 0:
                     _components.append(lambda state, _m=_min_wl: _wl_of(state) >= _m)
-                if ENABLE_ACH_SKILL_TRAIT_GATE:
-                    _st = _compile_skill_trait_gate(
-                        ach_data.get("requirements", []), player)
-                    if _st is not None:
-                        _components.append(_st)
+                if _reqs:
+                    _dnf = _compile_dnf(_normalize_requirements(_reqs), world,
+                                        is_progressive=is_progressive)
+                    if _dnf is not _always_true:
+                        _components.append(_dnf)
                 if _components:
                     location.access_rule = _compose_and(_components)
                     _ach_rules_added += 1
@@ -1746,11 +1807,15 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 # higher-tier stage locations (where the player has cores).
                 _restrict_talisman_shapes(location, True, True)
 
-                # Whole-pool achievements (Skillful, Peek Into The Abyss) may
-                # only hold useful/filler — never progression — so no critical
-                # item is ever walled behind the entire skill/trait pool.
-                # Composes with the talisman rule set just above.
-                if ach_name in _NO_PROGRESSION_ACHIEVEMENTS:
+                # Whole-pool achievements may only hold useful/filler — never
+                # progression — so no critical item is ever walled behind an
+                # entire item pool. Covers the hand-listed cases (Skillful,
+                # Peek Into The Abyss) plus any achievement whose every branch
+                # is gated on a large fraction of a bounded AP-item pool
+                # (talisman-set / whole-skill counters). Composes with the
+                # talisman shape rule set just above.
+                if (ach_name in _NO_PROGRESSION_ACHIEVEMENTS
+                        or _ach_progression_blocked(_reqs)):
                     prev_rule = location.item_rule
                     location.item_rule = (
                         lambda item, p=prev_rule:

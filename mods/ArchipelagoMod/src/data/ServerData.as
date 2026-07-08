@@ -14,6 +14,7 @@ package data {
         public var tokenStages:Object;           // stage str_id → true (reverse index)
         public var talismanMap:Object;           // apId (str) → "seed/rarity/type/upgradeLevel"
         public var talismanNameMap:Object;       // apId (str) → display name
+        public var talismanChargeMap:Object;     // propId (str) → { fragApId (str) → value at max } (Max-*-Charge props 21–26)
         public var shadowCoreMap:Object;         // apId (str) → amount (int)
         public var shadowCoreNameMap:Object;     // apId (str) → display name
         public var wizStashTalData:Object;       // stage str_id → "seed/rarity/type/upgradeLevel"
@@ -55,6 +56,7 @@ package data {
             tokenStages = {};
             talismanMap = {};
             talismanNameMap = {};
+            talismanChargeMap = {};
             shadowCoreMap = {};
             shadowCoreNameMap = {};
             wizStashTalData = {};
