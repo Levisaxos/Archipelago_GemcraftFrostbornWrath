@@ -12,11 +12,15 @@ package ui {
     import flash.text.TextFormat;
     import flash.text.TextFormatAlign;
 
+    import flash.filters.ColorMatrixFilter;
+
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.bmpd.BmpdInfoPanelCornerPaper;
     import com.giab.games.gcfw.bmpd.BmpdInfoPanelFrameBlack;
     import com.giab.games.gcfw.bmpd.BmpdInfoPanelFramePaper;
     import com.giab.games.gcfw.constants.SelectorScreenStatus;
+    import com.giab.games.gcfw.constants.GemComponentType;
+    import com.giab.games.gcfw.entity.Gem;
 
     import data.AV;
     import net.ConnectionManager;
@@ -73,6 +77,11 @@ package ui {
 
         // Stage index the panel is currently built for (-1 = nothing).
         private var _shownSid:int = -1;
+        // The McFieldToken the panel is showing for. Kept force-highlighted while
+        // the panel is up (moving the cursor onto the panel fires the token's
+        // MOUSE_OUT, so the game would otherwise drop the highlight), and
+        // restored to its base frame on hide / when switching to another field.
+        private var _shownTok:* = null;
         // Static anchor position (main space) the panel is pinned to.
         private var _anchorX:Number = 80;
         private var _anchorY:Number = 170;
@@ -93,7 +102,13 @@ package ui {
         public function IconTooltipPreview(evaluator:FieldLogicEvaluator) {
             super();
             _evaluator = evaluator;
-            mouseEnabled  = false;
+            // Block mouse events over the panel so they DON'T pass through to the
+            // field tokens underneath. A mouse-transparent panel lets the token
+            // beneath the cursor fire its MOUSE_OVER, lighting up the wrong field
+            // (e.g. S1) while the cursor is actually on the W4 tooltip.
+            // mouseChildren stays false — icon hover is position-based
+            // (updateHover), not event-driven, so children never need events.
+            mouseEnabled  = true;
             mouseChildren = false;
             visible = false;
         }
@@ -122,6 +137,7 @@ package ui {
                 ensureAttached();
                 suppressVanilla();
                 updateHover();
+                highlightToken(_shownTok, true); // keep the tooltip's field lit
                 return;
             }
 
@@ -138,23 +154,39 @@ package ui {
 
             var sid:int = int(tok.id);
             if (sid != _shownSid) {
+                highlightToken(_shownTok, false); // release the previous field
+                _shownTok = tok;
                 try { buildFor(sid); } catch (eBuild:Error) {}
                 _shownSid = sid;
                 anchorNear(tok);   // pin the panel beside this token (static)
             }
             ensureAttached();
             updateHover();
+            highlightToken(_shownTok, true); // keep the hovered field lit
         }
 
         public function hide():void {
             visible = false;
             _shownSid = -1; // force a fresh build + re-anchor on next hover
+            highlightToken(_shownTok, false); // let the field drop its highlight
+            _shownTok = null;
             // Restore the shared vanilla panel for every other tooltip
             // (skills, talismans, etc.) the moment we stop suppressing.
             if (_suppressed) {
                 try { GV.mcInfoPanel.visible = true; } catch (e:Error) {}
                 _suppressed = false;
             }
+        }
+
+        /** Force a field token's plate to its highlighted (on) or base (off)
+         *  frame — mirrors the game's own ehStageIconOver / ehStageIconOut
+         *  (SelectorInputHandler), which set plate frame plateFrame+1 / plateFrame.
+         *  We drive it ourselves so the tooltip's field stays lit while the cursor
+         *  is on the panel (the token's own MOUSE_OUT would otherwise clear it). */
+        private function highlightToken(tok:*, on:Boolean):void {
+            if (tok == null) return;
+            try { tok.plate.gotoAndStop(int(tok.plateFrame) + (on ? 1 : 0)); }
+            catch (e:Error) {}
         }
 
         // -----------------------------------------------------------------------
@@ -199,8 +231,9 @@ package ui {
                 }
                 ax = Math.max(5, Math.min(ax, 1920 - PANEL_W - 10));
 
-                var ay:Number = b.top + b.height * 0.5 - PANEL_H * 0.5;
-                ay = Math.max(10, Math.min(ay, 1080 - PANEL_H - 10));
+                var ph:Number = (_curPanelH > 0) ? _curPanelH : PANEL_H;
+                var ay:Number = b.top + b.height * 0.5 - ph * 0.5;
+                ay = Math.max(10, Math.min(ay, 1080 - ph - 10));
 
                 _anchorX = ax;
                 _anchorY = ay;
@@ -210,13 +243,17 @@ package ui {
             }
         }
 
-        /** Is the cursor within the panel's rect (plus a small bridging margin)? */
+        /** Is the cursor within the panel's rect (plus a small bridging margin)?
+         *  Uses the ACTUAL drawn height (_curPanelH), not the PANEL_H maximum, so
+         *  fields just below a short panel aren't wrongly treated as "over panel"
+         *  (which kept the tooltip stuck on the previous field). */
         private function isMouseOverPanel():Boolean {
             try {
+                var ph:Number = (_curPanelH > 0) ? _curPanelH : PANEL_H;
                 var mx:Number = Number(GV.main.mouseX);
                 var my:Number = Number(GV.main.mouseY);
                 return mx >= _anchorX - HOVER_MARGIN && mx <= _anchorX + PANEL_W + HOVER_MARGIN
-                    && my >= _anchorY - HOVER_MARGIN && my <= _anchorY + PANEL_H + HOVER_MARGIN;
+                    && my >= _anchorY - HOVER_MARGIN && my <= _anchorY + ph + HOVER_MARGIN;
             } catch (e:Error) {}
             return false;
         }
@@ -277,6 +314,27 @@ package ui {
             var waveWord:String = (waves == 1) ? " wave" : " waves";
             cy = addLine(waves + waveWord + "   \u00B7   first wave " + fhp + " HP",
                          COL_STAT, 12, cy, 26);
+
+            // XP / WL debug (tester slots only): the field's expected eff-XP
+            // (what it feeds the WL derivation), the XP actually collected on it
+            // in Journey + the current trait multiplier, and derived-WL vs gate.
+            if (_isTesterSlot()) {
+                var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+                var effXp:* = (opts != null && opts.wlEffXp != null) ? opts.wlEffXp[strId] : null;
+                var collected:int = 0;
+                try { collected = int(GV.ppd.stageHighestXpsJourney[sid].g()); } catch (eXp:Error) {}
+                var wl:int = (_evaluator != null) ? _evaluator.derivedWizardLevel() : 0;
+                var gate:int = stageGate(strId);
+                cy = addLine("Field XP: " + (effXp != null ? String(int(effXp)) : "?")
+                           + "   \u00B7   WL " + wl + " / gate " + gate,
+                           COL_MUTED, 11, cy, 20);
+                cy = addLine("Journey XP: " + collected + " (x" + _fmtMult(_xpTraitMult()) + ")",
+                           COL_MUTED, 11, cy, 24);
+            }
+
+            // Available gems on this field (pouch-aware; hollow gem on a
+            // free starter without a pouch).
+            cy = addGems(sid, strId, cy);
 
             cy = addLine("Checks", COL_LABEL, 12, cy, 24);
 
@@ -406,6 +464,113 @@ package ui {
                     return int(opts.stageGates[strId]);
             } catch (e:Error) {}
             return 0;
+        }
+
+        /** Tester-only gate for the XP/WL debug lines (mirrors the old
+         *  FieldTooltipOverlay._debugWlLines gate). */
+        private function _isTesterSlot():Boolean {
+            return AV.currentSlot != null
+                && AV.currentSlot.toLowerCase().indexOf("levisaxos") == 0;
+        }
+
+        /** The battle-XP multiplier the game actually applies to earned XP:
+         *  difficulty base + Σ(0.1 × selected trait level), as maintained by
+         *  DifficultyXpScaler on GV.selectorCore.traitsXpMult. Reading it here
+         *  keeps the tooltip in lockstep with the outcome screen. */
+        private function _xpTraitMult():Number {
+            try {
+                if (GV.selectorCore != null && GV.selectorCore.traitsXpMult != null)
+                    return Number(GV.selectorCore.traitsXpMult.g());
+            } catch (e:Error) {}
+            return 1.0;
+        }
+
+        /** Format a multiplier like 1.2 / 1.44 (trim to <=3 decimals, no trailing zeros). */
+        private function _fmtMult(m:Number):String {
+            var r:Number = Math.round(m * 1000) / 1000;
+            var s:String = String(r);
+            return s;
+        }
+
+        /** "Available gems" section. Shows the stage's gem colours when the
+         *  player can create them (a pouch is held, or pouch gating is off), a
+         *  single desaturated hollow gem on a free starter with no pouch yet, or
+         *  nothing on a non-free stage without a pouch. Mirrors SelectorRenderer's
+         *  gem rendering + the old FieldTooltipOverlay hollow-gem behaviour. */
+        private function addGems(sid:int, strId:String, y:Number):Number {
+            var pouchMode:int = 0;
+            try {
+                var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+                if (opts != null) pouchMode = int(opts.gemPouchGranularity);
+            } catch (eP:Error) {}
+            var hasPouch:Boolean = (pouchMode == 0)
+                    || (AV.sessionData != null && AV.sessionData.hasPouchForStage(strId));
+            var isFree:Boolean = (_evaluator != null) && _evaluator.isFreeStage(strId);
+
+            var types:Array = null;
+            var desat:Boolean = false;
+            if (hasPouch) {
+                try { types = GV.stageCollection.stageDatasJ[sid].getAvailableGemTypes(); }
+                catch (eG:Error) { types = null; }
+            } else if (isFree) {
+                types = [GemComponentType.MANA_LEECHING]; // colourless Hollow Gem
+                desat = true;
+            }
+            if (types == null || types.length == 0)
+                return y; // non-free stage with no pouch → nothing to build with
+
+            y = addLine("Available gems:", COL_LABEL, 11, y, 20);
+
+            // Build the gem icons, then lay them out in a centred row.
+            var mcs:Array = [];
+            var totalW:Number = 0;
+            var gap:Number = 6;
+            for each (var t:* in types) {
+                var gem:Gem = new Gem();
+                gem.elderComponents = [t];
+                gem.manaValuesByComponent[t].s(1);
+                GV.gemBitmapCreator.giveGemBitmaps(gem, false);
+                if (desat) {
+                    gem.hasColor = false;
+                    gem.hueMain  = 0;
+                    _desatGem(gem.mc);
+                }
+                mcs.push(gem.mc);
+                totalW += Number(gem.mc.width) + gap;
+            }
+            if (mcs.length > 0) totalW -= gap;
+
+            // giveGemBitmaps centres the icon on its origin, so offset by each
+            // gem's own bounds to place its visual top-left where we want (below
+            // the label, not overlapping it).
+            var cx:Number = (PANEL_W - totalW) * 0.5;
+            var maxH:Number = 0;
+            for each (var mc:* in mcs) {
+                var gb:Rectangle = mc.getBounds(mc);
+                mc.x = cx - gb.left;
+                mc.y = y - gb.top;
+                addChild(mc);
+                cx += Number(mc.width) + gap;
+                if (gb.height > maxH) maxH = gb.height;
+            }
+            return y + maxH + 8;
+        }
+
+        /** Luminance-preserving desaturate of a Gem MC's bitmap children (the
+         *  colourless Hollow-Gem look), matching HollowGemInjector. */
+        private function _desatGem(mc:*):void {
+            try {
+                var f:ColorMatrixFilter = new ColorMatrixFilter([
+                    0.299, 0.587, 0.114, 0, 60,
+                    0.299, 0.587, 0.114, 0, 60,
+                    0.299, 0.587, 0.114, 0, 60,
+                    0,     0,     0,     1, 0]);
+                var n:int = int(mc.numChildren);
+                for (var i:int = 0; i < n; i++) {
+                    var ch:* = mc.getChildAt(i);
+                    if (ch is Bitmap) (ch as Bitmap).filters = [f];
+                }
+            } catch (e:Error) {}
         }
 
         /** Hardcoded placeholder achievement list (real data later). */
