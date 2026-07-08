@@ -171,16 +171,46 @@ package tracker {
             return _fieldEvaluator;
         }
 
-        /** Minimum wizard level for an achievement, by its effort tier
-         *  (shipped in slot_data — same value the apworld gates on). */
+        /** Minimum wizard level for an achievement. A per-achievement
+         *  `min_wl:N` token in the requirements OVERRIDES the effort-tier
+         *  default (achievementMinWl[effort], shipped in slot_data); otherwise
+         *  the effort-tier value applies. Mirrors apworld rules._extract_min_wl
+         *  + set_rules override. */
         private
         function achMinWl(achData: Object): int {
+            var wlOverride: int = _extractMinWl(achData ? achData.requirements as Array : null);
+            if (wlOverride >= 0) return wlOverride;
             var effort: String = (achData && achData.required_effort)
                 ? String(achData.required_effort) : "Trivial";
             var map: Object = (AV.serverData != null && AV.serverData.serverOptions != null)
                 ? AV.serverData.serverOptions.achievementMinWl : null;
             if (map != null && map[effort] !== undefined) return int(map[effort]);
             return 0;
+        }
+
+        /** Scan `requirements` (flat or DNF) for a `min_wl:N` token and return
+         *  the largest N found, or -1 if absent. Treated as a top-level pacing
+         *  override regardless of which OR-group it sits in. */
+        private
+        function _extractMinWl(requirements: Array): int {
+            if (requirements == null || requirements.length == 0) return -1;
+            var groups: Array = (requirements[0] is Array) ? requirements : [requirements];
+            var best: int = -1;
+            for each (var group: * in groups)
+            {
+                var andGroup: Array = group as Array;
+                if (andGroup == null) continue;
+                for each (var tok: * in andGroup)
+                {
+                    if (!(tok is String)) continue;
+                    var t: String = String(tok).replace(/^\s+|\s+$/g, "");
+                    var ci: int = t.indexOf(":");
+                    if (ci <= 0 || t.substring(0, ci) != "min_wl") continue;
+                    var n: int = int(t.substring(ci + 1).replace(/^\s+|\s+$/g, ""));
+                    if (n > best) best = n;
+                }
+            }
+            return best;
         }
 
         /** In-logic gate — mirrors the apworld achievement access rule:

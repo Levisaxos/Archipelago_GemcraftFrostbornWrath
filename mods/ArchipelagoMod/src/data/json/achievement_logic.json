@@ -4,7 +4,7 @@
       "apId": 2485,
       "game_id": 368,
       "description": "Acquire and raise all skills to level 5 or above.",
-      "required_effort": "Trivial",
+      "required_effort": "Extreme",
       "requirements": [
         "skills:24"
       ],
@@ -34,7 +34,7 @@
       "apId": 2609,
       "game_id": 412,
       "description": "Activate a shrine while raining.",
-      "required_effort": "Trivial",
+      "required_effort": "minor",
       "requirements": [
         "eShrine:1",
         "wRain"
@@ -114,7 +114,7 @@
       "apId": 2509,
       "game_id": 631,
       "description": "Add 8 talisman fragments to your shape collection.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "talismanFragments:8"
       ]
@@ -123,7 +123,7 @@
       "apId": 2425,
       "game_id": 632,
       "description": "Add 16 talisman fragments to your shape collection.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "talismanFragments:16"
       ]
@@ -132,10 +132,10 @@
       "apId": 2272,
       "game_id": 49,
       "description": "Amplify a gem with 8 other gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sAmplifiers",
-        "minWave:30",
+        "minWave:50",
         "talismanRow:1"
       ]
     },
@@ -158,7 +158,7 @@
       "apId": 2541,
       "game_id": 215,
       "description": "Banish a monster at least 5 times.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [],
       "details": "Banish the same monster 5 or more times."
     },
@@ -166,7 +166,7 @@
       "apId": 2447,
       "game_id": 584,
       "description": "Banish 150 monsters while there are 2 or more wraiths on the battlefield.",
-      "required_effort": "Major",
+      "required_effort": "Extreme",
       "requirements": [
         "tRitual",
         "eWraith",
@@ -178,7 +178,7 @@
       "apId": 2033,
       "game_id": 304,
       "description": "Beat 120 waves and don't use any gem enhancement spells.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:120",
         "mEndurance"
@@ -188,7 +188,7 @@
       "apId": 2094,
       "game_id": 301,
       "description": "Beat 120 waves and don't use any spells.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:120",
         "mEndurance"
@@ -199,7 +199,7 @@
       "apId": 2422,
       "game_id": 308,
       "description": "Beat 120 waves and don't use any strike or gem enhancement spells.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:120",
         "mEndurance"
@@ -286,7 +286,7 @@
       "apId": 2364,
       "game_id": 22,
       "description": "Beat 90 waves using only armor tearing gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sArmorTearing",
         "minWave:90"
@@ -297,7 +297,7 @@
       "apId": 2052,
       "game_id": 35,
       "description": "Beat 90 waves using only bleeding gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sBleeding",
         "minWave:90"
@@ -307,7 +307,7 @@
       "apId": 2478,
       "game_id": 32,
       "description": "Beat 90 waves using only critical hit gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sCriticalHit",
         "minWave:90"
@@ -318,7 +318,7 @@
       "apId": 2013,
       "game_id": 33,
       "description": "Beat 90 waves using only mana leeching gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
         "minWave:90"
@@ -329,7 +329,7 @@
       "apId": 2575,
       "game_id": 20,
       "description": "Beat 90 waves using only poison gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "minWave:90"
@@ -339,7 +339,7 @@
       "apId": 2492,
       "game_id": 19,
       "description": "Beat 90 waves using only slowing gems.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sSlowing",
         "minWave:90"
@@ -388,7 +388,7 @@
       "apId": 2571,
       "game_id": 89,
       "description": "Break a tomb open before wave 15.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eTomb:1"
       ],
@@ -398,7 +398,7 @@
       "apId": 2279,
       "game_id": 87,
       "description": "Break a tomb open.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eTomb"
       ]
@@ -407,7 +407,7 @@
       "apId": 2573,
       "game_id": 82,
       "description": "Break 2 tombs open.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eTomb:2"
       ],
@@ -417,7 +417,7 @@
       "apId": 2540,
       "game_id": 88,
       "description": "Break 3 tombs open.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eTomb:3"
       ],
@@ -427,7 +427,7 @@
       "apId": 2412,
       "game_id": 75,
       "description": "Build 5 amplifiers.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sAmplifiers",
         "talismanRow:1"
@@ -438,7 +438,7 @@
       "apId": 2409,
       "game_id": 76,
       "description": "Build 15 amplifiers.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "sAmplifiers",
         "talismanRow:1"
@@ -448,7 +448,7 @@
       "apId": 2408,
       "game_id": 77,
       "description": "Build 25 amplifiers.",
-      "required_effort": "Minor",
+      "required_effort": "Extreme",
       "requirements": [
         "sAmplifiers",
         "talismanRow:2"
@@ -563,7 +563,7 @@
       "apId": 2433,
       "game_id": 493,
       "description": "Build 100 walls and start 100 enraged waves.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eWall",
         "minWave:100"
@@ -594,10 +594,10 @@
       "apId": 2635,
       "game_id": 81,
       "description": "Build 60 walls.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eWall",
-        "minWave:24"
+        "min_wl:20"
       ],
       "details": "Build 60 walls in one battle."
     },
@@ -605,10 +605,10 @@
       "apId": 2523,
       "game_id": 282,
       "description": "Build 240 walls.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eWall",
-        "fieldToken:25",
+        "min_wl:50",
         "talismanRow:1"
       ]
     },
@@ -616,7 +616,7 @@
       "apId": 2076,
       "game_id": 322,
       "description": "Call a wave early.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [],
       "details": "Call 1 wave early."
     },
@@ -624,7 +624,7 @@
       "apId": 2056,
       "game_id": 28,
       "description": "Call an enraged wave early.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [],
       "details": "Call an enraged wave early."
     },
@@ -632,7 +632,7 @@
       "apId": 2486,
       "game_id": 460,
       "description": "Call every wave early in a battle.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [],
       "details": "Call every wave early in a single battle (no waves arrive on their own timer)."
     },
@@ -640,7 +640,7 @@
       "apId": 2479,
       "game_id": 323,
       "description": "Call 5 waves early.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:5"
       ],
@@ -650,7 +650,7 @@
       "apId": 2444,
       "game_id": 324,
       "description": "Call 35 waves early.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:35"
       ],
@@ -660,7 +660,7 @@
       "apId": 2012,
       "game_id": 325,
       "description": "Call 70 waves early.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "minWave:70"
       ],
@@ -719,7 +719,7 @@
       "apId": 2468,
       "game_id": 591,
       "description": "Cast 6 ice shards on the same monster.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "sIceShards",
         "minWave:35"
@@ -729,7 +729,7 @@
       "apId": 2080,
       "game_id": 592,
       "description": "Cast 8 ice shards on the same monster.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "sIceShards",
         "minWave:50"
@@ -858,7 +858,7 @@
       "description": "Create a grade 3 gem.",
       "required_effort": "Trivial",
       "requirements": [
-        "minGemGrade:3"
+        "min_wl:20"
       ],
       "details": "Create a grade-3 gem."
     },
@@ -866,9 +866,9 @@
       "apId": 2174,
       "game_id": 44,
       "description": "Create a grade 5 gem.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
-        "fieldToken:10"
+        "min_wl:40"
       ],
       "details": "Create a grade-5 gem."
     },
@@ -879,7 +879,7 @@
       "required_effort": "Extreme",
       "requirements": [
         "sPoison",
-        "fieldToken:90",
+        "min_wl:100",
         "talismanRow:3"
       ],
       "details": "Create a grade-12 pure poison gem."
@@ -898,7 +898,7 @@
       "apId": 2490,
       "game_id": 414,
       "description": "Deal 10.000 poison damage to a monster.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "sPoison",
         "minMonsterHP:15000"
@@ -951,7 +951,7 @@
       "description": "Deal 350 gem wasp stings to creatures.",
       "required_effort": "Minor",
       "requirements": [
-        "minWave:35"
+        "minMonsters:50"
       ],
       "details": "Land 350 wasp stings on monsters."
     },
@@ -961,7 +961,7 @@
       "description": "Deal 950 gem wasp stings to creatures.",
       "required_effort": "Major",
       "requirements": [
-        "minMonsters:250"
+        "minMonsters:150"
       ],
       "details": "Land 950 wasp stings on monsters."
     },
@@ -978,7 +978,7 @@
       "apId": 2396,
       "game_id": 214,
       "description": "Deal 100 gem wasp stings to the same monster.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "minMonsterHP:1000"
       ]
@@ -987,7 +987,7 @@
       "apId": 2519,
       "game_id": 594,
       "description": "Deal 400 wasp stings to a spire.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tRitual",
         "eSpire"
@@ -998,7 +998,7 @@
       "apId": 2121,
       "game_id": 536,
       "description": "Decrease the range of a gem.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [],
       "details": "Decrease a gem's range with a duplicator (or similar mechanic)."
     },
@@ -1025,7 +1025,7 @@
       "apId": 2517,
       "game_id": 254,
       "description": "Deliver 100 banishments with your orb.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minMonsters:100"
       ],
@@ -1035,7 +1035,7 @@
       "apId": 2561,
       "game_id": 255,
       "description": "Deliver 400 banishments with your orb.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "minMonsters:400"
       ],
@@ -1047,7 +1047,7 @@
       "description": "Deliver gem bomb and wasp kills only.",
       "required_effort": "Minor",
       "requirements": [
-        "fieldToken:10"
+        "min_wl:20"
       ],
       "details": "In one battle, all kills come from gem bombs and wasps only."
     },
@@ -1095,7 +1095,7 @@
       "apId": 2594,
       "game_id": 602,
       "description": "Demolish a pylon.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "sPylons"
@@ -1109,7 +1109,7 @@
       "apId": 2227,
       "game_id": 601,
       "description": "Demolish a trap.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "eTraps:1"
@@ -1132,7 +1132,7 @@
       "apId": 2301,
       "game_id": 583,
       "description": "Demolish 20 or more walls with falling spires.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tRitual",
         "eSpire",
@@ -1182,7 +1182,7 @@
       "apId": 2385,
       "game_id": 578,
       "description": "Destroy a building and a non-monster creature with one gem bomb.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         [
           "tRitual",
@@ -1199,7 +1199,7 @@
       "apId": 2593,
       "game_id": 579,
       "description": "Destroy a dwelling and kill a monster with one gem bomb.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eAbandonedDwelling"
       ],
@@ -1218,7 +1218,7 @@
       "apId": 2072,
       "game_id": 593,
       "description": "Destroy a full health possession obelisk with one gem bomb blast.",
-      "required_effort": "Minor",
+      "required_effort": "Extreme",
       "requirements": [
         "eObelisk",
         "fieldToken:25",
@@ -1230,7 +1230,7 @@
       "apId": 2084,
       "game_id": 521,
       "description": "Destroy a jar of wasps, but don't have any wasp kills.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eJarOfWasps:1"
       ]
@@ -1239,7 +1239,7 @@
       "apId": 2233,
       "game_id": 561,
       "description": "Destroy a monster nest after the last wave has started.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eMonsterNest:1"
       ],
@@ -1249,7 +1249,7 @@
       "apId": 2388,
       "game_id": 581,
       "description": "Destroy a monster nest while there is a wraith on the battlefield.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         [
           "eMonsterNest:1",
@@ -1298,7 +1298,7 @@
       "apId": 2186,
       "game_id": 411,
       "description": "Destroy 1 apparition, 1 specter, 1 wraith and 1 shadow in the same battle.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "tRitual",
         "eApparition",
@@ -1312,7 +1312,7 @@
       "apId": 2455,
       "game_id": 4,
       "description": "Destroy 5 barricades.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eBarricade:5"
       ]
@@ -1321,9 +1321,15 @@
       "apId": 2068,
       "game_id": 96,
       "description": "Destroy 8 beacons before wave 8.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
-        "eBeacon:8"
+        "min_wl:30",
+        [
+          "eBeacon:8"
+        ],
+        [
+          "tDarkMasonry"
+        ]
       ],
       "details": "Destroy 8 beacons before wave 8 starts."
     },
@@ -1331,7 +1337,7 @@
       "apId": 2407,
       "game_id": 95,
       "description": "Destroy 5 beacons.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "eBeacon:5"
@@ -1380,7 +1386,7 @@
       "apId": 2457,
       "game_id": 102,
       "description": "Destroy 5 dwellings.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eAbandonedDwelling:5"
       ]
@@ -1389,7 +1395,7 @@
       "apId": 2236,
       "game_id": 467,
       "description": "Destroy 3 healing beacons.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "tDarkMasonry",
@@ -1405,7 +1411,7 @@
       "apId": 2362,
       "game_id": 93,
       "description": "Destroy 2 monster nests before wave 12.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "eMonsterNest:2"
       ],
@@ -1415,7 +1421,7 @@
       "apId": 2363,
       "game_id": 92,
       "description": "Destroy 3 monster nests before wave 6.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eMonsterNest:3"
       ],
@@ -1434,7 +1440,7 @@
       "apId": 2320,
       "game_id": 60,
       "description": "Destroy 3 monster nests.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eMonsterNest:3"
       ]
@@ -1443,7 +1449,7 @@
       "apId": 2120,
       "game_id": 62,
       "description": "Destroy 5 monster nests.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "eMonsterNest:5"
       ]
@@ -1452,7 +1458,7 @@
       "apId": 2477,
       "game_id": 468,
       "description": "Destroy 3 shield beacons.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "tDarkMasonry"
       ]
@@ -1461,7 +1467,7 @@
       "apId": 2305,
       "game_id": 574,
       "description": "Don't crack any egg laid by a swarm queen.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "eSwarmQueen:1"
       ],
@@ -1499,9 +1505,9 @@
       "apId": 2564,
       "game_id": 261,
       "description": "Don't let any monster touch your orb for 60 beaten waves.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
-        "minWave:60"
+        "minWave:61"
       ],
       "details": "60 consecutive waves with no monster touching the orb."
     },
@@ -1511,7 +1517,7 @@
       "description": "Don't let any monster touch your orb for 120 beaten waves.",
       "required_effort": "Major",
       "requirements": [
-        "minWave:120",
+        "minWave:121",
         "mEndurance"
       ],
       "details": "Survive 120 consecutive waves without any monster reaching the orb."
@@ -1522,7 +1528,7 @@
       "description": "Don't let any monster touch your orb for 240 beaten waves.",
       "required_effort": "Extreme",
       "requirements": [
-        "minWave:240",
+        "minWave:241",
         "mEndurance"
       ],
       "details": "Survive 240 consecutive waves without any monster reaching the orb."
@@ -1542,7 +1548,7 @@
       "apId": 2436,
       "game_id": 391,
       "description": "Drop 18 gem bombs while it's raining.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "wRain"
       ],
@@ -1552,7 +1558,7 @@
       "apId": 2497,
       "game_id": 392,
       "description": "Drop 27 gem bombs while it's snowing.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "wSnow"
       ],
@@ -1573,14 +1579,14 @@
       "apId": 2343,
       "game_id": 462,
       "description": "Enhance a gem in an amplifier.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         [
           "sAmplifiers",
           "enhancementSpells:1"
         ],
         [
-          "EAmplifiers:1",
+          "eAmplifiers:1",
           "enhancementSpells:1"
         ]
       ],
@@ -1590,7 +1596,7 @@
       "apId": 2621,
       "game_id": 464,
       "description": "Enhance a gem in the enraging socket.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "enhancementSpells:1"
       ]
@@ -1599,7 +1605,7 @@
       "apId": 2155,
       "game_id": 463,
       "description": "Enhance a gem in the inventory.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "enhancementSpells:1"
       ],
@@ -1648,7 +1654,7 @@
       "apId": 2542,
       "game_id": 335,
       "description": "Enrage 10 waves.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:10"
       ],
@@ -1658,7 +1664,7 @@
       "apId": 2432,
       "game_id": 336,
       "description": "Enrage 30 waves.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         "minWave:30"
       ]
@@ -1667,7 +1673,7 @@
       "apId": 2434,
       "game_id": 337,
       "description": "Enrage 80 waves.",
-      "required_effort": "Trivial",
+      "required_effort": "Extreme",
       "requirements": [
         "minWave:80"
       ],
@@ -1696,7 +1702,7 @@
       "apId": 2483,
       "game_id": 361,
       "description": "Fill all the sockets in your talisman with fragments upgraded to level 5 or higher.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "requirements": [
         "talismanFragments:25"
       ],
@@ -1716,10 +1722,9 @@
       "apId": 2021,
       "game_id": 359,
       "description": "Fill all the sockets in your talisman.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "requirements": [
-        "talismanFragments:25",
-        "shadowCore:15000"
+        "talismanFragments:25"
       ]
     },
     "First Puzzle Piece": {
@@ -1751,7 +1756,7 @@
       "apId": 2103,
       "game_id": 348,
       "description": "Find 180 shadow cores.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:80"
       ],
@@ -1761,7 +1766,7 @@
       "apId": 2191,
       "game_id": 365,
       "description": "Find 2 talisman fragments.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:30"
       ]
@@ -1770,7 +1775,7 @@
       "apId": 2226,
       "game_id": 366,
       "description": "Find 3 talisman fragments.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "minWave:100"
       ]
@@ -1798,7 +1803,7 @@
       "apId": 2193,
       "game_id": 309,
       "description": "Freeze a monster 3 times.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sFreeze"
       ],
@@ -1808,7 +1813,7 @@
       "apId": 2198,
       "game_id": 479,
       "description": "Freeze a specter while it's snowing.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "requirements": [
         [
           "sFreeze",
@@ -1860,7 +1865,7 @@
       "apId": 2508,
       "game_id": 615,
       "description": "Full of oxygen",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "requirements": [
         "sSlowing"
       ],
@@ -1873,7 +1878,7 @@
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
-        "minWave:35"
+        "min_wl:50"
       ],
       "details": "Gain 1,500 xp from Freeze crowd hits."
     },
@@ -1883,7 +1888,8 @@
       "description": "Gain 1.800 xp with Ice Shards spell crowd hits.",
       "required_effort": "Minor",
       "requirements": [
-        "sIceShards"
+        "sIceShards",
+        "min_wl:50"
       ],
       "details": "Gain 1,800 xp from Ice Shards crowd hits."
     },
@@ -1894,7 +1900,7 @@
       "required_effort": "Major",
       "requirements": [
         "sIceShards",
-        "minWave:50"
+        "min_wl:100"
       ],
       "details": "Gain 3,200 xp from Ice Shards crowd hits."
     },
@@ -1904,7 +1910,8 @@
       "description": "Gain 4.900 xp with Ice Shards spell crowd hits.",
       "required_effort": "Extreme",
       "requirements": [
-        "sIceShards"
+        "sIceShards",
+        "min_wl:100"
       ],
       "details": "Gain 4,900 xp from Ice Shards crowd hits in one battle."
     },
@@ -1912,9 +1919,9 @@
       "apId": 2055,
       "game_id": 246,
       "description": "Gain 1.200 xp with kill chains.",
-      "required_effort": "Minor",
+      "required_effort": "Extreme",
       "requirements": [
-        "minMonsters:2250",
+        "minMonsters:1800",
         "mEndurance"
       ],
       "details": "Gain 1,200 xp from kill chains in one battle."

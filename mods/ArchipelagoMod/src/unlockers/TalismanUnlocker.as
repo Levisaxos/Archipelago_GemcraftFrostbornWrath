@@ -77,13 +77,14 @@ package unlockers {
         public function syncTalismans(apIds:Array):void {
             _ensureSlotMap();
             for each (var apId:int in apIds) {
-                if (!((apId >= 900 && apId <= 952) || (apId >= 1200 && apId <= 1246))) continue;
-                // Mapped (static-talisman) fragment: unlock+socket its slot.
-                // Re-socketing every sync is intentional (no removal), so this
-                // is NOT skipped on the already-granted check.
+                // Only 900–952 are talisman-fragment AP items now. The extra
+                // range (1200–1246) was retired; those items no longer exist.
+                if (!(apId >= 900 && apId <= 952)) continue;
+                // Mapped (static-talisman) fragment: record as received only.
+                // AP Shop model — not auto-socketed; the player buys + places
+                // it from the shop.
                 if (isMappedFragment(apId)) {
                     _grantedApIds[String(apId)] = true;
-                    _socketMappedFragment(apId);
                     continue;
                 }
                 if (_grantedApIds[String(apId)] == true) continue; // already granted; persisted check
@@ -100,29 +101,53 @@ package unlockers {
         // Progression talisman set (slot_data.progression_talisman_set)
 
         /**
-         * Static talisman: (re-)socket the synthetic fragment for every FOUND
-         * slot. Slots whose fragment item hasn't been received stay LOCKED and
-         * empty — the talisman is built up from AP unlocks, not handed over whole.
-         * Called on every sync so removed fragments get re-placed (no removal).
-         * The AP fragment item is the trigger; the socketed fragment is the
-         * synthetic one so the grid always tiles (see talisman_gen.py). The `set`
-         * param is ignored — the map is read from AV.serverData.progressionTalismanSet.
+         * AP Shop model: progression fragments are NO LONGER auto-socketed.
+         * Receiving one just records it as available; the player buys and
+         * places it manually from the AP Shop (see ui/TalismanShop). Slot
+         * unlocking stays vanilla (shadow cores). This method now only ensures
+         * the slot map is built so getCatalogEntries() can resolve positions.
+         * The `set` param is ignored — the map is read from
+         * AV.serverData.progressionTalismanSet.
          */
         public function applyProgressionSet(set:Array):void {
             _ensureSlotMap();
-            if (!ensurePpdExists("applyProgressionSet")) {
-                return;
+        }
+
+        // -----------------------------------------------------------------------
+        // AP Shop catalog
+
+        /**
+         * Return the full shop catalog — always all 25 progression fragments so
+         * the grid layout is always shown. Each entry is
+         * `{slot, seed, rarity, type, upgradeLevel, apId, name, received}`;
+         * `received` is true once the fragment has been received from AP (a
+         * not-received entry renders as a locked slot in the shop).
+         */
+        public function getCatalogEntries():Array {
+            _ensureSlotMap();
+            var out:Array = [];
+            var set:Array = (AV.serverData != null) ? AV.serverData.progressionTalismanSet : null;
+            if (set == null) return out;
+            for each (var entry:Object in set) {
+                if (entry == null || entry.ap_id === undefined) continue;
+                var apId:int = int(entry.ap_id);
+                var parts:Array = String(entry.tal_data).split("/");
+                if (parts.length < 4) continue;
+                var name:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
+                    ? String(_talNameMap[String(apId)])
+                    : ("Talisman Fragment #" + apId);
+                out.push({
+                    slot:         int(entry.slot),
+                    seed:         int(parts[0]),
+                    rarity:       int(parts[1]),
+                    type:         int(parts[2]),
+                    upgradeLevel: int(parts[3]),
+                    apId:         apId,
+                    name:         name,
+                    received:     (_grantedApIds[String(apId)] == true)
+                });
             }
-            var placed:int = 0;
-            for (var apIdStr:String in _grantedApIds) {
-                if (_grantedApIds[apIdStr] != true) continue;
-                if (_slotEntryByApId[apIdStr] == null) continue; // useful frag → no slot
-                if (_socketMappedFragment(int(apIdStr))) placed++;
-            }
-            if (placed > 0) {
-                logAction("applyProgressionSet: socketed " + placed + " found slots");
-                showPlusNodeOnSelector("mcPlusNodeTalisman");
-            }
+            return out;
         }
 
         /** Build apId(str) → progression-set entry from the shipped set (each
@@ -165,11 +190,11 @@ package unlockers {
             return true;
         }
 
-        /** Grant a mapped (static-talisman) fragment: mark received, unlock +
-         *  socket its slot, toast. */
+        /** Grant a mapped (static-talisman) fragment: mark it received and
+         *  toast. AP Shop model — NOT auto-socketed; the player buys + places
+         *  it from the shop. */
         private function _grantMapped(apId:int):void {
             _grantedApIds[String(apId)] = true;
-            _socketMappedFragment(apId);
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
                 : ("Talisman Fragment #" + apId);

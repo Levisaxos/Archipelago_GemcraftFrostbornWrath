@@ -611,23 +611,21 @@ class GemcraftFrostbornWrathWorld(World):
             else:
                 pool.append(self.create_item(name))
 
-        # Location-specific talisman fragments (53) and shadow core stashes (17)
+        # Talisman fragments: ONLY the 25 AP "perfect placement" fragments are
+        # AP items now (received from AP, bought in the AP Shop). The other ~28
+        # specific fragments — and the retired "extra" fragments (1200–1246) —
+        # are no longer placed; those talismans are collected through normal
+        # gameplay (wave drops / wizard stashes).
+        # Shadow core stashes: only the base per-field stashes (17) stay AP; the
+        # "extra" stashes (1300+) were retired. Both freed sets become filler
+        # via the SP-bundle fill below.
+        from .talismans import PROGRESSION_ALL_TALISMAN_NAMES
         for name in item_table:
             if name.endswith(" Talisman Fragment") and name != "Talisman Fragment":
-                pool.append(self.create_item(name))
+                if name in PROGRESSION_ALL_TALISMAN_NAMES:
+                    pool.append(self.create_item(name))
             elif name.endswith(" Shadow Cores"):
                 pool.append(self.create_item(name))
-
-        gd = _load_game_data()
-
-        # Extra talisman fragments — currently empty (vanilla drops cover the
-        # rest); loop kept for forward compatibility.
-        for frag in gd["extra_talisman_fragments"]:
-            pool.append(self.create_item(frag["name"]))
-
-        # Extra shadow core stashes (IDs 1300–1317)
-        for sc in gd["extra_shadow_core_stashes"]:
-            pool.append(self.create_item(sc["name"]))
 
         # XP tomes — fixed counts scaled so option=50→50 levels, option=300→300 levels.
         # 32 Tattered + 6 Worn + 2 Ancient = 40 tomes; at multiplier 1 (option=50): 32+12+6=50.
@@ -985,24 +983,23 @@ class GemcraftFrostbornWrathWorld(World):
         free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 900–952)
+        # Only the 25 AP "perfect placement" fragments are AP items now, so the
+        # maps ship just those (the extras 1200–1246 were retired, and the other
+        # ~28 specific fragments are normal gameplay loot). Keeps the mod's
+        # toasts / name lookups / debug grant menu limited to real AP items.
+        from .talismans import PROGRESSION_ALL_TALISMAN_NAMES
         talisman_map = {
             str(frag["item_ap_id"]): frag["tal_data"]
             for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in PROGRESSION_ALL_TALISMAN_NAMES
         }
-        talisman_map.update({
-            str(frag["item_ap_id"]): frag["tal_data"]
-            for frag in gd["extra_talisman_fragments"]
-        })
 
-        # Talisman name map: item AP ID (str) → display name (IDs 900–952)
+        # Talisman name map: item AP ID (str) → display name (the 25 AP fragments)
         talisman_name_map = {
             str(frag["item_ap_id"]): f"{frag['str_id']} Talisman Fragment"
             for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in PROGRESSION_ALL_TALISMAN_NAMES
         }
-        talisman_name_map.update({
-            str(frag["item_ap_id"]): frag["name"]
-            for frag in gd["extra_talisman_fragments"]
-        })
 
         # Wiz stash talisman data: str_id → "seed/rarity/type/upgradeLevel"
         # Used by NormalProgressionBlocker to identify and remove stash-granted fragments.
@@ -1037,25 +1034,19 @@ class GemcraftFrostbornWrathWorld(World):
         for _apid, _entry in zip(_prog_frag_apids, _tal_set_sorted):
             _entry["ap_id"] = _apid
 
-        # Shadow core map: item AP ID (str) → amount (IDs 1000–1016, 1300–1317)
+        # Shadow core map: item AP ID (str) → amount (IDs 1000–1016). Only the
+        # base per-field stashes stay AP items; the extra stashes (1300+) were
+        # retired.
         shadow_core_map = {
             str(sc["item_ap_id"]): sc["total"]
             for sc in gd["shadow_core_stashes"]
         }
-        shadow_core_map.update({
-            str(sc["item_ap_id"]): sc["amount"]
-            for sc in gd["extra_shadow_core_stashes"]
-        })
 
-        # Shadow core name map: item AP ID (str) → display name (IDs 1000–1016, 1300–1317)
+        # Shadow core name map: item AP ID (str) → display name (IDs 1000–1016)
         shadow_core_name_map = {
             str(sc["item_ap_id"]): f"{sc['str_id']} Shadow Cores"
             for sc in gd["shadow_core_stashes"]
         }
-        shadow_core_name_map.update({
-            str(sc["item_ap_id"]): sc["name"]
-            for sc in gd["extra_shadow_core_stashes"]
-        })
 
         # XP tome levels — 32 Tattered + 6 Worn + 2 Ancient = 40 tomes.
         # At multiplier 1 (option=50): 32×1 + 6×2 + 2×3 = 50 levels exactly.

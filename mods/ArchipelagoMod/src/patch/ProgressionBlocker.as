@@ -555,7 +555,11 @@ package patch {
                 }
                 if (skillReverted) removePlusNodeFromSelector("mcPlusNodeSkills");
 
-                // --- Block shadow cores and talisman fragments from wizard stashes ---
+                // --- Block shadow cores from wizard stashes ---
+                // Talisman fragments are NO LONGER blocked: only the 25 AP
+                // "perfect placement" fragments are AP items (bought in the AP
+                // Shop); every other talisman fragment — including wizard-stash
+                // TAL drops — is collected through normal gameplay now.
                 if (GV.ppd != null && GV.stageCollection != null && _wizStashTalData != null) {
                     var metas:Array = GV.stageCollection.stageMetas;
                     for (var m:int = 0; m < metas.length; m++) {
@@ -586,26 +590,12 @@ package patch {
                                 }
                             }
 
-                            if (drop == "TAL") {
-                                var talData:* = _wizStashTalData[strId];
-                                if (talData != null) {
-                                    var talParts:Array = String(talData).split("/");
-                                    if (talParts.length >= 1) {
-                                        var seed:int = int(talParts[0]);
-                                        if (removeTalismanBySeed(seed)) {
-                                            reverted++;
-                                            stashReverted++;
-                                            _logger.log(_modName, "Blocked stash TAL grant stage=" + strId
-                                                + " seed=" + seed);
-                                        }
-                                    }
-                                }
-                            }
+                            // TAL drops intentionally left alone — stash
+                            // talisman fragments are normal gameplay loot now.
                         }
 
                         if (stashReverted > 0) {
                             _stashBlockedIds[stageId] = true;
-                            removePlusNodeFromSelector("mcPlusNodeTalisman");
                         }
                     }
                 }

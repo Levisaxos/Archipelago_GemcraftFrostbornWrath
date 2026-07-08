@@ -223,12 +223,12 @@ _TALISMAN_FRAGMENT_COUNTERS: dict[str, frozenset] = {
 }
 
 
-# Field-token floors layered on top of the talisman counter gates so the
-# achievement locations that test these don't open before the player has
-# made enough world progress (talismans were placing too early otherwise).
+# Field-token floor layered on top of the talismanFragments counter gate so
+# the achievement locations that test it don't open before the player has made
+# enough world progress. talismanRow / talismanColumn intentionally carry NO
+# such floor — any additional gate (minWave, fieldToken, min_wl, ...) belongs in
+# the achievement's own requirements list, not bound to the metric.
 # count_needed -> minimum effectively-unlocked stages required.
-_TALISMAN_ROW_TOKEN_FLOOR: dict[int, int] = {1: 20, 2: 40, 3: 60}
-_TALISMAN_COLUMN_TOKEN_FLOOR: dict[int, int] = {1: 10, 2: 30, 3: 50}
 _TALISMAN_FRAGMENTS_TOKEN_FLOOR: dict[int, int] = {25: 75}
 
 
@@ -1099,23 +1099,11 @@ def _compile_req(req: str, world, is_progressive: bool):
             return (lambda state: _count_clearable_stages(state, player) >= count_needed,
                     _COST_REACH, None)
         if group_name == "talismanRow":
-            floor = _TALISMAN_ROW_TOKEN_FLOOR.get(count_needed)
-            if floor is None:
-                return (lambda state: _count_complete_talisman_rows(state, player) >= count_needed,
-                        _COST_COUNTER, None)
-            return (lambda state: (
-                _count_complete_talisman_rows(state, player) >= count_needed
-                and _count_field_tokens(state, player) >= floor
-            ), _COST_COUNTER, None)
+            return (lambda state: _count_complete_talisman_rows(state, player) >= count_needed,
+                    _COST_COUNTER, None)
         if group_name == "talismanColumn":
-            floor = _TALISMAN_COLUMN_TOKEN_FLOOR.get(count_needed)
-            if floor is None:
-                return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
-                        _COST_COUNTER, None)
-            return (lambda state: (
-                _count_complete_talisman_columns(state, player) >= count_needed
-                and _count_field_tokens(state, player) >= floor
-            ), _COST_COUNTER, None)
+            return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
+                    _COST_COUNTER, None)
         if group_name == "skillPoints":
             return (lambda state: _count_skill_points(state, player) >= count_needed,
                     _COST_COUNTER, None)
@@ -1277,6 +1265,32 @@ _NO_PROGRESSION_ACHIEVEMENTS = frozenset({
     "Skillful",             # skills:24
     "Peek Into The Abyss",  # battleTraits:12
 })
+
+
+def _extract_min_wl(requirements):
+    """Return the per-achievement WL floor from a `min_wl:N` token in
+    `requirements`, or None if absent. Scans both flat (`["a", "b"]`) and DNF
+    (`[["a", "b"], ...]`) shapes — the token is treated as a top-level pacing
+    override, so the largest N found wins regardless of which OR-group it sits
+    in. Overrides the effort-tier default (ACH_MIN_WL[effort]) in set_rules."""
+    if not requirements:
+        return None
+    groups = requirements if isinstance(requirements[0], list) else [requirements]
+    best = None
+    for group in groups:
+        for tok in group:
+            if not isinstance(tok, str):
+                continue
+            head, _, cnt = tok.strip().partition(":")
+            if head.strip() != "min_wl":
+                continue
+            try:
+                n = int(cnt.strip())
+            except ValueError:
+                continue
+            if best is None or n > best:
+                best = n
+    return best
 
 
 def _compile_skill_trait_gate(requirements, player):
@@ -1702,15 +1716,20 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 location = multiworld.get_location(f"Achievement: {ach_name}", player)
 
                 # Two gates, composed (AND):
-                #   SOFT: derived WL >= ACH_MIN_WL[effort] — paces WHEN the
-                #         achievement is expected (the old token-era _compile_dnf
-                #         is intentionally not used; it referenced the stage-clear
-                #         system the WL revamp bypasses).
+                #   SOFT: derived WL floor — paces WHEN the achievement is
+                #         expected. A per-achievement `min_wl:N` token in the
+                #         requirements OVERRIDES the effort-tier default
+                #         (ACH_MIN_WL[effort]); otherwise the tier default
+                #         applies. (The old token-era _compile_dnf is
+                #         intentionally not used; it referenced the stage-clear
+                #         system the WL revamp bypasses.)
                 #   SKILL/TRAIT: the specific skills/traits the achievement needs
                 #         (Phase 5, ENABLE_ACH_SKILL_TRAIT_GATE). Element/counter
                 #         tokens stay unenforced here.
                 _components = []
-                _min_wl = int(_dg.ACH_MIN_WL.get(ach_effort, 0))
+                _wl_override = _extract_min_wl(ach_data.get("requirements", []))
+                _min_wl = (_wl_override if _wl_override is not None
+                           else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
                 if _min_wl > 0:
                     _components.append(lambda state, _m=_min_wl: _wl_of(state) >= _m)
                 if ENABLE_ACH_SKILL_TRAIT_GATE:

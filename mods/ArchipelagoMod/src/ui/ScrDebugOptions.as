@@ -33,8 +33,14 @@ package ui {
             _mc = new McDebugOptions();
             _scroll.attach(_mc, close);
 
-            // Wizard slider
-            _mc.wizardSlider.onChange = _onWizardLevelChanged;
+            // Level preset toggles (radio: clicking one sets the level exactly)
+            for (var k:int = 0; k < _mc.levelPanels.length; k++) {
+                var lentry:Object = _mc.levelPanels[k];
+                var lpnl:McOptPanel = McOptPanel(lentry.panel);
+                lpnl.addEventListener(      MouseEvent.CLICK,      _makeLevelClickHandler(int(lentry.level)), false, 0, true);
+                lpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
+                lpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+            }
 
             // Skills tab
             for (var i:int = 0; i < _mc.skillPanels.length; i++) {
@@ -270,8 +276,9 @@ package ui {
         // -----------------------------------------------------------------------
         // Click handlers
 
-        private function _onWizardLevelChanged(level:int):void {
+        private function _onLevelPresetClick(level:int):void {
             _mod.setDebugWizardLevel(level);
+            _renderDebugOptions();
         }
 
         private function _onSkillClick(gameId:int):void {
@@ -361,6 +368,9 @@ package ui {
         }
 
         // Closures
+        private function _makeLevelClickHandler(level:int):Function {
+            return function(e:MouseEvent):void { _onLevelPresetClick(level); };
+        }
         private function _makeSkillClickHandler(gameId:int):Function {
             return function(e:MouseEvent):void { _onSkillClick(gameId); };
         }
@@ -393,8 +403,16 @@ package ui {
 
             switch (active) {
                 case McDebugOptions.TAB_LEVELS:
-                    if (!_mc.wizardSlider.isDragging) {
-                        _mc.wizardSlider.setValue(_mod.getDisplayedWizardLevel());
+                    var lvlNow:int = _mod.getDisplayedWizardLevel();
+                    if (_mc.levelTitle != null) {
+                        _mc.levelTitle.tf.text = "Wizard Level: " + lvlNow;
+                    }
+                    // Radio display: only the toggle whose level matches the
+                    // current level shows checked (frame 2). Off-preset levels
+                    // (e.g. nudged by XP tomes) leave all unchecked.
+                    for (var lp:int = 0; lp < _mc.levelPanels.length; lp++) {
+                        var le:Object = _mc.levelPanels[lp];
+                        McOptPanel(le.panel).btn.gotoAndStop(int(le.level) == lvlNow ? 2 : 1);
                     }
                     _renderGrantPanelsCollected(_mc.xpPanels);
                     break;

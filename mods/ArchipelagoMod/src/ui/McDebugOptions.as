@@ -22,12 +22,12 @@ package ui {
      * McOptions directly).
      *
      * Tabs:
-     *   0 Wizard     — compact level slider + presets
+     *   0 Wizard     — level preset toggles + XP tomes
      *   1 Skills     — 24 skill toggles
      *   2 Traits     — 15 battle-trait toggles
      *   3 Stages     — YAML-aware: per-stage / per-tile / per-tier toggles
-     *   4 Talismans  — base (900–952) + extra (1200–1246) one-shot grants
-     *   5 Cores      — shadow-core bundles (1000–1016, 1300–1351) one-shot grants
+     *   4 Talismans  — the 25 AP "perfect placement" fragment one-shot grants
+     *   5 Cores      — base shadow-core stash (1000–1016) one-shot grants
      *   6 XP         — XP-tome drop-icon grants (Tattered/Worn/Ancient/Filler)
      *
      * Each tab owns an Array of display objects (each with `yReal`). On tab
@@ -48,7 +48,8 @@ package ui {
         public static const TAB_ACHIEVEMENTS:int = 7;
 
         // ── Public state for ScrDebugOptions handlers ───────────────────────────
-        public var wizardSlider:McWizardLevelSlider;
+        public var levelPanels:Array;       // Array of { panel:McOptPanel, level:int }
+        public var levelTitle:McOptTitle;   // live "Wizard Level: N" heading
         public var skillPanels:Array;        // McOptPanel[24]
         public var traitPanels:Array;        // McOptPanel[15]
         public var stageIdToPanel:Object;    // strId -> McOptPanel (per-stage mode)
@@ -231,13 +232,29 @@ package ui {
         private function _buildLevelsTab():Array {
             var arr:Array = [];
             xpPanels = [];
+            levelPanels = [];
 
-            // Wizard slider (top)
-            wizardSlider = new McWizardLevelSlider(0, CONTENT_START_Y);
-            arr.push(wizardSlider);
+            // ── Wizard level presets (native toggles, radio behaviour) ──────────
+            // The heading doubles as a live readout of the current level; the
+            // toggle whose level matches shows checked (see ScrDebugOptions).
+            var vY:Number = CONTENT_START_Y;
+            levelTitle = new McOptTitle("Wizard Level", TITLE_X, vY);
+            arr.push(levelTitle);
+            vY += ROW_HEIGHT_NORM;
 
-            // XP tomes (below slider, separated by a section gap)
-            var vY:Number = CONTENT_START_Y + McWizardLevelSlider.TOTAL_HEIGHT + SECTION_GAP;
+            var levels:Array = [1, 10, 25, 50, 100, 250, 500, 1000];
+            for (var li:int = 0; li < levels.length; li++) {
+                var lpx:Number = (li % 2 == 0) ? COL_LEFT_X : COL_RIGHT_X;
+                var lv:int = int(levels[li]);
+                var lpnl:McOptPanel = new McOptPanel("Level " + lv, lpx, vY, false);
+                levelPanels.push({ panel: lpnl, level: lv });
+                arr.push(lpnl);
+                if (li % 2 == 1) vY += ROW_HEIGHT_NORM;
+            }
+            if (levels.length % 2 != 0) vY += ROW_HEIGHT_NORM;
+
+            // ── XP tomes (below the presets, separated by a section gap) ────────
+            vY += SECTION_GAP;
             arr.push(new McOptTitle("XP Tomes", TITLE_X, vY));
             vY += ROW_HEIGHT_NORM;
 
@@ -419,12 +436,12 @@ package ui {
             talismanPanels = [];
             var nameMap:Object = (AV.serverData != null) ? AV.serverData.talismanNameMap : null;
 
+            // Only the 25 AP "perfect placement" fragments are AP items now
+            // (they resolve via the name map); the other 900–952 ids and the
+            // retired extras (1200–1246) are no longer granted here.
             var vY:Number = CONTENT_START_Y;
-            vY = _appendGrantSection(arr, talismanPanels, "Base Talismans (900-952)",
+            _appendGrantSection(arr, talismanPanels, "AP Talismans (900-952)",
                 900, 952, nameMap, "Talisman Fragment", vY);
-            vY += SECTION_GAP;
-            _appendGrantSection(arr, talismanPanels, "Extra Talismans (1200-1246)",
-                1200, 1246, nameMap, "Talisman Fragment", vY);
             return arr;
         }
 
@@ -433,12 +450,11 @@ package ui {
             corePanels = [];
             var nameMap:Object = (AV.serverData != null) ? AV.serverData.shadowCoreNameMap : null;
 
+            // Only the base per-field stashes (1000–1016) are AP items now; the
+            // extra shadow cores (1300–1351) were retired.
             var vY:Number = CONTENT_START_Y;
-            vY = _appendGrantSection(arr, corePanels, "Base Shadow Cores (1000-1016)",
+            _appendGrantSection(arr, corePanels, "Base Shadow Cores (1000-1016)",
                 1000, 1016, nameMap, "Shadow Cores", vY);
-            vY += SECTION_GAP;
-            _appendGrantSection(arr, corePanels, "Extra Shadow Cores (1300-1351)",
-                1300, 1351, nameMap, "Shadow Cores", vY);
             return arr;
         }
 

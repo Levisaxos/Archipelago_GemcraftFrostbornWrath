@@ -19,6 +19,7 @@ package {
     import goals.GoalManager;
 
     import ui.ModButtons;
+    import ui.TalismanShop;
     import ui.IconTooltipPreview;
     import ui.ScrSlotSettings;
     import ui.SystemToast;
@@ -121,6 +122,7 @@ package {
         private var _logger:Logger;
         private var _bezel:Bezel;
         private var _modButtons:ModButtons;
+        private var _talismanShop:TalismanShop;
         private var _slotSettings:ScrSlotSettings;
 
         private var _systemToast:SystemToast;
@@ -376,6 +378,10 @@ package {
                 _modButtons.onChangelogClick = openChangelog;
                 _modButtons.onCreditsClick   = openCredits;
 
+                // AP Shop — hover popup on the talisman screen for buying the
+                // perfect-placement talisman fragments with shadow cores.
+                _talismanShop = new TalismanShop(_logger, MOD_NAME, _talismanUnlocker);
+
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
                 _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
@@ -428,6 +434,10 @@ package {
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
             removeEventListener(Event.EXIT_FRAME, onExitFrame);
+            if (_talismanShop != null) {
+                _talismanShop.dispose();
+                _talismanShop = null;
+            }
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -580,6 +590,9 @@ package {
             if (_earlyExitOutcome != null) _earlyExitOutcome.detach();
             if (_victoryRestartButton != null) _victoryRestartButton.detach();
             if (_retryButtonSkillPointsRefresh != null) _retryButtonSkillPointsRefresh.detach();
+            // Remove the AP Shop button + popup from the (persistent) talisman
+            // panel so it doesn't linger into a standalone save.
+            if (_talismanShop != null) _talismanShop.dispose();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
@@ -1157,6 +1170,12 @@ package {
             }
             if (_slotSettings != null && _slotSettings.isOpen) {
                 _slotSettings.doEnterFrame();
+            }
+
+            // AP Shop: injects its talisman-screen button + drives the hover popup.
+            if (_talismanShop != null) {
+                try { _talismanShop.onSelectorFrame(); }
+                catch (eShop:Error) { _logger.log(MOD_NAME, "talismanShop error: " + eShop.message); }
             }
         }
 
