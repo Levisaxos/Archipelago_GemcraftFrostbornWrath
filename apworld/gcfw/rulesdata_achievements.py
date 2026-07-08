@@ -36,7 +36,7 @@ achievement_requirements = {
         "description": "Acquire and raise all skills to level 5 or above.",
         "details": "Acquire all skills and raise each to level 5+.",
         "requirements": ["skills:24"],
-        "required_effort": "Trivial",
+        "required_effort": "Extreme",
     },
     "Regaining Knowledge": {
         "ap_id": 2441,

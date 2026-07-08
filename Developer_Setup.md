@@ -1,4 +1,7 @@
-# Building a Bezel Mod for GemCraft Frostborn Wrath
+# Developer Setup — Building the GemCraft: Frostborn Wrath Mod
+
+> **This guide is for developers** who want to build the Archipelago mod and apworld from source.
+> If you just want to **play**, you do not need any of this — see the [README](README.md) for player install steps (download the prebuilt `ArchipelagoMod.swf` and `gcfw.apworld` from Releases).
 
 ## Prerequisites
 
@@ -17,7 +20,7 @@ https://adoptium.net/temurin/releases/?version=8
 ```
 Select **Windows x64**, package type **JDK**, and run the `.msi` installer with default settings.
 
-After installing, update `JAVA_HOME` in `do not commit\config.bat` to match the installed folder name if it differs.
+After installing, update `JAVA_HOME` in `do not commit\0. config.bat` to match the installed folder name if it differs.
 
 ### 3. Adobe AIR SDK 32
 AIR SDK 51 (current) produces bytecode that is too new for GemCraft's Flash runtime. You need **AIR SDK 32** specifically.
@@ -65,7 +68,7 @@ ArchipelagoMod/
 }
 ```
 
-`${BEZEL_LIBS}` is substituted at build time by `build_mod.bat` using the value from `do not commit\config.bat`.
+`${BEZEL_LIBS}` is substituted at build time by `2. build_mod.bat` using the value from `do not commit\0. config.bat`.
 
 **Important rules for `asconfig.json`:**
 - Use `"config": "air"` — not `"flex"` (causes a float type error with SDK 32)
@@ -89,18 +92,19 @@ package {
 
 ## Building
 
-Use the provided bat scripts in `do not commit\`. All paths are configured in `do not commit\config.bat`.
+Use the provided bat scripts in `do not commit\`. All paths are configured in `do not commit\0. config.bat`.
 
 **Build and install the mod:**
 ```
-do not commit\build_mod.bat
+do not commit\2. build_mod.bat
 ```
 This substitutes `${BEZEL_LIBS}` in `asconfig.json`, compiles with the bundled AIR SDK, and copies the output to the game's `Mods` folder.
 
 **Build and install the apworld:**
 ```
-do not commit\build_apworld.bat
+do not commit\1. build_apworld.bat
 ```
+This packs `apworld\gcfw` into `gcfw.apworld` and copies it into Archipelago's `custom_worlds` folder.
 
 ---
 
