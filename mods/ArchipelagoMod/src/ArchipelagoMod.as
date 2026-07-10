@@ -28,6 +28,7 @@ package {
     import ui.ItemColors;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
+    import ui.ScrGameElements;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
     import ui.OfflineItemsPanel;
@@ -137,6 +138,7 @@ package {
         private var _messageLogOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
+        private var _gameElements:ScrGameElements;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
         private var _apStateSync:ApStateSync;
@@ -288,6 +290,7 @@ package {
                 WizStashes.setEvaluator(_fieldLogicEvaluator);
 
                 _debugOptions  = new ScrDebugOptions(this);
+                _gameElements  = new ScrGameElements(_fieldLogicEvaluator);
                 _slotSettings  = new ScrSlotSettings();
 
                 // Connection manager — AP protocol + WebSocket
@@ -376,6 +379,7 @@ package {
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _modButtons.onSettingsClick  = onSettingsClicked;
                 _modButtons.onApDebugClick   = _toggleDebugOptions;
+                _modButtons.onGameElementClick = _toggleGameElements;
                 _modButtons.onChangelogClick = openChangelog;
                 _modButtons.onCreditsClick   = openCredits;
 
@@ -480,6 +484,10 @@ package {
                 _debugOptions.close();
             }
             _debugOptions = null;
+            if (_gameElements != null && _gameElements.isOpen) {
+                _gameElements.close();
+            }
+            _gameElements = null;
             if (_connectionPanel != null) {
                 _connectionPanel.dismiss();
             }
@@ -639,6 +647,7 @@ package {
             // Without this it survives AP → standalone → AP and its stale display
             // list / listeners leave the reopened menu unclickable.
             if (_debugOptions != null) _debugOptions.dispose();
+            if (_gameElements != null) _gameElements.dispose();
             if (_mainMenuUI != null) _mainMenuUI.hide();
 
             _sessionDrops = [];
@@ -1175,6 +1184,9 @@ package {
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
             }
+            if (_gameElements != null && _gameElements.isOpen) {
+                _gameElements.doEnterFrame();
+            }
             if (_slotSettings != null && _slotSettings.isOpen) {
                 _slotSettings.doEnterFrame();
             }
@@ -1251,6 +1263,15 @@ package {
                 _debugOptions.close();
             } else {
                 _debugOptions.open();
+            }
+        }
+
+        private function _toggleGameElements():void {
+            if (_gameElements == null) return;
+            if (_gameElements.isOpen) {
+                _gameElements.close();
+            } else {
+                _gameElements.open();
             }
         }
 
