@@ -25,6 +25,7 @@ package ui {
     import data.AV;
     import net.ConnectionManager;
     import tracker.FieldLogicEvaluator;
+    import tracker.AchievementLogicEvaluator;
 
     /**
      * PREVIEW of the proposed icon-based field tooltip \u2014 the panel intended to
@@ -89,6 +90,9 @@ package ui {
         private var _suppressed:Boolean = false;
         // Logic source for journey/stash reachability (same one FieldTooltipOverlay uses).
         private var _evaluator:FieldLogicEvaluator;
+        // Achievement logic — supplies the per-field "doable here" achievement
+        // block (specific + global split). May be null before AP connect.
+        private var _achEval:AchievementLogicEvaluator;
         // Per-icon hit rects (panel-local) + their detail html, rebuilt per stage.
         private var _hotspots:Array = [];
         // Detail text field below the checks row, updated each frame on hover.
@@ -99,9 +103,11 @@ package ui {
         private var _hoverY:Number = 0;
         private var _curPanelH:int = 0;
 
-        public function IconTooltipPreview(evaluator:FieldLogicEvaluator) {
+        public function IconTooltipPreview(evaluator:FieldLogicEvaluator,
+                                           achEval:AchievementLogicEvaluator) {
             super();
             _evaluator = evaluator;
+            _achEval   = achEval;
             // Block mouse events over the panel so they DON'T pass through to the
             // field tokens underneath. A mouse-transparent panel lets the token
             // beneath the cursor fire its MOUSE_OVER, lighting up the wrong field
@@ -381,8 +387,20 @@ package ui {
 
             if (showJ) { items.push(makeOrb(jColor, 30, "J")); htmls.push(jHtml); }
             if (showS) { items.push(makeOrb(sColor, 30, "S")); htmls.push(sHtml); }
-            items.push(makeCountBox(COL_LABEL, 48, 30, "A:3"));
-            htmls.push(achievementsHtml());
+
+            // Achievement count box ("A:N") + its hover list. N = achievements
+            // obtainable by playing THIS field (specific + globals). Colour:
+            // grey when none, green when the field is clearable, red when it
+            // isn't (globals still listed, but you can't earn them here yet).
+            var fa:Object = (_achEval != null) ? _achEval.getFieldAchievements(strId) : null;
+            var spec:Array = (fa != null) ? (fa.specific as Array) : [];
+            var glob:Array = (fa != null) ? (fa.global as Array) : [];
+            var achTotal:int = spec.length + glob.length;
+            var clearable:Boolean = (_evaluator != null) && _evaluator.canCompleteStage(strId);
+            var aColor:uint = (achTotal == 0) ? COL_GREY : (clearable ? COL_GREEN : COL_RED);
+            var aLabel:String = "A:" + achTotal;
+            items.push(makeCountBox(aColor, 24 + aLabel.length * 8, 30, aLabel));
+            htmls.push(achievementsHtml(spec, glob, clearable, achTotal));
 
             addRow(items, cy, 24);
 
@@ -573,13 +591,31 @@ package ui {
             } catch (e:Error) {}
         }
 
-        /** Hardcoded placeholder achievement list (real data later). */
-        private function achievementsHtml():String {
-            var parts:Array = [
-                entryHtml("Gemless Victory", "Beat the field without combining gems", COL_GREEN),
-                entryHtml("Swift Conqueror", "Reach wave 10 in under 5 minutes", COL_GREEN),
-                entryHtml("Giant Slayer",    "Kill 3 giants with a single beam", COL_GREEN)
-            ];
+        /**
+         * Hover list for the "A:N" box. Shows up to 3 achievements doable on
+         * this field (name heading + description body), then an "And x more"
+         * line covering the overflow and every global. Field-specific
+         * achievements lead; only when there are none do we fall back to
+         * showing globals. Entry colour is green on a clearable field, red on
+         * one that isn't yet (you can't earn them here). Completed achievements
+         * are already excluded upstream, so never appear.
+         */
+        private function achievementsHtml(spec:Array, glob:Array,
+                                          clearable:Boolean, total:int):String {
+            if (total <= 0)
+                return "<font color='" + toHex(COL_MUTED) + "'>No achievements available here</font>";
+            var entryColor:uint = clearable ? COL_GREEN : COL_RED;
+            var shown:Array = (spec.length > 0) ? spec : glob;
+            var shownCount:int = Math.min(3, shown.length);
+            var parts:Array = [];
+            for (var i:int = 0; i < shownCount; i++) {
+                var a:Object = shown[i];
+                var desc:String = (a.description != null) ? String(a.description) : "";
+                parts.push(entryHtml(String(a.name), desc, entryColor));
+            }
+            var more:int = total - shownCount;
+            if (more > 0)
+                parts.push("<font color='" + toHex(COL_MUTED) + "'>And " + more + " more</font>");
             return parts.join("<br>");
         }
 

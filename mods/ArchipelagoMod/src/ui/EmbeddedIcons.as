@@ -8,19 +8,20 @@ package ui {
      * + shadow layers). These are raw SWF bitmaps with no runtime AS3 class, so
      * they can't be resolved via getDefinitionByName - they're embedded here.
      *
-     * Source files live under src/images/elements/ (git-ignored game art; the
-     * SWF still carries them after build).
+     * Embedded straight from the extracted game images under
+     * `do not commit/gcfw/images/` (git-ignored, present for any local build) so
+     * there's no duplicate copy to maintain. The SWF carries them after build.
      */
     public class EmbeddedIcons {
 
-        [Embed(source='../images/elements/3516.png')] private static const Trap:Class;
-        [Embed(source='../images/elements/3518.jpg')] private static const Lantern:Class;
-        [Embed(source='../images/elements/3520.jpg')] private static const Pylon:Class;
-        [Embed(source='../images/elements/3514.png')] private static const Amp:Class;
-        [Embed(source='../images/elements/660.png')]  private static const Barricade:Class;
-        [Embed(source='../images/elements/1801.png')] private static const Nest:Class;
-        [Embed(source='../images/elements/284.png')]  private static const Shadow0:Class;
-        [Embed(source='../images/elements/286.png')]  private static const Shadow1:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/3516.png')] private static const Trap:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/3518.jpg')] private static const Lantern:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/3520.jpg')] private static const Pylon:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/3514.png')] private static const Amp:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/660.png')]  private static const Barricade:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/1801.png')] private static const Nest:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/284.png')]  private static const Shadow0:Class;
+        [Embed(source='../../../../do not commit/gcfw/images/286.png')]  private static const Shadow1:Class;
 
         private static const SINGLE:Object = {
             "Trap":         Trap,

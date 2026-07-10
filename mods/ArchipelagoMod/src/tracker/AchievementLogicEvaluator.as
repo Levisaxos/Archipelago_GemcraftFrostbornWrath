@@ -278,6 +278,47 @@ package tracker {
         }
 
         /**
+         * Build the world-map field tooltip's achievement block for `strId`.
+         * Returns { specific:Array, global:Array } where each element is
+         * { name, description, apId }.  Draws from the same set behind the
+         * panel's green dots (AV.sessionData.achievementNamesInLogic): missing,
+         * in-logic, non-excluded.  "specific" = completable by playing THIS
+         * field; "global" = obtainable on any clearable field.  Achievements
+         * bound only to OTHER fields are omitted.
+         */
+        public
+        function getFieldAchievements(strId: String): Object {
+            var specific: Array = [];
+            var global: Array = [];
+            if (_logicEvaluator == null || strId == null || strId.length == 0)
+                return { specific: specific, global: global };
+            // Make sure achievementNamesInLogic is current before we read it.
+            getInLogicAchApIds();
+            var names: Array = AV.sessionData.achievementNamesInLogic as Array;
+            if (names == null)
+                return { specific: specific, global: global };
+            for each (var achName: String in names) {
+                var achData: Object = _achievementData[achName];
+                if (achData == null)
+                    continue;
+                var cls: String = _logicEvaluator.classifyForStage(
+                    achData.requirements as Array, strId);
+                if (cls == "other")
+                    continue;
+                var entry: Object = {
+                    name: achName,
+                    description: achData.description,
+                    apId: int(achData.apId)
+                };
+                if (cls == "specific")
+                    specific.push(entry);
+                else
+                    global.push(entry);
+            }
+            return { specific: specific, global: global };
+        }
+
+        /**
          * Returns [text, color] pairs describing failing requirements for the
          * achievement identified by apId.  Empty if in logic, excluded, or not found.
          */

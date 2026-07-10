@@ -211,6 +211,85 @@ package tracker {
             return false;
         }
 
+        /**
+         * Classify an achievement (by its DNF requirements) relative to a
+         * hovered stage, for the world-map field tooltip's achievement block.
+         *
+         * Returns:
+         *   "specific" — some DNF group's per-stage tokens can ALL be satisfied
+         *                by THIS stage (strId is in the intersected candidate
+         *                set), strId is currently in logic, and that group's
+         *                non-stage tokens (skills/traits/counters) are all met.
+         *                The achievement is completable by playing this field.
+         *   "global"   — no passing group binds to a stage (every passing group
+         *                is loadout/global tokens only), so it's obtainable on
+         *                any clearable field. Field-independent.
+         *   "other"    — only bindable to OTHER stages (a per-stage group whose
+         *                candidate set excludes strId); not shown on this field.
+         *
+         * Mirrors _evaluateAndGroupBound's binding, but pins the bound stage to
+         * strId instead of "any stage in fieldsInLogic".
+         */
+        public function classifyForStage(requirements:Array, strId:String):String {
+            if (requirements == null || requirements.length == 0)
+                return "global";
+            if (_fieldEvaluator != null)
+                _fieldEvaluator.recompute();
+            var fil:Object = (AV.sessionData != null) ? AV.sessionData.fieldsInLogic : null;
+            var groups:Array = (requirements[0] is Array) ? requirements : [requirements];
+            var sawGlobalGroup:Boolean = false;
+            for each (var group:* in groups)
+            {
+                var andGroup:Array = group as Array;
+                if (andGroup == null)
+                    continue;
+                var candidates:Array = null;    // null = no per-stage token yet
+                var hasStageToken:Boolean = false;
+                var nonStageOk:Boolean = true;
+                for each (var groupReq:* in andGroup)
+                {
+                    var rs:String = _trim(String(groupReq));
+                    var stages:Array = _qualifyingStagesForToken(rs);
+                    if (stages == null)
+                    {
+                        if (!evaluateRequirement(rs))
+                        {
+                            nonStageOk = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        hasStageToken = true;
+                        if (candidates == null)
+                            candidates = stages.concat();
+                        else
+                            candidates = _intersectStages(candidates, stages);
+                    }
+                }
+                if (!nonStageOk)
+                    continue;
+                if (!hasStageToken)
+                {
+                    sawGlobalGroup = true;
+                    continue;
+                }
+                // Stage-bound group: doable HERE iff strId is a candidate and
+                // this field is currently in logic.
+                if (candidates != null && fil != null && fil[strId] == true)
+                {
+                    for each (var sid:String in candidates)
+                    {
+                        if (sid == strId)
+                            return "specific";
+                    }
+                }
+            }
+            if (sawGlobalGroup)
+                return "global";
+            return "other";
+        }
+
         /** Count of stages currently in logic.  Used by the `fieldToken:N`
          *  achievement-requirement token — mirrors apworld semantic. */
         private function _countFieldsInLogic():int {
