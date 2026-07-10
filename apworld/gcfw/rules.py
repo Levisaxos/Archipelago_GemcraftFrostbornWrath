@@ -584,9 +584,13 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
 # overhead in our setup, since every stage region is unconditionally
 # connected from start. Calling the compiled rule directly is ~5-10x cheaper.
 #
-# IMPORTANT: if the region graph ever gains *gated* connections (e.g. region
-# A reachable only after item X), this short-circuit becomes wrong — the
-# rule check alone won't see the region gate. Update accordingly.
+# IMPORTANT: if the region graph gains *gated* connections (e.g. region
+# A reachable only after item X), this short-circuit misses that gate unless
+# the gate is ALSO composed into the rule here. The wizard-level SOFT gate is
+# such a connection: it's composed onto stage entrances in set_rules AND folded
+# into these rules right after (see the `_STAGE_CLEAR_RULES[(player, _sid)]`
+# rewrap in the WL loop), so this direct call stays in parity with can_reach.
+# Any future region-level gate must do the same.
 #
 # Keyed by (player, sid) so multi-world generations don't stomp each other —
 # rules bind to a specific player at compile time.
@@ -1694,6 +1698,24 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         if _wl is not _always_true:
             for _ent in multiworld.get_region(_sid, player).entrances:
                 _ent.access_rule = _compose_and([_ent.access_rule, _wl])
+            # Also compose the WL gate into the direct-call clearability rule.
+            # `_can_clear_stage_cached` calls _STAGE_CLEAR_RULES[sid] DIRECTLY
+            # (bypassing can_reach for speed), so the entrance WL gate above is
+            # invisible to it — and it backs the achievement requirement checks
+            # (_can_reach_any_stage) and Field_<sid> prereqs. Without this a
+            # token-unlocked but WL-locked stage (e.g. R2 held-token at WL 11,
+            # gate 13) reads as clearable, so its gem/monster-gated achievements
+            # (sPoison / sBleeding / minMonsters:400) show in logic while every
+            # R2 stage location correctly stays out. This is exactly the region-
+            # gate divergence the _STAGE_CLEAR_RULES comment warns about, and it
+            # restores parity with the mod's isStageInLogic (soft gate applied).
+            _clear = _STAGE_CLEAR_RULES.get((player, _sid))
+            if _clear is not None:
+                _STAGE_CLEAR_RULES[(player, _sid)] = (
+                    lambda state, r=_clear, w=_wl: r(state) and w(state)
+                )
+            else:
+                _STAGE_CLEAR_RULES[(player, _sid)] = _wl
         # The "Clear <sid>" XP event fires on CLEAR, so it mirrors the Journey
         # location's clearability rule (WIZLOCK skills + pouch + DNF prereqs);
         # region reachability already supplies token + WL. Without this the
