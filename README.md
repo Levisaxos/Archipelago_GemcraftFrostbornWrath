@@ -157,7 +157,8 @@ That's **244 base locations**, plus however many achievements you enable — fro
 | Talisman fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
 | Shadow core stashes | 35 | 17 named by original field + 18 extra stashes |
 | XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls — combined wizard-level bonus is configurable |
-| Skillpoint bundles | filler | Four tiers (Small/Medium/Large/Huge); total payout scales with `skillpoint_multiplier` |
+| Skillpoint bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 8 Medium (25 SP) + 2 Big (250 SP) = 860 SP |
+| Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after the real items, XP tomes, and 40 bundles are placed |
 
 The exact item pool depends on your granularity choices — coarser settings put fewer, broader unlocks in the pool; finer settings put more, narrower ones.
 
@@ -198,7 +199,6 @@ The exact item pool depends on your granularity choices — coarser settings put
 | `xp_tome_bonus` | `50` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
-| `skillpoint_multiplier` | `100` | Total skill points distributed as filler bundles, as a percentage of a vanilla full-achievement run (50–200). |
 
 ### Achievements
 

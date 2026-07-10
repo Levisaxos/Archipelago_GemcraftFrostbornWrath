@@ -187,8 +187,6 @@ package net {
                     AV.serverData.serverOptions.tomeXpLevels.ancient = int(sd.ancient_grimoire_levels);
                 if (sd.xp_tome_bonus !== undefined)
                     AV.serverData.serverOptions.xpTomeBonus = int(sd.xp_tome_bonus);
-                if (sd.skillpoint_multiplier !== undefined)
-                    AV.serverData.serverOptions.skillpointMultiplier = int(sd.skillpoint_multiplier);
                 if (sd.sp_bundle_values !== undefined && sd.sp_bundle_values is Array) {
                     var vSpVals:Array = sd.sp_bundle_values as Array;
                     var vSpOut:Array = [0, 0, 0, 0];
@@ -240,6 +238,8 @@ package net {
                     AV.serverData.serverOptions.stashKeyPerTierProgressiveId = int(sd.stash_key_per_tier_progressive_id);
                 if (sd.stage_tier_by_str_id !== undefined)
                     AV.serverData.serverOptions.stageTierByStrId = sd.stage_tier_by_str_id;
+                if (sd.extra_shadow_cores_per_wave !== undefined)
+                    AV.serverData.serverOptions.extraShadowCoresPerWave = int(sd.extra_shadow_cores_per_wave);
                 if (sd.enemy_hp_multiplier !== undefined)
                     AV.serverData.serverOptions.enemyMultipliers.hp = int(sd.enemy_hp_multiplier);
                 if (sd.enemy_armor_multiplier !== undefined)

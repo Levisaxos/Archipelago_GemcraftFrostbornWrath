@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from BaseClasses import ItemClassification
 
@@ -9,91 +9,65 @@ from .items import ItemData
 
 SP_BUNDLE_BASE_ID = 1700
 
-# Four named bundle tiers. Order matters — index aligns with AP id offset
-# from SP_BUNDLE_BASE_ID and with the slot_data array sent to the mod.
-# (name, ap_id_offset, slot_pct, sp_pct)
-TIERS: Tuple[Tuple[str, int, float, float], ...] = (
-    ("Small",  0, 0.60, 0.30),
-    ("Medium", 1, 0.25, 0.30),
-    ("Large",  2, 0.12, 0.25),
-    ("Huge",   3, 0.03, 0.15),
+# Fixed-value skillpoint filler. Three chunky "bundle" tiers plus a common
+# single Skillpoint. Values are constant per-seed — there is no budget math:
+# the total SP a seed grants scales purely with how many checks it has (more
+# achievements -> more single Skillpoints), mirroring vanilla "do more, get
+# more". The bundles are always a fixed 40 (32 + 8 + 2 = 860 SP); the single
+# fills whatever filler slots remain after real items, XP tomes, and the 40
+# bundles.
+#
+# (item_name, ap_id_offset, sp_value, fixed_count)
+#   fixed_count is None for the single Skillpoint — its count is computed at
+#   generation time to fill the remaining location slots.
+# Order/index aligns with the AP id offset from SP_BUNDLE_BASE_ID and with the
+# sp_bundle_values slot_data array the mod reads (indexed by apId - 1700).
+SP_ITEMS: Tuple[Tuple[str, int, int, Optional[int]], ...] = (
+    ("Skillpoint Bundle (Small)",  0, 5,   32),
+    ("Skillpoint Bundle (Medium)", 1, 25,  8),
+    ("Skillpoint Bundle (Big)",    2, 250, 2),
+    ("Skillpoint",                 3, 1,   None),
 )
-TIER_NAMES: Tuple[str, ...] = tuple(t[0] for t in TIERS)
+
+# All four SP item names (used by rules.py to sum collected SP).
+SP_ITEM_NAMES: Tuple[str, ...] = tuple(x[0] for x in SP_ITEMS)
+# The three always-present fixed bundles (excludes the variable single).
+SP_BUNDLE_NAMES: Tuple[str, ...] = tuple(x[0] for x in SP_ITEMS if x[3] is not None)
+# The single-skillpoint filler item that soaks up leftover location slots.
+SP_SINGLE_NAME: str = "Skillpoint"
 
 
-def sp_bundle_item_name(tier: str) -> str:
-    return f"Skillpoint Bundle ({tier})"
-
-
-SP_BUNDLE_NAMES: Tuple[str, ...] = tuple(sp_bundle_item_name(t) for t in TIER_NAMES)
+def sp_slot_data_values() -> List[int]:
+    """The [Small, Medium, Big, Single] SP values shipped to the mod, indexed
+    by apId - SP_BUNDLE_BASE_ID. Constant every seed."""
+    return [x[2] for x in SP_ITEMS]
 
 
 def sp_bundle_item_table() -> Dict[str, ItemData]:
-    """One AP item per tier at IDs 1700..1703. All `filler`: under the
+    """One AP item per SP tier at IDs 1700..1703. All `filler`: under the
     WL-derived model, achievement access rules are pure wizard-level, so
-    skillPoints:N is no longer a generation gate and bundles gate nothing.
+    skillPoints:N is no longer a generation gate and these gate nothing.
     They're the pool balancer that fills leftover location slots. The mod
     still tracks them client-side for the skillPoints:N tooltip display
     regardless of classification.
 
-    The SP value granted by each bundle is determined per-seed by
-    compute_tier_distribution and shipped to the mod via slot_data —
-    the AP item itself just identifies the tier slot."""
+    The SP value granted by each item is a fixed constant (see SP_ITEMS) and
+    is shipped to the mod via slot_data (sp_bundle_values)."""
     table: Dict[str, ItemData] = {}
-    for name, offset, _slot_pct, _sp_pct in TIERS:
-        table[sp_bundle_item_name(name)] = ItemData(
+    for name, offset, _value, _count in SP_ITEMS:
+        table[name] = ItemData(
             SP_BUNDLE_BASE_ID + offset,
             ItemClassification.filler,
         )
     return table
 
 
-def compute_tier_distribution(total_sp: int, slot_count: int) -> Tuple[List[int], List[int]]:
-    """Return (values, counts) — both length 4, indexed in TIERS order.
-
-    counts[i] = number of bundle items of tier i to place; sums to slot_count.
-    values[i] = SP each bundle of that tier grants when collected.
-
-    Slot allocation uses TIERS slot_pct; SP allocation uses TIERS sp_pct.
-    Per-tier SP value = round(pile / count). Empty tiers (count rounded to 0
-    on small filler pools) have their SP pile folded into the next-lower
-    populated tier so SP isn't lost. Some rounding drift between the resulting
-    sum(c*v) and total_sp is tolerated (typically < 2 %)."""
-    counts = [0, 0, 0, 0]
-    values = [0, 0, 0, 0]
-    if slot_count <= 0 or total_sp <= 0:
-        return values, counts
-
-    slot_pcts = [t[2] for t in TIERS]
-    sp_pcts = [t[3] for t in TIERS]
-
-    # Slot counts: round, with Small absorbing the rounding remainder so the
-    # sum is exactly slot_count.
-    counts = [int(round(p * slot_count)) for p in slot_pcts]
-    counts[0] += slot_count - sum(counts)
-    counts[0] = max(0, counts[0])
-
-    # SP piles. If a tier rounds out to 0 slots (very small filler pools),
-    # move its pile down to the next-lower tier rather than dropping SP.
-    piles = [sp_pcts[i] * total_sp for i in range(4)]
-    for i in (3, 2, 1):
-        if counts[i] == 0:
-            piles[i - 1] += piles[i]
-            piles[i] = 0
-
-    # Per-tier SP value (clamped >=1 so a populated tier never grants 0).
-    for i in range(4):
-        if counts[i] > 0:
-            values[i] = max(1, int(round(piles[i] / counts[i])))
-
-    return values, counts
-
-
-def generate_sp_bundles(rng, counts: List[int]) -> List[str]:
-    """Expand per-tier counts into a flat list of bundle item names and shuffle.
-    Counts come from compute_tier_distribution."""
+def fixed_bundle_names() -> List[str]:
+    """Flat list of the 40 always-present fixed bundles (Small x32, Medium x8,
+    Big x2), in declaration order. The caller places these first, then tops up
+    any remaining filler slots with single Skillpoints."""
     names: List[str] = []
-    for i, tier_name in enumerate(TIER_NAMES):
-        names.extend([sp_bundle_item_name(tier_name)] * counts[i])
-    rng.shuffle(names)
+    for name, _offset, _value, count in SP_ITEMS:
+        if count is not None:
+            names.extend([name] * count)
     return names

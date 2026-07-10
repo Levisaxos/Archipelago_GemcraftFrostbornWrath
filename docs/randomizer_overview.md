@@ -30,7 +30,8 @@ This document describes the full feature set of the randomizer: what is shuffled
 | Map Tiles | up to 26 | Optional terrain tiles, depending on starting stage |
 | Gem Pouches | variable | Configurable granularity — see below |
 | Wizard Stash Keys | variable | Configurable granularity — see below |
-| Skillpoint Bundles | filler | Four named tiers (Small/Medium/Large/Huge), per-seed SP values; total scales by `skillpoint_multiplier` |
+| Skillpoint Bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 8 Medium (25 SP) + 2 Big (250 SP) = 860 SP |
+| Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after real items, XP tomes, and the 40 bundles |
 
 ### Always free (not randomized)
 
@@ -60,7 +61,8 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 **Filler** — pure pool-padding once the real items are placed
 
 - XP Tomes — under the WL-derived model, logic wizard level comes only from cleared fields, so tomes are pure in-game power now
-- Skillpoint Bundles — four named tiers (Small/Medium/Large/Huge); per-tier SP value is computed per-seed so the total (scaled by `skillpoint_multiplier`) divides cleanly across the actual filler-slot count
+- Skillpoint Bundles — 40 fixed bundles (32 Small @5 SP + 8 Medium @25 SP + 2 Big @250 SP = 860 SP); values are constant every seed
+- Skillpoint (single) — 1 SP each; the variable filler that soaks up whatever location slots remain, so total SP scales with the seed's check count (more achievements → more singles)
 
 ---
 
@@ -89,7 +91,6 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | `xp_tome_bonus` | `50` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power, not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any tomes (1–100) |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
-| `skillpoint_multiplier` | `100` | Total skill points distributed as filler bundles, as a percentage of the 2500-SP baseline |
 
 ### Stash & gem gating
 

@@ -79,16 +79,23 @@ package ui {
                 }
             }
 
-            // Close button
-            mc.btnClose.addEventListener(MouseEvent.MOUSE_DOWN, ehBtnDown,       true, 0, true);
-            mc.btnClose.addEventListener(MouseEvent.MOUSE_UP,   _onCloseClick,   true, 0, true);
-            mc.btnClose.addEventListener(MouseEvent.MOUSE_OVER, ehBtnMouseOver,  true, 0, true);
-            mc.btnClose.addEventListener(MouseEvent.MOUSE_OUT,  ehBtnMouseOut,   true, 0, true);
+            // Close button.
+            // useWeakReference = FALSE on these panel-local listeners: they bind
+            // instance methods that aren't retained elsewhere, so a weak
+            // registration let the GC collect them mid-session (the panel stayed
+            // up but the Done button / scrollbar stopped responding). They're
+            // children of the panel MC and die with it, so strong refs don't leak.
+            // (The global-stage wheel listener below stays weak — it lives on the
+            // shared stage and is explicitly removed in removeWheelListener().)
+            mc.btnClose.addEventListener(MouseEvent.MOUSE_DOWN, ehBtnDown,       true, 0, false);
+            mc.btnClose.addEventListener(MouseEvent.MOUSE_UP,   _onCloseClick,   true, 0, false);
+            mc.btnClose.addEventListener(MouseEvent.MOUSE_OVER, ehBtnMouseOver,  true, 0, false);
+            mc.btnClose.addEventListener(MouseEvent.MOUSE_OUT,  ehBtnMouseOut,   true, 0, false);
             mc.btnClose.tf.mouseEnabled = false;
 
             // Scroll knob + bar
-            mc.mcScrollBar.addEventListener( MouseEvent.MOUSE_DOWN, _ehScrollKnobDown, true, 0, true);
-            mc.btnScrollKnob.addEventListener(MouseEvent.MOUSE_DOWN, _ehScrollKnobDown, true, 0, true);
+            mc.mcScrollBar.addEventListener( MouseEvent.MOUSE_DOWN, _ehScrollKnobDown, true, 0, false);
+            mc.btnScrollKnob.addEventListener(MouseEvent.MOUSE_DOWN, _ehScrollKnobDown, true, 0, false);
         }
 
         /**

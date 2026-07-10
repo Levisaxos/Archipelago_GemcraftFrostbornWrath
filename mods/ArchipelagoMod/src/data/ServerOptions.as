@@ -27,15 +27,16 @@ package data {
         public var tomeXpLevels:Object;          // { tattered, worn, ancient }
         public var xpTomeBonus:int;              // raw yaml % (50–300, default 150)
 
-        // Skill point pool scale (50–200% of the 2500 SP baseline).
-        public var skillpointMultiplier:int;
+        // Mod-only QoL: extra shadow cores granted per wave reached in a battle
+        // (0–5, default 0). Accumulated into the vanilla per-battle loot tally
+        // and banked at level end like any other shadow-core drop.
+        public var extraShadowCoresPerWave:int;
 
-        // Per-seed SP value granted by each Skillpoint Bundle tier, indexed
-        // by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
-        // apworld-side so total SP divides cleanly across actual filler-slot
-        // count (see compute_tier_distribution in items_skillpoints.py).
-        // Used for grant amounts (ArchipelagoMod.grantItem) and the in-mod
-        // skillPoints:N achievement-gate counter.
+        // Fixed SP value granted by each SP item, indexed by AP id offset
+        // from 1700: [Small, Medium, Big, Single]. Constant every seed
+        // (see items_skillpoints.SP_ITEMS apworld-side). Used for grant
+        // amounts (ArchipelagoMod.grantItem) and the in-mod skillPoints:N
+        // achievement-gate counter.
         public var spBundleValues:Array;          // <int>[4]
 
         // Difficulty Multipliers
@@ -118,8 +119,8 @@ package data {
 
             tomeXpLevels = { tattered: 1, worn: 2, ancient: 3 };
             xpTomeBonus = 150;
-            skillpointMultiplier = 100;
-            spBundleValues = [0, 0, 0, 0];
+            extraShadowCoresPerWave = 0;
+            spBundleValues = [5, 25, 250, 1];
 
             enemyMultipliers = {
                 hp: 1.0,
@@ -180,7 +181,7 @@ package data {
             return String(progressiveTileOrder[copies - 1]);
         }
 
-        /** Per-seed SP value granted by a Skillpoint Bundle apId in 1700..1703.
+        /** Fixed SP value granted by an SP apId in 1700..1703.
          *  Returns 0 if slot_data hasn't loaded yet or apId is out of range. */
         public function getSpBundleValue(apId:int):int {
             var idx:int = apId - 1700;
@@ -189,15 +190,17 @@ package data {
             return int(spBundleValues[idx]);
         }
 
-        /** Tier label (Small/Medium/Large/Huge) for a bundle apId in 1700..1703. */
-        public function getSpBundleTierLabel(apId:int):String {
+        /** User-facing display name for an SP apId in 1700..1703. The first
+         *  three are chunky fixed "bundle" tiers; 1703 is the common single
+         *  Skillpoint filler (shown as just "Skillpoint", no "Bundle"). */
+        public function getSpItemName(apId:int):String {
             switch (apId) {
-                case 1700: return "Small";
-                case 1701: return "Medium";
-                case 1702: return "Large";
-                case 1703: return "Huge";
+                case 1700: return "Skillpoint Bundle (Small)";
+                case 1701: return "Skillpoint Bundle (Medium)";
+                case 1702: return "Skillpoint Bundle (Big)";
+                case 1703: return "Skillpoint";
             }
-            return "?";
+            return "Skillpoint";
         }
     }
 }

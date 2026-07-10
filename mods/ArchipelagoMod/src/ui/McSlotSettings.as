@@ -87,7 +87,6 @@ package ui {
             addRow("Tattered Scroll",         opts.tomeXpLevels.tattered + " levels", vY);                    vY += ROW_HEIGHT;
             addRow("Worn Tome",               opts.tomeXpLevels.worn     + " levels", vY);                    vY += ROW_HEIGHT;
             addRow("Ancient Grimoire",        opts.tomeXpLevels.ancient  + " levels", vY);                    vY += ROW_HEIGHT;
-            addRow("Skillpoint Multiplier",   opts.skillpointMultiplier + "%", vY);                           vY += ROW_HEIGHT;
 
             // ── Difficulty Modifiers ─────────────────────────────────────────
             vY += SECTION_GAP;
