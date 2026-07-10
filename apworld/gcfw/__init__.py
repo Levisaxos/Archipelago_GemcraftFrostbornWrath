@@ -24,7 +24,6 @@ from .options import (
     DeathLinkGracePeriod,
     DeathLinkCooldown,
     AchievementRequiredEffort,
-    SkillpointMultiplier,
     GemPouchGranularity,
     FieldTokenGranularity,
     StashKeyGranularity,
@@ -43,9 +42,9 @@ from .options import (
     ExtraWaveCount,
 )
 from .items_skillpoints import (
-    compute_tier_distribution as _compute_sp_bundle_distribution,
-    generate_sp_bundles,
-    TIER_NAMES as _SP_TIER_NAMES,
+    fixed_bundle_names,
+    sp_slot_data_values,
+    SP_SINGLE_NAME,
 )
 from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
@@ -398,7 +397,6 @@ class GCFWWebWorld(WebWorld):
             StartingWizardLevel,
             StartingOvercrowd,
             XpTomeBonus,
-            SkillpointMultiplier,
         ]),
         OptionGroup("Enemy Manipulation Options", [
             EnemyHpMultiplier,
@@ -463,7 +461,6 @@ class GemcraftFrostbornWrathWorld(World):
                     "starting_overcrowd",
                     "starting_wizard_level",
                     "xp_tome_bonus",
-                    "skillpoint_multiplier",
                 ):
                     if key in slot_data:
                         opt = getattr(self.options, key, None)
@@ -717,12 +714,14 @@ class GemcraftFrostbornWrathWorld(World):
         for pouch_name in _gating.pouches_for_pool(self.options.gem_pouch_granularity.value):
             pool.append(self.create_item(pouch_name))
 
-        # SP bundle filler — fills all remaining unfilled location slots.
-        # Total SP scales with skillpoint_multiplier (default 100 → 2500 SP).
-        # Bundles are split across four named tiers (Small/Medium/Large/Huge)
-        # whose SP values are computed per-seed based on the actual filler-slot
-        # count — see compute_tier_distribution. Tier values are stored on self
-        # so fill_slot_data can ship them to the mod.
+        # SP filler — fills all remaining unfilled location slots with
+        # fixed-value skillpoint items. First the 40 always-present bundles
+        # (32 Small @5 + 8 Medium @25 + 2 Big @250 = 860 SP), then single
+        # "Skillpoint" items (1 SP each) to soak up whatever slots remain.
+        # Values are constant; the total SP a seed grants scales purely with
+        # its check count (more achievements -> more singles), mirroring vanilla
+        # "do more, get more". Values ship via slot_data (sp_bundle_values) so
+        # the mod grants the same amounts and counts them for skillPoints:N.
         # Count only REAL (addressed) locations — Journey / Wizard stash /
         # achievements. Event locations (Victory, goal victories, and the
         # per-stage "Clear <sid>" XP events) have address=None and are filled by
@@ -731,15 +730,21 @@ class GemcraftFrostbornWrathWorld(World):
                               if region.player == self.player
                               for loc in region.locations
                               if loc.address is not None)
+        self.sp_bundle_values: List[int] = sp_slot_data_values()
         remaining = total_locations - len(pool)
-        self.sp_bundle_values: List[int] = [0, 0, 0, 0]
         if remaining > 0:
-            total_sp = 2500 * self.options.skillpoint_multiplier.value // 100
-            values, counts = _compute_sp_bundle_distribution(total_sp, remaining)
-            self.sp_bundle_values = values
-            bundles = generate_sp_bundles(self.random, counts)
+            bundles = fixed_bundle_names()
+            # If there aren't even enough filler slots for all 40 fixed bundles
+            # (only possible with very few locations + very coarse item
+            # granularity), shuffle and take what fits so we never overflow the
+            # location count.
+            if len(bundles) > remaining:
+                self.random.shuffle(bundles)
+                bundles = bundles[:remaining]
             for name in bundles:
                 pool.append(self.create_item(name))
+            for _ in range(remaining - len(bundles)):
+                pool.append(self.create_item(SP_SINGLE_NAME))
 
         self.multiworld.itempool += pool
         _timing_log(f"p{self.player} create_items: {(_t.perf_counter()-_t0)*1000:.1f} ms (pool={len(pool)})")
@@ -1199,14 +1204,11 @@ class GemcraftFrostbornWrathWorld(World):
             "starting_stage":        self.options.starting_stage.value,
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
-            "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
-            # Per-seed SP value granted by each Skillpoint Bundle tier, indexed
-            # by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
-            # in create_items so the four piles divide cleanly across the actual
-            # filler-slot count. The mod uses this for grant amounts and for
-            # the in-mod skillPoints:N achievement-gate counter.
-            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [0, 0, 0, 0])),
-            "sp_bundle_tier_names":  list(_SP_TIER_NAMES),
+            # Fixed SP value granted by each SP item, indexed by AP id offset
+            # from 1700: [Small, Medium, Big, Single]. Constant every seed
+            # (see items_skillpoints.SP_ITEMS). The mod uses this for grant
+            # amounts and for the in-mod skillPoints:N achievement-gate counter.
+            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [5, 25, 250, 1])),
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,
@@ -1294,6 +1296,9 @@ class GemcraftFrostbornWrathWorld(World):
                 s["str_id"]: STAGE_RULES[s["str_id"]].tier
                 for s in GAME_DATA["stages"]
             },
+            # Mod-only QoL: extra shadow cores per wave reached. Pure pass-through
+            # to the client — no effect on items, locations, or logic.
+            "extra_shadow_cores_per_wave":  self.options.extra_shadow_cores_per_wave.value,
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,

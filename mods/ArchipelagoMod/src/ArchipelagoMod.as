@@ -70,6 +70,7 @@ package {
     import patch.StartingGemSuppressor;
     import patch.WavePrePatcher;
     import patch.LinkedWaveEarlyCredit;
+    import patch.ExtraShadowCorePerWave;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
@@ -170,6 +171,7 @@ package {
         private var _startingGemSuppressor:StartingGemSuppressor;
         private var _wavePrePatcher:WavePrePatcher;
         private var _linkedWaveEarlyCredit:LinkedWaveEarlyCredit;
+        private var _extraShadowCorePerWave:ExtraShadowCorePerWave;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
@@ -267,6 +269,7 @@ package {
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _linkedWaveEarlyCredit = new LinkedWaveEarlyCredit(_logger, MOD_NAME);
+                _extraShadowCorePerWave = new ExtraShadowCorePerWave(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
@@ -554,6 +557,13 @@ package {
             // relocated stashes. apply() is idempotent (self-guarded).
             patchWizStashModes();
 
+            // Normalize every achievement to a flat 1 SP for the AP session
+            // (vanilla awards 1/2/3). GV.achiCollection is a per-process
+            // singleton, so _deactivateApMode calls restoreSkillPointValues to
+            // put the vanilla values back — otherwise a standalone slot loaded
+            // next keeps the nerfed values.
+            if (_achievementUnlocker != null) _achievementUnlocker.normalizeSkillPointValues();
+
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
 
@@ -592,6 +602,11 @@ package {
             // pnlAchievements is persistent, so it would otherwise leak into a
             // standalone save's achievements screen.
             if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
+            // Put vanilla per-achievement skill-point values back (AP mode
+            // normalized every achievement to 1 SP). GV.achiCollection is
+            // global/per-process, so a standalone slot loaded next would keep
+            // the nerfed values without this.
+            if (_achievementUnlocker != null) _achievementUnlocker.restoreSkillPointValues();
             // Detach the outcome / pause-menu button listeners. EarlyExitOutcome
             // sits on the persistent scrOptions singleton and would otherwise
             // hijack the vanilla pause-menu Return/Restart buttons in a
@@ -1067,6 +1082,21 @@ package {
                         + _lastIngameStatus + " → PLAYING)");
                     _initForNewStage();
                 }
+                // Outcome panel just appeared (transition INTO a gameover
+                // substate). IngameEnding commits stageHighestXpsJourney
+                // before the panel shows, so the just-cleared stage's
+                // Journey/Stash locations are already scannable here. Send
+                // their checks now instead of waiting for the end-of-
+                // animation SAVE_SAVE — otherwise the field-hover tooltip
+                // keeps rendering the pre-battle "in logic" state during the
+                // whole map XP tally. checkCompletedLocations no-ops on
+                // defeat (isBattleWon guard) and the later save re-call is
+                // idempotent (already-sent ids are gone from missing).
+                if (_lastIngameStatus != -1
+                        && !_isGameOverPanelStatus(_lastIngameStatus)
+                        && _isGameOverPanelStatus(status)) {
+                    _connectionManager.checkCompletedLocations();
+                }
                 _lastIngameStatus = status;
             } else {
                 _lastIngameStatus = -1;
@@ -1110,6 +1140,7 @@ package {
                 _retryButtonSkillPointsRefresh.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _linkedWaveEarlyCredit.onIngameFrame();
+                _extraShadowCorePerWave.onIngameFrame();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
@@ -1631,6 +1662,7 @@ package {
             _deathLinkHandler.resetForNewStage();
             _wavePrePatcher.resetForNewStage();
             _linkedWaveEarlyCredit.resetForNewStage();
+            _extraShadowCorePerWave.resetForNewStage();
             _ritualSpawnPatcher.resetForNewStage();
             _startingGemSuppressor.applyIfReady();
             // Refresh achievement-panel pips so they're current even if the
@@ -1907,9 +1939,9 @@ package {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
-            // 5b. Skillpoint bundles (apId 1700-1703, four named tiers): sum
-            // across all bundles received this run into one cyan-glow icon.
-            // Per-tier SP value is per-seed (slot_data spBundleValues).
+            // 5b. SP items (apId 1700-1703: 3 fixed bundle tiers + the single
+            // Skillpoint): sum across all received this run into one cyan-glow
+            // icon. Per-tier SP value is fixed (slot_data spBundleValues).
             var totalSkillPoints:int = 0;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
@@ -2272,15 +2304,15 @@ package {
                     vIp.addTextfield(0x99FF99, grantText, false, 11);
                     return true;
                 }
-                // Skill point bundles (1700-1703, four named tiers) — value
-                // per tier is per-seed and arrives via slot_data.
+                // SP items (1700-1703: 3 fixed bundle tiers + single Skillpoint)
+                // — value per tier is fixed and arrives via slot_data.
                 if (apId >= 1700 && apId <= 1703) {
                     var skp:int = AV.serverData.serverOptions.getSpBundleValue(apId);
-                    var tierName:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
+                    var spName:String = AV.serverData.serverOptions.getSpItemName(apId);
                     vIp.reset(280);
-                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle (" + tierName + ")", false, 13);
+                    vIp.addTextfield(0xFFD700, spName, false, 13);
                     vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
-                    vIp.addTextfield(0x99FF99, "+" + skp + " skill points.", false, 11);
+                    vIp.addTextfield(0x99FF99, "+" + skp + " skill point" + (skp == 1 ? "" : "s") + ".", false, 11);
                     return true;
                 }
                 // Achievements (2000-2636) — delegate to vanilla.
@@ -2620,13 +2652,13 @@ package {
                     }
                 }
                 if (apId >= 1700 && apId <= 1703) {
-                    // Skillpoint Bundle: 4 named tiers (Small/Medium/Large/Huge).
-                    // Per-tier SP value is per-seed and arrives via slot_data.
+                    // SP items: 3 fixed bundle tiers (Small/Medium/Big) + the
+                    // single Skillpoint. Fixed SP value arrives via slot_data.
                     var spAmount:int = AV.serverData.serverOptions.getSpBundleValue(apId);
-                    var tierLbl:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
+                    var spName:String = AV.serverData.serverOptions.getSpItemName(apId);
                     _achievementUnlocker.awardSkillPoints(spAmount);
-                    _receivedToast.addItem("Received Skillpoint Bundle (" + tierLbl + ") (+" + spAmount + ")", ItemColors.forApId(apId));
-                    _logger.log(MOD_NAME, "  → Skillpoint bundle [" + tierLbl + "]: +" + spAmount + " SP");
+                    _receivedToast.addItem("Received " + spName + " (+" + spAmount + ")", ItemColors.forApId(apId));
+                    _logger.log(MOD_NAME, "  → " + spName + ": +" + spAmount + " SP");
                     return;
                 }
                 if (apId >= 2000 && apId <= 2636) {
@@ -3664,9 +3696,9 @@ package {
             if (apId >= 1588 && apId <= 1600) {
                 return "Tier " + (apId - 1588) + " Field Tokens";
             }
-            // Skill point bundles (1700-1703, four named tiers; per-seed SP value).
+            // SP items (1700-1703: 3 fixed bundle tiers + single Skillpoint).
             if (apId >= 1700 && apId <= 1703) {
-                return "Skillpoint Bundle (" + AV.serverData.serverOptions.getSpBundleTierLabel(apId) + ")";
+                return AV.serverData.serverOptions.getSpItemName(apId);
             }
             // Progressive variants — singleton ids from slot_data.
             var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;

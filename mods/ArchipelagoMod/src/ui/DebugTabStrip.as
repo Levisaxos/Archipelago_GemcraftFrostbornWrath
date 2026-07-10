@@ -120,16 +120,20 @@ package ui {
             btn.useHandCursor = true;
             btn.mouseChildren = false;
 
+            // useWeakReference = FALSE: these inline closures aren't retained
+            // anywhere else, so a weak registration let the GC collect them and
+            // the tabs stopped responding to clicks mid-session. The strip lives
+            // as long as the menu and is dropped with it, so strong refs don't leak.
             var captured:int = idx;
             btn.addEventListener(MouseEvent.CLICK,
                 function(e:MouseEvent):void { setActive(captured, true); },
-                false, 0, true);
+                false, 0, false);
             btn.addEventListener(MouseEvent.MOUSE_OVER,
                 function(e:MouseEvent):void { if (captured != _active) _paint(captured, FR_HOVER, TX_HOVER); },
-                false, 0, true);
+                false, 0, false);
             btn.addEventListener(MouseEvent.MOUSE_OUT,
                 function(e:MouseEvent):void { if (captured != _active) _paint(captured, FR_NORMAL, TX_NORMAL); },
-                false, 0, true);
+                false, 0, false);
             return btn;
         }
 

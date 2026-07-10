@@ -128,10 +128,45 @@ package ui {
                 return;
             }
 
-            // Only on the idle map screen. Clicking a level moves to
-            // STAGES_TO_SETTINGS / SETTINGS_IDLE, which dismisses the tooltip.
-            if (int(GV.selectorCore.screenStatus) != SelectorScreenStatus.STAGES_IDLE) {
-                hide();
+            // Only on the map screen. STAGES_IDLE is the resting map;
+            // UPDATING_STAGES is the post-battle XP tally / token-appear
+            // animation, during which the map is still shown and its fields
+            // are hoverable — without it here the tooltip would hide for the
+            // whole tally and the player would see the vanilla ("old")
+            // tooltip until the animation finished. Every OTHER non-idle
+            // status is a transition off the map (STAGES_TO_SETTINGS,
+            // SETTINGS_IDLE, skills/talisman/etc.) and must still dismiss it.
+            var ss:int = int(GV.selectorCore.screenStatus);
+            var onMap:Boolean = (ss == SelectorScreenStatus.STAGES_IDLE
+                    || ss == SelectorScreenStatus.UPDATING_STAGES);
+
+            // What the cursor is over (panel checked first so a token sitting
+            // behind it doesn't steal focus). Both are cheap geometry hit-tests,
+            // valid in any selector state.
+            var overPanel:Boolean = (_shownSid >= 0 && visible && isMouseOverPanel());
+            var tok:* = overPanel ? _shownTok : findHoveredToken(mc);
+            var overField:Boolean = (tok != null);
+
+            // HARD BLOCK on the vanilla field hover tooltip: it must never be
+            // seen, our panel replaces it. We can't drop the game's field
+            // MOUSE_OVER listener because that render also sets
+            // hasMetReqsToEnterField (the click-to-enter gate in
+            // SelectorInputHandler.ehStageIconClicked), so instead we force
+            // GV.mcInfoPanel hidden every frame the cursor is over a field token
+            // or our panel, in ANY selector state (so a field hovered mid-
+            // transition can't flash it either). When over neither, release it
+            // so the other tooltips sharing mcInfoPanel (shadow-core counter,
+            // skills, talismans) can still show.
+            if (overField || overPanel) {
+                suppressVanilla();
+            } else if (_suppressed) {
+                try { GV.mcInfoPanel.visible = true; } catch (eV:Error) {}
+                _suppressed = false;
+            }
+
+            // Our replacement panel only builds on the map, over a field/panel.
+            if (!onMap || !overField) {
+                hidePanelOnly();
                 return;
             }
 
@@ -144,12 +179,6 @@ package ui {
                 suppressVanilla();
                 updateHover();
                 highlightToken(_shownTok, true); // keep the tooltip's field lit
-                return;
-            }
-
-            var tok:* = findHoveredToken(mc);
-            if (tok == null) {
-                hide();
                 return;
             }
 
@@ -171,11 +200,19 @@ package ui {
             highlightToken(_shownTok, true); // keep the hovered field lit
         }
 
-        public function hide():void {
+        /** Hide our replacement panel and drop the field highlight, WITHOUT
+         *  touching the vanilla panel's visibility. onSelectorFrame manages that
+         *  centrally so the vanilla field tooltip stays blocked even in states
+         *  where we don't show our own panel. */
+        private function hidePanelOnly():void {
             visible = false;
             _shownSid = -1; // force a fresh build + re-anchor on next hover
             highlightToken(_shownTok, false); // let the field drop its highlight
             _shownTok = null;
+        }
+
+        public function hide():void {
+            hidePanelOnly();
             // Restore the shared vanilla panel for every other tooltip
             // (skills, talismans, etc.) the moment we stop suppressing.
             if (_suppressed) {

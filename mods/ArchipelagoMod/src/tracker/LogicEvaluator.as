@@ -881,9 +881,9 @@ package tracker {
                 var tcNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countMatchingTalismanSets(false) >= tcNeed;
             }
-            // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
-            // items (1700..1703 — four named tiers; per-tier SP value from
-            // slot_data ServerOptions.spBundleValues).
+            // "skillPoints: N" — sum of SP across collected SP items (1700..1703
+            // — 3 fixed bundle tiers + the single Skillpoint; per-item SP value
+            // from slot_data ServerOptions.spBundleValues).
             if (lower.indexOf("skillpoints") == 0) {
                 var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countSkillPoints() >= spNeed;
@@ -1326,9 +1326,9 @@ package tracker {
         }
 
         /**
-         * Sum SP across collected Skillpoint Bundle items. Per-tier SP value
-         * is per-seed and arrives via slot_data (ServerOptions.spBundleValues
-         * indexed by apId-1700: Small/Medium/Large/Huge). Bundles stack — apworld's
+         * Sum SP across collected SP items. Per-item SP value is fixed and
+         * arrives via slot_data (ServerOptions.spBundleValues indexed by
+         * apId-1700: Small/Medium/Big/Single). Bundles stack — apworld's
          * _count_skill_points multiplies tier value by state.count(name), so the
          * mod must mirror that with getItemCount(apId) to keep logic in agreement.
          */

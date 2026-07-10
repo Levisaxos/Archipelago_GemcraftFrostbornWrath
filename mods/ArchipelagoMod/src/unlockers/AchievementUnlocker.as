@@ -43,6 +43,12 @@ package unlockers {
         // Achievements already sent to AP this session, keyed by game_id (reset on screen change)
         private var _reportedAchievements:Object = {};
 
+        // Snapshot of vanilla per-achievement skillPtValue, taken when AP mode
+        // normalizes every achievement to a flat 1 SP. Keyed by achisByOrder
+        // index. null when not normalized; restored on deactivate so a
+        // standalone slot loaded next earns vanilla 1/2/3 SP again.
+        private var _origSkillPtValues:Object = null;
+
         // Optional reference to AchievementLogicEvaluator. Set after configure
         // by ArchipelagoMod. Used to toast on unlocks that weren't in logic
         // — useful for diagnosing "this should not have been reachable yet".
@@ -683,6 +689,64 @@ package unlockers {
         }
 
         /**
+         * Normalize every achievement to grant exactly 1 skill point while AP
+         * is active. Vanilla GCFW awards 1/2/3 SP per achievement (520 give 1,
+         * 83 give 2, 33 give 3); the AP randomizer treats each achievement as
+         * worth a flat 1 SP whether it's an AP-tracked location or an excluded
+         * vanilla completion. That makes the total SP a seed can yield
+         * invariant to the achievement-effort setting: every achievement moved
+         * between "tracked" and "excluded" carries the same 1 SP either way.
+         *
+         * GV.achiCollection is a per-process singleton, so this snapshots the
+         * originals (by achisByOrder index) for restoreSkillPointValues() to
+         * put back — otherwise a standalone slot loaded next keeps the nerfed
+         * values. Idempotent: a no-op once the snapshot exists. Call from
+         * _activateApMode.
+         */
+        public function normalizeSkillPointValues():void {
+            if (_origSkillPtValues != null) return;   // already normalized
+            if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) {
+                _logger.log(_modName, "normalizeSkillPointValues: achiCollection not ready — skipped");
+                return;
+            }
+            _origSkillPtValues = {};
+            var achisByOrder:Array = GV.achiCollection.achisByOrder;
+            var changed:int = 0;
+            for (var i:int = 0; i < achisByOrder.length; i++) {
+                var ach:* = achisByOrder[i];
+                if (!ach) continue;
+                _origSkillPtValues[i] = int(ach.skillPtValue);
+                if (int(ach.skillPtValue) != 1) {
+                    ach.skillPtValue = 1;
+                    changed++;
+                }
+            }
+            _logger.log(_modName, "normalizeSkillPointValues: set " + changed + " achievements to 1 SP");
+        }
+
+        /**
+         * Restore the vanilla per-achievement skillPtValue captured by
+         * normalizeSkillPointValues(). Call from _deactivateApMode so a
+         * standalone/vanilla slot loaded next earns vanilla achievement SP.
+         * Idempotent: a no-op when nothing was normalized.
+         */
+        public function restoreSkillPointValues():void {
+            if (_origSkillPtValues == null) return;
+            if (GV.achiCollection != null && GV.achiCollection.achisByOrder != null) {
+                var achisByOrder:Array = GV.achiCollection.achisByOrder;
+                for (var i:int = 0; i < achisByOrder.length; i++) {
+                    var ach:* = achisByOrder[i];
+                    if (!ach) continue;
+                    if (_origSkillPtValues[i] !== undefined) {
+                        ach.skillPtValue = int(_origSkillPtValues[i]);
+                    }
+                }
+            }
+            _origSkillPtValues = null;
+            _logger.log(_modName, "restoreSkillPointValues: vanilla achievement SP restored");
+        }
+
+        /**
          * Returns { bundles, achievementsAp, achievementsExcluded } — the
          * canonical SP contributions used both for reconcile and for the
          * Skills-panel tooltip breakdown. Returns null if state isn't ready.
@@ -692,6 +756,10 @@ package unlockers {
          *   achievementsExcluded — sum(skillPtValue for gainedAchis NOT in AP
          *                          (effort/Trial/Endurance/untrackable);
          *                          these still flow through vanilla SP)
+         *
+         * While AP is active every skillPtValue is normalized to 1 (see
+         * normalizeSkillPointValues), so achievementsAp/achievementsExcluded
+         * are effectively counts of the gained tracked/excluded achievements.
          */
         public function getSkillPointBreakdown():Object {
             if (GV.ppd == null) return null;

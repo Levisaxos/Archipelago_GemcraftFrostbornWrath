@@ -378,17 +378,17 @@ class Difficulty(Choice):
     default = 1
 
 
-class SkillpointMultiplier(Range):
-    """Adjusts the total skill points you'll earn from Skillpoint Bundle items.
+class ExtraShadowCoresPerWave(Range):
+    """Mod-only quality-of-life option that makes shadow cores easier to earn.
 
-    In the randomizer, the per-achievement skillpoint rewards from vanilla GemCraft are replaced by Skillpoint Bundles found throughout the multiworld. This option scales the total payout from those bundles.
+    Grants this many extra shadow cores for every wave you get through in a battle. The extra cores drop into your normal shadow core pool exactly like vanilla drops, and are banked at the end of the level (on victory or defeat). Beating a 30-wave field at 5 gives 150 extra cores; losing a 50-wave field after 30 waves still gives 150.
 
-    100 = roughly the same total skill points you would earn in a vanilla full-achievement run. Lower values tighten the skill-point economy; higher values give you more skill points to spend on wizard skills.
+    0 disables the feature. This option has no effect on generation, item placement, or logic.
     """
-    display_name = "Skillpoint Multiplier"
-    range_start = 50
-    range_end   = 200
-    default     = 100
+    display_name = "Extra Shadow Cores per Wave"
+    range_start = 0
+    range_end   = 5
+    default     = 0
 
 
 @dataclass
@@ -407,7 +407,7 @@ class GCFWOptions(PerGameCommonOptions):
     xp_tome_bonus:             XpTomeBonus
     starting_overcrowd:        StartingOvercrowd    
     starting_wizard_level:     StartingWizardLevel
-    skillpoint_multiplier:     SkillpointMultiplier
+    extra_shadow_cores_per_wave: ExtraShadowCoresPerWave
     enemy_hp_multiplier:         EnemyHpMultiplier
     enemy_armor_multiplier:      EnemyArmorMultiplier
     enemy_shield_multiplier:     EnemyShieldMultiplier
