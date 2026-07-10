@@ -271,6 +271,7 @@ package tracker {
             _stageMonsters = monsters != null ? monsters : {};
             _elementToStages = _buildInverse(_stageElements);
             _monsterToStages = _buildInverse(_stageMonsters);
+            _gemToStages = null; // rebuilt lazily from serverData on next query
         }
 
         public function getStageElements(strId:String):Array {
@@ -371,6 +372,123 @@ package tracker {
                     if (out[name] == null) out[name] = [];
                     (out[name] as Array).push(sid);
                 }
+            }
+            return out;
+        }
+
+        // ── Game Elements window: requirement -> matching fields ─────────────
+
+        // Gem filter display names (RequirementIconRegistry) -> the short gem
+        // labels stored in serverData.stageAvailableGems (logic.json).
+        private static const GEM_DISPLAY_TO_RAW:Object = {
+            "Crit Hit":      "Crit",
+            "Mana Leech":    "Leech",
+            "Bleeding":      "Bleed",
+            "Armor Tearing": "Armor Tear",
+            "Poison":        "Poison",
+            "Slowing":       "Slow"
+        };
+
+        private var _gemToStages:Object; // gem label -> Array<strId>, built lazily
+
+        /**
+         * strIds that contain EVERY selected requirement name (AND). Returns a
+         * strId -> true set. An empty selection yields an empty set — the caller
+         * decides what "no filter" should show.
+         */
+        public function getStagesMatching(names:Array):Object {
+            if (names == null || names.length == 0) return {};
+
+            var lists:Array = [];
+            for each (var nm:String in names) {
+                var stages:Array = _stagesForRequirement(nm);
+                if (stages == null || stages.length == 0) return {}; // AND can't be met
+                lists.push(stages);
+            }
+
+            // Seed with the first list, then intersect the rest.
+            var candidate:Object = {};
+            for each (var s0:String in (lists[0] as Array)) candidate[s0] = true;
+            for (var i:int = 1; i < lists.length; i++) {
+                var next:Object = {};
+                for each (var s:String in (lists[i] as Array)) {
+                    if (candidate[s] == true) next[s] = true;
+                }
+                candidate = next;
+            }
+            return candidate;
+        }
+
+        private function _stagesForRequirement(name:String):Array {
+            if (_elementToStages[name] != null) return _elementToStages[name] as Array;
+            if (_monsterToStages[name] != null) return _monsterToStages[name] as Array;
+            var raw:String = GEM_DISPLAY_TO_RAW[name];
+            if (raw != null) return _gemStages(raw);
+            return null;
+        }
+
+        private function _gemStages(raw:String):Array {
+            if (_gemToStages == null) {
+                _gemToStages = {};
+                var byStage:Object = (AV.serverData != null) ? AV.serverData.stageAvailableGems : null;
+                if (byStage != null) {
+                    for (var sid:String in byStage) {
+                        var gems:Array = byStage[sid] as Array;
+                        if (gems == null) continue;
+                        for each (var g:String in gems) {
+                            if (_gemToStages[g] == null) _gemToStages[g] = [];
+                            (_gemToStages[g] as Array).push(sid);
+                        }
+                    }
+                }
+            }
+            // A field's gems only exist for the player if they hold the gempouch
+            // for it (else just the hollow gem) — filter to pouch-accessible
+            // stages so gem filters don't match fields you can't gem up.
+            var all:Array = _gemToStages[raw] as Array;
+            if (all == null) return null;
+            var out:Array = [];
+            for each (var stg:String in all) {
+                if (_hasGemAccess(stg)) out.push(stg);
+            }
+            return out;
+        }
+
+        /** Can the player create the field's real gems here? True when gempouch
+         *  gating is off, or the pouch for this stage is collected. */
+        private function _hasGemAccess(strId:String):Boolean {
+            var so:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var pouchMode:int = (so != null) ? int(so.gemPouchGranularity) : 0;
+            if (pouchMode == 0) return true; // gating off — vanilla gems available
+            return AV.sessionData.hasPouchForStage(strId);
+        }
+
+        /**
+         * Everything present on a field (elements + monsters + gems), each as
+         * "Name" or "Name xN" when a count is known. Drives the hover tooltip in
+         * the Game Elements window.
+         */
+        public function getFieldContents(strId:String):Array {
+            var out:Array = [];
+            for each (var el:String in getStageElements(strId)) {
+                if (el == "Tower" || el == "Wall") continue;
+                var ec:int = getStageElementCount(strId, el);
+                out.push(ec > 0 ? (el + " x" + ec) : el);
+            }
+            for each (var mo:String in getStageMonsters(strId)) {
+                var moc:int = getStageElementCount(strId, mo);
+                out.push(moc > 0 ? (mo + " x" + moc) : mo);
+            }
+            var byStage:Object = (AV.serverData != null) ? AV.serverData.stageAvailableGems : null;
+            var gemsArr:Array = (byStage != null) ? byStage[strId] as Array : null;
+            if (gemsArr != null && gemsArr.length > 0) {
+                // Mirror the in-game gem availability: real gems only with the
+                // pouch; free starter stages fall back to the hollow gem; other
+                // stages without the pouch show no gems at all.
+                if (_hasGemAccess(strId))
+                    out.push("Gems: " + (gemsArr.join(", ")));
+                else if (isFreeStage(strId))
+                    out.push("Gems: Hollow gem only (no pouch)");
             }
             return out;
         }
