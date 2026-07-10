@@ -64,6 +64,7 @@ package {
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
     import patch.SteamAchievementSuppressor;
+    import patch.DifficultyXpScaler;
     import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
     import patch.WavePrePatcher;
@@ -1056,6 +1057,8 @@ package {
             // adds skill-unlock gems back, the former wipes them when the
             // current stage's Gempouch is missing.
             if (screen == ScreenId.INGAME) {
+                // Difficulty-scaled battle XP (base of the traits multiplier).
+                DifficultyXpScaler.apply();
                 // Keep the world-map icon-tooltip preview off the battle screen.
                 if (_iconTooltipPreview != null) _iconTooltipPreview.hide();
                 _firstPlayBypass.onIngameFrame();
@@ -1126,6 +1129,10 @@ package {
 
             try {
                 if (_firstPlayBypass != null) _firstPlayBypass.onSelectorFrame(mc);
+
+                // Difficulty-scaled XP base, so the pre-battle traits-multiplier
+                // display reflects it too (recomputed after the game rebuilds it).
+                DifficultyXpScaler.apply();
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);

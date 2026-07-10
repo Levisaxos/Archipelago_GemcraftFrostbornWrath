@@ -368,6 +368,7 @@ class Difficulty(Choice):
 
     Fields unlock based on your wizard level, which you raise by clearing fields. Difficulty acts as a bonus or penalty on how much wizard-level progress each clear is worth: Easy clears grant the most, Extreme clears the least, with Medium and Hard in between.
     So the two ends trade off against each other. Easy makes battles forgiving and each win pushes your wizard level up the fastest, so you blow through the unlock gates quickly. Extreme makes battles punishing and each win is worth the least, so the climb to each gate is the slowest and most gradual. The gates themselves sit at the same wizard levels on every difficulty.
+    Extreme MUST have Endurance mode enabled (disable_endurance off): Extreme clears grant so little XP that the extra Endurance runs are needed to reach the gates. Generation fails if Extreme is chosen with Endurance disabled.
     """
     display_name = "Difficulty"
     option_easy    = 0

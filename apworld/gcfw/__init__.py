@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from BaseClasses import ItemClassification, LocationProgressType, Region
-from Options import DeathLink, OptionGroup
+from Options import DeathLink, OptionGroup, OptionError
 
 from worlds.AutoWorld import WebWorld, World
 
@@ -469,6 +469,19 @@ class GemcraftFrostbornWrathWorld(World):
                         opt = getattr(self.options, key, None)
                         if opt is not None:
                             opt.value = slot_data[key]
+
+            # Extreme leans on Endurance runs for the extra XP needed to reach
+            # the (difficulty-flat) WL gates — Extreme clears grant so little XP
+            # that Journey alone can't keep pace. Refuse to generate an Extreme
+            # seed with Endurance disabled: fail loudly so the player fixes the
+            # YAML rather than shipping an over-tight / potentially unwinnable seed.
+            if (self.options.difficulty.value == Difficulty.option_extreme
+                    and self.options.disable_endurance.value):
+                raise OptionError(
+                    f"[{self.player_name}] Extreme difficulty requires Endurance "
+                    f"mode: set 'disable_endurance' to false (Endurance ON), or "
+                    f"choose a lower difficulty."
+                )
 
             # Under Universal Tracker the multiworld is regenerated as a single
             # player (just the tracked slot), so `players == 1` even for a real
