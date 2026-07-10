@@ -35,7 +35,7 @@ package ui {
      *   - stage name, wave count, first-wave HP  (from GV.stageCollection)
      *   - the real minimap                       (SelectorRenderer.renderFieldMinimap)
      *   - Journey/Stash check orbs               (grey done / green in logic / red blocked)
-     * Still placeholders: the headline line and the achievement count ("A:3").
+     *   - the achievement count + list           (AchievementLogicEvaluator.getFieldAchievements)
      *
      * The frame is rebuilt from the game's own McInfoPanel paper/black frame
      * assets over the same semi-transparent black plate (0xB7000000) so it
@@ -465,12 +465,19 @@ package ui {
             return wlNeededBody(strId);
         }
 
-        /** "Needs Wizard Level N (you are M)" for an out-of-logic stage. */
+        /** Out-of-logic field: tell the player to raise XP/WL, without a
+         *  number. The derived-WL gate is not the same as the wizard level
+         *  the player sees in-game (derived WL is a function of fields cleared,
+         *  not real earned XP), so "Needs Wizard Level N" reads as wrong to the
+         *  player — a vague "get more XP" is the honest cue. A hovered field
+         *  always holds its own token (you can't hover a field without its
+         *  tile), so the only remaining blocker here is the WL soft-gate.
+         *  (Testers still see the exact gate in the XP/WL debug lines.) */
         private function wlNeededBody(strId:String):String {
             var gate:int = stageGate(strId);
-            if (gate <= 0) return "Blocked";
-            var cur:int = (_evaluator != null) ? _evaluator.derivedWizardLevel() : 0;
-            return "Needs Wizard Level " + gate + " (you are " + cur + ")";
+            if (gate <= 0)
+                return "Blocked";
+            return "Requires higher XP/WL";
         }
 
         /** Required wizard level for a stage, from shipped slot_data gates. */

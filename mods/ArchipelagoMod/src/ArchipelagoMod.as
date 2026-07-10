@@ -603,6 +603,24 @@ package {
             // panel so it doesn't linger into a standalone save.
             if (_talismanShop != null) _talismanShop.dispose();
 
+            // Reset the per-battle AP patchers. Their per-stage decision locks
+            // (GemPouchSuppressor._lockedSuppress, HollowGemInjector._lockedActive
+            // / _leechStatBaseline) and injected Hollow-Gem button would otherwise
+            // carry stale into the next AP battle (AP → standalone → AP) or linger
+            // when AP is torn down mid-battle by an exit straight to the main menu
+            // (that path skips _resetPerLevelState because _active is already
+            // cleared by the time the INGAME→MAINMENU reset block runs).
+            if (_gemPouchSuppressor != null)
+                _gemPouchSuppressor.resetIngame();
+            if (_hollowGemInjector != null)
+                _hollowGemInjector.resetIngame();
+            // Drop the AP difficulty XP scaling so a standalone/vanilla save
+            // loaded next earns vanilla battle XP. DifficultyXpScaler.apply only
+            // runs while AP is active, but the last value it wrote to
+            // GV.selectorCore.traitsXpMult persists until vanilla recomputes it —
+            // restore the vanilla base now so standalone never sees AP scaling.
+            DifficultyXpScaler.restoreVanilla();
+
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
 
@@ -626,6 +644,19 @@ package {
             }
             _disconnectPanelOnStage = false;
             if (_connectionPanel != null) _connectionPanel.dismiss();
+
+            // Remove the AP-mode stage listeners. Both are added lazily inside the
+            // AP-gated section of onEnterFrame (KEY_DOWN debug hotkey / message-log
+            // toggle, and RESIZE toast repositioning). They previously came off
+            // only in unload(), so after AP → standalone they survived on the
+            // persistent stage and the backtick key kept feeding AP's onKeyDown.
+            if (this.stage != null) {
+                if (_keyListenerAdded) {
+                    this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+                    _keyListenerAdded = false;
+                }
+                this.stage.removeEventListener(Event.RESIZE, onStageResize);
+            }
 
             // Reset transient session state
             if (_systemToast != null) _systemToast.clear();

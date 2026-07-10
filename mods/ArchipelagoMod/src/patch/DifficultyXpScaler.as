@@ -51,6 +51,29 @@ package patch {
             } catch (e:Error) {}
         }
 
+        /** Restore the vanilla battle-XP multiplier (base 1.0 + trait bonuses),
+         *  dropping the per-difficulty AP scaling. Called on AP-mode teardown so
+         *  a standalone/vanilla save loaded next never inherits AP XP scaling.
+         *  Mirrors apply() with the vanilla 1.0 base instead of difficultyBase(). */
+        public static function restoreVanilla():void {
+            try {
+                var sc:* = GV.selectorCore;
+                if (sc == null || sc.traitsXpMult == null || GV.ppd == null)
+                    return;
+
+                var sum:Number = 0;
+                var n:int = int(GV.BATTLE_TRAITS_NUM);
+                for (var i:int = 0; i < n; i++) {
+                    if (GV.ppd.gainedBattleTraits[i]) {
+                        var lvl:int = int(GV.ppd.selectedBattleTraitLevels[i].g());
+                        if (lvl > 0)
+                            sum += 0.1 * lvl;
+                    }
+                }
+                sc.traitsXpMult.s(1.0 + sum);
+            } catch (e:Error) {}
+        }
+
         /** Per-difficulty XP base; Hard (or unknown difficulty) = 1.0 = vanilla.
          *  Public so the WL model / tooltips can reuse the same value. */
         public static function difficultyBase():Number {
