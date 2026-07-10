@@ -371,7 +371,7 @@ package {
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
-                _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator);
+                _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator, _achievementLogicEvaluator);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
                 _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
 
