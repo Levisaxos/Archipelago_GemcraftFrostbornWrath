@@ -587,7 +587,7 @@ achievement_requirements = {
         "game_id": 291,
         "description": "Cast 5 strike spells.",
         "details": "Cast 5 strike spells in one battle.",
-        "requirements": ["strikeSpells:1", "minWave:30"],
+        "requirements": ["strikeSpells:1", "minWave:15"],
         "required_effort": "Trivial",
     },
     "No Place to Hide": {
@@ -595,9 +595,9 @@ achievement_requirements = {
         "game_id": 292,
         "description": "Cast 25 strike spells.",
         "requirements": [
-            ["strikeSpells:1", "minWave:50"],
-            ["strikeSpells:2", "minWave:35"],
-            ["strikeSpells:3", "minWave:25"],
+            ["strikeSpells:1", "minWave:30"],
+            ["strikeSpells:2", "minWave:20"],
+            ["strikeSpells:3", "minWave:10"],
         ],
         "required_effort": "Minor",
     },
@@ -672,7 +672,7 @@ achievement_requirements = {
         "game_id": 43,
         "description": "Create a grade 3 gem.",
         "details": "Create a grade-3 gem.",
-        "requirements": ["min_wl:20"],
+        "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
     },
     "Fifth Grader": {
@@ -680,8 +680,8 @@ achievement_requirements = {
         "game_id": 44,
         "description": "Create a grade 5 gem.",
         "details": "Create a grade-5 gem.",
-        "requirements": ["min_wl:40"],
-        "required_effort": "Minor",
+        "requirements": ["min_wl:20"],
+        "required_effort": "Trivial",
     },
     "Biohazard": {
         "ap_id": 2043,
@@ -858,7 +858,7 @@ achievement_requirements = {
             ["sPylons"],
             ["ePylons:1"],
         ],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "Groundfill": {
         "ap_id": 2227,
@@ -869,7 +869,7 @@ achievement_requirements = {
             ["eTraps:1"],
             ["sTraps"]
         ],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "Stones to Dust": {
         "ap_id": 2524,

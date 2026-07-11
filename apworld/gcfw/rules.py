@@ -396,6 +396,18 @@ def _any_stash_reachable(state, player: int) -> bool:
 # patch/RitualSpawnPatcher.as for the matching runtime behavior.
 _RITUAL_TRAIT_ITEM: str = "Ritual Battle Trait"
 _RITUAL_MIN_WAVES: int  = 4
+# Ritual pushes exactly this many apparitions (IngameInitializer.as:1649 —
+# a hardcoded `for i < 2` loop, independent of the trait's creature-count
+# value) on any stage with waves > 3. So an `eApparition:N` count token for
+# N <= this is satisfiable by Ritual alone on any reachable waves>=4 stage,
+# the same broadening the count-less `eApparition` path already applies.
+_RITUAL_APPARITION_SPAWN_COUNT: int = 2
+# Stages long enough for the Ritual scripted-spawn block to fire
+# (IngameInitializer.as:1612 gates on waves.length > 3).
+_RITUAL_STAGES: frozenset = frozenset(
+    sid for sid, d in LEVEL_DATA.items()
+    if int(d.get("WaveCount", 0)) >= _RITUAL_MIN_WAVES
+)
 
 
 # Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
@@ -852,13 +864,7 @@ def _compile_element_or_full(elem_names, player: int):
 
     # Stage set used by the Apparition+Ritual state-dependent path
     # (IngameInitializer.as:1612 gates the Ritual block on waves.length > 3).
-    if has_apparition:
-        ritual_stages = frozenset(
-            sid for sid, d in LEVEL_DATA.items()
-            if int(d.get("WaveCount", 0)) >= _RITUAL_MIN_WAVES
-        )
-    else:
-        ritual_stages = None
+    ritual_stages = _RITUAL_STAGES if has_apparition else None
 
     # Specialise common shapes.
     if len(members) == 1 and not has_apparition:
@@ -1051,6 +1057,18 @@ def _compile_req(req: str, world, is_progressive: bool):
                 return (lambda state, n=interact_skill, s=stages: (
                     state.has(n, player) and _can_reach_any_stage(state, player, s)
                 ), _COST_REACH, stages_fs)
+            # Apparition count within the Ritual scripted-spawn count is
+            # satisfiable by Ritual alone on any reachable waves>=4 stage —
+            # the same broadening `_compile_element_or_full` applies to the
+            # count-less `eApparition`. State-dependent (Ritual ownership), so
+            # static_set must be None: it can't bind to a fixed stage set.
+            if (elem_pascal == "Apparition"
+                    and count_needed <= _RITUAL_APPARITION_SPAWN_COUNT):
+                return (lambda state, s=stages: (
+                    _can_reach_any_stage(state, player, s)
+                    or (state.has(_RITUAL_TRAIT_ITEM, player)
+                        and _can_reach_any_stage(state, player, _RITUAL_STAGES))
+                ), _COST_REACH, None)
             return (lambda state: _can_reach_any_stage(state, player, stages),
                     _COST_REACH, stages_fs)
 
