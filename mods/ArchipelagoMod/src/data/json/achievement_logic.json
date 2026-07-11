@@ -743,7 +743,7 @@
       "required_effort": "Trivial",
       "requirements": [
         "strikeSpells:1",
-        "minWave:30"
+        "minWave:15"
       ],
       "details": "Cast 5 strike spells in one battle."
     },
@@ -755,15 +755,15 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "minWave:50"
+          "minWave:30"
         ],
         [
           "strikeSpells:2",
-          "minWave:35"
+          "minWave:20"
         ],
         [
           "strikeSpells:3",
-          "minWave:25"
+          "minWave:10"
         ]
       ]
     },
@@ -858,7 +858,7 @@
       "description": "Create a grade 3 gem.",
       "required_effort": "Trivial",
       "requirements": [
-        "min_wl:20"
+        "min_wl:10"
       ],
       "details": "Create a grade-3 gem."
     },
@@ -866,9 +866,9 @@
       "apId": 2174,
       "game_id": 44,
       "description": "Create a grade 5 gem.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
-        "min_wl:40"
+        "min_wl:20"
       ],
       "details": "Create a grade-5 gem."
     },
@@ -1095,7 +1095,7 @@
       "apId": 2594,
       "game_id": 602,
       "description": "Demolish a pylon.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         [
           "sPylons"
@@ -1109,7 +1109,7 @@
       "apId": 2227,
       "game_id": 601,
       "description": "Demolish a trap.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         [
           "eTraps:1"

@@ -396,6 +396,18 @@ def _any_stash_reachable(state, player: int) -> bool:
 # patch/RitualSpawnPatcher.as for the matching runtime behavior.
 _RITUAL_TRAIT_ITEM: str = "Ritual Battle Trait"
 _RITUAL_MIN_WAVES: int  = 4
+# Ritual pushes exactly this many apparitions (IngameInitializer.as:1649 —
+# a hardcoded `for i < 2` loop, independent of the trait's creature-count
+# value) on any stage with waves > 3. So an `eApparition:N` count token for
+# N <= this is satisfiable by Ritual alone on any reachable waves>=4 stage,
+# the same broadening the count-less `eApparition` path already applies.
+_RITUAL_APPARITION_SPAWN_COUNT: int = 2
+# Stages long enough for the Ritual scripted-spawn block to fire
+# (IngameInitializer.as:1612 gates on waves.length > 3).
+_RITUAL_STAGES: frozenset = frozenset(
+    sid for sid, d in LEVEL_DATA.items()
+    if int(d.get("WaveCount", 0)) >= _RITUAL_MIN_WAVES
+)
 
 
 # Gem-skill broadening: a bare `sX` gem-skill token (and the `gemSkills:N`
@@ -584,9 +596,13 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
 # overhead in our setup, since every stage region is unconditionally
 # connected from start. Calling the compiled rule directly is ~5-10x cheaper.
 #
-# IMPORTANT: if the region graph ever gains *gated* connections (e.g. region
-# A reachable only after item X), this short-circuit becomes wrong — the
-# rule check alone won't see the region gate. Update accordingly.
+# IMPORTANT: if the region graph gains *gated* connections (e.g. region
+# A reachable only after item X), this short-circuit misses that gate unless
+# the gate is ALSO composed into the rule here. The wizard-level SOFT gate is
+# such a connection: it's composed onto stage entrances in set_rules AND folded
+# into these rules right after (see the `_STAGE_CLEAR_RULES[(player, _sid)]`
+# rewrap in the WL loop), so this direct call stays in parity with can_reach.
+# Any future region-level gate must do the same.
 #
 # Keyed by (player, sid) so multi-world generations don't stomp each other —
 # rules bind to a specific player at compile time.
@@ -848,13 +864,7 @@ def _compile_element_or_full(elem_names, player: int):
 
     # Stage set used by the Apparition+Ritual state-dependent path
     # (IngameInitializer.as:1612 gates the Ritual block on waves.length > 3).
-    if has_apparition:
-        ritual_stages = frozenset(
-            sid for sid, d in LEVEL_DATA.items()
-            if int(d.get("WaveCount", 0)) >= _RITUAL_MIN_WAVES
-        )
-    else:
-        ritual_stages = None
+    ritual_stages = _RITUAL_STAGES if has_apparition else None
 
     # Specialise common shapes.
     if len(members) == 1 and not has_apparition:
@@ -1047,6 +1057,18 @@ def _compile_req(req: str, world, is_progressive: bool):
                 return (lambda state, n=interact_skill, s=stages: (
                     state.has(n, player) and _can_reach_any_stage(state, player, s)
                 ), _COST_REACH, stages_fs)
+            # Apparition count within the Ritual scripted-spawn count is
+            # satisfiable by Ritual alone on any reachable waves>=4 stage —
+            # the same broadening `_compile_element_or_full` applies to the
+            # count-less `eApparition`. State-dependent (Ritual ownership), so
+            # static_set must be None: it can't bind to a fixed stage set.
+            if (elem_pascal == "Apparition"
+                    and count_needed <= _RITUAL_APPARITION_SPAWN_COUNT):
+                return (lambda state, s=stages: (
+                    _can_reach_any_stage(state, player, s)
+                    or (state.has(_RITUAL_TRAIT_ITEM, player)
+                        and _can_reach_any_stage(state, player, _RITUAL_STAGES))
+                ), _COST_REACH, None)
             return (lambda state: _can_reach_any_stage(state, player, stages),
                     _COST_REACH, stages_fs)
 
@@ -1694,6 +1716,24 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         if _wl is not _always_true:
             for _ent in multiworld.get_region(_sid, player).entrances:
                 _ent.access_rule = _compose_and([_ent.access_rule, _wl])
+            # Also compose the WL gate into the direct-call clearability rule.
+            # `_can_clear_stage_cached` calls _STAGE_CLEAR_RULES[sid] DIRECTLY
+            # (bypassing can_reach for speed), so the entrance WL gate above is
+            # invisible to it — and it backs the achievement requirement checks
+            # (_can_reach_any_stage) and Field_<sid> prereqs. Without this a
+            # token-unlocked but WL-locked stage (e.g. R2 held-token at WL 11,
+            # gate 13) reads as clearable, so its gem/monster-gated achievements
+            # (sPoison / sBleeding / minMonsters:400) show in logic while every
+            # R2 stage location correctly stays out. This is exactly the region-
+            # gate divergence the _STAGE_CLEAR_RULES comment warns about, and it
+            # restores parity with the mod's isStageInLogic (soft gate applied).
+            _clear = _STAGE_CLEAR_RULES.get((player, _sid))
+            if _clear is not None:
+                _STAGE_CLEAR_RULES[(player, _sid)] = (
+                    lambda state, r=_clear, w=_wl: r(state) and w(state)
+                )
+            else:
+                _STAGE_CLEAR_RULES[(player, _sid)] = _wl
         # The "Clear <sid>" XP event fires on CLEAR, so it mirrors the Journey
         # location's clearability rule (WIZLOCK skills + pouch + DNF prereqs);
         # region reachability already supplies token + WL. Without this the

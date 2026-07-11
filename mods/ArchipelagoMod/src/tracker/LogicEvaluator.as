@@ -626,6 +626,19 @@ package tracker {
                     }
                     return false;
                 }
+                // Apparition count within the Ritual scripted-spawn count is
+                // satisfiable by Ritual alone on any in-logic waves>=4 stage —
+                // the same broadening _elementInLogic applies to count-less
+                // eApparition. Mirrors apworld's count-path Apparition branch.
+                if (nameForField == "Apparition"
+                        && ecount <= _RITUAL_APPARITION_SPAWN_COUNT)
+                {
+                    if (_fieldEvaluator == null) return false;
+                    if (_fieldEvaluator.hasInLogicFieldWithElementCount("Apparition", ecount))
+                        return true;
+                    return AV.sessionData.hasItem(_RITUAL_TRAIT_AP_ID)
+                        && _fieldEvaluator.hasInLogicFieldWithMinWaves(_RITUAL_TRAIT_MIN_WAVES);
+                }
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
             }
@@ -1564,7 +1577,13 @@ package tracker {
             "Tower":           true,
             "Wall":            true,
             "Marked Monster":  true,
-            "Drop Holder":     true
+            "Drop Holder":     true,
+            // Apparition broadens via the Ritual trait (see _elementInLogic),
+            // so it can't bind to its natural [Q1, R6] stage list — that would
+            // route it through the binding path and bypass the broadening,
+            // hiding standalone apparition achievements in-game even with
+            // Ritual. Mirrors apworld's static_set=None for Apparition.
+            "Apparition":      true
         };
 
         /** Returns a candidate stage str_id list for `req` if it's a
@@ -1631,6 +1650,13 @@ package tracker {
                                             : ehead.substring(1);
                 if (pascalName == "WizardTower" || pascalName == "WizardStash"
                         || pascalName == "DropHolder")
+                    return null;
+                // eApparition:N (N <= Ritual spawn count) broadens via Ritual,
+                // so it stays global — same reasoning as the count-less path's
+                // _NON_BINDABLE_ELEMENTS entry. The evaluateRequirement eX:N
+                // branch drives the answer.
+                if (pascalName == "Apparition"
+                        && ecount <= _RITUAL_APPARITION_SPAWN_COUNT)
                     return null;
                 return _qualifyingStagesWithStatAtLeast(pascalName + "Count", ecount);
             }
@@ -1910,6 +1936,10 @@ package tracker {
         // others' reachability still requires a pre-placed reachable stage.
         private static const _RITUAL_TRAIT_AP_ID:int     = 814;
         private static const _RITUAL_TRAIT_MIN_WAVES:int = 4;
+        // Ritual pushes exactly this many apparitions (IngameInitializer.as:1649,
+        // a hardcoded i<2 loop) on any stage with waves > 3, so eApparition:N for
+        // N <= this is satisfiable by Ritual alone on any in-logic waves>=4 stage.
+        private static const _RITUAL_APPARITION_SPAWN_COUNT:int = 2;
 
         /** Returns true if any reachable in-logic stage hosts the named element. */
         private function _elementInLogic(elemName:String):Boolean {

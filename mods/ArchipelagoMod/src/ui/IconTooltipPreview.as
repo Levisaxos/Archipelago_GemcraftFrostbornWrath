@@ -19,7 +19,9 @@ package ui {
     import com.giab.games.gcfw.bmpd.BmpdInfoPanelFrameBlack;
     import com.giab.games.gcfw.bmpd.BmpdInfoPanelFramePaper;
     import com.giab.games.gcfw.constants.SelectorScreenStatus;
+    import com.giab.games.gcfw.constants.ScreenId;
     import com.giab.games.gcfw.constants.GemComponentType;
+    import com.giab.games.gcfw.constants.SkillId;
     import com.giab.games.gcfw.entity.Gem;
 
     import data.AV;
@@ -127,6 +129,21 @@ package ui {
                 hide();
                 return;
             }
+
+            // HARD screen guard. GV.selectorCore survives into a battle, so the
+            // frame loop keeps pumping this method while the game is INGAME. Left
+            // unguarded, findHoveredToken() hit-tests the map's field-token
+            // positions in map space: a cursor resting over a left-side token's
+            // spot would flag overField, which suppresses GV.mcInfoPanel (the
+            // panel the in-battle gem tooltip uses) and can draw our panel on top
+            // of the battle — the "left half of the screen has no gem tooltip"
+            // bug. Only ever run on the actual world-map (SELECTOR) screen.
+            try {
+                if (int(GV.main.currentScreen) != ScreenId.SELECTOR) {
+                    hide();
+                    return;
+                }
+            } catch (eScr:Error) {}
 
             // Only on the map screen. STAGES_IDLE is the resting map;
             // UPDATING_STAGES is the post-battle XP tally / token-appear
@@ -570,12 +587,22 @@ package ui {
             var isFree:Boolean = (_evaluator != null) && _evaluator.isFreeStage(strId);
 
             var types:Array = null;
+            // Number of leading entries that are the field's own gems (drawn full
+            // size). Any entries past this are skill-tome gems, drawn smaller —
+            // mirrors SelectorRenderer's vStageGivenGemTypesNum split.
+            var stageGivenNum:int = 0;
             var desat:Boolean = false;
             if (hasPouch) {
                 try { types = GV.stageCollection.stageDatasJ[sid].getAvailableGemTypes(); }
                 catch (eG:Error) { types = null; }
+                if (types == null) types = [];
+                stageGivenNum = types.length;
+                // Append the gem components the player has unlocked via skill
+                // tomes; these render as smaller icons after the field's gems.
+                _appendSkillGems(types);
             } else if (isFree) {
                 types = [GemComponentType.MANA_LEECHING]; // colourless Hollow Gem
+                stageGivenNum = 1;
                 desat = true;
             }
             if (types == null || types.length == 0)
@@ -583,10 +610,13 @@ package ui {
 
             y = addLine("Available gems:", COL_LABEL, 11, y, 20);
 
-            // Build the gem icons, then lay them out in a centred row.
+            // Build the gem icons, then lay them out in a centred row. Skill-tome
+            // gems (index >= stageGivenNum) are scaled down like vanilla. The gem
+            // bitmaps carry transparent padding, so we advance by 0.8 * width
+            // (matching SelectorRenderer) to pack them without a visible gap.
             var mcs:Array = [];
             var totalW:Number = 0;
-            var gap:Number = 6;
+            var gi:int = 0;
             for each (var t:* in types) {
                 var gem:Gem = new Gem();
                 gem.elderComponents = [t];
@@ -597,10 +627,12 @@ package ui {
                     gem.hueMain  = 0;
                     _desatGem(gem.mc);
                 }
+                if (gi >= stageGivenNum)
+                    gem.mc.scaleX = gem.mc.scaleY = 0.7;
                 mcs.push(gem.mc);
-                totalW += Number(gem.mc.width) + gap;
+                totalW += Number(gem.mc.width) * 0.8;
+                gi++;
             }
-            if (mcs.length > 0) totalW -= gap;
 
             // giveGemBitmaps centres the icon on its origin, so offset by each
             // gem's own bounds to place its visual top-left where we want (below
@@ -608,14 +640,41 @@ package ui {
             var cx:Number = (PANEL_W - totalW) * 0.5;
             var maxH:Number = 0;
             for each (var mc:* in mcs) {
+                // getBounds is in the mc's own (unscaled) space; multiply by the
+                // mc's scale so the smaller skill gems still sit flush at cx/y.
                 var gb:Rectangle = mc.getBounds(mc);
-                mc.x = cx - gb.left;
-                mc.y = y - gb.top;
+                mc.x = cx - gb.left * Number(mc.scaleX);
+                mc.y = y  - gb.top  * Number(mc.scaleY);
                 addChild(mc);
-                cx += Number(mc.width) + gap;
-                if (gb.height > maxH) maxH = gb.height;
+                cx += Number(mc.width) * 0.8;
+                var sh:Number = gb.height * Number(mc.scaleY);
+                if (sh > maxH) maxH = sh;
             }
             return y + maxH + 8;
+        }
+
+        /** Append the gem components the player has unlocked via skill tomes
+         *  (mana-leech, crit, poison, bleeding, slowing, armor-tearing) to
+         *  `types`. Only components the field doesn't already provide are added.
+         *  Unlike vanilla (which gates this on having played the field), we show
+         *  them on ANY pouch-held field — if the player owns the skill they can
+         *  build these gems there, played or not, in or out of logic. Callers
+         *  draw the appended entries smaller than the field's own gems. */
+        private function _appendSkillGems(types:Array):void {
+            var pairs:Array = [
+                [SkillId.MANA_LEECHING, GemComponentType.MANA_LEECHING],
+                [SkillId.CRITHIT,       GemComponentType.CRITHIT],
+                [SkillId.POISON,        GemComponentType.POISON],
+                [SkillId.BLEEDING,      GemComponentType.BLEEDING],
+                [SkillId.SLOWING,       GemComponentType.SLOWING],
+                [SkillId.ARMOR_TEARING, GemComponentType.ARMOR_TEARING]
+            ];
+            for each (var p:Array in pairs) {
+                try {
+                    if (Boolean(GV.ppd.gainedSkillTomes[p[0]]) && types.indexOf(p[1]) == -1)
+                        types.push(p[1]);
+                } catch (e2:Error) {}
+            }
         }
 
         /** Luminance-preserving desaturate of a Gem MC's bitmap children (the
