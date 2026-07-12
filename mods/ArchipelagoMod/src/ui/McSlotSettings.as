@@ -60,46 +60,55 @@ package ui {
             var opts:* = AV.serverData.serverOptions;
             var vY:Number = CONTENT_START_Y;
 
-            // ── General settings ─────────────────────────────────────────────
-            addSectionHeader("General", vY); vY += ROW_HEIGHT;
+            // Section headers + membership mirror the apworld's YAML option_groups
+            // (GCFWWebWorld.option_groups in apworld/gcfw/__init__.py). Every
+            // yaml-settable option appears here under its yaml group so the panel
+            // is a faithful read-only view of what the player could set.
+
+            // ── Game Options ─────────────────────────────────────────────────
+            addSectionHeader("Game Options", vY); vY += ROW_HEIGHT;
             addRow("Goal",                    goalName(opts.goal), vY);                                        vY += ROW_HEIGHT;
             if (opts.goal == 2)
                 { addRow("Fields Required",   opts.fieldsRequiredCount + " fields", vY);                      vY += ROW_HEIGHT; }
             addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
-            addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
+            addRow("Difficulty",              difficultyName(opts.difficulty), vY);                           vY += ROW_HEIGHT;
             addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
             addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
             addRow("Trial Mode",              opts.disable_trial     ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
-            addRow("Starting Wizard Level",   opts.startingWizardLevel == 1 ? "Off" : "Level " + opts.startingWizardLevel, vY); vY += ROW_HEIGHT;
-            addRow("Starting Overcrowd",      opts.startingOvercrowd ? "Yes" : "No", vY);                    vY += ROW_HEIGHT;
+            addRow("Extra Shadow Cores/Wave", opts.extraShadowCoresPerWave == 0 ? "Off" : "+" + opts.extraShadowCoresPerWave, vY); vY += ROW_HEIGHT;
 
-            // ── Item gating granularity ──────────────────────────────────────
+            // ── Field Options ────────────────────────────────────────────────
             vY += SECTION_GAP;
-            addSectionHeader("Gating", vY); vY += ROW_HEIGHT;
+            addSectionHeader("Field Options", vY); vY += ROW_HEIGHT;
             addRow("Field Token Granularity", fieldTokenGranularityName(opts.fieldTokenGranularity), vY);     vY += ROW_HEIGHT;
             addRow("Stash Key Granularity",   stashKeyGranularityName(opts.stashKeyGranularity), vY);         vY += ROW_HEIGHT;
             addRow("Gem Pouch Granularity",   gemPouchGranularityName(opts.gemPouchGranularity), vY);         vY += ROW_HEIGHT;
+            addRow("Field Token Placement",   ftpName(opts.fieldTokenPlacement), vY);                         vY += ROW_HEIGHT;
 
-            // ── Item economy ─────────────────────────────────────────────────
+            // ── Difficulty Multipliers ───────────────────────────────────────
             vY += SECTION_GAP;
-            addSectionHeader("Item Economy", vY); vY += ROW_HEIGHT;
+            addSectionHeader("Difficulty Multipliers", vY); vY += ROW_HEIGHT;
+            addRow("Starting Wizard Level",   opts.startingWizardLevel == 1 ? "Off" : "Level " + opts.startingWizardLevel, vY); vY += ROW_HEIGHT;
+            addRow("Starting Overcrowd",      opts.startingOvercrowd ? "Yes" : "No", vY);                    vY += ROW_HEIGHT;
             addRow("XP Tome Bonus",           opts.xpTomeBonus + "%", vY);                                    vY += ROW_HEIGHT;
+            // Derived per-tome level rewards (not yaml options — shown as context
+            // for the XP Tome Bonus above).
             addRow("Tattered Scroll",         opts.tomeXpLevels.tattered + " levels", vY);                    vY += ROW_HEIGHT;
             addRow("Worn Tome",               opts.tomeXpLevels.worn     + " levels", vY);                    vY += ROW_HEIGHT;
             addRow("Ancient Grimoire",        opts.tomeXpLevels.ancient  + " levels", vY);                    vY += ROW_HEIGHT;
 
-            // ── Difficulty Modifiers ─────────────────────────────────────────
+            // ── Enemy Manipulation Options ───────────────────────────────────
             vY += SECTION_GAP;
-            addSectionHeader("Difficulty Modifiers", vY); vY += ROW_HEIGHT;
+            addSectionHeader("Enemy Manipulation Options", vY); vY += ROW_HEIGHT;
             addRow("Enemy HP",               opts.enemyMultipliers.hp     + "%", vY);                         vY += ROW_HEIGHT;
             addRow("Enemy Armor",            opts.enemyMultipliers.armor  + "%", vY);                         vY += ROW_HEIGHT;
             addRow("Enemy Shield",           opts.enemyMultipliers.shield + "%", vY);                         vY += ROW_HEIGHT;
             addRow("Enemies Per Wave",       opts.enemyMultipliers.waves  + "%", vY);                         vY += ROW_HEIGHT;
             addRow("Extra Waves",            opts.enemyMultipliers.extraWaves == 0 ? "Off" : "+" + opts.enemyMultipliers.extraWaves, vY); vY += ROW_HEIGHT;
 
-            // ── DeathLink ────────────────────────────────────────────────────
+            // ── DeathLink Options ────────────────────────────────────────────
             vY += SECTION_GAP;
-            addSectionHeader("DeathLink", vY); vY += ROW_HEIGHT;
+            addSectionHeader("DeathLink Options", vY); vY += ROW_HEIGHT;
             addRow("Enabled", dl.enabled ? "Yes" : "No", vY); vY += ROW_HEIGHT;
 
             if (dl.enabled) {
@@ -150,6 +159,16 @@ package ui {
                 case 1:  return "Beat Swarm Queen (K4)";
                 case 2:  return "Fields Cleared (Count)";
                 default: return "Unknown (" + goal + ")";
+            }
+        }
+
+        private function difficultyName(d:int):String {
+            switch (d) {
+                case 0:  return "Easy";
+                case 1:  return "Medium";
+                case 2:  return "Hard";
+                case 3:  return "Extreme";
+                default: return "Unknown (" + d + ")";
             }
         }
 

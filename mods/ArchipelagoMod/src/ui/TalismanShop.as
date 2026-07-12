@@ -178,11 +178,16 @@ package ui {
             if (tmpl == null) return;
 
             // Snapshot the shape-collection button to reuse its exact frame art,
-            // then bake a dark inset over its 3x3 icon so we can lay the AP logo
-            // on top (placeholder icon — a bespoke one can replace it later).
-            // The mask is composited INTO the bitmap because Sprite.graphics
-            // always renders beneath child bitmaps. Draw via the button's own
-            // bounds so a non-zero symbol origin doesn't clip the snapshot.
+            // then hide its 3x3 icon so we can lay the AP logo on top. Rather than
+            // a flat black box (which reads as a stark inset and — by leaving a
+            // gap to the frame — exposes the frame's light inner bevel as an ugly
+            // "white border"), we fill with the frame's OWN dark stone-interior
+            // tone, sampled from the snapshot. The cover then blends seamlessly:
+            // it looks like an empty version of the vanilla frame, matching the
+            // sibling buttons. The cover is composited INTO the bitmap because
+            // Sprite.graphics always renders beneath child bitmaps. Draw via the
+            // button's own bounds so a non-zero symbol origin doesn't clip the
+            // snapshot.
             var b:Rectangle = tmpl.getBounds(tmpl);
             _btnW = b.width;
             _btnH = b.height;
@@ -191,9 +196,12 @@ package ui {
             var bd:BitmapData = new BitmapData(Math.max(1, Math.ceil(_btnW)),
                                                Math.max(1, Math.ceil(_btnH)), true, 0);
             bd.draw(tmpl, m);
+            var interior:uint = _sampleInteriorFill(bd);
             var cover:Shape = new Shape();
-            cover.graphics.beginFill(0x141416, 1);
-            cover.graphics.drawRoundRect(9, 9, _btnW - 18, _btnH - 18, 10, 10);
+            cover.graphics.beginFill(interior, 1);
+            // Reach fully to the frame's inner edge (small inset, generous radius)
+            // so no light-bevel ring survives around the cover.
+            cover.graphics.drawRoundRect(6, 6, _btnW - 12, _btnH - 12, 12, 12);
             cover.graphics.endFill();
             bd.draw(cover);
 
@@ -202,7 +210,9 @@ package ui {
 
             var icon:Bitmap = new ApIcon() as Bitmap;
             icon.smoothing = true;
-            var iSize:Number = Math.min(_btnW, _btnH) - 24;
+            // Sit the balls in the frame opening at the size the vanilla symbols
+            // occupy (previously -24 left them small with a wide empty margin).
+            var iSize:Number = Math.min(_btnW, _btnH) - 16;
             icon.width  = iSize;
             icon.height = iSize;
             icon.x = (_btnW - iSize) / 2;
@@ -222,6 +232,40 @@ package ui {
 
             pnl.mc.addChild(_btn);
             log("button injected at x=" + _btn.x + " y=" + _btn.y);
+        }
+
+        /**
+         * Sample the frame's dark stone-interior tone from the button snapshot so
+         * the icon-cover blends with the vanilla frame instead of reading as a
+         * flat black box. Scans a grid of points across the interior (skipping the
+         * outer frame border) and returns the DARKEST opaque pixel — the icon's
+         * line-art is light, so the darkest sample is reliably the background
+         * stone shadow we want to match.
+         */
+        private function _sampleInteriorFill(bd:BitmapData):uint {
+            var w:int = bd.width;
+            var h:int = bd.height;
+            var x0:int = Math.floor(w * 0.28);
+            var x1:int = Math.ceil(w * 0.72);
+            var y0:int = Math.floor(h * 0.28);
+            var y1:int = Math.ceil(h * 0.72);
+            var best:uint = 0x141416;   // fallback matches the old flat fill
+            var bestLuma:Number = Number.MAX_VALUE;
+            for (var y:int = y0; y <= y1; y += 3) {
+                for (var x:int = x0; x <= x1; x += 3) {
+                    var px:uint = bd.getPixel32(x, y);
+                    if ((px >>> 24) < 200) continue; // skip transparent / edge AA
+                    var r:int = (px >> 16) & 0xFF;
+                    var g:int = (px >> 8) & 0xFF;
+                    var bl:int = px & 0xFF;
+                    var luma:Number = 0.299 * r + 0.587 * g + 0.114 * bl;
+                    if (luma < bestLuma) {
+                        bestLuma = luma;
+                        best = px & 0xFFFFFF;
+                    }
+                }
+            }
+            return best;
         }
 
         private function _onBtnOver(e:MouseEvent):void {

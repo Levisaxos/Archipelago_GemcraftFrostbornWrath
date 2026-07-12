@@ -266,6 +266,8 @@ package net {
                     AV.serverData.serverOptions.xpTraitApIds = sd.xp_trait_ap_ids as Array;
                 if (sd.xp_trait_multiplier !== undefined)
                     AV.serverData.serverOptions.xpTraitMultiplier = sd.xp_trait_multiplier as Array;
+                if (sd.xp_trait_min_wl !== undefined)
+                    AV.serverData.serverOptions.xpTraitMinWl = sd.xp_trait_min_wl as Array;
                 if (sd.death_link !== undefined)
                     AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }

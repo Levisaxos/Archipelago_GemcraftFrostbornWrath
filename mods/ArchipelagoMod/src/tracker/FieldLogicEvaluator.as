@@ -163,7 +163,8 @@ package tracker {
                 }
             }
             var mult:Array = (opts != null) ? (opts.xpTraitMultiplier as Array) : null;
-            return WizardLevelCalc.derivedWl(base, n, mult);
+            var minWl:Array = (opts != null) ? (opts.xpTraitMinWl as Array) : null;
+            return WizardLevelCalc.derivedWl(base, n, mult, minWl);
         }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }

@@ -34,6 +34,8 @@ package ui {
          */
         public function configure(cm:ConnectionManager, dl:DeathLinkHandler):void {
             if (_mc != null && _mc.parent != null) _mc.parent.removeChild(_mc);
+            // Rebuilding while open would strand the field tooltip hidden — restore it.
+            if (_isOpen) _showFieldTooltip();
             _isOpen = false;
             _mc = new McSlotSettings(dl);
             _scroll.attach(_mc, close);
@@ -58,6 +60,7 @@ package ui {
             GV.main.addChildAt(_mc, GV.main.numChildren);
             _scroll.addWheelListener();
             _scroll.renderViewport();
+            _hideFieldTooltip();
         }
 
         public function close():void {
@@ -65,6 +68,7 @@ package ui {
             _isOpen = false;
             if (_mc != null && _mc.parent != null) _mc.parent.removeChild(_mc);
             _scroll.removeWheelListener();
+            _showFieldTooltip();
         }
 
         // -----------------------------------------------------------------------
@@ -72,6 +76,24 @@ package ui {
 
         public function doEnterFrame():void {
             _scroll.doEnterFrame();
+            // The selector's field tokens sit underneath this panel and keep
+            // firing hover events, so the game re-shows its field tooltip
+            // (McInfoPanel) behind us. Keep it hidden every frame while open;
+            // close() restores it. On the selector nothing else toggles this
+            // flag, so a single set would suffice, but re-asserting per frame
+            // is self-healing against a stray in-battle transition.
+            _hideFieldTooltip();
+        }
+
+        // -----------------------------------------------------------------------
+        // Field-tooltip suppression
+
+        private function _hideFieldTooltip():void {
+            if (GV.mcInfoPanel != null) GV.mcInfoPanel.visible = false;
+        }
+
+        private function _showFieldTooltip():void {
+            if (GV.mcInfoPanel != null) GV.mcInfoPanel.visible = true;
         }
     }
 }

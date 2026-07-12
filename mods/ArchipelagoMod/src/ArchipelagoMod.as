@@ -1207,10 +1207,24 @@ package {
 
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
-                if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
-                // PREVIEW of the proposed icon tooltip — live data for the hovered
-                // stage, pinned top-left alongside vanilla for comparison.
-                if (_iconTooltipPreview != null) _iconTooltipPreview.onSelectorFrame(mc);
+                // While the Slot Settings window is up (a modal overlay) the
+                // field tokens underneath keep firing hover events, so both the
+                // vanilla field tooltip (McInfoPanel, appended by
+                // _fieldTooltipOverlay) and the custom replacement panel
+                // (_iconTooltipPreview) would still pop up behind/over it. Force
+                // both off while it's open: skip the overlay, and hide() the
+                // custom panel so it dismisses immediately.
+                var settingsOpen:Boolean =
+                        (_slotSettings != null && _slotSettings.isOpen);
+                if (_fieldTooltipOverlay != null && !settingsOpen)
+                    _fieldTooltipOverlay.onSelectorFrame(mc);
+                // Custom icon-based field tooltip (replaces the vanilla one on the map).
+                if (_iconTooltipPreview != null) {
+                    if (settingsOpen)
+                        _iconTooltipPreview.hide();
+                    else
+                        _iconTooltipPreview.onSelectorFrame(mc);
+                }
                 if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
                 if (_skillTypeTooltipOverlay != null) _skillTypeTooltipOverlay.onSelectorFrame();
 

@@ -1396,12 +1396,8 @@
       "apId": 2236,
       "game_id": 467,
       "description": "Destroy 3 healing beacons.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
-        [
-          "tDarkMasonry",
-          "minWave:30"
-        ],
         [
           "Field_T3"
         ]
@@ -4263,7 +4259,7 @@
       "apId": 2402,
       "game_id": 140,
       "description": "Kill 333 swarmlings.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [
         "minSwarmlings:333"
       ],
@@ -4273,7 +4269,7 @@
       "apId": 2123,
       "game_id": 143,
       "description": "Kill 666 swarmlings.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "requirements": [
         "minSwarmlings:666"
       ]
@@ -4282,7 +4278,7 @@
       "apId": 2532,
       "game_id": 144,
       "description": "Kill 999 swarmlings.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "requirements": [
         "minSwarmlings:999"
       ],

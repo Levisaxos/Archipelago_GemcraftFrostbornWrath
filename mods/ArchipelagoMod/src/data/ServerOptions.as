@@ -13,11 +13,14 @@ package data {
         public var stageGates:Object;            // str_id -> required wizard level
         public var achievementMinWl:Object;      // effort tier name -> required wizard level
         // Derived-WL inputs (mirror difficulty_gates.derived_wl). Derived WL =
-        // levelFromXp( sum(wlEffXp[strId] over cleared fields) * xpTraitMultiplier[n] ),
-        // n = how many of xpTraitApIds are held. See WizardLevelCalc.
+        // levelFromXp( sum(wlEffXp[strId] over cleared fields) * xpTraitMultiplier[eff] ),
+        // where eff is the effective XP-trait count after the harness gate:
+        // the k-th of the (up to 4) held xpTraitApIds counts only if the WL
+        // already reached with k-1 traits >= xpTraitMinWl[k]. See WizardLevelCalc.
         public var wlEffXp:Object;               // str_id -> per-field XP (this difficulty)
         public var xpTraitApIds:Array;           // AP ids of the 4 XP-scaling traits
         public var xpTraitMultiplier:Array;      // [1.0,1.2,1.44,1.728,2.0736]; index = n held
+        public var xpTraitMinWl:Array;           // [0,10,20,30,40]; harness gate, index = target count
         public var startingStage:int;            // 0=W1..3=W4, 4=S1..7=S4 (StartingStage option order)
         public var fieldTokenPlacement:int;      // 0=own_world, 1=any_world, 2=different_world
         public var disable_endurance:Boolean;
@@ -112,6 +115,7 @@ package data {
             wlEffXp = {};
             xpTraitApIds = [];
             xpTraitMultiplier = [1.0, 1.2, 1.44, 1.728, 2.0736];
+            xpTraitMinWl = [0, 10, 20, 30, 40];
             startingStage = 0;
             fieldTokenPlacement = 1;
             disable_endurance = false;

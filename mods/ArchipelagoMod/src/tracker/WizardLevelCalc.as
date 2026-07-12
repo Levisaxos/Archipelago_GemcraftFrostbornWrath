@@ -7,9 +7,12 @@ package tracker {
      * cases). Do NOT reorder operations or use Math.pow for the multiplier —
      * the multiplier ships as exact literals in slot_data (xp_trait_multiplier).
      *
-     *   derivedWl = levelFromXp( clearedXpSum * multiplier[n] )
+     *   derivedWl = levelFromXp( clearedXpSum * multiplier[eff] )
      *   clearedXpSum = sum of wlEffXp[strId] over cleared fields
-     *   n            = how many of the 4 XP-scaling traits are held (cap 4)
+     *   eff          = effective XP-trait count after the harness gate: apply
+     *                  traits one at a time (up to the held count, cap 4); the
+     *                  k-th trait counts only if the WL already reached with
+     *                  k-1 traits is >= minWl[k]. See difficulty_gates.py.
      */
     public class WizardLevelCalc {
 
@@ -30,16 +33,34 @@ package tracker {
         }
 
         /** Canonical derived WL. `multiplier` is the shipped xp_trait_multiplier
-         *  array ([1.0,1.2,1.44,1.728,2.0736]); traitsHeld is clamped to 0..4. */
-        public static function derivedWl(clearedXpSum:Number, traitsHeld:int, multiplier:Array):int {
-            var n:int = traitsHeld;
-            if (n < 0)
-                n = 0;
-            else if (n > 4)
-                n = 4;
-            var m:Number = (multiplier != null && n < multiplier.length)
-                    ? Number(multiplier[n]) : 1.0;
-            return levelFromXp(clearedXpSum * m);
+         *  array ([1.0,1.2,1.44,1.728,2.0736]); `minWl` is xp_trait_min_wl
+         *  ([0,10,20,30,40]). traitsHeld is clamped to 0..4. Greedy harness gate:
+         *  the k-th held trait counts only if the WL already reached with the
+         *  first k-1 traits is >= minWl[k]. Mirrors effective_trait_wl. */
+        public static function derivedWl(clearedXpSum:Number, traitsHeld:int, multiplier:Array, minWl:Array = null):int {
+            var held:int = traitsHeld;
+            if (held < 0)
+                held = 0;
+            else if (held > 4)
+                held = 4;
+            var n:int = 0;
+            var wl:int = levelFromXp(clearedXpSum * _mult(multiplier, 0));
+            while (n < held && wl >= _gate(minWl, n + 1)) {
+                n++;
+                wl = levelFromXp(clearedXpSum * _mult(multiplier, n));
+            }
+            return wl;
+        }
+
+        /** multiplier[i] with a 1.0 fallback (pre-slot_data / short array). */
+        private static function _mult(multiplier:Array, i:int):Number {
+            return (multiplier != null && i < multiplier.length)
+                    ? Number(multiplier[i]) : 1.0;
+        }
+
+        /** minWl[i] with a 0 fallback (no gate shipped => traits always count). */
+        private static function _gate(minWl:Array, i:int):int {
+            return (minWl != null && i < minWl.length) ? int(minWl[i]) : 0;
         }
 
         /** Parity self-check of the ported curve against reference values
@@ -60,6 +81,16 @@ package tracker {
             _chk(errs, "lvl(50000)",   levelFromXp(50000),    33);
             _chk(errs, "lvl(500000)",  levelFromXp(500000),   77);
             _chk(errs, "lvl(5000000)", levelFromXp(5000000),  169);
+            // Harness gate (greedy step-up) — mirrors effective_trait_wl. Holding
+            // 4 traits at low base XP applies fewer than 4 until base WL rises.
+            var _mu:Array = [1.0, 1.2, 1.44, 1.728, 2.0736];
+            var _mw:Array = [0, 10, 20, 30, 40];
+            _chk(errs, "wl(1000,4)",  derivedWl(1000,  4, _mu, _mw), 3);   // eff 0
+            _chk(errs, "wl(6000,1)",  derivedWl(6000,  1, _mu, _mw), 14);  // eff 1
+            _chk(errs, "wl(6000,4)",  derivedWl(6000,  4, _mu, _mw), 14);  // eff 1
+            _chk(errs, "wl(20000,4)", derivedWl(20000, 4, _mu, _mw), 27);  // eff 2
+            _chk(errs, "wl(40000,4)", derivedWl(40000, 4, _mu, _mw), 38);  // eff 3
+            _chk(errs, "wl(80000,4)", derivedWl(80000, 4, _mu, _mw), 52);  // eff 4
             return errs.length == 0 ? "" : errs.join("; ");
         }
 

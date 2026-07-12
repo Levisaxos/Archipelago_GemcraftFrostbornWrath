@@ -65,6 +65,15 @@ def level_from_xp(xp: float, _cap: int = _LEVEL_CAP) -> int:
 # Max-trait-replay: a trait's presence grants the full 1.2; its in-game upgrade
 # level is ignored.
 #
+# HARNESS GATE: a held trait only counts once the wizard is strong enough to run
+# it alongside the ones already active — collecting all 4 early doesn't grant the
+# full 2.0736x when you lack the power to stack them. The k-th trait applies only
+# if the WL you have ALREADY reached (with the first k-1 traits applied) meets
+# XP_TRAIT_MIN_WL[k]. This is a GREEDY step-up: traits bootstrap each other (the
+# boost from trait k-1 can push you over the threshold for trait k), and every
+# comparison is against a WL the player actually sees. So the effective count is
+# never received/held-count directly — it is derived through effective_trait_wl.
+#
 # Both the apworld (`_wl_of` in rules.py, via this function) and the mod MUST
 # reproduce this bit-for-bit. Parity rules:
 #   * use the EXACT literal multipliers in XP_TRAIT_MULTIPLIER (never Math.pow —
@@ -86,6 +95,33 @@ XP_TRAIT_ITEM_NAMES = (
 # so the apworld and the AS3 mod multiply by identical IEEE-754 doubles.
 XP_TRAIT_MULTIPLIER = (1.0, 1.2, 1.44, 1.728, 2.0736)
 
+# Min derived WL required to "harness" the k-th XP-scaling trait (see the HARNESS
+# GATE note above). index = target trait count; the k-th trait counts only if the
+# WL already reached with (k-1) traits applied is >= XP_TRAIT_MIN_WL[k]. index 0
+# is a placeholder (holding 0 traits is always fine). Ships to the mod via
+# slot_data as xp_trait_min_wl; both sides walk it identically in effective_trait_wl.
+XP_TRAIT_MIN_WL = (0, 10, 20, 30, 40)
+
+
+def effective_trait_wl(base_xp, num_xp_traits_held: int) -> int:
+    """Derived WL from base cleared-field XP + held XP traits, WITH the harness
+    gate (greedy step-up). Apply traits one at a time, counting the k-th only if
+    the WL already reached (with k-1 traits) meets XP_TRAIT_MIN_WL[k]. Both the
+    apworld hot path (_wl_of) and the AS3 mod (WizardLevelCalc.derivedWl) MUST
+    reproduce this bit-for-bit. See difficulty_gates spec + wl_test_vectors.json.
+    """
+    held = num_xp_traits_held
+    if held < 0:
+        held = 0
+    elif held > 4:
+        held = 4
+    n = 0
+    wl = level_from_xp(base_xp * XP_TRAIT_MULTIPLIER[0])
+    while n < held and wl >= XP_TRAIT_MIN_WL[n + 1]:
+        n += 1
+        wl = level_from_xp(base_xp * XP_TRAIT_MULTIPLIER[n])
+    return wl
+
 
 def difficulty_name(value: int) -> str:
     """Resolve a difficulty option index (0..3) to its EFF_XP key."""
@@ -103,10 +139,4 @@ def derived_wl(cleared_sids, num_xp_traits_held: int, difficulty: str) -> int:
     base = 0
     for sid in cleared_sids:
         base += eff.get(sid, 0)
-    n = num_xp_traits_held
-    if n < 0:
-        n = 0
-    elif n > 4:
-        n = 4
-    total = base * XP_TRAIT_MULTIPLIER[n]
-    return level_from_xp(total)
+    return effective_trait_wl(base, num_xp_traits_held)

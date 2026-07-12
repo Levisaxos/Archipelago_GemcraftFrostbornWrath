@@ -53,7 +53,24 @@ if TYPE_CHECKING:
 # memoise their result against `_gcfw_state_sig`. The signature changes
 # whenever AP collects/removes any progression item, so cached values
 # from a previous fill state are invalidated automatically.
+import os as _os
+# Verification escape hatch: GCFW_NO_VERSTAMP=1 forces the old O(#items)
+# content signature, so a fixed seed can be generated both ways and diffed to
+# prove the version stamp changes only speed, not logic.
+_USE_VERSTAMP = _os.environ.get("GCFW_NO_VERSTAMP", "0") != "1"
+
+
 def _gcfw_state_sig(state, player: int):
+    # Fast path: an O(1) per-player version stamp maintained by the world's
+    # collect/remove overrides (see GemcraftFrostbornWrathWorld.collect). It
+    # bumps exactly when this player's prog_items change, so it's an exact
+    # invalidation key — but WAY cheaper than re-summing hundreds of item
+    # counts on every one of the ~20M cache accesses a fill does.
+    ver = getattr(state, "_gcfw_ver", None) if _USE_VERSTAMP else None
+    if ver is not None:
+        return (player, ver.get(player, 0))
+    # Fallback (state never went through our collect, e.g. a bare copy):
+    # content signature — correct, just O(#items).
     items = state.prog_items.get(player)
     if items is None:
         return (player, 0, 0)
@@ -67,12 +84,32 @@ def _gcfw_state_sig(state, player: int):
 # per achievement-rule eval. The bundle is invalidated atomically when
 # the sig changes, so semantics stay identical.
 def _get_caches(state, player: int):
-    sig = _gcfw_state_sig(state, player)
-    bundle = getattr(state, "_gcfw_caches", None)
-    if bundle is None or bundle[0] != sig:
-        bundle = (sig, {}, {}, {})
-        state._gcfw_caches = bundle
-    return bundle  # (sig, counter_dict, clear_dict, or_dict)
+    # Cache key: the O(1) per-player version int on the fast path (bundles are
+    # already keyed by player in `allc`, so the key only needs to track this
+    # player's item-version, not player identity). Avoids allocating a sig
+    # TUPLE on every one of the ~20M accesses a fill does. Fallback path keeps
+    # the content tuple for bare copies.
+    ver = getattr(state, "_gcfw_ver", None) if _USE_VERSTAMP else None
+    key = ver.get(player, 0) if ver is not None else _gcfw_state_sig(state, player)
+    # Per-PLAYER bundle. CollectionState is shared across ALL players in a
+    # multiworld and fill sweeps interleave reachability checks between players,
+    # so a single shared slot got evicted on every player switch — the cache
+    # thrashed to uselessness exactly when players > 1. That made WL /
+    # stage-clear / field-token / reach-any recompute on essentially every call
+    # (the ~60k-call fill hot path) and blew up super-linearly with player count
+    # (solo fine; a same-game multiworld took hours). Keying the bundle by player
+    # keeps each player's cache alive across the interleave; the signature still
+    # invalidates a player's bundle whenever that player's prog_items change, so
+    # semantics are byte-for-byte identical — only the storage keying changed.
+    allc = getattr(state, "_gcfw_caches", None)
+    if allc is None:
+        allc = {}
+        state._gcfw_caches = allc
+    bundle = allc.get(player)
+    if bundle is None or bundle[0] != key:
+        bundle = (key, {}, {}, {})
+        allc[player] = bundle
+    return bundle  # (key, counter_dict, clear_dict, or_dict)
 
 
 def _get_counter_cache(state, player: int) -> dict:
@@ -367,27 +404,35 @@ def _any_stash_reachable(state, player: int) -> bool:
     would be circular since that location's own access rule includes the
     key check). When stash keys are off, every stash is open so this
     reduces to "any stage's Journey location is reachable"."""
+    cache = _get_counter_cache(state, player)
+    val = cache.get("stash_reach")
+    if val is not None:
+        return val
+    res = False
     sid_to_key = _get_world_stash_key_map(state, player)
     if sid_to_key is None:
         for s in GAME_DATA["stages"]:
             try:
                 if state.can_reach(f"Complete {s['str_id']} - Journey", "Location", player):
-                    return True
+                    res = True
+                    break
             except KeyError:
                 continue
-        return False
-    for sid, (key_name, key_count) in sid_to_key.items():
-        if key_count == 1:
-            if not state.has(key_name, player):
+    else:
+        for sid, (key_name, key_count) in sid_to_key.items():
+            if key_count == 1:
+                if not state.has(key_name, player):
+                    continue
+            elif state.count(key_name, player) < key_count:
                 continue
-        elif state.count(key_name, player) < key_count:
-            continue
-        try:
-            if state.can_reach(f"Complete {sid} - Journey", "Location", player):
-                return True
-        except KeyError:
-            continue
-    return False
+            try:
+                if state.can_reach(f"Complete {sid} - Journey", "Location", player):
+                    res = True
+                    break
+            except KeyError:
+                continue
+    cache["stash_reach"] = res
+    return res
 
 
 # Ritual Battle Trait grants an unconditional 2-Apparition scripted spawn
@@ -486,6 +531,10 @@ def _count_gem_skills_per_stage_max(state, player: int) -> int:
     STRICT gempouch — Hollow Gems substitute for clearing free stages but do
     NOT grant real gem types (see _compile_gem_broadened). Unreachable or
     pouch-less stages contribute 0."""
+    cache = _get_counter_cache(state, player)
+    val = cache.get("gsp")
+    if val is not None:
+        return val
     held = set()
     for token, gem_name in _GEM_TOKEN_TO_GEM_NAME.items():
         if state.has(item_prefix_map[token], player):
@@ -506,7 +555,8 @@ def _count_gem_skills_per_stage_max(state, player: int) -> int:
         if n > max_n:
             max_n = n
             if max_n == 6:
-                return 6
+                break
+    cache["gsp"] = max_n
     return max_n
 
 
@@ -1658,18 +1708,19 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # the "Beat <sid>" event; wl(state) is the curve of total beaten XP, so
     # clearing what you can raises WL and opens more stages.
     # The 4 XP-scaling traits (Haste/Overcrowd/Ritual/Dark Masonry) multiply the
-    # summed XP by 1.2^(count held) — RETROACTIVELY over all cleared fields — so
-    # collecting one is a WL power spike. Inlined here for fill speed but must
-    # equal difficulty_gates.derived_wl bit-for-bit (validated by the 280 vectors
-    # in wl_test_vectors.json): base_xp * XP_TRAIT_MULTIPLIER[n], then the curve.
+    # summed XP by up to 1.2^(count held) — RETROACTIVELY over all cleared fields —
+    # so collecting one is a WL power spike, but each trait only counts once the
+    # harness gate (XP_TRAIT_MIN_WL, greedy step-up) is met. Inlined here for fill
+    # speed but must equal difficulty_gates.derived_wl / effective_trait_wl
+    # bit-for-bit (validated by the vectors in wl_test_vectors.json).
     from . import difficulty_gates as _dg
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
     _xp_items = [(f"{s} Cleared", x) for s, x in _eff.items() if x]
     _xp_trait_names = _dg.XP_TRAIT_ITEM_NAMES
-    _xp_mult = _dg.XP_TRAIT_MULTIPLIER
 
-    def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names, _mu=_xp_mult, _p=player):
+    def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names,
+               _eff_wl=_dg.effective_trait_wl, _p=player):
         # Memoise on the state signature: WL is a pure function of the collected
         # "<sid> Cleared" events + XP traits (all progression), so it only needs
         # recomputing when prog_items change. Without this the full XP sum +
@@ -1686,9 +1737,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         for _t in _tn:
             if state.has(_t, _p):
                 n += 1
-        if n > 4:
-            n = 4
-        v = _dg.level_from_xp(base * _mu[n])
+        v = _eff_wl(base, n)
         cache["wl"] = v
         return v
 

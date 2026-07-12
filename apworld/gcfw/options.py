@@ -80,7 +80,7 @@ class XpTomeBonus(Range):
     display_name = "XP Tome Bonus"
     range_start = 0
     range_end   = 300
-    default     = 50
+    default     = 100
 
 
 class DeathLinkPunishment(Choice):
@@ -360,7 +360,7 @@ class AchievementRequiredEffort(Choice):
     option_minor    = 2
     option_major    = 3
     option_extreme  = 4
-    default = 1
+    default = 2
 
 
 class Difficulty(Choice):
@@ -375,7 +375,7 @@ class Difficulty(Choice):
     option_medium  = 1
     option_hard    = 2
     option_extreme = 3
-    default = 1
+    default = 2
 
 
 class ExtraShadowCoresPerWave(Range):
@@ -388,7 +388,7 @@ class ExtraShadowCoresPerWave(Range):
     display_name = "Extra Shadow Cores per Wave"
     range_start = 0
     range_end   = 5
-    default     = 0
+    default     = 2
 
 
 @dataclass

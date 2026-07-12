@@ -40,6 +40,7 @@ from .options import (
     EnemyShieldMultiplier,
     EnemiesPerWaveMultiplier,
     ExtraWaveCount,
+    ExtraShadowCoresPerWave,
 )
 from .items_skillpoints import (
     fixed_bundle_names,
@@ -386,6 +387,7 @@ class GCFWWebWorld(WebWorld):
             AchievementRequiredEffort,
             DisableEndurance,
             DisableTrial,
+            ExtraShadowCoresPerWave,
         ]),
         OptionGroup("Field Options", [
             FieldTokenGranularity,
@@ -515,6 +517,30 @@ class GemcraftFrostbornWrathWorld(World):
                 _random.Random(self.random.getrandbits(64)))
 
     _JOURNEY_PRIORITY_FRACTION = 0.75
+
+    # Per-player monotonic version counter, bumped whenever this player's
+    # progression items change. rules._gcfw_state_sig reads it as an O(1)
+    # cache-validity key instead of recomputing sum(prog_items.values())
+    # (O(#items)) on every one of the ~20M cache accesses during fill.
+    # Falls back to the content signature if a state never went through here
+    # (e.g. a bare copy), so correctness never depends on the stamp existing.
+    def collect(self, state, item) -> bool:
+        change = super().collect(state, item)
+        if change:
+            ver = getattr(state, "_gcfw_ver", None)
+            if ver is None:
+                ver = state._gcfw_ver = {}
+            ver[self.player] = ver.get(self.player, 0) + 1
+        return change
+
+    def remove(self, state, item) -> bool:
+        change = super().remove(state, item)
+        if change:
+            ver = getattr(state, "_gcfw_ver", None)
+            if ver is None:
+                ver = state._gcfw_ver = {}
+            ver[self.player] = ver.get(self.player, 0) + 1
+        return change
 
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
@@ -975,6 +1001,8 @@ class GemcraftFrostbornWrathWorld(World):
         # Main fill happens between generate_basic and fill_slot_data, so this
         # is where we dump the per-rule call counters.
         report_top_rules()
+        from ._timing import report_counters as _report_counters
+        _report_counters()
         import time as _t; _t0 = _t.perf_counter()
         gd = _load_game_data()
         stages = gd["stages"]
@@ -1141,12 +1169,15 @@ class GemcraftFrostbornWrathWorld(World):
         #   xp_trait_ap_ids:    AP item ids of the 4 XP-scaling traits; the mod
         #                       counts how many are held to pick the multiplier.
         #   xp_trait_multiplier:[1.0,1.2,1.44,1.728,2.0736] — index = count held.
+        #   xp_trait_min_wl:    [0,10,20,30,40] — harness gate; the k-th trait only
+        #                       counts once WL-with-(k-1)-traits >= this[k].
         # See difficulty_gates.py for the canonical formula + wl_test_vectors.json
         # (the parity contract the mod's ported level_from_xp must reproduce).
         from .difficulty_gates import (
             GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH,
             EFF_XP as _DG_EFF, DIFFICULTIES as _DG_DIFFS,
             XP_TRAIT_ITEM_NAMES as _DG_XPT, XP_TRAIT_MULTIPLIER as _DG_XPM,
+            XP_TRAIT_MIN_WL as _DG_XPMINWL,
         )
         stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
         # The starter GROUP — the start stage plus its immediately-playable
@@ -1162,6 +1193,7 @@ class GemcraftFrostbornWrathWorld(World):
         wl_eff_xp = {sid: int(x) for sid, x in _DG_EFF[_wl_diff_name].items()}
         xp_trait_ap_ids = [item_table[n].id for n in _DG_XPT]
         xp_trait_multiplier = list(_DG_XPM)
+        xp_trait_min_wl = list(_DG_XPMINWL)
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
@@ -1201,6 +1233,7 @@ class GemcraftFrostbornWrathWorld(World):
             "wl_eff_xp":             wl_eff_xp,
             "xp_trait_ap_ids":       xp_trait_ap_ids,
             "xp_trait_multiplier":   xp_trait_multiplier,
+            "xp_trait_min_wl":       xp_trait_min_wl,
             "starting_stage":        self.options.starting_stage.value,
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,

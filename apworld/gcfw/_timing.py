@@ -81,3 +81,24 @@ def report_top_rules(top_n: int = 30) -> None:
 def reset() -> None:
     _call_counts.clear()
     _call_times.clear()
+    _counters.clear()
+
+
+# ---------------------------------------------------------------------------
+# Cheap integer counters for hot functions (call volume + cache-miss rates).
+# Just dict increments behind the ENABLED flag — no per-call timing overhead.
+# ---------------------------------------------------------------------------
+_counters: dict[str, int] = defaultdict(int)
+
+
+def bump(label: str, n: int = 1) -> None:
+    if ENABLED:
+        _counters[label] += n
+
+
+def report_counters() -> None:
+    if not ENABLED or not _counters:
+        return
+    log("hot-function counters (call volume + cache misses):")
+    for k in sorted(_counters, key=lambda k: -_counters[k]):
+        log(f"  {_counters[k]:>12}  {k}")

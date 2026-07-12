@@ -1071,10 +1071,9 @@ achievement_requirements = {
         "description": "Destroy 3 healing beacons.",
         "details": "Healing beacons spawn from a dark masonry",
         "requirements": [
-            ["tDarkMasonry", "minWave:30"],
             ["Field_T3"]
         ],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "Nest Blaster": {
         "ap_id": 2362,
@@ -3198,14 +3197,14 @@ achievement_requirements = {
         "description": "Kill 333 swarmlings.",
         "details": "Kill 333 swarmlings in one battle.",
         "requirements": ["minSwarmlings:333"],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "Diabolic Trophy": {
         "ap_id": 2123,
         "game_id": 143,
         "description": "Kill 666 swarmlings.",
         "requirements": ["minSwarmlings:666"],
-        "required_effort": "Major",
+        "required_effort": "Minor",
     },
     "Swarmling Season": {
         "ap_id": 2532,
@@ -3213,7 +3212,7 @@ achievement_requirements = {
         "description": "Kill 999 swarmlings.",
         "details": "Kill 999 swarmlings in one battle.",
         "requirements": ["minSwarmlings:999"],
-        "required_effort": "Extreme",
+        "required_effort": "Major",
     },
     "Swift Death": {
         "ap_id": 2533,
