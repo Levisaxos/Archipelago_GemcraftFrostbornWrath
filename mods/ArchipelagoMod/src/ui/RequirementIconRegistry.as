@@ -49,8 +49,11 @@ package ui {
 
         // Icons known to be wrong / placeholder — flagged with a red marker in
         // the grid so they're easy to spot and fix later.
+        // TODO: "Marked Monster" still uses a placeholder icon (falls back to
+        // the generic McMonsterBase sprite in the MC map below). Give it a
+        // dedicated icon eventually. Deliberately no longer flagged as
+        // needs-fix so it renders cleanly (no red marker) for now.
         private static const NEEDS_FIX:Object = {
-            "Marked Monster": true
         };
 
         public static function needsFix(name:String):Boolean {

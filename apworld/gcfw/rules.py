@@ -1031,10 +1031,13 @@ def _compile_req(req: str, world, is_progressive: bool):
         try:
             count_needed = int(count_str.strip())
         except ValueError:
-            return (_always_true, _COST_CONST, None)
+            raise ValueError(
+                f"Unknown gate: malformed counter requirement '{req}' "
+                f"(count after ':' must be an integer)"
+            ) from None
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
-        # mirrors _eval_req. Reachable iff any group member is reachable.
+        # mirrors _compile_req. Reachable iff any group member is reachable.
         if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:
             fn, static_set = _compile_element_or_full(element_prefix_map[group_name], player)
             return (fn,
@@ -1174,9 +1177,9 @@ def _compile_req(req: str, world, is_progressive: bool):
             return (lambda state: _count_skill_points(state, player) >= count_needed,
                     _COST_COUNTER, None)
 
-        return (_always_true, _COST_CONST, None)  # Unknown counter
+        raise ValueError(f"Unknown gate: unrecognized counter requirement '{req}'")
 
-    return (_always_true, _COST_CONST, None)  # Metadata
+    raise ValueError(f"Unknown gate: unrecognized requirement '{req}'")
 
 
 def _compose_and(compiled):

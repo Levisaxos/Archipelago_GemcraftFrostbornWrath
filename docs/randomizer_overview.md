@@ -30,7 +30,7 @@ This document describes the full feature set of the randomizer: what is shuffled
 | Map Tiles | up to 26 | Optional terrain tiles, depending on starting stage |
 | Gem Pouches | variable | Configurable granularity — see below |
 | Wizard Stash Keys | variable | Configurable granularity — see below |
-| Skillpoint Bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 8 Medium (25 SP) + 2 Big (250 SP) = 860 SP |
+| Skillpoint Bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 6 Medium (25 SP) + 2 Big (250 SP) = 810 SP |
 | Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after real items, XP tomes, and the 40 bundles |
 
 ### Always free (not randomized)
@@ -61,7 +61,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 **Filler** — pure pool-padding once the real items are placed
 
 - XP Tomes — under the WL-derived model, logic wizard level comes only from cleared fields, so tomes are pure in-game power now
-- Skillpoint Bundles — 40 fixed bundles (32 Small @5 SP + 8 Medium @25 SP + 2 Big @250 SP = 860 SP); values are constant every seed
+- Skillpoint Bundles — 40 fixed bundles (32 Small @5 SP + 6 Medium @25 SP + 2 Big @250 SP = 810 SP); values are constant every seed
 - Skillpoint (single) — 1 SP each; the variable filler that soaks up whatever location slots remain, so total SP scales with the seed's check count (more achievements → more singles)
 
 ---

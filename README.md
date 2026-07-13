@@ -157,7 +157,7 @@ That's **244 base locations**, plus however many achievements you enable — fro
 | Talisman fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
 | Shadow core stashes | 35 | 17 named by original field + 18 extra stashes |
 | XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls — combined wizard-level bonus is configurable |
-| Skillpoint bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 8 Medium (25 SP) + 2 Big (250 SP) = 860 SP |
+| Skillpoint bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 6 Medium (25 SP) + 2 Big (250 SP) = 810 SP |
 | Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after the real items, XP tomes, and 40 bundles are placed |
 
 The exact item pool depends on your granularity choices — coarser settings put fewer, broader unlocks in the pool; finer settings put more, narrower ones.
@@ -196,7 +196,7 @@ The exact item pool depends on your granularity choices — coarser settings put
 | `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
 | `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
 | `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). |
-| `xp_tome_bonus` | `50` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
+| `xp_tome_bonus` | `100` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
 
@@ -204,7 +204,7 @@ The exact item pool depends on your granularity choices — coarser settings put
 
 | Option | Default | Description |
 |---|---|---|
-| `achievement_required_effort` | `trivial` | How many achievements become AP checks: `off`, `trivial`, `minor`, `major`, or `extreme` (each level includes all easier ones). More effort = more checks and a longer seed. |
+| `achievement_required_effort` | `minor` | How many achievements become AP checks: `off`, `trivial`, `minor`, `major`, or `extreme` (each level includes all easier ones). More effort = more checks and a longer seed. |
 
 ### Difficulty tuning
 
@@ -217,6 +217,7 @@ The exact item pool depends on your granularity choices — coarser settings put
 | `enemy_shield_multiplier` | `100` | Enemy shield HP as a percentage of normal (50–200). |
 | `enemies_per_wave_multiplier` | `100` | Number of enemies per wave as a percentage of normal (50–200). |
 | `extra_wave_count` | `0` | Additional waves appended to each stage beyond its normal length (0–24). |
+| `extra_shadow_cores_per_wave` | `2` | Mod-only QoL: extra shadow cores granted for every wave you get through in a battle (0–5). Banked at level end like vanilla drops. No effect on generation, item placement, or logic. |
 
 ### DeathLink
 

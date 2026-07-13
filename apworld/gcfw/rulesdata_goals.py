@@ -53,20 +53,9 @@ goal_requirements = {
 #
 
 # =====================================================================
-# TIER REQUIREMENTS PROGRESSION
+# STAGE / TIER ACCESS
 # =====================================================================
-# For goals requiring stage progression (kill_gatekeeper, kill_swarm_queen),
-# the tier progression works as follows:
-#
-# To reach Tier N, you must have:
-# 1. Your own field token for a stage in Tier N
-# 2. X% of field tokens from Tier (N-1)
-# 3. Which recursively requires X% from Tier (N-2), etc.
-#
-# Example: To reach A4 (tier 12):
-#   - Need A4 field token
-#   - Need X% of tier 11 tokens (e.g., tier_11_stages * 75%)
-#   - Which requires X% of tier 10 tokens (recursively)
-#   - Continues back to tier 0 (free access)
-#
-# The percentage (X) is set by the "tier_requirements_percent" YAML option.
+# Stage access is gated by the player's derived wizard level (see
+# difficulty_gates.py), NOT by a tier-token percentage. The requirements /
+# notes / tier fields in goal_requirements below are descriptive only —
+# rules.py hardcodes the real access rules and ignores those strings.
