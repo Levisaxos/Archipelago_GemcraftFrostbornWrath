@@ -27,9 +27,10 @@ from .options import (
     GemPouchGranularity,
     FieldTokenGranularity,
     StashKeyGranularity,
-    STARTING_STAGE_BY_VALUE,
+    RandomStartingStages,
+    StartingStages,
+    W_STARTER_SIDS,
     FieldsRequired,
-    StartingStage,
     Difficulty,
     DisableEndurance,
     DisableTrial,
@@ -382,7 +383,8 @@ class GCFWWebWorld(WebWorld):
         OptionGroup("Game Options", [
             Goal,
             FieldsRequired,
-            StartingStage,
+            RandomStartingStages,
+            StartingStages,
             Difficulty,
             AchievementRequiredEffort,
             DisableEndurance,
@@ -452,7 +454,6 @@ class GemcraftFrostbornWrathWorld(World):
                 for key in (
                     "goal",
                     "fields_required",
-                    "starting_stage",
                     "field_token_placement",
                     "field_token_granularity",
                     "stash_key_granularity",
@@ -469,17 +470,39 @@ class GemcraftFrostbornWrathWorld(World):
                         if opt is not None:
                             opt.value = slot_data[key]
 
-            # Extreme leans on Endurance runs for the extra XP needed to reach
-            # the (difficulty-flat) WL gates — Extreme clears grant so little XP
-            # that Journey alone can't keep pace. Refuse to generate an Extreme
-            # seed with Endurance disabled: fail loudly so the player fixes the
-            # YAML rather than shipping an over-tight / potentially unwinnable seed.
-            if (self.options.difficulty.value == Difficulty.option_extreme
+            # Resolve the set of starting stages (W tile only). On UT regen,
+            # reuse the resolved set shipped in slot_data so we never re-roll.
+            _pt = re_gen_passthrough.get(self.game) if self.game in re_gen_passthrough else None
+            if _pt is not None and "starting_stages" in _pt:
+                self.start_sids = set(_pt["starting_stages"])
+            else:
+                rand_n = self.options.random_starting_stages.value
+                if rand_n == 0:
+                    chosen = set(self.options.starting_stages.value)
+                    if not chosen:
+                        raise OptionError(
+                            f"[{self.player_name}] 'starting_stages' must list at "
+                            f"least one W field when 'random_starting_stages' is 0."
+                        )
+                    self.start_sids = chosen
+                else:
+                    self.start_sids = set(self.random.sample(W_STARTER_SIDS, rand_n))
+            self.start_sid = sorted(self.start_sids)[0]
+
+            # Hard and Extreme lean on Endurance runs for the extra XP needed to
+            # reach the (difficulty-flat) WL gates — their clears grant so little
+            # XP that Journey alone can't keep pace, so Endurance is the catch-up
+            # path if a player gets stuck. Refuse to generate a Hard/Extreme seed
+            # with Endurance disabled: fail loudly so the player fixes the YAML
+            # rather than shipping an over-tight / potentially unwinnable seed.
+            if (self.options.difficulty.value in (Difficulty.option_hard,
+                                                  Difficulty.option_extreme)
                     and self.options.disable_endurance.value):
                 raise OptionError(
-                    f"[{self.player_name}] Extreme difficulty requires Endurance "
-                    f"mode: set 'disable_endurance' to false (Endurance ON), or "
-                    f"choose a lower difficulty."
+                    f"[{self.player_name}] Hard and Extreme difficulty require "
+                    f"Endurance mode (the catch-up XP path if you get stuck): set "
+                    f"'disable_endurance' to false (Endurance ON), or choose a "
+                    f"lower difficulty."
                 )
 
             # Under Universal Tracker the multiworld is regenerated as a single
@@ -616,7 +639,6 @@ class GemcraftFrostbornWrathWorld(World):
         # Field tokens — count and names depend on field_token_granularity:
         #   per_stage: 122 tokens (one per stage), starter's token precollected
         #   per_tile:  26 tokens (one per stage prefix), starter's tile precollected
-        #   per_tier:  N tokens (one per active tier), starter's tier precollected
         # The starter's covering token is always pushed to precollected items
         # so Menu->starter is satisfied without the player having to find it.
         from . import gating as _gating
@@ -624,9 +646,9 @@ class GemcraftFrostbornWrathWorld(World):
         # Progressive variants need M copies precollected (M = starter's index
         # in the unlock order + 1) so the starter is reachable from frame 0.
         # Distinct variants precollect a single covering item.
-        for tok_name in _gating.starter_field_tokens_to_precollect(self.start_sid, ft_gran):
+        for tok_name in _gating.starter_field_tokens_to_precollect(self.start_sids, ft_gran):
             self.multiworld.push_precollected(self.create_item(tok_name))
-        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sid):
+        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sids):
             pool.append(self.create_item(token_name))
 
         # Skills (includes gem-type unlocks at positions 7–12)
@@ -726,7 +748,6 @@ class GemcraftFrostbornWrathWorld(World):
         # Wizard Stash keys — count and names depend on stash_key_granularity:
         #   per_stage: 122 keys (one per stage)
         #   per_tile:  26 keys (one per stage prefix)
-        #   per_tier:  N keys (one per active tier, N = len(ACTIVE_TIERS))
         #   global:    1 master key
         from . import gating as _gating
         for key_name in _gating.stash_keys_for_pool(self.options.stash_key_granularity.value):
@@ -777,10 +798,10 @@ class GemcraftFrostbornWrathWorld(World):
 
     def create_regions(self) -> None:
         import time as _t; _t0 = _t.perf_counter()
-        # Resolve the chosen start stage. Its baked `requirements` in
-        # rulesdata_levels.py are intentionally ignored at rule-time
-        # (see rules.set_rules); Menu connects directly to its region.
-        self.start_sid = STARTING_STAGE_BY_VALUE[self.options.starting_stage.value]
+        # start_sids / start_sid (primary) resolved in generate_early(). The
+        # starters' baked `requirements` in rulesdata_levels.py are intentionally
+        # ignored at rule-time (see rules.set_rules); Menu connects to the
+        # primary starter and the rest of the set is free via precollected tokens.
 
         stages = _load_stages()
         # All stages get a region (needed for the region graph).
@@ -933,7 +954,7 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Stages that are immediately playable from session start. The exact
         # set depends on granularity AND whether progressive: distinct modes
-        # cover the starter's tile/tier/stage; progressive modes cover the
+        # cover the starter's tile/stage; progressive modes cover the
         # first M groups of the unlock order, where M = starter's position + 1
         # (i.e. the same M copies the apworld precollects). The mod uses this
         # list for HollowGemInjector, FirstPlayBypass, and free-buildings.
@@ -943,7 +964,7 @@ class GemcraftFrostbornWrathWorld(World):
         # uses the same M-position logic that drives precollect.
         from . import gating as _gating
         ft_gran = self.options.field_token_granularity.value
-        free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
+        free_stages = _gating.free_stages_for_starter(self.start_sids, ft_gran)
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 900–952)
         # Only the 25 AP "perfect placement" fragments are AP items now, so the
@@ -1098,7 +1119,7 @@ class GemcraftFrostbornWrathWorld(World):
         )
         stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
         # The starter GROUP — the start stage plus its immediately-playable
-        # tile/tier mates (free_stages, tokens precollected) — is always
+        # tile mates (free_stages, tokens precollected) — is always
         # reachable, so ship gate 0 for all of them. Without this a non-W
         # starter tile (curve gates > 0) reads out-of-logic at WL 0 and no
         # journey is available. The apworld's WL rule exempts the same set
@@ -1151,7 +1172,7 @@ class GemcraftFrostbornWrathWorld(World):
             "xp_trait_ap_ids":       xp_trait_ap_ids,
             "xp_trait_multiplier":   xp_trait_multiplier,
             "xp_trait_min_wl":       xp_trait_min_wl,
-            "starting_stage":        self.options.starting_stage.value,
+            "starting_stages":       sorted(self.start_sids),
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
             # Fixed SP value granted by each SP item, indexed by AP id offset
@@ -1193,17 +1214,16 @@ class GemcraftFrostbornWrathWorld(World):
             # key unlocks every stash with that prefix). Each granularity has
             # a "_progressive" sibling: a single fungible item id is added N
             # times to the pool; the Nth received copy unlocks the Nth entry
-            # in PROGRESSIVE_TILE_ORDER (for per_tile / per_tier variants) or
-            # in the per-stage progressive order (tile playOrder x within-tile
+            # in PROGRESSIVE_TILE_ORDER (for per_tile variants) or in the
+            # per-stage progressive order (tile playOrder x within-tile
             # alphabetical).
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
-            #                            2=per_tile,  3=per_tile_progressive,
-            #                            4=per_tier,  5=per_tier_progressive
+            #                            2=per_tile,  3=per_tile_progressive
             #   stash_key_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
-            #                            3=per_tier, 4=per_tier_progressive, 5=global
+            #                            5=global
             #     (per_stage retired; encoding now mirrors gem_pouch_granularity)
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
-            #                            3=per_tier, 4=per_tier_progressive, 5=global
+            #                            5=global
             "field_token_granularity": self.options.field_token_granularity.value,
             "stash_key_granularity":   self.options.stash_key_granularity.value,
             "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
@@ -1225,27 +1245,17 @@ class GemcraftFrostbornWrathWorld(World):
             # 0 is always the starter's own group, so a single precollected
             # copy lands the player exactly on the starter and the first
             # *received* copy unlocks the next group in canonical order.
-            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sid),
-            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sid),
-            "progressive_tier_order":  _gating.progressive_tier_order_for_starter(self.start_sid),
+            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sids),
+            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sids),
             # Singleton item ids for each progressive variant. The mod uses
             # these to recognize which apId is "the progressive item" for
             # a given category and granularity, then count-tracks via
             # AV.sessionData.getItemCount(apId).
             "gem_pouch_progressive_id":             item_table["Progressive Gempouch"].id,
-            "gem_pouch_per_tier_progressive_id":    item_table["Progressive Gempouch (per-tier)"].id,
             "field_token_per_stage_progressive_id": item_table["Progressive Field Token (per-stage)"].id,
             "field_token_per_tile_progressive_id":  item_table["Progressive Field Token (per-tile)"].id,
-            "field_token_per_tier_progressive_id":  item_table["Progressive Field Token (per-tier)"].id,
             "stash_key_per_stage_progressive_id":   item_table["Progressive Stash Stage Key"].id,
             "stash_key_per_tile_progressive_id":    item_table["Progressive Stash Tile Key"].id,
-            "stash_key_per_tier_progressive_id":    item_table["Progressive Stash Tier Key"].id,
-            # Per-stage tier assignments so the mod can resolve coarse
-            # tier-keyed items (e.g. "Tier 3 Field Token" → all tier-3 stages).
-            "stage_tier_by_str_id": {
-                s["str_id"]: STAGE_RULES[s["str_id"]].tier
-                for s in GAME_DATA["stages"]
-            },
             # Mod-only QoL: extra shadow cores per wave reached. Pure pass-through
             # to the client — no effect on items, locations, or logic.
             "extra_shadow_cores_per_wave":  self.options.extra_shadow_cores_per_wave.value,

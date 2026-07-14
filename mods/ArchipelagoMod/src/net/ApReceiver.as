@@ -177,8 +177,8 @@ package net {
             if (p.slot_data) {
                 var sd:Object = p.slot_data;
                 AV.serverData.serverOptions.goal              = int(sd.goal);
-                if (sd.starting_stage !== undefined)
-                    AV.serverData.serverOptions.startingStage = int(sd.starting_stage);
+                if (sd.starting_stages !== undefined)
+                    AV.serverData.serverOptions.startingStages = sd.starting_stages as Array;
                 if (sd.tattered_scroll_levels !== undefined)
                     AV.serverData.serverOptions.tomeXpLevels.tattered = int(sd.tattered_scroll_levels);
                 if (sd.worn_tome_levels !== undefined)
@@ -218,26 +218,16 @@ package net {
                     AV.serverData.serverOptions.progressiveTileOrder = sd.progressive_tile_order as Array;
                 if (sd.progressive_stage_order !== undefined)
                     AV.serverData.serverOptions.progressiveStageOrder = sd.progressive_stage_order as Array;
-                if (sd.progressive_tier_order !== undefined)
-                    AV.serverData.serverOptions.progressiveTierOrder = sd.progressive_tier_order as Array;
                 if (sd.gem_pouch_progressive_id !== undefined)
                     AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
-                if (sd.gem_pouch_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.gemPouchPerTierProgressiveId = int(sd.gem_pouch_per_tier_progressive_id);
                 if (sd.field_token_per_stage_progressive_id !== undefined)
                     AV.serverData.serverOptions.fieldTokenPerStageProgressiveId = int(sd.field_token_per_stage_progressive_id);
                 if (sd.field_token_per_tile_progressive_id !== undefined)
                     AV.serverData.serverOptions.fieldTokenPerTileProgressiveId = int(sd.field_token_per_tile_progressive_id);
-                if (sd.field_token_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.fieldTokenPerTierProgressiveId = int(sd.field_token_per_tier_progressive_id);
                 if (sd.stash_key_per_stage_progressive_id !== undefined)
                     AV.serverData.serverOptions.stashKeyPerStageProgressiveId = int(sd.stash_key_per_stage_progressive_id);
                 if (sd.stash_key_per_tile_progressive_id !== undefined)
                     AV.serverData.serverOptions.stashKeyPerTileProgressiveId = int(sd.stash_key_per_tile_progressive_id);
-                if (sd.stash_key_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.stashKeyPerTierProgressiveId = int(sd.stash_key_per_tier_progressive_id);
-                if (sd.stage_tier_by_str_id !== undefined)
-                    AV.serverData.serverOptions.stageTierByStrId = sd.stage_tier_by_str_id;
                 if (sd.extra_shadow_cores_per_wave !== undefined)
                     AV.serverData.serverOptions.extraShadowCoresPerWave = int(sd.extra_shadow_cores_per_wave);
                 if (sd.enemy_hp_multiplier !== undefined)

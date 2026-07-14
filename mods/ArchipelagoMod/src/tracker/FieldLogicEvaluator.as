@@ -796,7 +796,6 @@ package tracker {
          * the player sees the actual item to hunt for:
          *   off (0)                   → null (caller skips line)
          *   per_tile / progressive (1, 2)         → "pouch (X)"
-         *   per_tier / progressive (3, 4)         → "pouch (Tier N)"
          *   global (5)                            → "pouch"   (no suffix)
          *
          * Verb (`Got` / `Needs`) is decided by `hasPouchForPrefix`, which
@@ -830,12 +829,6 @@ package tracker {
                     return verb + " pouch (" + prefix + ")";
                 if (mode == 5)
                     return verb + " pouch";
-                if (mode == 3 || mode == 4) {
-                    var tierMap:Object = opts.stageTierByStrId;
-                    if (tierMap == null || tierMap[strId] == null)
-                        return verb + " pouch";
-                    return verb + " pouch (Tier " + int(tierMap[strId]) + ")";
-                }
                 // mode 1 / 2: per_tile (progressive) — tile letter is the right hint.
                 return verb + " pouch (" + prefix + ")";
             }
@@ -847,7 +840,6 @@ package tracker {
          * Stashes always require a key so this always returns a label —
          * granularity-aware so the player knows which item it points at:
          *   per_tile(_progressive)   → "key (W)"        (g==1/2)
-         *   per_tier(_progressive)   → "key (Tier 1)"   (g==3/4)
          *   off / global             → "key" (no suffix)
          */
         public function getStashKeyLabel(strId:String):String {
@@ -860,11 +852,6 @@ package tracker {
                 if (strId == null || strId.length == 0) return verb + " key";
                 return verb + " key (" + strId.charAt(0) + ")";
             }
-            if (g == 3 || g == 4) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null || tierMap[strId] == null) return verb + " key";
-                return verb + " key (Tier " + int(tierMap[strId]) + ")";
-            }
             // 0 (off), 5 (global) — no extra suffix needed.
             return verb + " key";
         }
@@ -874,8 +861,7 @@ package tracker {
          * field_token_granularity so the player knows which token to hunt:
          *   per_stage / progressive (0, 1)        → "Missing field token"
          *   per_tile / progressive (2, 3)         → "Missing tile token (X)"
-         *   per_tier / progressive (4, 5)         → "Missing tier token (Tier N)"
-         * Falls back to the plain string whenever opts/tier data isn't
+         * Falls back to the plain string whenever opts data isn't
          * available, so a misconfigured seed never crashes the tooltip.
          */
         public function getMissingTokenLabel(strId:String):String {
@@ -886,12 +872,6 @@ package tracker {
                 if (strId == null || strId.length == 0)
                     return "Missing field token";
                 return "Missing tile token (" + strId.charAt(0) + ")";
-            }
-            if (g == 4 || g == 5) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null || tierMap[strId] == null)
-                    return "Missing field token";
-                return "Missing tier token (Tier " + int(tierMap[strId]) + ")";
             }
             return "Missing field token";
         }
@@ -1242,8 +1222,7 @@ package tracker {
         }
 
         // Active gem-pouch granularity:
-        //   0=off, 1=per_tile, 2=per_tile_progressive,
-        //   3=per_tier, 4=per_tier_progressive, 5=global
+        //   0=off, 1=per_tile, 2=per_tile_progressive, 5=global
         // Read from slot_data via ServerOptions; returns 0 if not set.
         private function _pouchMode():int {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
@@ -1251,12 +1230,12 @@ package tracker {
             return int(AV.serverData.serverOptions.gemPouchGranularity);
         }
 
-        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3, per_tier_progressive=5). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
+        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
         private function _isFieldTokenProgressive():Boolean {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return false;
             var g:int = int(AV.serverData.serverOptions.fieldTokenGranularity);
-            return g == 1 || g == 3 || g == 5;
+            return g == 1 || g == 3;
         }
 
         // True iff the player has beaten this stage in vanilla Journey mode at

@@ -1757,11 +1757,11 @@ package {
          *   2.  Skill tomes
          *   3.  Battle trait scrolls
          *   4.  XP tomes
-         *   4b. Gempouches  (per-tile / per-tier / master / progressives)
-         *   4c. Stash keys  (per-stage + per-tile / per-tier / master pouches)
-         *   4d. Tile pouches  (coarse per-tile / per-tier field tokens)
+         *   4b. Gempouches  (per-tile / master / progressives)
+         *   4c. Stash keys  (per-stage + per-tile / master pouches)
+         *   4d. Tile pouches  (coarse per-tile field tokens)
          *   4e. Progressive variants (per-stage stage-specific icons,
-         *       per-tile / per-tier pouch icons)
+         *       per-tile pouch icons)
          *   5.  Shadow cores  (one combined icon: AP-granted + monster drops)
          *   5b. Skillpoint bundles  (cyan-glow icon, summed per run)
          *   6.  Talisman fragments  (monster drops + AP-granted)
@@ -1843,8 +1843,7 @@ package {
             // 4b. Gempouches:
             //   626-651  per-tile distinct
             //   652      per-tile progressive
-            //   1601-1614 per-tier + master
-            //   1615     per-tier progressive
+            //   1614     master
             // Per-tile-progressive (652) is a single fungible item id added 26
             // times to the pool, so two copies received in the same session
             // would otherwise both stamp the same getItemCount() reading on
@@ -1856,8 +1855,8 @@ package {
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
                 var isPouchDistinct:Boolean = (apId >= 626 && apId <= 652);
-                var isPouchTier:Boolean     = (apId >= 1601 && apId <= 1615);
-                if (!isPouchDistinct && !isPouchTier) continue;
+                var isPouchMaster:Boolean   = (apId == 1614);
+                if (!isPouchDistinct && !isPouchMaster) continue;
                 var pouchOrd:int = (apId == 652) ? pouchProgNext++ : 0;
                 _progressionBlocker.addGempouchDropIcon(apId, pouchOrd);
             }
@@ -1865,58 +1864,53 @@ package {
             // 4c. Wizard Stash keys:
             //   1400-1521  per-stage (one per stage)
             //   1522-1547  per-tile pouch
-            //   1548-1560  per-tier pouch
             //   1561       master pouch
             // Per-stage progressive (1619) handled below from
-            // _sessionStashStageProgressiveUnlocks. Per-tile / per-tier
-            // progressives (1620, 1621) handled in 4e.
+            // _sessionStashStageProgressiveUnlocks. Per-tile progressive
+            // (1620) handled in 4e.
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
                 if (apId >= 1400 && apId <= 1521) {
                     _progressionBlocker.addWizStashKeyDropIcon(apId);
-                } else if (apId >= 1522 && apId <= 1561) {
+                } else if ((apId >= 1522 && apId <= 1547) || apId == 1561) {
                     _progressionBlocker.addKeyPouchDropIcon(apId);
                 }
             }
 
             // 4d. Coarse field-token pouches:
             //   1562-1587  per-tile
-            //   1588-1600  per-tier
             // One TilePouchDropIcon per copy received. Per-stage progressive
             // (1616) handled below from _sessionFieldStageProgressiveUnlocks.
-            // Per-tile / per-tier progressives (1617, 1618) handled in 4e.
+            // Per-tile progressive (1617) handled in 4e.
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 1562 || apId > 1600) continue;
+                if (apId < 1562 || apId > 1587) continue;
                 _progressionBlocker.addTilePouchDropIcon(apId);
             }
 
-            // 4e. Progressive variants (1616-1621). Per-stage variants resolve
+            // 4e. Progressive variants (1616-1620). Per-stage variants resolve
             // to the specific stage and reuse FieldTokenDropIcon /
-            // WizStashKeyDropIcon. Per-tile / per-tier variants get one
-            // generic pouch icon per copy received.
+            // WizStashKeyDropIcon. Per-tile variants get one generic pouch
+            // icon per copy received.
             var stageLocIdMap:Object = ConnectionManager.stageLocIds;
             // Same multi-copy ordinal handling as 4b: 1617 (per-tile field
             // token progressive) and 1620 (per-tile stash key progressive)
             // are fungible and rely on per-icon ordinals to render the right
-            // tile in the tooltip. 1618 / 1621 (per-tier progressives) have
-            // no tooltip yet so ordinal stays 0.
+            // tile in the tooltip.
             var fieldTileProgNext:int = _firstProgressiveOrdinal(1617);
             var stashTileProgNext:int = _firstProgressiveOrdinal(1620);
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId == 1617 || apId == 1618) {
-                    var ftOrd:int = (apId == 1617) ? fieldTileProgNext++ : 0;
-                    _progressionBlocker.addTilePouchDropIcon(apId, ftOrd);
-                } else if (apId == 1620 || apId == 1621) {
-                    var skOrd:int = (apId == 1620) ? stashTileProgNext++ : 0;
-                    _progressionBlocker.addKeyPouchDropIcon(apId, skOrd);
+                if (apId == 1617) {
+                    _progressionBlocker.addTilePouchDropIcon(apId, fieldTileProgNext++);
+                } else if (apId == 1620) {
+                    _progressionBlocker.addKeyPouchDropIcon(apId, stashTileProgNext++);
                 }
             }
             for (var fpi:int = 0; fpi < _sessionFieldStageProgressiveUnlocks.length; fpi++) {
@@ -2165,16 +2159,12 @@ package {
                         && apId == so.fieldTokenPerStageProgressiveId) return 1;
                 if (so.fieldTokenPerTileProgressiveId > 0
                         && apId == so.fieldTokenPerTileProgressiveId)  return 1;
-                if (so.fieldTokenPerTierProgressiveId > 0
-                        && apId == so.fieldTokenPerTierProgressiveId)  return 1;
             }
             // Map tiles
             if (apId >= 600 && apId <= 625) return 2;
-            // Gempouches — distinct + tier + master + both progressives
+            // Gempouches — distinct + master + progressive
             if (apId >= 626 && apId <= 652)       return 3;
-            if (apId >= 1601 && apId <= 1614)     return 3;
-            if (so != null && so.gemPouchPerTierProgressiveId > 0
-                    && apId == so.gemPouchPerTierProgressiveId) return 3;
+            if (apId == 1614)                     return 3;
             // Wizard Stash keys — all granularities
             if (apId >= 1400 && apId <= 1561)     return 4;
             if (so != null) {
@@ -2182,8 +2172,6 @@ package {
                         && apId == so.stashKeyPerStageProgressiveId) return 4;
                 if (so.stashKeyPerTileProgressiveId > 0
                         && apId == so.stashKeyPerTileProgressiveId)  return 4;
-                if (so.stashKeyPerTierProgressiveId > 0
-                        && apId == so.stashKeyPerTierProgressiveId)  return 4;
             }
             // Skills
             if (apId >= 700 && apId <= 723) return 5;
@@ -2349,8 +2337,8 @@ package {
                     vIp.addTextfield(0xCCCCCC, "Wizard Stash Key", false, 11);
                     return true;
                 }
-                // Per-tile / per-tier field tokens (1562-1600).
-                if (apId >= 1562 && apId <= 1600) {
+                // Per-tile field tokens (1562-1587).
+                if (apId >= 1562 && apId <= 1587) {
                     var tokenName:String = itemName(apId);
                     if (tokenName == null) return false;
                     vIp.reset(280);
@@ -2370,8 +2358,6 @@ package {
                     // copy will actually unlock.
                     var stagOrder:Array = prgOpts.progressiveStageOrder as Array;
                     var tileOrder:Array = prgOpts.progressiveTileOrder as Array;
-                    var tierOrder:Array = prgOpts.progressiveTierOrder as Array;
-                    var tierTotal:int   = (tierOrder != null) ? tierOrder.length : 13;
 
                     if (prgOpts.fieldTokenPerStageProgressiveId > 0
                             && apId == prgOpts.fieldTokenPerStageProgressiveId) {
@@ -2385,12 +2371,6 @@ package {
                             "Progressive Field Token", "Field Token (per tile)",
                             "Unlocks all stages on the next tile", tileOrder, true);
                     }
-                    if (prgOpts.fieldTokenPerTierProgressiveId > 0
-                            && apId == prgOpts.fieldTokenPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Field Token", "Field Token (per tier)",
-                            "Unlocks all stages in the next tier", null, false, tierTotal);
-                    }
                     if (prgOpts.stashKeyPerStageProgressiveId > 0
                             && apId == prgOpts.stashKeyPerStageProgressiveId) {
                         return _renderProgressiveTooltip(vIp, apId,
@@ -2402,18 +2382,6 @@ package {
                         return _renderProgressiveTooltip(vIp, apId,
                             "Progressive Stash Key", "Wizard Stash Key (per tile)",
                             "Unlocks all stashes on the next tile", tileOrder, true);
-                    }
-                    if (prgOpts.stashKeyPerTierProgressiveId > 0
-                            && apId == prgOpts.stashKeyPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Stash Key", "Wizard Stash Key (per tier)",
-                            "Unlocks all stashes in the next tier", null, false, tierTotal);
-                    }
-                    if (prgOpts.gemPouchPerTierProgressiveId > 0
-                            && apId == prgOpts.gemPouchPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Gempouch", "Gem Pouch (per tier)",
-                            "Unlocks gems for the next tier", null, false, tierTotal);
                     }
                 }
                 // Gempouches (626-652) — exact match to GempouchDropIcon._onMouseOver.
@@ -2457,12 +2425,10 @@ package {
          * count-aware body (green) showing "(N/total unlocked)".
          *
          * @param order    If non-null, drives the body line "Next: <prefix>"
-         *                 by reading order[N]. For per-tier variants the
-         *                 fixedTotal kwarg is used instead.
+         *                 by reading order[N].
          * @param showNext If true and order is non-null, append the next-to-
          *                 unlock prefix/sid to the body.
-         * @param fixedTotal Override for `total` when no order list applies
-         *                   (per-tier variants pass 13).
+         * @param fixedTotal Override for `total` when no order list applies.
          */
         private function _renderProgressiveTooltip(vIp:*, apId:int,
                 title:String, subtitle:String, bodyLead:String,
@@ -2593,12 +2559,6 @@ package {
                     _grantStashKeyByPrefix(apId);
                     return;
                 }
-                if (apId >= 1548 && apId <= 1560) {
-                    // Per-tier stash key. Unlocks every stash whose stage is
-                    // in the matching tier.
-                    _grantStashKeyByTier(apId - 1548);
-                    return;
-                }
                 if (apId == 1561) {
                     // Master stash key. Unlocks every stash.
                     _grantMasterStashKey();
@@ -2608,11 +2568,6 @@ package {
                     // Per-tile field token. Unlocks every stage whose str_id
                     // starts with the matching prefix.
                     _grantFieldTokenByPrefix(apId);
-                    return;
-                }
-                if (apId >= 1588 && apId <= 1600) {
-                    // Per-tier field token. Unlocks every stage in the tier.
-                    _grantFieldTokenByTier(apId - 1588);
                     return;
                 }
                 // ---------- Progressive variants (singleton apIds, count-based) ----------
@@ -2633,11 +2588,6 @@ package {
                         _grantFieldTokenProgressivePerTile(apId);
                         return;
                     }
-                    if (so.fieldTokenPerTierProgressiveId > 0
-                            && apId == so.fieldTokenPerTierProgressiveId) {
-                        _grantFieldTokenProgressivePerTier(apId);
-                        return;
-                    }
                     if (so.stashKeyPerStageProgressiveId > 0
                             && apId == so.stashKeyPerStageProgressiveId) {
                         _grantStashKeyProgressivePerStage(apId);
@@ -2648,14 +2598,7 @@ package {
                         _grantStashKeyProgressivePerTile(apId);
                         return;
                     }
-                    if (so.stashKeyPerTierProgressiveId > 0
-                            && apId == so.stashKeyPerTierProgressiveId) {
-                        _grantStashKeyProgressivePerTier(apId);
-                        return;
-                    }
-                    if ((so.gemPouchProgressiveId > 0 && apId == so.gemPouchProgressiveId)
-                            || (so.gemPouchPerTierProgressiveId > 0
-                                && apId == so.gemPouchPerTierProgressiveId)) {
+                    if (so.gemPouchProgressiveId > 0 && apId == so.gemPouchProgressiveId) {
                         // Gempouches don't change in-game state — gating is
                         // handled by SessionData.getItemCount on the mod side
                         // and is read live by HollowGemInjector etc. Just toast.
@@ -2740,12 +2683,10 @@ package {
         //
         // ID layout (mirrors apworld gating.py):
         //   1522-1547 stash tile keys (one per prefix in gemPouchPlayOrder)
-        //   1548-1560 stash tier keys (one per tier 0..12)
         //   1561      stash master key
         //   1562-1587 field tile tokens (one per prefix)
-        //   1588-1600 field tier tokens (one per tier 0..12)
-        // For tile-keyed items, prefix = playOrder[apId - base]. For tier-keyed
-        // items, tier = apId - base. Master keys cover everything.
+        // For tile-keyed items, prefix = playOrder[apId - base]. Master keys
+        // cover everything.
 
         // Map a tile prefix letter ("A".."Z") to the integer tile gameId
         // (0..25) used by GV.selectorCore.mapTiles. Tile letters wrap in
@@ -2813,25 +2754,6 @@ package {
             _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
         }
 
-        private function _grantStashKeyByTier(tier:int):void {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId
-                : null;
-            if (tierMap == null) {
-                _logger.log(MOD_NAME, "  grantItem: tier stash key tier=" + tier + " — no stage->tier map");
-                return;
-            }
-            var count:int = 0;
-            for (var sid:String in tierMap) {
-                if (int(tierMap[sid]) == tier) {
-                    AV.sessionData.markStashUnlocked(sid);
-                    count++;
-                }
-            }
-            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", ItemColors.forApId(1548 + tier));
-            _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
-        }
-
         private function _grantMasterStashKey():void {
             var byStrId:Object = AV.serverData.stagesByStrId;
             var count:int = 0;
@@ -2862,65 +2784,11 @@ package {
             _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
         }
 
-        private function _grantFieldTokenByTier(tier:int):void {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId
-                : null;
-            if (tierMap == null) {
-                _logger.log(MOD_NAME, "  grantItem: tier field token tier=" + tier + " — no stage->tier map");
-                return;
-            }
-            var count:int = 0;
-            for (var sid:String in tierMap) {
-                if (int(tierMap[sid]) == tier) {
-                    _stageUnlocker.unlockStage(sid);
-                    AV.sessionData.markFieldTokenHeld(sid);
-                    count++;
-                }
-            }
-            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", ItemColors.forApId(1588 + tier));
-            _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
-        }
-
         // ---------- Progressive grant helpers ----------
         // Each handler reads the live count of the singleton apId via
         // AV.sessionData.getItemCount, finds the (count-1)-th entry in the
         // appropriate order (stage / tile / tier), and unlocks just that one
         // group. Earlier copies were already processed on previous calls.
-
-        /** Starter-first tier order — prefers progressiveTierOrder from
-         *  slot_data (starter's tier at position 0, rest ascending with
-         *  starter removed). Falls back to plain ascending if slot_data
-         *  didn't supply the list (older mod build / non-progressive seed). */
-        private function _progressiveTiersOrAsc():Array {
-            var so:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-            if (so != null) {
-                var list:Array = so.progressiveTierOrder as Array;
-                if (list != null && list.length > 0) return list;
-            }
-            return _activeTiersAsc();
-        }
-
-        /** Returns the unique tier ints in ascending order, derived live from
-         *  stageTierByStrId. Cached per call but cheap; alternative would be
-         *  to send active_tiers via slot_data. */
-        private function _activeTiersAsc():Array {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId : null;
-            var seen:Object = {};
-            var out:Array = [];
-            if (tierMap != null) {
-                for (var sid:String in tierMap) {
-                    var t:int = int(tierMap[sid]);
-                    if (t >= 0 && !seen[String(t)]) {
-                        seen[String(t)] = true;
-                        out.push(t);
-                    }
-                }
-            }
-            out.sort(Array.NUMERIC);
-            return out;
-        }
 
         private function _grantFieldTokenProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
@@ -2970,18 +2838,6 @@ package {
                 + " unlocks tile " + prefix + " (" + count + " stages)");
         }
 
-        private function _grantFieldTokenProgressivePerTier(apId:int):void {
-            var tiers:Array = _progressiveTiersOrAsc();
-            var n:int = AV.sessionData.getItemCount(apId);
-            if (n <= 0 || n > tiers.length) {
-                _logger.log(MOD_NAME, "  grantItem: per-tier progressive field token count " + n + " out of range");
-                return;
-            }
-            var tier:int = int(tiers[n - 1]);
-            _grantFieldTokenByTier(tier);
-            _logger.log(MOD_NAME, "  → Progressive field token (per-tier) #" + n + " = tier " + tier);
-        }
-
         private function _grantStashKeyProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
                 ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
@@ -3028,18 +2884,6 @@ package {
                 + " unlocks tile " + prefix + " (" + count + " stashes)");
         }
 
-        private function _grantStashKeyProgressivePerTier(apId:int):void {
-            var tiers:Array = _progressiveTiersOrAsc();
-            var n:int = AV.sessionData.getItemCount(apId);
-            if (n <= 0 || n > tiers.length) {
-                _logger.log(MOD_NAME, "  grantItem: per-tier progressive stash key count " + n + " out of range");
-                return;
-            }
-            var tier:int = int(tiers[n - 1]);
-            _grantStashKeyByTier(tier);
-            _logger.log(MOD_NAME, "  → Progressive stash key (per-tier) #" + n + " = tier " + tier);
-        }
-
         /** Re-apply stash unlocks from received items. Called from
          *  syncWithAP after sessionData.reset() so the unlocked state is
          *  rebuilt from the full item list at every sync. Handles every
@@ -3047,7 +2891,6 @@ package {
          *    off        → no keys exist; every stash is unlocked outright
          *    per_stage  → AP id 1400-1521 (one per stage's loc id)
          *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
-         *    per_tier   → AP id 1548-1560 (one per tier 0..12)
          *    global     → AP id 1561 (master key)
          */
         private function _syncStashLockState():int {
@@ -3103,19 +2946,6 @@ package {
                     }
                 }
             }
-            // Per-tier: AP id 1548 + tier
-            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
-            if (tierMap != null) {
-                for (var tt:int = 0; tt <= 12; tt++) {
-                    if (!AV.sessionData.hasItem(1548 + tt)) continue;
-                    for (var tsid:String in tierMap) {
-                        if (int(tierMap[tsid]) == tt && !AV.sessionData.isStashUnlocked(tsid)) {
-                            AV.sessionData.markStashUnlocked(tsid);
-                            changes++;
-                        }
-                    }
-                }
-            }
             // Global master key
             if (AV.sessionData.hasItem(1561)) {
                 for (var msid:String in byStrId) {
@@ -3133,7 +2963,6 @@ package {
             if (opts != null) {
                 var stagOrder:Array = opts.progressiveStageOrder as Array;
                 var tileOrder:Array = opts.progressiveTileOrder as Array;
-                var tierOrder:Array = opts.progressiveTierOrder as Array;
 
                 // Per-stage progressive
                 var spProgId:int = int(opts.stashKeyPerStageProgressiveId);
@@ -3163,23 +2992,6 @@ package {
                         }
                     }
                 }
-                // Per-tier progressive
-                var ttProgId:int = int(opts.stashKeyPerTierProgressiveId);
-                if (ttProgId > 0 && tierMap != null) {
-                    var ttTiers:Array = (tierOrder != null && tierOrder.length > 0)
-                                            ? tierOrder : _activeTiersAsc();
-                    var ttN:int = AV.sessionData.getItemCount(ttProgId);
-                    var ttLimit:int = (ttN < ttTiers.length) ? ttN : ttTiers.length;
-                    for (var tti:int = 0; tti < ttLimit; tti++) {
-                        var ttTier:int = int(ttTiers[tti]);
-                        for (var tttsid:String in tierMap) {
-                            if (int(tierMap[tttsid]) == ttTier && !AV.sessionData.isStashUnlocked(tttsid)) {
-                                AV.sessionData.markStashUnlocked(tttsid);
-                                changes++;
-                            }
-                        }
-                    }
-                }
             }
             return changes;
         }
@@ -3200,8 +3012,7 @@ package {
                 }
             }
             // Coarse field-token coverage: per-tile (1562 + prefix index)
-            // covers all stages with that prefix; per-tier (1588 + tier)
-            // covers all stages in the tier.
+            // covers all stages with that prefix.
             var opts:* = AV.serverData.serverOptions;
             var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
             if (order != null) {
@@ -3214,16 +3025,6 @@ package {
                     }
                 }
             }
-            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
-            if (tierMap != null) {
-                for (var tt:int = 0; tt <= 12; tt++) {
-                    if (AV.sessionData.hasItem(1588 + tt)) {
-                        for (var tsid:String in tierMap) {
-                            if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
-                        }
-                    }
-                }
-            }
 
             // -------- Progressive variants (singleton apIds, count-based) --------
             // Nth received copy unlocks the Nth entry in the starter-first
@@ -3231,7 +3032,6 @@ package {
             if (opts != null) {
                 var stagOrderFs:Array = opts.progressiveStageOrder as Array;
                 var tileOrderFs:Array = opts.progressiveTileOrder as Array;
-                var tierOrderFs:Array = opts.progressiveTierOrder as Array;
 
                 var fsProgId:int = int(opts.fieldTokenPerStageProgressiveId);
                 if (fsProgId > 0 && stagOrderFs != null) {
@@ -3249,19 +3049,6 @@ package {
                         var ftPfx:String = String(tileOrderFs[fti]);
                         for (var ftSid:String in AV.serverData.stagesByStrId) {
                             if (ftSid.charAt(0) == ftPfx) hasToken[ftSid] = true;
-                        }
-                    }
-                }
-                var ftTierProgId:int = int(opts.fieldTokenPerTierProgressiveId);
-                if (ftTierProgId > 0 && tierMap != null) {
-                    var ftTiers:Array = (tierOrderFs != null && tierOrderFs.length > 0)
-                                            ? tierOrderFs : _activeTiersAsc();
-                    var fttN:int = AV.sessionData.getItemCount(ftTierProgId);
-                    var fttLimit:int = (fttN < ftTiers.length) ? fttN : ftTiers.length;
-                    for (var ftti:int = 0; ftti < fttLimit; ftti++) {
-                        var fttTier:int = int(ftTiers[ftti]);
-                        for (var ftTsid:String in tierMap) {
-                            if (int(tierMap[ftTsid]) == fttTier) hasToken[ftTsid] = true;
                         }
                     }
                 }
@@ -3687,10 +3474,6 @@ package {
                 }
                 return "Wizard Stash Tile Key (#" + (apId - 1522) + ")";
             }
-            // Per-tier Wizard Stash keys (1548-1560 = tiers 0..12).
-            if (apId >= 1548 && apId <= 1560) {
-                return "Wizard Stash Tier " + (apId - 1548) + " Key";
-            }
             // Master Wizard Stash key (1561).
             if (apId == 1561) {
                 return "Wizard Stash Master Key";
@@ -3706,10 +3489,6 @@ package {
                 }
                 return "Tile Field Tokens (#" + tileIdx + ")";
             }
-            // Per-tier field tokens (1588-1600 = one per tier).
-            if (apId >= 1588 && apId <= 1600) {
-                return "Tier " + (apId - 1588) + " Field Tokens";
-            }
             // SP items (1700-1703: 3 fixed bundle tiers + single Skillpoint).
             if (apId >= 1700 && apId <= 1703) {
                 return AV.serverData.serverOptions.getSpItemName(apId);
@@ -3723,21 +3502,12 @@ package {
                 if (prgOpts.fieldTokenPerTileProgressiveId > 0
                         && apId == prgOpts.fieldTokenPerTileProgressiveId)
                     return "Progressive Field Token (per-tile)";
-                if (prgOpts.fieldTokenPerTierProgressiveId > 0
-                        && apId == prgOpts.fieldTokenPerTierProgressiveId)
-                    return "Progressive Field Token (per-tier)";
                 if (prgOpts.stashKeyPerStageProgressiveId > 0
                         && apId == prgOpts.stashKeyPerStageProgressiveId)
                     return "Progressive Stash Stage Key";
                 if (prgOpts.stashKeyPerTileProgressiveId > 0
                         && apId == prgOpts.stashKeyPerTileProgressiveId)
                     return "Progressive Stash Tile Key";
-                if (prgOpts.stashKeyPerTierProgressiveId > 0
-                        && apId == prgOpts.stashKeyPerTierProgressiveId)
-                    return "Progressive Stash Tier Key";
-                if (prgOpts.gemPouchPerTierProgressiveId > 0
-                        && apId == prgOpts.gemPouchPerTierProgressiveId)
-                    return "Progressive Gempouch (per-tier)";
             }
             return null; // let ConnectionManager handle the rest
         }

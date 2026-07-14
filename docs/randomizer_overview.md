@@ -20,7 +20,7 @@ This document describes the full feature set of the randomizer: what is shuffled
 
 | Item | Count | Notes |
 |---|---|---|
-| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage, per-tile, or per-tier — each with a progressive sibling). |
+| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage or per-tile — each with a progressive sibling). |
 | Skills | 24 | Includes the 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
 | Battle Traits | 15 | Optional upgrades — one optionally moved to "starting" via YAML (Overcrowd) |
 | Talisman Fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries the field's original seed and rarity. Vanilla in-game wave drops still cover any additional fragments, so no "extras" are added to the pool. |
@@ -50,7 +50,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 - Battle Traits (all 15 — many achievement counters require them)
 - Map Tiles (all of them)
 - Wizard Stash Keys (per-stage, coarse, and progressive variants)
-- Gem Pouches (per-tile, per-tier, master, and progressive variants)
+- Gem Pouches (per-tile, master, and progressive variants)
 - 25 Talisman Fragments — the highest-rarity fragment in each slot type (4 corner + 12 edge + 9 inner) so the `talismanCornerFragment:N / Edge / Center` counters can be gated
 
 **Useful** — not required by logic, but worth placing where they help
@@ -86,7 +86,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | `fields_required` | `80` | Used when `goal = fields_count` (12–122) |
 | `starting_stage` | `random` | Choose one of W1–W4 / S1–S4, or randomize per seed |
 | `field_token_placement` | `any_world` | Where Field Tokens may be placed: `any_world`, `own_world`, or `different_world` (multiplayer required) |
-| `field_token_granularity` | `per_tile` | How coarse Field Token items are. Three families — `per_stage` (122 unique tokens), `per_tile` (26, one per map-tile prefix), `per_tier` (13, one per power tier) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
+| `field_token_granularity` | `per_tile` | How coarse Field Token items are. Two families — `per_stage` (122 unique tokens) and `per_tile` (26, one per map-tile prefix) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
 | `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme` — battle difficulty and how much wizard-level progress each clear grants (gates sit at the same levels on every difficulty). |
 | `xp_tome_bonus` | `50` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power, not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any tomes (1–100) |
@@ -96,8 +96,10 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 | Option | Default | Description |
 |---|---|---|
-| `stash_key_granularity` | `per_tile` | Wizard Stashes start locked. `per_tile` / `per_tier` families (each with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. (Per-stage keys were retired.) |
-| `gem_pouch_granularity` | `per_tile` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `per_tier`, `per_tier_progressive`, `global`. |
+| `stash_key_granularity` | `per_tile` | Wizard Stashes start locked. A `per_tile` family (with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. (Per-stage and per-tier keys were retired.) |
+| `gem_pouch_granularity` | `per_tile` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `global`. |
+
+> **Design history — power tiers (removed):** Field-token, stash-key, and gem-pouch granularities once had a `per_tier` family — 13 "power tiers" that grouped stages by wave count, a coarse middle ground between per-tile and global. Tiers were the pre-wizard-level progression model (reach tier N by collecting a share of tier N−1's tokens). Now that stage access is gated purely by *derived wizard level*, tiers serve no purpose and were removed. Documented here for future reference only; the achievement **effort** tiers (Trivial/Minor/Major/Extreme) are a separate, still-active concept.
 
 ### Difficulty
 

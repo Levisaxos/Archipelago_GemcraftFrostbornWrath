@@ -128,64 +128,47 @@ def _load_item_table() -> Dict[str, ItemData]:
         table[f"Wizard Stash {stage['str_id']} Key"] = ItemData(
             key_id, ItemClassification.progression)
 
-    # Coarse stash keys (per_tile / per_tier / global). All declared so
-    # name→id lookup works regardless of stash_key_granularity option;
-    # create_items() decides which subset goes into the pool.
+    # Coarse stash keys (per_tile / global). All declared so name→id lookup
+    # works regardless of stash_key_granularity option; create_items()
+    # decides which subset goes into the pool.
     from . import gating as _g
     for prefix in _g.TILE_PREFIXES:
         table[f"Wizard Stash Tile {prefix} Key"] = ItemData(
             _g.stash_tile_key_id(prefix), ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Wizard Stash Tier {tier} Key"] = ItemData(
-            _g.stash_tier_key_id(tier), ItemClassification.progression)
     table["Wizard Stash Master Key"] = ItemData(
         _g.STASH_MASTER_KEY_ID, ItemClassification.progression)
 
     # Gempouches. Always declared so name→id resolution works regardless of gem_pouch_granularity option; create_items() picks which set goes into the pool.
     #   - per_tile:             26 named pouches `Gempouch (X)` at IDs 626..651.
     #   - per_tile_progressive: single "Progressive Gempouch" at ID 652, added 26 times to the pool.
-    #   - per_tier:             `Tier <N> Gempouch` (one per active tier).
-    #   - per_tier_progressive: single "Progressive Gempouch (per-tier)" added once per active tier (declared below with the other progressive variants).
     #   - global:               "Master Gempouch" (single item).
     for i, prefix in enumerate(_g.TILE_PREFIXES):
         table[f"Gempouch ({prefix})"] = ItemData(
             626 + i, ItemClassification.progression)
     table["Progressive Gempouch"] = ItemData(
         652, ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Tier {tier} Gempouch"] = ItemData(
-            _g.pouch_tier_id(tier), ItemClassification.progression)
     table["Master Gempouch"] = ItemData(
         _g.POUCH_MASTER_ID, ItemClassification.progression)
 
-    # Coarse field tokens (per_tile / per_tier). Per-stage field tokens are
-    # already added at the top of this function from data["stages"].
+    # Coarse field tokens (per_tile). Per-stage field tokens are already
+    # added at the top of this function from data["stages"].
     for prefix in _g.TILE_PREFIXES:
         table[f"{prefix} Tile Field Token"] = ItemData(
             _g.field_tile_token_id(prefix), ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Tier {tier} Field Token"] = ItemData(
-            _g.field_tier_token_id(tier), ItemClassification.progression)
 
     # Progressive variants — single fungible item per category, added N
     # times to the pool by create_items(). The Nth received copy unlocks
-    # the Nth entry in PROGRESSIVE_TILE_ORDER (or per-stage / per-tier
-    # order). Always declared so name→id resolution works regardless of
-    # which granularity is chosen.
-    table[_g.PROG_GEMPOUCH_PER_TIER_NAME] = ItemData(
-        _g.POUCH_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
+    # the Nth entry in PROGRESSIVE_TILE_ORDER (or per-stage order). Always
+    # declared so name→id resolution works regardless of which granularity
+    # is chosen.
     table[_g.PROG_FIELD_PER_STAGE_NAME] = ItemData(
         _g.FIELD_PER_STAGE_PROGRESSIVE_ID, ItemClassification.progression)
     table[_g.PROG_FIELD_PER_TILE_NAME] = ItemData(
         _g.FIELD_PER_TILE_PROGRESSIVE_ID,  ItemClassification.progression)
-    table[_g.PROG_FIELD_PER_TIER_NAME] = ItemData(
-        _g.FIELD_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
     table[_g.PROG_STASH_PER_STAGE_NAME] = ItemData(
         _g.STASH_PER_STAGE_PROGRESSIVE_ID, ItemClassification.progression)
     table[_g.PROG_STASH_PER_TILE_NAME] = ItemData(
         _g.STASH_PER_TILE_PROGRESSIVE_ID,  ItemClassification.progression)
-    table[_g.PROG_STASH_PER_TIER_NAME] = ItemData(
-        _g.STASH_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
 
     return table
 

@@ -324,15 +324,13 @@ package patch {
          * Inject a Gempouch drop icon. Accepted apId ranges:
          *   626-651  per-tile distinct (Gempouch (X))
          *   652      per-tile progressive
-         *   1601-1613 per-tier (Tier N Gempouch)
          *   1614     master (Master Gempouch)
-         *   1615     per-tier progressive
          * Uses its own MOUSE_OVER tooltip handler.
          */
         public function addGempouchDropIcon(apId:int, ordinal:int = 0):void {
             var inDistinct:Boolean = (apId >= 626 && apId <= 652);
-            var inTier:Boolean     = (apId >= 1601 && apId <= 1615);
-            if (!inDistinct && !inTier) return;
+            var isMaster:Boolean   = (apId == 1614);
+            if (!inDistinct && !isMaster) return;
             _addDropIcon(new GempouchDropIcon(apId, ordinal),
                 "GEMPOUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
@@ -354,15 +352,14 @@ package patch {
         /**
          * Inject a coarse stash-key pouch drop icon. apId ranges:
          *   1522-1547  per-tile pouch
-         *   1548-1560  per-tier pouch
          *   1561       master pouch
          *   1620       per-tile progressive
-         *   1621       per-tier progressive
          */
         public function addKeyPouchDropIcon(apId:int, ordinal:int = 0):void {
-            var inFixed:Boolean = (apId >= 1522 && apId <= 1561);
-            var inProg:Boolean  = (apId == 1620 || apId == 1621);
-            if (!inFixed && !inProg) return;
+            var inTile:Boolean  = (apId >= 1522 && apId <= 1547);
+            var isMaster:Boolean = (apId == 1561);
+            var inProg:Boolean  = (apId == 1620);
+            if (!inTile && !isMaster && !inProg) return;
             _addDropIcon(new KeyPouchDropIcon(apId, ordinal),
                 "KEY_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
@@ -371,13 +368,11 @@ package patch {
         /**
          * Inject a coarse field-token pouch drop icon. apId ranges:
          *   1562-1587  per-tile field tokens
-         *   1588-1600  per-tier field tokens
          *   1617       per-tile progressive
-         *   1618       per-tier progressive
          */
         public function addTilePouchDropIcon(apId:int, ordinal:int = 0):void {
-            var inFixed:Boolean = (apId >= 1562 && apId <= 1600);
-            var inProg:Boolean  = (apId == 1617 || apId == 1618);
+            var inFixed:Boolean = (apId >= 1562 && apId <= 1587);
+            var inProg:Boolean  = (apId == 1617);
             if (!inFixed && !inProg) return;
             _addDropIcon(new TilePouchDropIcon(apId, ordinal),
                 "TILE_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),

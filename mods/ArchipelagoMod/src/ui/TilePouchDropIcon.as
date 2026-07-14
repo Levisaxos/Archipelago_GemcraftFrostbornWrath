@@ -15,16 +15,14 @@ package ui {
     import data.ServerOptions;
 
     /**
-     * Custom drop icon for coarse-granularity field-token items — per_tile,
-     * per_tier, and their progressive siblings. Reads as "field tokens for a
-     * group of stages" rather than a specific map tile, which is why we use
-     * a generic pouch artwork instead of the actual MapTile bitmap.
+     * Custom drop icon for coarse-granularity field-token items — per_tile
+     * and its progressive sibling. Reads as "field tokens for a group of
+     * stages" rather than a specific map tile, which is why we use a generic
+     * pouch artwork instead of the actual MapTile bitmap.
      *
      * AP id ranges this icon serves:
      *   1562-1587  per-tile field tokens          (one per playOrder prefix)
-     *   1588-1600  per-tier field tokens          (one per tier 0..12)
      *   1617       per-tile field token progressive  (single id, 26 copies)
-     *   1618       per-tier field token progressive  (single id, 13 copies)
      *
      * Asset: ../../resources/TilePouch.png
      *
@@ -48,7 +46,7 @@ package ui {
         // because multiple copies can drop at the same level-end and reading
         // getItemCount() at hover stamps the same total on every icon. 0 ==
         // "fall back to live count" for callers that don't track per-copy.
-        public var meta:Object;  // { apId:int, isProgressive:Boolean, isTierProgressive:Boolean, ordinal:int }
+        public var meta:Object;  // { apId:int, isProgressive:Boolean, ordinal:int }
 
         [Embed(source='../../resources/TilePouch.png')]
         private static const TilePouchAsset:Class;
@@ -61,7 +59,6 @@ package ui {
             this.meta = {
                 apId: apId,
                 isProgressive: _isPerTileProgressive(apId),
-                isTierProgressive: _isPerTierProgressive(apId),
                 ordinal: ordinal
             };
 
@@ -122,19 +119,6 @@ package ui {
                     body  = "Unlocks fields on tile " + prefixT + ". "
                           + "(" + copiesT + "/" + (opts != null ? opts.progressiveTileOrderLength() : 26)
                           + " worlds unlocked)";
-                } else if (this.meta.isTierProgressive == true) {
-                    // 1618 — per-tier progressive
-                    var ordinalR:int = int(this.meta.ordinal);
-                    var copiesR:int = (ordinalR > 0) ? ordinalR
-                                                    : AV.sessionData.getItemCount(apId);
-                    var tierOrder:Array = (opts != null) ? opts.progressiveTierOrder as Array : null;
-                    var tierLabel:String = (tierOrder != null && copiesR >= 1 && copiesR <= tierOrder.length)
-                        ? String(tierOrder[copiesR - 1])
-                        : "?";
-                    var tierTotal:int = (tierOrder != null) ? tierOrder.length : 13;
-                    title = "Progressive Field Token (per-tier)";
-                    body  = "Unlocks fields in tier " + tierLabel + ". "
-                          + "(" + copiesR + "/" + tierTotal + " tiers unlocked)";
                 } else if (apId >= 1562 && apId <= 1587) {
                     // Per-tile distinct
                     var idx:int = apId - 1562;
@@ -144,11 +128,6 @@ package ui {
                     var prefix:String = String(order[idx]);
                     title = prefix + " Tile Field Tokens";
                     body  = "Unlocks all field tokens on tile " + prefix + ".";
-                } else if (apId >= 1588 && apId <= 1600) {
-                    // Per-tier distinct
-                    var tier:int = apId - 1588;
-                    title = "Tier " + tier + " Field Tokens";
-                    body  = "Unlocks all field tokens in tier " + tier + ".";
                 } else {
                     return;
                 }
@@ -172,18 +151,6 @@ package ui {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
                     var progId:int = int(opts.fieldTokenPerTileProgressiveId);
-                    if (progId > 0 && apId == progId)
-                        return true;
-                }
-            } catch (e:Error) {}
-            return false;
-        }
-
-        private static function _isPerTierProgressive(apId:int):Boolean {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var progId:int = int(opts.fieldTokenPerTierProgressiveId);
                     if (progId > 0 && apId == progId)
                         return true;
                 }

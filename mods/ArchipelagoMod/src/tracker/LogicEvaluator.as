@@ -767,13 +767,7 @@ package tracker {
             //   off (0)        → no gating, always true
             //   per_tile (1)   → state.has("Gempouch (<prefix>)")
             //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
-            //   per_tier (3)   → state.has("Tier <N> Gempouch") for stage's tier
-            //                    (requires a stage str_id reference; the
-            //                    requirement string only carries prefix, so
-            //                    per_tier is checked at stage-level — here we
-            //                    fall back to "any tier pouch held" which is
-            //                    permissive but safe for tracker preview)
-            //   global (4)     → state.has("Master Gempouch")
+            //   global (5)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
                 var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
@@ -800,30 +794,6 @@ package tracker {
                     var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
                     if (progId <= 0) progId = 652;
                     return AV.sessionData.getItemCount(progId) >= idxP + 1;
-                }
-                if (mode == 3 || mode == 4) {
-                    // per_tier (3) and per_tier_progressive (4): without a specific stage in scope, accept if ANY tier pouch is held that covers a stage with this prefix.
-                    var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
-                    if (tierMap == null) return true;
-                    var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
-                    var tierOrd:Array = AV.serverData.serverOptions.progressiveTierOrder as Array;
-                    for (var sid:String in tierMap) {
-                        if (sid.charAt(0) == pouchPrefix) {
-                            var st:int = int(tierMap[sid]);
-                            if (mode == 3) {
-                                if (AV.sessionData.hasItem(1601 + st))
-                                    return true;
-                            } else if (tierProgId > 0) {
-                                // mode == 4: starter-first count threshold.
-                                var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                                  ? tierOrd.indexOf(st) : st;
-                                if (posT < 0) continue;
-                                if (AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                                    return true;
-                            }
-                        }
-                    }
-                    return false;
                 }
                 return true;
             }

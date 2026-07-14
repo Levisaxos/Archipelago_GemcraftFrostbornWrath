@@ -47,7 +47,12 @@ package patch {
                         if (lvl > 0) sum += 0.1 * lvl;
                     }
                 }
-                sc.traitsXpMult.s(difficultyBase() + sum);
+                // Starter / free stages always earn the top (Easy) XP base so
+                // the cold start gets a boost even on Hard/Extreme.
+                var base:Number = _onStarterStage()
+                    ? Math.max(2.0, difficultyBase())
+                    : difficultyBase();
+                sc.traitsXpMult.s(base + sum);
             } catch (e:Error) {}
         }
 
@@ -83,6 +88,30 @@ package patch {
                 if (d >= 0 && d < BASE.length) return Number(BASE[d]);
             } catch (e:Error) {}
             return 1.0;
+        }
+
+        /** True while the active battle is on a starter / free stage. Those
+         *  fields always earn the top (Easy) XP base so the opening is eased
+         *  even on Hard/Extreme, without touching difficultyBase() (which the
+         *  tooltips / WL model reuse as the pure per-difficulty value). */
+        private static function _onStarterStage():Boolean {
+            try {
+                if (GV.ingameCore == null || GV.ingameCore.stageMeta == null)
+                    return false;
+                if (AV.serverData == null)
+                    return false;
+                var sid:String = String(GV.ingameCore.stageMeta.strId);
+                if (sid == null || sid.length == 0)
+                    return false;
+                var free:Array = AV.serverData.freeStages as Array;
+                if (free == null)
+                    return false;
+                for (var i:int = 0; i < free.length; i++) {
+                    if (String(free[i]) == sid)
+                        return true;
+                }
+            } catch (e:Error) {}
+            return false;
         }
     }
 }

@@ -70,7 +70,7 @@ package ui {
             addRow("Goal",                    goalName(opts.goal), vY);                                        vY += ROW_HEIGHT;
             if (opts.goal == 2)
                 { addRow("Fields Required",   opts.fieldsRequiredCount + " fields", vY);                      vY += ROW_HEIGHT; }
-            addRow("Starting Stage",          startingStageName(opts.startingStage), vY);                     vY += ROW_HEIGHT;
+            addRow("Starting Stages",         startingStagesName(opts.startingStages), vY);                   vY += ROW_HEIGHT;
             addRow("Difficulty",              difficultyName(opts.difficulty), vY);                           vY += ROW_HEIGHT;
             addRow("Achievement Required Effort", effortName(opts.achievementRequiredEffort), vY);             vY += ROW_HEIGHT;
             addRow("Endurance Mode",          opts.disable_endurance ? "Disabled" : "Enabled", vY);           vY += ROW_HEIGHT;
@@ -192,30 +192,20 @@ package ui {
             }
         }
 
-        private function startingStageName(s:int):String {
-            switch (s) {
-                case 0:  return "W1";
-                case 1:  return "W2";
-                case 2:  return "W3";
-                case 3:  return "W4";
-                case 4:  return "S1";
-                case 5:  return "S2";
-                case 6:  return "S3";
-                case 7:  return "S4";
-                default: return "Unknown (" + s + ")";
-            }
+        private function startingStagesName(arr:Array):String {
+            if (arr == null || arr.length == 0) return "Unknown";
+            return arr.join(", ");
         }
 
-        // Field tokens & stash keys share the same granularity values 0-5,
-        // and stash keys add 6=global. Render with the same name table.
+        // Field-token granularity values 0-3 (per_stage, per_stage_progressive,
+        // per_tile, per_tile_progressive). Stash keys / gem pouches use 0-2 plus
+        // 5=global. (per_tier / per_tier_progressive retired.)
         private function fieldTokenGranularityName(g:int):String {
             switch (g) {
                 case 0:  return "Per Stage";
                 case 1:  return "Per Stage (Progressive)";
                 case 2:  return "Per Tile";
                 case 3:  return "Per Tile (Progressive)";
-                case 4:  return "Per Tier";
-                case 5:  return "Per Tier (Progressive)";
                 default: return "Unknown (" + g + ")";
             }
         }
@@ -225,8 +215,6 @@ package ui {
                 case 0:  return "Off";
                 case 1:  return "Per Tile";
                 case 2:  return "Per Tile (Progressive)";
-                case 3:  return "Per Tier";
-                case 4:  return "Per Tier (Progressive)";
                 case 5:  return "Global";
                 default: return "Unknown (" + g + ")";
             }
@@ -237,8 +225,6 @@ package ui {
                 case 0:  return "Off";
                 case 1:  return "Per Tile";
                 case 2:  return "Per Tile (Progressive)";
-                case 3:  return "Per Tier";
-                case 4:  return "Per Tier (Progressive)";
                 case 5:  return "Global";
                 default: return "Unknown (" + g + ")";
             }
