@@ -1036,6 +1036,17 @@ def _compile_req(req: str, world, is_progressive: bool):
                 f"(count after ':' must be an integer)"
             ) from None
 
+        # `min_wl:N` is a pacing token, NOT a DNF predicate: the WL floor it
+        # names is enforced separately as its own component in set_rules (via
+        # _extract_min_wl) and by the stage WL soft gate. Inside a requirement
+        # DNF it's a no-op, so compile it to _always_true — _compile_dnf then
+        # drops it from the AND-group. Without this branch the token falls
+        # through to the "unrecognized counter" raise below, which (swallowed
+        # by the per-achievement try/except) leaves EVERY min_wl-bearing
+        # achievement ungated / permanently in logic.
+        if group_name == "min_wl":
+            return (_always_true, _COST_CONST, None)
+
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _compile_req. Reachable iff any group member is reachable.
         if group_name in element_prefix_map and len(element_prefix_map[group_name]) > 1:

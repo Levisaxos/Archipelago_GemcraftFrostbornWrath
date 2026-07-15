@@ -453,6 +453,7 @@ class GemcraftFrostbornWrathWorld(World):
                 slot_data = re_gen_passthrough[self.game]
                 for key in (
                     "goal",
+                    "difficulty",
                     "fields_required",
                     "field_token_placement",
                     "field_token_granularity",
@@ -717,7 +718,18 @@ class GemcraftFrostbornWrathWorld(World):
                             result.append(inner)
                     else:
                         r_lower = r.lower()
-                        if "trait" in r_lower or "skill" in r_lower or r.startswith("Achievement:"):
+                        # Keep loadout tokens (trait / skill), Achievement:
+                        # chain tokens, AND the min_wl:N pacing gate. min_wl is
+                        # NOT an element / stage-reach requirement — it's a pure
+                        # WL floor that rules._extract_min_wl reads downstream —
+                        # so dropping it here silently collapses the achievement's
+                        # floor to the effort-tier default (e.g. `battleTraits:1`
+                        # contains the substring "trait", so this branch fired
+                        # and ate `min_wl:20`, letting the achievement into logic
+                        # ~12 WL early).
+                        if ("trait" in r_lower or "skill" in r_lower
+                                or r.startswith("Achievement:")
+                                or r_lower.startswith("min_wl")):
                             result.append(r)
                 return result
 

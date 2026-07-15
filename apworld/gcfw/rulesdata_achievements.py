@@ -672,7 +672,7 @@ achievement_requirements = {
         "game_id": 43,
         "description": "Create a grade 3 gem.",
         "details": "Create a grade-3 gem.",
-        "requirements": ["min_wl:10"],
+        "requirements": [],
         "required_effort": "Trivial",
     },
     "Fifth Grader": {
@@ -680,7 +680,7 @@ achievement_requirements = {
         "game_id": 44,
         "description": "Create a grade 5 gem.",
         "details": "Create a grade-5 gem.",
-        "requirements": ["min_wl:20"],
+        "requirements": ["min_wl:15"],
         "required_effort": "Trivial",
     },
     "Biohazard": {
@@ -1335,7 +1335,7 @@ achievement_requirements = {
         "ap_id": 2104,
         "game_id": 346,
         "description": "Find 20 shadow cores.",
-        "requirements": ["minWave:26"],
+        "requirements": [],
         "required_effort": "Trivial",
     },
     "Core Pile": {
@@ -2174,7 +2174,7 @@ achievement_requirements = {
         "description": "Have no own buildings on the field at the end of the battle.",
         "details": "End a battle with no friendly buildings remaining (demolish them all yourself).",
         "requirements": [],
-        "required_effort": "Minor",
+        "required_effort": "Trivial",
     },
     "By Three They Go": {
         "ap_id": 2074,

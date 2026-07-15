@@ -857,9 +857,7 @@
       "game_id": 43,
       "description": "Create a grade 3 gem.",
       "required_effort": "Trivial",
-      "requirements": [
-        "min_wl:10"
-      ],
+      "requirements": [],
       "details": "Create a grade-3 gem."
     },
     "Fifth Grader": {
@@ -868,7 +866,7 @@
       "description": "Create a grade 5 gem.",
       "required_effort": "Trivial",
       "requirements": [
-        "min_wl:20"
+        "min_wl:15"
       ],
       "details": "Create a grade-5 gem."
     },
@@ -1736,9 +1734,7 @@
       "game_id": 346,
       "description": "Find 20 shadow cores.",
       "required_effort": "Trivial",
-      "requirements": [
-        "minWave:26"
-      ]
+      "requirements": []
     },
     "Core Pile": {
       "apId": 2105,
@@ -2854,7 +2850,7 @@
       "apId": 2356,
       "game_id": 399,
       "description": "Have no own buildings on the field at the end of the battle.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [],
       "details": "End a battle with no friendly buildings remaining (demolish them all yourself)."
     },
