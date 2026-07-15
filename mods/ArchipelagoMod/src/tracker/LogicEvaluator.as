@@ -803,15 +803,18 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N" — player must be able to call N waves early on
-            // some in-logic stage. Linked-wave pairs only count as ONE call
-            // (the follower spawns automatically with the leader), so we
-            // gate on CallableWaveCount, not total WaveCount. Matches the
-            // apworld split in requirement_tokens.py.
+            // "minWave: N" — an in-logic stage has N total waves of capacity.
+            // Backs "beat N waves", "cast N spells", "activate shrines", and the
+            // literal "call N waves early" family. Gates on total WaveCount (NOT
+            // vanilla CallableWaveCount): the LinkedWaveEarlyCredit patch restores
+            // full credit for linked followers, so the achievable early-call max
+            // is WaveCount - 1, and total-wave achievements need WaveCount anyway.
+            // Matches the apworld's requirement_tokens.py mapping AND the mod's own
+            // in-level evaluator (both use WaveCount for minWave).
             if (lower.indexOf("minwave") == 0) {
                 var cwNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
-                    && _fieldEvaluator.hasInLogicFieldWithMinCallableWaves(cwNeed);
+                    && _fieldEvaluator.hasInLogicFieldWithMinWaves(cwNeed);
             }
             // "beforeWave: N" — must beat the stage before wave N starts;
             // gates on the stage actually having N+ waves at all. Stays

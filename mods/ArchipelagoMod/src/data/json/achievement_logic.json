@@ -524,7 +524,8 @@
       "description": "Build 10 traps.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps"
+        "sTraps",
+        "min_wl:20"
       ],
       "details": "Build 10 traps in one battle."
     },
@@ -534,7 +535,8 @@
       "description": "Build 20 traps.",
       "required_effort": "Minor",
       "requirements": [
-        "sTraps"
+        "sTraps",
+        "min_wl:30"
       ],
       "details": "Build 20 traps in one battle."
     },
@@ -545,7 +547,7 @@
       "required_effort": "Major",
       "requirements": [
         "sTraps",
-        "fieldToken:25"
+        "min_wl:40"
       ]
     },
     "Razor Path": {

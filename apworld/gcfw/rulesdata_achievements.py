@@ -416,7 +416,7 @@ achievement_requirements = {
         "game_id": 71,
         "description": "Build 10 traps.",
         "details": "Build 10 traps in one battle.",
-        "requirements": ["sTraps"],
+        "requirements": ["sTraps", "min_wl:20"],
         "required_effort": "Trivial",
     },
     "Entrenched": {
@@ -424,14 +424,14 @@ achievement_requirements = {
         "game_id": 72,
         "description": "Build 20 traps.",
         "details": "Build 20 traps in one battle.",
-        "requirements": ["sTraps"],
+        "requirements": ["sTraps", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Watch Your Step": {
         "ap_id": 2602,
         "game_id": 73,
         "description": "Build 40 traps.",
-        "requirements": ["sTraps", "fieldToken:25"],
+        "requirements": ["sTraps", "min_wl:40"],
         "required_effort": "Major",
     },
     "Razor Path": {

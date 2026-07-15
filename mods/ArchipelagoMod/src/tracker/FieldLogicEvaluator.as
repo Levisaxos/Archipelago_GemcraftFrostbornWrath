@@ -275,7 +275,7 @@ package tracker {
         /**
          * True if any in-logic stage lets the player call at least minCount waves early in a single battle.
          *
-         * Distinct from hasInLogicFieldWithMinWaves: linked-wave pairs (game's isLinkedToNext) only count as ONE call — the linked follower auto-spawns with its leader and the player only earns one wavesCalledEarly++ per button press. CallableWaveCount is precomputed per stage in rulesdata_levels.py by replaying the IngamePopulator PRNG. Used by the "Call N waves early" achievement family (minWave:N).
+         * Uses VANILLA CallableWaveCount, where linked-wave pairs (game's isLinkedToNext) count as ONE call. NOTE: no longer wired to minWave:N — the LinkedWaveEarlyCredit patch restores full credit for linked followers, so minWave now gates on total WaveCount (see LogicEvaluator + apworld requirement_tokens.py). Kept for possible future precise "call exactly N early" gating that wants the vanilla cap; unused today.
          */
         public function hasInLogicFieldWithMinCallableWaves(minCount:int):Boolean {
             recompute();
