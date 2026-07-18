@@ -49,6 +49,12 @@ package unlockers {
         // standalone slot loaded next earns vanilla 1/2/3 SP again.
         private var _origSkillPtValues:Object = null;
 
+        // Snapshot of vanilla achievement descriptions replaced with corrected
+        // text while AP mode is active (see applyDescriptionCorrections). Keyed
+        // by achisByOrder index. null when nothing was overwritten; restored on
+        // deactivate so a standalone/vanilla slot loaded next shows vanilla text.
+        private var _origDescriptions:Object = null;
+
         // Optional reference to AchievementLogicEvaluator. Set after configure
         // by ArchipelagoMod. Used to toast on unlocks that weren't in logic
         // — useful for diagnosing "this should not have been reachable yet".
@@ -744,6 +750,72 @@ package unlockers {
             }
             _origSkillPtValues = null;
             _logger.log(_modName, "restoreSkillPointValues: vanilla achievement SP restored");
+        }
+
+        /**
+         * Overwrite the in-game achievement descriptions for the handful of
+         * achievements whose vanilla text misstates the actual unlock condition
+         * (a hidden whiteout requirement, a wrong count, a hidden minimum, etc.).
+         * The corrected text ships in achievement_logic.json flagged with
+         * vanilla_correction; only flagged achievements are touched, everything
+         * else keeps its vanilla text. This makes the game's own achievements
+         * window show the true requirement.
+         *
+         * GV.achiCollection is a per-process singleton, so this snapshots the
+         * originals (by achisByOrder index) for restoreDescriptionCorrections()
+         * to put back — otherwise a standalone slot loaded next keeps the
+         * patched descriptions. Idempotent: a no-op once the snapshot exists.
+         * Call from _activateApMode.
+         */
+        public function applyDescriptionCorrections():void {
+            if (_origDescriptions != null)
+                return;   // already applied
+            if (GV.achiCollection == null || GV.achiCollection.achisByOrder == null) {
+                _logger.log(_modName, "applyDescriptionCorrections: achiCollection not ready — skipped");
+                return;
+            }
+            _origDescriptions = {};
+            var achisByOrder:Array = GV.achiCollection.achisByOrder;
+            var changed:int = 0;
+            for (var i:int = 0; i < achisByOrder.length; i++) {
+                var ach:* = achisByOrder[i];
+                if (!ach)
+                    continue;
+                var entry:Object = _gameIdToData[int(ach.id)];
+                if (entry == null || !entry.vanilla_correction)
+                    continue;
+                var corrected:String = (entry.description != null) ? String(entry.description) : "";
+                if (corrected.length == 0)
+                    continue;
+                _origDescriptions[i] = String(ach.description);
+                ach.description = corrected;
+                changed++;
+            }
+            _logger.log(_modName, "applyDescriptionCorrections: corrected " + changed + " achievement descriptions");
+        }
+
+        /**
+         * Restore the vanilla achievement descriptions captured by
+         * applyDescriptionCorrections(). Call from _deactivateApMode so a
+         * standalone/vanilla slot loaded next shows vanilla text. Idempotent:
+         * a no-op when nothing was corrected.
+         */
+        public function restoreDescriptionCorrections():void {
+            if (_origDescriptions == null)
+                return;
+            if (GV.achiCollection != null && GV.achiCollection.achisByOrder != null) {
+                var achisByOrder:Array = GV.achiCollection.achisByOrder;
+                for (var i:int = 0; i < achisByOrder.length; i++) {
+                    var ach:* = achisByOrder[i];
+                    if (!ach)
+                        continue;
+                    if (_origDescriptions[i] !== undefined) {
+                        ach.description = String(_origDescriptions[i]);
+                    }
+                }
+            }
+            _origDescriptions = null;
+            _logger.log(_modName, "restoreDescriptionCorrections: vanilla achievement descriptions restored");
         }
 
         /**

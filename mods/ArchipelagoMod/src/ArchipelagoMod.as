@@ -564,6 +564,13 @@ package {
             // next keeps the nerfed values.
             if (_achievementUnlocker != null) _achievementUnlocker.normalizeSkillPointValues();
 
+            // Correct the in-game achievement descriptions whose vanilla text
+            // misstates the real unlock condition (flagged vanilla_correction in
+            // achievement_logic.json). Snapshots originals; _deactivateApMode
+            // calls restoreDescriptionCorrections so a standalone slot loaded
+            // next shows vanilla text.
+            if (_achievementUnlocker != null) _achievementUnlocker.applyDescriptionCorrections();
+
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
 
@@ -607,6 +614,11 @@ package {
             // global/per-process, so a standalone slot loaded next would keep
             // the nerfed values without this.
             if (_achievementUnlocker != null) _achievementUnlocker.restoreSkillPointValues();
+            // Put vanilla achievement descriptions back (AP mode overwrote the
+            // mislabeled ones with corrected text). GV.achiCollection is
+            // global/per-process, so a standalone slot loaded next would keep
+            // the patched descriptions without this.
+            if (_achievementUnlocker != null) _achievementUnlocker.restoreDescriptionCorrections();
             // Detach the outcome / pause-menu button listeners. EarlyExitOutcome
             // sits on the persistent scrOptions singleton and would otherwise
             // hijack the vanilla pause-menu Return/Restart buttons in a
