@@ -3,32 +3,31 @@ from dataclasses import dataclass
 from Options import Choice, DeathLink, OptionSet, PerGameCommonOptions, Range, Toggle
 
 
-class StartingStage(Choice):
-    """Which early-game stage you start the run on.
+class RandomStartingStages(Range):
+    """How many starting stages to roll at random from the four W fields.
 
-    The chosen stage is playable from the menu immediately; every other stage (including the W/S stages you didn't pick) needs to be unlocked through Archipelago. If you're using tile- or tier-based granularity for field tokens or stash keys, the starter's tile/tier is unlocked from the start as well so you can play and collect checks right away.
+    0 = don't roll — start on exactly the fields you list in Starting Stages instead.
+    1-4 = start on that many randomly-chosen W fields.
+    Set this to `random` to roll the count itself (which can land on 0 = your specific list), or `random-range-1-4` to always roll a random 1 to 4.
     """
-    display_name = "Starting Stage"
-    option_w1 = 0
-    option_w2 = 1
-    option_w3 = 2
-    option_w4 = 3
-    option_s1 = 4
-    option_s2 = 5
-    option_s3 = 6
-    option_s4 = 7
-    default = "random"
+    display_name = "Random Starting Stages"
+    range_start = 0
+    range_end   = 4
+    default     = 1
 
-STARTING_STAGE_BY_VALUE = {
-    StartingStage.option_w1: "W1",
-    StartingStage.option_w2: "W2",
-    StartingStage.option_w3: "W3",
-    StartingStage.option_w4: "W4",
-    StartingStage.option_s1: "S1",
-    StartingStage.option_s2: "S2",
-    StartingStage.option_s3: "S3",
-    StartingStage.option_s4: "S4",
-}
+
+class StartingStages(OptionSet):
+    """The exact W fields you start on, used when Random Starting Stages is 0.
+
+    List one or more of W1, W2, W3, W4 — every one you list is playable from the menu immediately; all other stages must be unlocked through Archipelago. Must contain at least one field. Starting on more than one field only makes a difference with per-stage field-token granularity (with per-tile, the whole W tile is already free from any single W starter).
+    """
+    display_name = "Starting Stages"
+    valid_keys = frozenset({"W1", "W2", "W3", "W4"})
+    default = frozenset({"W1"})
+
+
+# W-tile stages eligible as starters.
+W_STARTER_SIDS = ["W1", "W2", "W3", "W4"]
 
 
 class FieldTokenPlacement(Choice):
@@ -268,8 +267,6 @@ class GemPouchGranularity(Choice):
     off:                  Gems are never gated. Every stage spawns gem orbs as normal.
     per_tile:             One pouch per map tile (26 total). A stage spawns no gem orbs until you receive the pouch for its tile.
     per_tile_progressive: 26 generic progressive pouches. Each one you receive unlocks gems on the next tile in a randomized order.
-    per_tier:             One pouch per power tier (13 total). Each tier's pouch unlocks gems on every stage of that tier.
-    per_tier_progressive: 13 generic progressive pouches. Each one unlocks gems on the next tier.
     global:               A single master pouch unlocks gems on every stage at once.
 
     Whichever mode you pick, your starting stage always has gems available immediately so you can play from the moment you connect.
@@ -278,8 +275,6 @@ class GemPouchGranularity(Choice):
     option_off                  = 0
     option_per_tile             = 1
     option_per_tile_progressive = 2
-    option_per_tier             = 3
-    option_per_tier_progressive = 4
     option_global               = 5
     default = 1
 
@@ -289,22 +284,18 @@ class FieldTokenGranularity(Choice):
 
     Stages start locked and require Field Tokens to access. This option controls whether each stage has its own token or whole groups of stages unlock together. Coarser settings put fewer unique tokens in the pool but each token unlocks more stages; finer settings give you more individual unlocks but a larger item pool overall.
 
-    Each granularity has a "_progressive" sibling. Progressive variants use a single generic token that appears multiple times in the pool, and the Nth copy you receive unlocks the Nth stage/tile/tier in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
+    Each granularity has a "_progressive" sibling. Progressive variants use a single generic token that appears multiple times in the pool, and the Nth copy you receive unlocks the Nth stage/tile in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
 
     per_stage:             One token per stage (122 tokens). Each stage has its own unlock.
     per_stage_progressive: 122 generic tokens. Each one unlocks the next stage in a randomized order.
     per_tile:              One token per map tile (26 tokens). A tile's token unlocks every stage on that tile.
     per_tile_progressive:  26 generic tokens. Each one unlocks the next tile.
-    per_tier:              One token per power tier (13 tokens). A tier's token unlocks every stage in that tier.
-    per_tier_progressive:  13 generic tokens. Each one unlocks the next tier.
     """
     display_name = "Field Token Granularity"
     option_per_stage             = 0
     option_per_stage_progressive = 1
     option_per_tile              = 2
     option_per_tile_progressive  = 3
-    option_per_tier              = 4
-    option_per_tier_progressive  = 5
     default = 2
 
 
@@ -318,8 +309,6 @@ class StashKeyGranularity(Choice):
     off:                  Stashes are not gated. Every Wizard Stash is open from the start — no keys exist.
     per_tile:             One key per map tile (26 keys). A tile's key unlocks every stash on that tile.
     per_tile_progressive: 26 generic keys. Each one unlocks the next tile's stashes.
-    per_tier:             One key per power tier (13 keys). A tier's key unlocks every stash in that tier.
-    per_tier_progressive: 13 generic keys. Each one unlocks the next tier's stashes.
     global:               A single master key unlocks every stash at once.
     """
     display_name = "Stash Key Granularity"
@@ -328,8 +317,6 @@ class StashKeyGranularity(Choice):
     option_off                  = 0
     option_per_tile             = 1
     option_per_tile_progressive = 2
-    option_per_tier             = 3
-    option_per_tier_progressive = 4
     option_global               = 5
 
     default = 1
@@ -371,7 +358,7 @@ class Difficulty(Choice):
 
     Fields unlock based on your wizard level, which you raise by clearing fields. Difficulty acts as a bonus or penalty on how much wizard-level progress each clear is worth: Easy clears grant the most, Extreme clears the least, with Medium and Hard in between.
     So the two ends trade off against each other. Easy makes battles forgiving and each win pushes your wizard level up the fastest, so you blow through the unlock gates quickly. Extreme makes battles punishing and each win is worth the least, so the climb to each gate is the slowest and most gradual. The gates themselves sit at the same wizard levels on every difficulty.
-    Extreme MUST have Endurance mode enabled (disable_endurance off): Extreme clears grant so little XP that the extra Endurance runs are needed to reach the gates. Generation fails if Extreme is chosen with Endurance disabled.
+    Hard and Extreme MUST have Endurance mode enabled (disable_endurance off): their clears grant little XP, so Endurance runs are the catch-up path to reach the gates if you get stuck. Generation fails if Hard or Extreme is chosen with Endurance disabled.
     """
     display_name = "Difficulty"
     option_easy    = 0
@@ -402,7 +389,8 @@ class GCFWOptions(PerGameCommonOptions):
     field_token_granularity:   FieldTokenGranularity
     stash_key_granularity:     StashKeyGranularity
     gem_pouch_granularity:     GemPouchGranularity
-    starting_stage:              StartingStage
+    random_starting_stages:      RandomStartingStages
+    starting_stages:             StartingStages
     achievement_required_effort: AchievementRequiredEffort
     difficulty:                Difficulty
     disable_endurance:         DisableEndurance

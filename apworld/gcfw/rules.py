@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .rulesdata import GAME_DATA, STAGE_RULES, TIERS, GEM_POUCH_PLAY_ORDER
+from .rulesdata import GAME_DATA, STAGE_RULES, GEM_POUCH_PLAY_ORDER
 from .requirement_tokens import (
     item_prefix_map, element_prefix_map, skill_prefix_map,
     mode_tokens, level_stat_counters, skill_counter_pools,
@@ -172,9 +172,9 @@ def _count_field_tokens(state, player: int) -> int:
     """Granularity-aware count of stages effectively beatable.
     A stage only counts when the player holds BOTH its field token and the
     gempouch needed to clear it (pouch granularity decides whether that's a
-    per-tile, per-tier, or global pouch; with pouches off the pouch check
+    per-tile or global pouch; with pouches off the pouch check
     short-circuits to True). Token granularity decides what 'its field
-    token' means (per-stage / per-tile / per-tier)."""
+    token' means (per-stage / per-tile)."""
     cache = _get_counter_cache(state, player)
     val = cache.get("ft")
     if val is not None:
@@ -184,7 +184,7 @@ def _count_field_tokens(state, player: int) -> int:
     if pairs is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
-        starter_sid = world.start_sid
+        starter_sid = world.start_sids
         # Clearability check: free stages auto-pass the pouch gate because
         # Hollow Gems substitute at runtime. Strict gem-availability uses
         # _compile_gempouch_checker directly elsewhere.
@@ -382,7 +382,7 @@ def _get_world_field_token_map(state, player: int) -> dict:
     if cached is None:
         from . import gating as _g
         ft_gran = world.options.field_token_granularity.value
-        starter_sid = world.start_sid
+        starter_sid = world.start_sids
         cached = {
             s["str_id"]: (
                 _g.field_token_for_stage(s["str_id"], ft_gran),
@@ -725,9 +725,9 @@ def _can_clear_any_stage(state, player: int, stages) -> bool:
 # ---------------------------------------------------------------------------
 
 # `fieldToken:N` counter previously cached a flat list of per-stage token
-# names here at module load. With per_tile / per_tier granularity, the set
-# of token items is per-world, so the cache moved to a lazy per-world map
-# computed by `_get_world_field_token_map` (see above).
+# names here at module load. With per_tile granularity, the set of token
+# items is per-world, so the cache moved to a lazy per-world map computed
+# by `_get_world_field_token_map` (see above).
 
 # Cache of (elem_pascal, count_needed) → qualifying-stage list. Reused across
 # achievement-rule compiles so each unique (element, count) pair only scans
@@ -1035,6 +1035,17 @@ def _compile_req(req: str, world, is_progressive: bool):
                 f"Unknown gate: malformed counter requirement '{req}' "
                 f"(count after ':' must be an integer)"
             ) from None
+
+        # `min_wl:N` is a pacing token, NOT a DNF predicate: the WL floor it
+        # names is enforced separately as its own component in set_rules (via
+        # _extract_min_wl) and by the stage WL soft gate. Inside a requirement
+        # DNF it's a no-op, so compile it to _always_true — _compile_dnf then
+        # drops it from the AND-group. Without this branch the token falls
+        # through to the "unrecognized counter" raise below, which (swallowed
+        # by the per-achievement try/except) leaves EVERY min_wl-bearing
+        # achievement ungated / permanently in logic.
+        if group_name == "min_wl":
+            return (_always_true, _COST_CONST, None)
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _compile_req. Reachable iff any group member is reachable.
@@ -1491,9 +1502,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     stages = GAME_DATA["stages"]
 
-    # The chosen starting stage (from world.options.starting_stage) is the
-    # one stage whose Field prereqs we ignore — it's the menu connection,
-    # so its `requirements` list in rulesdata_levels.py shouldn't gate it.
+    # The primary starting stage (world.start_sid) is the region hub whose
+    # Field prereqs we ignore — it's the menu connection, so its `requirements`
+    # list in rulesdata_levels.py shouldn't gate it. Extra starters (world.
+    # start_sids) are reached from the hub via their precollected tokens.
     start_sid = world.start_sid
 
     start_region = multiworld.get_region(start_sid, player)
@@ -1501,8 +1513,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # --- Region connections: starting stage → every other stage ---
     # A stage's own field-token item is required to physically enter the stage.
     # The actual item name depends on field_token_granularity — per_stage uses
-    # `<sid> Field Token`, per_tile uses `<prefix> Tile Field Token`, per_tier
-    # uses `Tier <N> Field Token`.
+    # `<sid> Field Token`, per_tile uses `<prefix> Tile Field Token`.
     from . import gating as _gating
     ft_gran = world.options.field_token_granularity.value
     for stage in stages:
@@ -1513,7 +1524,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         connection = start_region.connect(child_region, f"{start_sid} -> {str_id}")
 
         token_name  = _gating.field_token_for_stage(str_id, ft_gran)
-        token_count = _gating.field_token_count_for_stage(str_id, ft_gran, start_sid)
+        token_count = _gating.field_token_count_for_stage(str_id, ft_gran, world.start_sids)
         if token_count == 1:
             connection.access_rule = (
                 lambda state, tok=token_name: state.has(tok, player)
@@ -1555,12 +1566,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     ft_progressive = ft_gran in (
         _gating.FIELD_PER_STAGE_PROGRESSIVE,
         _gating.FIELD_PER_TILE_PROGRESSIVE,
-        _gating.FIELD_PER_TIER_PROGRESSIVE,
     )
     # Stages immediately playable at session start under the chosen
     # field-token granularity (per_stage → just the starter; per_tile →
-    # the whole starter tile; per_tier → the whole starter tier). Their
-    # covering field token is precollected, the mod treats them as
+    # the whole starter tile). Their covering field token is
+    # precollected, the mod treats them as
     # `_freeStages` with no DNF/skill gates, so apworld must too:
     #   - Skip the gem-pouch WIZLOCK clause (HollowGemInjector substitutes
     #     Hollow Gems at runtime when the matching pouch isn't held).
@@ -1576,7 +1586,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # gem-typed achievement requirements) still goes through the strict
     # _compile_gempouch_checker — see _compile_gem_broadened for the
     # corresponding "no Hollow Gem credit" filter.
-    free_sids = set(_gating.free_stages_for_starter(start_sid, ft_gran))
+    free_sids = set(_gating.free_stages_for_starter(world.start_sids, ft_gran))
     pouch_free_sids = free_sids if pouch_mode != _g.POUCH_OFF else set()
     for stage in stages:
         sid = stage["str_id"]
@@ -1629,10 +1639,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
         # ---- DNF prereq closure (mixed cost) + _STAGE_CLEAR_RULES entry ----
         dnf_rule = None  # None means "no DNF gate" (start stage / free stage / empty reqs)
-        if sid != start_sid:
+        if sid not in world.start_sids:
             requirements = LEVEL_DATA[sid].get("requirements", [])
             token_name  = _gating.field_token_for_stage(sid, ft_gran)
-            token_count = _gating.field_token_count_for_stage(sid, ft_gran, start_sid)
+            token_count = _gating.field_token_count_for_stage(sid, ft_gran, world.start_sids)
             if token_count == 1:
                 token_check = lambda state, t=token_name: state.has(t, player)
             else:
@@ -1746,11 +1756,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     def _wl_rule(sid):
         # The starter GROUP is always reachable: the start stage AND its
-        # immediately-playable tile/tier mates (free_sids, tokens precollected).
+        # immediately-playable tile mates (free_sids, tokens precollected).
         # Exempting the whole group from the WL soft gate matches "play the
         # starter tile right away" and keeps parity with the shipped stage_gates
         # (fill_slot_data ships gate 0 for exactly this set).
-        if sid == start_sid or sid in free_sids:
+        if sid in world.start_sids or sid in free_sids:
             return _always_true
         g = int(_dg.GATE.get(sid, 0))
         if g <= 0:
@@ -1803,14 +1813,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     goal_value = world.options.goal.value
 
     if goal_value == 0:
-        # kill_gatekeeper: Requires completing A4 - Journey (tier 12)
+        # kill_gatekeeper: Requires completing A4 - Journey
         req = goal_requirements["kill_gatekeeper"]
         a4_journey_loc = "Complete A4 - Journey"
         victory_location = multiworld.get_location("Complete A4 - Frostborn Wrath Victory", player)
         victory_location.access_rule = lambda state, loc=a4_journey_loc: state.can_reach(loc, "Location", player)
 
     elif goal_value == 1:
-        # kill_swarm_queen: Requires completing K4 - Journey (tier 4)
+        # kill_swarm_queen: Requires completing K4 - Journey
         req = goal_requirements["kill_swarm_queen"]
         k4_journey_loc = "Complete K4 - Journey"
         victory_location = multiworld.get_location("Kill Swarm Queen Victory", player)

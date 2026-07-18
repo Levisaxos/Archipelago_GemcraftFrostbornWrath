@@ -767,13 +767,7 @@ package tracker {
             //   off (0)        → no gating, always true
             //   per_tile (1)   → state.has("Gempouch (<prefix>)")
             //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
-            //   per_tier (3)   → state.has("Tier <N> Gempouch") for stage's tier
-            //                    (requires a stage str_id reference; the
-            //                    requirement string only carries prefix, so
-            //                    per_tier is checked at stage-level — here we
-            //                    fall back to "any tier pouch held" which is
-            //                    permissive but safe for tracker preview)
-            //   global (4)     → state.has("Master Gempouch")
+            //   global (5)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
                 var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
@@ -801,30 +795,6 @@ package tracker {
                     if (progId <= 0) progId = 652;
                     return AV.sessionData.getItemCount(progId) >= idxP + 1;
                 }
-                if (mode == 3 || mode == 4) {
-                    // per_tier (3) and per_tier_progressive (4): without a specific stage in scope, accept if ANY tier pouch is held that covers a stage with this prefix.
-                    var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
-                    if (tierMap == null) return true;
-                    var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
-                    var tierOrd:Array = AV.serverData.serverOptions.progressiveTierOrder as Array;
-                    for (var sid:String in tierMap) {
-                        if (sid.charAt(0) == pouchPrefix) {
-                            var st:int = int(tierMap[sid]);
-                            if (mode == 3) {
-                                if (AV.sessionData.hasItem(1601 + st))
-                                    return true;
-                            } else if (tierProgId > 0) {
-                                // mode == 4: starter-first count threshold.
-                                var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                                  ? tierOrd.indexOf(st) : st;
-                                if (posT < 0) continue;
-                                if (AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                                    return true;
-                            }
-                        }
-                    }
-                    return false;
-                }
                 return true;
             }
 
@@ -833,15 +803,18 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N" — player must be able to call N waves early on
-            // some in-logic stage. Linked-wave pairs only count as ONE call
-            // (the follower spawns automatically with the leader), so we
-            // gate on CallableWaveCount, not total WaveCount. Matches the
-            // apworld split in requirement_tokens.py.
+            // "minWave: N" — an in-logic stage has N total waves of capacity.
+            // Backs "beat N waves", "cast N spells", "activate shrines", and the
+            // literal "call N waves early" family. Gates on total WaveCount (NOT
+            // vanilla CallableWaveCount): the LinkedWaveEarlyCredit patch restores
+            // full credit for linked followers, so the achievable early-call max
+            // is WaveCount - 1, and total-wave achievements need WaveCount anyway.
+            // Matches the apworld's requirement_tokens.py mapping AND the mod's own
+            // in-level evaluator (both use WaveCount for minWave).
             if (lower.indexOf("minwave") == 0) {
                 var cwNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
-                    && _fieldEvaluator.hasInLogicFieldWithMinCallableWaves(cwNeed);
+                    && _fieldEvaluator.hasInLogicFieldWithMinWaves(cwNeed);
             }
             // "beforeWave: N" — must beat the stage before wave N starts;
             // gates on the stage actually having N+ waves at all. Stays

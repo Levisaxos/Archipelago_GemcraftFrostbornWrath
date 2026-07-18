@@ -159,14 +159,6 @@ package ui {
                     tilePnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
                     tilePnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
                 }
-            } else if (mode == "tier") {
-                for (var tierKey:String in _mc.tierPanels) {
-                    var tier:int = int(tierKey);
-                    var tierPnl:McOptPanel = McOptPanel(_mc.tierPanels[tierKey]);
-                    tierPnl.addEventListener(MouseEvent.CLICK, _makeTierClickHandler(tier), false, 0, false);
-                    tierPnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
-                    tierPnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
-                }
             }
         }
 
@@ -274,9 +266,7 @@ package ui {
             // fieldTokenGranularity:
             //   0/1 = per_stage(_progressive)
             //   2/3 = per_tile(_progressive)
-            //   4/5 = per_tier(_progressive)
             var g:int = int(so.fieldTokenGranularity);
-            if (g >= 4) return "tier";
             if (g >= 2) return "tile";
             return "stage";
         }
@@ -336,21 +326,6 @@ package ui {
             _renderDebugOptions();
         }
 
-        private function _onTierClick(tier:int):void {
-            var stages:Array = _mc.tiersToStages[tier] as Array;
-            if (stages == null) return;
-            var allUnlocked:Boolean = true;
-            for (var i:int = 0; i < stages.length; i++) {
-                if (!_mod.isStageUnlocked(String(stages[i]))) { allUnlocked = false; break; }
-            }
-            for (var j:int = 0; j < stages.length; j++) {
-                var sid:String = String(stages[j]);
-                if (allUnlocked) _mod.lockStage(sid);
-                else if (!_mod.isStageUnlocked(sid)) _mod.unlockStage(sid);
-            }
-            _renderDebugOptions();
-        }
-
         private function _onTalismanClick(apId:int):void {
             _mod.debugLog("[Debug] talisman click apId=" + apId);
             _mod.debugGrantItem(apId);
@@ -390,9 +365,6 @@ package ui {
         }
         private function _makeTileClickHandler(letter:String):Function {
             return function(e:MouseEvent):void { _onTileClick(letter); };
-        }
-        private function _makeTierClickHandler(tier:int):Function {
-            return function(e:MouseEvent):void { _onTierClick(tier); };
         }
         private function _makeGrantHandler(handler:Function, apId:int):Function {
             return function(e:MouseEvent):void { handler(apId); };
@@ -447,11 +419,6 @@ package ui {
                         for (var letter:String in _mc.tilePanels) {
                             McOptPanel(_mc.tilePanels[letter]).btn.gotoAndStop(
                                 _allStagesUnlocked(_mc.tilesByLetter[letter] as Array) ? 2 : 1);
-                        }
-                    } else if (_mc.stageMode == "tier") {
-                        for (var tierKey:String in _mc.tierPanels) {
-                            McOptPanel(_mc.tierPanels[tierKey]).btn.gotoAndStop(
-                                _allStagesUnlocked(_mc.tiersToStages[int(tierKey)] as Array) ? 2 : 1);
                         }
                     }
                     break;

@@ -190,12 +190,12 @@ The exact item pool depends on your granularity choices — coarser settings put
 
 | Option | Default | Description |
 |---|---|---|
-| `starting_stage` | `random` | Which early stage you start on (W1–W4 / S1–S4). Every other stage must be unlocked through Archipelago. |
+| `starting_stage` | `random` | Which early stage you start on — one of the four W fields (W1–W4). Every other stage must be unlocked through Archipelago. Starter fields always grant ×2 XP (even on Hard/Extreme) to ease the opening. |
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
 | `field_token_granularity` | `per_tile` | How coarse stage-unlock items are: `per_stage` (122), `per_tile` (26), `per_tier` (13), or a `_progressive` variant of each. |
 | `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
 | `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
-| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). |
+| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). Hard and Extreme require Endurance mode enabled — it's the catch-up XP path if you get stuck. |
 | `xp_tome_bonus` | `100` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
@@ -210,7 +210,7 @@ The exact item pool depends on your granularity choices — coarser settings put
 
 | Option | Default | Description |
 |---|---|---|
-| `disable_endurance` | `false` | Permanently disables Endurance mode. |
+| `disable_endurance` | `false` | Permanently disables Endurance mode. Must stay `false` (Endurance ON) on Hard and Extreme — generation fails otherwise, since Endurance is the catch-up XP path there. |
 | `disable_trial` | `true` | Permanently disables Trial mode (no AP checks there, disabled by default). |
 | `enemy_hp_multiplier` | `100` | Enemy HP as a percentage of normal (50–200). |
 | `enemy_armor_multiplier` | `100` | Enemy armor as a percentage of normal (50–200). |

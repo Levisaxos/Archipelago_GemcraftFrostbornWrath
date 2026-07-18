@@ -524,7 +524,8 @@
       "description": "Build 10 traps.",
       "required_effort": "Trivial",
       "requirements": [
-        "sTraps"
+        "sTraps",
+        "min_wl:20"
       ],
       "details": "Build 10 traps in one battle."
     },
@@ -534,7 +535,8 @@
       "description": "Build 20 traps.",
       "required_effort": "Minor",
       "requirements": [
-        "sTraps"
+        "sTraps",
+        "min_wl:30"
       ],
       "details": "Build 20 traps in one battle."
     },
@@ -545,7 +547,7 @@
       "required_effort": "Major",
       "requirements": [
         "sTraps",
-        "fieldToken:25"
+        "min_wl:40"
       ]
     },
     "Razor Path": {
@@ -857,9 +859,7 @@
       "game_id": 43,
       "description": "Create a grade 3 gem.",
       "required_effort": "Trivial",
-      "requirements": [
-        "min_wl:10"
-      ],
+      "requirements": [],
       "details": "Create a grade-3 gem."
     },
     "Fifth Grader": {
@@ -868,7 +868,7 @@
       "description": "Create a grade 5 gem.",
       "required_effort": "Trivial",
       "requirements": [
-        "min_wl:20"
+        "min_wl:15"
       ],
       "details": "Create a grade-5 gem."
     },
@@ -1044,12 +1044,13 @@
     "Stirring Up the Nest": {
       "apId": 2520,
       "game_id": 203,
-      "description": "Deliver gem bomb and wasp kills only.",
+      "description": "Deliver gem bomb and wasp kills only, with at least 30 kills total. (Corrected vanilla bug: the in-game text omits the 30-kill minimum.)",
       "required_effort": "Minor",
       "requirements": [
         "min_wl:20"
       ],
-      "details": "In one battle, all kills come from gem bombs and wasps only."
+      "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed. (Corrected vanilla bug: vanilla text omits the 30-kill minimum.)",
+      "vanilla_correction": true
     },
     "Puncturing Shots": {
       "apId": 2420,
@@ -1533,13 +1534,14 @@
     "Getting Rid of Them": {
       "apId": 2212,
       "game_id": 344,
-      "description": "Drop 48 gem bombs on beacons.",
+      "description": "Drop 48 gem bombs on beacons or jars of wasps. (Corrected vanilla bug: the in-game text lists only beacons, but gem bombs on jars of wasps also count.)",
       "required_effort": "Minor",
       "requirements": [
         "eBeacon:4",
         "tDarkMasonry"
       ],
-      "details": "Throw 48 gem bombs at beacons in one battle."
+      "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle. (Corrected vanilla bug: vanilla text lists only beacons.)",
+      "vanilla_correction": true
     },
     "Raindrop": {
       "apId": 2436,
@@ -1736,9 +1738,7 @@
       "game_id": 346,
       "description": "Find 20 shadow cores.",
       "required_effort": "Trivial",
-      "requirements": [
-        "minWave:26"
-      ]
+      "requirements": []
     },
     "Core Pile": {
       "apId": 2105,
@@ -2832,13 +2832,14 @@
     "Green Vial": {
       "apId": 2224,
       "game_id": 204,
-      "description": "Have more than 75% of the monster kills caused by poison.",
+      "description": "Have more than 74% of the monster kills caused by poison. (Corrected vanilla bug: the in-game text says 75%, but the code checks >74%.)",
       "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "sTraps"
       ],
-      "details": "In one battle, at least 75% of kills are from poison damage."
+      "details": "In one battle, more than 74% of kills are from poison damage. (Corrected vanilla bug: vanilla text says 75%.)",
+      "vanilla_correction": true
     },
     "Unarmed": {
       "apId": 2586,
@@ -2854,7 +2855,7 @@
       "apId": 2356,
       "game_id": 399,
       "description": "Have no own buildings on the field at the end of the battle.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "requirements": [],
       "details": "End a battle with no friendly buildings remaining (demolish them all yourself)."
     },
@@ -3866,13 +3867,14 @@
     "Snow Dust": {
       "apId": 2496,
       "game_id": 193,
-      "description": "Kill 95 frozen monsters while it's snowing.",
+      "description": "Kill 100 frozen monsters while it's snowing. (Corrected vanilla bug: the in-game text says 95, but the code requires 100.)",
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
         "wSnow"
       ],
-      "details": "Kill 95 frozen monsters during snow weather."
+      "details": "Kill 100 frozen monsters during snow weather. (Corrected vanilla bug: vanilla text says 95.)",
+      "vanilla_correction": true
     },
     "Snow Blower": {
       "apId": 2495,
@@ -3942,20 +3944,23 @@
     "Absolute Zero": {
       "apId": 2003,
       "game_id": 126,
-      "description": "Kill 273 frozen monsters.",
+      "description": "Kill 273 frozen monsters that are not in a whiteout. (Corrected vanilla bug: the in-game text omits that frozen monsters also in a whiteout don't count.)",
       "required_effort": "Major",
       "requirements": [
         "sFreeze"
-      ]
+      ],
+      "vanilla_correction": true
     },
     "Crunchy Bites": {
       "apId": 2112,
       "game_id": 206,
-      "description": "Kill 160 frozen swarmlings.",
+      "description": "Kill 160 frozen swarmlings while they're in a whiteout. (Corrected vanilla bug: the in-game text omits the whiteout requirement.)",
       "required_effort": "Major",
       "requirements": [
-        "sFreeze"
-      ]
+        "sFreeze",
+        "sWhiteout"
+      ],
+      "vanilla_correction": true
     },
     "Purged": {
       "apId": 2421,
@@ -5974,12 +5979,13 @@
     "Ablatio Retinae": {
       "apId": 2002,
       "game_id": 311,
-      "description": "Whiteout 111 whited out monsters.",
+      "description": "Whiteout 90 whited out monsters. (Corrected vanilla bug: the in-game text says 111, but the code unlocks at 90.)",
       "required_effort": "Minor",
       "requirements": [
         "sWhiteout",
         "skillPoints:50"
-      ]
+      ],
+      "vanilla_correction": true
     },
     "Shavings All Around": {
       "apId": 2475,
@@ -6501,10 +6507,11 @@
     "Green Path": {
       "apId": 2223,
       "game_id": 609,
-      "description": "Kill 9.900 green blooded monsters.",
+      "description": "Kill 9.000 green blooded monsters. (Corrected vanilla bug: the in-game text says 9.900, but the code unlocks at 9.000.)",
       "required_effort": "Extreme",
       "requirements": [],
-      "untrackable": true
+      "untrackable": true,
+      "vanilla_correction": true
     },
     "Family Friendlier": {
       "apId": 2170,

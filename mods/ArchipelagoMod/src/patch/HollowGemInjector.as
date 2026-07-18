@@ -42,8 +42,8 @@ package patch {
      *     so achievement gates (e.g. "only mana leech gems") aren't polluted.
      *
      * Activation: AV.serverData.freeStages holds the starter stage str_id(s).
-     * Under per_stage granularity that's a single str_id; under per_tile or
-     * per_tier the entire covered set is included — Hollow Gem activates on
+     * Under per_stage granularity that's a single str_id; under per_tile
+     * the entire covered set is included — Hollow Gem activates on
      * any stage in the set when no covering pouch is held.
      * (e.g. "S2"). Active only on that exact stage and only when its prefix
      * letter has no Gempouch. Auto-deactivates once the pouch arrives.
@@ -188,7 +188,7 @@ package patch {
             }
 
             // Starter set may be a single stage (per_stage granularity) or an
-            // entire tile / tier worth of stages (per_tile / per_tier).
+            // entire tile worth of stages (per_tile).
             // Activate Hollow Gem bootstrap on any stage in the set.
             var inStarterSet:Boolean = false;
             for (var fi:int = 0; fi < freeStages.length; fi++) {

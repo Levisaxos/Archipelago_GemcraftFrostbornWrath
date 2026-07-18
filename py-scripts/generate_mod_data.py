@@ -166,6 +166,8 @@ def build_achievements(achievements: dict) -> dict:
             entry["details"] = data["details"]
         if data.get("untrackable"):
             entry["untrackable"] = True
+        if data.get("vanilla_correction"):
+            entry["vanilla_correction"] = True
         out[name] = entry
     return out
 

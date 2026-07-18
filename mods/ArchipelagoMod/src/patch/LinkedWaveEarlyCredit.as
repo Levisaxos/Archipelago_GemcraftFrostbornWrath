@@ -19,7 +19,10 @@ package patch {
      * frame.  When an early call advances currentWave by more than one (the
      * linked follower), it credits the extra wave(s) so a linked pair counts as
      * two.  After the fix the maximum is always waves.length - 1 regardless of
-     * links, which is exactly what the apworld's CallableWaveCount models.
+     * links. NOTE: that is HIGHER than the apworld's vanilla CallableWaveCount
+     * (which subtracts one per link); because this patch restores the linked
+     * credit, minWave:N logic gates on total WaveCount, not CallableWaveCount
+     * (see requirement_tokens.py / LogicEvaluator.as).
      *
      * Detection is delta-based and only acts on frames where wavesCalledEarly
      * actually increased, so naturally-arriving waves (which never touch the
