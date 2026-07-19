@@ -186,9 +186,23 @@ package tracker {
 
         /** AND-group with same-stage binding.  See evaluateRequirements doc. */
         private function _evaluateAndGroupBound(andGroup:Array):Boolean {
+            // A group with 2+ gem `sX` tokens must field all its colours on ONE
+            // stage — evaluating each gem via its own global broadening let two
+            // colours be satisfied on two different in-logic stages (Rotten Aura
+            // false-positive). Pull them out and bind them jointly below; single-
+            // gem groups keep the standard broadened path (unchanged).
+            var gemNames:Array = [];
+            for each (var scanReq:* in andGroup) {
+                var gn:String = _gemNameForToken(_trim(String(scanReq)));
+                if (gn != null) gemNames.push(gn);
+            }
+            var jointGems:Boolean = gemNames.length >= 2;
+
             var staticCandidates:Array = null;  // null = no per-stage constraint yet
             for each (var groupReq:* in andGroup) {
                 var rs:String = _trim(String(groupReq));
+                if (jointGems && _gemNameForToken(rs) != null)
+                    continue; // handled by the joint gem check below
                 var stages:Array = _qualifyingStagesForToken(rs);
                 if (stages == null) {
                     if (!evaluateRequirement(rs)) return false;
@@ -200,6 +214,11 @@ package tracker {
                         if (staticCandidates.length == 0) return false;
                     }
                 }
+            }
+            if (jointGems) {
+                // The joint check binds the colours AND the other per-stage
+                // tokens (staticCandidates) to a single in-logic stage.
+                return _jointGemStageInLogic(gemNames, staticCandidates);
             }
             if (staticCandidates == null) return true;
             if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
@@ -243,12 +262,23 @@ package tracker {
                 var andGroup:Array = group as Array;
                 if (andGroup == null)
                     continue;
+                // 2+ gem `sX` tokens bind jointly to a single stage (see
+                // _evaluateAndGroupBound) — treat them as a per-stage token here.
+                var gemNames:Array = [];
+                for each (var scanReq:* in andGroup)
+                {
+                    var gnc:String = _gemNameForToken(_trim(String(scanReq)));
+                    if (gnc != null) gemNames.push(gnc);
+                }
+                var jointGems:Boolean = gemNames.length >= 2;
                 var candidates:Array = null;    // null = no per-stage token yet
                 var hasStageToken:Boolean = false;
                 var nonStageOk:Boolean = true;
                 for each (var groupReq:* in andGroup)
                 {
                     var rs:String = _trim(String(groupReq));
+                    if (jointGems && _gemNameForToken(rs) != null)
+                        continue; // handled by the joint gem check below
                     var stages:Array = _qualifyingStagesForToken(rs);
                     if (stages == null)
                     {
@@ -269,6 +299,23 @@ package tracker {
                 }
                 if (!nonStageOk)
                     continue;
+                if (jointGems)
+                {
+                    // Doable HERE iff strId (within any other per-stage
+                    // constraint) can host all colours and is in logic.
+                    if (candidates != null)
+                    {
+                        var inCand:Boolean = false;
+                        for each (var cc:String in candidates)
+                        {
+                            if (cc == strId) { inCand = true; break; }
+                        }
+                        if (!inCand) continue;
+                    }
+                    if (_jointGemStageInLogic(gemNames, [strId]))
+                        return "specific";
+                    continue;
+                }
                 if (!hasStageToken)
                 {
                     sawGlobalGroup = true;
@@ -1870,6 +1917,68 @@ package tracker {
                 if (n >= need) out.push(sid);
             }
             return out;
+        }
+
+        /** Gem display name for a gem-skill token (`sPoison` -> "Poison"), or
+         *  null if `req` isn't a gem-skill token. Mirrors apworld's
+         *  _GEM_TOKEN_TO_GEM_NAME. */
+        private function _gemNameForToken(req:String):String {
+            if (req == null || req.length < 2) return null;
+            if (req.charAt(0) != "s" || !_isUpper(req.charAt(1))) return null;
+            if (req.indexOf(":") >= 0) return null;
+            var skillName:String = _skillPrefixMap[req];
+            if (skillName == null) return null;
+            return _GEM_SKILL_TO_GEM_NAME[skillName]; // null for non-gem skills
+        }
+
+        /** True iff some in-logic stage can field EVERY gem in `gemNames` AT
+         *  ONCE: pouch owned, pouch capacity (|stageAvailableGems|) >= count,
+         *  and each requested colour is held (skill item, works on any stage) OR
+         *  listed in that stage's pouch. When `candidates` is non-null the search
+         *  is restricted to it (the AND-group's other per-stage tokens), so the
+         *  colours and those tokens land on the SAME stage.
+         *
+         *  Mirrors apworld rules._compile_gems_joint. Without this, a multi-gem
+         *  achievement (Rotten Aura = sManaLeech + sPoison) passed when each
+         *  colour was creatable on a DIFFERENT in-logic stage, even with no
+         *  single beatable stage hosting both. */
+        private function _jointGemStageInLogic(gemNames:Array, candidates:Array):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return false;
+            var nNeed:int = gemNames.length;
+            var held:Object = {};
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                var sIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx))
+                    held[_GEM_SKILL_TO_GEM_NAME[skillName]] = true;
+            }
+            var candSet:Object = null;
+            if (candidates != null) {
+                candSet = {};
+                for each (var cs:String in candidates) candSet[cs] = true;
+            }
+            var pools:Object = AV.serverData.stageAvailableGems;
+            var fields:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in pools) {
+                if (fields[sid] != true) continue;
+                if (candSet != null && candSet[sid] !== true) continue;
+                if (sid.length == 0 || !AV.sessionData.hasPouchForPrefix(sid.charAt(0)))
+                    continue;
+                var arr:Array = pools[sid] as Array;
+                if (arr == null || arr.length < nNeed) continue; // pouch capacity
+                var stageSet:Object = {};
+                for each (var g:String in arr) stageSet[g] = true;
+                var allMet:Boolean = true;
+                for each (var need:String in gemNames) {
+                    if (stageSet[need] === true || held[need] === true) continue;
+                    allMet = false;
+                    break;
+                }
+                if (allMet) return true;
+            }
+            return false;
         }
 
         /** Count of gem skills 'available' on a specific stage (held OR

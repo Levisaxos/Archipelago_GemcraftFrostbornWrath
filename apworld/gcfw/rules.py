@@ -851,6 +851,53 @@ def _compile_can_create_any_gem(world):
     return _check
 
 
+def _compile_gems_joint(world, gem_tokens, stage_constraint=None):
+    """Compile a checker: True iff some in-logic stage can field EVERY gem in
+    `gem_tokens` (a list of `sX` requirement strings) AT ONCE.
+
+    A stage qualifies when it is clearable, its STRICT gempouch is owned, its
+    pouch has room for all requested colors (`len(AvailableGems) >= len(gems)`),
+    and each requested gem is either listed in the stage's AvailableGems or
+    granted globally by a held gem-skill item (which lets the player respawn any
+    color into a pouch slot — the same model as `_count_gem_skills_per_stage_max`).
+    When `stage_constraint` is given (the intersection of the AND-group's other
+    per-stage tokens), candidates are limited to it so the gems and those tokens
+    are satisfied on the SAME stage.
+
+    This generalises the single-gem `_gem_token` broadening to the multi-gem
+    achievements (Rotten Aura, Out of Misery, ...). Checking each gem
+    independently via its own global `_gem_token` closure let two colors be
+    satisfied on two DIFFERENT beatable stages, marking the achievement in-logic
+    even when no single beatable stage hosts both colors.
+    """
+    player = world.player
+    needed = frozenset(_GEM_TOKEN_TO_GEM_NAME[g.strip()] for g in gem_tokens)
+    n_needed = len(needed)
+    skill_items = {gem: item_prefix_map[tok]
+                   for tok, gem in _GEM_TOKEN_TO_GEM_NAME.items()}
+    candidates = []
+    for sid, stage_gems in _GEMS_BY_STAGE.items():
+        if len(stage_gems) < n_needed:
+            continue
+        if stage_constraint is not None and sid not in stage_constraint:
+            continue
+        candidates.append((sid, stage_gems, _compile_gempouch_checker(world, sid)))
+    if not candidates:
+        return _always_false
+    def _check(state):
+        held = frozenset(gem for gem, item in skill_items.items()
+                         if state.has(item, player))
+        for sid, stage_gems, pouch_ok in candidates:
+            if not needed <= (held | stage_gems):
+                continue
+            if not pouch_ok(state):
+                continue
+            if _can_clear_stage_cached(state, player, sid):
+                return True
+        return False
+    return _check
+
+
 # Per-predicate cost ranks used by `_compile_dnf` to short-circuit cheap
 # checks first. Tiers reflect average per-call work in a typical fill:
 #   0 = constant (always_true / always_false)
@@ -1255,7 +1302,21 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
     compiled_groups: list = []
     group_min_costs: list = []
     for group in groups:
-        items = [_compile_req(r, world, is_progressive) for r in group]
+        if not isinstance(group, list):
+            group = [group]
+        # A group with 2+ gem `sX` tokens must satisfy all its colors on ONE
+        # stage. Compiling each gem via its own global `_gem_token` closure lets
+        # two colors be satisfied on two different beatable stages (Rotten Aura
+        # false-positive). Pull them out and bind them jointly per-stage below;
+        # single-gem groups keep the standard `_gem_token` path (unchanged).
+        joint_gems = [r for r in group
+                      if isinstance(r, str) and r.strip() in _GEM_TOKEN_TO_GEM_NAME]
+        if len(joint_gems) >= 2:
+            rest = [r for r in group if r not in joint_gems]
+        else:
+            joint_gems = []
+            rest = group
+        items = [_compile_req(r, world, is_progressive) for r in rest]
         # Partition into globals (no per-stage binding) and static per-stage
         # tokens (carry a frozenset that AND-binds across the group).
         # Drop _always_true entries; collapse on _always_false.
@@ -1274,10 +1335,11 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
                 globals_list.append((fn, cost))
         if dead_group:
             continue  # this AND-group can never satisfy
-        if not globals_list and not static_sets:
+        if not joint_gems and not globals_list and not static_sets:
             # All predicates were always_true → group is unconditionally true,
             # so the whole DNF is true regardless of other groups.
             return _always_true
+        stage_constraint = None
         if static_sets:
             intersection = static_sets[0]
             for s in static_sets[1:]:
@@ -1287,11 +1349,20 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
             if not intersection:
                 # No stage satisfies all per-stage tokens in this AND-group.
                 continue
-            intersection = frozenset(intersection)
+            stage_constraint = frozenset(intersection)
+        if joint_gems:
+            # The joint checker binds the colors AND the other per-stage tokens
+            # (via stage_constraint) to a single clearable stage, so it replaces
+            # the standalone consolidated reach check for this group.
+            gem_check = _compile_gems_joint(world, joint_gems, stage_constraint)
+            if gem_check is _always_false:
+                continue  # no stage can host all colors (with the constraint)
+            globals_list.append((gem_check, _COST_REACH))
+        elif stage_constraint is not None:
             # One consolidated reach check replaces every individual static
             # per-stage closure in this AND-group.
             globals_list.append(
-                ((lambda state, _stages=intersection:
+                ((lambda state, _stages=stage_constraint:
                       _can_reach_any_stage(state, player, _stages)),
                  _COST_REACH)
             )

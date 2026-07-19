@@ -2405,7 +2405,7 @@ achievement_requirements = {
         "game_id": 329,
         "description": "Hit 475 frozen monsters with shrines.",
         "details": "Hit 475 frozen monsters with shrines.",
-        "requirements": ["sFreeze", "eShrine"],
+        "requirements": ["sFreeze", "eShrine", "minMonsters:475"],
         "required_effort": "Extreme",
     },
     "Twice the Shock": {
@@ -2422,8 +2422,8 @@ achievement_requirements = {
         "description": "Hit the same monster with traps 100 times.",
         "details": "Hit the same monster with traps 100 times.",
         "requirements": [
-            ["sTraps", "minMonsterHP:400"],
-            ["eTraps:1", "minMonsterHP:400"],
+            ["sTraps", "minMonsterHP:1000"],
+            ["eTraps:1", "minMonsterHP:1000"],
         ],
         "required_effort": "Minor",
     },
