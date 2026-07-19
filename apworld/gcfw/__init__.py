@@ -555,6 +555,7 @@ class GemcraftFrostbornWrathWorld(World):
             if ver is None:
                 ver = state._gcfw_ver = {}
             ver[self.player] = ver.get(self.player, 0) + 1
+            self._wl_base_delta(state, item, +1)
         return change
 
     def remove(self, state, item) -> bool:
@@ -564,7 +565,37 @@ class GemcraftFrostbornWrathWorld(World):
             if ver is None:
                 ver = state._gcfw_ver = {}
             ver[self.player] = ver.get(self.player, 0) + 1
+            self._wl_base_delta(state, item, -1)
         return change
+
+    # Running wizard-level base maintained incrementally so rules._wl_of is O(1)
+    # instead of re-summing 122 "<sid> Cleared" markers on every WL gate check.
+    # `_wl_xp_by_item` (name -> eff_xp) is published on the world in
+    # rules.set_rules; before that (e.g. precollect in __init__) it's absent and
+    # this is a no-op — no Cleared events are precollected, so the base stays 0.
+    # Only the 0<->1 count transition moves the base, matching _wl_of's binary
+    # `state.has` semantics. On first touch of an untracked state (a bare
+    # copy that never went through here) the base is recomputed from prog_items
+    # (which already reflects this collect/remove), so no delta is applied.
+    def _wl_base_delta(self, state, item, sign: int) -> None:
+        xp_map = getattr(self, "_wl_xp_by_item", None)
+        if xp_map is None:
+            return
+        xp = xp_map.get(item.name)
+        if not xp:
+            return
+        p = self.player
+        count = state.prog_items[p].get(item.name, 0)
+        if not ((sign > 0 and count == 1) or (sign < 0 and count == 0)):
+            return  # not a 0<->1 transition; base unchanged
+        base_map = getattr(state, "_gcfw_wl_base", None)
+        if base_map is None:
+            base_map = state._gcfw_wl_base = {}
+        if p in base_map:
+            base_map[p] += sign * xp
+        else:
+            base_map[p] = sum(x for n, x in self._wl_xp_items
+                              if state.prog_items[p].get(n, 0) > 0)
 
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):

@@ -1232,8 +1232,15 @@ def _compile_req(req: str, world, is_progressive: bool):
             return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
                     _COST_COUNTER, None)
         if group_name == "skillPoints":
-            return (lambda state: _count_skill_points(state, player) >= count_needed,
-                    _COST_COUNTER, None)
+            # skillPoints:N gates NOTHING server-side. Skill-point items are
+            # filler (see items_skillpoints.py), so they never enter prog_items
+            # and `state.count` can't see them — `_count_skill_points` is always
+            # 0, which would make `skillPoints:N` permanently FALSE and any
+            # achievement that lists it (Ablatio Retinae skillPoints:50, and the
+            # sManaLeech skillPoints:200 one) UNREACHABLE. The intent is a no-op
+            # pacing token (the mod still tracks real SP client-side for the
+            # tooltip); compile it to _always_true, exactly like `min_wl:N`.
+            return (_always_true, _COST_CONST, None)
 
         raise ValueError(f"Unknown gate: unrecognized counter requirement '{req}'")
 
@@ -1801,29 +1808,31 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
     _xp_items = [(f"{s} Cleared", x) for s, x in _eff.items() if x]
-    _xp_trait_names = _dg.XP_TRAIT_ITEM_NAMES
+    # Publish the "<sid> Cleared" -> XP map on the world so its collect/remove
+    # overrides can maintain a RUNNING WL base per player (add eff_xp on collect,
+    # subtract on remove). Since the trait multiplier was dropped (2026-07-19) WL
+    # is a plain accumulated sum, so it never needs the old 122-event re-sum on
+    # the fill hot path — see GemcraftFrostbornWrathWorld.collect + _wl_of below.
+    world._wl_xp_items = _xp_items
+    world._wl_xp_by_item = {name: x for name, x in _xp_items}
 
-    def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names,
-               _eff_wl=_dg.effective_trait_wl, _p=player):
-        # Memoise on the state signature: WL is a pure function of the collected
-        # "<sid> Cleared" events + XP traits (all progression), so it only needs
-        # recomputing when prog_items change. Without this the full XP sum +
-        # curve is redone on every WL gate check — the fill hot path (~60k calls).
-        cache = _get_counter_cache(state, _p)
-        v = cache.get("wl")
-        if v is not None:
-            return v
+    def _wl_of(state, _items=_xp_items, _lvl=_dg.level_from_xp, _p=player):
+        # O(1): read the running base_xp the collect/remove overrides keep on the
+        # state. A bare CollectionState.copy() doesn't carry custom attrs, so fall
+        # back to summing the held Cleared markers ONCE, then cache it on the copy
+        # so repeat calls stay O(1) (and any later collect on that copy applies its
+        # delta on top). WL == level_from_xp(base) — no multiplier, no curve.
+        base_map = getattr(state, "_gcfw_wl_base", None)
+        if base_map is not None and _p in base_map:
+            return _lvl(base_map[_p])
         base = 0
         for _name, _x in _items:
             if state.has(_name, _p):
                 base += _x
-        n = 0
-        for _t in _tn:
-            if state.has(_t, _p):
-                n += 1
-        v = _eff_wl(base, n)
-        cache["wl"] = v
-        return v
+        if base_map is None:
+            base_map = state._gcfw_wl_base = {}
+        base_map[_p] = base
+        return _lvl(base)
 
     def _wl_rule(sid):
         # The starter GROUP is always reachable: the start stage AND its

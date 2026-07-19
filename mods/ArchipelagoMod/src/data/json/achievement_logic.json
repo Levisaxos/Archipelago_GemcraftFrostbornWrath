@@ -3174,7 +3174,8 @@
       "required_effort": "Extreme",
       "requirements": [
         "sFreeze",
-        "eShrine"
+        "eShrine",
+        "minMonsters:475"
       ],
       "details": "Hit 475 frozen monsters with shrines."
     },
@@ -3196,11 +3197,11 @@
       "requirements": [
         [
           "sTraps",
-          "minMonsterHP:400"
+          "minMonsterHP:1000"
         ],
         [
           "eTraps:1",
-          "minMonsterHP:400"
+          "minMonsterHP:1000"
         ]
       ],
       "details": "Hit the same monster with traps 100 times."

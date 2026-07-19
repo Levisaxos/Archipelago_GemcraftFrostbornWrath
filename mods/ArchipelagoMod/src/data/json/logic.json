@@ -13,29 +13,7 @@
         "Slow"
       ],
       "waveCount": 6,
-      "requirements": [
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "W2",
@@ -50,29 +28,7 @@
         "Poison"
       ],
       "waveCount": 8,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "W3",
@@ -87,29 +43,7 @@
         "Slow"
       ],
       "waveCount": 12,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "W4",
@@ -123,29 +57,7 @@
         "Poison"
       ],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S1",
@@ -161,29 +73,7 @@
         "Slow"
       ],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S2",
@@ -197,29 +87,7 @@
         "Slow"
       ],
       "waveCount": 16,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S3",
@@ -234,29 +102,7 @@
         "Slow"
       ],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S4",
@@ -272,29 +118,7 @@
         "Armor Tear"
       ],
       "waveCount": 20,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V1",
@@ -309,17 +133,7 @@
         "Poison"
       ],
       "waveCount": 20,
-      "requirements": [
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V2",
@@ -335,17 +149,7 @@
         "Leech"
       ],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_V1"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V3",
@@ -358,17 +162,7 @@
         "Slow"
       ],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V4",
@@ -384,17 +178,7 @@
         "Slow"
       ],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ],
-        [
-          "Field_R2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R1",
@@ -409,17 +193,7 @@
         "Armor Tear"
       ],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_V1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R2",
@@ -434,17 +208,7 @@
         "Poison"
       ],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R3",
@@ -459,20 +223,7 @@
         "Bleed"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T3"
-        ],
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_U2"
-        ],
-        [
-          "Field_T2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R4",
@@ -487,20 +238,7 @@
         "Slow"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_U2"
-        ],
-        [
-          "Field_T3"
-        ],
-        [
-          "Field_T2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R5",
@@ -516,17 +254,7 @@
         "Poison"
       ],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_Y3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_R3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q1",
@@ -541,17 +269,7 @@
         "Bleed"
       ],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_R2"
-        ],
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q2",
@@ -566,17 +284,7 @@
         "Poison"
       ],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q3",
@@ -592,17 +300,7 @@
         "Slow"
       ],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q4",
@@ -617,17 +315,7 @@
         "Slow"
       ],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_U3"
-        ],
-        [
-          "Field_Q3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q5",
@@ -643,17 +331,7 @@
         "Poison"
       ],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_U4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T1",
@@ -668,17 +346,7 @@
         "Armor Tear"
       ],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ],
-        [
-          "Field_R2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T2",
@@ -693,17 +361,7 @@
         "Leech"
       ],
       "waveCount": 28,
-      "requirements": [
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_U4"
-        ],
-        [
-          "Field_Q4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T3",
@@ -718,17 +376,7 @@
         "Slow"
       ],
       "waveCount": 28,
-      "requirements": [
-        [
-          "Field_U4"
-        ],
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T4",
@@ -744,17 +392,7 @@
         "Slow"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U1",
@@ -770,17 +408,7 @@
         "Poison"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_Q3"
-        ],
-        [
-          "Field_U3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U2",
@@ -795,17 +423,7 @@
         "Slow"
       ],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U3",
@@ -818,17 +436,7 @@
         "Leech"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U4",
@@ -844,17 +452,7 @@
         "Armor Tear"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q3"
-        ],
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_U3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y1",
@@ -869,17 +467,7 @@
         "Poison"
       ],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_Y3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_R3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y2",
@@ -894,17 +482,7 @@
         "Armor Tear"
       ],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_N2"
-        ],
-        [
-          "Field_O4"
-        ],
-        [
-          "Field_N1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y3",
@@ -920,17 +498,7 @@
         "Poison"
       ],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_T2"
-        ],
-        [
-          "Field_U2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y4",
@@ -947,17 +515,7 @@
         "Slow"
       ],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_O2"
-        ],
-        [
-          "Field_P1"
-        ],
-        [
-          "Field_R6"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X1",
@@ -973,17 +531,7 @@
         "Poison"
       ],
       "waveCount": 42,
-      "requirements": [
-        [
-          "Field_P6"
-        ],
-        [
-          "Field_P4"
-        ],
-        [
-          "Field_P2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X2",
@@ -997,17 +545,7 @@
         "Slow"
       ],
       "waveCount": 48,
-      "requirements": [
-        [
-          "Field_L3"
-        ],
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X3",
@@ -1022,17 +560,7 @@
         "Armor Tear"
       ],
       "waveCount": 44,
-      "requirements": [
-        [
-          "Field_P6"
-        ],
-        [
-          "Field_P2"
-        ],
-        [
-          "Field_P4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X4",
@@ -1047,17 +575,7 @@
         "Poison"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ],
-        [
-          "Field_X1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z1",
@@ -1075,17 +593,7 @@
         "Poison"
       ],
       "waveCount": 44,
-      "requirements": [
-        [
-          "Field_P2"
-        ],
-        [
-          "Field_P6"
-        ],
-        [
-          "Field_P4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z2",
@@ -1099,17 +607,7 @@
         "Slow"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z3",
@@ -1123,17 +621,7 @@
         "Slow"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_K1"
-        ],
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_Z2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z4",
@@ -1146,17 +634,7 @@
         "Bleed"
       ],
       "waveCount": 48,
-      "requirements": [
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L3"
-        ],
-        [
-          "Field_L2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O1",
@@ -1172,17 +650,7 @@
         "Poison"
       ],
       "waveCount": 34,
-      "requirements": [
-        [
-          "Field_N1"
-        ],
-        [
-          "Field_N2"
-        ],
-        [
-          "Field_O4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O2",
@@ -1195,17 +663,7 @@
         "Armor Tear"
       ],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_O1"
-        ],
-        [
-          "Field_T5"
-        ],
-        [
-          "Field_Y2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O3",
@@ -1220,17 +678,7 @@
         "Poison"
       ],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_R3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_Y3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O4",
@@ -1247,17 +695,7 @@
         "Slow"
       ],
       "waveCount": 33,
-      "requirements": [
-        [
-          "Field_O3"
-        ],
-        [
-          "Field_Y1"
-        ],
-        [
-          "Field_R5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N1",
@@ -1273,17 +711,7 @@
         "Slow"
       ],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_R5"
-        ],
-        [
-          "Field_O3"
-        ],
-        [
-          "Field_Y1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N2",
@@ -1296,17 +724,7 @@
         "Poison"
       ],
       "waveCount": 36,
-      "requirements": [
-        [
-          "Field_Y1"
-        ],
-        [
-          "Field_R5"
-        ],
-        [
-          "Field_O3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N3",
@@ -1319,17 +737,7 @@
         "Armor Tear"
       ],
       "waveCount": 38,
-      "requirements": [
-        [
-          "Field_R6"
-        ],
-        [
-          "Field_P1"
-        ],
-        [
-          "Field_O2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N4",
@@ -1343,17 +751,7 @@
         "Poison"
       ],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_H5"
-        ],
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N5",
@@ -1367,17 +765,7 @@
         "Slow"
       ],
       "waveCount": 68,
-      "requirements": [
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ],
-        [
-          "Field_H5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P1",
@@ -1393,17 +781,7 @@
         "Slow"
       ],
       "waveCount": 38,
-      "requirements": [
-        [
-          "Field_T5"
-        ],
-        [
-          "Field_O1"
-        ],
-        [
-          "Field_Y2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P2",
@@ -1416,17 +794,7 @@
         "Slow"
       ],
       "waveCount": 42,
-      "requirements": [
-        [
-          "Field_P3"
-        ],
-        [
-          "Field_N3"
-        ],
-        [
-          "Field_Y4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P3",
@@ -1442,17 +810,7 @@
         "Armor Tear"
       ],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_O2"
-        ],
-        [
-          "Field_R6"
-        ],
-        [
-          "Field_P1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P4",
@@ -1469,20 +827,7 @@
         "Slow"
       ],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_N3"
-        ],
-        [
-          "Field_Y4"
-        ],
-        [
-          "Field_P5"
-        ],
-        [
-          "Field_P3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P5",
@@ -1497,15 +842,6 @@
       "waveCount": 40,
       "requirements": [
         [
-          "Field_P1",
-          "sTraps"
-        ],
-        [
-          "Field_R6",
-          "sTraps"
-        ],
-        [
-          "Field_O2",
           "sTraps"
         ]
       ]
@@ -1523,17 +859,7 @@
         "Bleed"
       ],
       "waveCount": 44,
-      "requirements": [
-        [
-          "Field_X1"
-        ],
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L2",
@@ -1548,17 +874,7 @@
         "Slow"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_K1"
-        ],
-        [
-          "Field_Z2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L3",
@@ -1574,17 +890,7 @@
         "Armor Tear"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z2"
-        ],
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_K1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L4",
@@ -1601,17 +907,7 @@
         "Poison"
       ],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L2"
-        ],
-        [
-          "Field_L3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L5",
@@ -1630,21 +926,6 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_E2",
-          "sBeam",
-          "sBolt",
-          "sBarrage",
-          "sFreeze"
-        ],
-        [
-          "Field_M3",
-          "sBeam",
-          "sBolt",
-          "sBarrage",
-          "sFreeze"
-        ],
-        [
-          "Field_M2",
           "sBeam",
           "sBolt",
           "sBarrage",
@@ -1666,17 +947,7 @@
         "Armor Tear"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K2",
@@ -1691,17 +962,7 @@
         "Slow"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K3",
@@ -1716,20 +977,7 @@
         "Poison"
       ],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_K5"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_L4"
-        ],
-        [
-          "Field_X2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K4",
@@ -1746,17 +994,7 @@
         "Slow"
       ],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ],
-        [
-          "Field_X1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H1",
@@ -1772,17 +1010,7 @@
         "Armor Tear"
       ],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M3"
-        ],
-        [
-          "Field_M2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H2",
@@ -1798,17 +1026,7 @@
         "Poison"
       ],
       "waveCount": 66,
-      "requirements": [
-        [
-          "Field_L5"
-        ],
-        [
-          "Field_F2"
-        ],
-        [
-          "Field_H1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H3",
@@ -1823,17 +1041,7 @@
         "Slow"
       ],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M3"
-        ],
-        [
-          "Field_M2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H4",
@@ -1850,17 +1058,7 @@
         "Slow"
       ],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_N4"
-        ],
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G1",
@@ -1878,20 +1076,7 @@
         "Poison"
       ],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_L4"
-        ],
-        [
-          "Field_X2"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_K5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G2",
@@ -1905,20 +1090,7 @@
         "Slow"
       ],
       "waveCount": 52,
-      "requirements": [
-        [
-          "Field_X2"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_K5"
-        ],
-        [
-          "Field_L4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G3",
@@ -1936,17 +1108,7 @@
         "Armor Tear"
       ],
       "waveCount": 55,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_J2"
-        ],
-        [
-          "Field_Z5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G4",
@@ -1961,17 +1123,7 @@
         "Leech"
       ],
       "waveCount": 56,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_J2"
-        ],
-        [
-          "Field_Z5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J1",
@@ -1988,17 +1140,7 @@
         "Slow"
       ],
       "waveCount": 55,
-      "requirements": [
-        [
-          "Field_K3"
-        ],
-        [
-          "Field_G2"
-        ],
-        [
-          "Field_G1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J2",
@@ -2011,17 +1153,7 @@
         "Poison"
       ],
       "waveCount": 54,
-      "requirements": [
-        [
-          "Field_G2"
-        ],
-        [
-          "Field_K3"
-        ],
-        [
-          "Field_G1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J3",
@@ -2037,17 +1169,7 @@
         "Slow"
       ],
       "waveCount": 56,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_Z5"
-        ],
-        [
-          "Field_J2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J4",
@@ -2061,17 +1183,7 @@
         "Armor Tear"
       ],
       "waveCount": 58,
-      "requirements": [
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G4"
-        ],
-        [
-          "Field_G3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M1",
@@ -2087,17 +1199,7 @@
         "Slow"
       ],
       "waveCount": 60,
-      "requirements": [
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G3"
-        ],
-        [
-          "Field_G4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M2",
@@ -2113,17 +1215,7 @@
         "Slow"
       ],
       "waveCount": 62,
-      "requirements": [
-        [
-          "Field_F1"
-        ],
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_M1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M3",
@@ -2140,17 +1232,7 @@
         "Poison"
       ],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_F1"
-        ],
-        [
-          "Field_M1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M4",
@@ -2166,20 +1248,7 @@
         "Poison"
       ],
       "waveCount": 66,
-      "requirements": [
-        [
-          "Field_L5"
-        ],
-        [
-          "Field_H1"
-        ],
-        [
-          "Field_F2"
-        ],
-        [
-          "Field_H3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F1",
@@ -2195,17 +1264,7 @@
         "Slow"
       ],
       "waveCount": 60,
-      "requirements": [
-        [
-          "Field_G3"
-        ],
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F2",
@@ -2219,17 +1278,7 @@
         "Armor Tear"
       ],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M2"
-        ],
-        [
-          "Field_M3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F3",
@@ -2245,17 +1294,7 @@
         "Bleed"
       ],
       "waveCount": 85,
-      "requirements": [
-        [
-          "Field_B5"
-        ],
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_C1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F4",
@@ -2269,17 +1308,7 @@
         "Slow"
       ],
       "waveCount": 88,
-      "requirements": [
-        [
-          "Field_F3"
-        ],
-        [
-          "Field_C3"
-        ],
-        [
-          "Field_B3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E1",
@@ -2295,17 +1324,7 @@
         "Slow"
       ],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_H5"
-        ],
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E2",
@@ -2321,17 +1340,7 @@
         "Poison"
       ],
       "waveCount": 62,
-      "requirements": [
-        [
-          "Field_M1"
-        ],
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_F1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E3",
@@ -2347,17 +1356,7 @@
         "Slow"
       ],
       "waveCount": 74,
-      "requirements": [
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_D1"
-        ],
-        [
-          "Field_H4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E4",
@@ -2375,17 +1374,7 @@
         "Slow"
       ],
       "waveCount": 74,
-      "requirements": [
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_H4"
-        ],
-        [
-          "Field_D1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D1",
@@ -2401,17 +1390,7 @@
         "Slow"
       ],
       "waveCount": 72,
-      "requirements": [
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ],
-        [
-          "Field_N4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D2",
@@ -2428,17 +1407,7 @@
         "Slow"
       ],
       "waveCount": 75,
-      "requirements": [
-        [
-          "Field_H4"
-        ],
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_D1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D3",
@@ -2455,17 +1424,7 @@
         "Armor Tear"
       ],
       "waveCount": 77,
-      "requirements": [
-        [
-          "Field_E3"
-        ],
-        [
-          "Field_E4"
-        ],
-        [
-          "Field_D2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D4",
@@ -2479,17 +1438,7 @@
         "Poison"
       ],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_N4"
-        ],
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B1",
@@ -2505,17 +1454,7 @@
         "Slow"
       ],
       "waveCount": 76,
-      "requirements": [
-        [
-          "Field_E4"
-        ],
-        [
-          "Field_E3"
-        ],
-        [
-          "Field_D2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B2",
@@ -2534,17 +1473,7 @@
         "Slow"
       ],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_D3"
-        ],
-        [
-          "Field_B1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B3",
@@ -2558,17 +1487,7 @@
         "Slow"
       ],
       "waveCount": 86,
-      "requirements": [
-        [
-          "Field_C1"
-        ],
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_B5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B4",
@@ -2582,20 +1501,7 @@
         "Poison"
       ],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_I2"
-        ],
-        [
-          "Field_D5"
-        ],
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C1",
@@ -2612,17 +1518,7 @@
         "Poison"
       ],
       "waveCount": 82,
-      "requirements": [
-        [
-          "Field_C2"
-        ],
-        [
-          "Field_I3"
-        ],
-        [
-          "Field_B4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C2",
@@ -2636,17 +1532,7 @@
         "Slow"
       ],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ],
-        [
-          "Field_I2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C3",
@@ -2662,17 +1548,7 @@
         "Slow"
       ],
       "waveCount": 84,
-      "requirements": [
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_B5"
-        ],
-        [
-          "Field_C1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C4",
@@ -2688,17 +1564,7 @@
         "Armor Tear"
       ],
       "waveCount": 87,
-      "requirements": [
-        [
-          "Field_C3"
-        ],
-        [
-          "Field_B3"
-        ],
-        [
-          "Field_F3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C5",
@@ -2715,17 +1581,7 @@
         "Armor Tear"
       ],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F3"
-        ],
-        [
-          "Field_B3"
-        ],
-        [
-          "Field_C3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A1",
@@ -2743,17 +1599,7 @@
         "Slow"
       ],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F4"
-        ],
-        [
-          "Field_C5"
-        ],
-        [
-          "Field_C4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A2",
@@ -2771,17 +1617,7 @@
         "Slow"
       ],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F4"
-        ],
-        [
-          "Field_C5"
-        ],
-        [
-          "Field_C4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A3",
@@ -2799,17 +1635,7 @@
         "Poison"
       ],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_A1"
-        ],
-        [
-          "Field_F5"
-        ],
-        [
-          "Field_A2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A4",
@@ -2826,17 +1652,7 @@
         "Slow"
       ],
       "waveCount": 100,
-      "requirements": [
-        [
-          "Field_A3"
-        ],
-        [
-          "Field_A6"
-        ],
-        [
-          "Field_A5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I2",
@@ -2852,17 +1668,7 @@
         "Slow"
       ],
       "waveCount": 78,
-      "requirements": [
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_B1"
-        ],
-        [
-          "Field_D3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I3",
@@ -2878,17 +1684,7 @@
         "Poison"
       ],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_D5"
-        ],
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I4",
@@ -2900,17 +1696,7 @@
         "Bleed"
       ],
       "waveCount": 82,
-      "requirements": [
-        [
-          "Field_C2"
-        ],
-        [
-          "Field_B4"
-        ],
-        [
-          "Field_I3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z5",
@@ -2922,17 +1708,7 @@
         "Leech"
       ],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_K3"
-        ],
-        [
-          "Field_G2"
-        ],
-        [
-          "Field_G1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T5",
@@ -2946,17 +1722,7 @@
         "Slow"
       ],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_N2"
-        ],
-        [
-          "Field_O4"
-        ],
-        [
-          "Field_N1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R6",
@@ -2970,17 +1736,7 @@
         "Bleed"
       ],
       "waveCount": 36,
-      "requirements": [
-        [
-          "Field_O1"
-        ],
-        [
-          "Field_Y2"
-        ],
-        [
-          "Field_T5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P6",
@@ -2997,20 +1753,7 @@
         "Slow"
       ],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_P5"
-        ],
-        [
-          "Field_Y4"
-        ],
-        [
-          "Field_N3"
-        ],
-        [
-          "Field_P3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K5",
@@ -3023,17 +1766,7 @@
         "Poison"
       ],
       "waveCount": 54,
-      "requirements": [
-        [
-          "Field_L2"
-        ],
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H5",
@@ -3050,20 +1783,7 @@
         "Slow"
       ],
       "waveCount": 68,
-      "requirements": [
-        [
-          "Field_H1"
-        ],
-        [
-          "Field_L5"
-        ],
-        [
-          "Field_F2"
-        ],
-        [
-          "Field_H3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F5",
@@ -3080,17 +1800,7 @@
         "Slow"
       ],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_C4"
-        ],
-        [
-          "Field_C5"
-        ],
-        [
-          "Field_F4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E5",
@@ -3103,17 +1813,7 @@
         "Poison"
       ],
       "waveCount": 78,
-      "requirements": [
-        [
-          "Field_D3"
-        ],
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_B1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B5",
@@ -3130,17 +1830,7 @@
         "Slow"
       ],
       "waveCount": 84,
-      "requirements": [
-        [
-          "Field_I3"
-        ],
-        [
-          "Field_C2"
-        ],
-        [
-          "Field_B4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A5",
@@ -3154,17 +1844,7 @@
         "Slow"
       ],
       "waveCount": 96,
-      "requirements": [
-        [
-          "Field_F5"
-        ],
-        [
-          "Field_A1"
-        ],
-        [
-          "Field_A2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A6",
@@ -3178,17 +1858,7 @@
         "Bleed"
       ],
       "waveCount": 99,
-      "requirements": [
-        [
-          "Field_A1"
-        ],
-        [
-          "Field_F5"
-        ],
-        [
-          "Field_A2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I1",
@@ -3204,17 +1874,7 @@
         "Bleed"
       ],
       "waveCount": 76,
-      "requirements": [
-        [
-          "Field_E4"
-        ],
-        [
-          "Field_E3"
-        ],
-        [
-          "Field_D2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D5",
@@ -3228,17 +1888,7 @@
         "Slow"
       ],
       "waveCount": 78,
-      "requirements": [
-        [
-          "Field_D3"
-        ],
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_B1"
-        ]
-      ]
+      "requirements": []
     }
   ],
   "matchingTalismans": {

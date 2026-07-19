@@ -38,11 +38,6 @@ level_requirements = {
         "MarkedMonsterCount": 57,
         "CallableWaveCount": 73,
         "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
-        "requirements": [
-            ["Field_F4"],
-            ["Field_C5"],
-            ["Field_C4"],
-        ],
     },
     "A2": {
         "type": "NORMAL",
@@ -64,11 +59,6 @@ level_requirements = {
         "MarkedMonsterCount": 147,
         "CallableWaveCount": 67,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "SLOWING"],
-        "requirements": [
-            ["Field_F4"],
-            ["Field_C5"],
-            ["Field_C4"],
-        ],
     },
     "A3": {
         "type": "NORMAL",
@@ -91,11 +81,6 @@ level_requirements = {
         "CallableWaveCount": 64,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON"],
         "BeaconCount": 10,
-        "requirements": [
-            ["Field_A1"],
-            ["Field_F5"],
-            ["Field_A2"],
-        ],
     },
     "A4": {
         "type": "NORMAL",
@@ -122,11 +107,6 @@ level_requirements = {
         "ObeliskCount": 2,
         "ShadowCount": 1,
         "WraithCount": 1,
-        "requirements": [
-            ["Field_A3"],
-            ["Field_A6"],
-            ["Field_A5"],
-        ],
     },
     "A5": {
         "type": "NORMAL",
@@ -148,11 +128,6 @@ level_requirements = {
         "MarkedMonsterCount": 118,
         "CallableWaveCount": 67,
         "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
-        "requirements": [
-            ["Field_F5"],
-            ["Field_A1"],
-            ["Field_A2"],
-        ],
     },
     "A6": {
         "type": "NORMAL",
@@ -174,11 +149,6 @@ level_requirements = {
         "MarkedMonsterCount": 104,
         "CallableWaveCount": 54,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
-        "requirements": [
-            ["Field_A1"],
-            ["Field_F5"],
-            ["Field_A2"],
-        ],
     },
     "B1": {
         "type": "NORMAL",
@@ -203,11 +173,6 @@ level_requirements = {
         "MonsterNestCount": 1,
         "TombCount": 1,
         "BarricadeCount": 24,
-        "requirements": [
-            ["Field_E4"],
-            ["Field_E3"],
-            ["Field_D2"],
-        ],
     },
     "B2": {
         "type": "NORMAL",
@@ -230,11 +195,6 @@ level_requirements = {
         "CallableWaveCount": 67,
         "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_I1"],
-            ["Field_D3"],
-            ["Field_B1"],
-        ],
     },
     "B3": {
         "type": "NORMAL",
@@ -257,11 +217,6 @@ level_requirements = {
         "CallableWaveCount": 73,
         "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "SLOWING"],
         "BarricadeCount": 10,
-        "requirements": [
-            ["Field_C1"],
-            ["Field_I4"],
-            ["Field_B5"],
-        ],
     },
     "B4": {
         "type": "NORMAL",
@@ -286,12 +241,6 @@ level_requirements = {
         "BarricadeCount": 10,
         "ShrineCount": 1,
         "SleepingHiveCount": 2,
-        "requirements": [
-            ["Field_I2"],
-            ["Field_D5"],
-            ["Field_E5"],
-            ["Field_B2"],
-        ],
     },
     "B5": {
         "type": "SECRET",
@@ -314,11 +263,6 @@ level_requirements = {
         "CallableWaveCount": 69,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "MonsterNestCount": 3,
-        "requirements": [
-            ["Field_I3"],
-            ["Field_C2"],
-            ["Field_B4"],
-        ],
     },
     "C1": {
         "type": "NORMAL",
@@ -344,11 +288,6 @@ level_requirements = {
         "BarricadeCount": 3,
         "BeaconCount": 8,
         "SealedGemCount": 1,
-        "requirements": [
-            ["Field_C2"],
-            ["Field_I3"],
-            ["Field_B4"],
-        ],
     },
     "C2": {
         "type": "NORMAL",
@@ -372,11 +311,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "CorruptedManaShardCount": 1,
         "ManaShardCount": 4,
-        "requirements": [
-            ["Field_E5"],
-            ["Field_B2"],
-            ["Field_I2"],
-        ],
     },
     "C3": {
         "type": "NORMAL",
@@ -400,11 +334,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "POISON", "SLOWING"],
         "MonsterNestCount": 2,
         "BarricadeCount": 27,
-        "requirements": [
-            ["Field_I4"],
-            ["Field_B5"],
-            ["Field_C1"],
-        ],
     },
     "C4": {
         "type": "TILE_GIVING",
@@ -428,11 +357,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
         "BeaconCount": 6,
         "ObeliskCount": 1,
-        "requirements": [
-            ["Field_C3"],
-            ["Field_B3"],
-            ["Field_F3"],
-        ],
     },
     "C5": {
         "type": "EPIC",
@@ -456,11 +380,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
         "LanternCount": 4,
         "ShadowCount": 1,
-        "requirements": [
-            ["Field_F3"],
-            ["Field_B3"],
-            ["Field_C3"],
-        ],
     },
     "D1": {
         "type": "NORMAL",
@@ -483,11 +402,6 @@ level_requirements = {
         "CallableWaveCount": 62,
         "AvailableGems": ["MANA_LEECHING", "POISON", "SLOWING"],
         "BarricadeCount": 6,
-        "requirements": [
-            ["Field_N5"],
-            ["Field_E1"],
-            ["Field_N4"],
-        ],
     },
     "D2": {
         "type": "NORMAL",
@@ -510,11 +424,6 @@ level_requirements = {
         "CallableWaveCount": 68,
         "AvailableGems": ["CRITHIT", "BLEEDING", "SLOWING"],
         "MonsterNestCount": 4,
-        "requirements": [
-            ["Field_H4"],
-            ["Field_D4"],
-            ["Field_D1"],
-        ],
     },
     "D3": {
         "type": "EPIC",
@@ -535,11 +444,6 @@ level_requirements = {
         "MonstersBeforeWave12": 148,
         "CallableWaveCount": 64,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
-        "requirements": [
-            ["Field_E3"],
-            ["Field_E4"],
-            ["Field_D2"],
-        ],
     },
     "D4": {
         "type": "NORMAL",
@@ -562,11 +466,6 @@ level_requirements = {
         "CallableWaveCount": 61,
         "AvailableGems": ["CRITHIT", "BLEEDING", "POISON"],
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_N4"],
-            ["Field_N5"],
-            ["Field_E1"],
-        ],
     },
     "D5": {
         "type": "NORMAL",
@@ -588,11 +487,6 @@ level_requirements = {
         "MarkedMonsterCount": 24,
         "CallableWaveCount": 64,
         "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
-        "requirements": [
-            ["Field_D3"],
-            ["Field_I1"],
-            ["Field_B1"],
-        ],
     },
     "E1": {
         "type": "NORMAL",
@@ -617,11 +511,6 @@ level_requirements = {
         "LanternCount": 4,
         "PylonCount": 2,
         "BarricadeCount": 10,
-        "requirements": [
-            ["Field_H5"],
-            ["Field_M4"],
-            ["Field_H2"],
-        ],
     },
     "E2": {
         "type": "NORMAL",
@@ -644,11 +533,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "POISON"],
         "MonsterNestCount": 1,
         "SpireCount": 1,
-        "requirements": [
-            ["Field_M1"],
-            ["Field_J4"],
-            ["Field_F1"],
-        ],
     },
     "E3": {
         "type": "NORMAL",
@@ -672,11 +556,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "BLEEDING", "SLOWING"],
         "MonsterNestCount": 3,
         "BarricadeCount": 1,
-        "requirements": [
-            ["Field_D4"],
-            ["Field_D1"],
-            ["Field_H4"],
-        ],
     },
     "E4": {
         "type": "EPIC",
@@ -702,11 +581,6 @@ level_requirements = {
         "ManaShardCount": 9,
         "ShadowCount": 1,
         "SpecterCount": 1,
-        "requirements": [
-            ["Field_D4"],
-            ["Field_H4"],
-            ["Field_D1"],
-        ],
     },
     "E5": {
         "type": "SECRET",
@@ -730,11 +604,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "POISON"],
         "TombCount": 3,
         "BarricadeCount": 6,
-        "requirements": [
-            ["Field_D3"],
-            ["Field_I1"],
-            ["Field_B1"],
-        ],
     },
     "F1": {
         "type": "NORMAL",
@@ -760,11 +629,6 @@ level_requirements = {
         "OldWallCount": 22,
         "AbandonedDwellingCount": 13,
         "DropHolderCount": 19,
-        "requirements": [
-            ["Field_G3"],
-            ["Field_J3"],
-            ["Field_G4"],
-        ],
     },
     "F2": {
         "type": "NORMAL",
@@ -787,11 +651,6 @@ level_requirements = {
         "CallableWaveCount": 56,
         "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_E2"],
-            ["Field_M2"],
-            ["Field_M3"],
-        ],
     },
     "F3": {
         "type": "NORMAL",
@@ -816,11 +675,6 @@ level_requirements = {
         "TombCount": 1,
         "BarricadeCount": 6,
         "RainCount": 1,
-        "requirements": [
-            ["Field_B5"],
-            ["Field_I4"],
-            ["Field_C1"],
-        ],
     },
     "F4": {
         "type": "NORMAL",
@@ -844,11 +698,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "BLEEDING", "SLOWING"],
         "BarricadeCount": 14,
         "RainCount": 1,
-        "requirements": [
-            ["Field_F3"],
-            ["Field_C3"],
-            ["Field_B3"],
-        ],
     },
     "F5": {
         "type": "SECRET",
@@ -873,11 +722,6 @@ level_requirements = {
         "OldWallCount": 50,
         "BarricadeCount": 12,
         "RainCount": 1,
-        "requirements": [
-            ["Field_C4"],
-            ["Field_C5"],
-            ["Field_F4"],
-        ],
     },
     "G1": {
         "type": "NORMAL",
@@ -900,12 +744,6 @@ level_requirements = {
         "CallableWaveCount": 40,
         "AvailableGems": ["CRITHIT", "BLEEDING", "POISON"],
         "PylonCount": 4,
-        "requirements": [
-            ["Field_L4"],
-            ["Field_X2"],
-            ["Field_Z4"],
-            ["Field_K5"],
-        ],
     },
     "G2": {
         "type": "NORMAL",
@@ -928,12 +766,6 @@ level_requirements = {
         "CallableWaveCount": 47,
         "AvailableGems": ["MANA_LEECHING", "POISON", "SLOWING"],
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_X2"],
-            ["Field_Z4"],
-            ["Field_K5"],
-            ["Field_L4"],
-        ],
     },
     "G3": {
         "type": "EPIC",
@@ -957,11 +789,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING"],
         "OldWallCount": 30,
         "ShadowCount": 1,
-        "requirements": [
-            ["Field_J1"],
-            ["Field_J2"],
-            ["Field_Z5"],
-        ],
     },
     "G4": {
         "type": "TILE_GIVING",
@@ -986,11 +813,6 @@ level_requirements = {
         "TowerCount": 7,
         "WallCount": 9,
         "OldWallCount": 104,
-        "requirements": [
-            ["Field_J1"],
-            ["Field_J2"],
-            ["Field_Z5"],
-        ],
     },
     "H1": {
         "type": "NORMAL",
@@ -1013,11 +835,6 @@ level_requirements = {
         "CallableWaveCount": 56,
         "AvailableGems": ["CRITHIT", "BLEEDING", "ARMOR_TEARING"],
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_E2"],
-            ["Field_M3"],
-            ["Field_M2"],
-        ],
     },
     "H2": {
         "type": "NORMAL",
@@ -1041,11 +858,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "BLEEDING", "POISON"],
         "BeaconCount": 3,
         "ShrineCount": 2,
-        "requirements": [
-            ["Field_L5"],
-            ["Field_F2"],
-            ["Field_H1"],
-        ],
     },
     "H3": {
         "type": "TILE_GIVING",
@@ -1068,11 +880,6 @@ level_requirements = {
         "CallableWaveCount": 56,
         "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "BarricadeCount": 23,
-        "requirements": [
-            ["Field_E2"],
-            ["Field_M3"],
-            ["Field_M2"],
-        ],
     },
     "H4": {
         "type": "NORMAL",
@@ -1094,11 +901,6 @@ level_requirements = {
         "MarkedMonsterCount": 86,
         "CallableWaveCount": 64,
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "POISON", "SLOWING"],
-        "requirements": [
-            ["Field_N4"],
-            ["Field_N5"],
-            ["Field_E1"],
-        ],
     },
     "H5": {
         "type": "SECRET",
@@ -1121,12 +923,6 @@ level_requirements = {
         "CallableWaveCount": 60,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "BarricadeCount": 23,
-        "requirements": [
-            ["Field_H1"],
-            ["Field_L5"],
-            ["Field_F2"],
-            ["Field_H3"],
-        ],
     },
     "I1": {
         "type": "NORMAL",
@@ -1150,11 +946,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING"],
         "TowerCount": 1,
         "BarricadeCount": 5,
-        "requirements": [
-            ["Field_E4"],
-            ["Field_E3"],
-            ["Field_D2"],
-        ],
     },
     "I2": {
         "type": "NORMAL",
@@ -1179,11 +970,6 @@ level_requirements = {
         "TombCount": 1,
         "AbandonedDwellingCount": 4,
         "DropHolderCount": 7,
-        "requirements": [
-            ["Field_I1"],
-            ["Field_B1"],
-            ["Field_D3"],
-        ],
     },
     "I3": {
         "type": "NORMAL",
@@ -1206,11 +992,6 @@ level_requirements = {
         "CallableWaveCount": 69,
         "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "BarricadeCount": 32,
-        "requirements": [
-            ["Field_D5"],
-            ["Field_E5"],
-            ["Field_B2"],
-        ],
     },
     "I4": {
         "type": "NORMAL",
@@ -1226,11 +1007,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING"],
         "BarricadeCount": 12,
         "RainCount": 1,
-        "requirements": [
-            ["Field_C2"],
-            ["Field_B4"],
-            ["Field_I3"],
-        ],
     },
     "J1": {
         "type": "NORMAL",
@@ -1253,11 +1029,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "ARMOR_TEARING", "SLOWING"],
         "MonsterNestCount": 2,
         "RainCount": 1,
-        "requirements": [
-            ["Field_K3"],
-            ["Field_G2"],
-            ["Field_G1"],
-        ],
     },
     "J2": {
         "type": "NORMAL",
@@ -1285,11 +1056,6 @@ level_requirements = {
         "ManaShardCount": 4,
         "RainCount": 1,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_G2"],
-            ["Field_K3"],
-            ["Field_G1"],
-        ],
     },
     "J3": {
         "type": "NORMAL",
@@ -1315,11 +1081,6 @@ level_requirements = {
         "TowerCount": 1,
         "TombCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_J1"],
-            ["Field_Z5"],
-            ["Field_J2"],
-        ],
     },
     "J4": {
         "type": "TILE_GIVING",
@@ -1345,11 +1106,6 @@ level_requirements = {
         "ManaShardCount": 4,
         "RainCount": 1,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_J3"],
-            ["Field_G4"],
-            ["Field_G3"],
-        ],
     },
     "K1": {
         "type": "STORY_RELATED",
@@ -1373,11 +1129,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "ARMOR_TEARING"],
         "LanternCount": 4,
         "WatchtowerCount": 1,
-        "requirements": [
-            ["Field_L1"],
-            ["Field_X4"],
-            ["Field_K4"],
-        ],
     },
     "K2": {
         "type": "NORMAL",
@@ -1402,11 +1153,6 @@ level_requirements = {
         "TowerCount": 2,
         "OldWallCount": 64,
         "BarricadeCount": 6,
-        "requirements": [
-            ["Field_X4"],
-            ["Field_L1"],
-            ["Field_K4"],
-        ],
     },
     "K3": {
         "type": "NORMAL",
@@ -1430,12 +1176,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterNestCount": 1,
         "ManaShardCount": 1,
-        "requirements": [
-            ["Field_K5"],
-            ["Field_Z4"],
-            ["Field_L4"],
-            ["Field_X2"],
-        ],
     },
     "K4": {
         "type": "EPIC",
@@ -1459,11 +1199,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "SLOWING"],
         "TowerCount": 3,
         "SwarmQueenCount": 1,
-        "requirements": [
-            ["Field_Z1"],
-            ["Field_X3"],
-            ["Field_X1"],
-        ],
     },
     "K5": {
         "type": "SECRET",
@@ -1482,11 +1217,6 @@ level_requirements = {
         "CallableWaveCount": 43,
         "AvailableGems": ["CRITHIT", "POISON"],
         "MonsterNestCount": 5,
-        "requirements": [
-            ["Field_L2"],
-            ["Field_Z3"],
-            ["Field_L3"],
-        ],
     },
     "L1": {
         "type": "NORMAL",
@@ -1511,11 +1241,6 @@ level_requirements = {
         "MonsterNestCount": 5,
         "BeaconCount": 4,
         "RainCount": 1,
-        "requirements": [
-            ["Field_X1"],
-            ["Field_Z1"],
-            ["Field_X3"],
-        ],
     },
     "L2": {
         "type": "NORMAL",
@@ -1538,11 +1263,6 @@ level_requirements = {
         "AvailableGems": ["POISON", "SLOWING"],
         "DropHolderCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_K2"],
-            ["Field_K1"],
-            ["Field_Z2"],
-        ],
     },
     "L3": {
         "type": "NORMAL",
@@ -1569,11 +1289,6 @@ level_requirements = {
         "ManaShardCount": 3,
         "RainCount": 1,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_Z2"],
-            ["Field_K2"],
-            ["Field_K1"],
-        ],
     },
     "L4": {
         "type": "EPIC",
@@ -1598,11 +1313,6 @@ level_requirements = {
         "TowerCount": 6,
         "BarricadeCount": 4,
         "WizardHunterCount": 1,
-        "requirements": [
-            ["Field_Z3"],
-            ["Field_L2"],
-            ["Field_L3"],
-        ],
     },
     "L5": {
         "type": "EPIC",
@@ -1626,11 +1336,7 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "SLOWING"],
         "MonsterNestCount": 2,
         "WizardTowerCount": 1,
-        "requirements": [
-            ["Field_E2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
-            ["Field_M3", "sBeam", "sBolt", "sBarrage", "sFreeze"],
-            ["Field_M2", "sBeam", "sBolt", "sBarrage", "sFreeze"],
-        ],
+        "requirements": [["sBeam", "sBolt", "sBarrage", "sFreeze"]],
     },
     "M1": {
         "type": "NORMAL",
@@ -1655,11 +1361,6 @@ level_requirements = {
         "MonsterNestCount": 5,
         "AbandonedDwellingCount": 4,
         "RainCount": 1,
-        "requirements": [
-            ["Field_J3"],
-            ["Field_G3"],
-            ["Field_G4"],
-        ],
     },
     "M2": {
         "type": "NORMAL",
@@ -1683,11 +1384,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "POISON", "SLOWING"],
         "MonsterNestCount": 3,
         "RainCount": 1,
-        "requirements": [
-            ["Field_F1"],
-            ["Field_J4"],
-            ["Field_M1"],
-        ],
     },
     "M3": {
         "type": "NORMAL",
@@ -1718,11 +1414,6 @@ level_requirements = {
         "DropHolderCount": 1,
         "ManaShardCount": 2,
         "RainCount": 1,
-        "requirements": [
-            ["Field_J4"],
-            ["Field_F1"],
-            ["Field_M1"],
-        ],
     },
     "M4": {
         "type": "NORMAL",
@@ -1746,12 +1437,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "RainCount": 1,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_L5"],
-            ["Field_H1"],
-            ["Field_F2"],
-            ["Field_H3"],
-        ],
     },
     "N1": {
         "type": "NORMAL",
@@ -1774,11 +1459,6 @@ level_requirements = {
         "CallableWaveCount": 32,
         "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_R5"],
-            ["Field_O3"],
-            ["Field_Y1"],
-        ],
     },
     "N2": {
         "type": "NORMAL",
@@ -1804,11 +1484,6 @@ level_requirements = {
         "BarricadeCount": 16,
         "ManaShardCount": 2,
         "RainCount": 1,
-        "requirements": [
-            ["Field_Y1"],
-            ["Field_R5"],
-            ["Field_O3"],
-        ],
     },
     "N3": {
         "type": "NORMAL",
@@ -1834,11 +1509,6 @@ level_requirements = {
         "ManaShardCount": 2,
         "RainCount": 1,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_R6"],
-            ["Field_P1"],
-            ["Field_O2"],
-        ],
     },
     "N4": {
         "type": "NORMAL",
@@ -1862,11 +1532,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING", "ARMOR_TEARING", "POISON"],
         "MonsterNestCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_H5"],
-            ["Field_M4"],
-            ["Field_H2"],
-        ],
     },
     "N5": {
         "type": "NORMAL",
@@ -1891,11 +1556,6 @@ level_requirements = {
         "AmplifierCount": 1,
         "OldWallCount": 62,
         "RainCount": 1,
-        "requirements": [
-            ["Field_M4"],
-            ["Field_H2"],
-            ["Field_H5"],
-        ],
     },
     "O1": {
         "type": "NORMAL",
@@ -1918,11 +1578,6 @@ level_requirements = {
         "CallableWaveCount": 31,
         "AvailableGems": ["MANA_LEECHING", "POISON"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_N1"],
-            ["Field_N2"],
-            ["Field_O4"],
-        ],
     },
     "O2": {
         "type": "NORMAL",
@@ -1948,11 +1603,6 @@ level_requirements = {
         "BeaconCount": 6,
         "DropHolderCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_O1"],
-            ["Field_T5"],
-            ["Field_Y2"],
-        ],
     },
     "O3": {
         "type": "NORMAL",
@@ -1976,11 +1626,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING", "POISON"],
         "MonsterNestCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_R3"],
-            ["Field_R4"],
-            ["Field_Y3"],
-        ],
     },
     "O4": {
         "type": "EPIC",
@@ -2010,11 +1655,6 @@ level_requirements = {
         "BarricadeCount": 9,
         "DropHolderCount": 2,
         "RainCount": 1,
-        "requirements": [
-            ["Field_O3"],
-            ["Field_Y1"],
-            ["Field_R5"],
-        ],
     },
     "P1": {
         "type": "NORMAL",
@@ -2037,11 +1677,6 @@ level_requirements = {
         "CallableWaveCount": 33,
         "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_T5"],
-            ["Field_O1"],
-            ["Field_Y2"],
-        ],
     },
     "P2": {
         "type": "NORMAL",
@@ -2067,11 +1702,6 @@ level_requirements = {
         "MonsterNestCount": 1,
         "BeaconCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_P3"],
-            ["Field_N3"],
-            ["Field_Y4"],
-        ],
     },
     "P3": {
         "type": "NORMAL",
@@ -2093,11 +1723,6 @@ level_requirements = {
         "CallableWaveCount": 38,
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_O2"],
-            ["Field_R6"],
-            ["Field_P1"],
-        ],
     },
     "P4": {
         "type": "EPIC",
@@ -2122,12 +1747,6 @@ level_requirements = {
         "MonsterNestCount": 1,
         "BarricadeCount": 12,
         "RainCount": 1,
-        "requirements": [
-            ["Field_N3"],
-            ["Field_Y4"],
-            ["Field_P5"],
-            ["Field_P3"],
-        ],
     },
     "P5": {
         "type": "NORMAL",
@@ -2151,11 +1770,7 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "POISON"],
         "MonsterNestCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_P1", "sTraps"],
-            ["Field_R6", "sTraps"],
-            ["Field_O2", "sTraps"],
-        ],
+        "requirements": [["sTraps"]],
     },
     "P6": {
         "type": "SECRET",
@@ -2170,12 +1785,6 @@ level_requirements = {
         "CallableWaveCount": 38,
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "BLEEDING", "ARMOR_TEARING", "POISON", "SLOWING"],
         "RainCount": 1,
-        "requirements": [
-            ["Field_P5"],
-            ["Field_Y4"],
-            ["Field_N3"],
-            ["Field_P3"],
-        ],
     },
     "Q1": {
         "type": "NORMAL",
@@ -2193,11 +1802,6 @@ level_requirements = {
         "CallableWaveCount": 21,
         "AvailableGems": ["CRITHIT", "BLEEDING"],
         "ApparitionCount": 1,
-        "requirements": [
-            ["Field_R2"],
-            ["Field_V3"],
-            ["Field_Q2"],
-        ],
     },
     "Q2": {
         "type": "NORMAL",
@@ -2218,11 +1822,6 @@ level_requirements = {
         "AmplifierCount": 1,
         "TowerCount": 2,
         "BarricadeCount": 6,
-        "requirements": [
-            ["Field_S4"],
-            ["Field_V2"],
-            ["Field_R1"],
-        ],
     },
     "Q3": {
         "type": "NORMAL",
@@ -2245,11 +1844,6 @@ level_requirements = {
         "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "PylonCount": 1,
         "TowerCount": 2,
-        "requirements": [
-            ["Field_T1"],
-            ["Field_V4"],
-            ["Field_Q1"],
-        ],
     },
     "Q4": {
         "type": "EPIC",
@@ -2279,11 +1873,6 @@ level_requirements = {
         "DropHolderCount": 3,
         "RainCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_T4"],
-            ["Field_U3"],
-            ["Field_Q3"],
-        ],
     },
     "Q5": {
         "type": "NORMAL",
@@ -2307,11 +1896,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "MANA_LEECHING", "POISON"],
         "TrapCount": 4,
         "BarricadeCount": 11,
-        "requirements": [
-            ["Field_Q4"],
-            ["Field_U1"],
-            ["Field_U4"],
-        ],
     },
     "R1": {
         "type": "NORMAL",
@@ -2333,11 +1917,6 @@ level_requirements = {
         "WallCount": 14,
         "OldWallCount": 11,
         "BarricadeCount": 11,
-        "requirements": [
-            ["Field_V1"],
-            ["Field_S2"],
-            ["Field_S1"],
-        ],
     },
     "R2": {
         "type": "EPIC",
@@ -2355,11 +1934,6 @@ level_requirements = {
         "CallableWaveCount": 21,
         "AvailableGems": ["BLEEDING", "POISON"],
         "TrapCount": 4,
-        "requirements": [
-            ["Field_S4"],
-            ["Field_V2"],
-            ["Field_R1"],
-        ],
     },
     "R3": {
         "type": "NORMAL",
@@ -2383,12 +1957,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "BLEEDING"],
         "BarricadeCount": 16,
         "RainCount": 1,
-        "requirements": [
-            ["Field_T3"],
-            ["Field_Q5"],
-            ["Field_U2"],
-            ["Field_T2"],
-        ],
     },
     "R4": {
         "type": "NORMAL",
@@ -2414,12 +1982,6 @@ level_requirements = {
         "TowerCount": 3,
         "AbandonedDwellingCount": 2,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_Q5"],
-            ["Field_U2"],
-            ["Field_T3"],
-            ["Field_T2"],
-        ],
     },
     "R5": {
         "type": "EPIC",
@@ -2443,11 +2005,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "POISON"],
         "PylonCount": 4,
         "TowerCount": 2,
-        "requirements": [
-            ["Field_Y3"],
-            ["Field_R4"],
-            ["Field_R3"],
-        ],
     },
     "R6": {
         "type": "SECRET",
@@ -2473,11 +2030,6 @@ level_requirements = {
         "AbandonedDwellingCount": 2,
         "ApparitionCount": 1,
         "RainCount": 1,
-        "requirements": [
-            ["Field_O1"],
-            ["Field_Y2"],
-            ["Field_T5"],
-        ],
     },
     "S1": {
         "type": "NORMAL",
@@ -2492,15 +2044,6 @@ level_requirements = {
         "AvailableGems": ["MANA_LEECHING", "SLOWING"],
         "TrapCount": 4,
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S2"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "S2": {
         "type": "NORMAL",
@@ -2517,15 +2060,6 @@ level_requirements = {
         "AbandonedDwellingCount": 1,
         "BeaconCount": 2,
         "DropHolderCount": 1,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "S3": {
         "type": "NORMAL",
@@ -2542,15 +2076,6 @@ level_requirements = {
         "TowerCount": 1,
         "OldWallCount": 1,
         "MonsterNestCount": 1,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S4"],
-        ],
     },
     "S4": {
         "type": "EPIC",
@@ -2572,15 +2097,6 @@ level_requirements = {
         "WallCount": 22,
         "OldWallCount": 57,
         "BeaconCount": 1,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S3"],
-        ],
     },
     "T1": {
         "type": "NORMAL",
@@ -2602,11 +2118,6 @@ level_requirements = {
         "MonsterNestCount": 2,
         "BeaconCount": 2,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_V3"],
-            ["Field_Q2"],
-            ["Field_R2"],
-        ],
     },
     "T2": {
         "type": "STORY_RELATED",
@@ -2630,11 +2141,6 @@ level_requirements = {
         "AmplifierCount": 3,
         "WallCount": 16,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_U1"],
-            ["Field_U4"],
-            ["Field_Q4"],
-        ],
     },
     "T3": {
         "type": "NORMAL",
@@ -2659,11 +2165,6 @@ level_requirements = {
         "MonsterNestCount": 1,
         "BeaconCount": 5,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_U4"],
-            ["Field_Q4"],
-            ["Field_U1"],
-        ],
     },
     "T4": {
         "type": "EPIC",
@@ -2683,11 +2184,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "AbandonedDwellingCount": 8,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_T1"],
-            ["Field_V4"],
-            ["Field_Q1"],
-        ],
     },
     "T5": {
         "type": "SECRET",
@@ -2706,11 +2202,6 @@ level_requirements = {
         "CallableWaveCount": 35,
         "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
         "SnowCount": 1,
-        "requirements": [
-            ["Field_N2"],
-            ["Field_O4"],
-            ["Field_N1"],
-        ],
     },
     "U1": {
         "type": "NORMAL",
@@ -2728,11 +2219,6 @@ level_requirements = {
         "CallableWaveCount": 29,
         "AvailableGems": ["BLEEDING", "POISON"],
         "SnowCount": 1,
-        "requirements": [
-            ["Field_T4"],
-            ["Field_Q3"],
-            ["Field_U3"],
-        ],
     },
     "U2": {
         "type": "NORMAL",
@@ -2751,11 +2237,6 @@ level_requirements = {
         "CallableWaveCount": 30,
         "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "SnowCount": 1,
-        "requirements": [
-            ["Field_U1"],
-            ["Field_Q4"],
-            ["Field_U4"],
-        ],
     },
     "U3": {
         "type": "NORMAL",
@@ -2775,11 +2256,6 @@ level_requirements = {
         "ManaShardCount": 2,
         "ShrineCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_V4"],
-            ["Field_T1"],
-            ["Field_Q1"],
-        ],
     },
     "U4": {
         "type": "EPIC",
@@ -2800,11 +2276,6 @@ level_requirements = {
         "AbandonedDwellingCount": 3,
         "ManaShardCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_Q3"],
-            ["Field_T4"],
-            ["Field_U3"],
-        ],
     },
     "V1": {
         "type": "NORMAL",
@@ -2821,11 +2292,6 @@ level_requirements = {
         "MonstersBeforeWave12": 142,
         "CallableWaveCount": 18,
         "AvailableGems": ["ARMOR_TEARING", "POISON"],
-        "requirements": [
-            ["Field_W4"],
-            ["Field_W2"],
-            ["Field_W3"],
-        ],
     },
     "V2": {
         "type": "NORMAL",
@@ -2845,11 +2311,6 @@ level_requirements = {
         "TowerCount": 10,
         "BeaconCount": 2,
         "ShrineCount": 1,
-        "requirements": [
-            ["Field_V1"],
-            ["Field_S3"],
-            ["Field_S1"],
-        ],
     },
     "V3": {
         "type": "NORMAL",
@@ -2867,11 +2328,6 @@ level_requirements = {
         "CallableWaveCount": 19,
         "AvailableGems": ["POISON", "SLOWING"],
         "MonsterNestCount": 2,
-        "requirements": [
-            ["Field_V2"],
-            ["Field_S4"],
-            ["Field_R1"],
-        ],
     },
     "V4": {
         "type": "EPIC",
@@ -2890,11 +2346,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "AmplifierCount": 7,
         "TowerCount": 2,
-        "requirements": [
-            ["Field_V3"],
-            ["Field_Q2"],
-            ["Field_R2"],
-        ],
     },
     "W1": {
         "type": "NORMAL",
@@ -2908,15 +2359,6 @@ level_requirements = {
         "CallableWaveCount": 5,
         "AvailableGems": ["ARMOR_TEARING", "SLOWING"],
         "TowerCount": 5,
-        "requirements": [
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "W2": {
         "type": "NORMAL",
@@ -2930,15 +2372,6 @@ level_requirements = {
         "CallableWaveCount": 7,
         "AvailableGems": ["ARMOR_TEARING", "POISON"],
         "TowerCount": 4,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W3"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "W3": {
         "type": "STORY_RELATED",
@@ -2951,15 +2384,6 @@ level_requirements = {
         "MonstersBeforeWave12": 131,
         "CallableWaveCount": 11,
         "AvailableGems": ["MANA_LEECHING", "SLOWING"],
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W4"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "W4": {
         "type": "EPIC",
@@ -2975,15 +2399,6 @@ level_requirements = {
         "TowerCount": 8,
         "WallCount": 4,
         "BarricadeCount": 6,
-        "requirements": [
-            ["Field_W1"],
-            ["Field_W2"],
-            ["Field_W3"],
-            ["Field_S1"],
-            ["Field_S2"],
-            ["Field_S3"],
-            ["Field_S4"],
-        ],
     },
     "X1": {
         "type": "NORMAL",
@@ -3008,11 +2423,6 @@ level_requirements = {
         "MonsterNestCount": 2,
         "JarOfWaspsCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_P6"],
-            ["Field_P4"],
-            ["Field_P2"],
-        ],
     },
     "X2": {
         "type": "NORMAL",
@@ -3040,11 +2450,6 @@ level_requirements = {
         "DropHolderCount": 1,
         "JarOfWaspsCount": 3,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_L3"],
-            ["Field_Z3"],
-            ["Field_L2"],
-        ],
     },
     "X3": {
         "type": "NORMAL",
@@ -3073,11 +2478,6 @@ level_requirements = {
         "BarricadeCount": 5,
         "ManaShardCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_P6"],
-            ["Field_P2"],
-            ["Field_P4"],
-        ],
     },
     "X4": {
         "type": "EPIC",
@@ -3106,11 +2506,6 @@ level_requirements = {
         "ManaShardCount": 3,
         "SnowCount": 1,
         "WraithCount": 1,
-        "requirements": [
-            ["Field_Z1"],
-            ["Field_X3"],
-            ["Field_X1"],
-        ],
     },
     "Y1": {
         "type": "NORMAL",
@@ -3133,11 +2528,6 @@ level_requirements = {
         "AvailableGems": ["BLEEDING", "POISON"],
         "SleepingHiveCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_Y3"],
-            ["Field_R4"],
-            ["Field_R3"],
-        ],
     },
     "Y2": {
         "type": "NORMAL",
@@ -3163,11 +2553,6 @@ level_requirements = {
         "BarricadeCount": 6,
         "ManaShardCount": 1,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_N2"],
-            ["Field_O4"],
-            ["Field_N1"],
-        ],
     },
     "Y3": {
         "type": "STORY_RELATED",
@@ -3190,11 +2575,6 @@ level_requirements = {
         "CallableWaveCount": 27,
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "POISON"],
         "SnowCount": 1,        
-        "requirements": [
-            ["Field_Q5"],
-            ["Field_T2"],
-            ["Field_U2"],
-        ],
     },
     "Y4": {
         "type": "EPIC",
@@ -3220,11 +2600,6 @@ level_requirements = {
         "ManaShardCount": 1,
         "SnowCount": 1,
         "SpecterCount": 1,
-        "requirements": [
-            ["Field_O2"],
-            ["Field_P1"],
-            ["Field_R6"],
-        ],
     },
     "Z1": {
         "type": "NORMAL",
@@ -3249,11 +2624,6 @@ level_requirements = {
         "MonsterNestCount": 4,
         "BeaconCount": 6,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_P2"],
-            ["Field_P6"],
-            ["Field_P4"],
-        ],
     },
     "Z2": {
         "type": "NORMAL",
@@ -3275,11 +2645,6 @@ level_requirements = {
         "CallableWaveCount": 44,
         "AvailableGems": ["ARMOR_TEARING", "POISON", "SLOWING"],
         "SnowCount": 1,
-        "requirements": [
-            ["Field_L1"],
-            ["Field_X4"],
-            ["Field_K4"],
-        ],
     },
     "Z3": {
         "type": "NORMAL",
@@ -3303,11 +2668,6 @@ level_requirements = {
         "AvailableGems": ["CRITHIT", "ARMOR_TEARING", "SLOWING"],
         "ManaShardCount": 4,
         "SnowCount": 1,
-        "requirements": [
-            ["Field_K1"],
-            ["Field_K2"],
-            ["Field_Z2"],
-        ],
     },
     "Z4": {
         "type": "NORMAL",
@@ -3332,11 +2692,6 @@ level_requirements = {
         "MonsterNestCount": 1,
         "AbandonedDwellingCount": 7,
         "DropHolderCount": 4,
-        "requirements": [
-            ["Field_Z3"],
-            ["Field_L3"],
-            ["Field_L2"],
-        ],
     },
     "Z5": {
         "type": "SECRET",
@@ -3351,10 +2706,5 @@ level_requirements = {
         "CallableWaveCount": 45,
         "AvailableGems": ["MANA_LEECHING"],
         "ManaShardCount": 1,
-        "requirements": [
-            ["Field_K3"],
-            ["Field_G2"],
-            ["Field_G1"],
-        ],
     },
 }

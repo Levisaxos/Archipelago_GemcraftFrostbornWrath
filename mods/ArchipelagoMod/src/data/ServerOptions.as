@@ -105,7 +105,7 @@ package data {
             achievementMinWl = {};
             wlEffXp = {};
             xpTraitApIds = [];
-            xpTraitMultiplier = [1.0, 1.2, 1.44, 1.728, 2.0736];
+            xpTraitMultiplier = [1.0, 1.0, 1.0, 1.0, 1.0]; // DROPPED 2026-07-19: trait multiplier no longer affects WL. Slot_data ships [1,1,1,1,1]; this fallback matches.
             xpTraitMinWl = [0, 10, 20, 30, 40];
             startingStages = ["W1"];
             fieldTokenPlacement = 1;

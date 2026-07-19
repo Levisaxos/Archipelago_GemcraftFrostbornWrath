@@ -123,10 +123,29 @@ starter_stages = ["W1", "W2", "W3", "W4"]
 # minxp, gates rescaled). Re-running the OLD exporter that scales to per-difficulty
 # targets would OVERWRITE it — update the exporter to the minxp model first.
 difficulty_target_final_wl = {
-    "Easy":    86,
-    "Medium":  86,
-    "Hard":    86,
-    "Extreme": 86,
+    "Easy":    100,
+    "Medium":  100,
+    "Hard":    100,
+    "Extreme": 100,
+}
+
+# Hidden per-TILE XP-curve multiplier. Reshapes the raw-sim baseline into a
+# "rise then plateau" curve: early tiles worth a lot (fast early progression),
+# late tiles cut hard so the endgame flattens instead of exploding. Applied to
+# `eff_xp` by do not commit/py-scripts/apply_xp_curve.py (which rescales the
+# whole thing so a full clear == difficulty_target_final_wl and recomputes the
+# gates).
+#
+# CRITICAL: the mod must apply the IDENTICAL table as a hidden multiplier on
+# monster XP (on top of the Easy/Medium/Hard/Extreme real-XP multiplier), or the
+# tracker's "in logic" WL will disagree with the player's real in-game WL. This
+# table is the single source of truth — keep the mod copy byte-identical.
+tile_xp_multiplier = {
+    "W": 1.90, "S": 1.85, "V": 1.80, "Q": 1.85, "R": 0.95,
+    "O": 1.40, "T": 1.20, "U": 1.35, "Y": 1.25, "P": 1.15,
+    "Z": 1.15, "X": 1.05, "K": 1.05, "N": 0.80, "L": 0.95, "G": 1.00,
+    "J": 0.70, "M": 0.65, "H": 0.65,
+    "E": 0.55, "F": 0.50, "D": 0.55, "I": 0.55, "C": 0.45, "B": 0.40, "A": 0.30,
 }
 
 # There is ONE gate (required wizard level) per level, the same on every
