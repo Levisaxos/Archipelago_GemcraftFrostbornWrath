@@ -40,6 +40,7 @@ package {
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
+    import patch.TalismanFragmentTooltipOverlay;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -71,6 +72,7 @@ package {
     import patch.WavePrePatcher;
     import patch.LinkedWaveEarlyCredit;
     import patch.ExtraShadowCorePerWave;
+    import patch.OrbIntactWaveFix;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
@@ -126,6 +128,7 @@ package {
         private var _bezel:Bezel;
         private var _modButtons:ModButtons;
         private var _talismanShop:TalismanShop;
+        private var _talismanFragmentTooltip:TalismanFragmentTooltipOverlay;
         private var _slotSettings:ScrSlotSettings;
 
         private var _systemToast:SystemToast;
@@ -172,6 +175,7 @@ package {
         private var _wavePrePatcher:WavePrePatcher;
         private var _linkedWaveEarlyCredit:LinkedWaveEarlyCredit;
         private var _extraShadowCorePerWave:ExtraShadowCorePerWave;
+        private var _orbIntactWaveFix:OrbIntactWaveFix;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
@@ -270,6 +274,7 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _linkedWaveEarlyCredit = new LinkedWaveEarlyCredit(_logger, MOD_NAME);
                 _extraShadowCorePerWave = new ExtraShadowCorePerWave(_logger, MOD_NAME);
+                _orbIntactWaveFix = new OrbIntactWaveFix(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
@@ -390,6 +395,11 @@ package {
                 // perfect-placement talisman fragments with shadow cores.
                 _talismanShop = new TalismanShop(_logger, MOD_NAME, _talismanUnlocker);
 
+                // Marks AP-sourced fragments with an "Archipelago item" line in
+                // their vanilla hover tooltip (inventory / active slots).
+                _talismanFragmentTooltip = new TalismanFragmentTooltipOverlay(
+                    _logger, MOD_NAME, _talismanUnlocker);
+
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
                 _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
@@ -446,6 +456,7 @@ package {
                 _talismanShop.dispose();
                 _talismanShop = null;
             }
+            _talismanFragmentTooltip = null;
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -1153,6 +1164,10 @@ package {
                 _wavePrePatcher.applyIfReady();
                 _linkedWaveEarlyCredit.onIngameFrame();
                 _extraShadowCorePerWave.onIngameFrame();
+                // Unlock the "keep the orb intact for N waves" achievements at
+                // the stated wave count (vanilla's -1 counter base makes them
+                // require N+1). AP-only so a standalone battle stays vanilla.
+                if (_active && _orbIntactWaveFix != null) _orbIntactWaveFix.onIngameFrame();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
@@ -1283,6 +1298,15 @@ package {
             if (_talismanShop != null) {
                 try { _talismanShop.onSelectorFrame(); }
                 catch (eShop:Error) { _logger.log(MOD_NAME, "talismanShop error: " + eShop.message); }
+            }
+
+            // Mark AP-sourced fragments in their hover tooltip. Only while an AP
+            // session is active so it never touches a standalone slot's tooltips,
+            // and not while the AP Shop popup is up (it owns its own tooltips).
+            if (_active && _talismanFragmentTooltip != null
+                    && (_talismanShop == null || !_talismanShop.isOpen)) {
+                try { _talismanFragmentTooltip.onSelectorFrame(); }
+                catch (eTft:Error) { _logger.log(MOD_NAME, "talismanFragmentTooltip error: " + eTft.message); }
             }
         }
 

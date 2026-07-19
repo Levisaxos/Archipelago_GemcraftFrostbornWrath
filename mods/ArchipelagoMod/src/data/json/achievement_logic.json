@@ -1496,7 +1496,7 @@
       "description": "Don't let any monster touch your orb for 20 beaten waves.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:21"
+        "minWave:20"
       ]
     },
     "Tightly Secured": {
@@ -1505,7 +1505,7 @@
       "description": "Don't let any monster touch your orb for 60 beaten waves.",
       "required_effort": "Minor",
       "requirements": [
-        "minWave:61"
+        "minWave:60"
       ],
       "details": "60 consecutive waves with no monster touching the orb."
     },
@@ -1515,7 +1515,7 @@
       "description": "Don't let any monster touch your orb for 120 beaten waves.",
       "required_effort": "Major",
       "requirements": [
-        "minWave:121",
+        "minWave:120",
         "mEndurance"
       ],
       "details": "Survive 120 consecutive waves without any monster reaching the orb."
@@ -1526,7 +1526,7 @@
       "description": "Don't let any monster touch your orb for 240 beaten waves.",
       "required_effort": "Extreme",
       "requirements": [
-        "minWave:241",
+        "minWave:240",
         "mEndurance"
       ],
       "details": "Survive 240 consecutive waves without any monster reaching the orb."
@@ -3127,12 +3127,13 @@
     "Deal Some Damage Too": {
       "apId": 2116,
       "game_id": 469,
-      "description": "Have 5 traps with bolt enhanced gems in them.",
+      "description": "Have 6 traps with bolt enhanced gems in them. (Corrected vanilla bug: the in-game text says 5, but the check runs before the newly enhanced gem counts, so 6 are actually required.)",
       "required_effort": "Minor",
       "requirements": [
         "sBolt",
         "eTraps"
-      ]
+      ],
+      "vanilla_correction": true
     },
     "Shovel Swing": {
       "apId": 2480,
@@ -4392,7 +4393,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sBleeding",
-        "sManaLeech"
+        "sManaLeech",
+        "min_wl:30"
       ]
     },
     "Painful Leech": {
@@ -4402,7 +4404,8 @@
       "required_effort": "Major",
       "requirements": [
         "sBleeding",
-        "sManaLeech"
+        "sManaLeech",
+        "min_wl:40"
       ]
     },
     "Mana Cult": {
@@ -4412,7 +4415,8 @@
       "required_effort": "Extreme",
       "requirements": [
         "sBleeding",
-        "sManaLeech"
+        "sManaLeech",
+        "min_wl:50"
       ],
       "details": "Leech 6,500 mana from bleeding monsters."
     },
@@ -4423,7 +4427,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
-        "sPoison"
+        "sPoison",
+        "min_wl:30"
       ]
     },
     "Mana of the Dying": {
@@ -4433,7 +4438,8 @@
       "required_effort": "Major",
       "requirements": [
         "sManaLeech",
-        "sPoison"
+        "sPoison",
+        "min_wl:40"
       ]
     },
     "To the Last Drop": {
@@ -4443,7 +4449,8 @@
       "required_effort": "Extreme",
       "requirements": [
         "sManaLeech",
-        "sPoison"
+        "sPoison",
+        "min_wl:50"
       ],
       "details": "Leech 4,700 mana from poisoned monsters."
     },
@@ -4485,11 +4492,10 @@
       "apId": 2632,
       "game_id": 232,
       "description": "Leech 10.000 mana with gems.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "sManaLeech",
-        "talismanRow:1",
-        "fieldToken:15"
+        "min_wl:50"
       ]
     },
     "Red Orange": {
@@ -4500,7 +4506,7 @@
       "requirements": [
         "sBleeding",
         "sManaLeech",
-        "minMonsters:200"
+        "min_wl:30"
       ],
       "details": "Leech 700 mana from bleeding monsters."
     },
@@ -4511,7 +4517,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
-        "sPoison"
+        "sPoison",
+        "min_wl:30"
       ]
     },
     "Mana Blinded": {
@@ -4521,7 +4528,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sManaLeech",
-        "sWhiteout"
+        "sWhiteout",
+        "min_wl:40"
       ],
       "details": "Leech 900 mana from whited-out monsters."
     },
@@ -4533,7 +4541,6 @@
       "requirements": [
         "sManaLeech",
         "eTraps",
-        "fieldToken:40",
         "sBeam"
       ]
     },
@@ -4545,7 +4552,7 @@
       "requirements": [
         "tRitual",
         "eShadow",
-        "fieldToken:50",
+        "min_wl:50",
         "talismanRow:1"
       ],
       "details": "Lose 3,333 mana to shadows."

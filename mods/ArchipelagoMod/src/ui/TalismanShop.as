@@ -88,6 +88,11 @@ package ui {
         private var _popup:Sprite;
         private var _open:Boolean = false;
 
+        /** True while the shop popup is open. The fragment-tooltip overlay skips
+         *  its work when the shop is up — the shop drives its own fragment
+         *  tooltips and parks the vanilla hover zone. */
+        public function get isOpen():Boolean { return _open; }
+
         // Cells of the currently-built popup, for frame-driven positional hover
         // (robust to rebuilds — rollover events get lost when the grid is
         // rebuilt under a stationary pointer). Each: {frag, entry, x, y, w, h}.
