@@ -59,6 +59,12 @@ import os as _os
 # prove the version stamp changes only speed, not logic.
 _USE_VERSTAMP = _os.environ.get("GCFW_NO_VERSTAMP", "0") != "1"
 
+# A/B switch for the FUSED token+WL stage-entrance closure. Fused and composed
+# forms are the same boolean — this exists purely so a fixed seed can be
+# generated both ways and diffed to prove the fusion changes speed, not logic.
+# GCFW_NO_FUSE=1 forces the old `_compose_and` path.
+_FUSE_ENTRANCE = _os.environ.get("GCFW_NO_FUSE", "0") != "1"
+
 
 def _gcfw_state_sig(state, player: int):
     # Fast path: an O(1) per-player version stamp maintained by the world's
@@ -1622,6 +1628,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # `<sid> Field Token`, per_tile uses `<prefix> Tile Field Token`.
     from . import gating as _gating
     ft_gran = world.options.field_token_granularity.value
+    # sid -> (token_name, token_count); lets the WL loop below FUSE the token
+    # and WL predicates into ONE entrance closure instead of composing them.
+    _entrance_token: dict = {}
     for stage in stages:
         str_id = stage["str_id"]
         if str_id == start_sid:
@@ -1631,6 +1640,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
         token_name  = _gating.field_token_for_stage(str_id, ft_gran)
         token_count = _gating.field_token_count_for_stage(str_id, ft_gran, world.start_sids)
+        _entrance_token[str_id] = (token_name, token_count)
         if token_count == 1:
             connection.access_rule = (
                 lambda state, tok=token_name: state.has(tok, player)
@@ -1874,21 +1884,26 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
     _plxp = _dg.player_level_xp_req  # WL gate -> minimum XP that reaches it
 
-    def _wl_rule(sid):
-        # The starter GROUP is always reachable: the start stage AND its
-        # immediately-playable tile mates (free_sids, tokens precollected).
-        # Exempting the whole group from the WL soft gate matches "play the
-        # starter tile right away" and keeps parity with the shipped stage_gates
-        # (fill_slot_data ships gate 0 for exactly this set).
+    def _wl_threshold(sid):
+        """Raw-XP threshold for this stage's WL soft gate, or None when exempt.
+        The starter GROUP is always reachable: the start stage AND its
+        immediately-playable tile mates (free_sids, tokens precollected).
+        Exempting the whole group matches "play the starter tile right away" and
+        keeps parity with the shipped stage_gates (fill_slot_data ships gate 0
+        for exactly this set). `_xp_of >= xp(g)` is exactly
+        `level_from_xp(_xp_of) >= g`, but a single int compare with no bisect."""
         if sid in world.start_sids or sid in free_sids:
-            return _always_true
+            return None
         g = int(_dg.GATE.get(sid, 0))
         if g <= 0:
+            return None
+        return _plxp(g)
+
+    def _wl_rule(sid):
+        _t = _wl_threshold(sid)
+        if _t is None:
             return _always_true
-        # Compare raw XP to the gate's XP threshold: `_xp_of >= xp(g)` is exactly
-        # `level_from_xp(_xp_of) >= g`, but a single int compare with no bisect.
-        _xg = _plxp(g)
-        return lambda state, _t=_xg: _xp_of(state) >= _t
+        return lambda state, _t=_t: _xp_of(state) >= _t
 
     for _stage in stages:
         _sid = _stage["str_id"]
@@ -1899,8 +1914,30 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         # compose when the stage has no WL gate (start stage / gate 0) so we
         # don't pay an extra always-true call.
         if _wl is not _always_true:
-            for _ent in multiworld.get_region(_sid, player).entrances:
-                _ent.access_rule = _compose_and([_ent.access_rule, _wl])
+            _ents = multiworld.get_region(_sid, player).entrances
+            _tok = _entrance_token.get(_sid)
+            _xg = _wl_threshold(_sid)
+            if _FUSE_ENTRANCE and _tok is not None and len(_ents) == 1:
+                # FUSE token + WL into a SINGLE closure. Composing them costs 3
+                # Python frames per evaluation (compose wrapper + token lambda +
+                # WL lambda) and AP's region BFS re-evaluates every stage
+                # entrance on each state change, making this one of the hottest
+                # rules in fill. Fused it's 1 frame + an inline C-level
+                # state.has/.count + the _xp_of read. Same boolean, no logic change.
+                _tn, _tc = _tok
+                if _tc == 1:
+                    _ents[0].access_rule = (
+                        lambda state, tok=_tn, t=_xg:
+                            state.has(tok, player) and _xp_of(state) >= t
+                    )
+                else:
+                    _ents[0].access_rule = (
+                        lambda state, tok=_tn, n=_tc, t=_xg:
+                            state.count(tok, player) >= n and _xp_of(state) >= t
+                    )
+            else:
+                for _ent in _ents:
+                    _ent.access_rule = _compose_and([_ent.access_rule, _wl])
             # Also compose the WL gate into the direct-call clearability rule.
             # `_can_clear_stage_cached` calls _STAGE_CLEAR_RULES[sid] DIRECTLY
             # (bypassing can_reach for speed), so the entrance WL gate above is

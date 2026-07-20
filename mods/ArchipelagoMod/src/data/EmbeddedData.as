@@ -18,6 +18,9 @@ package data {
         [Embed(source="json/level_stats.json", mimeType="application/octet-stream")]
         private static var LevelStatsBytes:Class;
 
+        [Embed(source="json/xp_curve.json", mimeType="application/octet-stream")]
+        private static var XpCurveBytes:Class;
+
         /**
          * Get the itemdata.json content as a string.
          */
@@ -51,6 +54,18 @@ package data {
          */
         public static function getLevelStatsJSON():String {
             var bytes:* = new LevelStatsBytes();
+            return bytes.readUTFBytes(bytes.length);
+        }
+
+        /**
+         * Get the xp_curve.json content as a string.
+         * Hand-authored per-tile XP multiplier (the game-tuning curve). The same
+         * file is read by py-scripts/apply_xp_curve.py to bake the apworld's
+         * eff_xp / WL gates, so the in-game XP curve and the logic's WL gating
+         * stay in sync. See the _comment block inside the JSON.
+         */
+        public static function getXpCurveJSON():String {
+            var bytes:* = new XpCurveBytes();
             return bytes.readUTFBytes(bytes.length);
         }
     }

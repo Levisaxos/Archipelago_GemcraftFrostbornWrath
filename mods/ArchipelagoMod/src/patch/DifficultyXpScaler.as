@@ -52,7 +52,10 @@ package patch {
                 var base:Number = _onStarterStage()
                     ? Math.max(2.0, difficultyBase())
                     : difficultyBase();
-                sc.traitsXpMult.s(base + sum);
+                // Hidden per-tile XP curve: scales the WHOLE earned amount so
+                // this field yields the share the WL curve expects (steep early,
+                // plateau late). Same table the apworld bakes its WL gates from.
+                sc.traitsXpMult.s((base + sum) * tileXpMultiplier());
             } catch (e:Error) {}
         }
 
@@ -86,6 +89,50 @@ package patch {
                 var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
                 var d:int = (opts != null) ? int(opts.difficulty) : 2;
                 if (d >= 0 && d < BASE.length) return Number(BASE[d]);
+            } catch (e:Error) {}
+            return 1.0;
+        }
+
+        /**
+         * Hidden per-TILE XP-curve multiplier for the field currently being
+         * played. This is what shapes real in-game progression to match the WL
+         * curve the apworld gates on — early tiles worth far more, late tiles
+         * cut hard so the endgame flattens instead of exploding.
+         *
+         * Source: the hand-authored mods/.../json/xp_curve.json, embedded at
+         * compile time. py-scripts/apply_xp_curve.py reads the SAME file to bake
+         * eff_xp / WL gates into the apworld, so the two curves cannot drift.
+         *
+         * Returns 1.0 (vanilla) outside a battle, when the table is missing, or
+         * for any tile with no entry — never blocks or zeroes XP.
+         */
+        public static function tileXpMultiplier():Number {
+            try {
+                if (GV.ingameCore == null || GV.ingameCore.stageMeta == null)
+                    return 1.0;
+                if (AV.serverData == null)
+                    return 1.0;
+                var tbl:Object = AV.serverData.tileXpMultiplier;
+                if (tbl == null)
+                    return 1.0;
+                var sid:String = String(GV.ingameCore.stageMeta.strId);
+                if (sid == null || sid.length == 0)
+                    return 1.0;
+                // Tile = the leading non-digit run of the stage id ("A4" -> "A").
+                var tile:String = "";
+                for (var i:int = 0; i < sid.length; i++) {
+                    var c:String = sid.charAt(i);
+                    if (c >= "0" && c <= "9")
+                        break;
+                    tile += c;
+                }
+                if (tile.length == 0)
+                    return 1.0;
+                var v:* = tbl[tile];
+                if (v == null)
+                    return 1.0;
+                var n:Number = Number(v);
+                return (n > 0) ? n : 1.0;
             } catch (e:Error) {}
             return 1.0;
         }

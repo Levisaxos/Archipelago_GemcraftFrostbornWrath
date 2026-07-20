@@ -122,6 +122,13 @@ starter_stages = ["W1", "W2", "W3", "W4"]
 # NOTE: data/difficulty_gates.json has been hand-updated to this model (eff_xp =
 # minxp, gates rescaled). Re-running the OLD exporter that scales to per-difficulty
 # targets would OVERWRITE it — update the exporter to the minxp model first.
+#
+# !! NOT AUTHORITATIVE ANY MORE !! The live pipeline is
+#    py-scripts/apply_xp_curve.py, which reads the target from
+#    mods/ArchipelagoMod/src/data/json/xp_curve.json ("targetFinalWl").
+# The dict below is only still read by the STALE export_difficulty_gates.py.
+# Change the target in xp_curve.json; this copy is kept in sync by hand purely
+# so the old exporter isn't silently wrong if anyone ever revives it.
 difficulty_target_final_wl = {
     "Easy":    100,
     "Medium":  100,
@@ -129,24 +136,13 @@ difficulty_target_final_wl = {
     "Extreme": 100,
 }
 
-# Hidden per-TILE XP-curve multiplier. Reshapes the raw-sim baseline into a
-# "rise then plateau" curve: early tiles worth a lot (fast early progression),
-# late tiles cut hard so the endgame flattens instead of exploding. Applied to
-# `eff_xp` by do not commit/py-scripts/apply_xp_curve.py (which rescales the
-# whole thing so a full clear == difficulty_target_final_wl and recomputes the
-# gates).
-#
-# CRITICAL: the mod must apply the IDENTICAL table as a hidden multiplier on
-# monster XP (on top of the Easy/Medium/Hard/Extreme real-XP multiplier), or the
-# tracker's "in logic" WL will disagree with the player's real in-game WL. This
-# table is the single source of truth — keep the mod copy byte-identical.
-tile_xp_multiplier = {
-    "W": 1.90, "S": 1.85, "V": 1.80, "Q": 1.85, "R": 0.95,
-    "O": 1.40, "T": 1.20, "U": 1.35, "Y": 1.25, "P": 1.15,
-    "Z": 1.15, "X": 1.05, "K": 1.05, "N": 0.80, "L": 0.95, "G": 1.00,
-    "J": 0.70, "M": 0.65, "H": 0.65,
-    "E": 0.55, "F": 0.50, "D": 0.55, "I": 0.55, "C": 0.45, "B": 0.40, "A": 0.30,
-}
+# NOTE: the per-TILE XP-curve multiplier does NOT live here — the apworld has no
+# use for it. It's a game-tuning constant owned by the mod:
+#     mods/ArchipelagoMod/src/data/json/xp_curve.json
+# The mod applies it to earned monster XP at runtime; the same file is read by
+# do not commit/py-scripts/apply_xp_curve.py, which bakes the resulting curve
+# into data/difficulty_gates.json (eff_xp + gate, rescaled to targetFinalWl).
+# The apworld only ever reads those finished numbers.
 
 # There is ONE gate (required wizard level) per level, the same on every
 # difficulty. With a single baseline it's simply derived from the raw-sim

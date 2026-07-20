@@ -96,8 +96,9 @@ XP_TRAIT_ITEM_NAMES = (
 # XP-scaling traits are held (the harness-gate loop below still runs but is a
 # no-op). Rationale: the retroactive multiplier was the one piece of the WL
 # formula that couldn't be made cheap/boolean; dropping it lets WL be a plain
-# accumulated sum, and the XP CURVE (tile_xp_multiplier in rulesdata_settings)
-# now shapes early-vs-late pacing instead. Ships to the mod as [1,1,1,1,1] via
+# accumulated sum, and the XP CURVE (mod-owned
+# mods/ArchipelagoMod/src/data/json/xp_curve.json, baked into eff_xp/gate here
+# by py-scripts/apply_xp_curve.py) now shapes early-vs-late pacing instead. Ships to the mod as [1,1,1,1,1] via
 # slot_data (ApReceiver reads xp_trait_multiplier), so the mod's derived WL
 # drops it too with NO mod code change. To restore, put the 1.2**index values
 # back and regenerate wl_test_vectors.json.
