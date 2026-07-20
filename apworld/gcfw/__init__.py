@@ -490,6 +490,20 @@ class GemcraftFrostbornWrathWorld(World):
                     self.start_sids = set(self.random.sample(W_STARTER_SIDS, rand_n))
             self.start_sid = sorted(self.start_sids)[0]
 
+            # Force the starter tile's gem pouch early. Without it the opening
+            # stages run on Hollow Gems only, which is playable but grindingly
+            # slow, so it always goes in local_early_items. The starter tile is
+            # always W, so per_tile resolves to "Gempouch (W)"; progressive
+            # resolves to the generic item and 1 copy suffices because the
+            # starter tile sorts first in progressive_tile_order_for_starter().
+            # Returns None when pouches are off. This only biases fill — it does
+            # not precollect, so logic and item/location counts are untouched.
+            from . import gating as _gating_early
+            _pouch_name = _gating_early.pouch_for_stage(
+                self.start_sid, self.options.gem_pouch_granularity.value)
+            if _pouch_name is not None:
+                self.multiworld.local_early_items[self.player][_pouch_name] = 1
+
             # Hard and Extreme lean on Endurance runs for the extra XP needed to
             # reach the (difficulty-flat) WL gates — their clears grant so little
             # XP that Journey alone can't keep pace, so Endurance is the catch-up

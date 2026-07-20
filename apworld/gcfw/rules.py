@@ -622,16 +622,21 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
       2. Per-stage `_can_clear_stage_cached` — each stage's clearability is
          computed once per state-sig and reused across all OR scans.
     """
-    data = _get_caches(state, player)[3]
+    caches = _get_caches(state, player)
+    or_dict = caches[3]
     key = id(stages)
-    if key in data:
-        return data[key]
+    if key in or_dict:
+        return or_dict[key]
+    # Fetch the clear-dict ONCE and drive the scan through `_clear_in` so the
+    # inner loop doesn't re-resolve the per-state cache bundle on every stage
+    # (was N `_get_caches` calls per scan — a top cache-machinery hotspot).
+    clear_dict = caches[2]
     result = False
     for sid in stages:
-        if _can_clear_stage_cached(state, player, sid):
+        if _clear_in(clear_dict, state, player, sid):
             result = True
             break
-    data[key] = result
+    or_dict[key] = result
     return result
 
 
@@ -658,35 +663,35 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
 # rules bind to a specific player at compile time.
 _STAGE_CLEAR_RULES: dict = {}
 
+_CACHE_MISS = object()  # sentinel: distinguishes "absent" from a cached False
 
-def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
-    """Return True if the player can clear (reach Journey for) `sid`.
 
-    Memoised on the state via a signature derived from prog_items (length +
-    sum of counts). The signature changes whenever AP collects or removes
-    any item, so cached values from a previous fill state are invalidated
-    automatically.
-
-    Calls the stage's compiled rule directly from `_STAGE_CLEAR_RULES`,
-    skipping `state.can_reach`. See dict comment above for the assumption
-    this relies on.
-    """
-    data = _get_caches(state, player)[2]
-
-    if sid in data:
-        return data[sid]
+def _clear_in(data, state, player: int, sid: str) -> bool:
+    """Core stage-clearability against a PRE-FETCHED clear-dict
+    (`data == _get_caches(state, player)[2]`). Hot loops fetch the bundle once
+    and call this per stage, avoiding a `_get_caches` resolution per iteration.
+    Single dict lookup via a sentinel (was `in` + `[]`)."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
     rule = _STAGE_CLEAR_RULES.get((player, sid))
     if rule is None:
-        # No rule registered = stage is unconditionally clearable (start
-        # stage, or stages with empty/missing requirements list).
+        # No rule registered = unconditionally clearable (start / free stages).
         data[sid] = True
         return True
-    # Cycle guard — our prereq DAG is acyclic by construction, but if a
-    # broken edit ever introduces a cycle this prevents infinite recursion.
+    # Cycle guard (defensive; the clear DAG is acyclic since Field_ prereqs
+    # were dropped, so no stage rule recurses back here).
     data[sid] = False
     ok = rule(state)
     data[sid] = ok
     return ok
+
+
+def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
+    """True iff the player can clear (reach Journey for) `sid`. Memoised per
+    state-version in the clear-dict; calls the compiled `_STAGE_CLEAR_RULES`
+    rule directly (skips `state.can_reach`)."""
+    return _clear_in(_get_caches(state, player)[2], state, player, sid)
 
 
 def _can_clear_any_stage(state, player: int, stages) -> bool:
@@ -821,11 +826,23 @@ def _compile_gem_broadened(world, gem_name: str):
     stages = _STAGES_BY_GEM.get(gem_name, [])
     pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in stages]
     player = world.player
+    _key = ("gemb", gem_name)
     def _check(state):
+        # Memoise per state-version: the result is a pure function of which
+        # stages are clearable + which pouches are held, both of which only
+        # change when prog_items change (bumping the counter-cache version). Was
+        # re-scanning every call — hot for every sX gem achievement.
+        cache = _get_counter_cache(state, player)
+        v = cache.get(_key)
+        if v is not None:
+            return v
+        v = False
         for sid, pouch_ok in pairs:
             if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
-                return True
-        return False
+                v = True
+                break
+        cache[_key] = v
+        return v
     return _check
 
 
@@ -844,10 +861,21 @@ def _compile_can_create_any_gem(world):
     player = world.player
     pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in LEVEL_DATA]
     def _check(state):
+        # Memoise per state-version — scans all 122 stages otherwise, and every
+        # held gem-skill (sPoison/sBolt/...) AND-gates against this, so it ran on
+        # a huge share of achievement-rule evals. Invalidated when prog_items
+        # change (same version key as the stage-clear / counter caches).
+        cache = _get_counter_cache(state, player)
+        v = cache.get("cca")
+        if v is not None:
+            return v
+        v = False
         for sid, pouch_ok in pairs:
             if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
-                return True
-        return False
+                v = True
+                break
+        cache["cca"] = v
+        return v
     return _check
 
 
@@ -1816,15 +1844,18 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     world._wl_xp_items = _xp_items
     world._wl_xp_by_item = {name: x for name, x in _xp_items}
 
-    def _wl_of(state, _items=_xp_items, _lvl=_dg.level_from_xp, _p=player):
-        # O(1): read the running base_xp the collect/remove overrides keep on the
-        # state. A bare CollectionState.copy() doesn't carry custom attrs, so fall
-        # back to summing the held Cleared markers ONCE, then cache it on the copy
-        # so repeat calls stay O(1) (and any later collect on that copy applies its
-        # delta on top). WL == level_from_xp(base) — no multiplier, no curve.
+    def _xp_of(state, _items=_xp_items, _p=player):
+        # O(1): the RAW accumulated cleared-field XP the collect/remove overrides
+        # keep on the state. A bare CollectionState.copy() doesn't carry custom
+        # attrs, so fall back to summing the held Cleared markers ONCE, then cache
+        # it on the copy so repeat calls stay O(1) (any later collect on that copy
+        # applies its delta on top). This is the value WL derives from — but gate
+        # checks compare it DIRECTLY against a precomputed XP threshold (see below)
+        # instead of converting to a level first, so `level_from_xp` never runs on
+        # the fill hot path.
         base_map = getattr(state, "_gcfw_wl_base", None)
         if base_map is not None and _p in base_map:
-            return _lvl(base_map[_p])
+            return base_map[_p]
         base = 0
         for _name, _x in _items:
             if state.has(_name, _p):
@@ -1832,7 +1863,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         if base_map is None:
             base_map = state._gcfw_wl_base = {}
         base_map[_p] = base
-        return _lvl(base)
+        return base
+
+    def _wl_of(state, _lvl=_dg.level_from_xp):
+        # Actual wizard LEVEL. Only for the rare caller that needs the number
+        # itself; every gate check uses _xp_of + a precomputed XP threshold, which
+        # is exactly equivalent (level_from_xp is monotonic, player_level_xp_req is
+        # its inverse) but skips this binary search.
+        return _lvl(_xp_of(state))
+
+    _plxp = _dg.player_level_xp_req  # WL gate -> minimum XP that reaches it
 
     def _wl_rule(sid):
         # The starter GROUP is always reachable: the start stage AND its
@@ -1845,7 +1885,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         g = int(_dg.GATE.get(sid, 0))
         if g <= 0:
             return _always_true
-        return lambda state, _g=g: _wl_of(state) >= _g
+        # Compare raw XP to the gate's XP threshold: `_xp_of >= xp(g)` is exactly
+        # `level_from_xp(_xp_of) >= g`, but a single int compare with no bisect.
+        _xg = _plxp(g)
+        return lambda state, _t=_xg: _xp_of(state) >= _t
 
     for _stage in stages:
         _sid = _stage["str_id"]
@@ -1968,7 +2011,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 _min_wl = (_wl_override if _wl_override is not None
                            else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
                 if _min_wl > 0:
-                    _components.append(lambda state, _m=_min_wl: _wl_of(state) >= _m)
+                    _components.append(lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
                 if _reqs:
                     _dnf = _compile_dnf(_normalize_requirements(_reqs), world,
                                         is_progressive=is_progressive)
