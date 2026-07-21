@@ -440,6 +440,7 @@ package deathlink {
                         return true;
                     case "Spire":
                         core.creator.createSpire(0, hp, armor);
+                        _fixSpireDamageLimit(core);
                         return true;
                     case "Wizard Hunter":
                         core.creator.createWizardHunter(0, hp, armor);
@@ -449,6 +450,34 @@ package deathlink {
                 _logger.log(_modName, "_spawnSpecialOfType(" + kind + ") error: " + err.message);
             }
             return false;
+        }
+
+        /**
+         * Vanilla's Spire constructor sets dmgLim = round(hp * 0.00931), and every
+         * damage path caps against it (sufferShotDamage / sufferRawDamage do
+         * Math.min(damage, dmgLim); Tower/Pylon do the same for incomingDamage).
+         * Below 54 hp that rounds to 0, so the spire takes literally no damage and
+         * can never be killed. Vanilla never hits this — createSpire's own formula
+         * floors around 495 hp — but our specials scale off the current wave's
+         * monsterProto, which is well under 54 on early waves. Clamp the spire we
+         * just pushed onto core.spires to a minimum of 1.
+         */
+        private function _fixSpireDamageLimit(core:*):void {
+            var spires:Array = core.spires as Array;
+            if (spires == null || spires.length == 0)
+            {
+                return;
+            }
+
+            var spire:* = spires[spires.length - 1];
+            if (spire == null || spire.dmgLim >= 1)
+            {
+                return;
+            }
+
+            spire.dmgLim = 1;
+            _logger.log(_modName, "  spawnSpecial: raised Spire dmgLim 0 -> 1 (hp="
+                + spire.hp.g() + ")");
         }
 
         /**
