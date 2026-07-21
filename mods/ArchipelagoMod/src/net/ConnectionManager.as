@@ -42,6 +42,51 @@ package net {
             return host.toLowerCase() == "archipelago.gg";
         }
 
+        /**
+         * Clean up a host string before it reaches Socket.connect().
+         *
+         * Players routinely copy the "wss://archipelago.gg" form off the AP
+         * room page and paste it whole into the Host field. Two things go
+         * wrong if the scheme is left on: Socket.connect() treats it as a
+         * literal hostname and fails instantly, and — less obviously — the
+         * string equality in isSecureHost() no longer matches, silently
+         * downgrading archipelago.gg from TLS to a plain socket.
+         *
+         * Deliberately does not split a trailing ":port" — that would break
+         * bare IPv6 literals and silently overwrite the user's Port field.
+         */
+        private static function normalizeHost(host:String):String {
+            if (host == null) return "";
+
+            var start:int = 0;
+            var end:int = host.length;
+            while (start < end && host.charCodeAt(start) <= 32) start++;
+            while (end > start && host.charCodeAt(end - 1) <= 32) end--;
+            var out:String = host.substring(start, end);
+
+            // Match case-insensitively but slice the original so casing survives.
+            var lower:String = out.toLowerCase();
+            if (lower.indexOf("wss://") == 0) out = out.substring(6);
+            else if (lower.indexOf("ws://") == 0) out = out.substring(5);
+
+            while (out.length > 0 && out.charAt(out.length - 1) == "/") out = out.substring(0, out.length - 1);
+            return out;
+        }
+
+        // -----------------------------------------------------------------------
+        // Connection failure hints — shown on the connection panel.
+        //
+        // ConnectionPanel._tfStatus is 390px wide at 12pt with wordWrap off, so
+        // it clips silently at roughly 63 characters including the
+        // "Connect failed: " prefix. Keep these short — nothing warns you if
+        // they grow past the edge.
+
+        private static const ERR_UNREACHABLE:String = "cannot reach host — VPN/proxy? see README";
+        private static const ERR_SECURITY:String    = "blocked by Flash security sandbox";
+        private static const ERR_HANDSHAKE:String   = "not an Archipelago server (bad handshake)";
+        private static const ERR_BADHOST:String     = "invalid host or port";
+        private static const ERR_UNKNOWN:String     = "unknown error";
+
         // Stage str_id → AP location ID (Journey).  Stash = locId + 399.
         private static const STAGE_LOC_AP_IDS:Object = {
             "W1":1,  "W2":2,  "W3":3,  "W4":4,
@@ -254,7 +299,14 @@ package net {
         // Connection control
 
         public function connect(host:String, port:int, slot:String, password:String):void {
-            _archipelagoHost     = host;
+            // Normalise here rather than in the panel: auto-connect feeds this
+            // straight from save data, which may already hold a malformed host
+            // from an earlier session. Storing the cleaned value also heals the
+            // slot file on the next save.
+            var cleanHost:String = normalizeHost(host);
+            if (cleanHost != host) _logger.log(_modName, "Normalised host '" + host + "' → '" + cleanHost + "'");
+
+            _archipelagoHost     = cleanHost;
             _archipelagoPort     = port;
             _archipelagoSlot     = slot;
             _archipelagoPassword = password;
@@ -263,10 +315,10 @@ package net {
                 _reconnecting = true;
                 _webSocketClient.disconnect();
                 _reconnecting = false;
-                _toast.addMessage("Connecting to " + host + ":" + port
+                _toast.addMessage("Connecting to " + _archipelagoHost + ":" + port
                     + " as " + slot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
-                _webSocketClient.connect(host, port, isSecureHost(host));
-                _logger.log(_modName, "Connecting to " + host + ":" + port + "  slot=" + slot);
+                _webSocketClient.connect(_archipelagoHost, port, isSecureHost(_archipelagoHost));
+                _logger.log(_modName, "Connecting to " + _archipelagoHost + ":" + port + "  slot=" + slot);
             }
         }
 
@@ -302,14 +354,39 @@ package net {
             if (onError != null) onError("Authenticating...");
         }
 
+        /**
+         * Condense a raw WebSocketClient failure string into a short hint that
+         * fits the connection panel. Unrecognised reasons are returned as-is —
+         * they may clip on the panel, but the full text still reaches the toast
+         * and the log, so nothing is lost.
+         *
+         * Note: AIR raises #2031 for essentially every TCP-layer failure — a
+         * real block, a refused connection, a DNS failure, or simply the wrong
+         * port. ERR_UNREACHABLE therefore asks a question instead of asserting
+         * a diagnosis; telling a player who mistyped a port that they have a
+         * VPN problem sends them down a long dead end.
+         */
+        private function _shortReason(msg:String):String {
+            if (msg == null) return ERR_UNKNOWN;
+            if (msg.indexOf("2031") != -1) return ERR_UNREACHABLE;
+            if (msg.indexOf("Security error") == 0) return ERR_SECURITY;
+            if (msg.indexOf("Handshake rejected") == 0) return ERR_HANDSHAKE;
+            if (msg.indexOf("connect() threw") == 0) return ERR_BADHOST;
+            return msg;
+        }
+
         private function wsOnError(msg:String):void {
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
             if (onPanelReset != null) onPanelReset();
             var failMsg:String = "Failed to connect to " + _archipelagoHost + ":" + _archipelagoPort
                 + " with name " + _archipelagoSlot;
-            if (onError != null) onError(failMsg);
+            // Panel gets the short hint; the toast and log carry the real reason.
+            if (onError != null) onError("Connect failed: " + _shortReason(msg));
             _toast.addMessage(failMsg, 0xFFFF6666);
+            // Truncated: SystemToast sizes its panel to the widest row and does
+            // not wrap, so an unbounded reason string overflows the stage.
+            if (msg != null) _toast.addMessage(msg.substring(0, 90), 0xFFFF6666);
         }
 
         private function wsOnClose():void {

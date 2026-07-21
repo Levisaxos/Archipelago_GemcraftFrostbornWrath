@@ -114,6 +114,76 @@ To disconnect from a session later, open the in-game **Disconnect** panel and cl
 
 ---
 
+### Connecting behind a VPN or proxy
+
+**Symptom.** The connection panel shows:
+
+```
+Connect failed: cannot reach host — VPN/proxy? see README
+```
+
+and the log contains:
+
+```
+FAIL: IO error: Error #2031: Socket Error. URL: archipelago.gg
+```
+
+Other Archipelago clients (the text client, Universal Tracker) connect fine from the same PC, but the game does not.
+
+**Why.** The game's Flash runtime opens network connections directly and ignores the Windows proxy setting. If your VPN or proxy only routes selected apps, or is configured as a system proxy at `127.0.0.1`, the game's traffic never reaches it — it goes out unproxied and gets dropped. The mod cannot route itself through the proxy either: the runtime provides no way to complete a proxy handshake and *then* start TLS on the same connection.
+
+#### Easiest fix: TUN mode
+
+If your VPN client has a **TUN mode** (sometimes called "tun2socks" or "system tunnel"), turn it on. It captures traffic at the network level, so the game is routed transparently with no further setup. **If you have TUN mode, stop here — the rest of this section is unnecessary.**
+
+#### Otherwise: run a local TLS relay
+
+[stunnel](https://www.stunnel.org/) is a small tool that accepts a plain connection on your own machine, and handles the TLS (and proxy traversal) on the way out. The mod connects to stunnel; stunnel connects to Archipelago.
+
+On Windows the config lives at `C:\Program Files (x86)\stunnel\config\stunnel.conf`. After editing it, use **Reload Configuration** from the stunnel tray icon.
+
+**If you use a proxy** — `connect` is your *proxy* address, `protocolHost` is the real Archipelago room:
+
+```ini
+[archipelago]
+client = yes
+accept = 127.0.0.1:38300
+connect = 127.0.0.1:2080
+protocol = connect
+protocolHost = archipelago.gg:54623
+sni = archipelago.gg
+```
+
+**If you use a full VPN with no proxy** — connect straight to the room:
+
+```ini
+[archipelago]
+client = yes
+accept = 127.0.0.1:38300
+connect = archipelago.gg:54623
+sni = archipelago.gg
+```
+
+Then enter this in the mod's connection panel:
+
+| Field | Value |
+|---|---|
+| Host | `127.0.0.1` |
+| Port | `38300` |
+| Slot name | your slot name (unchanged) |
+| Password | your password (unchanged) |
+
+Entering `127.0.0.1` makes the mod use a plain connection, and stunnel supplies the TLS.
+
+> **The Port you type into the panel is the relay's `accept` port, not the Archipelago room port.** The room port belongs in `protocolHost` (or `connect`, if you have no proxy). Every Archipelago room gets a different port, so you must update that line and reload stunnel each time you join a new room.
+
+Two notes:
+
+- `38300` is arbitrary — any free port works, as long as it matches in both the config and the panel.
+- A locally-hosted Archipelago server (`localhost:38281`) already uses a plain connection and needs none of this.
+
+---
+
 ### Finding the log file
 
 If something isn't working, the Bezel log contains detailed output from the mod.
