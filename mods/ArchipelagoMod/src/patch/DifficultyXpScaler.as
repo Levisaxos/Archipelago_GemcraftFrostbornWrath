@@ -23,6 +23,11 @@ package patch {
      * correct after the game rebuilds traitsXpMult (trait change / battle init).
      * Idempotent — a full recompute, never an incremental offset. Trial mode is
      * left alone (it uses earlyWaveTrialXpMultPercent, not traitsXpMult).
+     *
+     * This value is PLAYER-VISIBLE (outcome panel "Battle Traits Multiplier",
+     * and difficultyBase() backs the map-tile tooltip), so nothing hidden may be
+     * folded into it. The per-tile XP curve lives on the monsters' own xpBase
+     * instead — see tileXpMultiplier() below and its consumer WavePrePatcher.
      */
     public class DifficultyXpScaler {
 
@@ -47,15 +52,22 @@ package patch {
                         if (lvl > 0) sum += 0.1 * lvl;
                     }
                 }
-                // Starter / free stages always earn the top (Easy) XP base so
-                // the cold start gets a boost even on Hard/Extreme.
-                var base:Number = _onStarterStage()
-                    ? Math.max(2.0, difficultyBase())
-                    : difficultyBase();
-                // Hidden per-tile XP curve: scales the WHOLE earned amount so
-                // this field yields the share the WL curve expects (steep early,
-                // plateau late). Same table the apworld bakes its WL gates from.
-                sc.traitsXpMult.s((base + sum) * tileXpMultiplier());
+                // Pure per-difficulty base — NOTHING else is folded in here.
+                //
+                // The old starter/free-stage boost (max(2.0, difficultyBase))
+                // was REMOVED: the per-tile XP curve now eases the cold start
+                // (W x1.90, S x1.85, ...) invisibly and with finer control, so
+                // the extra boost was redundant AND it compounded to an
+                // effective 3.8x on starter fields.
+                //
+                // It also has to stay pure because traitsXpMult is
+                // player-visible ("Battle Traits Multiplier" on the outcome
+                // panel, IngameEnding.tfTraitsMultiplier) and difficultyBase()
+                // is what the map-tile tooltip shows — the starter boost made
+                // the two disagree (tooltip x1.50 vs in-battle x2.00 on Medium).
+                // The XP curve is applied to the monsters' own xpBase instead;
+                // see WavePrePatcher, which consumes tileXpMultiplier() below.
+                sc.traitsXpMult.s(difficultyBase() + sum);
             } catch (e:Error) {}
         }
 
@@ -103,6 +115,12 @@ package patch {
          * compile time. py-scripts/apply_xp_curve.py reads the SAME file to bake
          * eff_xp / WL gates into the apworld, so the two curves cannot drift.
          *
+         * CONSUMED BY WavePrePatcher, which scales each wave's monsterProto.xpBase
+         * by this before the first wave spawns. It is deliberately NOT folded into
+         * traitsXpMult — that value is shown to the player as the "Battle Traits
+         * Multiplier", so putting the curve there exposed it (x3.80 on a starter
+         * field) and misattributed it to battle traits.
+         *
          * Returns 1.0 (vanilla) outside a battle, when the table is missing, or
          * for any tile with no entry — never blocks or zeroes XP.
          */
@@ -137,28 +155,8 @@ package patch {
             return 1.0;
         }
 
-        /** True while the active battle is on a starter / free stage. Those
-         *  fields always earn the top (Easy) XP base so the opening is eased
-         *  even on Hard/Extreme, without touching difficultyBase() (which the
-         *  tooltips / WL model reuse as the pure per-difficulty value). */
-        private static function _onStarterStage():Boolean {
-            try {
-                if (GV.ingameCore == null || GV.ingameCore.stageMeta == null)
-                    return false;
-                if (AV.serverData == null)
-                    return false;
-                var sid:String = String(GV.ingameCore.stageMeta.strId);
-                if (sid == null || sid.length == 0)
-                    return false;
-                var free:Array = AV.serverData.freeStages as Array;
-                if (free == null)
-                    return false;
-                for (var i:int = 0; i < free.length; i++) {
-                    if (String(free[i]) == sid)
-                        return true;
-                }
-            } catch (e:Error) {}
-            return false;
-        }
+        // NOTE: _onStarterStage() was removed along with the starter/free-stage
+        // XP boost — the per-tile XP curve (xp_curve.json, applied to monster
+        // xpBase by WavePrePatcher) now handles easing the opening.
     }
 }
