@@ -320,8 +320,8 @@ package {
                     grantItem(apId);
                     if (_saveManager != null) _saveManager.saveSlotData();
                 };
-                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
-                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
+                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void {
+                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe, flags: flags });
                     _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
                         + itemName + " (apId=" + apId + ") → " + recipientName + (isForMe ? " (self)" : ""));
                 };
@@ -2064,7 +2064,8 @@ package {
                 if (entry.isForMe === true) continue;
                 _progressionBlocker.addRemoteItemDropIcon(
                     String(entry.name),
-                    String(entry.recipient));
+                    String(entry.recipient),
+                    int(entry.flags));
             }
 
             // Kick off the vanilla one-by-one reveal animation. No-op if stats

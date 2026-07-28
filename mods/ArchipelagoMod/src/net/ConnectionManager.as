@@ -127,8 +127,8 @@ package net {
             _receiver.onDeathLinkReceived = function(src:String):void {
                 if (onDeathLinkReceived != null) onDeathLinkReceived(src);
             };
-            _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
-                if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe);
+            _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void {
+                if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe, flags);
             };
             _receiver.onDataStorageRetrieved = function(keys:Object):void {
                 if (onDataStorageRetrieved != null) onDataStorageRetrieved(keys);

@@ -16,8 +16,10 @@ package ui {
      * player sent out whose AP id falls outside any of our handled ranges
      * (fields, skills, traits, talismans, shadow cores, XP tomes, achievements).
      *
-     * Shows the standard Archipelago icon (IconColorSmall.png) and a tooltip
-     * "Sent <itemName> to <recipientName>".
+     * The icon reflects the sent item's Archipelago classification, so the
+     * player can see at a glance whether the check they sent out was
+     * progression (arrow), useful (colour) or filler (grey). The tooltip reads
+     * "Sent <itemName> to <recipientName>" plus the classification label.
      *
      * Mimics McDropIconOutcome's public shape (type / data / cntInner / bmpIcon /
      * bmpdIcon) so it slots into ending.dropIcons without breaking the vanilla
@@ -34,16 +36,23 @@ package ui {
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        public var data:Object;  // { itemName:String, recipientName:String }
+        public var data:Object;  // { itemName:String, recipientName:String, flags:int }
 
+        // Progression — colour logo with an up-arrow.
+        [Embed(source='../images/IconColorArrowSmall.png')]
+        private static const IconProgression:Class;
+        // Useful — plain colour logo.
         [Embed(source='../images/IconColorSmall.png')]
-        private static const IconAsset:Class;
+        private static const IconUseful:Class;
+        // Filler (and traps) — greyed logo.
+        [Embed(source='../images/IconGreySmall.png')]
+        private static const IconFiller:Class;
 
-        public function RemoteItemDropIcon(itemName:String, recipientName:String) {
+        public function RemoteItemDropIcon(itemName:String, recipientName:String, flags:int) {
             super();
 
             this.type = DropType.SKILL_TOME; // for the vanilla reveal sound
-            this.data = { itemName: itemName, recipientName: recipientName };
+            this.data = { itemName: itemName, recipientName: recipientName, flags: flags };
 
             this.cntInner = new Sprite();
             addChild(this.cntInner);
@@ -51,7 +60,7 @@ package ui {
             this.bmpdIcon = new BitmapData(140, 140, true, 0);
             this.bmpIcon  = new Bitmap(this.bmpdIcon);
 
-            var src:Bitmap = new IconAsset() as Bitmap;
+            var src:Bitmap = new (_iconClassFor(flags))() as Bitmap;
             if (src != null && src.bitmapData != null) {
                 var srcW:int = src.bitmapData.width;
                 var srcH:int = src.bitmapData.height;
@@ -74,12 +83,39 @@ package ui {
             addEventListener(MouseEvent.MOUSE_OUT,  _onMouseOut,  false, 0, true);
         }
 
+        /** Pick the embed matching the item's Archipelago classification. */
+        private static function _iconClassFor(flags:int):Class {
+            switch (ItemColors.iconClassForFlags(flags)) {
+                case ItemColors.CLASS_PROGRESSION:
+                    return IconProgression;
+                case ItemColors.CLASS_USEFUL:
+                    return IconUseful;
+                default:
+                    return IconFiller;
+            }
+        }
+
+        /** Human-readable classification label for the tooltip. */
+        private static function _classLabel(flags:int):String {
+            switch (ItemColors.iconClassForFlags(flags)) {
+                case ItemColors.CLASS_PROGRESSION:
+                    return "Progression";
+                case ItemColors.CLASS_USEFUL:
+                    return "Useful";
+                default:
+                    return "Filler";
+            }
+        }
+
         private function _onMouseOver(e:MouseEvent):void {
             try {
+                var flags:int = int(this.data.flags);
+                var col:uint  = ItemColors.forFlags(flags);
                 var vIp:* = GV.mcInfoPanel;
                 vIp.reset(320);
-                vIp.addTextfield(0xCC99FF, "Sent " + String(this.data.itemName), false, 13);
+                vIp.addTextfield(col, "Sent " + String(this.data.itemName), false, 13);
                 vIp.addTextfield(0xFFFFFF, "to " + String(this.data.recipientName), false, 12);
+                vIp.addTextfield(col, _classLabel(flags), false, 11);
                 GV.main.cntInfoPanel.addChild(vIp);
                 vIp.doEnterFrame();
             } catch (err:Error) {

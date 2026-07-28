@@ -52,7 +52,8 @@ package net {
         public var onItemReceived:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
+        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void
+         *  flags carries the item's Archipelago classification bits (progression / useful / trap). */
         public var onItemSent:Function;
         /** Called when AP responds to a `Get` with a `Retrieved` packet. Signature: (keysMap:Object):void
          *  keysMap is the `keys` object from the packet — { key:String → value:* (null if absent) }. */
@@ -390,7 +391,7 @@ package net {
                     _toast.addRichMessage(html, plain);
 
                     var isForMe:Boolean = (receiving == _mySlot);
-                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe);
+                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe, sentFlags);
                 }
                 return;
             }
