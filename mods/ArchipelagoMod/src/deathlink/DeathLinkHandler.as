@@ -26,8 +26,12 @@ package deathlink {
      *                      enabled element list, HP scaled as if it were currentWave + 10.
      *
      * Queuing:
-     *   - Incoming DeathLinks are queued and applied one at a time.
-     *   - Grace period starts when the player first unpauses (currentWave >= 0).
+     *   - Incoming DeathLinks are ALWAYS queued — even when received outside a
+     *     level (world map, between stages) — and applied one at a time once in
+     *     a level. They are never dropped into the void.
+     *   - Grace period restarts each level, timed from the first unpause
+     *     (currentWave >= 0), so a DeathLink queued between levels still waits
+     *     out the grace period of the level it lands in.
      *   - Cooldown enforced between successive punishments.
      *
      * Call checkForDeath() and checkQueue() each frame while on INGAME screen.
@@ -75,7 +79,13 @@ package deathlink {
         private var _pendingQueue:Array          = [];
         private var _stageStartTime:int          = -1; // set on first unpause; -1 = not yet
         private var _lastPunishmentTime:int      = 0;
-        private var _deathProcessed:Boolean      = false;
+        // The defeat `ending` object we've already sent a DeathLink for. We latch
+        // on the object IDENTITY rather than a per-stage boolean so exactly one
+        // bounce goes out per defeat: an in-place retry / screen transition can
+        // reset the per-stage state while this same `ending` is momentarily still
+        // present (before the engine rebuilds the scene), and a boolean latch
+        // would re-fire the same death. A genuinely new defeat is a new object.
+        private var _lastSentEnding:*            = null;
         // Set when an inbound DeathLink directly destroys our orb (instant_fail).
         // Tells checkForDeath to suppress the outbound send so we don't bounce the
         // very death we just received back to the killer.
@@ -126,31 +136,68 @@ package deathlink {
                 + " cooldown=" + (_cooldownMs / 1000) + "s");
         }
 
+        /**
+         * Full teardown for AP-mode deactivation. Disables the handler and drops
+         * ALL transient state — including any queued-but-unapplied DeathLinks —
+         * so an AP -> standalone -> AP transition starts clean and a standalone
+         * run never applies a leftover AP-era punishment. See
+         * [[feedback_standalone_clean_slate]]. (resetForNewStage deliberately
+         * keeps the queue across levels, so it can't stand in for this.)
+         */
+        public function deactivate():void {
+            _enabled               = false;
+            _pendingQueue          = [];
+            _stageStartTime        = -1;
+            _lastPunishmentTime    = getTimer();
+            _lastSentEnding        = null;
+            _suppressNextDeathSend = false;
+        }
+
         public function resetForNewStage():void {
-            _deathProcessed       = false;
             _stageStartTime       = -1;
             _lastPunishmentTime   = getTimer();
-            _pendingQueue         = [];
             _suppressNextDeathSend = false;
+            // NOTE: _pendingQueue is deliberately NOT cleared here. A DeathLink
+            // received between levels (or during a level the player then
+            // abandons) must survive into the next level and be honored after
+            // its grace period — clearing it here is exactly what used to send
+            // those DeathLinks into the void.
+            //
+            // NOTE: _lastSentEnding is NOT cleared here either. It self-clears
+            // in checkForDeath the moment `ending` goes null on the fresh
+            // battle; clearing it now could re-fire against a stale defeat
+            // `ending` that lingers for a frame after an in-place retry.
         }
 
         // -----------------------------------------------------------------------
         // Per-frame checks
 
         public function checkForDeath():void {
-            if (!_enabled || _deathProcessed) return;
+            if (!_enabled) return;
             try {
                 if (GV.ingameController == null || GV.ingameController.core == null) return;
                 var core:* = GV.ingameController.core;
-                // Skip pre-start: a non-null `ending` left over from the previous
-                // defeat's outcome panel would otherwise re-fire the death the
-                // moment DeathLink is enabled (e.g. on connect). Real deaths only
-                // happen once monsters can damage the orb — i.e. after wave 0
-                // has been activated.
-                if (core.currentWave.g() < 0) return;
                 var ending:* = core.ending;
-                if (ending == null || ending.isBattleWon) return;
-                _deathProcessed = true;
+
+                // No pending defeat outcome (fresh battle, or a victory): clear
+                // the latch so the NEXT genuine defeat sends, and drop the stale
+                // reference. This is the ONLY place the latch is re-armed — so a
+                // retry/transition that resets the per-stage state can't cause a
+                // second bounce for a defeat we've already reported.
+                if (ending == null || ending.isBattleWon) {
+                    _lastSentEnding = null;
+                    return;
+                }
+
+                // Already reported THIS exact defeat — one bounce per death.
+                if (ending === _lastSentEnding) return;
+
+                // Real deaths only register once monsters can damage the orb
+                // (wave 0 activated). A leftover pre-start `ending` — e.g. right
+                // after enabling DeathLink or entering a stage — must not fire.
+                if (core.currentWave.g() < 0) return;
+
+                _lastSentEnding = ending;
                 if (_suppressNextDeathSend) {
                     _suppressNextDeathSend = false;
                     _logger.log(_modName, "DEATHLINK — orb destroyed by inbound DL (instant_fail); not bouncing");
@@ -215,12 +262,15 @@ package deathlink {
 
         public function queuePunishment(source:String):void {
             if (!_enabled) return;
-            if (GV.ingameController == null) {
-                _logger.log(_modName, "DeathLink from " + source + " — not in-game, discarded");
-                return;
-            }
+            // Always queue — even when not in a level. checkQueue() only drains
+            // the queue while on the INGAME screen and past the grace period, so
+            // a DeathLink received on the world map / between stages simply waits
+            // and is applied once the player is in a level. Discarding here is
+            // what used to send those DeathLinks into the void.
             _pendingQueue.push(source);
-            _logger.log(_modName, "DeathLink from " + source + " queued (queue=" + _pendingQueue.length + ")");
+            var inLevel:Boolean = (GV.ingameController != null);
+            _logger.log(_modName, "DeathLink from " + source + " queued (queue="
+                + _pendingQueue.length + ", inLevel=" + inLevel + ")");
             if (onPunishmentReceived != null) onPunishmentReceived(source);
         }
 

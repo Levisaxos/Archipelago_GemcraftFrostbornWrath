@@ -708,6 +708,9 @@ package {
                 _receivedToast.setSuppressed(false);
             }
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
+            // Disable DeathLink and drop any queued-but-unapplied punishments so
+            // they can't fire in a standalone save or bleed into a later AP run.
+            if (_deathLinkHandler != null) _deathLinkHandler.deactivate();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
             if (_apStateSync != null) _apStateSync.reset();
@@ -3359,10 +3362,17 @@ package {
         }
 
         private function onPunishmentReceived(source:String):void {
-            var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
             var msg:String = "DeathLink from " + source + "!";
-            if (waitMs > 0) {
-                msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+            // Received outside a level: it's queued and will apply (after the
+            // grace period) once the player is in a level — the wall-clock
+            // countdown would be meaningless here, so word it that way instead.
+            if (GV.ingameController == null) {
+                msg += " Queued — applies when you enter a level.";
+            } else {
+                var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
+                if (waitMs > 0) {
+                    msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+                }
             }
             _systemToast.addMessage(msg, 0xFFFF4444);
         }
