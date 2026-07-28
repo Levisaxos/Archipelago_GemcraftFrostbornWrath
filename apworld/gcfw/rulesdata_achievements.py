@@ -792,7 +792,8 @@ achievement_requirements = {
         "ap_id": 2286,
         "game_id": 230,
         "description": "Deliver 3.600 banishments with your orb.",
-        "requirements": ["minMonsters:3600"],
+        "details": "Deliver 3,600 orb banishments cumulatively; a late-game grind, gated on wizard level rather than a single-battle count.",
+        "requirements": ["min_wl:85"],
         "required_effort": "Extreme",
     },
     "Stinging Sphere": {
@@ -847,8 +848,8 @@ achievement_requirements = {
         "ap_id": 2165,
         "game_id": 278,
         "description": "Deliver 3750 one hit kills.",
-        "details": "Score 3,750 one-hit kills cumulatively.",
-        "requirements": ["minMonsters:3750"],
+        "details": "Score 3,750 one-hit kills cumulatively; a late-game grind, gated on wizard level rather than a single-battle count.",
+        "requirements": ["min_wl:85"],
         "required_effort": "Extreme",
     },
     "Vantage Point Down": {
@@ -1374,7 +1375,7 @@ achievement_requirements = {
         "game_id": 358,
         "description": "Find 5 talisman fragments.",
         "details": "Find 5 talisman fragments (random drops; varies per seed).",
-        "requirements": ["minWave:245"],
+        "requirements": ["minWave:245", "mEndurance"],
         "required_effort": "Major",
     },
     "Broken Seal": {
@@ -1478,8 +1479,8 @@ achievement_requirements = {
         "ap_id": 2298,
         "game_id": 288,
         "description": "Gain 7.200 xp with kill chains.",
-        "details": "Gain 7,200 xp from kill chains across all battles.",
-        "requirements": ["minMonsters:13000", "mEndurance"],
+        "details": "Gain 7,200 xp from kill chains across all battles; cumulative, so gated on wizard level rather than a single-battle count.",
+        "requirements": ["min_wl:85"],
         "required_effort": "Extreme",
     },
     "Snowdust Blindness": {
@@ -2517,8 +2518,8 @@ achievement_requirements = {
         "ap_id": 2367,
         "game_id": 280,
         "description": "Kill 3.333 swarmlings.",
-        "details": "Kill 3,333 swarmlings cumulatively.",
-        "requirements": ["minSwarmlings:3333"],
+        "details": "Kill 3,333 swarmlings cumulatively; a late-game grind, gated on wizard level rather than a single-battle count.",
+        "requirements": ["min_wl:85"],
         "required_effort": "Extreme",
     },
     "Can't Take Any Risks": {
