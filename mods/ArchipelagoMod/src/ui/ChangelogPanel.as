@@ -41,6 +41,7 @@ package ui {
         private static const COL_TAG:uint       = 0xFFDD88; // gold for version headings
         private static const COL_DATE:uint      = 0x887799; // muted for dates
         private static const COL_BODY:uint      = 0xCCBBEE; // body text
+        private static const COL_BREAKING:uint  = 0xFF7755; // breaking-change warning
         private static const COL_BTN_BG:uint    = 0x3A1A6E;
         private static const COL_BTN_BD:uint    = 0xAA77EE;
         private static const COL_BTN_TX:uint    = 0xFFFFFF;
@@ -129,6 +130,7 @@ package ui {
         /**
          * Clear and rebuild the scrollable content from an Array of release objects.
          * Each entry must have: tag (String), name (String), body (String), date (String).
+         * Optional: breaking (Boolean) — renders a "finish your async first" warning.
          * If releases is null or empty, shows a "no changelog available" message.
          */
         public function populate(releases:Array):void {
@@ -164,6 +166,22 @@ package ui {
                     _contentSprite.addChild(dateTf);
                 }
                 yPos += 22;
+
+                // BREAKING banner. Flagged in the release notes (see
+                // UpdateChecker.isBreakingRelease) and shown per-release so a
+                // player scanning the changelog can tell exactly WHICH version
+                // broke compatibility — updating past it invalidates a seed
+                // generated with an older apworld, so an in-progress async must
+                // be finished first.
+                if (entry.breaking == true) {
+                    var warnTf:TextField = makeLabelTf(
+                        "⚠  BREAKING — finish any in-progress async before updating",
+                        BODY_W - PADDING * 2, 18, COL_BREAKING, 11, true, false);
+                    warnTf.x = PADDING;
+                    warnTf.y = yPos;
+                    _contentSprite.addChild(warnTf);
+                    yPos += 20;
+                }
 
                 // Body text (multiline, word-wrapped)
                 if (body.length > 0) {

@@ -122,12 +122,27 @@ starter_stages = ["W1", "W2", "W3", "W4"]
 # NOTE: data/difficulty_gates.json has been hand-updated to this model (eff_xp =
 # minxp, gates rescaled). Re-running the OLD exporter that scales to per-difficulty
 # targets would OVERWRITE it — update the exporter to the minxp model first.
+#
+# !! NOT AUTHORITATIVE ANY MORE !! The live pipeline is
+#    py-scripts/apply_xp_curve.py, which reads the target from
+#    mods/ArchipelagoMod/src/data/json/xp_curve.json ("targetFinalWl").
+# The dict below is only still read by the STALE export_difficulty_gates.py.
+# Change the target in xp_curve.json; this copy is kept in sync by hand purely
+# so the old exporter isn't silently wrong if anyone ever revives it.
 difficulty_target_final_wl = {
-    "Easy":    86,
-    "Medium":  86,
-    "Hard":    86,
-    "Extreme": 86,
+    "Easy":    100,
+    "Medium":  100,
+    "Hard":    100,
+    "Extreme": 100,
 }
+
+# NOTE: the per-TILE XP-curve multiplier does NOT live here — the apworld has no
+# use for it. It's a game-tuning constant owned by the mod:
+#     mods/ArchipelagoMod/src/data/json/xp_curve.json
+# The mod applies it to earned monster XP at runtime; the same file is read by
+# do not commit/py-scripts/apply_xp_curve.py, which bakes the resulting curve
+# into data/difficulty_gates.json (eff_xp + gate, rescaled to targetFinalWl).
+# The apworld only ever reads those finished numbers.
 
 # There is ONE gate (required wizard level) per level, the same on every
 # difficulty. With a single baseline it's simply derived from the raw-sim

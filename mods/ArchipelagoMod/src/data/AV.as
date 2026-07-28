@@ -9,7 +9,11 @@ package data {
         // -----------------------------------------------------------------------
         // Top-level generic mod data
 
-        public static var version:String = "1.0.0";
+        // NOTE: there is deliberately no `version` field here. The authoritative
+        // mod version is ArchipelagoMod.VERSION (with APWORLD_VERSION alongside
+        // it, and world_version in apworld/gcfw/archipelago.json). A stale copy
+        // used to live here, referenced by nothing, which is exactly the kind of
+        // second source that silently drifts — don't reintroduce it.
         public static var currentSlot:String = "";
 
         // -----------------------------------------------------------------------

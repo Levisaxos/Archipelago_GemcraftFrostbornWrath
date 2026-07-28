@@ -59,6 +59,12 @@ import os as _os
 # prove the version stamp changes only speed, not logic.
 _USE_VERSTAMP = _os.environ.get("GCFW_NO_VERSTAMP", "0") != "1"
 
+# A/B switch for the FUSED token+WL stage-entrance closure. Fused and composed
+# forms are the same boolean — this exists purely so a fixed seed can be
+# generated both ways and diffed to prove the fusion changes speed, not logic.
+# GCFW_NO_FUSE=1 forces the old `_compose_and` path.
+_FUSE_ENTRANCE = _os.environ.get("GCFW_NO_FUSE", "0") != "1"
+
 
 def _gcfw_state_sig(state, player: int):
     # Fast path: an O(1) per-player version stamp maintained by the world's
@@ -622,16 +628,21 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
       2. Per-stage `_can_clear_stage_cached` — each stage's clearability is
          computed once per state-sig and reused across all OR scans.
     """
-    data = _get_caches(state, player)[3]
+    caches = _get_caches(state, player)
+    or_dict = caches[3]
     key = id(stages)
-    if key in data:
-        return data[key]
+    if key in or_dict:
+        return or_dict[key]
+    # Fetch the clear-dict ONCE and drive the scan through `_clear_in` so the
+    # inner loop doesn't re-resolve the per-state cache bundle on every stage
+    # (was N `_get_caches` calls per scan — a top cache-machinery hotspot).
+    clear_dict = caches[2]
     result = False
     for sid in stages:
-        if _can_clear_stage_cached(state, player, sid):
+        if _clear_in(clear_dict, state, player, sid):
             result = True
             break
-    data[key] = result
+    or_dict[key] = result
     return result
 
 
@@ -658,35 +669,35 @@ def _can_reach_any_stage(state, player: int, stages) -> bool:
 # rules bind to a specific player at compile time.
 _STAGE_CLEAR_RULES: dict = {}
 
+_CACHE_MISS = object()  # sentinel: distinguishes "absent" from a cached False
 
-def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
-    """Return True if the player can clear (reach Journey for) `sid`.
 
-    Memoised on the state via a signature derived from prog_items (length +
-    sum of counts). The signature changes whenever AP collects or removes
-    any item, so cached values from a previous fill state are invalidated
-    automatically.
-
-    Calls the stage's compiled rule directly from `_STAGE_CLEAR_RULES`,
-    skipping `state.can_reach`. See dict comment above for the assumption
-    this relies on.
-    """
-    data = _get_caches(state, player)[2]
-
-    if sid in data:
-        return data[sid]
+def _clear_in(data, state, player: int, sid: str) -> bool:
+    """Core stage-clearability against a PRE-FETCHED clear-dict
+    (`data == _get_caches(state, player)[2]`). Hot loops fetch the bundle once
+    and call this per stage, avoiding a `_get_caches` resolution per iteration.
+    Single dict lookup via a sentinel (was `in` + `[]`)."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
     rule = _STAGE_CLEAR_RULES.get((player, sid))
     if rule is None:
-        # No rule registered = stage is unconditionally clearable (start
-        # stage, or stages with empty/missing requirements list).
+        # No rule registered = unconditionally clearable (start / free stages).
         data[sid] = True
         return True
-    # Cycle guard — our prereq DAG is acyclic by construction, but if a
-    # broken edit ever introduces a cycle this prevents infinite recursion.
+    # Cycle guard (defensive; the clear DAG is acyclic since Field_ prereqs
+    # were dropped, so no stage rule recurses back here).
     data[sid] = False
     ok = rule(state)
     data[sid] = ok
     return ok
+
+
+def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
+    """True iff the player can clear (reach Journey for) `sid`. Memoised per
+    state-version in the clear-dict; calls the compiled `_STAGE_CLEAR_RULES`
+    rule directly (skips `state.can_reach`)."""
+    return _clear_in(_get_caches(state, player)[2], state, player, sid)
 
 
 def _can_clear_any_stage(state, player: int, stages) -> bool:
@@ -821,11 +832,23 @@ def _compile_gem_broadened(world, gem_name: str):
     stages = _STAGES_BY_GEM.get(gem_name, [])
     pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in stages]
     player = world.player
+    _key = ("gemb", gem_name)
     def _check(state):
+        # Memoise per state-version: the result is a pure function of which
+        # stages are clearable + which pouches are held, both of which only
+        # change when prog_items change (bumping the counter-cache version). Was
+        # re-scanning every call — hot for every sX gem achievement.
+        cache = _get_counter_cache(state, player)
+        v = cache.get(_key)
+        if v is not None:
+            return v
+        v = False
         for sid, pouch_ok in pairs:
             if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
-                return True
-        return False
+                v = True
+                break
+        cache[_key] = v
+        return v
     return _check
 
 
@@ -844,8 +867,66 @@ def _compile_can_create_any_gem(world):
     player = world.player
     pairs = [(sid, _compile_gempouch_checker(world, sid)) for sid in LEVEL_DATA]
     def _check(state):
+        # Memoise per state-version — scans all 122 stages otherwise, and every
+        # held gem-skill (sPoison/sBolt/...) AND-gates against this, so it ran on
+        # a huge share of achievement-rule evals. Invalidated when prog_items
+        # change (same version key as the stage-clear / counter caches).
+        cache = _get_counter_cache(state, player)
+        v = cache.get("cca")
+        if v is not None:
+            return v
+        v = False
         for sid, pouch_ok in pairs:
             if pouch_ok(state) and _can_clear_stage_cached(state, player, sid):
+                v = True
+                break
+        cache["cca"] = v
+        return v
+    return _check
+
+
+def _compile_gems_joint(world, gem_tokens, stage_constraint=None):
+    """Compile a checker: True iff some in-logic stage can field EVERY gem in
+    `gem_tokens` (a list of `sX` requirement strings) AT ONCE.
+
+    A stage qualifies when it is clearable, its STRICT gempouch is owned, its
+    pouch has room for all requested colors (`len(AvailableGems) >= len(gems)`),
+    and each requested gem is either listed in the stage's AvailableGems or
+    granted globally by a held gem-skill item (which lets the player respawn any
+    color into a pouch slot — the same model as `_count_gem_skills_per_stage_max`).
+    When `stage_constraint` is given (the intersection of the AND-group's other
+    per-stage tokens), candidates are limited to it so the gems and those tokens
+    are satisfied on the SAME stage.
+
+    This generalises the single-gem `_gem_token` broadening to the multi-gem
+    achievements (Rotten Aura, Out of Misery, ...). Checking each gem
+    independently via its own global `_gem_token` closure let two colors be
+    satisfied on two DIFFERENT beatable stages, marking the achievement in-logic
+    even when no single beatable stage hosts both colors.
+    """
+    player = world.player
+    needed = frozenset(_GEM_TOKEN_TO_GEM_NAME[g.strip()] for g in gem_tokens)
+    n_needed = len(needed)
+    skill_items = {gem: item_prefix_map[tok]
+                   for tok, gem in _GEM_TOKEN_TO_GEM_NAME.items()}
+    candidates = []
+    for sid, stage_gems in _GEMS_BY_STAGE.items():
+        if len(stage_gems) < n_needed:
+            continue
+        if stage_constraint is not None and sid not in stage_constraint:
+            continue
+        candidates.append((sid, stage_gems, _compile_gempouch_checker(world, sid)))
+    if not candidates:
+        return _always_false
+    def _check(state):
+        held = frozenset(gem for gem, item in skill_items.items()
+                         if state.has(item, player))
+        for sid, stage_gems, pouch_ok in candidates:
+            if not needed <= (held | stage_gems):
+                continue
+            if not pouch_ok(state):
+                continue
+            if _can_clear_stage_cached(state, player, sid):
                 return True
         return False
     return _check
@@ -1185,8 +1266,15 @@ def _compile_req(req: str, world, is_progressive: bool):
             return (lambda state: _count_complete_talisman_columns(state, player) >= count_needed,
                     _COST_COUNTER, None)
         if group_name == "skillPoints":
-            return (lambda state: _count_skill_points(state, player) >= count_needed,
-                    _COST_COUNTER, None)
+            # skillPoints:N gates NOTHING server-side. Skill-point items are
+            # filler (see items_skillpoints.py), so they never enter prog_items
+            # and `state.count` can't see them — `_count_skill_points` is always
+            # 0, which would make `skillPoints:N` permanently FALSE and any
+            # achievement that lists it (Ablatio Retinae skillPoints:50, and the
+            # sManaLeech skillPoints:200 one) UNREACHABLE. The intent is a no-op
+            # pacing token (the mod still tracks real SP client-side for the
+            # tooltip); compile it to _always_true, exactly like `min_wl:N`.
+            return (_always_true, _COST_CONST, None)
 
         raise ValueError(f"Unknown gate: unrecognized counter requirement '{req}'")
 
@@ -1255,7 +1343,21 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
     compiled_groups: list = []
     group_min_costs: list = []
     for group in groups:
-        items = [_compile_req(r, world, is_progressive) for r in group]
+        if not isinstance(group, list):
+            group = [group]
+        # A group with 2+ gem `sX` tokens must satisfy all its colors on ONE
+        # stage. Compiling each gem via its own global `_gem_token` closure lets
+        # two colors be satisfied on two different beatable stages (Rotten Aura
+        # false-positive). Pull them out and bind them jointly per-stage below;
+        # single-gem groups keep the standard `_gem_token` path (unchanged).
+        joint_gems = [r for r in group
+                      if isinstance(r, str) and r.strip() in _GEM_TOKEN_TO_GEM_NAME]
+        if len(joint_gems) >= 2:
+            rest = [r for r in group if r not in joint_gems]
+        else:
+            joint_gems = []
+            rest = group
+        items = [_compile_req(r, world, is_progressive) for r in rest]
         # Partition into globals (no per-stage binding) and static per-stage
         # tokens (carry a frozenset that AND-binds across the group).
         # Drop _always_true entries; collapse on _always_false.
@@ -1274,10 +1376,11 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
                 globals_list.append((fn, cost))
         if dead_group:
             continue  # this AND-group can never satisfy
-        if not globals_list and not static_sets:
+        if not joint_gems and not globals_list and not static_sets:
             # All predicates were always_true → group is unconditionally true,
             # so the whole DNF is true regardless of other groups.
             return _always_true
+        stage_constraint = None
         if static_sets:
             intersection = static_sets[0]
             for s in static_sets[1:]:
@@ -1287,11 +1390,20 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
             if not intersection:
                 # No stage satisfies all per-stage tokens in this AND-group.
                 continue
-            intersection = frozenset(intersection)
+            stage_constraint = frozenset(intersection)
+        if joint_gems:
+            # The joint checker binds the colors AND the other per-stage tokens
+            # (via stage_constraint) to a single clearable stage, so it replaces
+            # the standalone consolidated reach check for this group.
+            gem_check = _compile_gems_joint(world, joint_gems, stage_constraint)
+            if gem_check is _always_false:
+                continue  # no stage can host all colors (with the constraint)
+            globals_list.append((gem_check, _COST_REACH))
+        elif stage_constraint is not None:
             # One consolidated reach check replaces every individual static
             # per-stage closure in this AND-group.
             globals_list.append(
-                ((lambda state, _stages=intersection:
+                ((lambda state, _stages=stage_constraint:
                       _can_reach_any_stage(state, player, _stages)),
                  _COST_REACH)
             )
@@ -1516,6 +1628,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # `<sid> Field Token`, per_tile uses `<prefix> Tile Field Token`.
     from . import gating as _gating
     ft_gran = world.options.field_token_granularity.value
+    # sid -> (token_name, token_count); lets the WL loop below FUSE the token
+    # and WL predicates into ONE entrance closure instead of composing them.
+    _entrance_token: dict = {}
     for stage in stages:
         str_id = stage["str_id"]
         if str_id == start_sid:
@@ -1525,6 +1640,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
 
         token_name  = _gating.field_token_for_stage(str_id, ft_gran)
         token_count = _gating.field_token_count_for_stage(str_id, ft_gran, world.start_sids)
+        _entrance_token[str_id] = (token_name, token_count)
         if token_count == 1:
             connection.access_rule = (
                 lambda state, tok=token_name: state.has(tok, player)
@@ -1730,42 +1846,64 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
     _xp_items = [(f"{s} Cleared", x) for s, x in _eff.items() if x]
-    _xp_trait_names = _dg.XP_TRAIT_ITEM_NAMES
+    # Publish the "<sid> Cleared" -> XP map on the world so its collect/remove
+    # overrides can maintain a RUNNING WL base per player (add eff_xp on collect,
+    # subtract on remove). Since the trait multiplier was dropped (2026-07-19) WL
+    # is a plain accumulated sum, so it never needs the old 122-event re-sum on
+    # the fill hot path — see GemcraftFrostbornWrathWorld.collect + _wl_of below.
+    world._wl_xp_items = _xp_items
+    world._wl_xp_by_item = {name: x for name, x in _xp_items}
 
-    def _wl_of(state, _items=_xp_items, _tn=_xp_trait_names,
-               _eff_wl=_dg.effective_trait_wl, _p=player):
-        # Memoise on the state signature: WL is a pure function of the collected
-        # "<sid> Cleared" events + XP traits (all progression), so it only needs
-        # recomputing when prog_items change. Without this the full XP sum +
-        # curve is redone on every WL gate check — the fill hot path (~60k calls).
-        cache = _get_counter_cache(state, _p)
-        v = cache.get("wl")
-        if v is not None:
-            return v
+    def _xp_of(state, _items=_xp_items, _p=player):
+        # O(1): the RAW accumulated cleared-field XP the collect/remove overrides
+        # keep on the state. A bare CollectionState.copy() doesn't carry custom
+        # attrs, so fall back to summing the held Cleared markers ONCE, then cache
+        # it on the copy so repeat calls stay O(1) (any later collect on that copy
+        # applies its delta on top). This is the value WL derives from — but gate
+        # checks compare it DIRECTLY against a precomputed XP threshold (see below)
+        # instead of converting to a level first, so `level_from_xp` never runs on
+        # the fill hot path.
+        base_map = getattr(state, "_gcfw_wl_base", None)
+        if base_map is not None and _p in base_map:
+            return base_map[_p]
         base = 0
         for _name, _x in _items:
             if state.has(_name, _p):
                 base += _x
-        n = 0
-        for _t in _tn:
-            if state.has(_t, _p):
-                n += 1
-        v = _eff_wl(base, n)
-        cache["wl"] = v
-        return v
+        if base_map is None:
+            base_map = state._gcfw_wl_base = {}
+        base_map[_p] = base
+        return base
 
-    def _wl_rule(sid):
-        # The starter GROUP is always reachable: the start stage AND its
-        # immediately-playable tile mates (free_sids, tokens precollected).
-        # Exempting the whole group from the WL soft gate matches "play the
-        # starter tile right away" and keeps parity with the shipped stage_gates
-        # (fill_slot_data ships gate 0 for exactly this set).
+    def _wl_of(state, _lvl=_dg.level_from_xp):
+        # Actual wizard LEVEL. Only for the rare caller that needs the number
+        # itself; every gate check uses _xp_of + a precomputed XP threshold, which
+        # is exactly equivalent (level_from_xp is monotonic, player_level_xp_req is
+        # its inverse) but skips this binary search.
+        return _lvl(_xp_of(state))
+
+    _plxp = _dg.player_level_xp_req  # WL gate -> minimum XP that reaches it
+
+    def _wl_threshold(sid):
+        """Raw-XP threshold for this stage's WL soft gate, or None when exempt.
+        The starter GROUP is always reachable: the start stage AND its
+        immediately-playable tile mates (free_sids, tokens precollected).
+        Exempting the whole group matches "play the starter tile right away" and
+        keeps parity with the shipped stage_gates (fill_slot_data ships gate 0
+        for exactly this set). `_xp_of >= xp(g)` is exactly
+        `level_from_xp(_xp_of) >= g`, but a single int compare with no bisect."""
         if sid in world.start_sids or sid in free_sids:
-            return _always_true
+            return None
         g = int(_dg.GATE.get(sid, 0))
         if g <= 0:
+            return None
+        return _plxp(g)
+
+    def _wl_rule(sid):
+        _t = _wl_threshold(sid)
+        if _t is None:
             return _always_true
-        return lambda state, _g=g: _wl_of(state) >= _g
+        return lambda state, _t=_t: _xp_of(state) >= _t
 
     for _stage in stages:
         _sid = _stage["str_id"]
@@ -1776,8 +1914,30 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         # compose when the stage has no WL gate (start stage / gate 0) so we
         # don't pay an extra always-true call.
         if _wl is not _always_true:
-            for _ent in multiworld.get_region(_sid, player).entrances:
-                _ent.access_rule = _compose_and([_ent.access_rule, _wl])
+            _ents = multiworld.get_region(_sid, player).entrances
+            _tok = _entrance_token.get(_sid)
+            _xg = _wl_threshold(_sid)
+            if _FUSE_ENTRANCE and _tok is not None and len(_ents) == 1:
+                # FUSE token + WL into a SINGLE closure. Composing them costs 3
+                # Python frames per evaluation (compose wrapper + token lambda +
+                # WL lambda) and AP's region BFS re-evaluates every stage
+                # entrance on each state change, making this one of the hottest
+                # rules in fill. Fused it's 1 frame + an inline C-level
+                # state.has/.count + the _xp_of read. Same boolean, no logic change.
+                _tn, _tc = _tok
+                if _tc == 1:
+                    _ents[0].access_rule = (
+                        lambda state, tok=_tn, t=_xg:
+                            state.has(tok, player) and _xp_of(state) >= t
+                    )
+                else:
+                    _ents[0].access_rule = (
+                        lambda state, tok=_tn, n=_tc, t=_xg:
+                            state.count(tok, player) >= n and _xp_of(state) >= t
+                    )
+            else:
+                for _ent in _ents:
+                    _ent.access_rule = _compose_and([_ent.access_rule, _wl])
             # Also compose the WL gate into the direct-call clearability rule.
             # `_can_clear_stage_cached` calls _STAGE_CLEAR_RULES[sid] DIRECTLY
             # (bypassing can_reach for speed), so the entrance WL gate above is
@@ -1888,7 +2048,7 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 _min_wl = (_wl_override if _wl_override is not None
                            else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
                 if _min_wl > 0:
-                    _components.append(lambda state, _m=_min_wl: _wl_of(state) >= _m)
+                    _components.append(lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
                 if _reqs:
                     _dnf = _compile_dnf(_normalize_requirements(_reqs), world,
                                         is_progressive=is_progressive)

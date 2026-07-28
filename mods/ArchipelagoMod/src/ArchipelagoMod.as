@@ -40,6 +40,7 @@ package {
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
+    import patch.TalismanFragmentTooltipOverlay;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -71,6 +72,7 @@ package {
     import patch.WavePrePatcher;
     import patch.LinkedWaveEarlyCredit;
     import patch.ExtraShadowCorePerWave;
+    import patch.OrbIntactWaveFix;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.FieldTooltipOverlay;
@@ -106,10 +108,15 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.6"; }
+        // VERSION is the authoritative mod version: shown on the main menu and
+        // handed to UpdateChecker.fetchReleases() to compare against the latest
+        // GitHub release tag (and to decide whether any newer release is flagged
+        // BREAKING). Keep in step with APWORLD_VERSION and with world_version in
+        // apworld/gcfw/archipelago.json.
+        public function get VERSION():String           { return "0.6.0"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.5"; }
+        public function get APWORLD_VERSION():String   { return "0.6.0"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
@@ -126,6 +133,7 @@ package {
         private var _bezel:Bezel;
         private var _modButtons:ModButtons;
         private var _talismanShop:TalismanShop;
+        private var _talismanFragmentTooltip:TalismanFragmentTooltipOverlay;
         private var _slotSettings:ScrSlotSettings;
 
         private var _systemToast:SystemToast;
@@ -172,6 +180,7 @@ package {
         private var _wavePrePatcher:WavePrePatcher;
         private var _linkedWaveEarlyCredit:LinkedWaveEarlyCredit;
         private var _extraShadowCorePerWave:ExtraShadowCorePerWave;
+        private var _orbIntactWaveFix:OrbIntactWaveFix;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
@@ -270,6 +279,7 @@ package {
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _linkedWaveEarlyCredit = new LinkedWaveEarlyCredit(_logger, MOD_NAME);
                 _extraShadowCorePerWave = new ExtraShadowCorePerWave(_logger, MOD_NAME);
+                _orbIntactWaveFix = new OrbIntactWaveFix(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
@@ -390,6 +400,11 @@ package {
                 // perfect-placement talisman fragments with shadow cores.
                 _talismanShop = new TalismanShop(_logger, MOD_NAME, _talismanUnlocker);
 
+                // Marks AP-sourced fragments with an "Archipelago item" line in
+                // their vanilla hover tooltip (inventory / active slots).
+                _talismanFragmentTooltip = new TalismanFragmentTooltipOverlay(
+                    _logger, MOD_NAME, _talismanUnlocker);
+
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
                 _disconnectPanel.onReconnect = onDisconnectPanelReconnect;
@@ -446,6 +461,7 @@ package {
                 _talismanShop.dispose();
                 _talismanShop = null;
             }
+            _talismanFragmentTooltip = null;
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -692,6 +708,9 @@ package {
                 _receivedToast.setSuppressed(false);
             }
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
+            // Disable DeathLink and drop any queued-but-unapplied punishments so
+            // they can't fire in a standalone save or bleed into a later AP run.
+            if (_deathLinkHandler != null) _deathLinkHandler.deactivate();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
             if (_apStateSync != null) _apStateSync.reset();
@@ -1153,6 +1172,10 @@ package {
                 _wavePrePatcher.applyIfReady();
                 _linkedWaveEarlyCredit.onIngameFrame();
                 _extraShadowCorePerWave.onIngameFrame();
+                // Unlock the "keep the orb intact for N waves" achievements at
+                // the stated wave count (vanilla's -1 counter base makes them
+                // require N+1). AP-only so a standalone battle stays vanilla.
+                if (_active && _orbIntactWaveFix != null) _orbIntactWaveFix.onIngameFrame();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
@@ -1283,6 +1306,15 @@ package {
             if (_talismanShop != null) {
                 try { _talismanShop.onSelectorFrame(); }
                 catch (eShop:Error) { _logger.log(MOD_NAME, "talismanShop error: " + eShop.message); }
+            }
+
+            // Mark AP-sourced fragments in their hover tooltip. Only while an AP
+            // session is active so it never touches a standalone slot's tooltips,
+            // and not while the AP Shop popup is up (it owns its own tooltips).
+            if (_active && _talismanFragmentTooltip != null
+                    && (_talismanShop == null || !_talismanShop.isOpen)) {
+                try { _talismanFragmentTooltip.onSelectorFrame(); }
+                catch (eTft:Error) { _logger.log(MOD_NAME, "talismanFragmentTooltip error: " + eTft.message); }
             }
         }
 
@@ -3330,10 +3362,17 @@ package {
         }
 
         private function onPunishmentReceived(source:String):void {
-            var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
             var msg:String = "DeathLink from " + source + "!";
-            if (waitMs > 0) {
-                msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+            // Received outside a level: it's queued and will apply (after the
+            // grace period) once the player is in a level — the wall-clock
+            // countdown would be meaningless here, so word it that way instead.
+            if (GV.ingameController == null) {
+                msg += " Queued — applies when you enter a level.";
+            } else {
+                var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
+                if (waitMs > 0) {
+                    msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+                }
             }
             _systemToast.addMessage(msg, 0xFFFF4444);
         }

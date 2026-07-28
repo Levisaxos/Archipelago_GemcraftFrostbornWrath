@@ -80,10 +80,15 @@ package unlockers {
                 // Only 900–952 are talisman-fragment AP items now. The extra
                 // range (1200–1246) was retired; those items no longer exist.
                 if (!(apId >= 900 && apId <= 952)) continue;
-                // Mapped (static-talisman) fragment: record as received only.
-                // AP Shop model — not auto-socketed; the player buys + places
-                // it from the shop.
+                // Mapped (static-talisman) fragment: drop one free copy into
+                // the inventory the first time it's received (see
+                // _depositMappedFree). Guarded by _grantedApIds so a reconnect
+                // full-sync never re-grants — and selling it doesn't earn
+                // another. The AP Shop stays available to re-buy it if sold.
                 if (isMappedFragment(apId)) {
+                    if (_grantedApIds[String(apId)] != true) {
+                        _depositMappedFree(apId);
+                    }
                     _grantedApIds[String(apId)] = true;
                     continue;
                 }
@@ -190,16 +195,85 @@ package unlockers {
             return true;
         }
 
-        /** Grant a mapped (static-talisman) fragment: mark it received and
-         *  toast. AP Shop model — NOT auto-socketed; the player buys + places
-         *  it from the shop. */
+        /** Grant a mapped (static-talisman) fragment: drop one free copy into
+         *  the inventory (first receipt only), mark it received, and toast. The
+         *  player can place, upgrade, or sell it freely; the AP Shop stays
+         *  available to re-buy it (net-zero) if sold. */
         private function _grantMapped(apId:int):void {
+            // First receipt only — _grantedApIds is persisted, so this never
+            // re-grants on reconnect or after the player sells the fragment.
+            if (_grantedApIds[String(apId)] != true) {
+                _depositMappedFree(apId);
+            }
             _grantedApIds[String(apId)] = true;
             var label:String = (_talNameMap != null && _talNameMap[String(apId)] != null)
                 ? String(_talNameMap[String(apId)])
                 : ("Talisman Fragment #" + apId);
             showToast("Received " + label, ItemColors.forApId(apId));
             showPlusNodeOnSelector("mcPlusNodeTalisman");
+        }
+
+        /**
+         * Deposit one free copy of a mapped (AP) fragment into the talisman
+         * inventory at base upgrade level (0 — the player upgrades it in-game,
+         * matching the AP Shop). Deduped by seed so a fragment already held
+         * (e.g. from a wiz stash) is never doubled. Returns true if a fragment
+         * was actually added.
+         */
+        private function _depositMappedFree(apId:int):Boolean {
+            _ensureSlotMap();
+            var entry:Object = _slotEntryByApId[String(apId)];
+            if (entry == null) return false;
+            var parts:Array = String(entry.tal_data).split("/");
+            if (parts.length < 4) return false;
+            var seed:int = int(parts[0]);
+            if (hasFragmentWithSeed(seed)) return false; // already held — don't double
+            if (!ensurePpdExists("depositMappedFree")) return false;
+            var inv:Array = GV.ppd.talismanInventory;
+            if (inv == null) {
+                logAction("depositMappedFree: talismanInventory null");
+                return false;
+            }
+            var slotIdx:int = -1;
+            for (var i:int = 0; i < inv.length; i++) {
+                if (inv[i] == null) { slotIdx = i; break; }
+            }
+            if (slotIdx < 0) {
+                logAction("depositMappedFree: inventory full, cannot grant apId=" + apId);
+                return false;
+            }
+            inv[slotIdx] = new TalismanFragment(seed, int(parts[1]), int(parts[2]), 0);
+            logAction("Free talisman granted apId=" + apId + " seed=" + seed + " slot=" + slotIdx);
+            return true;
+        }
+
+        // -----------------------------------------------------------------------
+        // AP-origin seed lookup (for the fragment-tooltip "Archipelago item" mark)
+
+        // seed(int) → true for every mapped AP fragment. Lazily built from the
+        // shipped progression set; null until it can be built (serverData ready).
+        private var _apSeedSet:Object = null;
+
+        /** True iff `seed` belongs to one of the AP talisman fragments (the 25
+         *  mapped/progression fragments). Used by the fragment-tooltip overlay
+         *  to mark AP-sourced fragments in their hover panel. */
+        public function isApFragmentSeed(seed:int):Boolean {
+            _ensureApSeedSet();
+            return _apSeedSet != null && _apSeedSet[seed] === true;
+        }
+
+        private function _ensureApSeedSet():void {
+            if (_apSeedSet != null) return;
+            var set:Array = (AV.serverData != null) ? AV.serverData.progressionTalismanSet : null;
+            if (set == null || set.length == 0) return; // not shipped yet — retry next call
+            var built:Object = {};
+            for each (var entry:Object in set) {
+                if (entry == null || entry.tal_data == null) continue;
+                var parts:Array = String(entry.tal_data).split("/");
+                if (parts.length < 1) continue;
+                built[int(parts[0])] = true;
+            }
+            _apSeedSet = built;
         }
 
         // -----------------------------------------------------------------------
