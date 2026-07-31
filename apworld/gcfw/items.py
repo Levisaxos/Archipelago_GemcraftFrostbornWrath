@@ -38,10 +38,10 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{skill['name']} Skill"
         table[name] = ItemData(skill["ap_id"], ItemClassification.progression)
 
-    # Map tiles (AP IDs 600–625) — progression items that unlock map regions
-    for tile in data["map_tiles"]:
-        name = f"Map Tile {tile['game_id']}"
-        table[name] = ItemData(tile["ap_id"], ItemClassification.progression)
+    # Map tiles are NOT AP items: in the mod a tile lights up when you receive
+    # one of its field tokens, so nothing here ever entered the pool, gated a
+    # region, or shipped in slot_data. The old `Map Tile <id>` definitions only
+    # reserved IDs 600–625 in item_name_to_id, so they've been removed.
 
     # Battle traits — classified as progression since achievements require them
     for trait in data["battle_traits"]:

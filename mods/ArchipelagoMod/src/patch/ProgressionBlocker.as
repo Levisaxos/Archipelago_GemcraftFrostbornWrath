@@ -404,14 +404,15 @@ package patch {
         }
 
         /**
-         * Inject a generic AP icon for an item this player sent out that belongs
-         * to ANOTHER game (apId outside any of our handled ranges). Tooltip
-         * reads "Sent <itemName> to <recipientName>".
+         * Inject an AP icon for an item this player sent out that belongs to
+         * ANOTHER game (apId outside any of our handled ranges). The icon
+         * reflects the item's Archipelago classification (progression / useful /
+         * filler) via flags. Tooltip reads "Sent <itemName> to <recipientName>".
          */
-        public function addRemoteItemDropIcon(itemName:String, recipientName:String):void {
+        public function addRemoteItemDropIcon(itemName:String, recipientName:String, flags:int):void {
             if (itemName == null) itemName = "Unknown item";
             if (recipientName == null) recipientName = "another player";
-            _addDropIcon(new RemoteItemDropIcon(itemName, recipientName),
+            _addDropIcon(new RemoteItemDropIcon(itemName, recipientName, flags),
                 "REMOTE_ITEM '" + itemName + "' → " + recipientName,
                 false /* useVanillaHover */);
         }

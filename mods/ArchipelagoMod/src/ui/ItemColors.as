@@ -25,6 +25,13 @@ package ui {
         private static const FLAG_USEFUL:int      = 0x2;
         private static const FLAG_TRAP:int        = 0x4;
 
+        // Drop-icon classes for the sent-item icon (RemoteItemDropIcon). We have
+        // three flat icons — progression (arrow), useful (colour), filler (grey).
+        // Traps have no dedicated icon, so they fall into the filler bucket.
+        public static const CLASS_FILLER:int      = 0;
+        public static const CLASS_USEFUL:int      = 1;
+        public static const CLASS_PROGRESSION:int = 2;
+
         // apId (int) -> flags (int). Populated by ApReceiver every time a
         // NetworkItem arrives. Multiple copies of the same apId always carry
         // the same flags for a given seed, so first-write-wins is fine.
@@ -45,6 +52,17 @@ package ui {
             if ((flags & FLAG_PROGRESSION) != 0) return PROGRESSION;
             if ((flags & FLAG_USEFUL)      != 0) return USEFUL;
             return FILLER;
+        }
+
+        /** Collapse AP flags to one of the three drop-icon classes.
+         *  Progression wins over useful; bare filler and traps both map to
+         *  filler (there is no dedicated trap icon). */
+        public static function iconClassForFlags(flags:int):int {
+            if ((flags & FLAG_PROGRESSION) != 0)
+                return CLASS_PROGRESSION;
+            if ((flags & FLAG_USEFUL) != 0)
+                return CLASS_USEFUL;
+            return CLASS_FILLER;
         }
 
         /** Look up the cached flags for an apId and return the matching
