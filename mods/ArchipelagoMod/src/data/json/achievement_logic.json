@@ -174,38 +174,6 @@
       ],
       "details": "Banish 150 monsters with at least 2 wraiths alive."
     },
-    "Basic Gem Tactics": {
-      "apId": 2033,
-      "game_id": 304,
-      "description": "Beat 120 waves and don't use any gem enhancement spells.",
-      "required_effort": "Minor",
-      "requirements": [
-        "minWave:120",
-        "mEndurance"
-      ]
-    },
-    "Clear Sky": {
-      "apId": 2094,
-      "game_id": 301,
-      "description": "Beat 120 waves and don't use any spells.",
-      "required_effort": "Minor",
-      "requirements": [
-        "minWave:120",
-        "mEndurance"
-      ],
-      "details": "Beat 120 waves without casting any strike spells."
-    },
-    "Purist": {
-      "apId": 2422,
-      "game_id": 308,
-      "description": "Beat 120 waves and don't use any strike or gem enhancement spells.",
-      "required_effort": "Minor",
-      "requirements": [
-        "minWave:120",
-        "mEndurance"
-      ],
-      "details": "Beat 120 waves without casting any strike OR enhancement spells."
-    },
     "Mixing Up": {
       "apId": 2348,
       "game_id": 553,
@@ -230,19 +198,6 @@
         "minWave:100",
         "talismanRow:3"
       ]
-    },
-    "Enhancing Challenge": {
-      "apId": 2156,
-      "game_id": 555,
-      "description": "Beat 200 waves on max Swarmling and Giant domination traits.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "tSwarmlingDomination",
-        "tGiantDomination",
-        "minWave:200",
-        "mEndurance"
-      ],
-      "details": "Beat 200 waves in Endurance with Swarmling Domination AND Giant Domination both at max level."
     },
     "Elementary": {
       "apId": 2150,
@@ -362,26 +317,6 @@
       "required_effort": "Trivial",
       "requirements": [
         "minWave:60"
-      ]
-    },
-    "Feels Like Endurance": {
-      "apId": 2172,
-      "game_id": 145,
-      "description": "Beat 120 waves.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minWave:120",
-        "mEndurance"
-      ]
-    },
-    "Long Run": {
-      "apId": 2315,
-      "game_id": 281,
-      "description": "Beat 360 waves.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minWave:360",
-        "mEndurance"
       ]
     },
     "Tomb Raiding": {
@@ -1012,15 +947,6 @@
         "talismanRow:1"
       ]
     },
-    "Itchy Sphere": {
-      "apId": 2286,
-      "game_id": 230,
-      "description": "Deliver 3.600 banishments with your orb.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:3600"
-      ]
-    },
     "Stinging Sphere": {
       "apId": 2517,
       "game_id": 254,
@@ -1081,16 +1007,6 @@
         "min_wl:100"
       ],
       "details": "Score 750 one-hit kills cumulatively."
-    },
-    "Every Hit Counts": {
-      "apId": 2165,
-      "game_id": 278,
-      "description": "Deliver 3750 one hit kills.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:3750"
-      ],
-      "details": "Score 3,750 one-hit kills cumulatively."
     },
     "Vantage Point Down": {
       "apId": 2594,
@@ -1509,28 +1425,6 @@
       ],
       "details": "60 consecutive waves with no monster touching the orb."
     },
-    "It's a Trap": {
-      "apId": 2285,
-      "game_id": 262,
-      "description": "Don't let any monster touch your orb for 120 beaten waves.",
-      "required_effort": "Major",
-      "requirements": [
-        "minWave:120",
-        "mEndurance"
-      ],
-      "details": "Survive 120 consecutive waves without any monster reaching the orb."
-    },
-    "You Shall Not Pass": {
-      "apId": 2630,
-      "game_id": 248,
-      "description": "Don't let any monster touch your orb for 240 beaten waves.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minWave:240",
-        "mEndurance"
-      ],
-      "details": "Survive 240 consecutive waves without any monster reaching the orb."
-    },
     "Getting Rid of Them": {
       "apId": 2212,
       "game_id": 344,
@@ -1678,17 +1572,6 @@
       ],
       "details": "Manually enrage 80 waves cumulatively across all battles (or in one battle, depending on stat)."
     },
-    "Enraged is the New Norm": {
-      "apId": 2159,
-      "game_id": 338,
-      "description": "Enrage 240 waves.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minWave:240",
-        "mEndurance"
-      ],
-      "details": "Manually enrage 240 waves cumulatively."
-    },
     "Jewel Box": {
       "apId": 2287,
       "game_id": 54,
@@ -1776,16 +1659,6 @@
       "requirements": [
         "minWave:100"
       ]
-    },
-    "Frag Rain": {
-      "apId": 2192,
-      "game_id": 358,
-      "description": "Find 5 talisman fragments.",
-      "required_effort": "Major",
-      "requirements": [
-        "minWave:245"
-      ],
-      "details": "Find 5 talisman fragments (random drops; varies per seed)."
     },
     "Broken Seal": {
       "apId": 2067,
@@ -1911,28 +1784,6 @@
         "min_wl:100"
       ],
       "details": "Gain 4,900 xp from Ice Shards crowd hits in one battle."
-    },
-    "Bloodmaster": {
-      "apId": 2055,
-      "game_id": 246,
-      "description": "Gain 1.200 xp with kill chains.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:1800",
-        "mEndurance"
-      ],
-      "details": "Gain 1,200 xp from kill chains in one battle."
-    },
-    "Killed So Many": {
-      "apId": 2298,
-      "game_id": 288,
-      "description": "Gain 7.200 xp with kill chains.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:13000",
-        "mEndurance"
-      ],
-      "details": "Gain 7,200 xp from kill chains across all battles."
     },
     "Snowdust Blindness": {
       "apId": 2498,
@@ -2170,18 +2021,6 @@
       "requirements": [],
       "details": "Start a battle with at least 25,000 shadow cores in your stash."
     },
-    "Fully Lit": {
-      "apId": 2203,
-      "game_id": 508,
-      "description": "Have a field beaten in all three battle modes.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "mEndurance",
-        "mTrial"
-      ],
-      "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
-      "untrackable": true
-    },
     "Disco Ball": {
       "apId": 2126,
       "game_id": 526,
@@ -2358,18 +2197,6 @@
         "eWatchtower"
       ],
       "details": "Have a watchtower kill a poisoned monster."
-    },
-    "Helping Hand": {
-      "apId": 2241,
-      "game_id": 500,
-      "description": "Have a watchtower kill a possessed monster.",
-      "required_effort": "Major",
-      "requirements": [
-        "ePossessedMonster",
-        "eWatchtower",
-        "mEndurance"
-      ],
-      "details": "Have a watchtower kill a possessed monster."
     },
     "No Honor Among Thieves": {
       "apId": 2366,
@@ -2579,46 +2406,6 @@
       ],
       "details": "Have 16 bolt-enhanced gems active at once."
     },
-    "Getting My Feet Wet": {
-      "apId": 2211,
-      "game_id": 513,
-      "description": "Have 20 fields lit in Endurance mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mEndurance",
-        "fieldToken:20"
-      ]
-    },
-    "Xp Harvest": {
-      "apId": 2626,
-      "game_id": 514,
-      "description": "Have 40 fields lit in Endurance mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mEndurance",
-        "fieldToken:40"
-      ]
-    },
-    "Longrunner": {
-      "apId": 2316,
-      "game_id": 515,
-      "description": "Have 60 fields lit in Endurance mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mEndurance",
-        "fieldToken:60"
-      ]
-    },
-    "Endured a Lot": {
-      "apId": 2153,
-      "game_id": 516,
-      "description": "Have 80 fields lit in Endurance mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mEndurance",
-        "fieldToken:80"
-      ]
-    },
     "A Bright Start": {
       "apId": 2000,
       "game_id": 509,
@@ -2654,39 +2441,6 @@
       "requirements": [
         "fieldToken:90"
       ]
-    },
-    "Disciple": {
-      "apId": 2125,
-      "game_id": 517,
-      "description": "Have 10 fields lit in Trial mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mTrial",
-        "fieldToken:10"
-      ],
-      "untrackable": true
-    },
-    "Adept": {
-      "apId": 2007,
-      "game_id": 518,
-      "description": "Have 30 fields lit in Trial mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mTrial",
-        "fieldToken:30"
-      ],
-      "untrackable": true
-    },
-    "Expert": {
-      "apId": 2167,
-      "game_id": 519,
-      "description": "Have 50 fields lit in Trial mode.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mTrial",
-        "fieldToken:50"
-      ],
-      "untrackable": true
     },
     "Stockpile": {
       "apId": 2521,
@@ -3289,49 +3043,6 @@
       ],
       "details": "Kill 2,500 monsters with prismatic wasps."
     },
-    "Bloodstream": {
-      "apId": 2057,
-      "game_id": 429,
-      "description": "Kill 4.000 monsters.",
-      "required_effort": "Major",
-      "requirements": [
-        "minMonsters:4000",
-        "mEndurance"
-      ],
-      "details": "Kill 4,000 monsters in one battle."
-    },
-    "They Keep Coming": {
-      "apId": 2557,
-      "game_id": 430,
-      "description": "Kill 12.000 monsters.",
-      "required_effort": "Major",
-      "requirements": [
-        "minMonsters:12000",
-        "mEndurance"
-      ],
-      "details": "Kill 12,000 monsters in one battle."
-    },
-    "Unending Flow": {
-      "apId": 2588,
-      "game_id": 431,
-      "description": "Kill 24.000 monsters.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:24000",
-        "mEndurance"
-      ],
-      "details": "Kill 24,000 monsters in one battle."
-    },
-    "No Land for Swarmlings": {
-      "apId": 2367,
-      "game_id": 280,
-      "description": "Kill 3.333 swarmlings.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minSwarmlings:3333"
-      ],
-      "details": "Kill 3,333 swarmlings cumulatively."
-    },
     "Can't Take Any Risks": {
       "apId": 2079,
       "game_id": 482,
@@ -3467,17 +3178,6 @@
       "requirements": [],
       "details": "Kill 1 monster."
     },
-    "Doom Drop": {
-      "apId": 2130,
-      "game_id": 159,
-      "description": "Kill a possessed giant with barrage.",
-      "required_effort": "Minor",
-      "requirements": [
-        "sBarrage",
-        "ePossessedMonster",
-        "mEndurance"
-      ]
-    },
     "Enough Frozen Time Trickery": {
       "apId": 2157,
       "game_id": 529,
@@ -3590,19 +3290,6 @@
         "minSwarmlingArmor:100"
       ],
       "details": "Kill a swarmling that has at least 100 armor."
-    },
-    "Out of Nowhere": {
-      "apId": 2393,
-      "game_id": 160,
-      "description": "Kill a whited out possessed monster with bolt.",
-      "required_effort": "Minor",
-      "requirements": [
-        "sBolt",
-        "sWhiteout",
-        "ePossessedMonster",
-        "mEndurance"
-      ],
-      "details": "Kill a whited-out possessed monster with a Bolt shot."
     },
     "That Was Your Last Move": {
       "apId": 2544,
@@ -3866,6 +3553,16 @@
       ],
       "details": "Kill 5 frozen monsters that are carrying orblets."
     },
+    "Absolute Zero": {
+      "apId": 2003,
+      "game_id": 126,
+      "description": "Kill 273 frozen monsters that are not in a whiteout. (Corrected vanilla bug: the in-game text omits that frozen monsters also in a whiteout don't count.)",
+      "required_effort": "Major",
+      "requirements": [
+        "sFreeze"
+      ],
+      "vanilla_correction": true
+    },
     "Snow Dust": {
       "apId": 2496,
       "game_id": 193,
@@ -3943,16 +3640,6 @@
       ],
       "details": "Kill 20 frozen monsters with traps."
     },
-    "Absolute Zero": {
-      "apId": 2003,
-      "game_id": 126,
-      "description": "Kill 273 frozen monsters that are not in a whiteout. (Corrected vanilla bug: the in-game text omits that frozen monsters also in a whiteout don't count.)",
-      "required_effort": "Major",
-      "requirements": [
-        "sFreeze"
-      ],
-      "vanilla_correction": true
-    },
     "Crunchy Bites": {
       "apId": 2112,
       "game_id": 206,
@@ -3972,17 +3659,6 @@
       "requirements": [
         "markedMonster:179"
       ]
-    },
-    "Bone Shredder": {
-      "apId": 2061,
-      "game_id": 150,
-      "description": "Kill 600 monsters before wave 12 starts.",
-      "required_effort": "Major",
-      "requirements": [
-        "mEndurance",
-        "minMonstersBeforeWave12:600"
-      ],
-      "details": "Kill 600 monsters before wave 12 starts. ."
     },
     "Avenged": {
       "apId": 2028,
@@ -4188,17 +3864,6 @@
         "wRain"
       ],
       "details": "Kill 85 poisoned monsters during rain weather."
-    },
-    "Exorcism": {
-      "apId": 2166,
-      "game_id": 148,
-      "description": "Kill 199 possessed monsters.",
-      "required_effort": "Major",
-      "requirements": [
-        "ePossessedMonster",
-        "mEndurance"
-      ],
-      "details": "Kill 199 possessed monsters in one battle."
     },
     "Twice the Terror": {
       "apId": 2585,
@@ -4913,78 +4578,6 @@
       ],
       "details": "Cumulative across all battles: 200,000 monster kills."
     },
-    "Something Special": {
-      "apId": 2503,
-      "game_id": 176,
-      "description": "Reach 2.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Extreme",
-      "requirements": [
-        [
-          "min_wl:10",
-          "mEndurance",
-          "ePossessedMonster:1",
-          "minWave:70"
-        ],
-        [
-          "min_wl:10",
-          "mEndurance",
-          "eTwistedMonster:1",
-          "minWave:70"
-        ],
-        [
-          "min_wl:10",
-          "eMarkedMonster:1"
-        ]
-      ]
-    },
-    "Marked Targets": {
-      "apId": 2334,
-      "game_id": 185,
-      "description": "Reach 10.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Major",
-      "requirements": [
-        [
-          "min_wl:50",
-          "eMarkedMonster:1"
-        ],
-        [
-          "min_wl:50",
-          "mEndurance",
-          "ePossessedMonster:1"
-        ],
-        [
-          "min_wl:50",
-          "mEndurance",
-          "eTwistedMonster:1"
-        ]
-      ],
-      "details": "Cumulative across all battles: 10,000 kills on monsters with special properties."
-    },
-    "Unholy Stack": {
-      "apId": 2589,
-      "game_id": 186,
-      "description": "Reach 20.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Extreme",
-      "requirements": [
-        [
-          "min_wl:100",
-          "mEndurance",
-          "ePossessedMonster",
-          "minWave:70"
-        ],
-        [
-          "min_wl:100",
-          "mEndurance",
-          "eTwistedMonster",
-          "minWave:70"
-        ],
-        [
-          "min_wl:100",
-          "eMarkedMonster:1"
-        ]
-      ],
-      "details": "Cumulative across all battles: 20,000 kills on monsters with special properties."
-    },
     "Necrotrophic": {
       "apId": 2358,
       "game_id": 300,
@@ -5306,17 +4899,6 @@
         "min_wl:30"
       ],
       "details": "Reach a kill chain of 900 in one battle."
-    },
-    "Boiling Red": {
-      "apId": 2060,
-      "game_id": 249,
-      "description": "Reach a kill chain of 2400.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "minMonsters:2400",
-        "mEndurance"
-      ],
-      "details": "Reach a kill chain of 2,400 in one battle."
     },
     "Eagle Eye": {
       "apId": 2141,
@@ -5643,45 +5225,6 @@
         "min_wl:100"
       ],
       "details": "Reach wizard level 100."
-    },
-    "Purple Wand": {
-      "apId": 2423,
-      "game_id": 387,
-      "description": "Reach wizard level 200.",
-      "required_effort": "Major",
-      "requirements": [
-        "mEndurance"
-      ]
-    },
-    "Brown Wand": {
-      "apId": 2070,
-      "game_id": 388,
-      "description": "Reach wizard level 300.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "mEndurance"
-      ],
-      "details": "Reach wizard level 300."
-    },
-    "Red Wand": {
-      "apId": 2439,
-      "game_id": 389,
-      "description": "Reach wizard level 500.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "mEndurance"
-      ],
-      "details": "Reach wizard level 500."
-    },
-    "Black Wand": {
-      "apId": 2045,
-      "game_id": 419,
-      "description": "Reach wizard level 1.000.",
-      "required_effort": "Extreme",
-      "requirements": [
-        "mEndurance"
-      ],
-      "details": "Reach wizard level 1,000."
     },
     "Mana Trader": {
       "apId": 2330,
@@ -6082,38 +5625,6 @@
       "requirements": [],
       "details": "Win a battle without any monster touching the orb of presence."
     },
-    "Get This Done Quick": {
-      "apId": 2210,
-      "game_id": 559,
-      "description": "Win a Trial battle with at least 3 waves started early.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "minWave:3",
-        "mTrial"
-      ],
-      "details": "Win a Trial battle with at least 3 waves called early.",
-      "untrackable": true
-    },
-    "Impressive": {
-      "apId": 2269,
-      "game_id": 558,
-      "description": "Win a Trial battle without any monster reaching your Orb.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mTrial"
-      ],
-      "untrackable": true
-    },
-    "So Attached": {
-      "apId": 2499,
-      "game_id": 557,
-      "description": "Win a Trial battle without losing any orblets.",
-      "required_effort": "Trivial",
-      "requirements": [
-        "mTrial"
-      ],
-      "untrackable": true
-    },
     "Heavily Modified": {
       "apId": 2237,
       "game_id": 542,
@@ -6168,6 +5679,55 @@
       "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
       "untrackable": true
     },
+    "Basic Gem Tactics": {
+      "apId": 2033,
+      "game_id": 304,
+      "description": "Beat 120 waves and don't use any gem enhancement spells.",
+      "required_effort": "Minor",
+      "requirements": [
+        "minWave:120",
+        "mEndurance"
+      ],
+      "untrackable": true
+    },
+    "Clear Sky": {
+      "apId": 2094,
+      "game_id": 301,
+      "description": "Beat 120 waves and don't use any spells.",
+      "required_effort": "Minor",
+      "requirements": [
+        "minWave:120",
+        "mEndurance"
+      ],
+      "details": "Beat 120 waves without casting any strike spells.",
+      "untrackable": true
+    },
+    "Purist": {
+      "apId": 2422,
+      "game_id": 308,
+      "description": "Beat 120 waves and don't use any strike or gem enhancement spells.",
+      "required_effort": "Minor",
+      "requirements": [
+        "minWave:120",
+        "mEndurance"
+      ],
+      "details": "Beat 120 waves without casting any strike OR enhancement spells.",
+      "untrackable": true
+    },
+    "Enhancing Challenge": {
+      "apId": 2156,
+      "game_id": 555,
+      "description": "Beat 200 waves on max Swarmling and Giant domination traits.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "tSwarmlingDomination",
+        "tGiantDomination",
+        "minWave:200",
+        "mEndurance"
+      ],
+      "details": "Beat 200 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
+      "untrackable": true
+    },
     "Worst of Both Sizes": {
       "apId": 2624,
       "game_id": 556,
@@ -6180,6 +5740,28 @@
         "mEndurance"
       ],
       "details": "Beat 300 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
+      "untrackable": true
+    },
+    "Feels Like Endurance": {
+      "apId": 2172,
+      "game_id": 145,
+      "description": "Beat 120 waves.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minWave:120",
+        "mEndurance"
+      ],
+      "untrackable": true
+    },
+    "Long Run": {
+      "apId": 2315,
+      "game_id": 281,
+      "description": "Beat 360 waves.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minWave:360",
+        "mEndurance"
+      ],
       "untrackable": true
     },
     "Ful Ir": {
@@ -6348,6 +5930,30 @@
       ],
       "untrackable": true
     },
+    "Itchy Sphere": {
+      "apId": 2286,
+      "game_id": 230,
+      "description": "Deliver 3.600 banishments with your orb.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:3600",
+        "mEndurance"
+      ],
+      "details": "Deliver 3,600 orb banishments in a SINGLE battle (game checks per-battle this.stats.banishmentsByOrb); exceeds any Journey field's monster count, so Endurance-only.",
+      "untrackable": true
+    },
+    "Every Hit Counts": {
+      "apId": 2165,
+      "game_id": 278,
+      "description": "Deliver 3750 one hit kills.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:3750",
+        "mEndurance"
+      ],
+      "details": "Score 3,750 one-hit kills in a SINGLE battle (game checks per-battle this.stats.oneHitKills); exceeds any Journey field's monster count, so Endurance-only.",
+      "untrackable": true
+    },
     "Still No Match": {
       "apId": 2515,
       "game_id": 604,
@@ -6368,6 +5974,42 @@
       ],
       "untrackable": true
     },
+    "It's a Trap": {
+      "apId": 2285,
+      "game_id": 262,
+      "description": "Don't let any monster touch your orb for 120 beaten waves.",
+      "required_effort": "Major",
+      "requirements": [
+        "minWave:120",
+        "mEndurance"
+      ],
+      "details": "Survive 120 consecutive waves without any monster reaching the orb.",
+      "untrackable": true
+    },
+    "You Shall Not Pass": {
+      "apId": 2630,
+      "game_id": 248,
+      "description": "Don't let any monster touch your orb for 240 beaten waves.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minWave:240",
+        "mEndurance"
+      ],
+      "details": "Survive 240 consecutive waves without any monster reaching the orb.",
+      "untrackable": true
+    },
+    "Enraged is the New Norm": {
+      "apId": 2159,
+      "game_id": 338,
+      "description": "Enrage 240 waves.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minWave:240",
+        "mEndurance"
+      ],
+      "details": "Manually enrage 240 waves cumulatively.",
+      "untrackable": true
+    },
     "Green Eyed Ninja": {
       "apId": 2222,
       "game_id": 614,
@@ -6384,6 +6026,18 @@
       "required_effort": "Extreme",
       "requirements": [],
       "details": "Find 540 shadow cores in one battle.",
+      "untrackable": true
+    },
+    "Frag Rain": {
+      "apId": 2192,
+      "game_id": 358,
+      "description": "Find 5 talisman fragments.",
+      "required_effort": "Major",
+      "requirements": [
+        "minWave:245",
+        "mEndurance"
+      ],
+      "details": "Find 5 talisman fragments (random drops; varies per seed).",
       "untrackable": true
     },
     "Takers": {
@@ -6421,12 +6075,36 @@
       "details": "Gain 4,500 xp from Freeze crowd hits in one battle.",
       "untrackable": true
     },
+    "Bloodmaster": {
+      "apId": 2055,
+      "game_id": 246,
+      "description": "Gain 1.200 xp with kill chains.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:1800",
+        "mEndurance"
+      ],
+      "details": "Gain 1,200 xp from kill chains in one battle.",
+      "untrackable": true
+    },
     "Chainsaw": {
       "apId": 2086,
       "game_id": 272,
       "description": "Gain 3.200 xp with kill chains.",
       "required_effort": "Major",
       "requirements": [],
+      "untrackable": true
+    },
+    "Killed So Many": {
+      "apId": 2298,
+      "game_id": 288,
+      "description": "Gain 7.200 xp with kill chains.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:13000",
+        "mEndurance"
+      ],
+      "details": "Gain 7,200 kill-chain XP in a SINGLE battle (game checks per-battle this.stats.xpFromLongKillChains); needs the monster density of an Endurance run, so Endurance-only.",
       "untrackable": true
     },
     "Bright Weakening": {
@@ -6458,6 +6136,18 @@
       ],
       "untrackable": true
     },
+    "Fully Lit": {
+      "apId": 2203,
+      "game_id": 508,
+      "description": "Have a field beaten in all three battle modes.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "mEndurance",
+        "mTrial"
+      ],
+      "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
+      "untrackable": true
+    },
     "Hacked Gem": {
       "apId": 2229,
       "game_id": 61,
@@ -6483,6 +6173,96 @@
       "required_effort": "Extreme",
       "requirements": [],
       "details": "Create a grade-3 gem with at least 900 effective max damage.",
+      "untrackable": true
+    },
+    "Helping Hand": {
+      "apId": 2241,
+      "game_id": 500,
+      "description": "Have a watchtower kill a possessed monster.",
+      "required_effort": "Major",
+      "requirements": [
+        "ePossessedMonster",
+        "eWatchtower",
+        "mEndurance"
+      ],
+      "details": "Have a watchtower kill a possessed monster.",
+      "untrackable": true
+    },
+    "Getting My Feet Wet": {
+      "apId": 2211,
+      "game_id": 513,
+      "description": "Have 20 fields lit in Endurance mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mEndurance",
+        "fieldToken:20"
+      ],
+      "untrackable": true
+    },
+    "Xp Harvest": {
+      "apId": 2626,
+      "game_id": 514,
+      "description": "Have 40 fields lit in Endurance mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mEndurance",
+        "fieldToken:40"
+      ],
+      "untrackable": true
+    },
+    "Longrunner": {
+      "apId": 2316,
+      "game_id": 515,
+      "description": "Have 60 fields lit in Endurance mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mEndurance",
+        "fieldToken:60"
+      ],
+      "untrackable": true
+    },
+    "Endured a Lot": {
+      "apId": 2153,
+      "game_id": 516,
+      "description": "Have 80 fields lit in Endurance mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mEndurance",
+        "fieldToken:80"
+      ],
+      "untrackable": true
+    },
+    "Disciple": {
+      "apId": 2125,
+      "game_id": 517,
+      "description": "Have 10 fields lit in Trial mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mTrial",
+        "fieldToken:10"
+      ],
+      "untrackable": true
+    },
+    "Adept": {
+      "apId": 2007,
+      "game_id": 518,
+      "description": "Have 30 fields lit in Trial mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mTrial",
+        "fieldToken:30"
+      ],
+      "untrackable": true
+    },
+    "Expert": {
+      "apId": 2167,
+      "game_id": 519,
+      "description": "Have 50 fields lit in Trial mode.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mTrial",
+        "fieldToken:50"
+      ],
       "untrackable": true
     },
     "Worthy": {
@@ -6521,12 +6301,98 @@
       "untrackable": true,
       "vanilla_correction": true
     },
+    "Bloodstream": {
+      "apId": 2057,
+      "game_id": 429,
+      "description": "Kill 4.000 monsters.",
+      "required_effort": "Major",
+      "requirements": [
+        "minMonsters:4000",
+        "mEndurance"
+      ],
+      "details": "Kill 4,000 monsters in one battle.",
+      "untrackable": true
+    },
+    "They Keep Coming": {
+      "apId": 2557,
+      "game_id": 430,
+      "description": "Kill 12.000 monsters.",
+      "required_effort": "Major",
+      "requirements": [
+        "minMonsters:12000",
+        "mEndurance"
+      ],
+      "details": "Kill 12,000 monsters in one battle.",
+      "untrackable": true
+    },
+    "Unending Flow": {
+      "apId": 2588,
+      "game_id": 431,
+      "description": "Kill 24.000 monsters.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:24000",
+        "mEndurance"
+      ],
+      "details": "Kill 24,000 monsters in one battle.",
+      "untrackable": true
+    },
+    "No Land for Swarmlings": {
+      "apId": 2367,
+      "game_id": 280,
+      "description": "Kill 3.333 swarmlings.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minSwarmlings:3333",
+        "mEndurance"
+      ],
+      "details": "Kill 3,333 swarmlings in a SINGLE battle (game checks per-battle this.stats.killedSwarmlings); exceeds any Journey field's swarmling count, so Endurance-only.",
+      "untrackable": true
+    },
+    "Doom Drop": {
+      "apId": 2130,
+      "game_id": 159,
+      "description": "Kill a possessed giant with barrage.",
+      "required_effort": "Minor",
+      "requirements": [
+        "sBarrage",
+        "ePossessedMonster",
+        "mEndurance"
+      ],
+      "untrackable": true
+    },
+    "Out of Nowhere": {
+      "apId": 2393,
+      "game_id": 160,
+      "description": "Kill a whited out possessed monster with bolt.",
+      "required_effort": "Minor",
+      "requirements": [
+        "sBolt",
+        "sWhiteout",
+        "ePossessedMonster",
+        "mEndurance"
+      ],
+      "details": "Kill a whited-out possessed monster with a Bolt shot.",
+      "untrackable": true
+    },
     "Family Friendlier": {
       "apId": 2170,
       "game_id": 606,
       "description": "Kill 900 green blooded monsters.",
       "required_effort": "Trivial",
       "requirements": [],
+      "untrackable": true
+    },
+    "Bone Shredder": {
+      "apId": 2061,
+      "game_id": 150,
+      "description": "Kill 600 monsters before wave 12 starts.",
+      "required_effort": "Major",
+      "requirements": [
+        "mEndurance",
+        "minMonstersBeforeWave12:600"
+      ],
+      "details": "Kill 600 monsters before wave 12 starts. .",
       "untrackable": true
     },
     "Bath Bomb": {
@@ -6567,6 +6433,18 @@
       "requirements": [
         "sOrbOfPresence"
       ],
+      "untrackable": true
+    },
+    "Exorcism": {
+      "apId": 2166,
+      "game_id": 148,
+      "description": "Kill 199 possessed monsters.",
+      "required_effort": "Major",
+      "requirements": [
+        "ePossessedMonster",
+        "mEndurance"
+      ],
+      "details": "Kill 199 possessed monsters in one battle.",
       "untrackable": true
     },
     "Hint of Darkness": {
@@ -6642,6 +6520,81 @@
       "details": "Reference: Half-Life HEV suit. Reach 1000 specific stat (mod logic only — exact trigger undocumented). Have atleast 1.000 enemies poisoned and alive on a field",
       "untrackable": true
     },
+    "Something Special": {
+      "apId": 2503,
+      "game_id": 176,
+      "description": "Reach 2.000 monsters with special properties killed through all the battles.",
+      "required_effort": "Extreme",
+      "requirements": [
+        [
+          "min_wl:10",
+          "mEndurance",
+          "ePossessedMonster:1",
+          "minWave:70"
+        ],
+        [
+          "min_wl:10",
+          "mEndurance",
+          "eTwistedMonster:1",
+          "minWave:70"
+        ],
+        [
+          "min_wl:10",
+          "eMarkedMonster:1"
+        ]
+      ],
+      "untrackable": true
+    },
+    "Marked Targets": {
+      "apId": 2334,
+      "game_id": 185,
+      "description": "Reach 10.000 monsters with special properties killed through all the battles.",
+      "required_effort": "Major",
+      "requirements": [
+        [
+          "min_wl:50",
+          "eMarkedMonster:1"
+        ],
+        [
+          "min_wl:50",
+          "mEndurance",
+          "ePossessedMonster:1"
+        ],
+        [
+          "min_wl:50",
+          "mEndurance",
+          "eTwistedMonster:1"
+        ]
+      ],
+      "details": "Cumulative across all battles: 10,000 kills on monsters with special properties.",
+      "untrackable": true
+    },
+    "Unholy Stack": {
+      "apId": 2589,
+      "game_id": 186,
+      "description": "Reach 20.000 monsters with special properties killed through all the battles.",
+      "required_effort": "Extreme",
+      "requirements": [
+        [
+          "min_wl:100",
+          "mEndurance",
+          "ePossessedMonster",
+          "minWave:70"
+        ],
+        [
+          "min_wl:100",
+          "mEndurance",
+          "eTwistedMonster",
+          "minWave:70"
+        ],
+        [
+          "min_wl:100",
+          "eMarkedMonster:1"
+        ]
+      ],
+      "details": "Cumulative across all battles: 20,000 kills on monsters with special properties.",
+      "untrackable": true
+    },
     "Cleansing the Wilderness": {
       "apId": 2093,
       "game_id": 187,
@@ -6665,6 +6618,61 @@
         ]
       ],
       "details": "Cumulative across all battles: 50,000 kills on monsters with special properties.",
+      "untrackable": true
+    },
+    "Boiling Red": {
+      "apId": 2060,
+      "game_id": 249,
+      "description": "Reach a kill chain of 2400.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "minMonsters:2400",
+        "mEndurance"
+      ],
+      "details": "Reach a kill chain of 2,400 in one battle.",
+      "untrackable": true
+    },
+    "Purple Wand": {
+      "apId": 2423,
+      "game_id": 387,
+      "description": "Reach wizard level 200.",
+      "required_effort": "Major",
+      "requirements": [
+        "mEndurance"
+      ],
+      "untrackable": true
+    },
+    "Brown Wand": {
+      "apId": 2070,
+      "game_id": 388,
+      "description": "Reach wizard level 300.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "mEndurance"
+      ],
+      "details": "Reach wizard level 300.",
+      "untrackable": true
+    },
+    "Red Wand": {
+      "apId": 2439,
+      "game_id": 389,
+      "description": "Reach wizard level 500.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "mEndurance"
+      ],
+      "details": "Reach wizard level 500.",
+      "untrackable": true
+    },
+    "Black Wand": {
+      "apId": 2045,
+      "game_id": 419,
+      "description": "Reach wizard level 1.000.",
+      "required_effort": "Extreme",
+      "requirements": [
+        "mEndurance"
+      ],
+      "details": "Reach wizard level 1,000.",
       "untrackable": true
     },
     "Going Deviant": {
@@ -6713,6 +6721,38 @@
         "mTrial"
       ],
       "details": "Win a Trial battle with at least 3 waves enraged.",
+      "untrackable": true
+    },
+    "Get This Done Quick": {
+      "apId": 2210,
+      "game_id": 559,
+      "description": "Win a Trial battle with at least 3 waves started early.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "minWave:3",
+        "mTrial"
+      ],
+      "details": "Win a Trial battle with at least 3 waves called early.",
+      "untrackable": true
+    },
+    "Impressive": {
+      "apId": 2269,
+      "game_id": 558,
+      "description": "Win a Trial battle without any monster reaching your Orb.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mTrial"
+      ],
+      "untrackable": true
+    },
+    "So Attached": {
+      "apId": 2499,
+      "game_id": 557,
+      "description": "Win a Trial battle without losing any orblets.",
+      "required_effort": "Trivial",
+      "requirements": [
+        "mTrial"
+      ],
       "untrackable": true
     }
   },
