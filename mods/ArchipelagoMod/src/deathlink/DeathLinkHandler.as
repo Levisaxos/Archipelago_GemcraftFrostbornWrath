@@ -91,7 +91,7 @@ package deathlink {
         // very death we just received back to the killer.
         private var _suppressNextDeathSend:Boolean = false;
 
-        /** Fired when the player's orb is destroyed. ():void */
+        /** Fired when the player's orb is destroyed (and a DeathLink is sent). ():void */
         public var onPlayerDied:Function;
         /** Fired when a DeathLink is received and queued. (source:String):void */
         public var onPunishmentReceived:Function;
