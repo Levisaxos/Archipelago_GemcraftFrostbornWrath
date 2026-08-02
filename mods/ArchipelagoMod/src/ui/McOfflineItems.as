@@ -258,15 +258,13 @@ package ui {
                 } else if (apId >= 1400 && apId <= 1521) {
                     // Per-stage Wizard Stash keys — one per stage.
                     return new WizStashKeyDropIcon(apId).bmpdIcon;
-                } else if (apId >= 1522 && apId <= 1561) {
-                    // Stash key pouches: per-tile (1522-1547),
-                    // per-tier (1548-1560), and master (1561).
+                } else if ((apId >= 1522 && apId <= 1547) || apId == 1561) {
+                    // Stash key pouches: per-tile (1522-1547) and master (1561).
                     return new KeyPouchDropIcon(apId).bmpdIcon;
-                } else if (apId >= 1562 && apId <= 1600) {
-                    // Coarse field tokens — per-tile (1562-1587) and per-tier
-                    // (1588-1600). Both render as the generic TilePouch artwork
-                    // since the player's getting "tokens for a group of stages",
-                    // not a specific map tile.
+                } else if (apId >= 1562 && apId <= 1587) {
+                    // Coarse field tokens — per-tile (1562-1587), rendered as the
+                    // generic TilePouch artwork since the player's getting
+                    // "tokens for a group of stages", not a specific map tile.
                     return new TilePouchDropIcon(apId).bmpdIcon;
                 } else if (apId >= 1700 && apId <= 1703) {
                     var spVal:int = (AV.serverData != null && AV.serverData.serverOptions != null)
@@ -287,23 +285,15 @@ package ui {
                         // in the offline panel. Use TilePouch as a neutral icon.
                         return new TilePouchDropIcon(apId).bmpdIcon;
                     }
-                    if ((so.fieldTokenPerTileProgressiveId > 0
-                                && apId == so.fieldTokenPerTileProgressiveId)
-                            || (so.fieldTokenPerTierProgressiveId > 0
-                                && apId == so.fieldTokenPerTierProgressiveId)) {
+                    if (so.fieldTokenPerTileProgressiveId > 0
+                            && apId == so.fieldTokenPerTileProgressiveId) {
                         return new TilePouchDropIcon(apId).bmpdIcon;
                     }
                     if ((so.stashKeyPerStageProgressiveId > 0
                                 && apId == so.stashKeyPerStageProgressiveId)
                             || (so.stashKeyPerTileProgressiveId > 0
-                                && apId == so.stashKeyPerTileProgressiveId)
-                            || (so.stashKeyPerTierProgressiveId > 0
-                                && apId == so.stashKeyPerTierProgressiveId)) {
+                                && apId == so.stashKeyPerTileProgressiveId)) {
                         return new KeyPouchDropIcon(apId).bmpdIcon;
-                    }
-                    if (so.gemPouchPerTierProgressiveId > 0
-                            && apId == so.gemPouchPerTierProgressiveId) {
-                        return new GempouchDropIcon(apId).bmpdIcon;
                     }
                 }
                 // Achievements (2000-2636) need _achievementUnlocker.findGameIdByApId

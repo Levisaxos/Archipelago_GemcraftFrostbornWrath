@@ -22,12 +22,12 @@ package ui {
      * McOptions directly).
      *
      * Tabs:
-     *   0 Wizard     — compact level slider + presets
+     *   0 Wizard     — level preset toggles + XP tomes
      *   1 Skills     — 24 skill toggles
      *   2 Traits     — 15 battle-trait toggles
-     *   3 Stages     — YAML-aware: per-stage / per-tile / per-tier toggles
-     *   4 Talismans  — base (900–952) + extra (1200–1246) one-shot grants
-     *   5 Cores      — shadow-core bundles (1000–1016, 1300–1351) one-shot grants
+     *   3 Stages     — YAML-aware: per-stage / per-tile toggles
+     *   4 Talismans  — the 25 AP "perfect placement" fragment one-shot grants
+     *   5 Cores      — base shadow-core stash (1000–1016) one-shot grants
      *   6 XP         — XP-tome drop-icon grants (Tattered/Worn/Ancient/Filler)
      *
      * Each tab owns an Array of display objects (each with `yReal`). On tab
@@ -48,20 +48,19 @@ package ui {
         public static const TAB_ACHIEVEMENTS:int = 7;
 
         // ── Public state for ScrDebugOptions handlers ───────────────────────────
-        public var wizardSlider:McWizardLevelSlider;
+        public var levelPanels:Array;       // Array of { panel:McOptPanel, level:int }
+        public var levelTitle:McOptTitle;   // live "Wizard Level: N" heading
         public var skillPanels:Array;        // McOptPanel[24]
         public var traitPanels:Array;        // McOptPanel[15]
         public var stageIdToPanel:Object;    // strId -> McOptPanel (per-stage mode)
         public var tilePanels:Object;        // letter -> McOptPanel (per-tile mode)
         public var tilesByLetter:Object;     // letter -> Array<strId>
-        public var tierPanels:Object;        // tier int -> McOptPanel (per-tier mode)
-        public var tiersToStages:Object;     // tier int -> Array<strId>
         public var talismanPanels:Array;     // Array of { panel:McOptPanel, apId:int }
         public var corePanels:Array;         // Array of { panel:McOptPanel, apId:int }
         public var xpPanels:Array;           // Array of { panel:McOptPanel, apId:int }
         public var achievementPanels:Array;  // Array of { panel:McOptPanel, apId:int }
         public var achievementModeBtn:McOptPanel; // toggles the achievements view mode
-        public var stageMode:String = "stage"; // "stage" | "tile" | "tier"
+        public var stageMode:String = "stage"; // "stage" | "tile"
 
         public var tabStrip:DebugTabStrip;
 
@@ -132,8 +131,7 @@ package ui {
             _tabContents[TAB_TRAITS]    = _buildTraitsTab();
             _stagesByMode = {
                 stage: _buildStagesPerStage(),
-                tile:  _buildStagesPerTile(),
-                tier:  _buildStagesPerTier()
+                tile:  _buildStagesPerTile()
             };
             _tabContents[TAB_STAGES]    = _stagesByMode.stage;
             _tabContents[TAB_TALISMANS] = _buildTalismansTab();
@@ -173,12 +171,12 @@ package ui {
         }
 
         /**
-         * Switch the Stages tab between "stage" / "tile" / "tier" mode.
+         * Switch the Stages tab between "stage" / "tile" mode.
          * If the Stages tab is currently visible, swaps the displayed contents.
          * Returns true if the mode changed.
          */
         public function setStageMode(mode:String):Boolean {
-            if (mode != "stage" && mode != "tile" && mode != "tier") return false;
+            if (mode != "stage" && mode != "tile") return false;
             if (mode == stageMode) return false;
             stageMode = mode;
             _tabContents[TAB_STAGES] = _stagesByMode[mode] as Array;
@@ -196,8 +194,7 @@ package ui {
         public function rebuildStagesContents():void {
             _stagesByMode = {
                 stage: _buildStagesPerStage(),
-                tile:  _buildStagesPerTile(),
-                tier:  _buildStagesPerTier()
+                tile:  _buildStagesPerTile()
             };
             _tabContents[TAB_STAGES] = _stagesByMode[stageMode] as Array;
             if (tabStrip != null && tabStrip.activeIndex == TAB_STAGES) {
@@ -231,13 +228,29 @@ package ui {
         private function _buildLevelsTab():Array {
             var arr:Array = [];
             xpPanels = [];
+            levelPanels = [];
 
-            // Wizard slider (top)
-            wizardSlider = new McWizardLevelSlider(0, CONTENT_START_Y);
-            arr.push(wizardSlider);
+            // ── Wizard level presets (native toggles, radio behaviour) ──────────
+            // The heading doubles as a live readout of the current level; the
+            // toggle whose level matches shows checked (see ScrDebugOptions).
+            var vY:Number = CONTENT_START_Y;
+            levelTitle = new McOptTitle("Wizard Level", TITLE_X, vY);
+            arr.push(levelTitle);
+            vY += ROW_HEIGHT_NORM;
 
-            // XP tomes (below slider, separated by a section gap)
-            var vY:Number = CONTENT_START_Y + McWizardLevelSlider.TOTAL_HEIGHT + SECTION_GAP;
+            var levels:Array = [1, 10, 25, 50, 100, 250, 500, 1000];
+            for (var li:int = 0; li < levels.length; li++) {
+                var lpx:Number = (li % 2 == 0) ? COL_LEFT_X : COL_RIGHT_X;
+                var lv:int = int(levels[li]);
+                var lpnl:McOptPanel = new McOptPanel("Level " + lv, lpx, vY, false);
+                levelPanels.push({ panel: lpnl, level: lv });
+                arr.push(lpnl);
+                if (li % 2 == 1) vY += ROW_HEIGHT_NORM;
+            }
+            if (levels.length % 2 != 0) vY += ROW_HEIGHT_NORM;
+
+            // ── XP tomes (below the presets, separated by a section gap) ────────
+            vY += SECTION_GAP;
             arr.push(new McOptTitle("XP Tomes", TITLE_X, vY));
             vY += ROW_HEIGHT_NORM;
 
@@ -362,69 +375,17 @@ package ui {
             return arr;
         }
 
-        private function _buildStagesPerTier():Array {
-            var arr:Array = [];
-            tierPanels   = {};
-            tiersToStages = {};
-            if (GV.stageCollection == null) return arr;
-
-            // Bucket stages by tier from serverOptions.stageTierByStrId.
-            // If no server data yet, this tab will be empty (caller can rebuild
-            // after connect via setStageMode("tier") rebuild).
-            var so:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
-            var tierByStrId:Object = (so != null) ? so.stageTierByStrId : null;
-            var hasTierData:Boolean = false;
-            if (tierByStrId != null) {
-                for (var probeKey:String in tierByStrId) { hasTierData = true; break; }
-            }
-            if (!hasTierData) {
-                var vY0:Number = CONTENT_START_Y;
-                arr.push(new McOptTitle("(no AP tier data — connect first)", TITLE_X, vY0));
-                return arr;
-            }
-
-            var metas:Array = GV.stageCollection.stageMetas;
-            for (var j:int = 0; j < metas.length; j++) {
-                if (metas[j] == null) continue;
-                var sid:String = String(metas[j].strId);
-                if (tierByStrId[sid] == null) continue;
-                var tier:int = int(tierByStrId[sid]);
-                if (tiersToStages[tier] == null) tiersToStages[tier] = [];
-                (tiersToStages[tier] as Array).push(sid);
-            }
-
-            // Sort tiers ascending using progressiveTierOrder if present, else numeric.
-            var tierKeys:Array = [];
-            for (var k:* in tiersToStages) tierKeys.push(int(k));
-            tierKeys.sort(Array.NUMERIC);
-
-            var vY:Number = CONTENT_START_Y;
-            arr.push(new McOptTitle("Tiers", TITLE_X, vY));
-            vY += ROW_HEIGHT_NORM;
-
-            for (var ti:int = 0; ti < tierKeys.length; ti++) {
-                var t:int = int(tierKeys[ti]);
-                var px:Number = (ti % 2 == 0) ? COL_LEFT_X : COL_RIGHT_X;
-                var label:String = "Tier " + t + "  (" + (tiersToStages[t] as Array).length + " stages)";
-                var pnl:McOptPanel = new McOptPanel(label, px, vY, false);
-                tierPanels[t] = pnl;
-                arr.push(pnl);
-                if (ti % 2 == 1) vY += ROW_HEIGHT_NORM;
-            }
-            return arr;
-        }
-
         private function _buildTalismansTab():Array {
             var arr:Array = [];
             talismanPanels = [];
             var nameMap:Object = (AV.serverData != null) ? AV.serverData.talismanNameMap : null;
 
+            // Only the 25 AP "perfect placement" fragments are AP items now
+            // (they resolve via the name map); the other 900–952 ids and the
+            // retired extras (1200–1246) are no longer granted here.
             var vY:Number = CONTENT_START_Y;
-            vY = _appendGrantSection(arr, talismanPanels, "Base Talismans (900-952)",
+            _appendGrantSection(arr, talismanPanels, "AP Talismans (900-952)",
                 900, 952, nameMap, "Talisman Fragment", vY);
-            vY += SECTION_GAP;
-            _appendGrantSection(arr, talismanPanels, "Extra Talismans (1200-1246)",
-                1200, 1246, nameMap, "Talisman Fragment", vY);
             return arr;
         }
 
@@ -433,12 +394,11 @@ package ui {
             corePanels = [];
             var nameMap:Object = (AV.serverData != null) ? AV.serverData.shadowCoreNameMap : null;
 
+            // Only the base per-field stashes (1000–1016) are AP items now; the
+            // extra shadow cores (1300–1351) were retired.
             var vY:Number = CONTENT_START_Y;
-            vY = _appendGrantSection(arr, corePanels, "Base Shadow Cores (1000-1016)",
+            _appendGrantSection(arr, corePanels, "Base Shadow Cores (1000-1016)",
                 1000, 1016, nameMap, "Shadow Cores", vY);
-            vY += SECTION_GAP;
-            _appendGrantSection(arr, corePanels, "Extra Shadow Cores (1300-1351)",
-                1300, 1351, nameMap, "Shadow Cores", vY);
             return arr;
         }
 

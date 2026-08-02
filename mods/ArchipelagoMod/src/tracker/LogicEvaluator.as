@@ -42,6 +42,18 @@ package tracker {
             "Apparition", "Shadow", "Specter", "Spire", "Wizard Hunter", "Wraith",
         ];
 
+        // `tm<Spell>Charge:N` token head → TalismanPropertyId (Max-*-Charge).
+        // Mirrors apworld rules._TALISMAN_PROPERTY_TOKENS; the per-fragment
+        // values ship in AV.serverData.talismanChargeMap.
+        private static const TM_CHARGE_PROP:Object = {
+            "tmFreezeCharge":    21,
+            "tmWhiteoutCharge":  22,
+            "tmIceshardsCharge": 23,
+            "tmBoltCharge":      24,
+            "tmBeamCharge":      25,
+            "tmBarrageCharge":   26
+        };
+
         private var _logger:Logger;
         private var _modName:String;
         private var _fieldEvaluator:FieldLogicEvaluator;
@@ -117,11 +129,80 @@ package tracker {
             return _evaluateAndGroupBound(requirements);
         }
 
+        /**
+         * Skill/trait-only gate — mirrors apworld rules._compile_skill_trait_gate
+         * (Phase 5). Evaluates ONLY the skill/trait tokens in a DNF requirement
+         * list; element / stat-counter / mode / Field_ / Achievement tokens are
+         * IGNORED (the WL gate + in-game play handle them). Returns true when
+         * there are no skill/trait tokens, so the achievement stays WL-only —
+         * matching the apworld's "None => no extra gate" behaviour.
+         *
+         * Used by the achievement in-logic gate so the tracker matches exactly
+         * what the apworld gates on for fill (derived WL AND required skills/traits).
+         */
+        public function evaluateSkillTraitGate(requirements:Array):Boolean {
+            if (requirements == null || requirements.length == 0) return true;
+            var groups:Array = (requirements[0] is Array) ? requirements : [requirements];
+            for each (var group:* in groups) {
+                var andGroup:Array = group as Array;
+                if (andGroup == null) continue;
+                var groupOk:Boolean = true;
+                for each (var tok:* in andGroup) {
+                    if (!(tok is String)) continue;
+                    var t:String = _trim(String(tok));
+                    if (!_isSkillTraitToken(t)) continue; // ignore non-skill/trait
+                    if (!evaluateRequirement(t)) {
+                        groupOk = false;
+                        break;
+                    }
+                }
+                // A group whose skill/trait tokens all pass (or that has none)
+                // satisfies the OR — matches apworld's _always_true empty group.
+                if (groupOk) return true;
+            }
+            return false;
+        }
+
+        /** True iff `t` is a skill token (sX), a trait token (tX), or a
+         *  skill/trait counter (skills:/gemSkills:/strikeSpells:/
+         *  enhancementSpells:/battleTraits:). Mirrors the token classes the
+         *  apworld's skill_prefix_map / trait_prefix_map / skill_counter_pools
+         *  cover; stat / talisman / field counters are NOT included. */
+        private function _isSkillTraitToken(t:String):Boolean {
+            if (_skillPrefixMap[t] != null) return true;
+            if (_traitPrefixMap[t] != null) return true;
+            var ci:int = t.indexOf(":");
+            if (ci > 0) {
+                var head:String = t.substring(0, ci);
+                if (head == "skills" || head == "Skills"
+                        || head == "gemSkills" || head == "GemSkills"
+                        || head == "otherSkills" || head == "OtherSkills"
+                        || head == "strikeSpells" || head == "enhancementSpells"
+                        || head == "battleTraits" || head == "BattleTraits")
+                    return true;
+            }
+            return false;
+        }
+
         /** AND-group with same-stage binding.  See evaluateRequirements doc. */
         private function _evaluateAndGroupBound(andGroup:Array):Boolean {
+            // A group with 2+ gem `sX` tokens must field all its colours on ONE
+            // stage — evaluating each gem via its own global broadening let two
+            // colours be satisfied on two different in-logic stages (Rotten Aura
+            // false-positive). Pull them out and bind them jointly below; single-
+            // gem groups keep the standard broadened path (unchanged).
+            var gemNames:Array = [];
+            for each (var scanReq:* in andGroup) {
+                var gn:String = _gemNameForToken(_trim(String(scanReq)));
+                if (gn != null) gemNames.push(gn);
+            }
+            var jointGems:Boolean = gemNames.length >= 2;
+
             var staticCandidates:Array = null;  // null = no per-stage constraint yet
             for each (var groupReq:* in andGroup) {
                 var rs:String = _trim(String(groupReq));
+                if (jointGems && _gemNameForToken(rs) != null)
+                    continue; // handled by the joint gem check below
                 var stages:Array = _qualifyingStagesForToken(rs);
                 if (stages == null) {
                     if (!evaluateRequirement(rs)) return false;
@@ -134,6 +215,11 @@ package tracker {
                     }
                 }
             }
+            if (jointGems) {
+                // The joint check binds the colours AND the other per-stage
+                // tokens (staticCandidates) to a single in-logic stage.
+                return _jointGemStageInLogic(gemNames, staticCandidates);
+            }
             if (staticCandidates == null) return true;
             if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
                 return false;
@@ -142,6 +228,113 @@ package tracker {
                 if (fil[sid] == true) return true;
             }
             return false;
+        }
+
+        /**
+         * Classify an achievement (by its DNF requirements) relative to a
+         * hovered stage, for the world-map field tooltip's achievement block.
+         *
+         * Returns:
+         *   "specific" — some DNF group's per-stage tokens can ALL be satisfied
+         *                by THIS stage (strId is in the intersected candidate
+         *                set), strId is currently in logic, and that group's
+         *                non-stage tokens (skills/traits/counters) are all met.
+         *                The achievement is completable by playing this field.
+         *   "global"   — no passing group binds to a stage (every passing group
+         *                is loadout/global tokens only), so it's obtainable on
+         *                any clearable field. Field-independent.
+         *   "other"    — only bindable to OTHER stages (a per-stage group whose
+         *                candidate set excludes strId); not shown on this field.
+         *
+         * Mirrors _evaluateAndGroupBound's binding, but pins the bound stage to
+         * strId instead of "any stage in fieldsInLogic".
+         */
+        public function classifyForStage(requirements:Array, strId:String):String {
+            if (requirements == null || requirements.length == 0)
+                return "global";
+            if (_fieldEvaluator != null)
+                _fieldEvaluator.recompute();
+            var fil:Object = (AV.sessionData != null) ? AV.sessionData.fieldsInLogic : null;
+            var groups:Array = (requirements[0] is Array) ? requirements : [requirements];
+            var sawGlobalGroup:Boolean = false;
+            for each (var group:* in groups)
+            {
+                var andGroup:Array = group as Array;
+                if (andGroup == null)
+                    continue;
+                // 2+ gem `sX` tokens bind jointly to a single stage (see
+                // _evaluateAndGroupBound) — treat them as a per-stage token here.
+                var gemNames:Array = [];
+                for each (var scanReq:* in andGroup)
+                {
+                    var gnc:String = _gemNameForToken(_trim(String(scanReq)));
+                    if (gnc != null) gemNames.push(gnc);
+                }
+                var jointGems:Boolean = gemNames.length >= 2;
+                var candidates:Array = null;    // null = no per-stage token yet
+                var hasStageToken:Boolean = false;
+                var nonStageOk:Boolean = true;
+                for each (var groupReq:* in andGroup)
+                {
+                    var rs:String = _trim(String(groupReq));
+                    if (jointGems && _gemNameForToken(rs) != null)
+                        continue; // handled by the joint gem check below
+                    var stages:Array = _qualifyingStagesForToken(rs);
+                    if (stages == null)
+                    {
+                        if (!evaluateRequirement(rs))
+                        {
+                            nonStageOk = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        hasStageToken = true;
+                        if (candidates == null)
+                            candidates = stages.concat();
+                        else
+                            candidates = _intersectStages(candidates, stages);
+                    }
+                }
+                if (!nonStageOk)
+                    continue;
+                if (jointGems)
+                {
+                    // Doable HERE iff strId (within any other per-stage
+                    // constraint) can host all colours and is in logic.
+                    if (candidates != null)
+                    {
+                        var inCand:Boolean = false;
+                        for each (var cc:String in candidates)
+                        {
+                            if (cc == strId) { inCand = true; break; }
+                        }
+                        if (!inCand) continue;
+                    }
+                    if (_jointGemStageInLogic(gemNames, [strId]))
+                        return "specific";
+                    continue;
+                }
+                if (!hasStageToken)
+                {
+                    sawGlobalGroup = true;
+                    continue;
+                }
+                // Stage-bound group: doable HERE iff strId is a candidate and
+                // this field is currently in logic.
+                if (candidates != null && fil != null && fil[strId] == true)
+                {
+                    for each (var sid:String in candidates)
+                    {
+                        if (sid == strId)
+                            return "specific";
+                    }
+                }
+            }
+            if (sawGlobalGroup)
+                return "global";
+            return "other";
         }
 
         /** Count of stages currently in logic.  Used by the `fieldToken:N`
@@ -279,6 +472,14 @@ package tracker {
                     elemNameD = eheadD.substring(1);
                 }
                 return "Requires stage with " + ecountD + "+ " + elemNameD;
+            }
+            if (req.indexOf("tm") == 0 && req.indexOf("Charge:") > 0
+                    && TM_CHARGE_PROP[req.substring(0, req.indexOf(":"))] != null)
+            {
+                var tccD:int = req.indexOf(":");
+                var spellD:String = req.substring(2, tccD - "Charge".length);
+                return "Requires +" + int(_trim(req.substring(tccD + 1)))
+                    + "% max " + spellD + " charge from talisman fragments";
             }
             // -------------------------------------------------------------
 
@@ -472,8 +673,37 @@ package tracker {
                     }
                     return false;
                 }
+                // Apparition count within the Ritual scripted-spawn count is
+                // satisfiable by Ritual alone on any in-logic waves>=4 stage —
+                // the same broadening _elementInLogic applies to count-less
+                // eApparition. Mirrors apworld's count-path Apparition branch.
+                if (nameForField == "Apparition"
+                        && ecount <= _RITUAL_APPARITION_SPAWN_COUNT)
+                {
+                    if (_fieldEvaluator == null) return false;
+                    if (_fieldEvaluator.hasInLogicFieldWithElementCount("Apparition", ecount))
+                        return true;
+                    return AV.sessionData.hasItem(_RITUAL_TRAIT_AP_ID)
+                        && _fieldEvaluator.hasInLogicFieldWithMinWaves(_RITUAL_TRAIT_MIN_WAVES);
+                }
                 return _fieldEvaluator != null
                     && _fieldEvaluator.hasInLogicFieldWithElementCount(nameForField, ecount);
+            }
+            // tm<Spell>Charge:N — sum the Max-*-Charge value of the held
+            // progression talisman fragments and require >= N. The per-fragment
+            // values ship in AV.serverData.talismanChargeMap; holding the
+            // fragment counts at its fully-upgraded value, mirroring apworld
+            // rules._sum_talisman_property (same full-upgrade assumption as
+            // talismanFragments:N) so the tracker dot matches generation.
+            if (req.indexOf("tm") == 0 && req.indexOf("Charge:") > 0)
+            {
+                var tmc:int = req.indexOf(":");
+                var tmPid:* = TM_CHARGE_PROP[req.substring(0, tmc)];
+                if (tmPid != null)
+                {
+                    var tmNeed:int = int(_trim(req.substring(tmc + 1)));
+                    return _sumTalismanCharge(int(tmPid)) >= tmNeed;
+                }
             }
             // -------------------------------------------------------------
 
@@ -584,13 +814,7 @@ package tracker {
             //   off (0)        → no gating, always true
             //   per_tile (1)   → state.has("Gempouch (<prefix>)")
             //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
-            //   per_tier (3)   → state.has("Tier <N> Gempouch") for stage's tier
-            //                    (requires a stage str_id reference; the
-            //                    requirement string only carries prefix, so
-            //                    per_tier is checked at stage-level — here we
-            //                    fall back to "any tier pouch held" which is
-            //                    permissive but safe for tracker preview)
-            //   global (4)     → state.has("Master Gempouch")
+            //   global (5)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
                 var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
                 if (mode == 0) return true;
@@ -618,30 +842,6 @@ package tracker {
                     if (progId <= 0) progId = 652;
                     return AV.sessionData.getItemCount(progId) >= idxP + 1;
                 }
-                if (mode == 3 || mode == 4) {
-                    // per_tier (3) and per_tier_progressive (4): without a specific stage in scope, accept if ANY tier pouch is held that covers a stage with this prefix.
-                    var tierMap:Object = AV.serverData.serverOptions.stageTierByStrId;
-                    if (tierMap == null) return true;
-                    var tierProgId:int = int(AV.serverData.serverOptions.gemPouchPerTierProgressiveId);
-                    var tierOrd:Array = AV.serverData.serverOptions.progressiveTierOrder as Array;
-                    for (var sid:String in tierMap) {
-                        if (sid.charAt(0) == pouchPrefix) {
-                            var st:int = int(tierMap[sid]);
-                            if (mode == 3) {
-                                if (AV.sessionData.hasItem(1601 + st))
-                                    return true;
-                            } else if (tierProgId > 0) {
-                                // mode == 4: starter-first count threshold.
-                                var posT:int = (tierOrd != null && tierOrd.length > 0)
-                                                  ? tierOrd.indexOf(st) : st;
-                                if (posT < 0) continue;
-                                if (AV.sessionData.getItemCount(tierProgId) >= posT + 1)
-                                    return true;
-                            }
-                        }
-                    }
-                    return false;
-                }
                 return true;
             }
 
@@ -650,15 +850,18 @@ package tracker {
                 return AV.sessionData.countItemsInRange(800, 814) >= btNeed;
             }
 
-            // "minWave: N" — player must be able to call N waves early on
-            // some in-logic stage. Linked-wave pairs only count as ONE call
-            // (the follower spawns automatically with the leader), so we
-            // gate on CallableWaveCount, not total WaveCount. Matches the
-            // apworld split in requirement_tokens.py.
+            // "minWave: N" — an in-logic stage has N total waves of capacity.
+            // Backs "beat N waves", "cast N spells", "activate shrines", and the
+            // literal "call N waves early" family. Gates on total WaveCount (NOT
+            // vanilla CallableWaveCount): the LinkedWaveEarlyCredit patch restores
+            // full credit for linked followers, so the achievable early-call max
+            // is WaveCount - 1, and total-wave achievements need WaveCount anyway.
+            // Matches the apworld's requirement_tokens.py mapping AND the mod's own
+            // in-level evaluator (both use WaveCount for minWave).
             if (lower.indexOf("minwave") == 0) {
                 var cwNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _fieldEvaluator != null
-                    && _fieldEvaluator.hasInLogicFieldWithMinCallableWaves(cwNeed);
+                    && _fieldEvaluator.hasInLogicFieldWithMinWaves(cwNeed);
             }
             // "beforeWave: N" — must beat the stage before wave N starts;
             // gates on the stage actually having N+ waves at all. Stays
@@ -711,9 +914,9 @@ package tracker {
                 var tcNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countMatchingTalismanSets(false) >= tcNeed;
             }
-            // "skillPoints: N" — sum of SP across collected Skillpoint Bundle
-            // items (1700..1703 — four named tiers; per-tier SP value from
-            // slot_data ServerOptions.spBundleValues).
+            // "skillPoints: N" — sum of SP across collected SP items (1700..1703
+            // — 3 fixed bundle tiers + the single Skillpoint; per-item SP value
+            // from slot_data ServerOptions.spBundleValues).
             if (lower.indexOf("skillpoints") == 0) {
                 var spNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countSkillPoints() >= spNeed;
@@ -800,6 +1003,25 @@ package tracker {
 
             // Unknown requirement — don't block
             return true;
+        }
+
+        /** Sum the Max-*-Charge value (talisman property `propId`) across the
+         *  progression talisman fragments the player currently holds. Data ships
+         *  in AV.serverData.talismanChargeMap (propId str → {fragApId str →
+         *  value at max upgrade}). Mirrors apworld rules._sum_talisman_property:
+         *  a held fragment contributes its fully-upgraded value (same assumption
+         *  talismanFragments:N makes about socketing). */
+        private function _sumTalismanCharge(propId:int):int {
+            if (AV.serverData == null || AV.serverData.talismanChargeMap == null)
+                return 0;
+            var contribs:Object = AV.serverData.talismanChargeMap[String(propId)];
+            if (contribs == null) return 0;
+            var total:int = 0;
+            for (var apIdStr:String in contribs) {
+                if (AV.sessionData.hasItem(int(apIdStr)))
+                    total += int(contribs[apIdStr]);
+            }
+            return total;
         }
 
         // -----------------------------------------------------------------------
@@ -1137,9 +1359,9 @@ package tracker {
         }
 
         /**
-         * Sum SP across collected Skillpoint Bundle items. Per-tier SP value
-         * is per-seed and arrives via slot_data (ServerOptions.spBundleValues
-         * indexed by apId-1700: Small/Medium/Large/Huge). Bundles stack — apworld's
+         * Sum SP across collected SP items. Per-item SP value is fixed and
+         * arrives via slot_data (ServerOptions.spBundleValues indexed by
+         * apId-1700: Small/Medium/Big/Single). Bundles stack — apworld's
          * _count_skill_points multiplies tier value by state.count(name), so the
          * mod must mirror that with getItemCount(apId) to keep logic in agreement.
          */
@@ -1375,7 +1597,13 @@ package tracker {
             "Tower":           true,
             "Wall":            true,
             "Marked Monster":  true,
-            "Drop Holder":     true
+            "Drop Holder":     true,
+            // Apparition broadens via the Ritual trait (see _elementInLogic),
+            // so it can't bind to its natural [Q1, R6] stage list — that would
+            // route it through the binding path and bypass the broadening,
+            // hiding standalone apparition achievements in-game even with
+            // Ritual. Mirrors apworld's static_set=None for Apparition.
+            "Apparition":      true
         };
 
         /** Returns a candidate stage str_id list for `req` if it's a
@@ -1405,6 +1633,21 @@ package tracker {
                 return [fSid];
             }
 
+            // gemSkills:N (prismatic) — bind to the SAME stage as the other
+            // per-stage tokens in the AND-group. Held gem-skill items give
+            // their colour on EVERY stage, so if they alone meet N the token
+            // doesn't constrain the stage (null = global). Otherwise the
+            // remaining colours must all come from ONE stage's pouch, so return
+            // the stages whose pouch (unioned with held skills) reaches N. Without
+            // this, "eSpecter AND gemSkills:6" (etc.) turned green when a specter
+            // field AND a *different* 6-gem field were both in logic — impossible
+            // to actually complete.
+            if (lower.indexOf("gemskills") == 0) {
+                var gsColon:int = lower.indexOf(":");
+                if (gsColon < 0) return null;
+                return _qualifyingStagesForGemSkills(int(_trim(lower.substring(gsColon + 1))));
+            }
+
             var firstChar:String = req.charAt(0);
             if ((firstChar == "e" || firstChar == "w") && req.length >= 2
                     && _isUpper(req.charAt(1))) {
@@ -1427,6 +1670,13 @@ package tracker {
                                             : ehead.substring(1);
                 if (pascalName == "WizardTower" || pascalName == "WizardStash"
                         || pascalName == "DropHolder")
+                    return null;
+                // eApparition:N (N <= Ritual spawn count) broadens via Ritual,
+                // so it stays global — same reasoning as the count-less path's
+                // _NON_BINDABLE_ELEMENTS entry. The evaluateRequirement eX:N
+                // branch drives the answer.
+                if (pascalName == "Apparition"
+                        && ecount <= _RITUAL_APPARITION_SPAWN_COUNT)
                     return null;
                 return _qualifyingStagesWithStatAtLeast(pascalName + "Count", ecount);
             }
@@ -1634,6 +1884,103 @@ package tracker {
             return maxN;
         }
 
+        /** Candidate stages for `gemSkills:N` same-stage binding. Held gem-skill
+         *  items give their colour on EVERY stage, so if the player already holds
+         *  >= N gem skills the token doesn't constrain the stage (returns null =
+         *  global). Otherwise the missing colours must all come from a single
+         *  stage's pouch, so returns every stage whose pouch (unioned with the
+         *  held skills) reaches N. The AND-group walker intersects this with the
+         *  other tokens' stages and applies the final in-logic check. Mirrors
+         *  _countGemSkillsPerStageMaxAP's per-stage math. */
+        private function _qualifyingStagesForGemSkills(need:int):Array {
+            if (need <= 0) return null;
+            var held:Object = {};
+            var heldCount:int = 0;
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                var sIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx)) {
+                    held[skillName] = true;
+                    heldCount++;
+                }
+            }
+            if (heldCount >= need) return null; // satisfiable on any stage — no constraint
+            var out:Array = [];
+            var fields:Object = (AV.sessionData != null) ? AV.sessionData.fieldsInLogic : null;
+            if (fields == null) return out;
+            for (var sid:String in fields) {
+                var n:int = heldCount;
+                for each (var sk:String in _GEM_SKILL_NAMES) {
+                    if (held[sk]) continue;
+                    var gn:String = _GEM_SKILL_TO_GEM_NAME[sk];
+                    if (gn != null && _gemOnStage(sid, gn)) n++;
+                }
+                if (n >= need) out.push(sid);
+            }
+            return out;
+        }
+
+        /** Gem display name for a gem-skill token (`sPoison` -> "Poison"), or
+         *  null if `req` isn't a gem-skill token. Mirrors apworld's
+         *  _GEM_TOKEN_TO_GEM_NAME. */
+        private function _gemNameForToken(req:String):String {
+            if (req == null || req.length < 2) return null;
+            if (req.charAt(0) != "s" || !_isUpper(req.charAt(1))) return null;
+            if (req.indexOf(":") >= 0) return null;
+            var skillName:String = _skillPrefixMap[req];
+            if (skillName == null) return null;
+            return _GEM_SKILL_TO_GEM_NAME[skillName]; // null for non-gem skills
+        }
+
+        /** True iff some in-logic stage can field EVERY gem in `gemNames` AT
+         *  ONCE: pouch owned, pouch capacity (|stageAvailableGems|) >= count,
+         *  and each requested colour is held (skill item, works on any stage) OR
+         *  listed in that stage's pouch. When `candidates` is non-null the search
+         *  is restricted to it (the AND-group's other per-stage tokens), so the
+         *  colours and those tokens land on the SAME stage.
+         *
+         *  Mirrors apworld rules._compile_gems_joint. Without this, a multi-gem
+         *  achievement (Rotten Aura = sManaLeech + sPoison) passed when each
+         *  colour was creatable on a DIFFERENT in-logic stage, even with no
+         *  single beatable stage hosting both. */
+        private function _jointGemStageInLogic(gemNames:Array, candidates:Array):Boolean {
+            if (AV.serverData == null || AV.serverData.stageAvailableGems == null)
+                return false;
+            if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
+                return false;
+            var nNeed:int = gemNames.length;
+            var held:Object = {};
+            for each (var skillName:String in _GEM_SKILL_NAMES) {
+                var sIdx:int = SessionData.SKILL_NAMES.indexOf(skillName);
+                if (sIdx >= 0 && AV.sessionData.hasItem(700 + sIdx))
+                    held[_GEM_SKILL_TO_GEM_NAME[skillName]] = true;
+            }
+            var candSet:Object = null;
+            if (candidates != null) {
+                candSet = {};
+                for each (var cs:String in candidates) candSet[cs] = true;
+            }
+            var pools:Object = AV.serverData.stageAvailableGems;
+            var fields:Object = AV.sessionData.fieldsInLogic;
+            for (var sid:String in pools) {
+                if (fields[sid] != true) continue;
+                if (candSet != null && candSet[sid] !== true) continue;
+                if (sid.length == 0 || !AV.sessionData.hasPouchForPrefix(sid.charAt(0)))
+                    continue;
+                var arr:Array = pools[sid] as Array;
+                if (arr == null || arr.length < nNeed) continue; // pouch capacity
+                var stageSet:Object = {};
+                for each (var g:String in arr) stageSet[g] = true;
+                var allMet:Boolean = true;
+                for each (var need:String in gemNames) {
+                    if (stageSet[need] === true || held[need] === true) continue;
+                    allMet = false;
+                    break;
+                }
+                if (allMet) return true;
+            }
+            return false;
+        }
+
         /** Count of gem skills 'available' on a specific stage (held OR
          *  on that stage's pouch). */
         private function _countGemSkillsOnStage(currentStrId:String):int {
@@ -1671,6 +2018,10 @@ package tracker {
         // others' reachability still requires a pre-placed reachable stage.
         private static const _RITUAL_TRAIT_AP_ID:int     = 814;
         private static const _RITUAL_TRAIT_MIN_WAVES:int = 4;
+        // Ritual pushes exactly this many apparitions (IngameInitializer.as:1649,
+        // a hardcoded i<2 loop) on any stage with waves > 3, so eApparition:N for
+        // N <= this is satisfiable by Ritual alone on any in-logic waves>=4 stage.
+        private static const _RITUAL_APPARITION_SPAWN_COUNT:int = 2;
 
         /** Returns true if any reachable in-logic stage hosts the named element. */
         private function _elementInLogic(elemName:String):Boolean {

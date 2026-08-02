@@ -124,14 +124,25 @@ mode_tokens = frozenset({"mTrial", "mEndurance"})
 # To add a new stage-stat gate: one entry here + the field on each
 # applicable stage in rulesdata_levels.py. No evaluator change.
 level_stat_counters = {
-    # "minWave:N" means "player must be able to call N waves early on this
-    # stage in a single battle". The cap is NOT total WaveCount — waves with
-    # isLinkedToNext=true cause their follower to auto-spawn with the leader,
-    # so the player only gets credit for one call per pair. CallableWaveCount
-    # (derived per-stage via PRNG replay in extract_level_monster_data.py) is
-    # the achievable maximum and the correct logic gate for the "Call N waves
-    # early" achievement family (Short Tempered / Restless / Agitated / ...).
-    "minWave":           "CallableWaveCount",
+    # "minWave:N" gates on a stage having N total waves of capacity. It backs a
+    # broad family — "beat N waves" (Getting Wet / Elementary), "cast N spells
+    # over a battle" (Scare Tactics / Shardalot), "activate shrines" (Earthquake),
+    # and the literal "Call N waves early" trio (Short Tempered / Restless /
+    # Agitated) — so total WaveCount is the right measure for the majority.
+    #
+    # It used to gate on CallableWaveCount, which subtracts one per
+    # isLinkedToNext pair (a linked follower auto-spawns with its leader, so
+    # vanilla credits only one early call per pair). But the mod's
+    # LinkedWaveEarlyCredit patch restores full credit for linked followers, so
+    # in the AP-modded game the achievable early-call max is WaveCount - 1, not
+    # the vanilla CallableWaveCount. Under CallableWaveCount, e.g. S2 (WaveCount
+    # 16, one link -> CallableWaveCount 14) failed minWave:15 even though the
+    # patched game lets you call 15 early there. Gating on WaveCount fixes that.
+    # (Off-by-one caveat: for the literal call-early trio the true max is
+    # WaveCount-1, so a stage with exactly N waves is 1-lenient here; harmless
+    # given the heuristic nature and that the mod's in-level evaluator already
+    # uses total WaveCount for minWave.)
+    "minWave":           "WaveCount",
     # "beforeWave:N" is a different semantic — "must happen before wave N" —
     # which gates on the stage actually having N+ waves at all. Stays on
     # total WaveCount.

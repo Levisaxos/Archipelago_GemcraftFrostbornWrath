@@ -14,6 +14,7 @@ package data {
         public var tokenStages:Object;           // stage str_id → true (reverse index)
         public var talismanMap:Object;           // apId (str) → "seed/rarity/type/upgradeLevel"
         public var talismanNameMap:Object;       // apId (str) → display name
+        public var talismanChargeMap:Object;     // propId (str) → { fragApId (str) → value at max } (Max-*-Charge props 21–26)
         public var shadowCoreMap:Object;         // apId (str) → amount (int)
         public var shadowCoreNameMap:Object;     // apId (str) → display name
         public var wizStashTalData:Object;       // stage str_id → "seed/rarity/type/upgradeLevel"
@@ -37,6 +38,14 @@ package data {
         public var stageUnlocks:Object;          // stage str_id → Array<down-stream str_ids> (vanilla overworld map)
         public var freeStages:Array;             // Array of stage str_ids without field tokens (W1-W4)
         public var matchingTalismans:Object;     // { grid:[apId*9], rows:[[apId*3]*3], columns:[[apId*3]*3] }
+        public var progressionTalismanSet:Array; // 25 entries {slot, seed, rarity, type, upgrade_level, tal_data}
+
+        // Hidden per-TILE XP multiplier (from the hand-authored xp_curve.json —
+        // NOT slot_data, it's a static tuning curve). tile letter → Number.
+        // DifficultyXpScaler multiplies earned battle XP by this so the player's
+        // real progression matches the WL curve apply_xp_curve.py bakes into the
+        // apworld's gates from the SAME file. Null/missing ⇒ treated as 1.0.
+        public var tileXpMultiplier:Object;
 
         // Game Options (from slot_data)
         public var serverOptions:ServerOptions;
@@ -54,6 +63,7 @@ package data {
             tokenStages = {};
             talismanMap = {};
             talismanNameMap = {};
+            talismanChargeMap = {};
             shadowCoreMap = {};
             shadowCoreNameMap = {};
             wizStashTalData = {};
@@ -70,6 +80,8 @@ package data {
             stageUnlocks = {};
             freeStages = [];
             matchingTalismans = null;
+            progressionTalismanSet = [];
+            tileXpMultiplier = null;
             serverOptions = new ServerOptions();
         }
 
@@ -274,6 +286,17 @@ package data {
 
                 if (logicData.matchingTalismans)
                     matchingTalismans = logicData.matchingTalismans;
+
+                // Hidden per-tile XP curve (separate hand-authored file — it is
+                // NOT generated, and py-scripts/apply_xp_curve.py reads the same
+                // file to bake the apworld's WL gates).
+                try {
+                    var curve:Object = JSON.parse(EmbeddedData.getXpCurveJSON());
+                    if (curve != null && curve.tileXpMultiplier != null)
+                        tileXpMultiplier = curve.tileXpMultiplier;
+                } catch (ce:Error) {
+                    tileXpMultiplier = null;   // fall back to 1.0 everywhere
+                }
 
                 if (_logger)
                 {

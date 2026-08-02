@@ -50,6 +50,18 @@ package tracker {
 
         private var _dirty:Boolean = true;
         private var _inLogicByStrId:Object = {};
+        // Logical (derived) wizard level from the LAST recompute — a pure
+        // function of collected items, cached so derivedWizardLevel() is O(1)
+        // between item changes. See recompute()'s fixed-point loop.
+        private var _derivedWl:int = 0;
+        // WL held fixed for the DURATION of the current fixed-point iteration.
+        // _stageReachable compares a stage's soft gate against this; the outer
+        // loop raises it as more stages become clearable, then re-runs.
+        private var _iterWl:int = 0;
+        // Re-entrancy guard: a nested recompute() (e.g. a stat-counter stage
+        // requirement routing back through LogicEvaluator) returns immediately
+        // and reads the in-progress _inLogicByStrId rather than corrupting it.
+        private var _computing:Boolean = false;
         private var _levelStats:Object = {};  // strId -> {GiantMaxHP, ReaverMaxHP, ...}
         private var _stageElements:Object = {};  // strId -> Array<String>
         private var _stageMonsters:Object = {};  // strId -> Array<String>
@@ -92,9 +104,96 @@ package tracker {
                 }
             }
             _dirty = true;
+
+            // Invariant-1 parity check: confirm the ported WL curve reproduces
+            // the apworld's reference values. Logs once per connect; a non-empty
+            // result means the AS3 transcription drifted from difficulty_gates.py.
+            var wlErr:String = WizardLevelCalc.selfTest();
+            if (_logger != null) {
+                if (wlErr.length == 0)
+                    _logger.log(_modName, "WizardLevelCalc self-test: OK");
+                else
+                    _logger.log(_modName, "WizardLevelCalc self-test FAILED: " + wlErr);
+            }
         }
 
         public function markDirty():void { _dirty = true; }
+
+        /** The player's LIVE in-game wizard level (the game's own value).
+         *  NOTE: logic gates NO LONGER use this — they use derivedWizardLevel()
+         *  so the tracker matches the apworld (which computes WL from cleared
+         *  fields, not the live level). Kept as a fallback + for display. */
+        public function currentWizardLevel():int {
+            try {
+                if (GV.ppd != null) return int(GV.ppd.getWizLevel());
+            } catch (e:Error) {}
+            return 0;
+        }
+
+        /**
+         * DERIVED wizard level — the logic WL. Mirrors apworld
+         * difficulty_gates.derived_wl bit-for-bit (validated by wl_test_vectors):
+         *   levelFromXp( sum(wlEffXp[strId] over CLEARABLE-IN-LOGIC fields) * mult[n] )
+         *
+         * "Clearable in logic" — NOT "actually beaten in-game". The apworld
+         * derives WL from the "<sid> Cleared" events, which are collected as
+         * soon as a stage is REACHABLE (its Journey access rule passes): the
+         * fill/tracker assumes a stage you can reach can be beaten, so its XP
+         * counts and RAISES the WL that unlocks the next stages. That's a
+         * fixed point (more in-logic stages -> higher WL -> more in-logic
+         * stages), resolved for us by recompute()'s loop. Reading the live
+         * "which fields did the player actually finish" state instead made the
+         * mod lag UT: after W1-W4 the mod showed only S3 (derived WL 4) while
+         * UT already showed S1/S2/S3 (S3 assumed beaten -> WL rises -> tile
+         * opens). n = how many of xpTraitApIds are held (cap 4).
+         *
+         * Value is computed inside recompute() and cached in _derivedWl, so
+         * this is O(1) between item changes. Falls back to the live level only
+         * if slot_data hasn't shipped wlEffXp yet (pre-Connected), so early UI
+         * never divides by null.
+         */
+        public function derivedWizardLevel():int {
+            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var effXp:Object = (opts != null) ? opts.wlEffXp : null;
+            if (effXp == null || GV.ppd == null || GV.stageCollection == null)
+                return currentWizardLevel();
+            recompute();
+            return _derivedWl;
+        }
+
+        /**
+         * Logical WL from the CURRENT _inLogicByStrId set (one step of the
+         * fixed point). Sums wlEffXp over every stage flagged in logic, applies
+         * the XP-trait multiplier, and runs the shared WL curve. Assumes
+         * _inLogicByStrId is populated (called from recompute mid-iteration).
+         */
+        private function _deriveWlFromInLogic():int {
+            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var effXp:Object = (opts != null) ? opts.wlEffXp : null;
+            if (effXp == null)
+                return currentWizardLevel();
+
+            var base:Number = 0;
+            for (var sid:String in _inLogicByStrId) {
+                if (_inLogicByStrId[sid] !== true)
+                    continue;
+                var x:* = effXp[sid];
+                if (x != null)
+                    base += Number(x);
+            }
+
+            var n:int = 0;
+            var traitIds:Array = opts.xpTraitApIds as Array;
+            if (traitIds != null && AV.sessionData != null) {
+                for each (var tid:* in traitIds) {
+                    if (AV.sessionData.getItemCount(int(tid)) > 0)
+                        n++;
+                }
+            }
+            var mult:Array = opts.xpTraitMultiplier as Array;
+            var minWl:Array = opts.xpTraitMinWl as Array;
+            return WizardLevelCalc.derivedWl(base, n, mult, minWl);
+        }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
 
@@ -117,8 +216,7 @@ package tracker {
 
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
-            if (_stageRequirements == null) return true;
-            if (_dirty) recompute();
+            recompute();
             return _inLogicByStrId[strId] == true;
         }
 
@@ -133,21 +231,13 @@ package tracker {
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            if (!(journeyMissing || stashMissing))
-                return false;
-            if (_stageRequirements == null)
+            // Journey: stage clearable (tier + WIZLOCK / WL gate).
+            if (journeyMissing && canCompleteStage(strId))
                 return true;
-            if (!canCompleteStage(strId))
-                return false;
-
-            if (journeyMissing) {
-                // A4-only: Journey additionally needs all 24 skills.
-                var journeyOk:Boolean = !(ALL_SKILLS_STAGES[strId] == true
-                        && AV.sessionData.totalSkillsCollected < 24);
-                if (journeyOk)
-                    return true;
-            }
-            // Stash needs the key item AND stage gate met.
+            // Stash: same clearability PLUS the Wizard Stash Key item
+            // (isStashGateMet) — mirrors the apworld, which gates the stash
+            // location on state.has(stash_key). Without this the stash orb / line
+            // showed green even with no key.
             if (stashMissing && isStashGateMet(strId))
                 return true;
             return false;
@@ -157,9 +247,8 @@ package tracker {
          *  Mirrors apworld's location access_rule, which applies the same skill
          *  conditions to Journey and Wizard stash on a given stage. */
         public function canCompleteStage(strId:String):Boolean {
-            if (_dirty) recompute();
-            if (_inLogicByStrId[strId] != true) return false;
-            return _skillGateMet(strId);
+            recompute();
+            return _inLogicByStrId[strId] == true;
         }
 
         /**
@@ -172,7 +261,7 @@ package tracker {
          * on the stage actually having N+ waves to happen-before.
          */
         public function hasInLogicFieldWithMinWaves(minWaveCount:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             if (_levelStats == null) return false;
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true
@@ -186,10 +275,10 @@ package tracker {
         /**
          * True if any in-logic stage lets the player call at least minCount waves early in a single battle.
          *
-         * Distinct from hasInLogicFieldWithMinWaves: linked-wave pairs (game's isLinkedToNext) only count as ONE call — the linked follower auto-spawns with its leader and the player only earns one wavesCalledEarly++ per button press. CallableWaveCount is precomputed per stage in rulesdata_levels.py by replaying the IngamePopulator PRNG. Used by the "Call N waves early" achievement family (minWave:N).
+         * Uses VANILLA CallableWaveCount, where linked-wave pairs (game's isLinkedToNext) count as ONE call. NOTE: no longer wired to minWave:N — the LinkedWaveEarlyCredit patch restores full credit for linked followers, so minWave now gates on total WaveCount (see LogicEvaluator + apworld requirement_tokens.py). Kept for possible future precise "call exactly N early" gating that wants the vanilla cap; unused today.
          */
         public function hasInLogicFieldWithMinCallableWaves(minCount:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             if (_levelStats == null) return false;
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true
@@ -211,6 +300,7 @@ package tracker {
             _stageMonsters = monsters != null ? monsters : {};
             _elementToStages = _buildInverse(_stageElements);
             _monsterToStages = _buildInverse(_stageMonsters);
+            _gemToStages = null; // rebuilt lazily from serverData on next query
         }
 
         public function getStageElements(strId:String):Array {
@@ -315,9 +405,126 @@ package tracker {
             return out;
         }
 
+        // ── Game Elements window: requirement -> matching fields ─────────────
+
+        // Gem filter display names (RequirementIconRegistry) -> the short gem
+        // labels stored in serverData.stageAvailableGems (logic.json).
+        private static const GEM_DISPLAY_TO_RAW:Object = {
+            "Crit Hit":      "Crit",
+            "Mana Leech":    "Leech",
+            "Bleeding":      "Bleed",
+            "Armor Tearing": "Armor Tear",
+            "Poison":        "Poison",
+            "Slowing":       "Slow"
+        };
+
+        private var _gemToStages:Object; // gem label -> Array<strId>, built lazily
+
+        /**
+         * strIds that contain EVERY selected requirement name (AND). Returns a
+         * strId -> true set. An empty selection yields an empty set — the caller
+         * decides what "no filter" should show.
+         */
+        public function getStagesMatching(names:Array):Object {
+            if (names == null || names.length == 0) return {};
+
+            var lists:Array = [];
+            for each (var nm:String in names) {
+                var stages:Array = _stagesForRequirement(nm);
+                if (stages == null || stages.length == 0) return {}; // AND can't be met
+                lists.push(stages);
+            }
+
+            // Seed with the first list, then intersect the rest.
+            var candidate:Object = {};
+            for each (var s0:String in (lists[0] as Array)) candidate[s0] = true;
+            for (var i:int = 1; i < lists.length; i++) {
+                var next:Object = {};
+                for each (var s:String in (lists[i] as Array)) {
+                    if (candidate[s] == true) next[s] = true;
+                }
+                candidate = next;
+            }
+            return candidate;
+        }
+
+        private function _stagesForRequirement(name:String):Array {
+            if (_elementToStages[name] != null) return _elementToStages[name] as Array;
+            if (_monsterToStages[name] != null) return _monsterToStages[name] as Array;
+            var raw:String = GEM_DISPLAY_TO_RAW[name];
+            if (raw != null) return _gemStages(raw);
+            return null;
+        }
+
+        private function _gemStages(raw:String):Array {
+            if (_gemToStages == null) {
+                _gemToStages = {};
+                var byStage:Object = (AV.serverData != null) ? AV.serverData.stageAvailableGems : null;
+                if (byStage != null) {
+                    for (var sid:String in byStage) {
+                        var gems:Array = byStage[sid] as Array;
+                        if (gems == null) continue;
+                        for each (var g:String in gems) {
+                            if (_gemToStages[g] == null) _gemToStages[g] = [];
+                            (_gemToStages[g] as Array).push(sid);
+                        }
+                    }
+                }
+            }
+            // A field's gems only exist for the player if they hold the gempouch
+            // for it (else just the hollow gem) — filter to pouch-accessible
+            // stages so gem filters don't match fields you can't gem up.
+            var all:Array = _gemToStages[raw] as Array;
+            if (all == null) return null;
+            var out:Array = [];
+            for each (var stg:String in all) {
+                if (_hasGemAccess(stg)) out.push(stg);
+            }
+            return out;
+        }
+
+        /** Can the player create the field's real gems here? True when gempouch
+         *  gating is off, or the pouch for this stage is collected. */
+        private function _hasGemAccess(strId:String):Boolean {
+            var so:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var pouchMode:int = (so != null) ? int(so.gemPouchGranularity) : 0;
+            if (pouchMode == 0) return true; // gating off — vanilla gems available
+            return AV.sessionData.hasPouchForStage(strId);
+        }
+
+        /**
+         * Everything present on a field (elements + monsters + gems), each as
+         * "Name" or "Name xN" when a count is known. Drives the hover tooltip in
+         * the Game Elements window.
+         */
+        public function getFieldContents(strId:String):Array {
+            var out:Array = [];
+            for each (var el:String in getStageElements(strId)) {
+                if (el == "Tower" || el == "Wall") continue;
+                var ec:int = getStageElementCount(strId, el);
+                out.push(ec > 0 ? (el + " x" + ec) : el);
+            }
+            for each (var mo:String in getStageMonsters(strId)) {
+                var moc:int = getStageElementCount(strId, mo);
+                out.push(moc > 0 ? (mo + " x" + moc) : mo);
+            }
+            var byStage:Object = (AV.serverData != null) ? AV.serverData.stageAvailableGems : null;
+            var gemsArr:Array = (byStage != null) ? byStage[strId] as Array : null;
+            if (gemsArr != null && gemsArr.length > 0) {
+                // Mirror the in-game gem availability: real gems only with the
+                // pouch; free starter stages fall back to the hollow gem; other
+                // stages without the pouch show no gems at all.
+                if (_hasGemAccess(strId))
+                    out.push("Gems: " + (gemsArr.join(", ")));
+                else if (isFreeStage(strId))
+                    out.push("Gems: Hollow gem only (no pouch)");
+            }
+            return out;
+        }
+
         /** True if any in-logic field has max(GiantMaxHP, ReaverMaxHP) >= threshold. */
         public function hasInLogicFieldWithMinMonsterHP(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
@@ -329,7 +536,7 @@ package tracker {
 
         /** True if any in-logic field has max(GiantMaxArmor, ReaverMaxArmor) >= threshold. */
         public function hasInLogicFieldWithMinMonsterArmor(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true) {
                     var s:Object = _levelStats[sid];
@@ -341,7 +548,7 @@ package tracker {
 
         /** True if any in-logic field has MonsterCount >= threshold. */
         public function hasInLogicFieldWithMinMonsters(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonsterCount) >= threshold) return true;
             }
@@ -350,7 +557,7 @@ package tracker {
 
         /** True if any in-logic field has SwarmlingMaxArmor >= threshold. */
         public function hasInLogicFieldWithMinSwarmlingArmor(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingMaxArmor) >= threshold) return true;
             }
@@ -359,7 +566,7 @@ package tracker {
 
         /** True if any in-logic field has SwarmlingCount >= threshold. */
         public function hasInLogicFieldWithMinSwarmlings(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats) {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].SwarmlingCount) >= threshold) return true;
             }
@@ -368,7 +575,7 @@ package tracker {
 
         /** True if any in-logic field has GiantCount >= threshold. */
         public function hasInLogicFieldWithMinGiants(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].GiantCount) >= threshold)
@@ -381,7 +588,7 @@ package tracker {
 
         /** True if any in-logic field has ReaverCount >= threshold. */
         public function hasInLogicFieldWithMinReavers(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].ReaverCount) >= threshold)
@@ -398,7 +605,7 @@ package tracker {
         public function hasInLogicFieldWithElementCount(fieldNamePascal:String, threshold:int):Boolean {
             if (fieldNamePascal == "DropHolder" && !hasBoltSkill())
                 return false;
-            if (_dirty) recompute();
+            recompute();
             var key:String = fieldNamePascal + "Count";
             for (var sid:String in _levelStats)
             {
@@ -446,7 +653,7 @@ package tracker {
          *  The dedicated field is populated by a simulator from the
          *  decompiled stage data; mirrors the apworld gate exactly. */
         public function hasInLogicFieldWithMinMonstersBeforeWave12(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MonstersBeforeWave12) >= threshold)
@@ -461,7 +668,7 @@ package tracker {
          *  Like MonstersBeforeWave12, this is a simulator-derived expected
          *  value (marked = monsters with 1 attribute, per buffPower). */
         public function hasInLogicFieldWithMarkedMonsterCount(threshold:int):Boolean {
-            if (_dirty) recompute();
+            recompute();
             for (var sid:String in _levelStats)
             {
                 if (_inLogicByStrId[sid] == true && int(_levelStats[sid].MarkedMonsterCount) >= threshold)
@@ -598,8 +805,7 @@ package tracker {
         public function getBlockingTokenReq(strId:String):Object {
             if (_stageRequirements == null || _freeStages[strId] == true)
                 return null;
-            if (_dirty)
-                recompute();
+            recompute();
             if (_inLogicByStrId[strId] == true)
                 return null;
 
@@ -618,7 +824,6 @@ package tracker {
          * the player sees the actual item to hunt for:
          *   off (0)                   → null (caller skips line)
          *   per_tile / progressive (1, 2)         → "pouch (X)"
-         *   per_tier / progressive (3, 4)         → "pouch (Tier N)"
          *   global (5)                            → "pouch"   (no suffix)
          *
          * Verb (`Got` / `Needs`) is decided by `hasPouchForPrefix`, which
@@ -652,12 +857,6 @@ package tracker {
                     return verb + " pouch (" + prefix + ")";
                 if (mode == 5)
                     return verb + " pouch";
-                if (mode == 3 || mode == 4) {
-                    var tierMap:Object = opts.stageTierByStrId;
-                    if (tierMap == null || tierMap[strId] == null)
-                        return verb + " pouch";
-                    return verb + " pouch (Tier " + int(tierMap[strId]) + ")";
-                }
                 // mode 1 / 2: per_tile (progressive) — tile letter is the right hint.
                 return verb + " pouch (" + prefix + ")";
             }
@@ -668,10 +867,8 @@ package tracker {
          * "Got key (X)" / "Needs key (X)" suffix for the Stash line.
          * Stashes always require a key so this always returns a label —
          * granularity-aware so the player knows which item it points at:
-         *   per_stage(_progressive)  → "key" (this stage's key, no suffix)
-         *   per_tile(_progressive)   → "key (W)"
-         *   per_tier(_progressive)   → "key (Tier 1)"
-         *   global                   → "key" (master, no suffix)
+         *   per_tile(_progressive)   → "key (W)"        (g==1/2)
+         *   off / global             → "key" (no suffix)
          */
         public function getStashKeyLabel(strId:String):String {
             var verb:String = (AV.sessionData != null
@@ -679,16 +876,11 @@ package tracker {
             var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
             if (opts == null) return verb + " key";
             var g:int = int(opts.stashKeyGranularity);
-            if (g == 3 || g == 4) {
+            if (g == 1 || g == 2) {
                 if (strId == null || strId.length == 0) return verb + " key";
                 return verb + " key (" + strId.charAt(0) + ")";
             }
-            if (g == 5 || g == 6) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null || tierMap[strId] == null) return verb + " key";
-                return verb + " key (Tier " + int(tierMap[strId]) + ")";
-            }
-            // 0 (off), 1/2 (per_stage variants), 7 (global) — no extra suffix needed.
+            // 0 (off), 5 (global) — no extra suffix needed.
             return verb + " key";
         }
 
@@ -697,8 +889,7 @@ package tracker {
          * field_token_granularity so the player knows which token to hunt:
          *   per_stage / progressive (0, 1)        → "Missing field token"
          *   per_tile / progressive (2, 3)         → "Missing tile token (X)"
-         *   per_tier / progressive (4, 5)         → "Missing tier token (Tier N)"
-         * Falls back to the plain string whenever opts/tier data isn't
+         * Falls back to the plain string whenever opts data isn't
          * available, so a misconfigured seed never crashes the tooltip.
          */
         public function getMissingTokenLabel(strId:String):String {
@@ -709,12 +900,6 @@ package tracker {
                 if (strId == null || strId.length == 0)
                     return "Missing field token";
                 return "Missing tile token (" + strId.charAt(0) + ")";
-            }
-            if (g == 4 || g == 5) {
-                var tierMap:Object = opts.stageTierByStrId;
-                if (tierMap == null || tierMap[strId] == null)
-                    return "Missing field token";
-                return "Missing tier token (Tier " + int(tierMap[strId]) + ")";
             }
             return "Missing field token";
         }
@@ -774,26 +959,70 @@ package tracker {
          *          OR at least one Field_<sid> prereq token is held)
          *     AND every non-Field requirement (talismanRow:N etc.) is met.
          */
+        /**
+         * Recompute which stages are in logic. Self-guarding on the dirty flag
+         * only: the whole result (in-logic set AND derived WL) is a pure
+         * function of collected AP items, so nothing changes until an item
+         * arrives and markDirty() fires. Callers may invoke it freely each
+         * frame — it's a no-op until then. (The old live-wizard-level staleness
+         * check is gone: derived WL no longer reads the player's in-game level
+         * or which fields they actually finished.)
+         *
+         * Gating mirrors the apworld (rules.set_rules after the WL block):
+         * field-in-logic = HARD gate AND SOFT gate, resolved as a FIXED POINT.
+         *   HARD: own field token + WIZLOCK skills + prereq chain (_stageReachable).
+         *   SOFT: _iterWl >= stageGates[str_id], folded INTO _stageReachable so
+         *         a Field_<sid> prereq only counts when <sid> passes the WL
+         *         gate too (matches apworld's _wl inside _STAGE_CLEAR_RULES).
+         *
+         * The apworld resolves the WL<->reachability circularity by its
+         * monotonic event sweep: clearing what you can raises WL, which opens
+         * more. We reproduce that by iterating: hold WL fixed (_iterWl), rebuild
+         * the in-logic set, re-derive WL from that set, and repeat until WL
+         * stops rising. WL only ever grows (more in-logic -> more XP), so this
+         * converges in a handful of passes (bounded by stage count). Starters
+         * (free stages, gate 0) always pass both gates and seed the first pass.
+         */
+        // Safety bound on the fixed-point loop: WL strictly increases each
+        // non-final pass, and there are ~122 stages, so it always converges
+        // well within this. Guards against a pathological/broken data cycle.
+        private static const WL_FIXED_POINT_CAP:int = 200;
+
         public function recompute():void {
             if (!_dirty) return;
-            _inLogicByStrId = {};
+            // Re-entrant call (a stage requirement routed back here): don't
+            // restart the loop — serve the in-progress set as-is.
+            if (_computing) return;
+            _computing = true;
 
-            if (_stageRequirements == null) {
-                _dirty = false;
-                AV.sessionData.fieldsInLogic = _inLogicByStrId;
-                return;
+            var gates:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
+                    ? AV.serverData.serverOptions.stageGates : null;
+
+            var wl:int = 0;
+            for (var iter:int = 0; iter < WL_FIXED_POINT_CAP; iter++) {
+                _iterWl = wl;
+                _inLogicByStrId = {};
+
+                // HARD + SOFT gate at _iterWl: token + WIZLOCK + WL gate +
+                // prereq chain, recursive + memoised into _inLogicByStrId
+                // (see _stageReachable). Free stages short-circuit true.
+                if (gates != null) {
+                    for (var hsid:String in gates)
+                        _stageReachable(hsid);
+                }
+                for (var freeSid:String in _freeStages)
+                    _inLogicByStrId[freeSid] = true;
+
+                // Re-derive WL from the set we just built. If it didn't rise,
+                // we've hit the fixed point — the set can't grow further.
+                var newWl:int = _deriveWlFromInLogic();
+                if (newWl == wl)
+                    break;
+                wl = newWl;
             }
 
-            // Iterate every stage we know about (free + non-free).
-            // _stageReachable memoises into _inLogicByStrId, so recursive
-            // visits via prerequisite chains are reused for free.
-            for (var freeSid:String in _freeStages) {
-                _stageReachable(freeSid);
-            }
-            for (var strId:String in _stageRequirements) {
-                _stageReachable(strId);
-            }
-
+            _derivedWl = wl;
+            _computing = false;
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
         }
@@ -824,6 +1053,16 @@ package tracker {
             }
             // Clause 2: WIZLOCK skill gate.
             if (!_skillGateMet(strId)) {
+                _inLogicByStrId[strId] = false;
+                return false;
+            }
+            // Clause 2.5: SOFT wizard-level gate — derived WL >= the stage's
+            // gate. Compared against _iterWl (the WL held fixed for this
+            // recompute pass); the fixed-point loop raises it as more stages
+            // become clearable. Folded in HERE (not as a post-overlay) so a
+            // Field_<sid> prereq is only satisfied when <sid> clears its WL
+            // gate too — mirrors apworld folding _wl into _STAGE_CLEAR_RULES.
+            if (_iterWl < _stageGate(strId)) {
                 _inLogicByStrId[strId] = false;
                 return false;
             }
@@ -958,10 +1197,10 @@ package tracker {
             return n;
         }
 
-        /** Sum SP across collected Skillpoint Bundle items (1700-1703, four
-         *  named tiers; per-tier SP value comes from slot_data via
-         *  ServerOptions.spBundleValues). Bundles stack — same apId can
-         *  arrive multiple times, so multiply tier value by per-apId count. */
+        /** Sum SP across collected SP items (1700-1703: 3 fixed bundle tiers
+         *  + the single Skillpoint; per-item SP value comes from slot_data via
+         *  ServerOptions.spBundleValues). Items stack — same apId can arrive
+         *  multiple times, so multiply value by per-apId count. */
         private function _countSkillPoints():int {
             var total:int = 0;
             if (AV.serverData == null || AV.serverData.serverOptions == null)
@@ -987,9 +1226,16 @@ package tracker {
          * plus the per-stage Wizard Stash Key item.
          */
         public function isStashGateMet(strId:String):Boolean {
-            if (AV.sessionData == null || !AV.sessionData.isStashUnlocked(strId))
-                return false;
-            return canCompleteStage(strId);
+            // Stash shares the stage's clearability gate (tier + WIZLOCK / WL)...
+            if (!canCompleteStage(strId)) return false;
+            // ...AND requires the per-stage Wizard Stash Key item, exactly like
+            // the apworld's stash access rule (state.has(stash_key)). The only
+            // exception is stash_key_granularity == OFF, where the apworld uses
+            // an always-true key check — then no key is needed.
+            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
+            var g:int = (opts != null) ? int(opts.stashKeyGranularity) : 0;
+            if (g == 0) return true; // OFF — stashes need no key
+            return AV.sessionData != null && AV.sessionData.isStashUnlocked(strId);
         }
 
         // -----------------------------------------------------------------------
@@ -1036,9 +1282,22 @@ package tracker {
             return true;
         }
 
+        // Soft wizard-level gate for a stage: the derived WL required before
+        // it enters logic. Ships in slot_data (difficulty_gates.GATE) via
+        // ServerOptions.stageGates. 0 (starters / free stages / unknown) means
+        // no WL gate.
+        private function _stageGate(strId:String):int {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return 0;
+            var gates:Object = AV.serverData.serverOptions.stageGates;
+            if (gates == null)
+                return 0;
+            var g:* = gates[strId];
+            return (g != null) ? int(g) : 0;
+        }
+
         // Active gem-pouch granularity:
-        //   0=off, 1=per_tile, 2=per_tile_progressive,
-        //   3=per_tier, 4=per_tier_progressive, 5=global
+        //   0=off, 1=per_tile, 2=per_tile_progressive, 5=global
         // Read from slot_data via ServerOptions; returns 0 if not set.
         private function _pouchMode():int {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
@@ -1046,17 +1305,17 @@ package tracker {
             return int(AV.serverData.serverOptions.gemPouchGranularity);
         }
 
-        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3, per_tier_progressive=5). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
+        // True when field_token_granularity is one of the progressive variants (per_stage_progressive=1, per_tile_progressive=3). In those modes the Nth copy of the singleton progressive item unlocks the Nth tile/stage in the seed's randomized order, so the token count IS the prereq chain — vanilla GCFW Field_<sid> chains from rulesdata_levels become artificial and must be ignored.
         private function _isFieldTokenProgressive():Boolean {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
                 return false;
             var g:int = int(AV.serverData.serverOptions.fieldTokenGranularity);
-            return g == 1 || g == 3 || g == 5;
+            return g == 1 || g == 3;
         }
 
         // True iff the player has beaten this stage in vanilla Journey mode at
-        // least once. Mirrors BeatGameGoal / FieldPercentageGoal — XP > 0 means
-        // the stage was cleared (0 = available/unlocked-not-cleared, -1 = locked).
+        // least once. XP > 0 means the stage was cleared
+        // (0 = available/unlocked-not-cleared, -1 = locked).
         private function _isFieldBeatenJourney(strId:String):Boolean {
             if (GV.ppd == null || GV.stageCollection == null) return false;
             var stageId:int = GV.getFieldId(strId);

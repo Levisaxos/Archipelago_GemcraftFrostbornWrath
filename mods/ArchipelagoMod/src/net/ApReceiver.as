@@ -34,6 +34,7 @@ package net {
         private var _tokenStages:Object      = {};
         private var _talismanMap:Object      = {};
         private var _talismanNameMap:Object  = {};
+        private var _talismanChargeMap:Object = {}; // propId(str) → {fragApId(str) → value}
         private var _shadowCoreMap:Object    = {};
         private var _shadowCoreNameMap:Object = {};
         private var _wizStashTalData:Object  = {};
@@ -51,7 +52,8 @@ package net {
         public var onItemReceived:Function;
         /** Called when a DeathLink bounce is received. Signature: (source:String):void */
         public var onDeathLinkReceived:Function;
-        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean):void */
+        /** Called when we are the sender of an AP item. Signature: (itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void
+         *  flags carries the item's Archipelago classification bits (progression / useful / trap). */
         public var onItemSent:Function;
         /** Called when AP responds to a `Get` with a `Retrieved` packet. Signature: (keysMap:Object):void
          *  keysMap is the `keys` object from the packet — { key:String → value:* (null if absent) }. */
@@ -86,6 +88,7 @@ package net {
         public function get tokenStages():Object       { return _tokenStages; }
         public function get talismanMap():Object       { return _talismanMap; }
         public function get talismanNameMap():Object   { return _talismanNameMap; }
+        public function get talismanChargeMap():Object { return _talismanChargeMap; }
         public function get shadowCoreMap():Object     { return _shadowCoreMap; }
         public function get shadowCoreNameMap():Object { return _shadowCoreNameMap; }
         public function get wizStashTalData():Object   { return _wizStashTalData; }
@@ -155,6 +158,8 @@ package net {
                 _talismanMap = p.slot_data.talisman_map;
             if (p.slot_data && p.slot_data.talisman_name_map)
                 _talismanNameMap = p.slot_data.talisman_name_map;
+            if (p.slot_data && p.slot_data.talisman_charge_map)
+                _talismanChargeMap = p.slot_data.talisman_charge_map;
             if (p.slot_data && p.slot_data.shadow_core_map)
                 _shadowCoreMap = p.slot_data.shadow_core_map;
             if (p.slot_data && p.slot_data.shadow_core_name_map)
@@ -166,11 +171,15 @@ package net {
             if (p.slot_data && p.slot_data.free_stages)
                 AV.serverData.freeStages = p.slot_data.free_stages as Array;
 
+            // Progression talisman set (25 fragments the mod unlocks + slots).
+            if (p.slot_data && p.slot_data.progression_talisman_set)
+                AV.serverData.progressionTalismanSet = p.slot_data.progression_talisman_set as Array;
+
             if (p.slot_data) {
                 var sd:Object = p.slot_data;
                 AV.serverData.serverOptions.goal              = int(sd.goal);
-                if (sd.starting_stage !== undefined)
-                    AV.serverData.serverOptions.startingStage = int(sd.starting_stage);
+                if (sd.starting_stages !== undefined)
+                    AV.serverData.serverOptions.startingStages = sd.starting_stages as Array;
                 if (sd.tattered_scroll_levels !== undefined)
                     AV.serverData.serverOptions.tomeXpLevels.tattered = int(sd.tattered_scroll_levels);
                 if (sd.worn_tome_levels !== undefined)
@@ -179,8 +188,6 @@ package net {
                     AV.serverData.serverOptions.tomeXpLevels.ancient = int(sd.ancient_grimoire_levels);
                 if (sd.xp_tome_bonus !== undefined)
                     AV.serverData.serverOptions.xpTomeBonus = int(sd.xp_tome_bonus);
-                if (sd.skillpoint_multiplier !== undefined)
-                    AV.serverData.serverOptions.skillpointMultiplier = int(sd.skillpoint_multiplier);
                 if (sd.sp_bundle_values !== undefined && sd.sp_bundle_values is Array) {
                     var vSpVals:Array = sd.sp_bundle_values as Array;
                     var vSpOut:Array = [0, 0, 0, 0];
@@ -212,26 +219,18 @@ package net {
                     AV.serverData.serverOptions.progressiveTileOrder = sd.progressive_tile_order as Array;
                 if (sd.progressive_stage_order !== undefined)
                     AV.serverData.serverOptions.progressiveStageOrder = sd.progressive_stage_order as Array;
-                if (sd.progressive_tier_order !== undefined)
-                    AV.serverData.serverOptions.progressiveTierOrder = sd.progressive_tier_order as Array;
                 if (sd.gem_pouch_progressive_id !== undefined)
                     AV.serverData.serverOptions.gemPouchProgressiveId = int(sd.gem_pouch_progressive_id);
-                if (sd.gem_pouch_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.gemPouchPerTierProgressiveId = int(sd.gem_pouch_per_tier_progressive_id);
                 if (sd.field_token_per_stage_progressive_id !== undefined)
                     AV.serverData.serverOptions.fieldTokenPerStageProgressiveId = int(sd.field_token_per_stage_progressive_id);
                 if (sd.field_token_per_tile_progressive_id !== undefined)
                     AV.serverData.serverOptions.fieldTokenPerTileProgressiveId = int(sd.field_token_per_tile_progressive_id);
-                if (sd.field_token_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.fieldTokenPerTierProgressiveId = int(sd.field_token_per_tier_progressive_id);
                 if (sd.stash_key_per_stage_progressive_id !== undefined)
                     AV.serverData.serverOptions.stashKeyPerStageProgressiveId = int(sd.stash_key_per_stage_progressive_id);
                 if (sd.stash_key_per_tile_progressive_id !== undefined)
                     AV.serverData.serverOptions.stashKeyPerTileProgressiveId = int(sd.stash_key_per_tile_progressive_id);
-                if (sd.stash_key_per_tier_progressive_id !== undefined)
-                    AV.serverData.serverOptions.stashKeyPerTierProgressiveId = int(sd.stash_key_per_tier_progressive_id);
-                if (sd.stage_tier_by_str_id !== undefined)
-                    AV.serverData.serverOptions.stageTierByStrId = sd.stage_tier_by_str_id;
+                if (sd.extra_shadow_cores_per_wave !== undefined)
+                    AV.serverData.serverOptions.extraShadowCoresPerWave = int(sd.extra_shadow_cores_per_wave);
                 if (sd.enemy_hp_multiplier !== undefined)
                     AV.serverData.serverOptions.enemyMultipliers.hp = int(sd.enemy_hp_multiplier);
                 if (sd.enemy_armor_multiplier !== undefined)
@@ -244,10 +243,22 @@ package net {
                     AV.serverData.serverOptions.enemyMultipliers.extraWaves = int(sd.extra_wave_count);
                 if (sd.fields_required_count !== undefined)
                     AV.serverData.serverOptions.fieldsRequiredCount = int(sd.fields_required_count);
-                if (sd.fields_required_percentage !== undefined)
-                    AV.serverData.serverOptions.fieldsRequiredPercentage = int(sd.fields_required_percentage);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.difficulty !== undefined)
+                    AV.serverData.serverOptions.difficulty = int(sd.difficulty);
+                if (sd.stage_gates !== undefined)
+                    AV.serverData.serverOptions.stageGates = sd.stage_gates;
+                if (sd.achievement_min_wl !== undefined)
+                    AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
+                if (sd.wl_eff_xp !== undefined)
+                    AV.serverData.serverOptions.wlEffXp = sd.wl_eff_xp;
+                if (sd.xp_trait_ap_ids !== undefined)
+                    AV.serverData.serverOptions.xpTraitApIds = sd.xp_trait_ap_ids as Array;
+                if (sd.xp_trait_multiplier !== undefined)
+                    AV.serverData.serverOptions.xpTraitMultiplier = sd.xp_trait_multiplier as Array;
+                if (sd.xp_trait_min_wl !== undefined)
+                    AV.serverData.serverOptions.xpTraitMinWl = sd.xp_trait_min_wl as Array;
                 if (sd.death_link !== undefined)
                     AV.serverData.serverOptions.deathLinkEnabled = Boolean(sd.death_link);
             }
@@ -380,7 +391,7 @@ package net {
                     _toast.addRichMessage(html, plain);
 
                     var isForMe:Boolean = (receiving == _mySlot);
-                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe);
+                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe, sentFlags);
                 }
                 return;
             }

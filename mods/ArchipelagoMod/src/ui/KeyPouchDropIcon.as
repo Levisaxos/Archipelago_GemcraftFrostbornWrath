@@ -20,7 +20,6 @@ package ui {
      *
      * AP id ranges this icon serves:
      *   1522-1547  Per-tile  (one pouch per prefix in gemPouchPlayOrder)
-     *   1548-1560  Per-tier  (one pouch per tier 0..12)
      *   1561       Master    (single pouch unlocking every stash)
      *   stashKeyPerTileProgressiveId   per-tile progressive (single id, 26 copies)
      *
@@ -49,7 +48,7 @@ package ui {
         // because multiple copies can drop at the same level-end and reading
         // getItemCount() at hover stamps the same total on every icon. 0 ==
         // "fall back to live count" for callers that don't track per-copy.
-        public var meta:Object;  // { apId:int, isProgressive:Boolean, isTierProgressive:Boolean, ordinal:int }
+        public var meta:Object;  // { apId:int, isProgressive:Boolean, ordinal:int }
 
         [Embed(source='../../resources/KeyPouch.png')]
         private static const KeyPouchAsset:Class;
@@ -62,7 +61,6 @@ package ui {
             this.meta = {
                 apId: apId,
                 isProgressive: _isPerTileProgressive(apId),
-                isTierProgressive: _isPerTierProgressive(apId),
                 ordinal: ordinal
             };
 
@@ -124,19 +122,6 @@ package ui {
                     body  = "Unlocks Wizard Stashes on tile " + prefixT + ". "
                           + "(" + copiesT + "/" + (opts != null ? opts.progressiveTileOrderLength() : 26)
                           + " worlds unlocked)";
-                } else if (this.meta.isTierProgressive == true) {
-                    // 1621 — per-tier progressive
-                    var ordinalR:int = int(this.meta.ordinal);
-                    var copiesR:int = (ordinalR > 0) ? ordinalR
-                                                    : AV.sessionData.getItemCount(apId);
-                    var tierOrder:Array = (opts != null) ? opts.progressiveTierOrder as Array : null;
-                    var tierLabel:String = (tierOrder != null && copiesR >= 1 && copiesR <= tierOrder.length)
-                        ? String(tierOrder[copiesR - 1])
-                        : "?";
-                    var tierTotal:int = (tierOrder != null) ? tierOrder.length : 13;
-                    title = "Progressive Stash Tier Key";
-                    body  = "Unlocks Wizard Stashes in tier " + tierLabel + ". "
-                          + "(" + copiesR + "/" + tierTotal + " tiers unlocked)";
                 } else if (apId >= 1522 && apId <= 1547) {
                     // Per-tile distinct
                     var idx:int = apId - 1522;
@@ -146,11 +131,6 @@ package ui {
                     var prefix:String = String(order[idx]);
                     title = "Wizard Stash Tile " + prefix + " Key";
                     body  = "Unlocks every Wizard Stash on tile " + prefix + ".";
-                } else if (apId >= 1548 && apId <= 1560) {
-                    // Per-tier distinct
-                    var tier:int = apId - 1548;
-                    title = "Wizard Stash Tier " + tier + " Key";
-                    body  = "Unlocks every Wizard Stash in tier " + tier + ".";
                 } else if (apId == 1561) {
                     // Master
                     title = "Wizard Stash Master Key";
@@ -178,18 +158,6 @@ package ui {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
                 if (opts != null) {
                     var progId:int = int(opts.stashKeyPerTileProgressiveId);
-                    if (progId > 0 && apId == progId)
-                        return true;
-                }
-            } catch (e:Error) {}
-            return false;
-        }
-
-        private static function _isPerTierProgressive(apId:int):Boolean {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var progId:int = int(opts.stashKeyPerTierProgressiveId);
                     if (progId > 0 && apId == progId)
                         return true;
                 }

@@ -28,9 +28,17 @@ package update {
         private var _loader:URLLoader;
         private var _currentVersion:String;
 
-        /** Called with a normalized Array of {tag, name, body, date} Objects on success. */
+        /** Called with a normalized Array of {tag, name, body, date, breaking} Objects on success. */
         public var onReleasesLoaded:Function;
-        /** Called with the latest tag String when a newer version is detected. */
+        /**
+         * Called when a newer version is detected, as
+         *     onUpdateAvailable(latestTag:String, breakingSinceCurrent:Boolean)
+         * `breakingSinceCurrent` is true when ANY release newer than the running
+         * version is flagged breaking — not just the latest. That's the question
+         * a player with a running async actually needs answered: "can I update
+         * without breaking my seed?" Skipping a breaking 1.1.0 by jumping
+         * straight to 1.2.0 still breaks it, so the whole range is checked.
+         */
         public var onUpdateAvailable:Function;
         /** Called when the network request fails. */
         public var onFetchFailed:Function;
@@ -101,15 +109,19 @@ package update {
                 return;
             }
 
-            // Normalize each GitHub release object into a plain {tag,name,body,date}.
+            // Normalize each GitHub release object into {tag,name,body,date,breaking}.
+            // NOTE: `breaking` is parsed from the RAW body, before stripMarkdown
+            // flattens the headings it looks for.
             var releases:Array = [];
             for each (var item:Object in parsed) {
                 var tag:String  = String(item.tag_name  || "");
                 var name:String = String(item.name      || tag);
-                var body:String = stripMarkdown(String(item.body || ""));
+                var rawBody:String = String(item.body || "");
+                var body:String = stripMarkdown(rawBody);
                 var date:String = String(item.published_at || "");
                 if (date.length >= 10) date = date.substr(0, 10); // "YYYY-MM-DD"
-                releases.push({ tag: tag, name: name, body: body, date: date });
+                releases.push({ tag: tag, name: name, body: body, date: date,
+                                breaking: isBreakingRelease(rawBody) });
             }
 
             _logger.log(_modName, "UpdateChecker: loaded " + releases.length + " release(s)");
@@ -120,8 +132,18 @@ package update {
             if (releases.length > 0) {
                 var latestTag:String = releases[0].tag;
                 if (compareVersions(latestTag, _currentVersion) > 0) {
-                    _logger.log(_modName, "UpdateChecker: update available — " + latestTag);
-                    if (onUpdateAvailable != null) onUpdateAvailable(latestTag);
+                    // Any breaking release in (currentVersion .. latest] means the
+                    // player cannot update mid-async without breaking their seed.
+                    var breakingSince:Boolean = false;
+                    for each (var rel:Object in releases) {
+                        if (rel.breaking && compareVersions(String(rel.tag), _currentVersion) > 0) {
+                            breakingSince = true;
+                            break;
+                        }
+                    }
+                    _logger.log(_modName, "UpdateChecker: update available — " + latestTag
+                        + (breakingSince ? " (BREAKING since " + _currentVersion + ")" : ""));
+                    if (onUpdateAvailable != null) onUpdateAvailable(latestTag, breakingSince);
                 }
             }
         }
@@ -181,6 +203,32 @@ package update {
             if (dashIdx >= 0)
                 v = v.substr(0, dashIdx);
             return v;
+        }
+
+        /**
+         * Does this release's notes flag it as a BREAKING change — i.e. updating
+         * to it invalidates a seed generated with an older apworld, so a player
+         * mid-async must finish first?
+         *
+         * Authored in the GitHub release body using either form:
+         *
+         *     ## Breaking change            (a heading — matches the notes template)
+         *     ## ⚠️ Breaking changes
+         *     [BREAKING]                    (standalone marker, anywhere)
+         *
+         * Matching is case-insensitive and deliberately narrow: it requires a
+         * heading that STARTS with "breaking", or the explicit [BREAKING] token.
+         * Prose like "this does not contain breaking changes" must NOT trip it,
+         * which is why we don't just search for the word anywhere in the body.
+         */
+        public static function isBreakingRelease(rawBody:String):Boolean {
+            if (rawBody == null || rawBody.length == 0) return false;
+            // Explicit token anywhere: [BREAKING] / [breaking change]
+            if (/\[\s*breaking[^\]]*\]/i.test(rawBody)) return true;
+            // Markdown heading whose text begins with "breaking" (allowing a
+            // leading emoji/symbol such as ⚠️ before the word).
+            if (/^\s{0,3}#{1,6}\s*[^\w\n]*breaking/im.test(rawBody)) return true;
+            return false;
         }
 
         /**

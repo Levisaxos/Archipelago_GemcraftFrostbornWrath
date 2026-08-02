@@ -45,29 +45,7 @@
       ],
       "availableGems": ["Armor Tear", "Poison"],
       "waveCount": 8,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "W3",
@@ -79,29 +57,7 @@
       ],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 12,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "W4",
@@ -113,29 +69,7 @@
       ],
       "availableGems": ["Poison"],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S1",
@@ -148,29 +82,7 @@
       ],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S2",
@@ -179,29 +91,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Slow"],
       "waveCount": 16,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S3",
@@ -213,29 +103,7 @@
       ],
       "availableGems": ["Crit", "Slow"],
       "waveCount": 14,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "S4",
@@ -247,29 +115,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Armor Tear"],
       "waveCount": 20,
-      "requirements": [
-        [
-          "Field_W1"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ],
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_S1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V1",
@@ -281,17 +127,7 @@
       ],
       "availableGems": ["Armor Tear", "Poison"],
       "waveCount": 20,
-      "requirements": [
-        [
-          "Field_W4"
-        ],
-        [
-          "Field_W2"
-        ],
-        [
-          "Field_W3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V2",
@@ -304,17 +140,7 @@
       ],
       "availableGems": ["Crit", "Leech"],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_V1"
-        ],
-        [
-          "Field_S3"
-        ],
-        [
-          "Field_S1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V3",
@@ -323,17 +149,7 @@
       ],
       "availableGems": ["Poison", "Slow"],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "V4",
@@ -345,17 +161,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Slow"],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ],
-        [
-          "Field_R2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R1",
@@ -367,17 +173,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear"],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_V1"
-        ],
-        [
-          "Field_S2"
-        ],
-        [
-          "Field_S1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R2",
@@ -389,17 +185,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R3",
@@ -411,20 +197,7 @@
       ],
       "availableGems": ["Leech", "Bleed"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T3"
-        ],
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_U2"
-        ],
-        [
-          "Field_T2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R4",
@@ -436,20 +209,7 @@
       ],
       "availableGems": ["Armor Tear", "Slow"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_U2"
-        ],
-        [
-          "Field_T3"
-        ],
-        [
-          "Field_T2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "R5",
@@ -462,17 +222,7 @@
       ],
       "availableGems": ["Crit", "Poison"],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_Y3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_R3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q1",
@@ -484,17 +234,7 @@
       ],
       "availableGems": ["Crit", "Bleed"],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_R2"
-        ],
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q2",
@@ -506,17 +246,7 @@
       ],
       "availableGems": ["Crit", "Poison"],
       "waveCount": 22,
-      "requirements": [
-        [
-          "Field_S4"
-        ],
-        [
-          "Field_V2"
-        ],
-        [
-          "Field_R1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q3",
@@ -529,17 +259,7 @@
       ],
       "availableGems": ["Armor Tear", "Slow"],
       "waveCount": 24,
-      "requirements": [
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q4",
@@ -551,17 +271,7 @@
       ],
       "availableGems": ["Bleed", "Slow"],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_U3"
-        ],
-        [
-          "Field_Q3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Q5",
@@ -573,17 +283,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Poison"],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_U4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T1",
@@ -595,17 +295,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear"],
       "waveCount": 26,
-      "requirements": [
-        [
-          "Field_V3"
-        ],
-        [
-          "Field_Q2"
-        ],
-        [
-          "Field_R2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T2",
@@ -617,17 +307,7 @@
       ],
       "availableGems": ["Crit", "Leech"],
       "waveCount": 28,
-      "requirements": [
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_U4"
-        ],
-        [
-          "Field_Q4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T3",
@@ -639,17 +319,7 @@
       ],
       "availableGems": ["Poison", "Slow"],
       "waveCount": 28,
-      "requirements": [
-        [
-          "Field_U4"
-        ],
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "T4",
@@ -661,17 +331,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Slow"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U1",
@@ -684,17 +344,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_Q3"
-        ],
-        [
-          "Field_U3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U2",
@@ -706,17 +356,7 @@
       ],
       "availableGems": ["Armor Tear", "Slow"],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_U1"
-        ],
-        [
-          "Field_Q4"
-        ],
-        [
-          "Field_U4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U3",
@@ -725,17 +365,7 @@
       ],
       "availableGems": ["Crit", "Leech"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_V4"
-        ],
-        [
-          "Field_T1"
-        ],
-        [
-          "Field_Q1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "U4",
@@ -747,17 +377,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Armor Tear"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q3"
-        ],
-        [
-          "Field_T4"
-        ],
-        [
-          "Field_U3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y1",
@@ -769,17 +389,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_Y3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_R3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y2",
@@ -791,17 +401,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear"],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_N2"
-        ],
-        [
-          "Field_O4"
-        ],
-        [
-          "Field_N1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y3",
@@ -813,17 +413,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Poison"],
       "waveCount": 30,
-      "requirements": [
-        [
-          "Field_Q5"
-        ],
-        [
-          "Field_T2"
-        ],
-        [
-          "Field_U2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Y4",
@@ -835,17 +425,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Slow"],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_O2"
-        ],
-        [
-          "Field_P1"
-        ],
-        [
-          "Field_R6"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X1",
@@ -858,17 +438,7 @@
       ],
       "availableGems": ["Armor Tear", "Poison"],
       "waveCount": 42,
-      "requirements": [
-        [
-          "Field_P6"
-        ],
-        [
-          "Field_P4"
-        ],
-        [
-          "Field_P2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X2",
@@ -877,17 +447,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Slow"],
       "waveCount": 48,
-      "requirements": [
-        [
-          "Field_L3"
-        ],
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X3",
@@ -899,17 +459,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear"],
       "waveCount": 44,
-      "requirements": [
-        [
-          "Field_P6"
-        ],
-        [
-          "Field_P2"
-        ],
-        [
-          "Field_P4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "X4",
@@ -918,17 +468,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Armor Tear", "Poison"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ],
-        [
-          "Field_X1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z1",
@@ -961,17 +501,7 @@
       ],
       "availableGems": ["Armor Tear", "Poison", "Slow"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z3",
@@ -980,17 +510,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Slow"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_K1"
-        ],
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_Z2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z4",
@@ -999,17 +519,7 @@
       ],
       "availableGems": ["Leech", "Bleed"],
       "waveCount": 48,
-      "requirements": [
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L3"
-        ],
-        [
-          "Field_L2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O1",
@@ -1022,17 +532,7 @@
       ],
       "availableGems": ["Leech", "Poison"],
       "waveCount": 34,
-      "requirements": [
-        [
-          "Field_N1"
-        ],
-        [
-          "Field_N2"
-        ],
-        [
-          "Field_O4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O2",
@@ -1041,17 +541,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear"],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_O1"
-        ],
-        [
-          "Field_T5"
-        ],
-        [
-          "Field_Y2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O3",
@@ -1063,17 +553,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 32,
-      "requirements": [
-        [
-          "Field_R3"
-        ],
-        [
-          "Field_R4"
-        ],
-        [
-          "Field_Y3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "O4",
@@ -1085,17 +565,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Poison", "Slow"],
       "waveCount": 33,
-      "requirements": [
-        [
-          "Field_O3"
-        ],
-        [
-          "Field_Y1"
-        ],
-        [
-          "Field_R5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N1",
@@ -1108,17 +578,7 @@
       ],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 35,
-      "requirements": [
-        [
-          "Field_R5"
-        ],
-        [
-          "Field_O3"
-        ],
-        [
-          "Field_Y1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N2",
@@ -1127,17 +587,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 36,
-      "requirements": [
-        [
-          "Field_Y1"
-        ],
-        [
-          "Field_R5"
-        ],
-        [
-          "Field_O3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N3",
@@ -1146,17 +596,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear"],
       "waveCount": 38,
-      "requirements": [
-        [
-          "Field_R6"
-        ],
-        [
-          "Field_P1"
-        ],
-        [
-          "Field_O2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N4",
@@ -1165,17 +605,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear", "Poison"],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_H5"
-        ],
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "N5",
@@ -1184,17 +614,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Slow"],
       "waveCount": 68,
-      "requirements": [
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ],
-        [
-          "Field_H5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P1",
@@ -1207,17 +627,7 @@
       ],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 38,
-      "requirements": [
-        [
-          "Field_T5"
-        ],
-        [
-          "Field_O1"
-        ],
-        [
-          "Field_Y2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P2",
@@ -1226,17 +636,7 @@
       ],
       "availableGems": ["Armor Tear", "Slow"],
       "waveCount": 42,
-      "requirements": [
-        [
-          "Field_P3"
-        ],
-        [
-          "Field_N3"
-        ],
-        [
-          "Field_Y4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P3",
@@ -1249,17 +649,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear"],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_O2"
-        ],
-        [
-          "Field_R6"
-        ],
-        [
-          "Field_P1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P4",
@@ -1271,20 +661,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Armor Tear", "Slow"],
       "waveCount": 40,
-      "requirements": [
-        [
-          "Field_N3"
-        ],
-        [
-          "Field_Y4"
-        ],
-        [
-          "Field_P5"
-        ],
-        [
-          "Field_P3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "P5",
@@ -1296,15 +673,6 @@
       "note": "towers can't be placed, therefore,",
       "requirements": [
         [
-          "Field_P1",
-          "sTraps"
-        ],
-        [
-          "Field_R6",
-          "sTraps"
-        ],
-        [
-          "Field_O2",
           "sTraps"
         ]
       ]
@@ -1319,17 +687,7 @@
       ],
       "availableGems": ["Crit", "Bleed"],
       "waveCount": 44,
-      "requirements": [
-        [
-          "Field_X1"
-        ],
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L2",
@@ -1341,17 +699,7 @@
       ],
       "availableGems": ["Poison", "Slow"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_K1"
-        ],
-        [
-          "Field_Z2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L3",
@@ -1364,17 +712,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z2"
-        ],
-        [
-          "Field_K2"
-        ],
-        [
-          "Field_K1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L4",
@@ -1386,17 +724,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Armor Tear", "Poison"],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_Z3"
-        ],
-        [
-          "Field_L2"
-        ],
-        [
-          "Field_L3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "L5",
@@ -1410,21 +738,6 @@
       "waveCount": 64,
       "requirements": [
         [
-          "Field_E2",
-          "sBeam",
-          "sBolt",
-          "sBarrage",
-          "sFreeze"
-        ],
-        [
-          "Field_M3",
-          "sBeam",
-          "sBolt",
-          "sBarrage",
-          "sFreeze"
-        ],
-        [
-          "Field_M2",
           "sBeam",
           "sBolt",
           "sBarrage",
@@ -1442,17 +755,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Armor Tear"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K2",
@@ -1464,17 +767,7 @@
       ],
       "availableGems": ["Leech", "Slow"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_X4"
-        ],
-        [
-          "Field_L1"
-        ],
-        [
-          "Field_K4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K3",
@@ -1486,20 +779,7 @@
       ],
       "availableGems": ["Bleed", "Poison"],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_K5"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_L4"
-        ],
-        [
-          "Field_X2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "K4",
@@ -1511,17 +791,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Armor Tear", "Slow"],
       "waveCount": 46,
-      "requirements": [
-        [
-          "Field_Z1"
-        ],
-        [
-          "Field_X3"
-        ],
-        [
-          "Field_X1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H1",
@@ -1533,17 +803,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Armor Tear"],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M3"
-        ],
-        [
-          "Field_M2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H2",
@@ -1555,17 +815,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Poison"],
       "waveCount": 66,
-      "requirements": [
-        [
-          "Field_L5"
-        ],
-        [
-          "Field_F2"
-        ],
-        [
-          "Field_H1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H3",
@@ -1577,17 +827,7 @@
       ],
       "availableGems": ["Armor Tear", "Slow"],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M3"
-        ],
-        [
-          "Field_M2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "H4",
@@ -1599,17 +839,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Poison", "Slow"],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_N4"
-        ],
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G1",
@@ -1623,20 +853,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Poison"],
       "waveCount": 50,
-      "requirements": [
-        [
-          "Field_L4"
-        ],
-        [
-          "Field_X2"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_K5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G2",
@@ -1645,20 +862,7 @@
       ],
       "availableGems": ["Leech", "Poison", "Slow"],
       "waveCount": 52,
-      "requirements": [
-        [
-          "Field_X2"
-        ],
-        [
-          "Field_Z4"
-        ],
-        [
-          "Field_K5"
-        ],
-        [
-          "Field_L4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G3",
@@ -1671,17 +875,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
       "waveCount": 55,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_J2"
-        ],
-        [
-          "Field_Z5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "G4",
@@ -1693,17 +887,7 @@
       ],
       "availableGems": ["Crit", "Leech"],
       "waveCount": 56,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_J2"
-        ],
-        [
-          "Field_Z5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J1",
@@ -1716,17 +900,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Slow"],
       "waveCount": 55,
-      "requirements": [
-        [
-          "Field_K3"
-        ],
-        [
-          "Field_G2"
-        ],
-        [
-          "Field_G1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J2",
@@ -1735,17 +909,7 @@
       ],
       "availableGems": ["Crit", "Poison"],
       "waveCount": 54,
-      "requirements": [
-        [
-          "Field_G2"
-        ],
-        [
-          "Field_K3"
-        ],
-        [
-          "Field_G1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J3",
@@ -1757,17 +921,7 @@
       ],
       "availableGems": ["Armor Tear", "Poison", "Slow"],
       "waveCount": 56,
-      "requirements": [
-        [
-          "Field_J1"
-        ],
-        [
-          "Field_Z5"
-        ],
-        [
-          "Field_J2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "J4",
@@ -1776,17 +930,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Armor Tear"],
       "waveCount": 58,
-      "requirements": [
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G4"
-        ],
-        [
-          "Field_G3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M1",
@@ -1798,17 +942,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Slow"],
       "waveCount": 60,
-      "requirements": [
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G3"
-        ],
-        [
-          "Field_G4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M2",
@@ -1820,17 +954,7 @@
       ],
       "availableGems": ["Crit", "Poison", "Slow"],
       "waveCount": 62,
-      "requirements": [
-        [
-          "Field_F1"
-        ],
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_M1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M3",
@@ -1843,17 +967,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Poison"],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_F1"
-        ],
-        [
-          "Field_M1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "M4",
@@ -1865,20 +979,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear", "Poison"],
       "waveCount": 66,
-      "requirements": [
-        [
-          "Field_L5"
-        ],
-        [
-          "Field_H1"
-        ],
-        [
-          "Field_F2"
-        ],
-        [
-          "Field_H3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F1",
@@ -1890,17 +991,7 @@
       ],
       "availableGems": ["Leech", "Poison", "Slow"],
       "waveCount": 60,
-      "requirements": [
-        [
-          "Field_G3"
-        ],
-        [
-          "Field_J3"
-        ],
-        [
-          "Field_G4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F2",
@@ -1909,17 +1000,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Armor Tear"],
       "waveCount": 64,
-      "requirements": [
-        [
-          "Field_E2"
-        ],
-        [
-          "Field_M2"
-        ],
-        [
-          "Field_M3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F3",
@@ -1931,17 +1012,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed"],
       "waveCount": 85,
-      "requirements": [
-        [
-          "Field_B5"
-        ],
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_C1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "F4",
@@ -1950,17 +1021,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Slow"],
       "waveCount": 88,
-      "requirements": [
-        [
-          "Field_F3"
-        ],
-        [
-          "Field_C3"
-        ],
-        [
-          "Field_B3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E1",
@@ -1972,17 +1033,7 @@
       ],
       "availableGems": ["Crit", "Poison", "Slow"],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_H5"
-        ],
-        [
-          "Field_M4"
-        ],
-        [
-          "Field_H2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E2",
@@ -1994,17 +1045,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Poison"],
       "waveCount": 62,
-      "requirements": [
-        [
-          "Field_M1"
-        ],
-        [
-          "Field_J4"
-        ],
-        [
-          "Field_F1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E3",
@@ -2016,17 +1057,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Slow"],
       "waveCount": 74,
-      "requirements": [
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_D1"
-        ],
-        [
-          "Field_H4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "E4",
@@ -2039,17 +1070,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear", "Poison", "Slow"],
       "waveCount": 74,
-      "requirements": [
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_H4"
-        ],
-        [
-          "Field_D1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D1",
@@ -2061,17 +1082,7 @@
       ],
       "availableGems": ["Leech", "Poison", "Slow"],
       "waveCount": 72,
-      "requirements": [
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ],
-        [
-          "Field_N4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D2",
@@ -2084,17 +1095,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Slow"],
       "waveCount": 75,
-      "requirements": [
-        [
-          "Field_H4"
-        ],
-        [
-          "Field_D4"
-        ],
-        [
-          "Field_D1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D3",
@@ -2106,17 +1107,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
       "waveCount": 77,
-      "requirements": [
-        [
-          "Field_E3"
-        ],
-        [
-          "Field_E4"
-        ],
-        [
-          "Field_D2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "D4",
@@ -2125,17 +1116,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Poison"],
       "waveCount": 70,
-      "requirements": [
-        [
-          "Field_N4"
-        ],
-        [
-          "Field_N5"
-        ],
-        [
-          "Field_E1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B1",
@@ -2147,17 +1128,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Slow"],
       "waveCount": 76,
-      "requirements": [
-        [
-          "Field_E4"
-        ],
-        [
-          "Field_E3"
-        ],
-        [
-          "Field_D2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B2",
@@ -2170,17 +1141,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_D3"
-        ],
-        [
-          "Field_B1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B3",
@@ -2189,17 +1150,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear", "Slow"],
       "waveCount": 86,
-      "requirements": [
-        [
-          "Field_C1"
-        ],
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_B5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "B4",
@@ -2208,20 +1159,7 @@
       ],
       "availableGems": ["Leech", "Armor Tear", "Poison"],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_I2"
-        ],
-        [
-          "Field_D5"
-        ],
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C1",
@@ -2234,17 +1172,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Poison"],
       "waveCount": 82,
-      "requirements": [
-        [
-          "Field_C2"
-        ],
-        [
-          "Field_I3"
-        ],
-        [
-          "Field_B4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C2",
@@ -2253,17 +1181,7 @@
       ],
       "availableGems": ["Crit", "Armor Tear", "Slow"],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ],
-        [
-          "Field_I2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C3",
@@ -2275,17 +1193,7 @@
       ],
       "availableGems": ["Crit", "Poison", "Slow"],
       "waveCount": 84,
-      "requirements": [
-        [
-          "Field_I4"
-        ],
-        [
-          "Field_B5"
-        ],
-        [
-          "Field_C1"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C4",
@@ -2297,17 +1205,7 @@
       ],
       "availableGems": ["Leech", "Bleed", "Armor Tear"],
       "waveCount": 87,
-      "requirements": [
-        [
-          "Field_C3"
-        ],
-        [
-          "Field_B3"
-        ],
-        [
-          "Field_F3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "C5",
@@ -2319,17 +1217,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F3"
-        ],
-        [
-          "Field_B3"
-        ],
-        [
-          "Field_C3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A1",
@@ -2341,17 +1229,7 @@
       ],
       "availableGems": ["Crit", "Bleed", "Armor Tear", "Poison", "Slow"],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F4"
-        ],
-        [
-          "Field_C5"
-        ],
-        [
-          "Field_C4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A2",
@@ -2363,17 +1241,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Slow"],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_F4"
-        ],
-        [
-          "Field_C5"
-        ],
-        [
-          "Field_C4"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A3",
@@ -2385,17 +1253,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison"],
       "waveCount": 90,
-      "requirements": [
-        [
-          "Field_A1"
-        ],
-        [
-          "Field_F5"
-        ],
-        [
-          "Field_A2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "A4",
@@ -2404,17 +1262,7 @@
       ],
       "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
       "waveCount": 100,
-      "requirements": [
-        [
-          "Field_A3"
-        ],
-        [
-          "Field_A6"
-        ],
-        [
-          "Field_A5"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I2",
@@ -2426,17 +1274,7 @@
       ],
       "availableGems": ["Bleed", "Poison", "Slow"],
       "waveCount": 78,
-      "requirements": [
-        [
-          "Field_I1"
-        ],
-        [
-          "Field_B1"
-        ],
-        [
-          "Field_D3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I3",
@@ -2448,17 +1286,7 @@
       ],
       "availableGems": ["Bleed", "Armor Tear", "Poison"],
       "waveCount": 80,
-      "requirements": [
-        [
-          "Field_D5"
-        ],
-        [
-          "Field_E5"
-        ],
-        [
-          "Field_B2"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "I4",
@@ -2467,17 +1295,7 @@
       ],
       "availableGems": ["Bleed"],
       "waveCount": 82,
-      "requirements": [
-        [
-          "Field_C2"
-        ],
-        [
-          "Field_B4"
-        ],
-        [
-          "Field_I3"
-        ]
-      ]
+      "requirements": []
     },
     {
       "strId": "Z5",

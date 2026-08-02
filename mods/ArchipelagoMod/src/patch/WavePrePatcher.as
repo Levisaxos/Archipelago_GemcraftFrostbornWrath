@@ -71,13 +71,6 @@ package patch {
         public function applyIfReady():void {
             if (_hasApplied) return;
 
-            // Skip entirely when all settings are at their defaults.
-            if (_hpMult == 100 && _armorMult == 100 && _shieldMult == 100
-                    && _enemiesPerWaveMult == 100 && _extraWaveCount == 0) {
-                _hasApplied = true;
-                return;
-            }
-
             try {
                 var core:* = GV.ingameCore;
                 if (core == null) return;
@@ -89,7 +82,21 @@ package patch {
                 }
                 if (core.waves == null || core.waves.length == 0) return;
 
-                _apply(core);
+                // Hidden per-tile XP curve. Resolved HERE (not before the core
+                // null-check) because it reads the active stage — resolving it
+                // early would yield 1.0 on a frame where ingameCore isn't ready
+                // and could latch _hasApplied, disabling the curve for the stage.
+                var xpMult:Number = DifficultyXpScaler.tileXpMultiplier();
+
+                // Skip entirely when every setting is default AND the curve is flat.
+                if (_hpMult == 100 && _armorMult == 100 && _shieldMult == 100
+                        && _enemiesPerWaveMult == 100 && _extraWaveCount == 0
+                        && xpMult == 1.0) {
+                    _hasApplied = true;
+                    return;
+                }
+
+                _apply(core, xpMult);
                 _hasApplied = true;
             } catch (err:Error) {
                 _logger.log(_modName, "WavePrePatcher.applyIfReady ERROR: " + err.message);
@@ -98,7 +105,7 @@ package patch {
 
         // -----------------------------------------------------------------------
 
-        private function _apply(core:*):void {
+        private function _apply(core:*, xpMult:Number = 1.0):void {
             // Step 1: rebuild wave array with extra waves if requested.
             // stageData.monsterData is a shared object that persists across retries,
             // so we must restore wavesNum after the call to avoid accumulating extra
@@ -142,6 +149,15 @@ package patch {
                 if (_shieldMult != 100 && proto.shield > 0) {
                     proto.shield = int(Math.max(0,
                         Math.round(proto.shield * _shieldMult / 100)));
+                }
+
+                // Hidden per-tile XP curve: scale the monster's OWN xp rather
+                // than any global multiplier, so the curve never surfaces in the
+                // UI (traitsXpMult / manaPoolXpGainMultiplier are both shown to
+                // the player). Patching the proto also keeps the wave tooltip's
+                // "XP value" readout consistent with what the kill actually pays.
+                if (xpMult != 1.0 && proto.xpBase != null) {
+                    proto.xpBase.s(proto.xpBase.g() * xpMult);
                 }
             }
 

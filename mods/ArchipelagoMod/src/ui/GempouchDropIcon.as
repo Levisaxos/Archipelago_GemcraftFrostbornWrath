@@ -20,9 +20,7 @@ package ui {
      * Supported apIds:
      *   626-651  per-tile distinct  (Gempouch (X))
      *   652      per-tile progressive
-     *   1601-1613 per-tier distinct  (Tier N Gempouch)
      *   1614     master              (Master Gempouch)
-     *   1615     per-tier progressive
      *
      * Mirrors XpTomeDropIcon's public shape so it lives in ending.dropIcons
      * without breaking the vanilla animation loop or cleanup. Uses our own
@@ -35,7 +33,7 @@ package ui {
         public var bmpIcon:Bitmap;
         public var bmpdIcon:BitmapData;
         public var type:int;
-        // Variant: "tile" / "tile_progressive" / "tier" / "master" / "tier_progressive".
+        // Variant: "tile" / "tile_progressive" / "master".
         // ordinal is the 1-based copy index for progressive variants — needed
         // because multiple progressive copies can drop at the same level-end,
         // and reading getItemCount() at hover would stamp the same total on
@@ -103,15 +101,11 @@ package ui {
                 if (opts != null) {
                     var tileProg:int = int(opts.gemPouchProgressiveId);
                     if (tileProg > 0 && apId == tileProg) return "tile_progressive";
-                    var tierProg:int = int(opts.gemPouchPerTierProgressiveId);
-                    if (tierProg > 0 && apId == tierProg) return "tier_progressive";
                 }
             } catch (e:Error) {}
             // Apworld-allocated defaults / fixed ranges.
             if (apId == 652)  return "tile_progressive";
-            if (apId == 1615) return "tier_progressive";
             if (apId == 1614) return "master";
-            if (apId >= 1601 && apId <= 1613) return "tier";
             return "tile";
         }
 
@@ -151,15 +145,6 @@ package ui {
                     var prefixT:String = optsT.progressiveTilePrefix(copiesT);
                     body = "Unlocks gems on tile " + prefixT + ". "
                          + "(" + copiesT + "/" + optsT.progressiveTileOrderLength() + " worlds unlocked)";
-                } else if (variant == "tier_progressive") {
-                    title = "Progressive Gempouch (per-tier)";
-                    var copiesTier:int = AV.sessionData.getItemCount(apId);
-                    body = "Unlocks gems on the next tier. "
-                         + "(" + copiesTier + "/" + _tierLength() + " tiers unlocked)";
-                } else if (variant == "tier") {
-                    var tier:int = apId - 1601;
-                    title = "Tier " + tier + " Gempouch";
-                    body = "Unlocks gems on stages of tier " + tier + ".";
                 } else if (variant == "master") {
                     title = "Master Gempouch";
                     body = "Unlocks gems on every stage.";
@@ -178,25 +163,6 @@ package ui {
 
         private function _onMouseOut(e:MouseEvent):void {
             try { GV.main.cntInfoPanel.removeChild(GV.mcInfoPanel); } catch (err:Error) {}
-        }
-
-        private static function _tierLength():int {
-            try {
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null) {
-                    var tm:Object = opts.stageTierByStrId;
-                    if (tm != null) {
-                        var seen:Object = {};
-                        var n:int = 0;
-                        for (var k:String in tm) {
-                            var t:int = int(tm[k]);
-                            if (seen[t] !== true) { seen[t] = true; n++; }
-                        }
-                        if (n > 0) return n;
-                    }
-                }
-            } catch (e:Error) {}
-            return 13;
         }
     }
 }

@@ -81,14 +81,15 @@ GemCraft Frostborn Wrath\
 
 ### Step 3 — Install the apworld
 
-Download `gcfw.apworld` from the [Releases](../../releases) page and place it in the `lib/worlds` folder of your Archipelago installation:
+Download `gcfw.apworld` from the [Releases](../../releases) page and place it in the `custom_worlds` folder of your Archipelago installation:
 
 ```
 Archipelago\
-└── lib\
-    └── worlds\
-        └── gcfw.apworld
+└── custom_worlds\
+    └── gcfw.apworld
 ```
+
+> If the `custom_worlds` folder doesn't exist yet, create it at the root of your Archipelago install (next to `ArchipelagoLauncher.exe`).
 
 ---
 
@@ -204,32 +205,37 @@ Please include this file when reporting issues.
 
 ## What's randomized
 
-**366 locations** across three check types:
+### Locations (checks)
 
 | Location type | Count | Trigger |
 |---|---|---|
 | Stage clear — Journey | 122 | Complete any stage in Journey mode |
-| Stage clear — Bonus | 122 | Reach 50+ waves in Journey mode |
-| Wizard stash clear | 122 | Defeat the wizard stash on any stage |
+| Wizard Stash clear | 122 | Defeat the Wizard Stash on any stage |
+| Achievements | 0 to ~570 | Optional, scaled by `achievement_required_effort` (see options) |
 
-**366 items** across the following categories:
+That's **244 base locations**, plus however many achievements you enable — from none up to ~570 with all effort tiers on.
+
+### Items
 
 | Item | Count | Notes |
 |---|---|---|
-| Field tokens | 118 | Unlock stages across the world map |
+| Field tokens | variable | Unlock stages across the world map. Granularity is configurable — per-stage (122), per-tile (26), or per-tier (13), each with a progressive variant. |
+| Wizard Stash keys | variable | Unlock Wizard Stashes. Configurable granularity — per-tile, per-tier, global, or off (all stashes open). |
+| Gem pouches | variable | Optionally gate loose gem orbs. Configurable granularity — off, per-tile, per-tier, or global. |
 | Skills | 24 | Includes 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
 | Battle traits | 15 | |
-| Talisman fragments (specific) | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
-| Talisman fragments (extra) | 47 | "Extra Talisman Fragment #1–47" — rarity spread from 2 to 94 |
-| Shadow core stashes (specific) | 17 | Named by original field, e.g. "Z2 Shadow Cores" — original drop amount |
-| Shadow core stashes (extra) | 52 | "Extra Shadow Cores #1–52" — amounts from 60 to 1080 |
-| XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls |
+| Talisman fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
+| Shadow core stashes | 35 | 17 named by original field + 18 extra stashes |
+| XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls — combined wizard-level bonus is configurable |
+| Skillpoint bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 6 Medium (25 SP) + 2 Big (250 SP) = 810 SP |
+| Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after the real items, XP tomes, and 40 bundles are placed |
+
+The exact item pool depends on your granularity choices — coarser settings put fewer, broader unlocks in the pool; finer settings put more, narrower ones.
 
 **Always free (not randomized):**
-- W1 is the starting stage
-- W2, W3, and W4 are unlocked automatically on connect
+- Your chosen starting stage is playable from the menu on connect (its tile/tier is unlocked too when using coarse granularity)
 - Talisman fragments from normal wave completion are untouched
-- Shadow cores earned during gameplay are untouched (only wizard stash grants are intercepted)
+- Shadow cores earned during gameplay are untouched (only Wizard Stash grants are intercepted)
 
 ---
 
@@ -241,7 +247,6 @@ Please include this file when reporting issues.
 |---|---|---|
 | `goal` | `kill_gatekeeper` | Win condition. See values below. |
 | `fields_required` | `80` | Number of Journey stages to complete. Only used when `goal` is `fields_count` (12–122). |
-| `fields_required_percentage` | `66` | Percentage of Journey stages to complete. Only used when `goal` is `fields_percentage` (10–100). |
 
 **Goal values:**
 
@@ -250,39 +255,52 @@ Please include this file when reporting issues.
 | `kill_gatekeeper` | *(default)* Kill the Gatekeeper on A4 |
 | `kill_swarm_queen` | Kill the Swarm Queen on K4 |
 | `fields_count` | Complete a fixed number of Journey stages (set by `fields_required`) |
-| `fields_percentage` | Complete a percentage of all Journey stages (set by `fields_required_percentage`) |
 
-### Progression
+### Progression & gating
 
 | Option | Default | Description |
 |---|---|---|
+| `starting_stage` | `random` | Which early stage you start on — one of the four W fields (W1–W4). Every other stage must be unlocked through Archipelago. Starter fields always grant ×2 XP (even on Hard/Extreme) to ease the opening. |
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
-| `tier_requirements_percent` | `75` | Percentage of stages in earlier tiers that must be accessible before later tiers are considered in logic (40–100). Lower values may require heavier use of Endurance mode. |
-| `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tome values in a 1:2:3 ratio. |
+| `field_token_granularity` | `per_tile` | How coarse stage-unlock items are: `per_stage` (122), `per_tile` (26), `per_tier` (13), or a `_progressive` variant of each. |
+| `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
+| `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
+| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). Hard and Extreme require Endurance mode enabled — it's the catch-up XP path if you get stuck. |
+| `xp_tome_bonus` | `100` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
 
-### Difficulty
+### Achievements
 
 | Option | Default | Description |
 |---|---|---|
-| `disable_endurance` | `false` | Permanently disables Endurance mode. |
+| `achievement_required_effort` | `minor` | How many achievements become AP checks: `off`, `trivial`, `minor`, `major`, or `extreme` (each level includes all easier ones). More effort = more checks and a longer seed. |
+
+### Difficulty tuning
+
+| Option | Default | Description |
+|---|---|---|
+| `disable_endurance` | `false` | Permanently disables Endurance mode. Must stay `false` (Endurance ON) on Hard and Extreme — generation fails otherwise, since Endurance is the catch-up XP path there. |
 | `disable_trial` | `true` | Permanently disables Trial mode (no AP checks there, disabled by default). |
 | `enemy_hp_multiplier` | `100` | Enemy HP as a percentage of normal (50–200). |
 | `enemy_armor_multiplier` | `100` | Enemy armor as a percentage of normal (50–200). |
 | `enemy_shield_multiplier` | `100` | Enemy shield HP as a percentage of normal (50–200). |
 | `enemies_per_wave_multiplier` | `100` | Number of enemies per wave as a percentage of normal (50–200). |
-| `extra_wave_count` | `0` | Additional waves appended to each stage beyond its normal length (0–20). |
+| `extra_wave_count` | `0` | Additional waves appended to each stage beyond its normal length (0–24). |
+| `extra_shadow_cores_per_wave` | `2` | Mod-only QoL: extra shadow cores granted for every wave you get through in a battle (0–5). Banked at level end like vanilla drops. No effect on generation, item placement, or logic. |
 
 ### DeathLink
 
 | Option | Default | Description |
 |---|---|---|
 | `death_link` | `false` | Enables DeathLink with other players in the session. |
-| `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, or `instant_fail`. |
+| `death_link_punishment` | `gem_loss` | What happens on a received DeathLink: `gem_loss`, `wave_surge`, `instant_fail`, `spawn_horde`, or `spawn_special`. |
 | `gem_loss_percent` | `20` | Percentage of placed gems destroyed on `gem_loss` punishment (10–50). |
 | `wave_surge_count` | `3` | Number of enraged waves injected on `wave_surge` punishment (1–10). |
-| `wave_surge_gem_level` | `5` | Gem level used to calculate the surge wave enrage multiplier (1–9). |
+| `wave_surge_gem_level` | `3` | Gem level used to calculate the surge wave enrage multiplier (1–9). |
+| `spawn_horde_count` | `100` | Number of vanilla-strength monsters spawned on `spawn_horde` punishment (50–500). |
+| `spawn_special_elements` | all five | Special enemy types eligible for `spawn_special`: Apparition, Specter, Wraith, Spire, Wizard Hunter. |
+| `spawn_special_count` | `5` | Number of specials spawned on `spawn_special` punishment (1–10). |
 | `death_link_grace_period` | `15` | Seconds of immunity at the start of each stage before a queued DeathLink triggers (10–30). |
 | `death_link_cooldown` | `20` | Minimum seconds between two DeathLink punishments (10–30). |
 

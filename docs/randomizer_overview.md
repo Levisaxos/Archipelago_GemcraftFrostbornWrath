@@ -8,19 +8,19 @@ This document describes the full feature set of the randomizer: what is shuffled
 
 ## What gets randomized
 
-### Locations — 244 base + up to ~636 achievement locations
+### Locations — 244 base + up to ~570 achievement locations
 
 | Location type | Count | Trigger |
 |---|---|---|
 | Stage clear — Journey | 122 | Complete any stage in Journey mode |
 | Wizard Stash clear | 122 | Defeat the Wizard Stash on any stage |
-| Achievements | up to ~636 | Optional, scaled by `achievement_required_effort` (4 tiers, see below) |
+| Achievements | up to ~570 | Optional, scaled by `achievement_required_effort` (4 tiers, see below) |
 
 ### Items
 
 | Item | Count | Notes |
 |---|---|---|
-| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage, per-tile, or per-tier — each with a progressive sibling). |
+| Field Tokens | 122 | Unlock stages across the world map. Granularity is configurable (per-stage or per-tile — each with a progressive sibling). |
 | Skills | 24 | Includes the 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
 | Battle Traits | 15 | Optional upgrades — one optionally moved to "starting" via YAML (Overcrowd) |
 | Talisman Fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries the field's original seed and rarity. Vanilla in-game wave drops still cover any additional fragments, so no "extras" are added to the pool. |
@@ -30,7 +30,8 @@ This document describes the full feature set of the randomizer: what is shuffled
 | Map Tiles | up to 26 | Optional terrain tiles, depending on starting stage |
 | Gem Pouches | variable | Configurable granularity — see below |
 | Wizard Stash Keys | variable | Configurable granularity — see below |
-| Skillpoint Bundles | filler | Four named tiers (Small/Medium/Large/Huge), per-seed SP values; total scales by `skillpoint_multiplier` |
+| Skillpoint Bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 6 Medium (25 SP) + 2 Big (250 SP) = 810 SP |
+| Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after real items, XP tomes, and the 40 bundles |
 
 ### Always free (not randomized)
 
@@ -48,20 +49,20 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 - Skills (all 24, including the 6 gem-type unlocks)
 - Battle Traits (all 15 — many achievement counters require them)
 - Map Tiles (all of them)
-- Shadow Core stashes (all 17 specific + all 18 extras — the full pool sums into the `shadowCore:N` gate)
 - Wizard Stash Keys (per-stage, coarse, and progressive variants)
-- Gem Pouches (per-tile, per-tier, master, and progressive variants)
+- Gem Pouches (per-tile, master, and progressive variants)
 - 25 Talisman Fragments — the highest-rarity fragment in each slot type (4 corner + 12 edge + 9 inner) so the `talismanCornerFragment:N / Edge / Center` counters can be gated
-- ~50% of XP Tomes — odd-indexed Tattered Scrolls / Worn Tomes / Ancient Grimoires / Extra XP Items, so `wizardLevel:N` gates can be reasoned about
 
 **Useful** — not required by logic, but worth placing where they help
 
 - The remaining ~28 Talisman Fragments (still drop, just don't gate)
-- ~50% of XP Tomes — even-indexed Tattered Scrolls / Worn Tomes / Ancient Grimoires / Extra XP Items
+- Shadow Core stashes (all 17 specific + all 18 extras) — economy/power, no longer a generation gate
 
 **Filler** — pure pool-padding once the real items are placed
 
-- Skillpoint Bundles — four named tiers (Small/Medium/Large/Huge); per-tier SP value is computed per-seed so the total (scaled by `skillpoint_multiplier`) divides cleanly across the actual filler-slot count
+- XP Tomes — under the WL-derived model, logic wizard level comes only from cleared fields, so tomes are pure in-game power now
+- Skillpoint Bundles — 40 fixed bundles (32 Small @5 SP + 6 Medium @25 SP + 2 Big @250 SP = 810 SP); values are constant every seed
+- Skillpoint (single) — 1 SP each; the variable filler that soaks up whatever location slots remain, so total SP scales with the seed's check count (more achievements → more singles)
 
 ---
 
@@ -72,7 +73,6 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 | `kill_gatekeeper` *(default)* | Kill the Gatekeeper on stage A4 |
 | `kill_swarm_queen` | Kill the Swarm Queen on stage K4 |
 | `fields_count` | Complete a fixed number of Journey stages (`fields_required`, 12–122) |
-| `fields_percentage` | Complete a percentage of all Journey stages (`fields_required_percentage`, 10–100) |
 
 ---
 
@@ -84,21 +84,22 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 |---|---|---|
 | `goal` | `kill_gatekeeper` | Win condition (see above) |
 | `fields_required` | `80` | Used when `goal = fields_count` (12–122) |
-| `fields_required_percentage` | `66` | Used when `goal = fields_percentage` (10–100) |
 | `starting_stage` | `random` | Choose one of W1–W4 / S1–S4, or randomize per seed |
 | `field_token_placement` | `any_world` | Where Field Tokens may be placed: `any_world`, `own_world`, or `different_world` (multiplayer required) |
-| `field_token_granularity` | `per_tile_progressive` | How coarse Field Token items are. Three families — `per_stage` (122 unique tokens), `per_tile` (26, one per map-tile prefix), `per_tier` (13, one per power tier) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
-| `xp_tome_bonus` | `150` | Approximate total wizard levels granted by all XP tomes combined (50–300). Scales tomes in a 1:2:3 ratio. |
+| `field_token_granularity` | `per_tile` | How coarse Field Token items are. Two families — `per_stage` (122 unique tokens) and `per_tile` (26, one per map-tile prefix) — each with a `_progressive` sibling that uses a single fungible item ordered by play order. |
+| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme` — battle difficulty and how much wizard-level progress each clear grants (gates sit at the same levels on every difficulty). |
+| `xp_tome_bonus` | `50` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power, not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any tomes (1–100) |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
-| `skillpoint_multiplier` | `100` | Total skill points distributed as filler bundles, as a percentage of the 2500-SP baseline |
 
 ### Stash & gem gating
 
 | Option | Default | Description |
 |---|---|---|
-| `stash_key_granularity` | `per_tile_progressive` | Wizard Stashes start locked. Same `per_stage` / `per_tile` / `per_tier` families as Field Tokens (each with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. |
-| `gem_pouch_granularity` | `per_tile_progressive` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `per_tier`, `per_tier_progressive`, `global`. |
+| `stash_key_granularity` | `per_tile` | Wizard Stashes start locked. A `per_tile` family (with a `_progressive` sibling), plus a `global` option that uses one master key for every stash, and an `off` option that leaves every stash unlocked from the start. (Per-stage and per-tier keys were retired.) |
+| `gem_pouch_granularity` | `per_tile` | Gates gem-orb spawns behind Gem Pouch items. Options: `off`, `per_tile`, `per_tile_progressive`, `global`. |
+
+> **Design history — power tiers (removed):** Field-token, stash-key, and gem-pouch granularities once had a `per_tier` family — 13 "power tiers" that grouped stages by wave count, a coarse middle ground between per-tile and global. Tiers were the pre-wizard-level progression model (reach tier N by collecting a share of tier N−1's tokens). Now that stage access is gated purely by *derived wizard level*, tiers serve no purpose and were removed. Documented here for future reference only; the achievement **effort** tiers (Trivial/Minor/Major/Extreme) are a separate, still-active concept.
 
 ### Difficulty
 
@@ -116,7 +117,7 @@ Items are tagged so the Archipelago fill algorithm knows what counts as in-logic
 
 | Option | Default | Description |
 |---|---|---|
-| `achievement_required_effort` | `1` | Effort tier of achievements to include as locations. Integer `1`–`4`: `1` Trivial only (~362), `2` +Minor (~453), `3` +Major (~537), `4` +Extreme (~636). Untrackable achievements are excluded. |
+| `achievement_required_effort` | `1` | Effort tier of achievements to include as locations. `0` off, `1` Trivial only (~293), `2` +Minor (~420), `3` +Major (~497), `4` +Extreme (~570). Untrackable and Trial-only achievements are excluded; disabling Endurance also trims Endurance-only ones. |
 
 ### DeathLink
 
@@ -191,7 +192,7 @@ In short: Hollow Gem keeps your run playable from turn one when Gem Pouches are 
 See the [README](../README.md) for full setup steps:
 1. Install **BezelModLoader** for GemCraft: Frostborn Wrath
 2. Drop `ArchipelagoMod.swf` into the game's `Mods` folder
-3. Drop `gcfw.apworld` into Archipelago's `lib/worlds` folder
+3. Drop `gcfw.apworld` into Archipelago's `custom_worlds` folder
 4. Generate or join a multiworld that includes `gcfw`
 5. Launch the game, pick a slot, and connect via the in-game panel
 

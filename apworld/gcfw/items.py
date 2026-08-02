@@ -38,10 +38,10 @@ def _load_item_table() -> Dict[str, ItemData]:
         name = f"{skill['name']} Skill"
         table[name] = ItemData(skill["ap_id"], ItemClassification.progression)
 
-    # Map tiles (AP IDs 600–625) — progression items that unlock map regions
-    for tile in data["map_tiles"]:
-        name = f"Map Tile {tile['game_id']}"
-        table[name] = ItemData(tile["ap_id"], ItemClassification.progression)
+    # Map tiles are NOT AP items: in the mod a tile lights up when you receive
+    # one of its field tokens, so nothing here ever entered the pool, gated a
+    # region, or shipped in slot_data. The old `Map Tile <id>` definitions only
+    # reserved IDs 600–625 in item_name_to_id, so they've been removed.
 
     # Battle traits — classified as progression since achievements require them
     for trait in data["battle_traits"]:
@@ -53,12 +53,11 @@ def _load_item_table() -> Dict[str, ItemData]:
     # Extra: 60 additional XP filler items for future expansion
     # Per-tome level values are configured from slot_data (xp_tome_bonus option).
     #
-    # Half of each tier is `progression` so AP fill respects wizardLevel:N
-    # gates; the other half is `useful` (still placed, just not state-tracked).
-    # Convention: odd-numbered (#1, #3, #5...) = progression; even = useful.
-    # That keeps the split roughly 50/50 within each tier.
+    # All `filler`: under the WL-derived model, logic wizard level comes only
+    # from cleared fields (the "Beat <sid>" events), NOT from XP items. XP tomes
+    # are pure in-game power now, so nothing in generation references them.
     def _xp_cls(idx: int) -> ItemClassification:
-        return ItemClassification.progression if idx % 2 == 0 else ItemClassification.useful
+        return ItemClassification.filler
 
     xp_id = 1100
     # 32 Tattered Scrolls (1100–1131): 16 progression + 16 useful
@@ -108,19 +107,19 @@ def _load_item_table() -> Dict[str, ItemData]:
     for frag in data["extra_talisman_fragments"]:
         table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
 
-    # Shadow core stashes — all progression so the shadowCore:N gate can sum
-    # the full collected total. Combined base (10,100) + 18 extras (sum 18,900)
-    # = 29,000 cores, comfortably above the 25,000 cap from the
-    # "Endgame Balance" achievement.
+    # Shadow core stashes — `useful`. Achievements no longer gate on shadowCore:N
+    # in generation (achievement access rules are pure wizard-level now), so cores
+    # gate nothing; they're economy/power. The mod still tracks them client-side
+    # for the shadowCore:N achievement-tooltip display regardless of classification.
     # Specific shadow core stashes — named by original field (IDs 1000–1016).
     for sc in data["shadow_core_stashes"]:
         table[f"{sc['str_id']} Shadow Cores"] = ItemData(
-            sc["item_ap_id"], ItemClassification.progression)
+            sc["item_ap_id"], ItemClassification.useful)
 
     # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1317).
     for sc in data["extra_shadow_core_stashes"]:
         table[sc["name"]] = ItemData(
-            sc["item_ap_id"], ItemClassification.progression)
+            sc["item_ap_id"], ItemClassification.useful)
 
     # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
     # gates its matching "Complete {strId} - Wizard stash" location.
@@ -129,71 +128,55 @@ def _load_item_table() -> Dict[str, ItemData]:
         table[f"Wizard Stash {stage['str_id']} Key"] = ItemData(
             key_id, ItemClassification.progression)
 
-    # Coarse stash keys (per_tile / per_tier / global). All declared so
-    # name→id lookup works regardless of stash_key_granularity option;
-    # create_items() decides which subset goes into the pool.
+    # Coarse stash keys (per_tile / global). All declared so name→id lookup
+    # works regardless of stash_key_granularity option; create_items()
+    # decides which subset goes into the pool.
     from . import gating as _g
     for prefix in _g.TILE_PREFIXES:
         table[f"Wizard Stash Tile {prefix} Key"] = ItemData(
             _g.stash_tile_key_id(prefix), ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Wizard Stash Tier {tier} Key"] = ItemData(
-            _g.stash_tier_key_id(tier), ItemClassification.progression)
     table["Wizard Stash Master Key"] = ItemData(
         _g.STASH_MASTER_KEY_ID, ItemClassification.progression)
 
     # Gempouches. Always declared so name→id resolution works regardless of gem_pouch_granularity option; create_items() picks which set goes into the pool.
     #   - per_tile:             26 named pouches `Gempouch (X)` at IDs 626..651.
     #   - per_tile_progressive: single "Progressive Gempouch" at ID 652, added 26 times to the pool.
-    #   - per_tier:             `Tier <N> Gempouch` (one per active tier).
-    #   - per_tier_progressive: single "Progressive Gempouch (per-tier)" added once per active tier (declared below with the other progressive variants).
     #   - global:               "Master Gempouch" (single item).
     for i, prefix in enumerate(_g.TILE_PREFIXES):
         table[f"Gempouch ({prefix})"] = ItemData(
             626 + i, ItemClassification.progression)
     table["Progressive Gempouch"] = ItemData(
         652, ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Tier {tier} Gempouch"] = ItemData(
-            _g.pouch_tier_id(tier), ItemClassification.progression)
     table["Master Gempouch"] = ItemData(
         _g.POUCH_MASTER_ID, ItemClassification.progression)
 
-    # Coarse field tokens (per_tile / per_tier). Per-stage field tokens are
-    # already added at the top of this function from data["stages"].
+    # Coarse field tokens (per_tile). Per-stage field tokens are already
+    # added at the top of this function from data["stages"].
     for prefix in _g.TILE_PREFIXES:
         table[f"{prefix} Tile Field Token"] = ItemData(
             _g.field_tile_token_id(prefix), ItemClassification.progression)
-    for tier in _g.ACTIVE_TIERS:
-        table[f"Tier {tier} Field Token"] = ItemData(
-            _g.field_tier_token_id(tier), ItemClassification.progression)
 
     # Progressive variants — single fungible item per category, added N
     # times to the pool by create_items(). The Nth received copy unlocks
-    # the Nth entry in PROGRESSIVE_TILE_ORDER (or per-stage / per-tier
-    # order). Always declared so name→id resolution works regardless of
-    # which granularity is chosen.
-    table[_g.PROG_GEMPOUCH_PER_TIER_NAME] = ItemData(
-        _g.POUCH_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
+    # the Nth entry in PROGRESSIVE_TILE_ORDER (or per-stage order). Always
+    # declared so name→id resolution works regardless of which granularity
+    # is chosen.
     table[_g.PROG_FIELD_PER_STAGE_NAME] = ItemData(
         _g.FIELD_PER_STAGE_PROGRESSIVE_ID, ItemClassification.progression)
     table[_g.PROG_FIELD_PER_TILE_NAME] = ItemData(
         _g.FIELD_PER_TILE_PROGRESSIVE_ID,  ItemClassification.progression)
-    table[_g.PROG_FIELD_PER_TIER_NAME] = ItemData(
-        _g.FIELD_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
     table[_g.PROG_STASH_PER_STAGE_NAME] = ItemData(
         _g.STASH_PER_STAGE_PROGRESSIVE_ID, ItemClassification.progression)
     table[_g.PROG_STASH_PER_TILE_NAME] = ItemData(
         _g.STASH_PER_TILE_PROGRESSIVE_ID,  ItemClassification.progression)
-    table[_g.PROG_STASH_PER_TIER_NAME] = ItemData(
-        _g.STASH_PER_TIER_PROGRESSIVE_ID,  ItemClassification.progression)
 
     return table
 
 
 item_table: Dict[str, ItemData] = _load_item_table()
 
-# SP bundle items (IDs 1700-1703) — four named tiers (Small/Medium/Large/Huge)
-# whose per-seed SP values are computed in compute_tier_distribution.
+# SP filler items (IDs 1700-1703) — three fixed "bundle" tiers
+# (Small/Medium/Big) plus a single "Skillpoint" filler; fixed SP values in
+# items_skillpoints.SP_ITEMS.
 from .items_skillpoints import sp_bundle_item_table
 item_table.update(sp_bundle_item_table())

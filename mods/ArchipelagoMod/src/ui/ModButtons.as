@@ -26,6 +26,8 @@ package ui {
         public var onSettingsClick:Function;
         /** Toggle the debug-options panel. */
         public var onApDebugClick:Function;
+        /** Toggle the Game Elements browser panel. */
+        public var onGameElementClick:Function;
         /** Open the changelog panel. */
         public var onChangelogClick:Function;
         /** Open the credits panel. */
@@ -40,6 +42,7 @@ package ui {
         private var _reportBtn:CustomButton;
         private var _settingsBtn:CustomButton;
         private var _fieldsBtn:FieldsInLogicButton;
+        private var _gameElementBtn:CustomButton;
         private var _apDebugBtn:CustomButton;
 
         // Desired visibility — tracked separately so the setter survives
@@ -111,10 +114,20 @@ package ui {
             _fieldsBtn.y = tmpl.y + stepY * 3;
             mc.addChild(_fieldsBtn);
 
+            // ---- Game Elements (browser — sits between Fields in Logic and Debug) ----
+            _gameElementBtn         = new CustomButton(tmpl, "Game Elements");
+            _gameElementBtn.x       = tmpl.x;
+            _gameElementBtn.y       = tmpl.y + stepY * 4;
+            _gameElementBtn.visible = true;
+            _gameElementBtn.onClick = function():void {
+                if (onGameElementClick != null) onGameElementClick();
+            };
+            mc.addChild(_gameElementBtn);
+
             // ---- AP Debug Menu (always available in AP mode) ----
             _apDebugBtn         = new CustomButton(tmpl, "AP Debug Menu");
             _apDebugBtn.x       = tmpl.x;
-            _apDebugBtn.y       = tmpl.y + stepY * 4;
+            _apDebugBtn.y       = tmpl.y + stepY * 5;
             _apDebugBtn.visible = true;
             _apDebugBtn.onClick = function():void {
                 if (onApDebugClick != null) onApDebugClick();
@@ -128,10 +141,11 @@ package ui {
          * Remove all selector buttons and clear references.
          */
         public function removeFromSelector():void {
-            _remove(_reportBtn);   _reportBtn   = null;
-            _remove(_settingsBtn); _settingsBtn = null;
-            _remove(_fieldsBtn);   _fieldsBtn   = null;
-            _remove(_apDebugBtn);  _apDebugBtn  = null;
+            _remove(_reportBtn);      _reportBtn      = null;
+            _remove(_settingsBtn);    _settingsBtn    = null;
+            _remove(_fieldsBtn);      _fieldsBtn      = null;
+            _remove(_gameElementBtn); _gameElementBtn = null;
+            _remove(_apDebugBtn);     _apDebugBtn     = null;
             _selectorAdded = false;
         }
 
@@ -143,10 +157,11 @@ package ui {
             if (!_selectorAdded) return;
 
             var bx:Number = mc.btnTutorial.x;
-            if (_reportBtn   != null) _reportBtn.x   = bx;
-            if (_settingsBtn != null) _settingsBtn.x = bx;
-            if (_fieldsBtn   != null) _fieldsBtn.x   = bx;
-            if (_apDebugBtn  != null) _apDebugBtn.x  = bx;
+            if (_reportBtn      != null) _reportBtn.x      = bx;
+            if (_settingsBtn    != null) _settingsBtn.x    = bx;
+            if (_fieldsBtn      != null) _fieldsBtn.x      = bx;
+            if (_gameElementBtn != null) _gameElementBtn.x = bx;
+            if (_apDebugBtn     != null) _apDebugBtn.x     = bx;
 
             if (_fieldsBtn != null) {
                 var inLogicList:Array = _computeInLogicStages();

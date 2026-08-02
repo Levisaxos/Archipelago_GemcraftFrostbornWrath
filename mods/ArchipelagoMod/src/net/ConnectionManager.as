@@ -34,7 +34,7 @@ package net {
         // Connection settings
         private var _archipelagoHost:String     = "localhost";
         private var _archipelagoPort:int        = 38281;
-        private var _archipelagoSlot:String     = "";
+        private var _archipelagoSlot:String     = "Levisaxos";
         private var _archipelagoPassword:String = "";
         private var _saveSlot:int               = 0;
 
@@ -172,8 +172,8 @@ package net {
             _receiver.onDeathLinkReceived = function(src:String):void {
                 if (onDeathLinkReceived != null) onDeathLinkReceived(src);
             };
-            _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
-                if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe);
+            _receiver.onItemSent = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void {
+                if (onItemSent != null) onItemSent(itemName, apId, recipientName, isForMe, flags);
             };
             _receiver.onDataStorageRetrieved = function(keys:Object):void {
                 if (onDataStorageRetrieved != null) onDataStorageRetrieved(keys);
@@ -198,6 +198,7 @@ package net {
         public function get tokenStages():Object           { return _receiver.tokenStages; }
         public function get talismanMap():Object           { return _receiver.talismanMap; }
         public function get talismanNameMap():Object       { return _receiver.talismanNameMap; }
+        public function get talismanChargeMap():Object     { return _receiver.talismanChargeMap; }
         public function get shadowCoreMap():Object         { return _receiver.shadowCoreMap; }
         public function get shadowCoreNameMap():Object     { return _receiver.shadowCoreNameMap; }
         public function get wizStashTalData():Object       { return _receiver.wizStashTalData; }
@@ -338,7 +339,7 @@ package net {
         public function resetSettings():void {
             _archipelagoHost     = "localhost";
             _archipelagoPort     = 38281;
-            _archipelagoSlot     = "";
+            _archipelagoSlot     = "Levisaxos";
             _archipelagoPassword = "";
         }
 

@@ -12,7 +12,7 @@ package ui {
      * hardlock is cheating.
      *
      * Sits inside McDebugOptions.arrCntContents, so it exposes a public yReal
-     * property just like McOptTitle / McOptPanel / McWizardLevelSlider.
+     * property just like McOptTitle / McOptPanel.
      */
     public class DebugDisclaimerView extends Sprite {
 

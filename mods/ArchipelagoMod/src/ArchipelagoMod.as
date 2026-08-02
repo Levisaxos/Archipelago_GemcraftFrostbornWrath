@@ -10,6 +10,7 @@ package {
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+    import com.giab.games.gcfw.constants.BattleMode;
     import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.constants.ScreenId;
     import com.giab.games.gcfw.entity.TalismanFragment;
@@ -19,6 +20,8 @@ package {
     import goals.GoalManager;
 
     import ui.ModButtons;
+    import ui.TalismanShop;
+    import ui.IconTooltipPreview;
     import ui.ScrSlotSettings;
     import ui.SystemToast;
     import ui.ReceivedToast;
@@ -26,6 +29,7 @@ package {
     import ui.ItemColors;
     import ui.MessageLogPanel;
     import ui.ScrDebugOptions;
+    import ui.ScrGameElements;
     import ui.ConnectionPanel;
     import ui.DisconnectPanel;
     import ui.OfflineItemsPanel;
@@ -37,6 +41,7 @@ package {
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
+    import patch.TalismanFragmentTooltipOverlay;
     import unlockers.SkillUnlocker;
     import unlockers.TraitUnlocker;
     import unlockers.LevelUnlocker;
@@ -62,12 +67,16 @@ package {
     import patch.FrostbornFreeBuildings;
     import patch.GemPouchSuppressor;
     import patch.SteamAchievementSuppressor;
+    import patch.DifficultyXpScaler;
     import patch.HollowGemInjector;
     import patch.StartingGemSuppressor;
     import patch.WavePrePatcher;
     import patch.LinkedWaveEarlyCredit;
+    import patch.ExtraShadowCorePerWave;
+    import patch.OrbIntactWaveFix;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
+    import patch.ApStatsTab;
     import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
     import patch.SkillsTooltipOverlay;
@@ -101,10 +110,15 @@ package {
      */
     public class ArchipelagoMod extends MovieClip implements BezelMod {
 
-        public function get VERSION():String           { return "0.0.5.6"; }
+        // VERSION is the authoritative mod version: shown on the main menu and
+        // handed to UpdateChecker.fetchReleases() to compare against the latest
+        // GitHub release tag (and to decide whether any newer release is flagged
+        // BREAKING). Keep in step with APWORLD_VERSION and with world_version in
+        // apworld/gcfw/archipelago.json.
+        public function get VERSION():String           { return "0.6.0"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.0.5.5"; }
+        public function get APWORLD_VERSION():String   { return "0.6.0"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
@@ -120,6 +134,8 @@ package {
         private var _logger:Logger;
         private var _bezel:Bezel;
         private var _modButtons:ModButtons;
+        private var _talismanShop:TalismanShop;
+        private var _talismanFragmentTooltip:TalismanFragmentTooltipOverlay;
         private var _slotSettings:ScrSlotSettings;
 
         private var _systemToast:SystemToast;
@@ -133,6 +149,7 @@ package {
         private var _messageLogOnStage:Boolean = false;
 
         private var _debugOptions:ScrDebugOptions;
+        private var _gameElements:ScrGameElements;
         private var _progressionBlocker:ProgressionBlocker;
         private var _connectionManager:ConnectionManager;
         private var _apStateSync:ApStateSync;
@@ -164,6 +181,8 @@ package {
         private var _startingGemSuppressor:StartingGemSuppressor;
         private var _wavePrePatcher:WavePrePatcher;
         private var _linkedWaveEarlyCredit:LinkedWaveEarlyCredit;
+        private var _extraShadowCorePerWave:ExtraShadowCorePerWave;
+        private var _orbIntactWaveFix:OrbIntactWaveFix;
         private var _ritualSpawnPatcher:RitualSpawnPatcher;
         private var _fieldLogicEvaluator:FieldLogicEvaluator;
         private var _logicEvaluator:LogicEvaluator;
@@ -171,7 +190,14 @@ package {
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
+        private var _apStatsTab:ApStatsTab;
+        // Master switch for the injected "Archipelago" Stats tab. Off for now —
+        // the tab is incomplete, so it's hidden in-game while the tracking code
+        // (SaveManager stats, attempt/outcome recording) keeps running underneath.
+        // Flip to true to re-enable the UI once it's finished.
+        private static const SHOW_AP_STATS_TAB:Boolean = false;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
+        private var _iconTooltipPreview:IconTooltipPreview;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
@@ -184,6 +210,13 @@ package {
         // initializer.setScene1 without changing currentScreen, so the
         // screen-transition cleanup never fires). -1 = not initialized / not in INGAME.
         private var _lastIngameStatus:int      = -1;
+        // Per-level AP stats tracking (Journey battles only). _attemptCounted
+        // latches one attempt per battle instance; _currentBattleStrId is the
+        // stage of the in-progress Journey battle (set once waves start), used to
+        // attribute the win/loss and any achievements earned. Both reset on every
+        // stage init (fresh entry or in-place retry) and on leaving INGAME.
+        private var _attemptCounted:Boolean    = false;
+        private var _currentBattleStrId:String = null;
         private var _mapTilesUnlocked:Boolean  = false;
         // Standalone gate — true once the player has confirmed (or implicitly chosen)
         // standalone play for the current slot. Standalone slots leave _active=false
@@ -260,6 +293,8 @@ package {
                 // Note: _achievementUnlocker will be initialized after _connectionManager is created
                 _wavePrePatcher     = new WavePrePatcher(_logger, MOD_NAME);
                 _linkedWaveEarlyCredit = new LinkedWaveEarlyCredit(_logger, MOD_NAME);
+                _extraShadowCorePerWave = new ExtraShadowCorePerWave(_logger, MOD_NAME);
+                _orbIntactWaveFix = new OrbIntactWaveFix(_logger, MOD_NAME);
                 _ritualSpawnPatcher = new RitualSpawnPatcher(_logger, MOD_NAME);
                 _firstPlayBypass    = new FirstPlayBypass(_logger, MOD_NAME);
                 _earlyExitOutcome = new EarlyExitOutcome(_logger, MOD_NAME);
@@ -283,6 +318,7 @@ package {
                 WizStashes.setEvaluator(_fieldLogicEvaluator);
 
                 _debugOptions  = new ScrDebugOptions(this);
+                _gameElements  = new ScrGameElements(_fieldLogicEvaluator);
                 _slotSettings  = new ScrSlotSettings();
 
                 // Connection manager — AP protocol + WebSocket
@@ -299,8 +335,8 @@ package {
                     grantItem(apId);
                     if (_saveManager != null) _saveManager.saveSlotData();
                 };
-                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean):void {
-                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe });
+                _connectionManager.onItemSent              = function(itemName:String, apId:int, recipientName:String, isForMe:Boolean, flags:int):void {
+                    _sessionDrops.push({ name: itemName, apId: apId, recipient: recipientName, isForMe: isForMe, flags: flags });
                     _logger.log(MOD_NAME, "sessionDrop+ [" + (_sessionDrops.length - 1) + "] "
                         + itemName + " (apId=" + apId + ") → " + recipientName + (isForMe ? " (self)" : ""));
                 };
@@ -354,15 +390,22 @@ package {
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
                 _achPanelPatcher.setAchievementLogicEvaluator(_achievementLogicEvaluator);
 
-                // When an achievement check is sent, immediately refresh the panel so the
+                // "Archipelago" tab on the vanilla Stats panel. Content comes from
+                // _buildApStatsData so the tab is a generic AP-stats surface.
+                _apStatsTab = new ApStatsTab(_logger, MOD_NAME);
+                _apStatsTab.dataProvider = _buildApStatsData;
+
+                // When an achievement check is sent, credit it to the current
+                // battle's stage (Stats tab) and refresh the panel so the
                 // achievement leaves "In Logic" without waiting for the next item grant.
-                _achievementUnlocker.onChecked = _refreshAchievementPanel;
+                _achievementUnlocker.onChecked = _onAchievementChecked;
                 // Excluded-from-AP achievements still earn vanilla SP — record
                 // their gameIds so the level-end drop screen renders an icon.
                 _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
+                _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator, _achievementLogicEvaluator);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
                 _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
 
@@ -370,8 +413,18 @@ package {
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
                 _modButtons.onSettingsClick  = onSettingsClicked;
                 _modButtons.onApDebugClick   = _toggleDebugOptions;
+                _modButtons.onGameElementClick = _toggleGameElements;
                 _modButtons.onChangelogClick = openChangelog;
                 _modButtons.onCreditsClick   = openCredits;
+
+                // AP Shop — hover popup on the talisman screen for buying the
+                // perfect-placement talisman fragments with shadow cores.
+                _talismanShop = new TalismanShop(_logger, MOD_NAME, _talismanUnlocker);
+
+                // Marks AP-sourced fragments with an "Archipelago item" line in
+                // their vanilla hover tooltip (inventory / active slots).
+                _talismanFragmentTooltip = new TalismanFragmentTooltipOverlay(
+                    _logger, MOD_NAME, _talismanUnlocker);
 
                 // Disconnect banner (shown when AP drops unexpectedly)
                 _disconnectPanel = new DisconnectPanel();
@@ -425,6 +478,11 @@ package {
         public function unload():void {
             removeEventListener(Event.ENTER_FRAME, onEnterFrame);
             removeEventListener(Event.EXIT_FRAME, onExitFrame);
+            if (_talismanShop != null) {
+                _talismanShop.dispose();
+                _talismanShop = null;
+            }
+            _talismanFragmentTooltip = null;
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
                 _connectionManager.unload();
@@ -466,6 +524,10 @@ package {
                 _debugOptions.close();
             }
             _debugOptions = null;
+            if (_gameElements != null && _gameElements.isOpen) {
+                _gameElements.close();
+            }
+            _gameElements = null;
             if (_connectionPanel != null) {
                 _connectionPanel.dismiss();
             }
@@ -532,6 +594,20 @@ package {
             // relocated stashes. apply() is idempotent (self-guarded).
             patchWizStashModes();
 
+            // Normalize every achievement to a flat 1 SP for the AP session
+            // (vanilla awards 1/2/3). GV.achiCollection is a per-process
+            // singleton, so _deactivateApMode calls restoreSkillPointValues to
+            // put the vanilla values back — otherwise a standalone slot loaded
+            // next keeps the nerfed values.
+            if (_achievementUnlocker != null) _achievementUnlocker.normalizeSkillPointValues();
+
+            // Correct the in-game achievement descriptions whose vanilla text
+            // misstates the real unlock condition (flagged vanilla_correction in
+            // achievement_logic.json). Snapshots originals; _deactivateApMode
+            // calls restoreDescriptionCorrections so a standalone slot loaded
+            // next shows vanilla text.
+            if (_achievementUnlocker != null) _achievementUnlocker.applyDescriptionCorrections();
+
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
 
@@ -570,6 +646,19 @@ package {
             // pnlAchievements is persistent, so it would otherwise leak into a
             // standalone save's achievements screen.
             if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
+            // Remove the injected "Archipelago" Stats tab. pnlStats is persistent,
+            // so it would otherwise leak into a standalone save's stats screen.
+            if (_apStatsTab != null) _apStatsTab.unpatch();
+            // Put vanilla per-achievement skill-point values back (AP mode
+            // normalized every achievement to 1 SP). GV.achiCollection is
+            // global/per-process, so a standalone slot loaded next would keep
+            // the nerfed values without this.
+            if (_achievementUnlocker != null) _achievementUnlocker.restoreSkillPointValues();
+            // Put vanilla achievement descriptions back (AP mode overwrote the
+            // mislabeled ones with corrected text). GV.achiCollection is
+            // global/per-process, so a standalone slot loaded next would keep
+            // the patched descriptions without this.
+            if (_achievementUnlocker != null) _achievementUnlocker.restoreDescriptionCorrections();
             // Detach the outcome / pause-menu button listeners. EarlyExitOutcome
             // sits on the persistent scrOptions singleton and would otherwise
             // hijack the vanilla pause-menu Return/Restart buttons in a
@@ -577,6 +666,27 @@ package {
             if (_earlyExitOutcome != null) _earlyExitOutcome.detach();
             if (_victoryRestartButton != null) _victoryRestartButton.detach();
             if (_retryButtonSkillPointsRefresh != null) _retryButtonSkillPointsRefresh.detach();
+            // Remove the AP Shop button + popup from the (persistent) talisman
+            // panel so it doesn't linger into a standalone save.
+            if (_talismanShop != null) _talismanShop.dispose();
+
+            // Reset the per-battle AP patchers. Their per-stage decision locks
+            // (GemPouchSuppressor._lockedSuppress, HollowGemInjector._lockedActive
+            // / _leechStatBaseline) and injected Hollow-Gem button would otherwise
+            // carry stale into the next AP battle (AP → standalone → AP) or linger
+            // when AP is torn down mid-battle by an exit straight to the main menu
+            // (that path skips _resetPerLevelState because _active is already
+            // cleared by the time the INGAME→MAINMENU reset block runs).
+            if (_gemPouchSuppressor != null)
+                _gemPouchSuppressor.resetIngame();
+            if (_hollowGemInjector != null)
+                _hollowGemInjector.resetIngame();
+            // Drop the AP difficulty XP scaling so a standalone/vanilla save
+            // loaded next earns vanilla battle XP. DifficultyXpScaler.apply only
+            // runs while AP is active, but the last value it wrote to
+            // GV.selectorCore.traitsXpMult persists until vanilla recomputes it —
+            // restore the vanilla base now so standalone never sees AP scaling.
+            DifficultyXpScaler.restoreVanilla();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
@@ -602,6 +712,19 @@ package {
             _disconnectPanelOnStage = false;
             if (_connectionPanel != null) _connectionPanel.dismiss();
 
+            // Remove the AP-mode stage listeners. Both are added lazily inside the
+            // AP-gated section of onEnterFrame (KEY_DOWN debug hotkey / message-log
+            // toggle, and RESIZE toast repositioning). They previously came off
+            // only in unload(), so after AP → standalone they survived on the
+            // persistent stage and the backtick key kept feeding AP's onKeyDown.
+            if (this.stage != null) {
+                if (_keyListenerAdded) {
+                    this.stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+                    _keyListenerAdded = false;
+                }
+                this.stage.removeEventListener(Event.RESIZE, onStageResize);
+            }
+
             // Reset transient session state
             if (_systemToast != null) _systemToast.clear();
             if (_receivedToast != null) {
@@ -609,6 +732,9 @@ package {
                 _receivedToast.setSuppressed(false);
             }
             if (_offlineItemsCollector != null) _offlineItemsCollector.reset();
+            // Disable DeathLink and drop any queued-but-unapplied punishments so
+            // they can't fire in a standalone save or bleed into a later AP run.
+            if (_deathLinkHandler != null) _deathLinkHandler.deactivate();
             if (_goalManager != null) _goalManager.reset();
             if (_achievementUnlocker != null) _achievementUnlocker.resetReportedAchievements();
             if (_apStateSync != null) _apStateSync.reset();
@@ -622,6 +748,7 @@ package {
             // Without this it survives AP → standalone → AP and its stale display
             // list / listeners leave the reopened menu unclickable.
             if (_debugOptions != null) _debugOptions.dispose();
+            if (_gameElements != null) _gameElements.dispose();
             if (_mainMenuUI != null) _mainMenuUI.hide();
 
             _sessionDrops = [];
@@ -1010,6 +1137,28 @@ package {
                         + _lastIngameStatus + " → PLAYING)");
                     _initForNewStage();
                 }
+                // Outcome panel just appeared (transition INTO a gameover
+                // substate). IngameEnding commits stageHighestXpsJourney
+                // before the panel shows, so the just-cleared stage's
+                // Journey/Stash locations are already scannable here. Send
+                // their checks now instead of waiting for the end-of-
+                // animation SAVE_SAVE — otherwise the field-hover tooltip
+                // keeps rendering the pre-battle "in logic" state during the
+                // whole map XP tally. checkCompletedLocations no-ops on
+                // defeat (isBattleWon guard) and the later save re-call is
+                // idempotent (already-sent ids are gone from missing).
+                if (_lastIngameStatus != -1
+                        && !_isGameOverPanelStatus(_lastIngameStatus)
+                        && _isGameOverPanelStatus(status)) {
+                    _connectionManager.checkCompletedLocations();
+                    // Record the Journey battle outcome for the Stats tab. Fires
+                    // once per outcome (edge-guarded). _currentBattleStrId is only
+                    // set for a Journey battle whose waves started.
+                    if (_active && _currentBattleStrId != null && _saveManager != null) {
+                        if (_battleWasWon()) _saveManager.recordStageWin(_currentBattleStrId);
+                        else                 _saveManager.recordStageLoss(_currentBattleStrId);
+                    }
+                }
                 _lastIngameStatus = status;
             } else {
                 _lastIngameStatus = -1;
@@ -1033,6 +1182,8 @@ package {
             if (screen == ScreenId.INGAME) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
+                // AP stats: tally one attempt per Journey battle instance.
+                if (_active && !_attemptCounted) _tryRecordAttempt();
             }
 
             // Inject skill gems for first-play stages (every frame until done once).
@@ -1040,6 +1191,10 @@ package {
             // adds skill-unlock gems back, the former wipes them when the
             // current stage's Gempouch is missing.
             if (screen == ScreenId.INGAME) {
+                // Difficulty-scaled battle XP (base of the traits multiplier).
+                DifficultyXpScaler.apply();
+                // Keep the world-map icon-tooltip preview off the battle screen.
+                if (_iconTooltipPreview != null) _iconTooltipPreview.hide();
                 _firstPlayBypass.onIngameFrame();
                 _gemPouchSuppressor.onIngameFrame();
                 _hollowGemInjector.onIngameFrame();
@@ -1049,6 +1204,11 @@ package {
                 _retryButtonSkillPointsRefresh.tryAttach();
                 _wavePrePatcher.applyIfReady();
                 _linkedWaveEarlyCredit.onIngameFrame();
+                _extraShadowCorePerWave.onIngameFrame();
+                // Unlock the "keep the orb intact for N waves" achievements at
+                // the stated wave count (vanilla's -1 counter base makes them
+                // require N+1). AP-only so a standalone battle stays vanilla.
+                if (_active && _orbIntactWaveFix != null) _orbIntactWaveFix.onIngameFrame();
                 _ritualSpawnPatcher.applyIfReady();
                 if (_achPanelPatcher != null) _achPanelPatcher.onIngameFrame();
             }
@@ -1109,9 +1269,30 @@ package {
             try {
                 if (_firstPlayBypass != null) _firstPlayBypass.onSelectorFrame(mc);
 
+                // Difficulty-scaled XP base, so the pre-battle traits-multiplier
+                // display reflects it too (recomputed after the game rebuilds it).
+                DifficultyXpScaler.apply();
+
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
-                if (_fieldTooltipOverlay != null) _fieldTooltipOverlay.onSelectorFrame(mc);
+                // While the Slot Settings window is up (a modal overlay) the
+                // field tokens underneath keep firing hover events, so both the
+                // vanilla field tooltip (McInfoPanel, appended by
+                // _fieldTooltipOverlay) and the custom replacement panel
+                // (_iconTooltipPreview) would still pop up behind/over it. Force
+                // both off while it's open: skip the overlay, and hide() the
+                // custom panel so it dismisses immediately.
+                var settingsOpen:Boolean =
+                        (_slotSettings != null && _slotSettings.isOpen);
+                if (_fieldTooltipOverlay != null && !settingsOpen)
+                    _fieldTooltipOverlay.onSelectorFrame(mc);
+                // Custom icon-based field tooltip (replaces the vanilla one on the map).
+                if (_iconTooltipPreview != null) {
+                    if (settingsOpen)
+                        _iconTooltipPreview.hide();
+                    else
+                        _iconTooltipPreview.onSelectorFrame(mc);
+                }
                 if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
                 if (_skillTypeTooltipOverlay != null) _skillTypeTooltipOverlay.onSelectorFrame();
 
@@ -1131,6 +1312,14 @@ package {
                         _achPanelPatcher.onSelectorFrame(GV.selectorCore.pnlAchievements);
                     }
                 }
+
+                // "Archipelago" tab on the Stats panel — AP-only (never touches a
+                // standalone save's stats screen). Idempotent inject + selection sync.
+                // Gated off while the tab is incomplete (see SHOW_AP_STATS_TAB).
+                if (SHOW_AP_STATS_TAB && _active && _apStatsTab != null
+                        && GV.selectorCore != null && GV.selectorCore.pnlStats != null) {
+                    _apStatsTab.onSelectorFrame(GV.selectorCore.pnlStats);
+                }
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
             }
@@ -1147,8 +1336,26 @@ package {
             if (_debugOptions != null && _debugOptions.isOpen) {
                 _debugOptions.doEnterFrame();
             }
+            if (_gameElements != null && _gameElements.isOpen) {
+                _gameElements.doEnterFrame();
+            }
             if (_slotSettings != null && _slotSettings.isOpen) {
                 _slotSettings.doEnterFrame();
+            }
+
+            // AP Shop: injects its talisman-screen button + drives the hover popup.
+            if (_talismanShop != null) {
+                try { _talismanShop.onSelectorFrame(); }
+                catch (eShop:Error) { _logger.log(MOD_NAME, "talismanShop error: " + eShop.message); }
+            }
+
+            // Mark AP-sourced fragments in their hover tooltip. Only while an AP
+            // session is active so it never touches a standalone slot's tooltips,
+            // and not while the AP Shop popup is up (it owns its own tooltips).
+            if (_active && _talismanFragmentTooltip != null
+                    && (_talismanShop == null || !_talismanShop.isOpen)) {
+                try { _talismanFragmentTooltip.onSelectorFrame(); }
+                catch (eTft:Error) { _logger.log(MOD_NAME, "talismanFragmentTooltip error: " + eTft.message); }
             }
         }
 
@@ -1217,6 +1424,15 @@ package {
                 _debugOptions.close();
             } else {
                 _debugOptions.open();
+            }
+        }
+
+        private function _toggleGameElements():void {
+            if (_gameElements == null) return;
+            if (_gameElements.isOpen) {
+                _gameElements.close();
+            } else {
+                _gameElements.open();
             }
         }
 
@@ -1412,6 +1628,7 @@ package {
             AV.serverData.shadowCoreMap      = _connectionManager.shadowCoreMap;
             AV.serverData.shadowCoreNameMap  = _connectionManager.shadowCoreNameMap;
             AV.serverData.talismanNameMap    = _connectionManager.talismanNameMap;
+            AV.serverData.talismanChargeMap  = _connectionManager.talismanChargeMap;
             AV.serverData.wizStashTalData    = _connectionManager.wizStashTalData;
 
             // Reset + configure the in-game tracker from slot_data.  Must happen
@@ -1479,9 +1696,7 @@ package {
 
             _goalManager.configure(
                 AV.serverData.serverOptions.goal,
-                AV.serverData.serverOptions.talismanMinRarity,
-                AV.serverData.serverOptions.fieldsRequiredCount,
-                AV.serverData.serverOptions.fieldsRequiredPercentage);
+                AV.serverData.serverOptions.fieldsRequiredCount);
 
             // DeathLink: pull punishment / grace / cooldown from slot_data,
             // and seed the enabled flag from the yaml death_link option on
@@ -1542,10 +1757,15 @@ package {
          * the outcome panel's Retry button.
          */
         private function _initForNewStage():void {
+            // New battle instance (fresh entry or in-place retry): re-arm the
+            // attempt latch and drop the prior battle's stage attribution.
+            _attemptCounted     = false;
+            _currentBattleStrId = null;
             skipAllTutorials();
             _deathLinkHandler.resetForNewStage();
             _wavePrePatcher.resetForNewStage();
             _linkedWaveEarlyCredit.resetForNewStage();
+            _extraShadowCorePerWave.resetForNewStage();
             _ritualSpawnPatcher.resetForNewStage();
             _startingGemSuppressor.applyIfReady();
             // Refresh achievement-panel pips so they're current even if the
@@ -1566,6 +1786,10 @@ package {
             _gemPouchSuppressor.resetIngame();
             _hollowGemInjector.resetIngame();
             _startingGemSuppressor.resetForNewStage();
+            // Left the battle — drop stage attribution so post-battle achievement
+            // checks aren't miscredited to it.
+            _attemptCounted     = false;
+            _currentBattleStrId = null;
             _logger.log(MOD_NAME, reason);
             _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
             for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
@@ -1614,6 +1838,18 @@ package {
         private function _onExcludedAchievementUnlocked(gameId:int, skipReason:String):void {
             if (gameId < 0) return;
             _sessionExcludedAchievementGameIds.push(gameId);
+            // Excluded achievements still earn (vanilla SP) when you beat a level —
+            // count them in the Stats tab's per-level "Achis" column too.
+            _creditBattleAchievement();
+        }
+
+        /**
+         * Achievement-checked hook: credit it to the current battle's stage for
+         * the Stats tab, then run the panel refresh.
+         */
+        private function _onAchievementChecked():void {
+            _creditBattleAchievement();
+            _refreshAchievementPanel();
         }
 
         /**
@@ -1626,11 +1862,11 @@ package {
          *   2.  Skill tomes
          *   3.  Battle trait scrolls
          *   4.  XP tomes
-         *   4b. Gempouches  (per-tile / per-tier / master / progressives)
-         *   4c. Stash keys  (per-stage + per-tile / per-tier / master pouches)
-         *   4d. Tile pouches  (coarse per-tile / per-tier field tokens)
+         *   4b. Gempouches  (per-tile / master / progressives)
+         *   4c. Stash keys  (per-stage + per-tile / master pouches)
+         *   4d. Tile pouches  (coarse per-tile field tokens)
          *   4e. Progressive variants (per-stage stage-specific icons,
-         *       per-tile / per-tier pouch icons)
+         *       per-tile pouch icons)
          *   5.  Shadow cores  (one combined icon: AP-granted + monster drops)
          *   5b. Skillpoint bundles  (cyan-glow icon, summed per run)
          *   6.  Talisman fragments  (monster drops + AP-granted)
@@ -1712,8 +1948,7 @@ package {
             // 4b. Gempouches:
             //   626-651  per-tile distinct
             //   652      per-tile progressive
-            //   1601-1614 per-tier + master
-            //   1615     per-tier progressive
+            //   1614     master
             // Per-tile-progressive (652) is a single fungible item id added 26
             // times to the pool, so two copies received in the same session
             // would otherwise both stamp the same getItemCount() reading on
@@ -1725,8 +1960,8 @@ package {
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
                 var isPouchDistinct:Boolean = (apId >= 626 && apId <= 652);
-                var isPouchTier:Boolean     = (apId >= 1601 && apId <= 1615);
-                if (!isPouchDistinct && !isPouchTier) continue;
+                var isPouchMaster:Boolean   = (apId == 1614);
+                if (!isPouchDistinct && !isPouchMaster) continue;
                 var pouchOrd:int = (apId == 652) ? pouchProgNext++ : 0;
                 _progressionBlocker.addGempouchDropIcon(apId, pouchOrd);
             }
@@ -1734,58 +1969,53 @@ package {
             // 4c. Wizard Stash keys:
             //   1400-1521  per-stage (one per stage)
             //   1522-1547  per-tile pouch
-            //   1548-1560  per-tier pouch
             //   1561       master pouch
             // Per-stage progressive (1619) handled below from
-            // _sessionStashStageProgressiveUnlocks. Per-tile / per-tier
-            // progressives (1620, 1621) handled in 4e.
+            // _sessionStashStageProgressiveUnlocks. Per-tile progressive
+            // (1620) handled in 4e.
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
                 if (apId >= 1400 && apId <= 1521) {
                     _progressionBlocker.addWizStashKeyDropIcon(apId);
-                } else if (apId >= 1522 && apId <= 1561) {
+                } else if ((apId >= 1522 && apId <= 1547) || apId == 1561) {
                     _progressionBlocker.addKeyPouchDropIcon(apId);
                 }
             }
 
             // 4d. Coarse field-token pouches:
             //   1562-1587  per-tile
-            //   1588-1600  per-tier
             // One TilePouchDropIcon per copy received. Per-stage progressive
             // (1616) handled below from _sessionFieldStageProgressiveUnlocks.
-            // Per-tile / per-tier progressives (1617, 1618) handled in 4e.
+            // Per-tile progressive (1617) handled in 4e.
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId < 1562 || apId > 1600) continue;
+                if (apId < 1562 || apId > 1587) continue;
                 _progressionBlocker.addTilePouchDropIcon(apId);
             }
 
-            // 4e. Progressive variants (1616-1621). Per-stage variants resolve
+            // 4e. Progressive variants (1616-1620). Per-stage variants resolve
             // to the specific stage and reuse FieldTokenDropIcon /
-            // WizStashKeyDropIcon. Per-tile / per-tier variants get one
-            // generic pouch icon per copy received.
+            // WizStashKeyDropIcon. Per-tile variants get one generic pouch
+            // icon per copy received.
             var stageLocIdMap:Object = ConnectionManager.stageLocIds;
             // Same multi-copy ordinal handling as 4b: 1617 (per-tile field
             // token progressive) and 1620 (per-tile stash key progressive)
             // are fungible and rely on per-icon ordinals to render the right
-            // tile in the tooltip. 1618 / 1621 (per-tier progressives) have
-            // no tooltip yet so ordinal stays 0.
+            // tile in the tooltip.
             var fieldTileProgNext:int = _firstProgressiveOrdinal(1617);
             var stashTileProgNext:int = _firstProgressiveOrdinal(1620);
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
                 if (entry.isForMe !== true) continue;
                 apId = int(entry.apId);
-                if (apId == 1617 || apId == 1618) {
-                    var ftOrd:int = (apId == 1617) ? fieldTileProgNext++ : 0;
-                    _progressionBlocker.addTilePouchDropIcon(apId, ftOrd);
-                } else if (apId == 1620 || apId == 1621) {
-                    var skOrd:int = (apId == 1620) ? stashTileProgNext++ : 0;
-                    _progressionBlocker.addKeyPouchDropIcon(apId, skOrd);
+                if (apId == 1617) {
+                    _progressionBlocker.addTilePouchDropIcon(apId, fieldTileProgNext++);
+                } else if (apId == 1620) {
+                    _progressionBlocker.addKeyPouchDropIcon(apId, stashTileProgNext++);
                 }
             }
             for (var fpi:int = 0; fpi < _sessionFieldStageProgressiveUnlocks.length; fpi++) {
@@ -1822,9 +2052,9 @@ package {
                 _progressionBlocker.addShadowCoreDropIcon(totalShadowCores);
             }
 
-            // 5b. Skillpoint bundles (apId 1700-1703, four named tiers): sum
-            // across all bundles received this run into one cyan-glow icon.
-            // Per-tier SP value is per-seed (slot_data spBundleValues).
+            // 5b. SP items (apId 1700-1703: 3 fixed bundle tiers + the single
+            // Skillpoint): sum across all received this run into one cyan-glow
+            // icon. Per-tier SP value is fixed (slot_data spBundleValues).
             var totalSkillPoints:int = 0;
             for (i = 0; i < _sessionDrops.length; i++) {
                 entry = _sessionDrops[i];
@@ -1895,7 +2125,8 @@ package {
                 if (entry.isForMe === true) continue;
                 _progressionBlocker.addRemoteItemDropIcon(
                     String(entry.name),
-                    String(entry.recipient));
+                    String(entry.recipient),
+                    int(entry.flags));
             }
 
             // Kick off the vanilla one-by-one reveal animation. No-op if stats
@@ -2034,16 +2265,12 @@ package {
                         && apId == so.fieldTokenPerStageProgressiveId) return 1;
                 if (so.fieldTokenPerTileProgressiveId > 0
                         && apId == so.fieldTokenPerTileProgressiveId)  return 1;
-                if (so.fieldTokenPerTierProgressiveId > 0
-                        && apId == so.fieldTokenPerTierProgressiveId)  return 1;
             }
             // Map tiles
             if (apId >= 600 && apId <= 625) return 2;
-            // Gempouches — distinct + tier + master + both progressives
+            // Gempouches — distinct + master + progressive
             if (apId >= 626 && apId <= 652)       return 3;
-            if (apId >= 1601 && apId <= 1614)     return 3;
-            if (so != null && so.gemPouchPerTierProgressiveId > 0
-                    && apId == so.gemPouchPerTierProgressiveId) return 3;
+            if (apId == 1614)                     return 3;
             // Wizard Stash keys — all granularities
             if (apId >= 1400 && apId <= 1561)     return 4;
             if (so != null) {
@@ -2051,8 +2278,6 @@ package {
                         && apId == so.stashKeyPerStageProgressiveId) return 4;
                 if (so.stashKeyPerTileProgressiveId > 0
                         && apId == so.stashKeyPerTileProgressiveId)  return 4;
-                if (so.stashKeyPerTierProgressiveId > 0
-                        && apId == so.stashKeyPerTierProgressiveId)  return 4;
             }
             // Skills
             if (apId >= 700 && apId <= 723) return 5;
@@ -2187,15 +2412,15 @@ package {
                     vIp.addTextfield(0x99FF99, grantText, false, 11);
                     return true;
                 }
-                // Skill point bundles (1700-1703, four named tiers) — value
-                // per tier is per-seed and arrives via slot_data.
+                // SP items (1700-1703: 3 fixed bundle tiers + single Skillpoint)
+                // — value per tier is fixed and arrives via slot_data.
                 if (apId >= 1700 && apId <= 1703) {
                     var skp:int = AV.serverData.serverOptions.getSpBundleValue(apId);
-                    var tierName:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
+                    var spName:String = AV.serverData.serverOptions.getSpItemName(apId);
                     vIp.reset(280);
-                    vIp.addTextfield(0xFFD700, "Skillpoint Bundle (" + tierName + ")", false, 13);
+                    vIp.addTextfield(0xFFD700, spName, false, 13);
                     vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
-                    vIp.addTextfield(0x99FF99, "+" + skp + " skill points.", false, 11);
+                    vIp.addTextfield(0x99FF99, "+" + skp + " skill point" + (skp == 1 ? "" : "s") + ".", false, 11);
                     return true;
                 }
                 // Achievements (2000-2636) — delegate to vanilla.
@@ -2218,8 +2443,8 @@ package {
                     vIp.addTextfield(0xCCCCCC, "Wizard Stash Key", false, 11);
                     return true;
                 }
-                // Per-tile / per-tier field tokens (1562-1600).
-                if (apId >= 1562 && apId <= 1600) {
+                // Per-tile field tokens (1562-1587).
+                if (apId >= 1562 && apId <= 1587) {
                     var tokenName:String = itemName(apId);
                     if (tokenName == null) return false;
                     vIp.reset(280);
@@ -2239,8 +2464,6 @@ package {
                     // copy will actually unlock.
                     var stagOrder:Array = prgOpts.progressiveStageOrder as Array;
                     var tileOrder:Array = prgOpts.progressiveTileOrder as Array;
-                    var tierOrder:Array = prgOpts.progressiveTierOrder as Array;
-                    var tierTotal:int   = (tierOrder != null) ? tierOrder.length : 13;
 
                     if (prgOpts.fieldTokenPerStageProgressiveId > 0
                             && apId == prgOpts.fieldTokenPerStageProgressiveId) {
@@ -2254,12 +2477,6 @@ package {
                             "Progressive Field Token", "Field Token (per tile)",
                             "Unlocks all stages on the next tile", tileOrder, true);
                     }
-                    if (prgOpts.fieldTokenPerTierProgressiveId > 0
-                            && apId == prgOpts.fieldTokenPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Field Token", "Field Token (per tier)",
-                            "Unlocks all stages in the next tier", null, false, tierTotal);
-                    }
                     if (prgOpts.stashKeyPerStageProgressiveId > 0
                             && apId == prgOpts.stashKeyPerStageProgressiveId) {
                         return _renderProgressiveTooltip(vIp, apId,
@@ -2271,18 +2488,6 @@ package {
                         return _renderProgressiveTooltip(vIp, apId,
                             "Progressive Stash Key", "Wizard Stash Key (per tile)",
                             "Unlocks all stashes on the next tile", tileOrder, true);
-                    }
-                    if (prgOpts.stashKeyPerTierProgressiveId > 0
-                            && apId == prgOpts.stashKeyPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Stash Key", "Wizard Stash Key (per tier)",
-                            "Unlocks all stashes in the next tier", null, false, tierTotal);
-                    }
-                    if (prgOpts.gemPouchPerTierProgressiveId > 0
-                            && apId == prgOpts.gemPouchPerTierProgressiveId) {
-                        return _renderProgressiveTooltip(vIp, apId,
-                            "Progressive Gempouch", "Gem Pouch (per tier)",
-                            "Unlocks gems for the next tier", null, false, tierTotal);
                     }
                 }
                 // Gempouches (626-652) — exact match to GempouchDropIcon._onMouseOver.
@@ -2326,12 +2531,10 @@ package {
          * count-aware body (green) showing "(N/total unlocked)".
          *
          * @param order    If non-null, drives the body line "Next: <prefix>"
-         *                 by reading order[N]. For per-tier variants the
-         *                 fixedTotal kwarg is used instead.
+         *                 by reading order[N].
          * @param showNext If true and order is non-null, append the next-to-
          *                 unlock prefix/sid to the body.
-         * @param fixedTotal Override for `total` when no order list applies
-         *                   (per-tier variants pass 13).
+         * @param fixedTotal Override for `total` when no order list applies.
          */
         private function _renderProgressiveTooltip(vIp:*, apId:int,
                 title:String, subtitle:String, bodyLead:String,
@@ -2462,12 +2665,6 @@ package {
                     _grantStashKeyByPrefix(apId);
                     return;
                 }
-                if (apId >= 1548 && apId <= 1560) {
-                    // Per-tier stash key. Unlocks every stash whose stage is
-                    // in the matching tier.
-                    _grantStashKeyByTier(apId - 1548);
-                    return;
-                }
                 if (apId == 1561) {
                     // Master stash key. Unlocks every stash.
                     _grantMasterStashKey();
@@ -2477,11 +2674,6 @@ package {
                     // Per-tile field token. Unlocks every stage whose str_id
                     // starts with the matching prefix.
                     _grantFieldTokenByPrefix(apId);
-                    return;
-                }
-                if (apId >= 1588 && apId <= 1600) {
-                    // Per-tier field token. Unlocks every stage in the tier.
-                    _grantFieldTokenByTier(apId - 1588);
                     return;
                 }
                 // ---------- Progressive variants (singleton apIds, count-based) ----------
@@ -2502,11 +2694,6 @@ package {
                         _grantFieldTokenProgressivePerTile(apId);
                         return;
                     }
-                    if (so.fieldTokenPerTierProgressiveId > 0
-                            && apId == so.fieldTokenPerTierProgressiveId) {
-                        _grantFieldTokenProgressivePerTier(apId);
-                        return;
-                    }
                     if (so.stashKeyPerStageProgressiveId > 0
                             && apId == so.stashKeyPerStageProgressiveId) {
                         _grantStashKeyProgressivePerStage(apId);
@@ -2517,14 +2704,7 @@ package {
                         _grantStashKeyProgressivePerTile(apId);
                         return;
                     }
-                    if (so.stashKeyPerTierProgressiveId > 0
-                            && apId == so.stashKeyPerTierProgressiveId) {
-                        _grantStashKeyProgressivePerTier(apId);
-                        return;
-                    }
-                    if ((so.gemPouchProgressiveId > 0 && apId == so.gemPouchProgressiveId)
-                            || (so.gemPouchPerTierProgressiveId > 0
-                                && apId == so.gemPouchPerTierProgressiveId)) {
+                    if (so.gemPouchProgressiveId > 0 && apId == so.gemPouchProgressiveId) {
                         // Gempouches don't change in-game state — gating is
                         // handled by SessionData.getItemCount on the mod side
                         // and is read live by HollowGemInjector etc. Just toast.
@@ -2535,13 +2715,13 @@ package {
                     }
                 }
                 if (apId >= 1700 && apId <= 1703) {
-                    // Skillpoint Bundle: 4 named tiers (Small/Medium/Large/Huge).
-                    // Per-tier SP value is per-seed and arrives via slot_data.
+                    // SP items: 3 fixed bundle tiers (Small/Medium/Big) + the
+                    // single Skillpoint. Fixed SP value arrives via slot_data.
                     var spAmount:int = AV.serverData.serverOptions.getSpBundleValue(apId);
-                    var tierLbl:String = AV.serverData.serverOptions.getSpBundleTierLabel(apId);
+                    var spName:String = AV.serverData.serverOptions.getSpItemName(apId);
                     _achievementUnlocker.awardSkillPoints(spAmount);
-                    _receivedToast.addItem("Received Skillpoint Bundle (" + tierLbl + ") (+" + spAmount + ")", ItemColors.forApId(apId));
-                    _logger.log(MOD_NAME, "  → Skillpoint bundle [" + tierLbl + "]: +" + spAmount + " SP");
+                    _receivedToast.addItem("Received " + spName + " (+" + spAmount + ")", ItemColors.forApId(apId));
+                    _logger.log(MOD_NAME, "  → " + spName + ": +" + spAmount + " SP");
                     return;
                 }
                 if (apId >= 2000 && apId <= 2636) {
@@ -2609,12 +2789,10 @@ package {
         //
         // ID layout (mirrors apworld gating.py):
         //   1522-1547 stash tile keys (one per prefix in gemPouchPlayOrder)
-        //   1548-1560 stash tier keys (one per tier 0..12)
         //   1561      stash master key
         //   1562-1587 field tile tokens (one per prefix)
-        //   1588-1600 field tier tokens (one per tier 0..12)
-        // For tile-keyed items, prefix = playOrder[apId - base]. For tier-keyed
-        // items, tier = apId - base. Master keys cover everything.
+        // For tile-keyed items, prefix = playOrder[apId - base]. Master keys
+        // cover everything.
 
         // Map a tile prefix letter ("A".."Z") to the integer tile gameId
         // (0..25) used by GV.selectorCore.mapTiles. Tile letters wrap in
@@ -2682,25 +2860,6 @@ package {
             _logger.log(MOD_NAME, "  → Tile stash key " + prefix + " unlocked " + count + " stashes");
         }
 
-        private function _grantStashKeyByTier(tier:int):void {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId
-                : null;
-            if (tierMap == null) {
-                _logger.log(MOD_NAME, "  grantItem: tier stash key tier=" + tier + " — no stage->tier map");
-                return;
-            }
-            var count:int = 0;
-            for (var sid:String in tierMap) {
-                if (int(tierMap[sid]) == tier) {
-                    AV.sessionData.markStashUnlocked(sid);
-                    count++;
-                }
-            }
-            _receivedToast.addItem("Received Wizard Stash Tier " + tier + " Key (" + count + " stashes)", ItemColors.forApId(1548 + tier));
-            _logger.log(MOD_NAME, "  → Tier " + tier + " stash key unlocked " + count + " stashes");
-        }
-
         private function _grantMasterStashKey():void {
             var byStrId:Object = AV.serverData.stagesByStrId;
             var count:int = 0;
@@ -2731,65 +2890,11 @@ package {
             _logger.log(MOD_NAME, "  → Tile field token " + prefix + " unlocked " + count + " stages");
         }
 
-        private function _grantFieldTokenByTier(tier:int):void {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId
-                : null;
-            if (tierMap == null) {
-                _logger.log(MOD_NAME, "  grantItem: tier field token tier=" + tier + " — no stage->tier map");
-                return;
-            }
-            var count:int = 0;
-            for (var sid:String in tierMap) {
-                if (int(tierMap[sid]) == tier) {
-                    _stageUnlocker.unlockStage(sid);
-                    AV.sessionData.markFieldTokenHeld(sid);
-                    count++;
-                }
-            }
-            _receivedToast.addItem("Received Tier " + tier + " Field Token (" + count + " stages)", ItemColors.forApId(1588 + tier));
-            _logger.log(MOD_NAME, "  → Tier " + tier + " field token unlocked " + count + " stages");
-        }
-
         // ---------- Progressive grant helpers ----------
         // Each handler reads the live count of the singleton apId via
         // AV.sessionData.getItemCount, finds the (count-1)-th entry in the
         // appropriate order (stage / tile / tier), and unlocks just that one
         // group. Earlier copies were already processed on previous calls.
-
-        /** Starter-first tier order — prefers progressiveTierOrder from
-         *  slot_data (starter's tier at position 0, rest ascending with
-         *  starter removed). Falls back to plain ascending if slot_data
-         *  didn't supply the list (older mod build / non-progressive seed). */
-        private function _progressiveTiersOrAsc():Array {
-            var so:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-            if (so != null) {
-                var list:Array = so.progressiveTierOrder as Array;
-                if (list != null && list.length > 0) return list;
-            }
-            return _activeTiersAsc();
-        }
-
-        /** Returns the unique tier ints in ascending order, derived live from
-         *  stageTierByStrId. Cached per call but cheap; alternative would be
-         *  to send active_tiers via slot_data. */
-        private function _activeTiersAsc():Array {
-            var tierMap:Object = AV.serverData != null && AV.serverData.serverOptions != null
-                ? AV.serverData.serverOptions.stageTierByStrId : null;
-            var seen:Object = {};
-            var out:Array = [];
-            if (tierMap != null) {
-                for (var sid:String in tierMap) {
-                    var t:int = int(tierMap[sid]);
-                    if (t >= 0 && !seen[String(t)]) {
-                        seen[String(t)] = true;
-                        out.push(t);
-                    }
-                }
-            }
-            out.sort(Array.NUMERIC);
-            return out;
-        }
 
         private function _grantFieldTokenProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
@@ -2839,18 +2944,6 @@ package {
                 + " unlocks tile " + prefix + " (" + count + " stages)");
         }
 
-        private function _grantFieldTokenProgressivePerTier(apId:int):void {
-            var tiers:Array = _progressiveTiersOrAsc();
-            var n:int = AV.sessionData.getItemCount(apId);
-            if (n <= 0 || n > tiers.length) {
-                _logger.log(MOD_NAME, "  grantItem: per-tier progressive field token count " + n + " out of range");
-                return;
-            }
-            var tier:int = int(tiers[n - 1]);
-            _grantFieldTokenByTier(tier);
-            _logger.log(MOD_NAME, "  → Progressive field token (per-tier) #" + n + " = tier " + tier);
-        }
-
         private function _grantStashKeyProgressivePerStage(apId:int):void {
             var order:Array = AV.serverData != null && AV.serverData.serverOptions != null
                 ? AV.serverData.serverOptions.progressiveStageOrder as Array : null;
@@ -2897,18 +2990,6 @@ package {
                 + " unlocks tile " + prefix + " (" + count + " stashes)");
         }
 
-        private function _grantStashKeyProgressivePerTier(apId:int):void {
-            var tiers:Array = _progressiveTiersOrAsc();
-            var n:int = AV.sessionData.getItemCount(apId);
-            if (n <= 0 || n > tiers.length) {
-                _logger.log(MOD_NAME, "  grantItem: per-tier progressive stash key count " + n + " out of range");
-                return;
-            }
-            var tier:int = int(tiers[n - 1]);
-            _grantStashKeyByTier(tier);
-            _logger.log(MOD_NAME, "  → Progressive stash key (per-tier) #" + n + " = tier " + tier);
-        }
-
         /** Re-apply stash unlocks from received items. Called from
          *  syncWithAP after sessionData.reset() so the unlocked state is
          *  rebuilt from the full item list at every sync. Handles every
@@ -2916,7 +2997,6 @@ package {
          *    off        → no keys exist; every stash is unlocked outright
          *    per_stage  → AP id 1400-1521 (one per stage's loc id)
          *    per_tile   → AP id 1522-1547 (one per prefix in playOrder)
-         *    per_tier   → AP id 1548-1560 (one per tier 0..12)
          *    global     → AP id 1561 (master key)
          */
         private function _syncStashLockState():int {
@@ -2972,19 +3052,6 @@ package {
                     }
                 }
             }
-            // Per-tier: AP id 1548 + tier
-            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
-            if (tierMap != null) {
-                for (var tt:int = 0; tt <= 12; tt++) {
-                    if (!AV.sessionData.hasItem(1548 + tt)) continue;
-                    for (var tsid:String in tierMap) {
-                        if (int(tierMap[tsid]) == tt && !AV.sessionData.isStashUnlocked(tsid)) {
-                            AV.sessionData.markStashUnlocked(tsid);
-                            changes++;
-                        }
-                    }
-                }
-            }
             // Global master key
             if (AV.sessionData.hasItem(1561)) {
                 for (var msid:String in byStrId) {
@@ -3002,7 +3069,6 @@ package {
             if (opts != null) {
                 var stagOrder:Array = opts.progressiveStageOrder as Array;
                 var tileOrder:Array = opts.progressiveTileOrder as Array;
-                var tierOrder:Array = opts.progressiveTierOrder as Array;
 
                 // Per-stage progressive
                 var spProgId:int = int(opts.stashKeyPerStageProgressiveId);
@@ -3032,23 +3098,6 @@ package {
                         }
                     }
                 }
-                // Per-tier progressive
-                var ttProgId:int = int(opts.stashKeyPerTierProgressiveId);
-                if (ttProgId > 0 && tierMap != null) {
-                    var ttTiers:Array = (tierOrder != null && tierOrder.length > 0)
-                                            ? tierOrder : _activeTiersAsc();
-                    var ttN:int = AV.sessionData.getItemCount(ttProgId);
-                    var ttLimit:int = (ttN < ttTiers.length) ? ttN : ttTiers.length;
-                    for (var tti:int = 0; tti < ttLimit; tti++) {
-                        var ttTier:int = int(ttTiers[tti]);
-                        for (var tttsid:String in tierMap) {
-                            if (int(tierMap[tttsid]) == ttTier && !AV.sessionData.isStashUnlocked(tttsid)) {
-                                AV.sessionData.markStashUnlocked(tttsid);
-                                changes++;
-                            }
-                        }
-                    }
-                }
             }
             return changes;
         }
@@ -3069,8 +3118,7 @@ package {
                 }
             }
             // Coarse field-token coverage: per-tile (1562 + prefix index)
-            // covers all stages with that prefix; per-tier (1588 + tier)
-            // covers all stages in the tier.
+            // covers all stages with that prefix.
             var opts:* = AV.serverData.serverOptions;
             var order:Array = opts != null ? opts.gemPouchPlayOrder as Array : null;
             if (order != null) {
@@ -3083,16 +3131,6 @@ package {
                     }
                 }
             }
-            var tierMap:Object = opts != null ? opts.stageTierByStrId : null;
-            if (tierMap != null) {
-                for (var tt:int = 0; tt <= 12; tt++) {
-                    if (AV.sessionData.hasItem(1588 + tt)) {
-                        for (var tsid:String in tierMap) {
-                            if (int(tierMap[tsid]) == tt) hasToken[tsid] = true;
-                        }
-                    }
-                }
-            }
 
             // -------- Progressive variants (singleton apIds, count-based) --------
             // Nth received copy unlocks the Nth entry in the starter-first
@@ -3100,7 +3138,6 @@ package {
             if (opts != null) {
                 var stagOrderFs:Array = opts.progressiveStageOrder as Array;
                 var tileOrderFs:Array = opts.progressiveTileOrder as Array;
-                var tierOrderFs:Array = opts.progressiveTierOrder as Array;
 
                 var fsProgId:int = int(opts.fieldTokenPerStageProgressiveId);
                 if (fsProgId > 0 && stagOrderFs != null) {
@@ -3118,19 +3155,6 @@ package {
                         var ftPfx:String = String(tileOrderFs[fti]);
                         for (var ftSid:String in AV.serverData.stagesByStrId) {
                             if (ftSid.charAt(0) == ftPfx) hasToken[ftSid] = true;
-                        }
-                    }
-                }
-                var ftTierProgId:int = int(opts.fieldTokenPerTierProgressiveId);
-                if (ftTierProgId > 0 && tierMap != null) {
-                    var ftTiers:Array = (tierOrderFs != null && tierOrderFs.length > 0)
-                                            ? tierOrderFs : _activeTiersAsc();
-                    var fttN:int = AV.sessionData.getItemCount(ftTierProgId);
-                    var fttLimit:int = (fttN < ftTiers.length) ? fttN : ftTiers.length;
-                    for (var ftti:int = 0; ftti < fttLimit; ftti++) {
-                        var fttTier:int = int(ftTiers[ftti]);
-                        for (var ftTsid:String in tierMap) {
-                            if (int(tierMap[ftTsid]) == fttTier) hasToken[ftTsid] = true;
                         }
                     }
                 }
@@ -3286,6 +3310,9 @@ package {
             // --- Talisman fragments ---
             _talismanUnlocker.syncTalismans(apTalismans);
 
+            // --- Progression talisman: unlock all 25 slots + socket the set ---
+            _talismanUnlocker.applyProgressionSet(AV.serverData.progressionTalismanSet);
+
             // --- Shadow cores ---
             _shadowCoreUnlocker.syncShadowCores(apShadowCores);
 
@@ -3394,19 +3421,160 @@ package {
 
         private function onPlayerDied():void {
             _connectionManager.sendDeathLink(_connectionManager.apSlot);
+            // Tally the outgoing DeathLink for the Stats tab (only fires when
+            // DeathLink is on and a real death was bounced).
+            if (_active && _saveManager != null) _saveManager.incrementDeathLinksSent();
+        }
+
+        /**
+         * Tally one attempt for the current Journey battle, once its waves have
+         * started (robust against pause/unpause, unlike a PLAYING-status edge).
+         * Latches _attemptCounted so it fires exactly once per battle instance
+         * (re-armed by _initForNewStage on entry and in-place retry). Records the
+         * stage in _currentBattleStrId so the outcome + achievements attribute to
+         * it. Non-Journey battles latch without recording.
+         */
+        private function _tryRecordAttempt():void {
+            try {
+                if (GV.ingameCore == null || GV.ingameController == null
+                        || GV.ingameController.core == null) return;
+                var core:* = GV.ingameController.core;
+                // Wait until the battle has actually begun (wave 0 active); only
+                // then is battleMode reliably set.
+                if (core.currentWave == null || core.currentWave.g() < 0) return;
+                if (int(GV.ingameCore.battleMode) != BattleMode.JOURNEY) {
+                    _attemptCounted = true; // don't re-check this battle
+                    return;
+                }
+                var strId:String = (GV.ingameCore.stageMeta != null)
+                    ? String(GV.ingameCore.stageMeta.strId) : null;
+                if (strId == null) return;
+                _currentBattleStrId = strId;
+                _attemptCounted     = true;
+                if (_saveManager != null) _saveManager.recordStageAttempt(strId);
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "_tryRecordAttempt error: " + e.message);
+                _attemptCounted = true; // avoid spamming on a broken frame
+            }
+        }
+
+        /** True if the current battle ended in victory (for win/loss tallying). */
+        private function _battleWasWon():Boolean {
+            try {
+                if (GV.ingameController != null && GV.ingameController.core != null
+                        && GV.ingameController.core.ending != null) {
+                    return GV.ingameController.core.ending.isBattleWon == true;
+                }
+            } catch (e:Error) {}
+            return false;
+        }
+
+        /**
+         * Credit one achievement to the current Journey battle's stage, for the
+         * Stats tab "Achis" column. Called from the achievement-checked and
+         * -skipped hooks (both fire once per achievement earned). No-op outside a
+         * tracked battle (e.g. connect-time reconcile).
+         */
+        private function _creditBattleAchievement():void {
+            if (!_active || _currentBattleStrId == null || _saveManager == null) return;
+            _saveManager.recordStageAchievement(_currentBattleStrId);
+        }
+
+        /**
+         * Content for the "Archipelago" tab on the Stats panel. Returns
+         *   { summary: [ {name,value,...} ], grid: { columns:[...], rows:[[...]] } }.
+         * Extend either section to add more AP stats — the tab renders whatever
+         * this returns.
+         *
+         * The per-level grid lists only "engaged" stages (attempted, cleared, or
+         * with achievements), mirroring how vanilla only lists stages with XP.
+         * Attempts/Wins/Losses/Achievements come from SaveManager's per-stage
+         * tracking (Journey battles); Checks are derived live from game state
+         * (journey cleared + wizard-stash opened).
+         */
+        private function _buildApStatsData():Object {
+            var summary:Array = [];
+            var dlOn:Boolean = (_saveManager != null && _saveManager.deathLinkEnabled);
+            if (dlOn) {
+                summary.push({ name: "DeathLinks sent",     value: String(_saveManager.deathLinksSent) });
+                summary.push({ name: "DeathLinks received", value: String(_saveManager.deathLinksReceived) });
+            } else {
+                summary.push({ name: "DeathLink", value: "Turned off", valueColor: 0x999999 });
+            }
+
+            // Two-column McStatStrip layout so it renders in the native font like
+            // the other tabs: level + compact A/W/L in the wide LEFT field (the
+            // one vanilla proves holds long strings), achievements-collected count
+            // as the right value.
+            var columns:Array = ["Level      Attempts/Wins/Losses", "Achievements Collected"];
+            var gridRows:Array = [];
+            try {
+                var stats:Object = (_saveManager != null) ? _saveManager.stageStats : {};
+                var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
+                if (metas != null && GV.ppd != null) {
+                    for (var i:int = 0; i < metas.length; i++) {
+                        var meta:* = metas[i];
+                        if (meta == null) continue;
+                        var strId:String = String(meta.strId);
+                        var id:int = int(meta.id);
+
+                        var st:Object = stats[strId];
+                        var attempts:int = (st != null) ? int(st.attempts)     : 0;
+                        var wins:int     = (st != null) ? int(st.wins)         : 0;
+                        var losses:int   = (st != null) ? int(st.losses)       : 0;
+                        var achis:int    = (st != null) ? int(st.achievements) : 0;
+
+                        // "Engaged" = the stage has been touched: cleared its
+                        // journey check or opened its stash (live game state), or we
+                        // have session data for it. Keeps previously-cleared stages
+                        // in the list even before they gain attempt data.
+                        var journeyDone:Boolean = (GV.ppd.stageHighestXpsJourney != null)
+                            && (id < GV.ppd.stageHighestXpsJourney.length)
+                            && GV.ppd.stageHighestXpsJourney[id].g() > 0;
+                        var stashExists:Boolean = (GV.wizStashesInModes != null)
+                            && (id < GV.wizStashesInModes.length)
+                            && (int(GV.wizStashesInModes[id]) != -1);
+                        var stashDone:Boolean = stashExists
+                            && (GV.ppd.stageWizStashStauses != null)
+                            && (id < GV.ppd.stageWizStashStauses.length)
+                            && (int(GV.ppd.stageWizStashStauses[id]) != 0); // OPEN or DESTROYED
+                        var hasChecks:Boolean = journeyDone || stashDone;
+
+                        if (attempts <= 0 && !hasChecks && achis <= 0) continue; // engaged only
+
+                        // e.g. "W1: 3A/2W/1L"  →  achievements count in the right column.
+                        var left:String = strId + ": " + attempts + "A/" + wins + "W/" + losses + "L";
+                        gridRows.push([ left, String(achis) ]);
+                    }
+                }
+            } catch (eGrid:Error) {
+                _logger.log(MOD_NAME, "_buildApStatsData grid error: " + eGrid.message);
+            }
+
+            return { summary: summary, grid: { columns: columns, rows: gridRows } };
         }
 
         private function onPunishmentReceived(source:String):void {
-            var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
             var msg:String = "DeathLink from " + source + "!";
-            if (waitMs > 0) {
-                msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+            // Received outside a level: it's queued and will apply (after the
+            // grace period) once the player is in a level — the wall-clock
+            // countdown would be meaningless here, so word it that way instead.
+            if (GV.ingameController == null) {
+                msg += " Queued — applies when you enter a level.";
+            } else {
+                var waitMs:int = _deathLinkHandler.nextApplyDelayMs;
+                if (waitMs > 0) {
+                    msg += " Applies in " + Math.ceil(waitMs / 1000) + "s.";
+                }
             }
             _systemToast.addMessage(msg, 0xFFFF4444);
         }
 
         private function onDeathLinkReceived(source:String):void {
             _deathLinkHandler.queuePunishment(source);
+            // Tally the incoming DeathLink for the Stats tab. handleBounced already
+            // drops our own echo, so this only counts DeathLinks from other players.
+            if (_active && _saveManager != null) _saveManager.incrementDeathLinksReceived();
         }
 
         /**
@@ -3553,10 +3721,6 @@ package {
                 }
                 return "Wizard Stash Tile Key (#" + (apId - 1522) + ")";
             }
-            // Per-tier Wizard Stash keys (1548-1560 = tiers 0..12).
-            if (apId >= 1548 && apId <= 1560) {
-                return "Wizard Stash Tier " + (apId - 1548) + " Key";
-            }
             // Master Wizard Stash key (1561).
             if (apId == 1561) {
                 return "Wizard Stash Master Key";
@@ -3572,13 +3736,9 @@ package {
                 }
                 return "Tile Field Tokens (#" + tileIdx + ")";
             }
-            // Per-tier field tokens (1588-1600 = one per tier).
-            if (apId >= 1588 && apId <= 1600) {
-                return "Tier " + (apId - 1588) + " Field Tokens";
-            }
-            // Skill point bundles (1700-1703, four named tiers; per-seed SP value).
+            // SP items (1700-1703: 3 fixed bundle tiers + single Skillpoint).
             if (apId >= 1700 && apId <= 1703) {
-                return "Skillpoint Bundle (" + AV.serverData.serverOptions.getSpBundleTierLabel(apId) + ")";
+                return AV.serverData.serverOptions.getSpItemName(apId);
             }
             // Progressive variants — singleton ids from slot_data.
             var prgOpts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
@@ -3589,21 +3749,12 @@ package {
                 if (prgOpts.fieldTokenPerTileProgressiveId > 0
                         && apId == prgOpts.fieldTokenPerTileProgressiveId)
                     return "Progressive Field Token (per-tile)";
-                if (prgOpts.fieldTokenPerTierProgressiveId > 0
-                        && apId == prgOpts.fieldTokenPerTierProgressiveId)
-                    return "Progressive Field Token (per-tier)";
                 if (prgOpts.stashKeyPerStageProgressiveId > 0
                         && apId == prgOpts.stashKeyPerStageProgressiveId)
                     return "Progressive Stash Stage Key";
                 if (prgOpts.stashKeyPerTileProgressiveId > 0
                         && apId == prgOpts.stashKeyPerTileProgressiveId)
                     return "Progressive Stash Tile Key";
-                if (prgOpts.stashKeyPerTierProgressiveId > 0
-                        && apId == prgOpts.stashKeyPerTierProgressiveId)
-                    return "Progressive Stash Tier Key";
-                if (prgOpts.gemPouchPerTierProgressiveId > 0
-                        && apId == prgOpts.gemPouchPerTierProgressiveId)
-                    return "Progressive Gempouch (per-tier)";
             }
             return null; // let ConnectionManager handle the rest
         }

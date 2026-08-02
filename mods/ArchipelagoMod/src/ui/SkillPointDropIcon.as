@@ -60,7 +60,7 @@ package ui {
             try {
                 var vIp:* = GV.mcInfoPanel;
                 vIp.reset(280);
-                vIp.addTextfield(0xFFD700, "Skillpoint Bundle", false, 13);
+                vIp.addTextfield(0xFFD700, "Skill Points", false, 13);
                 vIp.addTextfield(0xCCCCCC, "Skill Points", false, 11);
                 vIp.addTextfield(0x99FF99, "+" + String(this.meta.amount) + " skill points.", false, 11);
                 GV.main.cntInfoPanel.addChild(vIp);

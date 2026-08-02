@@ -13,6 +13,14 @@ package ui {
      */
     public class ScrDebugOptions {
 
+        // NOTE: every panel/tab listener below is registered with
+        // useWeakReference = FALSE (strong). These handlers are anonymous
+        // closures returned by _make*Handler() and are stored nowhere else, so
+        // a weak registration let the GC reclaim them mid-session — the menu
+        // stayed on screen but silently stopped responding to clicks. The
+        // panels are dropped wholesale in dispose(), so strong refs don't leak
+        // across AP sessions. See [[project_mod_structure]].
+
         private var _mod:ArchipelagoMod;
         private var _mc:McDebugOptions;
         private var _scroll:ScrollablePanel;
@@ -33,23 +41,29 @@ package ui {
             _mc = new McDebugOptions();
             _scroll.attach(_mc, close);
 
-            // Wizard slider
-            _mc.wizardSlider.onChange = _onWizardLevelChanged;
+            // Level preset toggles (radio: clicking one sets the level exactly)
+            for (var k:int = 0; k < _mc.levelPanels.length; k++) {
+                var lentry:Object = _mc.levelPanels[k];
+                var lpnl:McOptPanel = McOptPanel(lentry.panel);
+                lpnl.addEventListener(      MouseEvent.CLICK,      _makeLevelClickHandler(int(lentry.level)), false, 0, false);
+                lpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                lpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
+            }
 
             // Skills tab
             for (var i:int = 0; i < _mc.skillPanels.length; i++) {
                 var spnl:McOptPanel = McOptPanel(_mc.skillPanels[i]);
-                spnl.addEventListener(      MouseEvent.CLICK,      _makeSkillClickHandler(i), false, 0, true);
-                spnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver,     false, 0, true);
-                spnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,      false, 0, true);
+                spnl.addEventListener(      MouseEvent.CLICK,      _makeSkillClickHandler(i), false, 0, false);
+                spnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver,     false, 0, false);
+                spnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,      false, 0, false);
             }
 
             // Traits tab
             for (var j:int = 0; j < _mc.traitPanels.length; j++) {
                 var tpnl:McOptPanel = McOptPanel(_mc.traitPanels[j]);
-                tpnl.addEventListener(      MouseEvent.CLICK,      _makeTraitClickHandler(j), false, 0, true);
-                tpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver,     false, 0, true);
-                tpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,      false, 0, true);
+                tpnl.addEventListener(      MouseEvent.CLICK,      _makeTraitClickHandler(j), false, 0, false);
+                tpnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver,     false, 0, false);
+                tpnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,      false, 0, false);
             }
 
             // Talisman / core / xp grant panels
@@ -70,9 +84,9 @@ package ui {
                 var entry:Object = arr[i];
                 var pnl:McOptPanel = McOptPanel(entry.panel);
                 var apId:int = int(entry.apId);
-                pnl.addEventListener(MouseEvent.CLICK, _makeGrantHandler(onClick, apId), false, 0, true);
-                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+                pnl.addEventListener(MouseEvent.CLICK, _makeGrantHandler(onClick, apId), false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
             }
         }
 
@@ -89,9 +103,9 @@ package ui {
                 var entry:Object = arr[i];
                 var pnl:McOptPanel = McOptPanel(entry.panel);
                 var apId:int = int(entry.apId);
-                pnl.addEventListener(MouseEvent.CLICK, _makeAchievementHandler(apId), false, 0, true);
-                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+                pnl.addEventListener(MouseEvent.CLICK, _makeAchievementHandler(apId), false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
             }
         }
 
@@ -109,9 +123,9 @@ package ui {
 
             // Wire the freshly-built view-mode toggle button.
             if (_mc.achievementModeBtn != null) {
-                _mc.achievementModeBtn.addEventListener(MouseEvent.CLICK, _onAchievementModeToggle, false, 0, true);
-                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+                _mc.achievementModeBtn.addEventListener(MouseEvent.CLICK, _onAchievementModeToggle, false, 0, false);
+                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                _mc.achievementModeBtn.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
             }
         }
 
@@ -134,24 +148,16 @@ package ui {
             if (mode == "stage") {
                 for (var stageId:String in _mc.stageIdToPanel) {
                     var sPnl:McOptPanel = McOptPanel(_mc.stageIdToPanel[stageId]);
-                    sPnl.addEventListener(MouseEvent.CLICK, _makeStageClickHandler(stageId), false, 0, true);
-                    sPnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                    sPnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+                    sPnl.addEventListener(MouseEvent.CLICK, _makeStageClickHandler(stageId), false, 0, false);
+                    sPnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                    sPnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
                 }
             } else if (mode == "tile") {
                 for (var letter:String in _mc.tilePanels) {
                     var tilePnl:McOptPanel = McOptPanel(_mc.tilePanels[letter]);
-                    tilePnl.addEventListener(MouseEvent.CLICK, _makeTileClickHandler(letter), false, 0, true);
-                    tilePnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                    tilePnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
-                }
-            } else if (mode == "tier") {
-                for (var tierKey:String in _mc.tierPanels) {
-                    var tier:int = int(tierKey);
-                    var tierPnl:McOptPanel = McOptPanel(_mc.tierPanels[tierKey]);
-                    tierPnl.addEventListener(MouseEvent.CLICK, _makeTierClickHandler(tier), false, 0, true);
-                    tierPnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, true);
-                    tierPnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, true);
+                    tilePnl.addEventListener(MouseEvent.CLICK, _makeTileClickHandler(letter), false, 0, false);
+                    tilePnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                    tilePnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
                 }
             }
         }
@@ -260,9 +266,7 @@ package ui {
             // fieldTokenGranularity:
             //   0/1 = per_stage(_progressive)
             //   2/3 = per_tile(_progressive)
-            //   4/5 = per_tier(_progressive)
             var g:int = int(so.fieldTokenGranularity);
-            if (g >= 4) return "tier";
             if (g >= 2) return "tile";
             return "stage";
         }
@@ -270,8 +274,9 @@ package ui {
         // -----------------------------------------------------------------------
         // Click handlers
 
-        private function _onWizardLevelChanged(level:int):void {
+        private function _onLevelPresetClick(level:int):void {
             _mod.setDebugWizardLevel(level);
+            _renderDebugOptions();
         }
 
         private function _onSkillClick(gameId:int):void {
@@ -321,21 +326,6 @@ package ui {
             _renderDebugOptions();
         }
 
-        private function _onTierClick(tier:int):void {
-            var stages:Array = _mc.tiersToStages[tier] as Array;
-            if (stages == null) return;
-            var allUnlocked:Boolean = true;
-            for (var i:int = 0; i < stages.length; i++) {
-                if (!_mod.isStageUnlocked(String(stages[i]))) { allUnlocked = false; break; }
-            }
-            for (var j:int = 0; j < stages.length; j++) {
-                var sid:String = String(stages[j]);
-                if (allUnlocked) _mod.lockStage(sid);
-                else if (!_mod.isStageUnlocked(sid)) _mod.unlockStage(sid);
-            }
-            _renderDebugOptions();
-        }
-
         private function _onTalismanClick(apId:int):void {
             _mod.debugLog("[Debug] talisman click apId=" + apId);
             _mod.debugGrantItem(apId);
@@ -361,6 +351,9 @@ package ui {
         }
 
         // Closures
+        private function _makeLevelClickHandler(level:int):Function {
+            return function(e:MouseEvent):void { _onLevelPresetClick(level); };
+        }
         private function _makeSkillClickHandler(gameId:int):Function {
             return function(e:MouseEvent):void { _onSkillClick(gameId); };
         }
@@ -372,9 +365,6 @@ package ui {
         }
         private function _makeTileClickHandler(letter:String):Function {
             return function(e:MouseEvent):void { _onTileClick(letter); };
-        }
-        private function _makeTierClickHandler(tier:int):Function {
-            return function(e:MouseEvent):void { _onTierClick(tier); };
         }
         private function _makeGrantHandler(handler:Function, apId:int):Function {
             return function(e:MouseEvent):void { handler(apId); };
@@ -393,8 +383,16 @@ package ui {
 
             switch (active) {
                 case McDebugOptions.TAB_LEVELS:
-                    if (!_mc.wizardSlider.isDragging) {
-                        _mc.wizardSlider.setValue(_mod.getDisplayedWizardLevel());
+                    var lvlNow:int = _mod.getDisplayedWizardLevel();
+                    if (_mc.levelTitle != null) {
+                        _mc.levelTitle.tf.text = "Wizard Level: " + lvlNow;
+                    }
+                    // Radio display: only the toggle whose level matches the
+                    // current level shows checked (frame 2). Off-preset levels
+                    // (e.g. nudged by XP tomes) leave all unchecked.
+                    for (var lp:int = 0; lp < _mc.levelPanels.length; lp++) {
+                        var le:Object = _mc.levelPanels[lp];
+                        McOptPanel(le.panel).btn.gotoAndStop(int(le.level) == lvlNow ? 2 : 1);
                     }
                     _renderGrantPanelsCollected(_mc.xpPanels);
                     break;
@@ -421,11 +419,6 @@ package ui {
                         for (var letter:String in _mc.tilePanels) {
                             McOptPanel(_mc.tilePanels[letter]).btn.gotoAndStop(
                                 _allStagesUnlocked(_mc.tilesByLetter[letter] as Array) ? 2 : 1);
-                        }
-                    } else if (_mc.stageMode == "tier") {
-                        for (var tierKey:String in _mc.tierPanels) {
-                            McOptPanel(_mc.tierPanels[tierKey]).btn.gotoAndStop(
-                                _allStagesUnlocked(_mc.tiersToStages[int(tierKey)] as Array) ? 2 : 1);
                         }
                     }
                     break;

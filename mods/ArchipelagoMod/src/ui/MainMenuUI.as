@@ -56,6 +56,10 @@ package ui {
         private var _fetchDone:Boolean       = false;
         private var _cachedReleases:Array    = null;
         private var _latestUpdateTag:String  = null;
+        /** True when any release newer than the running version is flagged
+         *  breaking — i.e. updating would invalidate an in-progress async. */
+        private var _latestUpdateBreaking:Boolean = false;
+        private var _updateBadgeTf:TextField;
 
         private static const RELEASE_TAG_URL_PREFIX:String =
             "https://github.com/Levisaxos/Archipelago_GemcraftFrostbornWrath/releases/tag/";
@@ -292,10 +296,15 @@ package ui {
             }
         }
 
-        private function _onUpdateAvailable(latestTag:String):void {
-            _logger.log(_modName, "MainMenuUI: update available — " + latestTag);
+        private function _onUpdateAvailable(latestTag:String, breaking:Boolean = false):void {
+            _logger.log(_modName, "MainMenuUI: update available — " + latestTag
+                + (breaking ? " (BREAKING — would invalidate an in-progress async)" : ""));
             _latestUpdateTag = latestTag;
-            if (_updateBadge != null) _updateBadge.visible = true;
+            _latestUpdateBreaking = breaking;
+            if (_updateBadge != null) {
+                _styleUpdateBadge(_updateBadge, breaking);
+                _updateBadge.visible = true;
+            }
             // Refresh the changelog if it's already open so the download button shows up.
             if (_scrChangelog != null && _scrChangelog.isShowing) {
                 openChangelog();
@@ -326,31 +335,53 @@ package ui {
 
         private function _makeUpdateBadge():Sprite {
             var badge:Sprite = new Sprite();
-            var label:String = "\u2191 Update available!";
 
-            var fmt:TextFormat = new TextFormat("_sans", 11, 0xFFEE66, true);
             var tf:TextField = new TextField();
-            tf.defaultTextFormat = fmt;
             tf.selectable   = false;
             tf.mouseEnabled = false;
             tf.autoSize     = TextFieldAutoSize.LEFT;
-            tf.text         = label;
-
-            var bw:Number = tf.textWidth + 16;
-            var bh:Number = 18;
-
-            badge.graphics.beginFill(0x2A1000, 0.9);
-            badge.graphics.lineStyle(1, 0xCC8800);
-            badge.graphics.drawRoundRect(0, 0, bw, bh, 5, 5);
-            badge.graphics.endFill();
-
-            tf.x = 8;
-            tf.y = 0;
             badge.addChild(tf);
+            _updateBadgeTf = tf;
 
             badge.buttonMode    = true;
             badge.useHandCursor = true;
+            _styleUpdateBadge(badge, false);
             return badge;
+        }
+
+        /**
+         * Style the update badge for a normal vs BREAKING update.
+         *
+         * A breaking update means seeds generated with an older apworld stop
+         * working, so a player part-way through an async must finish it before
+         * updating. That warning has to be visible at a glance on the main menu
+         * \u2014 not buried in the changelog body \u2014 so the badge itself turns red and
+         * says so. Re-called when the release data arrives.
+         */
+        private function _styleUpdateBadge(badge:Sprite, breaking:Boolean):void {
+            if (badge == null || _updateBadgeTf == null) return;
+
+            var label:String = breaking
+                ? "\u26a0 Update available \u2014 BREAKING"
+                : "\u2191 Update available!";
+            var textCol:uint = breaking ? 0xFF9977 : 0xFFEE66;
+            var fillCol:uint = breaking ? 0x3A0A0A : 0x2A1000;
+            var lineCol:uint = breaking ? 0xCC3322 : 0xCC8800;
+
+            // defaultTextFormat must be assigned BEFORE .text to take effect.
+            _updateBadgeTf.defaultTextFormat = new TextFormat("_sans", 11, textCol, true);
+            _updateBadgeTf.text = label;
+            _updateBadgeTf.x = 8;
+            _updateBadgeTf.y = 0;
+
+            var bw:Number = _updateBadgeTf.textWidth + 16;
+            var bh:Number = 18;
+
+            badge.graphics.clear();
+            badge.graphics.beginFill(fillCol, 0.9);
+            badge.graphics.lineStyle(1, lineCol);
+            badge.graphics.drawRoundRect(0, 0, bw, bh, 5, 5);
+            badge.graphics.endFill();
         }
     }
 }

@@ -30,8 +30,8 @@ package patch {
      * Activation gates (all must hold):
      *   - GameMode == FROSTBORN  (Chilling already gets its own 3 free)
      *   - Stage is in AV.serverData.freeStages (any stage in the starter set —
-     *     a single stage at per_stage granularity, an entire tile or tier
-     *     under per_tile / per_tier)
+     *     a single stage at per_stage granularity, an entire tile
+     *     under per_tile)
      *   - Gempouch covering that stage not owned (granularity-aware)
      *
      * Decision is snapshotted on the first frame with valid state (mirrors
@@ -107,7 +107,7 @@ package patch {
             var freeStages:Array = AV.serverData.freeStages as Array;
             if (freeStages == null || freeStages.length == 0)
                 return false;
-            // Starter set may span multiple stages under per_tile / per_tier.
+            // Starter set may span multiple stages under per_tile.
             var inStarterSet:Boolean = false;
             for (var fi:int = 0; fi < freeStages.length; fi++) {
                 if (String(freeStages[fi]) == stageStrId) {

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from BaseClasses import ItemClassification, LocationProgressType, Region
-from Options import DeathLink, OptionGroup
+from Options import DeathLink, OptionGroup, OptionError
 
 from worlds.AutoWorld import WebWorld, World
 
@@ -24,16 +24,29 @@ from .options import (
     DeathLinkGracePeriod,
     DeathLinkCooldown,
     AchievementRequiredEffort,
-    SkillpointMultiplier,
     GemPouchGranularity,
     FieldTokenGranularity,
     StashKeyGranularity,
-    STARTING_STAGE_BY_VALUE,
+    RandomStartingStages,
+    StartingStages,
+    W_STARTER_SIDS,
+    FieldsRequired,
+    Difficulty,
+    DisableEndurance,
+    DisableTrial,
+    StartingOvercrowd,
+    StartingWizardLevel,
+    EnemyHpMultiplier,
+    EnemyArmorMultiplier,
+    EnemyShieldMultiplier,
+    EnemiesPerWaveMultiplier,
+    ExtraWaveCount,
+    ExtraShadowCoresPerWave,
 )
 from .items_skillpoints import (
-    compute_tier_distribution as _compute_sp_bundle_distribution,
-    generate_sp_bundles,
-    TIER_NAMES as _SP_TIER_NAMES,
+    fixed_bundle_names,
+    sp_slot_data_values,
+    SP_SINGLE_NAME,
 )
 from ._timing import phase, log as _timing_log, report_top_rules
 from .rules import set_rules
@@ -56,16 +69,10 @@ def _resolve_fields_required_count(world) -> int:
     Single source of truth so the mod doesn't have to recompute.
     Must match the formulas in rules.py for the corresponding goal.
     """
-    from math import floor
     goal_value = world.options.goal.value
-    if goal_value == 3:
+    if goal_value == 2:
         # fields_count: option already holds the absolute count.
         return int(world.options.fields_required.value)
-    if goal_value == 4:
-        # fields_percentage: matches rules.py:1579 formula exactly.
-        pct = int(world.options.fields_required_percentage.value)
-        total = len(GAME_DATA["stages"])
-        return int(floor(pct * total / 100))
     return 0
 
 
@@ -120,7 +127,7 @@ def _get_stat_counter_ceilings() -> dict:
     """Map of `level_stat_counters` head -> max value any stage carries
     for that head's field(s).  A `<head>:N` requirement is structurally
     unsatisfiable iff N exceeds this ceiling.  Mirrors the qualifying-
-    stage selection in rules.py `_eval_req` (level_stat_counters branch)."""
+    stage selection in rules.py `_compile_req` (level_stat_counters branch)."""
     global _STAT_COUNTER_CEILINGS
     if _STAT_COUNTER_CEILINGS is None:
         from .requirement_tokens import level_stat_counters
@@ -232,7 +239,7 @@ def _can_achievement_be_met(requirements: list) -> bool:
         on one stage; if no such stage exists the access rule compiles to
         _always_false and the location becomes a dead slot for fill.
 
-    Mirrors the runtime check in rules.py `_eval_req` / `_compile_dnf`:
+    Mirrors the runtime check in rules.py `_compile_req` / `_compile_dnf`:
     a `<head>:N` requirement passes iff at least one stage qualifies, AND
     every per-stage token in an AND-group shares at least one stage.
     """
@@ -367,28 +374,40 @@ def _get_filter_reason(requirements: list) -> str:
 class GCFWWebWorld(WebWorld):
     theme = "ocean"
 
-
-class GemcraftFrostbornWrathWorld(World):
-    """GemCraft: Frostborn Wrath is a hex-grid tower defense game with gem crafting.
-    Complete stages to receive field tokens that unlock further stages, all shuffled
-    into an Archipelago multiworld."""
-
-    game = "GemCraft: Frostborn Wrath"
-    web = GCFWWebWorld()
-    options_dataclass = GCFWOptions
-    options: GCFWOptions
-    topology_present = True
-
+    # YAML template grouping. AP's Options.get_option_groups reads
+    # `world.web.option_groups` (i.e. this attribute on the WebWorld), NOT the
+    # World class — so it must live here. Each OptionGroup renders as a
+    # `#### <name> ####` header block in the generated template; options not
+    # listed in any group fall under an auto-generated "Game Options" block.
     option_groups = [
         OptionGroup("Game Options", [
             Goal,
+            FieldsRequired,
+            RandomStartingStages,
+            StartingStages,
+            Difficulty,
+            AchievementRequiredEffort,
+            DisableEndurance,
+            DisableTrial,
+            ExtraShadowCoresPerWave,
+        ]),
+        OptionGroup("Field Options", [
             FieldTokenGranularity,
             StashKeyGranularity,
             GemPouchGranularity,
             FieldTokenPlacement,
+        ]),
+        OptionGroup("Difficulty Multipliers", [
+            StartingWizardLevel,
+            StartingOvercrowd,
             XpTomeBonus,
-            AchievementRequiredEffort,
-            SkillpointMultiplier,
+        ]),
+        OptionGroup("Enemy Manipulation Options", [
+            EnemyHpMultiplier,
+            EnemyArmorMultiplier,
+            EnemyShieldMultiplier,
+            EnemiesPerWaveMultiplier,
+            ExtraWaveCount,
         ]),
         OptionGroup("DeathLink Options", [
             DeathLink,
@@ -403,6 +422,18 @@ class GemcraftFrostbornWrathWorld(World):
             DeathLinkCooldown,
         ]),
     ]
+
+
+class GemcraftFrostbornWrathWorld(World):
+    """GemCraft: Frostborn Wrath is a hex-grid tower defense game with gem crafting.
+    Complete stages to receive field tokens that unlock further stages, all shuffled
+    into an Archipelago multiworld."""
+
+    game = "GemCraft: Frostborn Wrath"
+    web = GCFWWebWorld()
+    options_dataclass = GCFWOptions
+    options: GCFWOptions
+    topology_present = True
 
     item_name_to_id: Dict[str, int] = {name: data.id for name, data in item_table.items()}
     location_name_to_id: Dict[str, int] = {name: data.id for name, data in location_table.items()}
@@ -422,9 +453,8 @@ class GemcraftFrostbornWrathWorld(World):
                 slot_data = re_gen_passthrough[self.game]
                 for key in (
                     "goal",
+                    "difficulty",
                     "fields_required",
-                    "fields_required_percentage",
-                    "starting_stage",
                     "field_token_placement",
                     "field_token_granularity",
                     "stash_key_granularity",
@@ -435,12 +465,60 @@ class GemcraftFrostbornWrathWorld(World):
                     "starting_overcrowd",
                     "starting_wizard_level",
                     "xp_tome_bonus",
-                    "skillpoint_multiplier",
                 ):
                     if key in slot_data:
                         opt = getattr(self.options, key, None)
                         if opt is not None:
                             opt.value = slot_data[key]
+
+            # Resolve the set of starting stages (W tile only). On UT regen,
+            # reuse the resolved set shipped in slot_data so we never re-roll.
+            _pt = re_gen_passthrough.get(self.game) if self.game in re_gen_passthrough else None
+            if _pt is not None and "starting_stages" in _pt:
+                self.start_sids = set(_pt["starting_stages"])
+            else:
+                rand_n = self.options.random_starting_stages.value
+                if rand_n == 0:
+                    chosen = set(self.options.starting_stages.value)
+                    if not chosen:
+                        raise OptionError(
+                            f"[{self.player_name}] 'starting_stages' must list at "
+                            f"least one W field when 'random_starting_stages' is 0."
+                        )
+                    self.start_sids = chosen
+                else:
+                    self.start_sids = set(self.random.sample(W_STARTER_SIDS, rand_n))
+            self.start_sid = sorted(self.start_sids)[0]
+
+            # Force the starter tile's gem pouch early. Without it the opening
+            # stages run on Hollow Gems only, which is playable but grindingly
+            # slow, so it always goes in local_early_items. The starter tile is
+            # always W, so per_tile resolves to "Gempouch (W)"; progressive
+            # resolves to the generic item and 1 copy suffices because the
+            # starter tile sorts first in progressive_tile_order_for_starter().
+            # Returns None when pouches are off. This only biases fill — it does
+            # not precollect, so logic and item/location counts are untouched.
+            from . import gating as _gating_early
+            _pouch_name = _gating_early.pouch_for_stage(
+                self.start_sid, self.options.gem_pouch_granularity.value)
+            if _pouch_name is not None:
+                self.multiworld.local_early_items[self.player][_pouch_name] = 1
+
+            # Hard and Extreme lean on Endurance runs for the extra XP needed to
+            # reach the (difficulty-flat) WL gates — their clears grant so little
+            # XP that Journey alone can't keep pace, so Endurance is the catch-up
+            # path if a player gets stuck. Refuse to generate a Hard/Extreme seed
+            # with Endurance disabled: fail loudly so the player fixes the YAML
+            # rather than shipping an over-tight / potentially unwinnable seed.
+            if (self.options.difficulty.value in (Difficulty.option_hard,
+                                                  Difficulty.option_extreme)
+                    and self.options.disable_endurance.value):
+                raise OptionError(
+                    f"[{self.player_name}] Hard and Extreme difficulty require "
+                    f"Endurance mode (the catch-up XP path if you get stuck): set "
+                    f"'disable_endurance' to false (Endurance ON), or choose a "
+                    f"lower difficulty."
+                )
 
             # Under Universal Tracker the multiworld is regenerated as a single
             # player (just the tracked slot), so `players == 1` even for a real
@@ -466,7 +544,72 @@ class GemcraftFrostbornWrathWorld(World):
                     and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+            # Progression talisman: deterministically build the 25-fragment set
+            # for this seed. Seed a DEDICATED RNG from a single world.random draw
+            # so the (thousands of) search rolls don't perturb the rest of
+            # generation, while staying reproducible (UT regen draws the same
+            # value). Stored on self for both slot_data and later logic use.
+            import random as _random
+            from .talisman_gen import generate_progression_set
+            self.talisman_set = generate_progression_set(
+                _random.Random(self.random.getrandbits(64)))
+
     _JOURNEY_PRIORITY_FRACTION = 0.75
+
+    # Per-player monotonic version counter, bumped whenever this player's
+    # progression items change. rules._gcfw_state_sig reads it as an O(1)
+    # cache-validity key instead of recomputing sum(prog_items.values())
+    # (O(#items)) on every one of the ~20M cache accesses during fill.
+    # Falls back to the content signature if a state never went through here
+    # (e.g. a bare copy), so correctness never depends on the stamp existing.
+    def collect(self, state, item) -> bool:
+        change = super().collect(state, item)
+        if change:
+            ver = getattr(state, "_gcfw_ver", None)
+            if ver is None:
+                ver = state._gcfw_ver = {}
+            ver[self.player] = ver.get(self.player, 0) + 1
+            self._wl_base_delta(state, item, +1)
+        return change
+
+    def remove(self, state, item) -> bool:
+        change = super().remove(state, item)
+        if change:
+            ver = getattr(state, "_gcfw_ver", None)
+            if ver is None:
+                ver = state._gcfw_ver = {}
+            ver[self.player] = ver.get(self.player, 0) + 1
+            self._wl_base_delta(state, item, -1)
+        return change
+
+    # Running wizard-level base maintained incrementally so rules._wl_of is O(1)
+    # instead of re-summing 122 "<sid> Cleared" markers on every WL gate check.
+    # `_wl_xp_by_item` (name -> eff_xp) is published on the world in
+    # rules.set_rules; before that (e.g. precollect in __init__) it's absent and
+    # this is a no-op — no Cleared events are precollected, so the base stays 0.
+    # Only the 0<->1 count transition moves the base, matching _wl_of's binary
+    # `state.has` semantics. On first touch of an untracked state (a bare
+    # copy that never went through here) the base is recomputed from prog_items
+    # (which already reflects this collect/remove), so no delta is applied.
+    def _wl_base_delta(self, state, item, sign: int) -> None:
+        xp_map = getattr(self, "_wl_xp_by_item", None)
+        if xp_map is None:
+            return
+        xp = xp_map.get(item.name)
+        if not xp:
+            return
+        p = self.player
+        count = state.prog_items[p].get(item.name, 0)
+        if not ((sign > 0 and count == 1) or (sign < 0 and count == 0)):
+            return  # not a 0<->1 transition; base unchanged
+        base_map = getattr(state, "_gcfw_wl_base", None)
+        if base_map is None:
+            base_map = state._gcfw_wl_base = {}
+        if p in base_map:
+            base_map[p] += sign * xp
+        else:
+            base_map[p] = sum(x for n, x in self._wl_xp_items
+                              if state.prog_items[p].get(n, 0) > 0)
 
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
@@ -542,7 +685,6 @@ class GemcraftFrostbornWrathWorld(World):
         # Field tokens — count and names depend on field_token_granularity:
         #   per_stage: 122 tokens (one per stage), starter's token precollected
         #   per_tile:  26 tokens (one per stage prefix), starter's tile precollected
-        #   per_tier:  N tokens (one per active tier), starter's tier precollected
         # The starter's covering token is always pushed to precollected items
         # so Menu->starter is satisfied without the player having to find it.
         from . import gating as _gating
@@ -550,9 +692,9 @@ class GemcraftFrostbornWrathWorld(World):
         # Progressive variants need M copies precollected (M = starter's index
         # in the unlock order + 1) so the starter is reachable from frame 0.
         # Distinct variants precollect a single covering item.
-        for tok_name in _gating.starter_field_tokens_to_precollect(self.start_sid, ft_gran):
+        for tok_name in _gating.starter_field_tokens_to_precollect(self.start_sids, ft_gran):
             self.multiworld.push_precollected(self.create_item(tok_name))
-        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sid):
+        for token_name in _gating.field_tokens_for_pool(ft_gran, self.start_sids):
             pool.append(self.create_item(token_name))
 
         # Skills (includes gem-type unlocks at positions 7–12)
@@ -573,23 +715,21 @@ class GemcraftFrostbornWrathWorld(World):
             else:
                 pool.append(self.create_item(name))
 
-        # Location-specific talisman fragments (53) and shadow core stashes (17)
+        # Talisman fragments: ONLY the 25 AP "perfect placement" fragments are
+        # AP items now (received from AP, bought in the AP Shop). The other ~28
+        # specific fragments — and the retired "extra" fragments (1200–1246) —
+        # are no longer placed; those talismans are collected through normal
+        # gameplay (wave drops / wizard stashes).
+        # Shadow core stashes: only the base per-field stashes (17) stay AP; the
+        # "extra" stashes (1300+) were retired. Both freed sets become filler
+        # via the SP-bundle fill below.
+        from .talismans import PROGRESSION_ALL_TALISMAN_NAMES
         for name in item_table:
             if name.endswith(" Talisman Fragment") and name != "Talisman Fragment":
-                pool.append(self.create_item(name))
+                if name in PROGRESSION_ALL_TALISMAN_NAMES:
+                    pool.append(self.create_item(name))
             elif name.endswith(" Shadow Cores"):
                 pool.append(self.create_item(name))
-
-        gd = _load_game_data()
-
-        # Extra talisman fragments — currently empty (vanilla drops cover the
-        # rest); loop kept for forward compatibility.
-        for frag in gd["extra_talisman_fragments"]:
-            pool.append(self.create_item(frag["name"]))
-
-        # Extra shadow core stashes (IDs 1300–1317)
-        for sc in gd["extra_shadow_core_stashes"]:
-            pool.append(self.create_item(sc["name"]))
 
         # XP tomes — fixed counts scaled so option=50→50 levels, option=300→300 levels.
         # 32 Tattered + 6 Worn + 2 Ancient = 40 tomes; at multiplier 1 (option=50): 32+12+6=50.
@@ -623,7 +763,18 @@ class GemcraftFrostbornWrathWorld(World):
                             result.append(inner)
                     else:
                         r_lower = r.lower()
-                        if "trait" in r_lower or "skill" in r_lower or r.startswith("Achievement:"):
+                        # Keep loadout tokens (trait / skill), Achievement:
+                        # chain tokens, AND the min_wl:N pacing gate. min_wl is
+                        # NOT an element / stage-reach requirement — it's a pure
+                        # WL floor that rules._extract_min_wl reads downstream —
+                        # so dropping it here silently collapses the achievement's
+                        # floor to the effort-tier default (e.g. `battleTraits:1`
+                        # contains the substring "trait", so this branch fired
+                        # and ate `min_wl:20`, letting the achievement into logic
+                        # ~12 WL early).
+                        if ("trait" in r_lower or "skill" in r_lower
+                                or r.startswith("Achievement:")
+                                or r_lower.startswith("min_wl")):
                             result.append(r)
                 return result
 
@@ -654,7 +805,6 @@ class GemcraftFrostbornWrathWorld(World):
         # Wizard Stash keys — count and names depend on stash_key_granularity:
         #   per_stage: 122 keys (one per stage)
         #   per_tile:  26 keys (one per stage prefix)
-        #   per_tier:  N keys (one per active tier, N = len(ACTIVE_TIERS))
         #   global:    1 master key
         from . import gating as _gating
         for key_name in _gating.stash_keys_for_pool(self.options.stash_key_granularity.value):
@@ -668,36 +818,47 @@ class GemcraftFrostbornWrathWorld(World):
         for pouch_name in _gating.pouches_for_pool(self.options.gem_pouch_granularity.value):
             pool.append(self.create_item(pouch_name))
 
-        # SP bundle filler — fills all remaining unfilled location slots.
-        # Total SP scales with skillpoint_multiplier (default 100 → 2500 SP).
-        # Bundles are split across four named tiers (Small/Medium/Large/Huge)
-        # whose SP values are computed per-seed based on the actual filler-slot
-        # count — see compute_tier_distribution. Tier values are stored on self
-        # so fill_slot_data can ship them to the mod.
-        # The -1 is for the Victory event location (filled by place_locked_item
-        # in generate_basic — outside the regular pool).
+        # SP filler — fills all remaining unfilled location slots with
+        # fixed-value skillpoint items. First the 40 always-present bundles
+        # (32 Small @5 + 6 Medium @25 + 2 Big @250 = 810 SP), then single
+        # "Skillpoint" items (1 SP each) to soak up whatever slots remain.
+        # Values are constant; the total SP a seed grants scales purely with
+        # its check count (more achievements -> more singles), mirroring vanilla
+        # "do more, get more". Values ship via slot_data (sp_bundle_values) so
+        # the mod grants the same amounts and counts them for skillPoints:N.
+        # Count only REAL (addressed) locations — Journey / Wizard stash /
+        # achievements. Event locations (Victory, goal victories, and the
+        # per-stage "Clear <sid>" XP events) have address=None and are filled by
+        # place_locked_item in generate_basic, so they must NOT inflate the pool.
         total_locations = sum(1 for region in self.multiworld.regions
                               if region.player == self.player
-                              for _ in region.locations)
-        remaining = total_locations - len(pool) - 1
-        self.sp_bundle_values: List[int] = [0, 0, 0, 0]
+                              for loc in region.locations
+                              if loc.address is not None)
+        self.sp_bundle_values: List[int] = sp_slot_data_values()
+        remaining = total_locations - len(pool)
         if remaining > 0:
-            total_sp = 2500 * self.options.skillpoint_multiplier.value // 100
-            values, counts = _compute_sp_bundle_distribution(total_sp, remaining)
-            self.sp_bundle_values = values
-            bundles = generate_sp_bundles(self.random, counts)
+            bundles = fixed_bundle_names()
+            # If there aren't even enough filler slots for all 40 fixed bundles
+            # (only possible with very few locations + very coarse item
+            # granularity), shuffle and take what fits so we never overflow the
+            # location count.
+            if len(bundles) > remaining:
+                self.random.shuffle(bundles)
+                bundles = bundles[:remaining]
             for name in bundles:
                 pool.append(self.create_item(name))
+            for _ in range(remaining - len(bundles)):
+                pool.append(self.create_item(SP_SINGLE_NAME))
 
         self.multiworld.itempool += pool
         _timing_log(f"p{self.player} create_items: {(_t.perf_counter()-_t0)*1000:.1f} ms (pool={len(pool)})")
 
     def create_regions(self) -> None:
         import time as _t; _t0 = _t.perf_counter()
-        # Resolve the chosen start stage. Its baked `requirements` in
-        # rulesdata_levels.py are intentionally ignored at rule-time
-        # (see rules.set_rules); Menu connects directly to its region.
-        self.start_sid = STARTING_STAGE_BY_VALUE[self.options.starting_stage.value]
+        # start_sids / start_sid (primary) resolved in generate_early(). The
+        # starters' baked `requirements` in rulesdata_levels.py are intentionally
+        # ignored at rule-time (see rules.set_rules); Menu connects to the
+        # primary starter and the rest of the set is free via precollected tokens.
 
         stages = _load_stages()
         # All stages get a region (needed for the region graph).
@@ -720,6 +881,9 @@ class GemcraftFrostbornWrathWorld(World):
             wiz_loc_name = f"Complete {str_id} - Wizard stash"
             wiz_loc_data = location_table[wiz_loc_name]
             region.locations.append(GCFWLocation(self.player, wiz_loc_name, wiz_loc_data.id, region))
+            # WL-gating: a "Clear <sid>" event (no AP address) holds the
+            # "<sid> Cleared" XP marker, driving the wizard-level progression.
+            region.locations.append(GCFWLocation(self.player, f"Clear {str_id}", None, region))
             stage_regions[str_id] = region
             self.multiworld.regions.append(region)
 
@@ -763,33 +927,20 @@ class GemcraftFrostbornWrathWorld(World):
             kill_gatekeeper_region = Region("Kill Gatekeeper Goal", self.player, self.multiworld)
             kill_gatekeeper_region.locations.append(GCFWLocation(self.player, "Complete A4 - Frostborn Wrath Victory", None, kill_gatekeeper_region))
             self.multiworld.regions.append(kill_gatekeeper_region)
-            menu_region.connect(kill_gatekeeper_region, "Kill Gatekeeper")            
+            menu_region.connect(kill_gatekeeper_region, "Kill Gatekeeper")
 
-        if self.options.goal.value == 2:
+        if self.options.goal.value == 1:
             kill_swarm_queen_region = Region("Kill Swarm Queen Goal", self.player, self.multiworld)
             kill_swarm_queen_region.locations.append(GCFWLocation(self.player, "Kill Swarm Queen Victory", None, kill_swarm_queen_region))
             self.multiworld.regions.append(kill_swarm_queen_region)
-            menu_region.connect(kill_swarm_queen_region, "Kill swarm")            
+            menu_region.connect(kill_swarm_queen_region, "Kill swarm")
 
-        # full_talisman goal: victory event in a dedicated region (no item requirements)
-        if self.options.goal.value == 1:
-            talisman_region = Region("Talisman Goal", self.player, self.multiworld)
-            talisman_region.locations.append(GCFWLocation(self.player, "Full Talisman Victory", None, talisman_region))
-            self.multiworld.regions.append(talisman_region)
-            menu_region.connect(talisman_region, "Talisman")
-
-        # fields_count / fields_percentage goals: victory in dedicated regions
-        if self.options.goal.value == 3:
+        # fields_count goal: victory in a dedicated region
+        if self.options.goal.value == 2:
             fields_count_region = Region("Fields Count Goal", self.player, self.multiworld)
             fields_count_region.locations.append(GCFWLocation(self.player, "Fields Count Victory", None, fields_count_region))
             self.multiworld.regions.append(fields_count_region)
             menu_region.connect(fields_count_region, "Fields Count")
-
-        if self.options.goal.value == 4:
-            fields_pct_region = Region("Fields Percentage Goal", self.player, self.multiworld)
-            fields_pct_region.locations.append(GCFWLocation(self.player, "Fields Percentage Victory", None, fields_pct_region))
-            self.multiworld.regions.append(fields_pct_region)
-            menu_region.connect(fields_pct_region, "Fields Percentage")
 
         # Connect Menu → starting stage. All other stages connect from the
         # starting stage in set_rules.
@@ -803,106 +954,32 @@ class GemcraftFrostbornWrathWorld(World):
     def generate_basic(self) -> None:
         import time as _t; _t0 = _t.perf_counter()
         # Place the Victory event at the goal-appropriate location.
-        if self.options.goal.value == 0:
-            victory_name = "Complete A4 - Frostborn Wrath Victory"
-        elif self.options.goal.value == 2:
+        if self.options.goal.value == 1:
             victory_name = "Kill Swarm Queen Victory"
-        elif self.options.goal.value == 3:
+        elif self.options.goal.value == 2:
             victory_name = "Fields Count Victory"
-        elif self.options.goal.value == 4:
-            victory_name = "Fields Percentage Victory"
         else:
-            victory_name = "Full Talisman Victory"
+            victory_name = "Complete A4 - Frostborn Wrath Victory"
         victory_loc = self.multiworld.get_location(victory_name, self.player)
         victory_loc.place_locked_item(
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
 
+        # WL-gating: place each stage's "<sid> Cleared" XP marker (locked) on
+        # its "Clear <sid>" event location. Named as a location:item pair so the
+        # spoiler reads "Clear S1: S1 Cleared" instead of "Beat S1: Beat S1".
+        from .difficulty_gates import GATE as _WL_GATE
+        for sid in _WL_GATE:
+            try:
+                loc = self.multiworld.get_location(f"Clear {sid}", self.player)
+            except KeyError:
+                continue
+            loc.place_locked_item(
+                GCFWItem(f"{sid} Cleared", ItemClassification.progression, None, self.player)
+            )
+
         # Skills stay in the shared item pool — placed anywhere by Archipelago's fill algorithm.
         _timing_log(f"p{self.player} generate_basic: {(_t.perf_counter()-_t0)*1000:.1f} ms")
-
-    # def fill_hook(self, progitempool, usefulitempool, filleritempool, fill_locations):
-    #     # Reorder progitempool so fill_restrictive (which pops from the end) places items in
-    #     # this sphere order:
-    #     #   tier-0 tokens → skills for tier 1 → tier-1 tokens → skills for tier 2 → ...
-    #     #
-    #     # Without skill reordering, skills land in random positions and can end up being placed
-    #     # last, at which point all low-tier locations are filled and the remaining locations are
-    #     # in tiers 9-12 (which require more skills than are in the state) — causing a FillError.
-    #     #
-    #     # The 24 skills map exactly onto the 12×2 tier requirements
-    #     # (6 spells + 4 focus + 6 gems + 4 buildings + 4 wrath = 24), so every skill gets a slot.
-    #     #
-    #     # In own_world mode, tokens are pre_fill'd and absent from the pool; only skills are
-    #     # reordered here. In any_world mode, skills and tokens are interleaved correctly.
-    #
-    #     # Build reverse lookup: skill name → category
-    #     skill_to_category: Dict[str, str] = {
-    #         skill: cat
-    #         for cat, skills in SKILL_CATEGORIES.items()
-    #         for skill in skills
-    #     }
-    #
-    #     # Collect this player's skill items per category
-    #     category_skill_items: Dict[str, list] = {cat: [] for cat in SKILL_CATEGORIES}
-    #     for item in progitempool:
-    #         if item.player == self.player and item.name.endswith(" Skill"):
-    #             cat = skill_to_category.get(item.name[:-6])
-    #             if cat:
-    #                 category_skill_items[cat].append(item)
-    #
-    #     category_ptr: Dict[str, int] = {cat: 0 for cat in SKILL_CATEGORIES}
-    #
-    #     # Iterate tiers from highest to lowest. Each append goes to the END of the pool,
-    #     # so the last appended item is popped (placed) first by fill_restrictive.
-    #     # After the loop the pool tail looks like:
-    #     #   ... [tier-12_toks][skills_for_t12][tier-11_toks][skills_for_t11][tier-10_toks]...[skills_for_t1][tier-0_toks]
-    #     # Popping from the right: tier-0 tokens first, then skills for tier 1, then tier-1 tokens, etc.
-    #     for t in range(12, 0, -1):
-    #         prev_tier = t - 1
-    #         level_req = len(TIERS[prev_tier]) * self.options.tier_requirements_percent // 100
-    #
-    #         # Append skills that unlock tier t (one per required category).
-    #         # These land just before the tier-(t-1) tokens in the pool tail, so they are
-    #         # placed right after those tokens unlock the tier-(t-1) stage locations.
-    #         for category in TIER_SKILL_REQUIREMENTS.get(t, []):
-    #             ptr = category_ptr[category]
-    #             if ptr < len(category_skill_items[category]):
-    #                 skill_item = category_skill_items[category][ptr]
-    #                 category_ptr[category] += 1
-    #                 pool_idx = next(
-    #                     (i for i, x in enumerate(progitempool) if x is skill_item), None
-    #                 )
-    #                 if pool_idx is not None:
-    #                     progitempool.append(progitempool.pop(pool_idx))
-    #
-    #         # Append enough tier-(prev_tier) tokens to satisfy the tier-t requirement.
-    #         moved_levels = 0
-    #         prog_idx = 0
-    #         while moved_levels < level_req:
-    #             if prog_idx >= len(progitempool):
-    #                 break  # tokens already placed via pre_fill (own_world); quota is fine
-    #             this_item = progitempool[prog_idx]
-    #             if (this_item.player == self.player
-    #                     and this_item.name.endswith(" Field Token")):
-    #                 this_field = this_item.name[:2]
-    #                 if this_field in TIERS[prev_tier]:
-    #                     progitempool.append(progitempool.pop(prog_idx))
-    #                     moved_levels += 1
-    #                     prog_idx -= 1
-    #             prog_idx += 1
-    #
-    #     # Tier-12 tokens (A4, A5, A6) are never covered by the loop above (there is no t=13).
-    #     # Without this they land in the unsorted leftover section and are placed last, meaning
-    #     # tier-12 regions open too late and the fill may run out of accessible locations for
-    #     # the final progression items.  Move all tier-12 tokens just before the tier-12 skills
-    #     # so they are placed after all 24 skills are in state (opening tier-12 regions for filler).
-    #     for prog_idx in range(len(progitempool) - 1, -1, -1):
-    #         this_item = progitempool[prog_idx]
-    #         if (this_item.player == self.player
-    #                 and this_item.name.endswith(" Field Token")
-    #                 and this_item.name[:2] in TIERS[12]):
-    #             progitempool.append(progitempool.pop(prog_idx))
 
 
     @staticmethod
@@ -919,6 +996,8 @@ class GemcraftFrostbornWrathWorld(World):
         # Main fill happens between generate_basic and fill_slot_data, so this
         # is where we dump the per-rule call counters.
         report_top_rules()
+        from ._timing import report_counters as _report_counters
+        _report_counters()
         import time as _t; _t0 = _t.perf_counter()
         gd = _load_game_data()
         stages = gd["stages"]
@@ -932,7 +1011,7 @@ class GemcraftFrostbornWrathWorld(World):
 
         # Stages that are immediately playable from session start. The exact
         # set depends on granularity AND whether progressive: distinct modes
-        # cover the starter's tile/tier/stage; progressive modes cover the
+        # cover the starter's tile/stage; progressive modes cover the
         # first M groups of the unlock order, where M = starter's position + 1
         # (i.e. the same M copies the apworld precollects). The mod uses this
         # list for HollowGemInjector, FirstPlayBypass, and free-buildings.
@@ -942,27 +1021,26 @@ class GemcraftFrostbornWrathWorld(World):
         # uses the same M-position logic that drives precollect.
         from . import gating as _gating
         ft_gran = self.options.field_token_granularity.value
-        free_stages = _gating.free_stages_for_starter(self.start_sid, ft_gran)
+        free_stages = _gating.free_stages_for_starter(self.start_sids, ft_gran)
 
         # Talisman map: item AP ID (str) → "seed/rarity/type/upgradeLevel" (IDs 900–952)
+        # Only the 25 AP "perfect placement" fragments are AP items now, so the
+        # maps ship just those (the extras 1200–1246 were retired, and the other
+        # ~28 specific fragments are normal gameplay loot). Keeps the mod's
+        # toasts / name lookups / debug grant menu limited to real AP items.
+        from .talismans import PROGRESSION_ALL_TALISMAN_NAMES
         talisman_map = {
             str(frag["item_ap_id"]): frag["tal_data"]
             for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in PROGRESSION_ALL_TALISMAN_NAMES
         }
-        talisman_map.update({
-            str(frag["item_ap_id"]): frag["tal_data"]
-            for frag in gd["extra_talisman_fragments"]
-        })
 
-        # Talisman name map: item AP ID (str) → display name (IDs 900–952)
+        # Talisman name map: item AP ID (str) → display name (the 25 AP fragments)
         talisman_name_map = {
             str(frag["item_ap_id"]): f"{frag['str_id']} Talisman Fragment"
             for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in PROGRESSION_ALL_TALISMAN_NAMES
         }
-        talisman_name_map.update({
-            str(frag["item_ap_id"]): frag["name"]
-            for frag in gd["extra_talisman_fragments"]
-        })
 
         # Wiz stash talisman data: str_id → "seed/rarity/type/upgradeLevel"
         # Used by NormalProgressionBlocker to identify and remove stash-granted fragments.
@@ -971,25 +1049,66 @@ class GemcraftFrostbornWrathWorld(World):
             for frag in gd["talisman_fragments"]
         }
 
-        # Shadow core map: item AP ID (str) → amount (IDs 1000–1016, 1300–1317)
+        # Talisman charge map: property_id (str) → { fragment AP id (str) → value
+        # at max upgrade }. Only the six Max-*-Charge properties (21–26) are
+        # shipped — they're what the `tm<Spell>Charge:N` achievement tokens gate
+        # on. Lets the mod's LogicEvaluator sum a held fragment set's charge
+        # contribution the same way the apworld's `_sum_talisman_property` does
+        # (rules.py), so the tracker's in-logic dots match generation.
+        # Built over ALL progression fragments (unfiltered), exactly mirroring
+        # rules._TALISMAN_PROPERTY_CONTRIBUTIONS / _sum_talisman_property; the
+        # mod's hasItem() guard naturally ignores any fragment not actually in
+        # the item pool, so the sums stay identical to the apworld gate.
+        from .rulesdata_talisman import progression_talismans as _prog_tal
+        _CHARGE_PROP_IDS = (21, 22, 23, 24, 25, 26)
+        talisman_charge_map = {}
+        for _frag_name, _frag in _prog_tal.items():
+            _frag_apid = _frag.get("ap_id")
+            if _frag_apid is None:
+                continue
+            for _pid, _pval in _frag.get("properties_at_max", []):
+                if _pid in _CHARGE_PROP_IDS and _pval > 0:
+                    talisman_charge_map.setdefault(str(_pid), {})[str(_frag_apid)] = _pval
+
+        # Static talisman: pair each of the 25 PROGRESSION fragment ITEMS to one
+        # synthetic slot. The synthetic set (self.talisman_set) is a legal tiling
+        # (talisman_gen.py); when the player FINDS the fragment item mapped to a
+        # slot, the mod unlocks that slot and sockets the synthetic fragment for
+        # it (the item is the trigger; the socketed fragment is the synthetic
+        # one so the grid always tiles). We tag each set entry with `ap_id` here.
+        from .talismans import (
+            MATCHING_TALISMAN_NAMES,
+            PROGRESSION_CORNER_TALISMAN_NAMES,
+            PROGRESSION_EDGE_TALISMAN_NAMES,
+        )
+        _prog_frag_names = (MATCHING_TALISMAN_NAMES
+                            | PROGRESSION_CORNER_TALISMAN_NAMES
+                            | PROGRESSION_EDGE_TALISMAN_NAMES)
+        _prog_frag_apids = sorted(
+            frag["item_ap_id"] for frag in gd["talisman_fragments"]
+            if f"{frag['str_id']} Talisman Fragment" in _prog_frag_names
+        )
+        _tal_set_sorted = sorted(getattr(self, "talisman_set", []),
+                                 key=lambda e: e["slot"])
+        if len(_prog_frag_apids) != len(_tal_set_sorted):
+            _timing_log(f"p{self.player} WARN talisman pairing mismatch: "
+                        f"{len(_prog_frag_apids)} items vs {len(_tal_set_sorted)} slots")
+        for _apid, _entry in zip(_prog_frag_apids, _tal_set_sorted):
+            _entry["ap_id"] = _apid
+
+        # Shadow core map: item AP ID (str) → amount (IDs 1000–1016). Only the
+        # base per-field stashes stay AP items; the extra stashes (1300+) were
+        # retired.
         shadow_core_map = {
             str(sc["item_ap_id"]): sc["total"]
             for sc in gd["shadow_core_stashes"]
         }
-        shadow_core_map.update({
-            str(sc["item_ap_id"]): sc["amount"]
-            for sc in gd["extra_shadow_core_stashes"]
-        })
 
-        # Shadow core name map: item AP ID (str) → display name (IDs 1000–1016, 1300–1317)
+        # Shadow core name map: item AP ID (str) → display name (IDs 1000–1016)
         shadow_core_name_map = {
             str(sc["item_ap_id"]): f"{sc['str_id']} Shadow Cores"
             for sc in gd["shadow_core_stashes"]
         }
-        shadow_core_name_map.update({
-            str(sc["item_ap_id"]): sc["name"]
-            for sc in gd["extra_shadow_core_stashes"]
-        })
 
         # XP tome levels — 32 Tattered + 6 Worn + 2 Ancient = 40 tomes.
         # At multiplier 1 (option=50): 32×1 + 6×2 + 2×3 = 50 levels exactly.
@@ -1002,7 +1121,7 @@ class GemcraftFrostbornWrathWorld(World):
 
         # --- In-game tracker: per-achievement requirements map ---
         # Stage logic (WIZLOCK skills + prereq tokens + talisman counters)
-        # is shipped via logic.json (generate_logic_json.py); slot_data here
+        # is shipped via logic.json (generate_ap_data.py); slot_data here
         # only carries options + the per-achievement requirements list so the
         # mod's AchievementLogicEvaluator can mirror the in-logic display.
         # Mirror exactly the same effort / skip / structural-reachability
@@ -1033,6 +1152,43 @@ class GemcraftFrostbornWrathWorld(World):
                 if not _can_achievement_be_met(requirements):
                     continue
                 achievement_requirements_map[ach_name] = requirements
+
+        # --- Difficulty / wizard-level gating data for the mod tracker ---
+        # The mod computes a DERIVED wizard level from cleared fields (identical
+        # to the apworld's _wl_of / difficulty_gates.derived_wl) and compares it
+        # against these gates — NOT the game's live GV.ppd.getWizLevel().
+        #   stage_gates:        {str_id: required wizard level}
+        #   achievement_min_wl: {effort tier: required wizard level}
+        #   wl_eff_xp:          {str_id: per-field XP for THIS difficulty} — the
+        #                       mod sums these over cleared fields for derived WL.
+        #   xp_trait_ap_ids:    AP item ids of the 4 XP-scaling traits; the mod
+        #                       counts how many are held to pick the multiplier.
+        #   xp_trait_multiplier:[1.0,1.2,1.44,1.728,2.0736] — index = count held.
+        #   xp_trait_min_wl:    [0,10,20,30,40] — harness gate; the k-th trait only
+        #                       counts once WL-with-(k-1)-traits >= this[k].
+        # See difficulty_gates.py for the canonical formula + wl_test_vectors.json
+        # (the parity contract the mod's ported level_from_xp must reproduce).
+        from .difficulty_gates import (
+            GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH,
+            EFF_XP as _DG_EFF, DIFFICULTIES as _DG_DIFFS,
+            XP_TRAIT_ITEM_NAMES as _DG_XPT, XP_TRAIT_MULTIPLIER as _DG_XPM,
+            XP_TRAIT_MIN_WL as _DG_XPMINWL,
+        )
+        stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
+        # The starter GROUP — the start stage plus its immediately-playable
+        # tile mates (free_stages, tokens precollected) — is always
+        # reachable, so ship gate 0 for all of them. Without this a non-W
+        # starter tile (curve gates > 0) reads out-of-logic at WL 0 and no
+        # journey is available. The apworld's WL rule exempts the same set
+        # (see set_rules _wl_rule), so both sides agree.
+        for _fsid in free_stages:
+            stage_gates[_fsid] = 0
+        achievement_min_wl = {k: int(v) for k, v in _DG_ACH.items()}
+        _wl_diff_name = _DG_DIFFS[self.options.difficulty.value]
+        wl_eff_xp = {sid: int(x) for sid, x in _DG_EFF[_wl_diff_name].items()}
+        xp_trait_ap_ids = [item_table[n].id for n in _DG_XPT]
+        xp_trait_multiplier = list(_DG_XPM)
+        xp_trait_min_wl = list(_DG_XPMINWL)
 
         # Per-stage element/monster lists for the in-game field tooltip.
         # Derived from per-stage Count fields in rulesdata_levels.py.
@@ -1065,17 +1221,22 @@ class GemcraftFrostbornWrathWorld(World):
         _timing_log(f"p{self.player} fill_slot_data: {(_t.perf_counter()-_t0)*1000:.1f} ms")
         return {
             "goal":                  self.options.goal.value,
-            "starting_stage":        self.options.starting_stage.value,
+            "difficulty":            self.options.difficulty.value,
+            "stage_gates":           stage_gates,
+            "achievement_min_wl":    achievement_min_wl,
+            # Derived-WL inputs for the mod (mirror difficulty_gates.derived_wl).
+            "wl_eff_xp":             wl_eff_xp,
+            "xp_trait_ap_ids":       xp_trait_ap_ids,
+            "xp_trait_multiplier":   xp_trait_multiplier,
+            "xp_trait_min_wl":       xp_trait_min_wl,
+            "starting_stages":       sorted(self.start_sids),
             "field_token_placement": self.options.field_token_placement.value,
             "xp_tome_bonus":         self.options.xp_tome_bonus.value,
-            "skillpoint_multiplier": self.options.skillpoint_multiplier.value,
-            # Per-seed SP value granted by each Skillpoint Bundle tier, indexed
-            # by AP id offset from 1700: [Small, Medium, Large, Huge]. Computed
-            # in create_items so the four piles divide cleanly across the actual
-            # filler-slot count. The mod uses this for grant amounts and for
-            # the in-mod skillPoints:N achievement-gate counter.
-            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [0, 0, 0, 0])),
-            "sp_bundle_tier_names":  list(_SP_TIER_NAMES),
+            # Fixed SP value granted by each SP item, indexed by AP id offset
+            # from 1700: [Small, Medium, Big, Single]. Constant every seed
+            # (see items_skillpoints.SP_ITEMS). The mod uses this for grant
+            # amounts and for the in-mod skillPoints:N achievement-gate counter.
+            "sp_bundle_values":      list(getattr(self, "sp_bundle_values", [5, 25, 250, 1])),
             "tattered_scroll_levels": tattered_levels,
             "worn_tome_levels":       worn_levels,
             "ancient_grimoire_levels": ancient_levels,
@@ -1083,7 +1244,7 @@ class GemcraftFrostbornWrathWorld(World):
             "free_stages":           free_stages,
             # Per-stage logic (WIZLOCK skills, prereq Field tokens, talisman
             # row/column counts, skillPoints, etc.) lives in logic.json —
-            # generated by py-scripts/generate_logic_json.py and embedded in
+            # generated by py-scripts/generate_ap_data.py and embedded in
             # the mod SWF. slot_data only carries options and goal data now.
             "logic_rules_version":   2,
             "skill_categories":      SKILL_CATEGORIES,
@@ -1091,7 +1252,13 @@ class GemcraftFrostbornWrathWorld(World):
             "stage_monsters":        stage_monsters,
             "talisman_map":          talisman_map,
             "talisman_name_map":     talisman_name_map,
+            "talisman_charge_map":   talisman_charge_map,
             "wiz_stash_tal_data":    wiz_stash_tal_data,
+            # Progression talisman: the 25-fragment set the mod unlocks + slots
+            # at start. Each entry: {slot, seed, rarity, type, upgrade_level,
+            # tal_data:"seed/rarity/type/upgradeLevel"}. Deterministic per seed
+            # (built in generate_early). Mod feeds tal_data to TalismanFragment.
+            "progression_talisman_set": getattr(self, "talisman_set", []),
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
             "achievement_required_effort": self.options.achievement_required_effort.value,
@@ -1104,17 +1271,16 @@ class GemcraftFrostbornWrathWorld(World):
             # key unlocks every stash with that prefix). Each granularity has
             # a "_progressive" sibling: a single fungible item id is added N
             # times to the pool; the Nth received copy unlocks the Nth entry
-            # in PROGRESSIVE_TILE_ORDER (for per_tile / per_tier variants) or
-            # in the per-stage progressive order (tile playOrder x within-tile
+            # in PROGRESSIVE_TILE_ORDER (for per_tile variants) or in the
+            # per-stage progressive order (tile playOrder x within-tile
             # alphabetical).
             #   field_token_granularity: 0=per_stage, 1=per_stage_progressive,
-            #                            2=per_tile,  3=per_tile_progressive,
-            #                            4=per_tier,  5=per_tier_progressive
-            #   stash_key_granularity:   0=off, 1=per_stage, 2=per_stage_progressive,
-            #                            3=per_tile,  4=per_tile_progressive,
-            #                            5=per_tier,  6=per_tier_progressive, 7=global
+            #                            2=per_tile,  3=per_tile_progressive
+            #   stash_key_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
+            #                            5=global
+            #     (per_stage retired; encoding now mirrors gem_pouch_granularity)
             #   gem_pouch_granularity:   0=off, 1=per_tile, 2=per_tile_progressive,
-            #                            3=per_tier, 4=per_tier_progressive, 5=global
+            #                            5=global
             "field_token_granularity": self.options.field_token_granularity.value,
             "stash_key_granularity":   self.options.stash_key_granularity.value,
             "gem_pouch_granularity":   self.options.gem_pouch_granularity.value,
@@ -1136,34 +1302,26 @@ class GemcraftFrostbornWrathWorld(World):
             # 0 is always the starter's own group, so a single precollected
             # copy lands the player exactly on the starter and the first
             # *received* copy unlocks the next group in canonical order.
-            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sid),
-            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sid),
-            "progressive_tier_order":  _gating.progressive_tier_order_for_starter(self.start_sid),
+            "progressive_tile_order":  _gating.progressive_tile_order_for_starter(self.start_sids),
+            "progressive_stage_order": _gating.progressive_stage_order_for_starter(self.start_sids),
             # Singleton item ids for each progressive variant. The mod uses
             # these to recognize which apId is "the progressive item" for
             # a given category and granularity, then count-tracks via
             # AV.sessionData.getItemCount(apId).
             "gem_pouch_progressive_id":             item_table["Progressive Gempouch"].id,
-            "gem_pouch_per_tier_progressive_id":    item_table["Progressive Gempouch (per-tier)"].id,
             "field_token_per_stage_progressive_id": item_table["Progressive Field Token (per-stage)"].id,
             "field_token_per_tile_progressive_id":  item_table["Progressive Field Token (per-tile)"].id,
-            "field_token_per_tier_progressive_id":  item_table["Progressive Field Token (per-tier)"].id,
             "stash_key_per_stage_progressive_id":   item_table["Progressive Stash Stage Key"].id,
             "stash_key_per_tile_progressive_id":    item_table["Progressive Stash Tile Key"].id,
-            "stash_key_per_tier_progressive_id":    item_table["Progressive Stash Tier Key"].id,
-            # Per-stage tier assignments so the mod can resolve coarse
-            # tier-keyed items (e.g. "Tier 3 Field Token" → all tier-3 stages).
-            "stage_tier_by_str_id": {
-                s["str_id"]: STAGE_RULES[s["str_id"]].tier
-                for s in GAME_DATA["stages"]
-            },
+            # Mod-only QoL: extra shadow cores per wave reached. Pure pass-through
+            # to the client — no effect on items, locations, or logic.
+            "extra_shadow_cores_per_wave":  self.options.extra_shadow_cores_per_wave.value,
             "enemy_hp_multiplier":          self.options.enemy_hp_multiplier.value,
             "enemy_armor_multiplier":       self.options.enemy_armor_multiplier.value,
             "enemy_shield_multiplier":      self.options.enemy_shield_multiplier.value,
             "enemies_per_wave_multiplier":  self.options.enemies_per_wave_multiplier.value,
             "extra_wave_count":             self.options.extra_wave_count.value,
             "fields_required":              self.options.fields_required.value,
-            "fields_required_percentage":   self.options.fields_required_percentage.value,
             # Resolved absolute stage count for the active goal. Mod uses this
             # as the FieldCount/FieldPercentage threshold directly — no
             # client-side math, no risk of floor/ceil drift against rules.py.

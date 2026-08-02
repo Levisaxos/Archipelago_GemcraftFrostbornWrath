@@ -33,31 +33,21 @@ package goals {
 
         /**
          * Create the appropriate goal strategy from AP slot data.
-         * @param goalType                  0 = beat_game, 1 = full_talisman, 2 = kill_swarm_queen,
-         *                                  3 = fields_count, 4 = fields_percentage
-         * @param talismanMinRarity         Minimum fragment rarity for full_talisman goal.
-         * @param fieldsRequiredCount       Apworld-resolved absolute stage threshold for
-         *                                  fields_count / fields_percentage goals. Don't recompute.
-         * @param fieldsRequiredPercentage  Raw percentage option, display only (goal name).
+         * @param goalType             0 = beat_game (Gatekeeper), 1 = kill_swarm_queen,
+         *                             2 = fields_count
+         * @param fieldsRequiredCount  Apworld-resolved absolute stage threshold for
+         *                             the fields_count goal. Don't recompute.
          */
-        public function configure(goalType:int, talismanMinRarity:int,
-                                  fieldsRequiredCount:int = 0,
-                                  fieldsRequiredPercentage:int = 0):void {
+        public function configure(goalType:int, fieldsRequiredCount:int = 0):void {
             if (goalType == 1) {
-                _goal = new FullTalismanGoal(_logger, _modName, talismanMinRarity);
-            } else if (goalType == 2) {
                 _goal = new SwarmQueenGoal(_logger, _modName);
-            } else if (goalType == 3) {
+            } else if (goalType == 2) {
                 _goal = new FieldCountGoal(_logger, _modName, fieldsRequiredCount);
-            } else if (goalType == 4) {
-                _goal = new FieldPercentageGoal(_logger, _modName, fieldsRequiredCount, fieldsRequiredPercentage);
             } else {
                 _goal = new BeatGameGoal(_logger, _modName);
             }
             _logger.log(_modName, "GoalManager configured: goalType=" + goalType
-                + " talismanMinRarity=" + talismanMinRarity
                 + " fieldsRequiredCount=" + fieldsRequiredCount
-                + " fieldsRequiredPercentage=" + fieldsRequiredPercentage
                 + " → " + _goal.goalName);
         }
 

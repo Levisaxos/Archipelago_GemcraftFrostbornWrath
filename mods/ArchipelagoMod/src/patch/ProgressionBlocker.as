@@ -324,15 +324,13 @@ package patch {
          * Inject a Gempouch drop icon. Accepted apId ranges:
          *   626-651  per-tile distinct (Gempouch (X))
          *   652      per-tile progressive
-         *   1601-1613 per-tier (Tier N Gempouch)
          *   1614     master (Master Gempouch)
-         *   1615     per-tier progressive
          * Uses its own MOUSE_OVER tooltip handler.
          */
         public function addGempouchDropIcon(apId:int, ordinal:int = 0):void {
             var inDistinct:Boolean = (apId >= 626 && apId <= 652);
-            var inTier:Boolean     = (apId >= 1601 && apId <= 1615);
-            if (!inDistinct && !inTier) return;
+            var isMaster:Boolean   = (apId == 1614);
+            if (!inDistinct && !isMaster) return;
             _addDropIcon(new GempouchDropIcon(apId, ordinal),
                 "GEMPOUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
@@ -354,15 +352,14 @@ package patch {
         /**
          * Inject a coarse stash-key pouch drop icon. apId ranges:
          *   1522-1547  per-tile pouch
-         *   1548-1560  per-tier pouch
          *   1561       master pouch
          *   1620       per-tile progressive
-         *   1621       per-tier progressive
          */
         public function addKeyPouchDropIcon(apId:int, ordinal:int = 0):void {
-            var inFixed:Boolean = (apId >= 1522 && apId <= 1561);
-            var inProg:Boolean  = (apId == 1620 || apId == 1621);
-            if (!inFixed && !inProg) return;
+            var inTile:Boolean  = (apId >= 1522 && apId <= 1547);
+            var isMaster:Boolean = (apId == 1561);
+            var inProg:Boolean  = (apId == 1620);
+            if (!inTile && !isMaster && !inProg) return;
             _addDropIcon(new KeyPouchDropIcon(apId, ordinal),
                 "KEY_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
                 false /* useVanillaHover */);
@@ -371,13 +368,11 @@ package patch {
         /**
          * Inject a coarse field-token pouch drop icon. apId ranges:
          *   1562-1587  per-tile field tokens
-         *   1588-1600  per-tier field tokens
          *   1617       per-tile progressive
-         *   1618       per-tier progressive
          */
         public function addTilePouchDropIcon(apId:int, ordinal:int = 0):void {
-            var inFixed:Boolean = (apId >= 1562 && apId <= 1600);
-            var inProg:Boolean  = (apId == 1617 || apId == 1618);
+            var inFixed:Boolean = (apId >= 1562 && apId <= 1587);
+            var inProg:Boolean  = (apId == 1617);
             if (!inFixed && !inProg) return;
             _addDropIcon(new TilePouchDropIcon(apId, ordinal),
                 "TILE_POUCH apId=" + apId + (ordinal > 0 ? " ord=" + ordinal : ""),
@@ -409,14 +404,15 @@ package patch {
         }
 
         /**
-         * Inject a generic AP icon for an item this player sent out that belongs
-         * to ANOTHER game (apId outside any of our handled ranges). Tooltip
-         * reads "Sent <itemName> to <recipientName>".
+         * Inject an AP icon for an item this player sent out that belongs to
+         * ANOTHER game (apId outside any of our handled ranges). The icon
+         * reflects the item's Archipelago classification (progression / useful /
+         * filler) via flags. Tooltip reads "Sent <itemName> to <recipientName>".
          */
-        public function addRemoteItemDropIcon(itemName:String, recipientName:String):void {
+        public function addRemoteItemDropIcon(itemName:String, recipientName:String, flags:int):void {
             if (itemName == null) itemName = "Unknown item";
             if (recipientName == null) recipientName = "another player";
-            _addDropIcon(new RemoteItemDropIcon(itemName, recipientName),
+            _addDropIcon(new RemoteItemDropIcon(itemName, recipientName, flags),
                 "REMOTE_ITEM '" + itemName + "' → " + recipientName,
                 false /* useVanillaHover */);
         }
@@ -555,7 +551,11 @@ package patch {
                 }
                 if (skillReverted) removePlusNodeFromSelector("mcPlusNodeSkills");
 
-                // --- Block shadow cores and talisman fragments from wizard stashes ---
+                // --- Block shadow cores from wizard stashes ---
+                // Talisman fragments are NO LONGER blocked: only the 25 AP
+                // "perfect placement" fragments are AP items (bought in the AP
+                // Shop); every other talisman fragment — including wizard-stash
+                // TAL drops — is collected through normal gameplay now.
                 if (GV.ppd != null && GV.stageCollection != null && _wizStashTalData != null) {
                     var metas:Array = GV.stageCollection.stageMetas;
                     for (var m:int = 0; m < metas.length; m++) {
@@ -586,26 +586,12 @@ package patch {
                                 }
                             }
 
-                            if (drop == "TAL") {
-                                var talData:* = _wizStashTalData[strId];
-                                if (talData != null) {
-                                    var talParts:Array = String(talData).split("/");
-                                    if (talParts.length >= 1) {
-                                        var seed:int = int(talParts[0]);
-                                        if (removeTalismanBySeed(seed)) {
-                                            reverted++;
-                                            stashReverted++;
-                                            _logger.log(_modName, "Blocked stash TAL grant stage=" + strId
-                                                + " seed=" + seed);
-                                        }
-                                    }
-                                }
-                            }
+                            // TAL drops intentionally left alone — stash
+                            // talisman fragments are normal gameplay loot now.
                         }
 
                         if (stashReverted > 0) {
                             _stashBlockedIds[stageId] = true;
-                            removePlusNodeFromSelector("mcPlusNodeTalisman");
                         }
                     }
                 }
