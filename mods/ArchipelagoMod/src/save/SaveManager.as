@@ -16,8 +16,9 @@ package save {
      *
      * Slot file fields: host, port, slot, password, bonusWizardLevel,
      *                   totalShadowCoresGranted, genericTalismansGranted,
-     *                   completed, deathLinkEnabled, standalone,
-     *                   seenOfflineApIds, sessionState.
+     *                   completed, deathLinkEnabled, deathLinksSent,
+     *                   deathLinksReceived, standalone, seenOfflineApIds,
+     *                   sessionState.
      *
      * sessionState is a snapshot of AV.sessionData (collected items, tokens,
      * stash unlocks). Persisted so map tooltips and tile coloring remain
@@ -40,6 +41,11 @@ package save {
         private var _slotCompleted:Boolean = false;
         private var _deathLinkEnabled:Boolean    = false;
         private var _deathLinkEnabledSet:Boolean = false; // false = no saved value yet (new slot)
+        private var _deathLinksSent:int          = 0;     // DeathLinks we sent out (actual deaths bounced)
+        private var _deathLinksReceived:int      = 0;     // DeathLinks received from other players
+        // Per-stage AP play stats for the Stats tab grid.
+        // strId -> { attempts:int, wins:int, losses:int, achievements:int } (Journey battles).
+        private var _stageStats:Object           = {};
         private var _standalone:Boolean    = false;
         private var _standaloneSet:Boolean = false;       // false = no saved value yet (new slot)
         private var _seenOfflineApIds:Array = [];         // apIds the player has seen via the offline-items grid
@@ -68,6 +74,38 @@ package save {
         public function set deathLinkEnabled(v:Boolean):void  { _deathLinkEnabled = v; _deathLinkEnabledSet = true; }
         /** False if the slot file had no saved deathlink preference (new slot). */
         public function get deathLinkEnabledSet():Boolean { return _deathLinkEnabledSet; }
+        /** Count of DeathLinks we've sent out. */
+        public function get deathLinksSent():int { return _deathLinksSent; }
+        /** Count of DeathLinks received from other players. */
+        public function get deathLinksReceived():int { return _deathLinksReceived; }
+        /** Tally one DeathLink we sent and persist immediately. */
+        public function incrementDeathLinksSent():void {
+            _deathLinksSent++;
+            saveSlotData();
+        }
+        /** Tally one DeathLink we received and persist immediately. */
+        public function incrementDeathLinksReceived():void {
+            _deathLinksReceived++;
+            saveSlotData();
+        }
+
+        /** Per-stage AP play stats (strId -> {attempts,wins,losses,achievements}). Read-only view. */
+        public function get stageStats():Object { return _stageStats; }
+
+        /** Get (creating if absent) the mutable stat record for a stage. */
+        private function _stageEntry(strId:String):Object {
+            var e:Object = _stageStats[strId];
+            if (e == null) {
+                e = { attempts: 0, wins: 0, losses: 0, achievements: 0 };
+                _stageStats[strId] = e;
+            }
+            return e;
+        }
+
+        public function recordStageAttempt(strId:String):void     { _stageEntry(strId).attempts++;     saveSlotData(); }
+        public function recordStageWin(strId:String):void         { _stageEntry(strId).wins++;         saveSlotData(); }
+        public function recordStageLoss(strId:String):void        { _stageEntry(strId).losses++;       saveSlotData(); }
+        public function recordStageAchievement(strId:String):void { _stageEntry(strId).achievements++; saveSlotData(); }
         public function get standalone():Boolean        { return _standalone; }
         public function set standalone(v:Boolean):void  { _standalone = v; _standaloneSet = true; }
         /** False if the slot file had no saved standalone flag (new slot). */
@@ -91,6 +129,9 @@ package save {
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
+            _deathLinksSent      = 0;
+            _deathLinksReceived  = 0;
+            _stageStats          = {};
             _standalone          = false;
             _standaloneSet       = false;
             _seenOfflineApIds    = [];
@@ -113,6 +154,21 @@ package save {
                 if (slotData.deathLinkEnabled !== undefined) {
                     _deathLinkEnabled    = slotData.deathLinkEnabled === true;
                     _deathLinkEnabledSet = true;
+                }
+                if (slotData.deathLinksSent     !== undefined) _deathLinksSent     = int(slotData.deathLinksSent);
+                if (slotData.deathLinksReceived !== undefined) _deathLinksReceived = int(slotData.deathLinksReceived);
+                if (slotData.stageStats !== undefined && slotData.stageStats != null) {
+                    _stageStats = {};
+                    for (var sStrId:String in slotData.stageStats) {
+                        var raw:Object = slotData.stageStats[sStrId];
+                        if (raw == null) continue;
+                        _stageStats[sStrId] = {
+                            attempts:     int(raw.attempts),
+                            wins:         int(raw.wins),
+                            losses:       int(raw.losses),
+                            achievements: int(raw.achievements)
+                        };
+                    }
                 }
                 if (slotData.standalone !== undefined) {
                     _standalone    = slotData.standalone === true;
@@ -162,7 +218,10 @@ package save {
                 totalShadowCoresGranted: _shadowCoreUnlocker != null ? _shadowCoreUnlocker.totalGranted : 0,
                 grantedTalismanApIds: grantedTalIds,
                 completed:        _slotCompleted,
-                deathLinkEnabled: _deathLinkEnabled,
+                deathLinkEnabled:   _deathLinkEnabled,
+                deathLinksSent:     _deathLinksSent,
+                deathLinksReceived: _deathLinksReceived,
+                stageStats:         _stageStats,
                 standalone:       _standalone,
                 seenOfflineApIds: _seenOfflineApIds,
                 sessionState:     sessionState
@@ -200,6 +259,9 @@ package save {
             _slotCompleted       = false;
             _deathLinkEnabled    = false;
             _deathLinkEnabledSet = false;
+            _deathLinksSent      = 0;
+            _deathLinksReceived  = 0;
+            _stageStats          = {};
             _standalone          = false;
             _standaloneSet       = false;
             _seenOfflineApIds    = [];

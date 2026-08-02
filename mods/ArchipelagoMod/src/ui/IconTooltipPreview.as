@@ -157,6 +157,20 @@ package ui {
             var onMap:Boolean = (ss == SelectorScreenStatus.STAGES_IDLE
                     || ss == SelectorScreenStatus.UPDATING_STAGES);
 
+            // Off the world map (settings / achievements / skills / talisman
+            // sub-screens) fully release and bail BEFORE any hover hit-test or
+            // suppression. Those panels sit over the map yet reuse
+            // GV.mcInfoPanel for their OWN hover tooltips — hit-testing the
+            // field tokens behind them (and then suppressVanilla()) hid the
+            // panel's tooltips (e.g. achievements became un-hoverable) and lit
+            // a field behind the panel. hide() restores the vanilla panel and
+            // drops our own; it's idempotent, so it only touches mcInfoPanel on
+            // the first off-map frame.
+            if (!onMap) {
+                hide();
+                return;
+            }
+
             // What the cursor is over (panel checked first so a token sitting
             // behind it doesn't steal focus). Both are cheap geometry hit-tests,
             // valid in any selector state.
@@ -169,11 +183,10 @@ package ui {
             // MOUSE_OVER listener because that render also sets
             // hasMetReqsToEnterField (the click-to-enter gate in
             // SelectorInputHandler.ehStageIconClicked), so instead we force
-            // GV.mcInfoPanel hidden every frame the cursor is over a field token
-            // or our panel, in ANY selector state (so a field hovered mid-
-            // transition can't flash it either). When over neither, release it
-            // so the other tooltips sharing mcInfoPanel (shadow-core counter,
-            // skills, talismans) can still show.
+            // GV.mcInfoPanel hidden every map frame the cursor is over a field
+            // token or our panel. When over neither, release it so the other
+            // tooltips sharing mcInfoPanel (shadow-core counter, skills,
+            // talismans) can still show.
             if (overField || overPanel) {
                 suppressVanilla();
             } else if (_suppressed) {
@@ -181,8 +194,9 @@ package ui {
                 _suppressed = false;
             }
 
-            // Our replacement panel only builds on the map, over a field/panel.
-            if (!onMap || !overField) {
+            // Our replacement panel only builds over a field/panel (we've
+            // already returned above for every off-map state).
+            if (!overField) {
                 hidePanelOnly();
                 return;
             }
@@ -322,6 +336,10 @@ package ui {
         private function findHoveredToken(mc:*):* {
             var cnt:* = mc.cntFieldTokens;
             if (cnt == null) return null;
+            // A button drawn over a field token wins the hover — don't pop the
+            // field tooltip behind it. (The bounds test below ignores z-order,
+            // so without this a button covering a token would still trigger.)
+            if (SelectorHitTest.isOverSelectorButton(mc)) return null;
             try {
                 var mx:Number = cnt.mouseX;
                 var my:Number = cnt.mouseY;

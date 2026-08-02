@@ -12,6 +12,7 @@ package patch {
     import data.AV;
     import net.ConnectionManager;
     import tracker.FieldLogicEvaluator;
+    import ui.SelectorHitTest;
 
     /**
      * Appends Archipelago check-status lines into the game's field hover tooltip
@@ -360,6 +361,9 @@ package patch {
         private function _findHoveredToken(mc:*):* {
             var cnt:* = mc.cntFieldTokens;
             if (cnt == null) return null;
+            // Defer to buttons drawn over field tokens (the bounds test ignores
+            // z-order) so we never append AP lines onto a button's tooltip.
+            if (SelectorHitTest.isOverSelectorButton(mc)) return null;
             try {
                 var mx:Number = cnt.mouseX;
                 var my:Number = cnt.mouseY;

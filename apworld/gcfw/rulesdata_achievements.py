@@ -347,7 +347,7 @@ achievement_requirements = {
         "game_id": 67,
         "description": "Build 15 towers.",
         "details": "Build 15 towers in one battle.",
-        "requirements": ["eTower"],
+        "requirements": ["eTower", "min_wl:20"],
         "required_effort": "Minor",
     },
     "Fortress": {
@@ -550,9 +550,9 @@ achievement_requirements = {
         "game_id": 292,
         "description": "Cast 25 strike spells.",
         "requirements": [
-            ["strikeSpells:1", "minWave:30"],
-            ["strikeSpells:2", "minWave:20"],
-            ["strikeSpells:3", "minWave:10"],
+            ["strikeSpells:1", "minWave:50"],
+            ["strikeSpells:2", "minWave:35"],
+            ["strikeSpells:3", "minWave:20"],
         ],
         "required_effort": "Minor",
     },
@@ -1260,7 +1260,7 @@ achievement_requirements = {
         "ap_id": 2105,
         "game_id": 347,
         "description": "Find 60 shadow cores.",
-        "requirements": ["minWave:48"],
+        "requirements": ["min_wl:30"],
         "required_effort": "Trivial",
     },
     "Core Haul": {
@@ -1268,22 +1268,22 @@ achievement_requirements = {
         "game_id": 348,
         "description": "Find 180 shadow cores.",
         "details": "Find 180 shadow cores in one battle.",
-        "requirements": ["minWave:80"],
+        "requirements": ["min_wl:75"],
         "required_effort": "Minor",
     },
     "Fortunate": {
         "ap_id": 2191,
         "game_id": 365,
         "description": "Find 2 talisman fragments.",
-        "requirements": ["minWave:30"],
+        "requirements": ["min_wl:30"],
         "required_effort": "Minor",
     },
     "Ground Luck": {
         "ap_id": 2226,
         "game_id": 366,
         "description": "Find 3 talisman fragments.",
-        "requirements": ["minWave:100"],
-        "required_effort": "Minor",
+        "requirements": ["min_wl:75"],
+        "required_effort": "Major",
     },
     "Broken Seal": {
         "ap_id": 2067,
@@ -1573,7 +1573,7 @@ achievement_requirements = {
         "game_id": 53,
         "description": "Have a grade 1 gem with 1.500 hits.",
         "details": "Reach 1,500 hits on a grade-1 gem.",
-        "requirements": ["sBeam", "minWave:20"],
+        "requirements": ["sBeam"],
         "required_effort": "Minor",
     },
     "Time to Upgrade": {
@@ -1581,7 +1581,7 @@ achievement_requirements = {
         "game_id": 57,
         "description": "Have a grade 1 gem with 4.500 hits.",
         "details": "Reach 4,500 hits on a grade-1 gem.",
-        "requirements": ["sBeam", "minWave:35"],
+        "requirements": ["sBeam", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Warming Up": {
@@ -1763,7 +1763,7 @@ achievement_requirements = {
         "ap_id": 2476,
         "game_id": 426,
         "description": "Have 8 barrage enhanced gems at the same time.",
-        "requirements": ["sBarrage", "minWave:45"],
+        "requirements": ["sBarrage", "min_wl:40"],
         "required_effort": "Major",
     },
     "Firefall": {
@@ -1771,7 +1771,7 @@ achievement_requirements = {
         "game_id": 427,
         "description": "Have 16 barrage enhanced gems at the same time.",
         "details": "Have 16 barrage-enhanced gems active at once.",
-        "requirements": ["sBarrage", "minWave:60"],
+        "requirements": ["sBarrage", "min_wl:60"],
         "required_effort": "Extreme",
     },
     "Heavy Support": {
@@ -1801,7 +1801,7 @@ achievement_requirements = {
         "ap_id": 2302,
         "game_id": 296,
         "description": "Have 8 beam enhanced gems at the same time.",
-        "requirements": ["sBeam", "minWave:40"],
+        "requirements": ["sBeam", "min_wl:40"],
         "required_effort": "Major",
     },
     "Fusion Core": {
@@ -1809,7 +1809,7 @@ achievement_requirements = {
         "game_id": 297,
         "description": "Have 16 beam enhanced gems at the same time.",
         "details": "Have 16 beam-enhanced gems active at once.",
-        "requirements": ["sBeam", "minWave:60"],
+        "requirements": ["sBeam", "min_wl:60"],
         "required_effort": "Extreme",
     },
     "Double Punch": {
@@ -1830,7 +1830,7 @@ achievement_requirements = {
         "ap_id": 2267,
         "game_id": 339,
         "description": "Have 8 bolt enhanced gems at the same time.",
-        "requirements": ["sBolt", "minWave:40"],
+        "requirements": ["sBolt", "min_wl:40"],
         "required_effort": "Major",
     },
     "Rugged Defense": {
@@ -1838,7 +1838,7 @@ achievement_requirements = {
         "game_id": 340,
         "description": "Have 16 bolt enhanced gems at the same time.",
         "details": "Have 16 bolt-enhanced gems active at once.",
-        "requirements": ["sBolt", "minWave:60"],
+        "requirements": ["sBolt", "min_wl:60"],
         "required_effort": "Extreme",
     },
     "A Bright Start": {

@@ -10,6 +10,7 @@ package {
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
+    import com.giab.games.gcfw.constants.BattleMode;
     import com.giab.games.gcfw.constants.IngameStatus;
     import com.giab.games.gcfw.constants.ScreenId;
     import com.giab.games.gcfw.entity.TalismanFragment;
@@ -75,6 +76,7 @@ package {
     import patch.OrbIntactWaveFix;
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
+    import patch.ApStatsTab;
     import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
     import patch.SkillsTooltipOverlay;
@@ -188,6 +190,12 @@ package {
         private var _logicHelper:LogicHelper;
         private var _stageTinter:StageTinter;
         private var _achPanelPatcher:AchievementPanelPatcher;
+        private var _apStatsTab:ApStatsTab;
+        // Master switch for the injected "Archipelago" Stats tab. Off for now —
+        // the tab is incomplete, so it's hidden in-game while the tracking code
+        // (SaveManager stats, attempt/outcome recording) keeps running underneath.
+        // Flip to true to re-enable the UI once it's finished.
+        private static const SHOW_AP_STATS_TAB:Boolean = false;
         private var _fieldTooltipOverlay:FieldTooltipOverlay;
         private var _iconTooltipPreview:IconTooltipPreview;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
@@ -202,6 +210,13 @@ package {
         // initializer.setScene1 without changing currentScreen, so the
         // screen-transition cleanup never fires). -1 = not initialized / not in INGAME.
         private var _lastIngameStatus:int      = -1;
+        // Per-level AP stats tracking (Journey battles only). _attemptCounted
+        // latches one attempt per battle instance; _currentBattleStrId is the
+        // stage of the in-progress Journey battle (set once waves start), used to
+        // attribute the win/loss and any achievements earned. Both reset on every
+        // stage init (fresh entry or in-place retry) and on leaving INGAME.
+        private var _attemptCounted:Boolean    = false;
+        private var _currentBattleStrId:String = null;
         private var _mapTilesUnlocked:Boolean  = false;
         // Standalone gate — true once the player has confirmed (or implicitly chosen)
         // standalone play for the current slot. Standalone slots leave _active=false
@@ -375,9 +390,15 @@ package {
                 _achPanelPatcher = new AchievementPanelPatcher(_logger, MOD_NAME);
                 _achPanelPatcher.setAchievementLogicEvaluator(_achievementLogicEvaluator);
 
-                // When an achievement check is sent, immediately refresh the panel so the
+                // "Archipelago" tab on the vanilla Stats panel. Content comes from
+                // _buildApStatsData so the tab is a generic AP-stats surface.
+                _apStatsTab = new ApStatsTab(_logger, MOD_NAME);
+                _apStatsTab.dataProvider = _buildApStatsData;
+
+                // When an achievement check is sent, credit it to the current
+                // battle's stage (Stats tab) and refresh the panel so the
                 // achievement leaves "In Logic" without waiting for the next item grant.
-                _achievementUnlocker.onChecked = _refreshAchievementPanel;
+                _achievementUnlocker.onChecked = _onAchievementChecked;
                 // Excluded-from-AP achievements still earn vanilla SP — record
                 // their gameIds so the level-end drop screen renders an icon.
                 _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
@@ -625,6 +646,9 @@ package {
             // pnlAchievements is persistent, so it would otherwise leak into a
             // standalone save's achievements screen.
             if (_achPanelPatcher != null) _achPanelPatcher.unpatch();
+            // Remove the injected "Archipelago" Stats tab. pnlStats is persistent,
+            // so it would otherwise leak into a standalone save's stats screen.
+            if (_apStatsTab != null) _apStatsTab.unpatch();
             // Put vanilla per-achievement skill-point values back (AP mode
             // normalized every achievement to 1 SP). GV.achiCollection is
             // global/per-process, so a standalone slot loaded next would keep
@@ -1127,6 +1151,13 @@ package {
                         && !_isGameOverPanelStatus(_lastIngameStatus)
                         && _isGameOverPanelStatus(status)) {
                     _connectionManager.checkCompletedLocations();
+                    // Record the Journey battle outcome for the Stats tab. Fires
+                    // once per outcome (edge-guarded). _currentBattleStrId is only
+                    // set for a Journey battle whose waves started.
+                    if (_active && _currentBattleStrId != null && _saveManager != null) {
+                        if (_battleWasWon()) _saveManager.recordStageWin(_currentBattleStrId);
+                        else                 _saveManager.recordStageLoss(_currentBattleStrId);
+                    }
                 }
                 _lastIngameStatus = status;
             } else {
@@ -1151,6 +1182,8 @@ package {
             if (screen == ScreenId.INGAME) {
                 _deathLinkHandler.checkForDeath();
                 _deathLinkHandler.checkQueue();
+                // AP stats: tally one attempt per Journey battle instance.
+                if (_active && !_attemptCounted) _tryRecordAttempt();
             }
 
             // Inject skill gems for first-play stages (every frame until done once).
@@ -1278,6 +1311,14 @@ package {
                         _achPanelPatcher.patchResetButton(GV.selectorCore.pnlAchievements);
                         _achPanelPatcher.onSelectorFrame(GV.selectorCore.pnlAchievements);
                     }
+                }
+
+                // "Archipelago" tab on the Stats panel — AP-only (never touches a
+                // standalone save's stats screen). Idempotent inject + selection sync.
+                // Gated off while the tab is incomplete (see SHOW_AP_STATS_TAB).
+                if (SHOW_AP_STATS_TAB && _active && _apStatsTab != null
+                        && GV.selectorCore != null && GV.selectorCore.pnlStats != null) {
+                    _apStatsTab.onSelectorFrame(GV.selectorCore.pnlStats);
                 }
             } catch (e:Error) {
                 _logger.log(MOD_NAME, "selectorFrame error: " + e.message);
@@ -1716,6 +1757,10 @@ package {
          * the outcome panel's Retry button.
          */
         private function _initForNewStage():void {
+            // New battle instance (fresh entry or in-place retry): re-arm the
+            // attempt latch and drop the prior battle's stage attribution.
+            _attemptCounted     = false;
+            _currentBattleStrId = null;
             skipAllTutorials();
             _deathLinkHandler.resetForNewStage();
             _wavePrePatcher.resetForNewStage();
@@ -1741,6 +1786,10 @@ package {
             _gemPouchSuppressor.resetIngame();
             _hollowGemInjector.resetIngame();
             _startingGemSuppressor.resetForNewStage();
+            // Left the battle — drop stage attribution so post-battle achievement
+            // checks aren't miscredited to it.
+            _attemptCounted     = false;
+            _currentBattleStrId = null;
             _logger.log(MOD_NAME, reason);
             _logger.log(MOD_NAME, "=== AP items received this level: " + _sessionDrops.length + " ===");
             for (var sd:int = 0; sd < _sessionDrops.length; sd++) {
@@ -1789,6 +1838,18 @@ package {
         private function _onExcludedAchievementUnlocked(gameId:int, skipReason:String):void {
             if (gameId < 0) return;
             _sessionExcludedAchievementGameIds.push(gameId);
+            // Excluded achievements still earn (vanilla SP) when you beat a level —
+            // count them in the Stats tab's per-level "Achis" column too.
+            _creditBattleAchievement();
+        }
+
+        /**
+         * Achievement-checked hook: credit it to the current battle's stage for
+         * the Stats tab, then run the panel refresh.
+         */
+        private function _onAchievementChecked():void {
+            _creditBattleAchievement();
+            _refreshAchievementPanel();
         }
 
         /**
@@ -3360,6 +3421,137 @@ package {
 
         private function onPlayerDied():void {
             _connectionManager.sendDeathLink(_connectionManager.apSlot);
+            // Tally the outgoing DeathLink for the Stats tab (only fires when
+            // DeathLink is on and a real death was bounced).
+            if (_active && _saveManager != null) _saveManager.incrementDeathLinksSent();
+        }
+
+        /**
+         * Tally one attempt for the current Journey battle, once its waves have
+         * started (robust against pause/unpause, unlike a PLAYING-status edge).
+         * Latches _attemptCounted so it fires exactly once per battle instance
+         * (re-armed by _initForNewStage on entry and in-place retry). Records the
+         * stage in _currentBattleStrId so the outcome + achievements attribute to
+         * it. Non-Journey battles latch without recording.
+         */
+        private function _tryRecordAttempt():void {
+            try {
+                if (GV.ingameCore == null || GV.ingameController == null
+                        || GV.ingameController.core == null) return;
+                var core:* = GV.ingameController.core;
+                // Wait until the battle has actually begun (wave 0 active); only
+                // then is battleMode reliably set.
+                if (core.currentWave == null || core.currentWave.g() < 0) return;
+                if (int(GV.ingameCore.battleMode) != BattleMode.JOURNEY) {
+                    _attemptCounted = true; // don't re-check this battle
+                    return;
+                }
+                var strId:String = (GV.ingameCore.stageMeta != null)
+                    ? String(GV.ingameCore.stageMeta.strId) : null;
+                if (strId == null) return;
+                _currentBattleStrId = strId;
+                _attemptCounted     = true;
+                if (_saveManager != null) _saveManager.recordStageAttempt(strId);
+            } catch (e:Error) {
+                _logger.log(MOD_NAME, "_tryRecordAttempt error: " + e.message);
+                _attemptCounted = true; // avoid spamming on a broken frame
+            }
+        }
+
+        /** True if the current battle ended in victory (for win/loss tallying). */
+        private function _battleWasWon():Boolean {
+            try {
+                if (GV.ingameController != null && GV.ingameController.core != null
+                        && GV.ingameController.core.ending != null) {
+                    return GV.ingameController.core.ending.isBattleWon == true;
+                }
+            } catch (e:Error) {}
+            return false;
+        }
+
+        /**
+         * Credit one achievement to the current Journey battle's stage, for the
+         * Stats tab "Achis" column. Called from the achievement-checked and
+         * -skipped hooks (both fire once per achievement earned). No-op outside a
+         * tracked battle (e.g. connect-time reconcile).
+         */
+        private function _creditBattleAchievement():void {
+            if (!_active || _currentBattleStrId == null || _saveManager == null) return;
+            _saveManager.recordStageAchievement(_currentBattleStrId);
+        }
+
+        /**
+         * Content for the "Archipelago" tab on the Stats panel. Returns
+         *   { summary: [ {name,value,...} ], grid: { columns:[...], rows:[[...]] } }.
+         * Extend either section to add more AP stats — the tab renders whatever
+         * this returns.
+         *
+         * The per-level grid lists only "engaged" stages (attempted, cleared, or
+         * with achievements), mirroring how vanilla only lists stages with XP.
+         * Attempts/Wins/Losses/Achievements come from SaveManager's per-stage
+         * tracking (Journey battles); Checks are derived live from game state
+         * (journey cleared + wizard-stash opened).
+         */
+        private function _buildApStatsData():Object {
+            var summary:Array = [];
+            var dlOn:Boolean = (_saveManager != null && _saveManager.deathLinkEnabled);
+            if (dlOn) {
+                summary.push({ name: "DeathLinks sent",     value: String(_saveManager.deathLinksSent) });
+                summary.push({ name: "DeathLinks received", value: String(_saveManager.deathLinksReceived) });
+            } else {
+                summary.push({ name: "DeathLink", value: "Turned off", valueColor: 0x999999 });
+            }
+
+            // Two-column McStatStrip layout so it renders in the native font like
+            // the other tabs: level + compact A/W/L in the wide LEFT field (the
+            // one vanilla proves holds long strings), achievements-collected count
+            // as the right value.
+            var columns:Array = ["Level      Attempts/Wins/Losses", "Achievements Collected"];
+            var gridRows:Array = [];
+            try {
+                var stats:Object = (_saveManager != null) ? _saveManager.stageStats : {};
+                var metas:Array = (GV.stageCollection != null) ? GV.stageCollection.stageMetas : null;
+                if (metas != null && GV.ppd != null) {
+                    for (var i:int = 0; i < metas.length; i++) {
+                        var meta:* = metas[i];
+                        if (meta == null) continue;
+                        var strId:String = String(meta.strId);
+                        var id:int = int(meta.id);
+
+                        var st:Object = stats[strId];
+                        var attempts:int = (st != null) ? int(st.attempts)     : 0;
+                        var wins:int     = (st != null) ? int(st.wins)         : 0;
+                        var losses:int   = (st != null) ? int(st.losses)       : 0;
+                        var achis:int    = (st != null) ? int(st.achievements) : 0;
+
+                        // "Engaged" = the stage has been touched: cleared its
+                        // journey check or opened its stash (live game state), or we
+                        // have session data for it. Keeps previously-cleared stages
+                        // in the list even before they gain attempt data.
+                        var journeyDone:Boolean = (GV.ppd.stageHighestXpsJourney != null)
+                            && (id < GV.ppd.stageHighestXpsJourney.length)
+                            && GV.ppd.stageHighestXpsJourney[id].g() > 0;
+                        var stashExists:Boolean = (GV.wizStashesInModes != null)
+                            && (id < GV.wizStashesInModes.length)
+                            && (int(GV.wizStashesInModes[id]) != -1);
+                        var stashDone:Boolean = stashExists
+                            && (GV.ppd.stageWizStashStauses != null)
+                            && (id < GV.ppd.stageWizStashStauses.length)
+                            && (int(GV.ppd.stageWizStashStauses[id]) != 0); // OPEN or DESTROYED
+                        var hasChecks:Boolean = journeyDone || stashDone;
+
+                        if (attempts <= 0 && !hasChecks && achis <= 0) continue; // engaged only
+
+                        // e.g. "W1: 3A/2W/1L"  →  achievements count in the right column.
+                        var left:String = strId + ": " + attempts + "A/" + wins + "W/" + losses + "L";
+                        gridRows.push([ left, String(achis) ]);
+                    }
+                }
+            } catch (eGrid:Error) {
+                _logger.log(MOD_NAME, "_buildApStatsData grid error: " + eGrid.message);
+            }
+
+            return { summary: summary, grid: { columns: columns, rows: gridRows } };
         }
 
         private function onPunishmentReceived(source:String):void {
@@ -3380,6 +3572,9 @@ package {
 
         private function onDeathLinkReceived(source:String):void {
             _deathLinkHandler.queuePunishment(source);
+            // Tally the incoming DeathLink for the Stats tab. handleBounced already
+            // drops our own echo, so this only counts DeathLinks from other players.
+            if (_active && _saveManager != null) _saveManager.incrementDeathLinksReceived();
         }
 
         /**

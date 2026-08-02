@@ -426,7 +426,8 @@
       "description": "Build 15 towers.",
       "required_effort": "Minor",
       "requirements": [
-        "eTower"
+        "eTower",
+        "min_wl:20"
       ],
       "details": "Build 15 towers in one battle."
     },
@@ -692,15 +693,15 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "minWave:30"
+          "minWave:50"
         ],
         [
           "strikeSpells:2",
-          "minWave:20"
+          "minWave:35"
         ],
         [
           "strikeSpells:3",
-          "minWave:10"
+          "minWave:20"
         ]
       ]
     },
@@ -1629,7 +1630,7 @@
       "description": "Find 60 shadow cores.",
       "required_effort": "Trivial",
       "requirements": [
-        "minWave:48"
+        "min_wl:30"
       ]
     },
     "Core Haul": {
@@ -1638,7 +1639,7 @@
       "description": "Find 180 shadow cores.",
       "required_effort": "Minor",
       "requirements": [
-        "minWave:80"
+        "min_wl:75"
       ],
       "details": "Find 180 shadow cores in one battle."
     },
@@ -1648,16 +1649,16 @@
       "description": "Find 2 talisman fragments.",
       "required_effort": "Minor",
       "requirements": [
-        "minWave:30"
+        "min_wl:30"
       ]
     },
     "Ground Luck": {
       "apId": 2226,
       "game_id": 366,
       "description": "Find 3 talisman fragments.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
-        "minWave:100"
+        "min_wl:75"
       ]
     },
     "Broken Seal": {
@@ -2043,8 +2044,7 @@
       "description": "Have a grade 1 gem with 1.500 hits.",
       "required_effort": "Minor",
       "requirements": [
-        "sBeam",
-        "minWave:20"
+        "sBeam"
       ],
       "details": "Reach 1,500 hits on a grade-1 gem."
     },
@@ -2055,7 +2055,7 @@
       "required_effort": "Minor",
       "requirements": [
         "sBeam",
-        "minWave:35"
+        "min_wl:30"
       ],
       "details": "Reach 4,500 hits on a grade-1 gem."
     },
@@ -2303,7 +2303,7 @@
       "required_effort": "Major",
       "requirements": [
         "sBarrage",
-        "minWave:45"
+        "min_wl:40"
       ]
     },
     "Firefall": {
@@ -2313,7 +2313,7 @@
       "required_effort": "Extreme",
       "requirements": [
         "sBarrage",
-        "minWave:60"
+        "min_wl:60"
       ],
       "details": "Have 16 barrage-enhanced gems active at once."
     },
@@ -2353,7 +2353,7 @@
       "required_effort": "Major",
       "requirements": [
         "sBeam",
-        "minWave:40"
+        "min_wl:40"
       ]
     },
     "Fusion Core": {
@@ -2363,7 +2363,7 @@
       "required_effort": "Extreme",
       "requirements": [
         "sBeam",
-        "minWave:60"
+        "min_wl:60"
       ],
       "details": "Have 16 beam-enhanced gems active at once."
     },
@@ -2392,7 +2392,7 @@
       "required_effort": "Major",
       "requirements": [
         "sBolt",
-        "minWave:40"
+        "min_wl:40"
       ]
     },
     "Rugged Defense": {
@@ -2402,7 +2402,7 @@
       "required_effort": "Extreme",
       "requirements": [
         "sBolt",
-        "minWave:60"
+        "min_wl:60"
       ],
       "details": "Have 16 bolt-enhanced gems active at once."
     },
