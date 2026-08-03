@@ -27,9 +27,9 @@ Its progression is well-suited to randomization: unlocks are plentiful, stages g
 
 ---
 
-## Pre-Alpha Testing
+## Alpha Testing
 
-> **Note:** This is an early pre-alpha. Expect rough edges. Feedback is very welcome.
+> **Note:** This is an alpha. The mod is fully playable, but expect logic bugs here and there. Feedback is very welcome.
 
 ### Requirements
 
@@ -213,19 +213,19 @@ Please include this file when reporting issues.
 | Wizard Stash clear | 122 | Defeat the Wizard Stash on any stage |
 | Achievements | 0 to ~570 | Optional, scaled by `achievement_required_effort` (see options) |
 
-That's **244 base locations**, plus however many achievements you enable — from none up to ~570 with all effort tiers on.
+That's **244 base locations**, plus however many achievements you enable — from none up to ~570 with the highest effort level on.
 
 ### Items
 
 | Item | Count | Notes |
 |---|---|---|
-| Field tokens | variable | Unlock stages across the world map. Granularity is configurable — per-stage (122), per-tile (26), or per-tier (13), each with a progressive variant. |
-| Wizard Stash keys | variable | Unlock Wizard Stashes. Configurable granularity — per-tile, per-tier, global, or off (all stashes open). |
-| Gem pouches | variable | Optionally gate loose gem orbs. Configurable granularity — off, per-tile, per-tier, or global. |
+| Field tokens | variable | Unlock stages across the world map. Granularity is configurable — per-stage (122) or per-tile (26), each with a progressive variant. |
+| Wizard Stash keys | variable | Unlock Wizard Stashes. Configurable granularity — off (all stashes open), per-tile (26, plus a progressive variant), or global (one master key). |
+| Gem pouches | variable | Optionally gate loose gem orbs. Configurable granularity — off, per-tile (26, plus a progressive variant), or global (one master pouch). |
 | Skills | 24 | Includes 6 gem-type unlocks (Crit, Leech, Bleed, Armor Tear, Poison, Slow) |
 | Battle traits | 15 | |
-| Talisman fragments | 53 | Named by original field, e.g. "Z3 Talisman Fragment" — carries that field's original seed/rarity |
-| Shadow core stashes | 35 | 17 named by original field + 18 extra stashes |
+| Talisman fragments | 25 | The "perfect placement" fragments that go into the AP pool (received from Archipelago / bought in the AP Shop), named by original field, e.g. "Z3 Talisman Fragment". All other talismans are collected through normal gameplay (wave drops / Wizard Stashes). |
+| Shadow core stashes | 17 | Named by original field — the Wizard Stash shadow-core grants. |
 | XP tomes | 40 | 2 Ancient Grimoires + 6 Worn Tomes + 32 Tattered Scrolls — combined wizard-level bonus is configurable |
 | Skillpoint bundles | filler | 40 fixed bundles: 32 Small (5 SP) + 6 Medium (25 SP) + 2 Big (250 SP) = 810 SP |
 | Skillpoint (single) | filler | 1 SP each; fills every remaining location slot after the real items, XP tomes, and 40 bundles are placed |
@@ -233,7 +233,7 @@ That's **244 base locations**, plus however many achievements you enable — fro
 The exact item pool depends on your granularity choices — coarser settings put fewer, broader unlocks in the pool; finer settings put more, narrower ones.
 
 **Always free (not randomized):**
-- Your chosen starting stage is playable from the menu on connect (its tile/tier is unlocked too when using coarse granularity)
+- Your chosen starting stage is playable from the menu on connect (its whole tile is unlocked too when using per-tile granularity)
 - Talisman fragments from normal wave completion are untouched
 - Shadow cores earned during gameplay are untouched (only Wizard Stash grants are intercepted)
 
@@ -262,9 +262,9 @@ The exact item pool depends on your granularity choices — coarser settings put
 |---|---|---|
 | `starting_stage` | `random` | Which early stage you start on — one of the four W fields (W1–W4). Every other stage must be unlocked through Archipelago. Starter fields always grant ×2 XP (even on Hard/Extreme) to ease the opening. |
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
-| `field_token_granularity` | `per_tile` | How coarse stage-unlock items are: `per_stage` (122), `per_tile` (26), `per_tier` (13), or a `_progressive` variant of each. |
-| `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
-| `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile`, `per_tier`, `global`, or a `_progressive` variant. |
+| `field_token_granularity` | `per_tile` | How coarse stage-unlock items are: `per_stage` (122) or `per_tile` (26), each with a `_progressive` variant. |
+| `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile` (plus `per_tile_progressive`), or `global`. |
+| `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile` (plus `per_tile_progressive`), or `global`. |
 | `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). Hard and Extreme require Endurance mode enabled — it's the catch-up XP path if you get stuck. |
 | `xp_tome_bonus` | `100` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
@@ -317,7 +317,7 @@ The mod keeps a scrollable history of all Archipelago messages received during y
 
 ---
 
-## Known limitations (pre-alpha)
+## Known limitations
 
 - Iron Wizard mode is not yet supported — only Chilling and Frostborn modes work
 - DeathLink is implemented but may have edge cases
