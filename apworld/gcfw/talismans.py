@@ -25,13 +25,6 @@ def _build_talisman_type_sets() -> tuple:
             edge.add(name)
         elif type_id == 1:
             corner.add(name)
-    for frag in GAME_DATA.get("extra_talisman_fragments", []):
-        type_id = int(str(frag["tal_data"]).split("/")[2])
-        name = frag["name"]
-        if type_id == 0:
-            edge.add(name)
-        elif type_id == 1:
-            corner.add(name)
     return edge, corner
 
 

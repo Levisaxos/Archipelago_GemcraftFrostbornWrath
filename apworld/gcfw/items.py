@@ -101,12 +101,6 @@ def _load_item_table() -> Dict[str, ItemData]:
                else ItemClassification.useful)
         table[name] = ItemData(frag["item_ap_id"], cls)
 
-    # Extra talisman fragments — kept for forward compatibility but the pool
-    # is empty: vanilla in-game talisman drops cover the additional fragments
-    # so we don't need to randomize extras here.
-    for frag in data["extra_talisman_fragments"]:
-        table[frag["name"]] = ItemData(frag["item_ap_id"], ItemClassification.useful)
-
     # Shadow core stashes — `useful`. Achievements no longer gate on shadowCore:N
     # in generation (achievement access rules are pure wizard-level now), so cores
     # gate nothing; they're economy/power. The mod still tracks them client-side
@@ -114,11 +108,6 @@ def _load_item_table() -> Dict[str, ItemData]:
     # Specific shadow core stashes — named by original field (IDs 1000–1016).
     for sc in data["shadow_core_stashes"]:
         table[f"{sc['str_id']} Shadow Cores"] = ItemData(
-            sc["item_ap_id"], ItemClassification.useful)
-
-    # Extra shadow core stashes — named "Extra Shadow Cores #N" (IDs 1300–1317).
-    for sc in data["extra_shadow_core_stashes"]:
-        table[sc["name"]] = ItemData(
             sc["item_ap_id"], ItemClassification.useful)
 
     # Per-stage Wizard Stash key items (IDs 1400–1521). Progression: each
