@@ -79,6 +79,7 @@ package {
     import patch.ApStatsTab;
     import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
+    import patch.LoadSlotBadgePatch;
     import patch.SkillsTooltipOverlay;
     import patch.SkillTypeTooltipOverlay;
 
@@ -201,6 +202,7 @@ package {
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
+        private var _loadSlotBadgePatch:LoadSlotBadgePatch;
 
         private var _keyListenerAdded:Boolean  = false;
         private var _needsConnection:Boolean   = false;
@@ -306,6 +308,7 @@ package {
                 _hollowGemInjector = new HollowGemInjector(_logger, MOD_NAME);
                 _startingGemSuppressor = new StartingGemSuppressor(_logger, MOD_NAME);
                 _saveSlotDeleteFix     = new SaveSlotDeleteFix(_logger, MOD_NAME);
+                _loadSlotBadgePatch    = new LoadSlotBadgePatch(_logger, MOD_NAME, _fileHandler);
 
                 // In-game tracker (stage light tinting + logic evaluation)
                 _fieldLogicEvaluator        = new FieldLogicEvaluator(_logger, MOD_NAME);
@@ -919,6 +922,7 @@ package {
                 // (kept across modes so we re-detect slot picks cleanly).
                 if (screen == ScreenId.LOADGAME) {
                     if (_modeInterceptor != null) _modeInterceptor.clearPending();
+                    if (_loadSlotBadgePatch != null) _loadSlotBadgePatch.refresh();
                     _needsConnection = false;
                     if (_active) {
                         _connectionManager.disconnectAndReset();
@@ -990,6 +994,12 @@ package {
             // so the slot doesn't resurrect on next launch.
             if (screen == ScreenId.LOADGAME && _saveSlotDeleteFix != null) {
                 _saveSlotDeleteFix.onLoadGameFrame();
+            }
+
+            // Restyle AP slot badges (server:port - name, one-line fields) so
+            // players running several asyncs can tell their slots apart.
+            if (screen == ScreenId.LOADGAME && _loadSlotBadgePatch != null) {
+                _loadSlotBadgePatch.onLoadGameFrame();
             }
 
             // Routing trigger — fires once after the player leaves LOADGAME
