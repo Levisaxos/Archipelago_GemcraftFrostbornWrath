@@ -116,10 +116,10 @@ package {
         // GitHub release tag (and to decide whether any newer release is flagged
         // BREAKING). Keep in step with APWORLD_VERSION and with world_version in
         // apworld/gcfw/archipelago.json.
-        public function get VERSION():String           { return "0.6.0"; }
+        public function get VERSION():String           { return "0.0.6.1"; }
         public function get MOD_NAME():String          { return "ArchipelagoMod"; }
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
-        public function get APWORLD_VERSION():String   { return "0.6.0"; }
+        public function get APWORLD_VERSION():String   { return "0.0.6.0"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
