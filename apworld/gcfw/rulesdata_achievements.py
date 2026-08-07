@@ -4502,7 +4502,7 @@ achievement_requirements = {
         "ap_id": 2515,
         "game_id": 604,
         "description": "Destroy an omnibeacon.",
-        "requirements": ["eOmniBeacon:1"], #requires mods
+        "requirements": [],  # ["eOmniBeacon:1"] removed - omnibeacon element not represented yet (requires mods)
         "required_effort": "Trivial",
         "untrackable": True,
     },
@@ -4687,7 +4687,7 @@ achievement_requirements = {
         "game_id": 500,
         "description": "Have a watchtower kill a possessed monster.",
         "details": "Have a watchtower kill a possessed monster.",
-        "requirements": ["ePossessedMonster", "eWatchtower", "mEndurance"],
+        "requirements": ["eWatchtower", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Major",
         "untrackable": True,
     },
@@ -4820,7 +4820,7 @@ achievement_requirements = {
         "ap_id": 2130,
         "game_id": 159,
         "description": "Kill a possessed giant with barrage.",
-        "requirements": ["sBarrage", "ePossessedMonster", "mEndurance"],
+        "requirements": ["sBarrage", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Minor",
         "untrackable": True,
     },
@@ -4829,7 +4829,7 @@ achievement_requirements = {
         "game_id": 160,
         "description": "Kill a whited out possessed monster with bolt.",
         "details": "Kill a whited-out possessed monster with a Bolt shot.",
-        "requirements": ["sBolt", "sWhiteout", "ePossessedMonster", "mEndurance"],
+        "requirements": ["sBolt", "sWhiteout", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Minor",
         "untrackable": True,
     },
@@ -4887,7 +4887,7 @@ achievement_requirements = {
         "game_id": 148,
         "description": "Kill 199 possessed monsters.",
         "details": "Kill 199 possessed monsters in one battle.",
-        "requirements": ["ePossessedMonster", "mEndurance"],
+        "requirements": ["mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Major",
         "untrackable": True,
     },
@@ -4895,7 +4895,7 @@ achievement_requirements = {
         "ap_id": 2245,
         "game_id": 147,
         "description": "Kill 189 twisted monsters.",
-        "requirements": ["eTwistedMonster"],
+        "requirements": [],  # ["eTwistedMonster"] removed - twisted-monster element not represented yet
         "required_effort": "Trivial",
         "untrackable": True,
     },
@@ -4956,9 +4956,10 @@ achievement_requirements = {
         "game_id": 176,
         "description": "Reach 2.000 monsters with special properties killed through all the battles.",
         "requirements": [
-            ["min_wl:10", "mEndurance", "ePossessedMonster:1", "minWave:70"],
-            ["min_wl:10", "mEndurance", "eTwistedMonster:1", "minWave:70"],
             ["min_wl:10", "eMarkedMonster:1"],
+            # possessed/twisted variants removed - elements not represented yet:
+            # ["min_wl:10", "mEndurance", "ePossessedMonster:1", "minWave:70"],
+            # ["min_wl:10", "mEndurance", "eTwistedMonster:1", "minWave:70"],
         ],
         "required_effort": "Extreme",
         "untrackable": True,
@@ -4970,8 +4971,9 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 10,000 kills on monsters with special properties.",
         "requirements": [
             ["min_wl:50", "eMarkedMonster:1"],
-            ["min_wl:50", "mEndurance", "ePossessedMonster:1"],
-            ["min_wl:50", "mEndurance", "eTwistedMonster:1"],
+            # possessed/twisted variants removed - elements not represented yet:
+            # ["min_wl:50", "mEndurance", "ePossessedMonster:1"],
+            # ["min_wl:50", "mEndurance", "eTwistedMonster:1"],
         ],
         "required_effort": "Major",
         "untrackable": True,
@@ -4982,9 +4984,10 @@ achievement_requirements = {
         "description": "Reach 20.000 monsters with special properties killed through all the battles.",
         "details": "Cumulative across all battles: 20,000 kills on monsters with special properties.",
         "requirements": [
-            ["min_wl:100", "mEndurance", "ePossessedMonster", "minWave:70"],
-            ["min_wl:100", "mEndurance", "eTwistedMonster", "minWave:70"],
             ["min_wl:100", "eMarkedMonster:1"],
+            # possessed/twisted variants removed - elements not represented yet:
+            # ["min_wl:100", "mEndurance", "ePossessedMonster", "minWave:70"],
+            # ["min_wl:100", "mEndurance", "eTwistedMonster", "minWave:70"],
         ],
         "required_effort": "Extreme",
         "untrackable": True,
@@ -4995,9 +4998,10 @@ achievement_requirements = {
         "description": "Reach 50.000 monsters with special properties killed through all the battles.",
         "details": "Cumulative across all battles: 50,000 kills on monsters with special properties.",
         "requirements": [
-            ["mEndurance", "ePossessedMonster", "minWave:70"],
-            ["mEndurance", "eTwistedMonster", "minWave:70"],
             ["mEndurance", "eMarkedMonster", "minWave:70"],
+            # possessed/twisted variants removed - elements not represented yet:
+            # ["mEndurance", "ePossessedMonster", "minWave:70"],
+            # ["mEndurance", "eTwistedMonster", "minWave:70"],
         ],
         "required_effort": "Extreme",
         "untrackable": True,

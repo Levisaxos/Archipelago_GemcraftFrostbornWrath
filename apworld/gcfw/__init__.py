@@ -611,10 +611,24 @@ class GemcraftFrostbornWrathWorld(World):
             base_map[p] = sum(x for n, x in self._wl_xp_items
                               if state.prog_items[p].get(n, 0) > 0)
 
+    def _lock_field_tokens_in_own_world(self) -> None:
+        """Pull this player's Field Tokens out of the pool and fill_restrictive
+        them into this player's own locations (locked). Used for own_world and
+        for the degenerate single-player different_world case (UT regen only —
+        real generation rejects solo different_world)."""
+        from Fill import fill_restrictive
+        from .gating import is_field_token_name
+        tokens = [item for item in self.multiworld.itempool
+                  if item.player == self.player and is_field_token_name(item.name)]
+        for token in tokens:
+            self.multiworld.itempool.remove(token)
+        target_locations = self.multiworld.get_unfilled_locations(self.player)
+        state = self.multiworld.get_all_state(use_cache=False)
+        fill_restrictive(self.multiworld, state, target_locations, tokens,
+                         lock=True, allow_partial=False)
+
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
-            from Fill import FillError, fill_restrictive
-
             # Bias 75% of Journey checks to hold progression items via main fill.
             # priority_locations is multiworld-safe — items can come from any
             # player's pool; only the destination is preferred.
@@ -629,49 +643,46 @@ class GemcraftFrostbornWrathWorld(World):
                     loc.progress_type = LocationProgressType.PRIORITY
 
             placement = self.options.field_token_placement.value
-            if placement != FieldTokenPlacement.option_own_world:
-                return  # any_world: nothing to do; different_world: handled in stage_pre_fill
 
-            tokens = [item for item in self.multiworld.itempool
-                      if item.player == self.player and item.name.endswith(" Field Token")]
-            for token in tokens:
-                self.multiworld.itempool.remove(token)
+            if placement == FieldTokenPlacement.option_any_world:
+                return  # normal fill: tokens may land anywhere
 
-            target_locations = self.multiworld.get_unfilled_locations(self.player)
-            state = self.multiworld.get_all_state(use_cache=False)
-            fill_restrictive(self.multiworld, state, target_locations, tokens,
-                             lock=True, allow_partial=False)
+            if placement == FieldTokenPlacement.option_own_world:
+                self._lock_field_tokens_in_own_world()
+                return
 
-    @classmethod
-    def stage_pre_fill(cls, multiworld: "MultiWorld") -> None:
-        from Fill import FillError, fill_restrictive
+            # different_world: leave this player's Field Tokens in the itempool
+            # and let MAIN fill place them. We only forbid THIS player's Field
+            # Tokens from THIS player's own locations via an item_rule, so they
+            # can never land at home but are otherwise placed with full
+            # randomization and progression balancing across the other worlds.
+            #
+            # This replaces an earlier approach that removed the tokens and
+            # fill_restrictive'd them into an *unshuffled* cross-player location
+            # list. fill_restrictive is deterministic — it fills the first
+            # eligible spot — and get_unfilled_locations() is grouped by slot,
+            # so every token piled into the first player's world (spilling to
+            # the second only once the first was exhausted). Combined with a
+            # player setting all progression as non_local_items, that funneled
+            # an entire game's field tokens into a single other world.
+            if self.multiworld.players == 1:
+                # Only reachable under UT regen (real gen rejects solo
+                # different_world). No other world exists, so keep them at home.
+                self._lock_field_tokens_in_own_world()
+                return
 
-        # Handle different_world token placement here (after all worlds' pre_fill methods
-        # have run) so that other worlds' pre_fill claims their locations first.
-        gcfw_worlds = [
-            world for world in multiworld.worlds.values()
-            if isinstance(world, GemcraftFrostbornWrathWorld)
-            and world.options.field_token_placement.value == FieldTokenPlacement.option_different_world
-        ]
+            from .gating import is_field_token_name
 
-        for world in gcfw_worlds:
-            tokens = [item for item in multiworld.itempool
-                      if item.player == world.player and item.name.endswith(" Field Token")]
-            for token in tokens:
-                multiworld.itempool.remove(token)
+            def _not_own_field_token(item, _p=self.player):
+                return not (item.player == _p
+                            and is_field_token_name(item.name))
 
-            state = multiworld.get_all_state(use_cache=False)
-
-            if multiworld.players > 1:
-                other_locations = [loc for loc in multiworld.get_unfilled_locations()
-                                   if loc.player != world.player]
-                fill_restrictive(multiworld, state, other_locations, tokens,
-                                 lock=True, allow_partial=True)
-
-            if tokens:
-                own_locations = multiworld.get_unfilled_locations(world.player)
-                fill_restrictive(multiworld, state, own_locations, tokens,
-                                 lock=True, allow_partial=False)
+            for loc in self.multiworld.get_unfilled_locations(self.player):
+                prev = loc.item_rule  # default is `lambda i: True`
+                loc.item_rule = (
+                    lambda item, _prev=prev, _rule=_not_own_field_token:
+                    _rule(item) and _prev(item)
+                )
 
     def create_item(self, name: str) -> GCFWItem:
         data = item_table[name]

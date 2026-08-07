@@ -5959,9 +5959,7 @@
       "game_id": 604,
       "description": "Destroy an omnibeacon.",
       "required_effort": "Trivial",
-      "requirements": [
-        "eOmniBeacon:1"
-      ],
+      "requirements": [],
       "untrackable": true
     },
     "Not So Omni Anymore": {
@@ -6181,7 +6179,6 @@
       "description": "Have a watchtower kill a possessed monster.",
       "required_effort": "Major",
       "requirements": [
-        "ePossessedMonster",
         "eWatchtower",
         "mEndurance"
       ],
@@ -6356,7 +6353,6 @@
       "required_effort": "Minor",
       "requirements": [
         "sBarrage",
-        "ePossessedMonster",
         "mEndurance"
       ],
       "untrackable": true
@@ -6369,7 +6365,6 @@
       "requirements": [
         "sBolt",
         "sWhiteout",
-        "ePossessedMonster",
         "mEndurance"
       ],
       "details": "Kill a whited-out possessed monster with a Bolt shot.",
@@ -6441,7 +6436,6 @@
       "description": "Kill 199 possessed monsters.",
       "required_effort": "Major",
       "requirements": [
-        "ePossessedMonster",
         "mEndurance"
       ],
       "details": "Kill 199 possessed monsters in one battle.",
@@ -6452,9 +6446,7 @@
       "game_id": 147,
       "description": "Kill 189 twisted monsters.",
       "required_effort": "Trivial",
-      "requirements": [
-        "eTwistedMonster"
-      ],
+      "requirements": [],
       "untrackable": true
     },
     "Mana Greedy": {
@@ -6528,18 +6520,6 @@
       "requirements": [
         [
           "min_wl:10",
-          "mEndurance",
-          "ePossessedMonster:1",
-          "minWave:70"
-        ],
-        [
-          "min_wl:10",
-          "mEndurance",
-          "eTwistedMonster:1",
-          "minWave:70"
-        ],
-        [
-          "min_wl:10",
           "eMarkedMonster:1"
         ]
       ],
@@ -6554,16 +6534,6 @@
         [
           "min_wl:50",
           "eMarkedMonster:1"
-        ],
-        [
-          "min_wl:50",
-          "mEndurance",
-          "ePossessedMonster:1"
-        ],
-        [
-          "min_wl:50",
-          "mEndurance",
-          "eTwistedMonster:1"
         ]
       ],
       "details": "Cumulative across all battles: 10,000 kills on monsters with special properties.",
@@ -6575,18 +6545,6 @@
       "description": "Reach 20.000 monsters with special properties killed through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        [
-          "min_wl:100",
-          "mEndurance",
-          "ePossessedMonster",
-          "minWave:70"
-        ],
-        [
-          "min_wl:100",
-          "mEndurance",
-          "eTwistedMonster",
-          "minWave:70"
-        ],
         [
           "min_wl:100",
           "eMarkedMonster:1"
@@ -6601,16 +6559,6 @@
       "description": "Reach 50.000 monsters with special properties killed through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        [
-          "mEndurance",
-          "ePossessedMonster",
-          "minWave:70"
-        ],
-        [
-          "mEndurance",
-          "eTwistedMonster",
-          "minWave:70"
-        ],
         [
           "mEndurance",
           "eMarkedMonster",

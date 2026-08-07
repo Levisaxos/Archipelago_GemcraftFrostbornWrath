@@ -756,14 +756,31 @@ def _qualifying_stages_for_element(elem_pascal: str, count_needed: int):
         # but the underlying mechanic isn't implemented yet. Force the
         # "universally present" path so the compiled `_compile_element_or`
         # short-circuits to `_always_true`. Mirrors the runtime `_STUB_ELEMENTS`
-        # bypass in `_eval_element_count`.
+        # bypass in `_eval_element_count`. This is the ONLY sanctioned
+        # "ungated element" path — it's an explicit, reviewed allow-list.
         result = None
     else:
         field = elem_pascal + "Count"
         if field not in _PRESENT_COUNT_FIELDS:
-            result = None  # element is universally present — no gate
-        else:
-            result = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
+            # FAIL LOUD. We were asked to gate on `e<elem>` but no stage in
+            # rulesdata_levels.py carries its per-stage `<elem>Count` field, so
+            # there is NO WAY to verify the requirement. Silently returning
+            # None here used to make the token "universally present" -> the
+            # gate compiled to _always_true and the achievement went
+            # permanently in logic even where the element can never occur
+            # (e.g. eOmniBeacon / ePossessedMonster / eTwistedMonster). A
+            # requirement we cannot check is a data/logic bug, not a pass:
+            # refuse to generate until the field is populated in
+            # rulesdata_levels.py, the element is given explicit handling, or
+            # it is deliberately added to _STUB_ELEMENTS.
+            raise ValueError(
+                f"Unrepresented element requirement 'e{elem_pascal}': field "
+                f"'{field}' is absent from every stage in rulesdata_levels.py. "
+                f"Cannot verify this requirement. Populate '{field}' per-stage, "
+                f"give the element explicit handling, or add '{elem_pascal}' to "
+                f"_STUB_ELEMENTS — refusing to fail open to _always_true."
+            )
+        result = [sid for sid, d in LEVEL_DATA.items() if d.get(field, 0) >= count_needed]
     _QUALIFYING_STAGES_CACHE[key] = result
     return result
 
@@ -2078,13 +2095,26 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                             (not item.advancement) and p(item)
                     )
 
-            except Exception:
+            except KeyError:
+                # The only benign failure here is "no AP location for this
+                # achievement" (it was filtered out) — get_location raises
+                # KeyError for that. Everything else (a requirement token that
+                # can't be compiled/verified) is a real logic bug and MUST NOT
+                # be swallowed: swallowing left the achievement with no access
+                # rule at all, i.e. permanently in logic — the exact fail-open
+                # we're eliminating. Let it propagate to the loud handler below.
                 pass
 
     except Exception as e:
-        print(f"ERROR setting achievement access rules: {e}")
+        # Abort generation. A requirement we can't compile means the seed's
+        # achievement logic would be wrong; failing loudly here is required so
+        # the underlying data/token gap gets fixed instead of shipping a seed
+        # where the achievement is silently always-in-logic.
         import traceback
         traceback.print_exc()
+        raise RuntimeError(
+            f"GCFW: failed to compile achievement access rules: {e}"
+        ) from e
     _tlog(f"  set_rules: achievement rules ({_ach_rules_added} gated): {(_t.perf_counter()-_t_ach)*1000:.1f} ms")
 
     multiworld.completion_condition[player] = lambda state: state.has("Victory", player)

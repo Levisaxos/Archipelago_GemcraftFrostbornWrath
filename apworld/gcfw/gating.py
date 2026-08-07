@@ -97,6 +97,17 @@ PROG_STASH_PER_STAGE_NAME      = "Progressive Stash Stage Key"
 PROG_STASH_PER_TILE_NAME       = "Progressive Stash Tile Key"
 
 
+def is_field_token_name(name: str) -> bool:
+    """True for any Field Token item name, across every granularity.
+    The distinct per-stage / per-tile tokens end in ' Field Token'
+    ("W2 Field Token", "W Tile Field Token"), but the progressive variants
+    do NOT — they are 'Progressive Field Token (per-stage)' / '(per-tile)'.
+    Selecting tokens by endswith(' Field Token') alone silently misses the
+    progressive ones, so always route token selection through this helper."""
+    return (name.endswith(" Field Token")
+            or name in (PROG_FIELD_PER_STAGE_NAME, PROG_FIELD_PER_TILE_NAME))
+
+
 def stash_tile_key_id(prefix: str) -> int:
     return STASH_TILE_KEY_BASE + _tile_index(prefix)
 
