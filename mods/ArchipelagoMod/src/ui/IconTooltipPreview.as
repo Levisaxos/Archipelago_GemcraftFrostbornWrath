@@ -406,8 +406,12 @@ package ui {
                 cy = addLine("Field XP: " + (effXp != null ? String(int(effXp)) : "?")
                            + "   \u00B7   WL " + wl + " / gate " + gate,
                            COL_MUTED, 11, cy, 20);
-                cy = addLine("Journey XP: " + collected + " (x" + _fmtMult(_xpTraitMult()) + ")",
-                           COL_MUTED, 11, cy, 24);
+                var endurance:int = 0;
+                try { endurance = int(GV.ppd.stageHighestXpsEndurance[sid].g()); } catch (eEnd:Error) {}
+                var xpLine:String = "Journey XP: " + collected + " (x" + _fmtMult(_xpTraitMult()) + ")";
+                if (endurance > 0)
+                    xpLine += "   \u00B7   Endurance XP: " + endurance + " (x" + _fmtMult(_xpTraitMult()) + ")";
+                cy = addLine(xpLine, COL_MUTED, 11, cy, 24);
             }
 
             // Available gems on this field (pouch-aware; hollow gem on a
