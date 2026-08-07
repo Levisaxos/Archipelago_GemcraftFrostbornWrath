@@ -971,12 +971,12 @@
     "Stirring Up the Nest": {
       "apId": 2520,
       "game_id": 203,
-      "description": "Deliver gem bomb and wasp kills only, with at least 30 kills total. (Corrected vanilla bug: the in-game text omits the 30-kill minimum.)",
+      "description": "Deliver gem bomb and wasp kills only, with at least 30 kills total.",
       "required_effort": "Minor",
       "requirements": [
         "min_wl:20"
       ],
-      "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed. (Corrected vanilla bug: vanilla text omits the 30-kill minimum.)",
+      "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed.",
       "vanilla_correction": true
     },
     "Puncturing Shots": {
@@ -1429,13 +1429,13 @@
     "Getting Rid of Them": {
       "apId": 2212,
       "game_id": 344,
-      "description": "Drop 48 gem bombs on beacons or jars of wasps. (Corrected vanilla bug: the in-game text lists only beacons, but gem bombs on jars of wasps also count.)",
+      "description": "Drop 48 gem bombs on beacons or jars of wasps.",
       "required_effort": "Minor",
       "requirements": [
         "eBeacon:4",
         "tDarkMasonry"
       ],
-      "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle. (Corrected vanilla bug: vanilla text lists only beacons.)",
+      "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle.",
       "vanilla_correction": true
     },
     "Raindrop": {
@@ -2586,13 +2586,13 @@
     "Green Vial": {
       "apId": 2224,
       "game_id": 204,
-      "description": "Have more than 74% of the monster kills caused by poison. (Corrected vanilla bug: the in-game text says 75%, but the code checks >74%.)",
+      "description": "Have more than 74% of the monster kills caused by poison.",
       "required_effort": "Minor",
       "requirements": [
         "sPoison",
         "sTraps"
       ],
-      "details": "In one battle, more than 74% of kills are from poison damage. (Corrected vanilla bug: vanilla text says 75%.)",
+      "details": "In one battle, more than 74% of kills are from poison damage.",
       "vanilla_correction": true
     },
     "Unarmed": {
@@ -2881,11 +2881,11 @@
     "Deal Some Damage Too": {
       "apId": 2116,
       "game_id": 469,
-      "description": "Have 6 traps with bolt enhanced gems in them. (Corrected vanilla bug: the in-game text says 5, but the check runs before the newly enhanced gem counts, so 6 are actually required.)",
+      "description": "Have 6 traps with bolt enhanced gems in them.",
       "required_effort": "Minor",
       "requirements": [
         "sBolt",
-        "eTraps"
+        "sTraps"
       ],
       "vanilla_correction": true
     },
@@ -3093,7 +3093,8 @@
       "description": "Kill a giant with one shot.",
       "required_effort": "Minor",
       "requirements": [
-        "sBolt"
+        "sBolt",
+        "mGiant:1"
       ],
       "details": "Kill a giant in a single hit."
     },
@@ -3488,7 +3489,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sBarrage",
-        "sBleeding"
+        "sBleeding",
+        "min_wl:30"
       ]
     },
     "Easy Kill": {
@@ -3556,7 +3558,7 @@
     "Absolute Zero": {
       "apId": 2003,
       "game_id": 126,
-      "description": "Kill 273 frozen monsters that are not in a whiteout. (Corrected vanilla bug: the in-game text omits that frozen monsters also in a whiteout don't count.)",
+      "description": "Kill 273 frozen monsters that are not in a whiteout.",
       "required_effort": "Major",
       "requirements": [
         "sFreeze"
@@ -3566,13 +3568,13 @@
     "Snow Dust": {
       "apId": 2496,
       "game_id": 193,
-      "description": "Kill 100 frozen monsters while it's snowing. (Corrected vanilla bug: the in-game text says 95, but the code requires 100.)",
+      "description": "Kill 100 frozen monsters while it's snowing.",
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
         "wSnow"
       ],
-      "details": "Kill 100 frozen monsters during snow weather. (Corrected vanilla bug: vanilla text says 95.)",
+      "details": "Kill 100 frozen monsters during snow weather.",
       "vanilla_correction": true
     },
     "Snow Blower": {
@@ -3582,7 +3584,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sBarrage",
-        "sFreeze"
+        "sFreeze",
+        "min_wl:20"
       ]
     },
     "Icecracker": {
@@ -3592,7 +3595,8 @@
       "required_effort": "Major",
       "requirements": [
         "sBarrage",
-        "sFreeze"
+        "sFreeze",
+        "min_wl:30"
       ],
       "details": "Kill 90 frozen monsters using Barrage-enhanced gems."
     },
@@ -3603,7 +3607,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sBeam",
-        "sFreeze"
+        "sFreeze",
+        "min_wl:20"
       ],
       "details": "Kill 20 frozen monsters using Beam-enhanced gems."
     },
@@ -3614,7 +3619,8 @@
       "required_effort": "Major",
       "requirements": [
         "sBeam",
-        "sFreeze"
+        "sFreeze",
+        "min_wl:30"
       ],
       "details": "Kill 90 frozen monsters using Beam-enhanced gems."
     },
@@ -3626,7 +3632,7 @@
       "requirements": [
         "sBolt",
         "sFreeze",
-        "minMonsters:90"
+        "min_wl:30"
       ]
     },
     "Thin Ice": {
@@ -3636,14 +3642,15 @@
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
-        "eTraps"
+        "eTraps",
+        "min_wl:20"
       ],
       "details": "Kill 20 frozen monsters with traps."
     },
     "Crunchy Bites": {
       "apId": 2112,
       "game_id": 206,
-      "description": "Kill 160 frozen swarmlings while they're in a whiteout. (Corrected vanilla bug: the in-game text omits the whiteout requirement.)",
+      "description": "Kill 160 frozen swarmlings while they're in a whiteout.",
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
@@ -4555,7 +4562,7 @@
       "description": "Reach 20.000 monsters killed through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "min_wl:10"
+        "min_wl:30"
       ]
     },
     "Crimson Journal": {
@@ -4585,7 +4592,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sPoison",
-        "min_wl:10"
+        "sTraps",
+        "min_wl:30"
       ],
       "details": "Cumulative across all battles: 1,000 kills with poison."
     },
@@ -4596,7 +4604,8 @@
       "required_effort": "Major",
       "requirements": [
         "sPoison",
-        "min_wl:30"
+        "sTraps",
+        "min_wl:35"
       ],
       "details": "Cumulative across all battles: 5,000 kills with poison."
     },
@@ -4607,7 +4616,8 @@
       "required_effort": "Extreme",
       "requirements": [
         "sPoison",
-        "min_wl:50"
+        "sTraps",
+        "min_wl:40"
       ],
       "details": "Cumulative across all battles: 25,000 kills with poison."
     },
@@ -5134,9 +5144,10 @@
       "apId": 2265,
       "game_id": 434,
       "description": "Reach 500 strike spells cast through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1"
+        "strikeSpells:1",
+        "min_wl:25"
       ]
     },
     "Build Along": {
@@ -5174,7 +5185,7 @@
       "description": "Reach 500 waves started early through all the battles.",
       "required_effort": "Minor",
       "requirements": [
-        "min_wl:30"
+        "min_wl:10"
       ]
     },
     "White Wand": {
@@ -5530,7 +5541,7 @@
     "Ablatio Retinae": {
       "apId": 2002,
       "game_id": 311,
-      "description": "Whiteout 90 whited out monsters. (Corrected vanilla bug: the in-game text says 111, but the code unlocks at 90.)",
+      "description": "Whiteout 90 whited out monsters.",
       "required_effort": "Minor",
       "requirements": [
         "sWhiteout",
@@ -6295,7 +6306,7 @@
     "Green Path": {
       "apId": 2223,
       "game_id": 609,
-      "description": "Kill 9.000 green blooded monsters. (Corrected vanilla bug: the in-game text says 9.900, but the code unlocks at 9.000.)",
+      "description": "Kill 9.000 green blooded monsters.",
       "required_effort": "Extreme",
       "requirements": [],
       "untrackable": true,
