@@ -365,7 +365,7 @@ class Difficulty(Choice):
     option_medium  = 1
     option_hard    = 2
     option_extreme = 3
-    default = 2
+    default = 1
 
 
 class ExtraShadowCoresPerWave(Range):

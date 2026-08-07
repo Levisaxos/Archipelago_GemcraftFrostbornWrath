@@ -60,19 +60,22 @@ def _load_item_table() -> Dict[str, ItemData]:
         return ItemClassification.filler
 
     xp_id = 1100
-    # 32 Tattered Scrolls (1100–1131): 16 progression + 16 useful
+    # All XP items are filler (see _xp_cls above). Of the 100 declared here, only
+    # the 40 tomes (32 Tattered + 6 Worn + 2 Ancient) are actually added to the
+    # pool by __init__.create_items; the 60 Extra XP items are spare ids.
+    # 32 Tattered Scrolls (1100–1131)
     for i in range(32):
         table[f"Tattered Scroll #{i+1}"] = ItemData(xp_id, _xp_cls(i))
         xp_id += 1
-    # 6 Worn Tomes (1132–1137): 3 progression + 3 useful
+    # 6 Worn Tomes (1132–1137)
     for i in range(6):
         table[f"Worn Tome #{i+1}"] = ItemData(xp_id, _xp_cls(i))
         xp_id += 1
-    # 2 Ancient Grimoires (1138–1139): 1 progression + 1 useful
+    # 2 Ancient Grimoires (1138–1139)
     for i in range(2):
         table[f"Ancient Grimoire #{i+1}"] = ItemData(xp_id, _xp_cls(i))
         xp_id += 1
-    # 60 Extra XP filler items (1140–1199): 30 progression + 30 useful
+    # 60 Extra XP filler items (1140–1199)
     for i in range(60):
         table[f"Extra XP Item #{i+1}"] = ItemData(xp_id, _xp_cls(i))
         xp_id += 1

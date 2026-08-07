@@ -7,7 +7,7 @@ package unlockers {
 
     /**
      * Handles AP wizard level / XP bonus grants.
-     * XP Bonus AP IDs: 500 (Tattered Scroll), 501 (Worn Tome), 502 (Ancient Grimoire).
+     * XP tomes use AP IDs 1100-1199 (see levelsForApId).
      * Per-tome level values are configured from slot_data via configure().
      *
      * Bonus wizard levels are persisted in the slot JSON file and injected into
@@ -67,9 +67,6 @@ package unlockers {
 
         /** Wizard-level value for an AP item ID, using the configured per-tome values. */
         public function levelsForApId(apId:int):int {
-            if (apId == 500) return _tatteredLevels;
-            if (apId == 501) return _wornLevels;
-            if (apId == 502) return _ancientLevels;
             // XP tomes: 1100-1131 Tattered, 1132-1137 Worn, 1138-1139 Ancient, 1140-1199 filler (tattered-equivalent)
             if (apId >= 1100 && apId <= 1131) return _tatteredLevels;
             if (apId >= 1132 && apId <= 1137) return _wornLevels;
@@ -89,39 +86,6 @@ package unlockers {
             GV.selectorCore.renderer.renderXpBar(GV.ppd.getXp());
             _xpBarDirty = false;
             return true;
-        }
-
-        /**
-         * Grant AP wizard levels from a received XP Bonus item.
-         * Tattered Scroll=3, Worn Tome=6, Ancient Grimoire=18 wizard levels.
-         */
-        public function grantXpBonus(apId:int):void {
-            var levels:int = levelsForApId(apId);
-            if (levels <= 0) return;
-
-            var label:String = "";
-            if      (apId == 500) label = "Tattered Scroll";
-            else if (apId == 501) label = "Worn Tome";
-            else if (apId == 502) label = "Ancient Grimoire";
-
-            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
-
-            _bonusWizardLevel += levels;
-            if (onDataChanged != null) onDataChanged();
-            applyBonusLevels(); // sets _xpBarDirty = true; also updates the A4 trial slot
-
-            // Animate XP bar on the selector instead of snapping.
-            // applyBonusLevels() already set _xpBarDirty; clear it so the frame-loop
-            // doesn't also snap to the final value while the animation is running.
-            if (GV.ppd != null) {
-                var newXp:Number = GV.ppd.getXp();
-                if (pushSelectorEvent(4, [oldXp, newXp])) { // 4 = XP_INCREASING
-                    _xpBarDirty = false;
-                }
-            }
-
-            logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
-            showToast("Received " + label, ItemColors.forApId(apId));
         }
 
         /**

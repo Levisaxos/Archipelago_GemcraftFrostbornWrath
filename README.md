@@ -260,12 +260,13 @@ The exact item pool depends on your granularity choices — coarser settings put
 
 | Option | Default | Description |
 |---|---|---|
-| `starting_stage` | `random` | Which early stage you start on — one of the four W fields (W1–W4). Every other stage must be unlocked through Archipelago. Starter fields always grant ×2 XP (even on Hard/Extreme) to ease the opening. |
+| `random_starting_stages` | `1` | How many starting stages to roll at random from the four W fields (W1–W4). `0` = don't roll — start on exactly the fields listed in `starting_stages` instead. `1`–`4` = start on that many randomly-chosen W fields. |
+| `starting_stages` | `["W1"]` | The exact W fields you start on, used only when `random_starting_stages` is `0`. List one or more of `W1`–`W4`; each one is playable from the menu immediately. Every other stage must be unlocked through Archipelago. (Multiple starters only matter with per-stage token granularity — with per-tile, any single W starter already frees the whole W tile.) |
 | `field_token_placement` | `any_world` | Where field tokens (stage unlocks) are placed: `any_world`, `own_world` (only in your locations), or `different_world` (only in other players' worlds — requires multiplayer). |
 | `field_token_granularity` | `per_tile` | How coarse stage-unlock items are: `per_stage` (122) or `per_tile` (26), each with a `_progressive` variant. |
 | `stash_key_granularity` | `per_tile` | How coarse Wizard Stash keys are: `off`, `per_tile` (plus `per_tile_progressive`), or `global`. |
 | `gem_pouch_granularity` | `per_tile` | Whether/how loose gem orbs are gated behind pouches: `off`, `per_tile` (plus `per_tile_progressive`), or `global`. |
-| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Affects battle difficulty and how much wizard-level progress each clear grants (Easy = fastest gate-clearing, Extreme = slowest). Hard and Extreme require Endurance mode enabled — it's the catch-up XP path if you get stuck. |
+| `difficulty` | `medium` | `easy` / `medium` / `hard` / `extreme`. Sets how tough battles are and how fast you earn in-game XP and skill points (Easy easiest & fastest, Extreme hardest & slowest). The stage-unlock gates sit at the same wizard levels on every difficulty. Hard and Extreme require Endurance mode enabled. |
 | `xp_tome_bonus` | `100` | Approximate total (bonus) wizard levels granted by all XP tomes combined (0–300). Pure in-game power — not counted toward logic. |
 | `starting_wizard_level` | `1` | Wizard level granted at the start of the run, before any XP tomes are received (1–100). |
 | `starting_overcrowd` | `false` | Start with the Overcrowd battle trait. Removes Overcrowd from the item pool. |
@@ -325,6 +326,8 @@ The mod keeps a scrollable history of all Archipelago messages received during y
 ---
 
 ## Development
+
+Building from source: see [Developer_Setup.md](Developer_Setup.md).
 
 **Tools used:**
 - [BezelModLoader](https://github.com/gemforce-team/BezelModLoader) — mod loader for GemCraft: Frostborn Wrath
