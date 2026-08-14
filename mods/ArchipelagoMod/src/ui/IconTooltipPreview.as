@@ -26,6 +26,7 @@ package ui {
 
     import data.AV;
     import net.ConnectionManager;
+    import patch.DifficultyXpScaler;
     import tracker.FieldLogicEvaluator;
     import tracker.AchievementLogicEvaluator;
 
@@ -398,7 +399,8 @@ package ui {
 
             // XP / WL debug (tester slots only): the field's expected eff-XP
             // (what it feeds the WL derivation), the XP actually collected on it
-            // in Journey + the current trait multiplier, and derived-WL vs gate.
+            // in Journey + the trait multiplier RECORDED for that field's XP, and
+            // derived-WL vs gate.
             if (_isTesterSlot()) {
                 var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
                 var effXp:* = (opts != null && opts.wlEffXp != null) ? opts.wlEffXp[strId] : null;
@@ -411,9 +413,9 @@ package ui {
                            COL_MUTED, 11, cy, 20);
                 var endurance:int = 0;
                 try { endurance = int(GV.ppd.stageHighestXpsEndurance[sid].g()); } catch (eEnd:Error) {}
-                var xpLine:String = "Journey XP: " + collected + " (x" + _fmtMult(_xpTraitMult()) + ")";
+                var xpLine:String = "Journey XP: " + collected + " (x" + _fmtMult(_recXpMult(GV.ppd.journeyXpRecXpMults, sid)) + ")";
                 if (endurance > 0)
-                    xpLine += "   \u00B7   Endurance XP: " + endurance + " (x" + _fmtMult(_xpTraitMult()) + ")";
+                    xpLine += "   \u00B7   Endurance XP: " + endurance + " (x" + _fmtMult(_recXpMult(GV.ppd.enduranceXpRecXpMults, sid)) + ")";
                 cy = addLine(xpLine, COL_MUTED, 11, cy, 24);
             }
 
@@ -578,16 +580,22 @@ package ui {
                 && AV.currentSlot.toLowerCase().indexOf("levisaxos") == 0;
         }
 
-        /** The battle-XP multiplier the game actually applies to earned XP:
-         *  difficulty base + Σ(0.1 × selected trait level), as maintained by
-         *  DifficultyXpScaler on GV.selectorCore.traitsXpMult. Reading it here
-         *  keeps the tooltip in lockstep with the outcome screen. */
-        private function _xpTraitMult():Number {
+        /** The trait-XP multiplier the game RECORDED for a field's stored record
+         *  XP (difficulty base + Σ(0.1 × trait level) as it stood when that XP was
+         *  earned). Pass GV.ppd.journeyXpRecXpMults or .enduranceXpRecXpMults.
+         *  This is per-field and historical — unlike the live selectorCore value,
+         *  which reflects the traits currently selected, not the ones used on this
+         *  field. Falls back to the current difficulty base when no record exists
+         *  (field never played), so it never shows a stray x1 on Extreme. */
+        private function _recXpMult(recArr:Array, sid:int):Number {
             try {
-                if (GV.selectorCore != null && GV.selectorCore.traitsXpMult != null)
-                    return Number(GV.selectorCore.traitsXpMult.g());
+                if (recArr != null) {
+                    var v:Number = Number(recArr[sid]);
+                    if (v > 0)
+                        return v;
+                }
             } catch (e:Error) {}
-            return 1.0;
+            return DifficultyXpScaler.difficultyBase();
         }
 
         /** Format a multiplier like 1.2 / 1.44 (trim to <=3 decimals, no trailing zeros). */
