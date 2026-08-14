@@ -1588,7 +1588,7 @@ achievement_requirements = {
         "ap_id": 2597,
         "game_id": 51,
         "description": "Have a grade 1 gem with 100 hits.",
-        "requirements": ["min_wl:20"],
+        "requirements": [],
         "required_effort": "Minor",
     },
     "Seen Battle": {

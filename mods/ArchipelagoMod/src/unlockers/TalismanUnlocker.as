@@ -175,26 +175,6 @@ package unlockers {
             return _slotEntryByApId[String(apId)] != null;
         }
 
-        /** Unlock the slot for a mapped fragment and socket its synthetic
-         *  fragment. Idempotent — re-sockets on every call (no removal). */
-        private function _socketMappedFragment(apId:int):Boolean {
-            _ensureSlotMap();
-            var entry:Object = _slotEntryByApId[String(apId)];
-            if (entry == null) return false;
-            if (!ensurePpdExists("socketMappedFragment")) return false;
-            var slots:Array = GV.ppd.talismanSlots;
-            var unlocks:Array = GV.ppd.talSlotUnlockStatuses;
-            if (slots == null || unlocks == null) return false;
-            var slot:int = int(entry.slot);
-            if (slot < 0 || slot >= GV.TALISMAN_ACTIVESLOT_NUM) return false;
-            var parts:Array = String(entry.tal_data).split("/");
-            if (parts.length < 4) return false;
-            unlocks[slot] = true;
-            slots[slot] = new TalismanFragment(int(parts[0]), int(parts[1]),
-                                               int(parts[2]), int(parts[3]));
-            return true;
-        }
-
         /** Grant a mapped (static-talisman) fragment: drop one free copy into
          *  the inventory (first receipt only), mark it received, and toast. The
          *  player can place, upgrade, or sell it freely; the AP Shop stays

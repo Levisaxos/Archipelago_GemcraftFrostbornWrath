@@ -33,14 +33,6 @@ class StageRule:
     skills: List[str] = field(default_factory=list)
 
 
-# Stages with no field token item. Empty: every stage including W1-W4
-# now has its own Field Token (item_ap_ids 1-4 / 5-8). The chosen
-# starting stages (see options.StartingStages) are the only stages without
-# a token gate, and it's reached directly from Menu in
-# __init__.create_regions — no FREE_STAGES entry needed.
-FREE_STAGES: set = set()
-
-
 # ---------------------------------------------------------------------------
 # Per-stage access rules
 # ---------------------------------------------------------------------------

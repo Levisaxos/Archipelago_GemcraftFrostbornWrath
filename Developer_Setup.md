@@ -2,6 +2,8 @@
 
 > **This guide is for developers** who want to build the Archipelago mod and apworld from source.
 > If you just want to **play**, you do not need any of this — see the [README](README.md) for player install steps (download the prebuilt `ArchipelagoMod.swf` and `gcfw.apworld` from Releases).
+>
+> **For how the mod and apworld actually work**, the author keeps an in-depth technical reference in `do not commit/docs/` (local only — not part of this repository). Start with `do not commit/docs/architecture.md`.
 
 ## Prerequisites
 
