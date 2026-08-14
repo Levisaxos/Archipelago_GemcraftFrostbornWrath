@@ -103,8 +103,8 @@ package ui {
         }
 
         // --- Tooltip ---
-        // Use GV.mcInfoPanel directly (same pattern as the FieldTooltipOverlay /
-        // ModButtons hover handlers). MOUSE_OUT removeChild is wrapped because
+        // Use GV.mcInfoPanel directly (same pattern as the ModButtons hover
+        // handlers). MOUSE_OUT removeChild is wrapped because
         // the panel may not be a child if the player moves the mouse fast.
 
         private function _onMouseOver(e:MouseEvent):void {

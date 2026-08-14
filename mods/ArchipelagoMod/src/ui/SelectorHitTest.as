@@ -2,10 +2,10 @@ package ui {
     import flash.display.DisplayObject;
 
     /**
-     * Geometry helper shared by the field-hover tooltips (IconTooltipPreview
-     * and FieldTooltipOverlay). Both locate the hovered field token by a raw
-     * bounds test that ignores z-order, so a button drawn over a field token
-     * would still pop the field tooltip behind it. This lets them defer to
+     * Geometry helper for the field-hover tooltip (IconTooltipPreview). It
+     * locates the hovered field token by a raw bounds test that ignores
+     * z-order, so a button drawn over a field token would still pop the field
+     * tooltip behind it. This lets it defer to
      * buttons, matching the game's own mouse routing (a field's eventPlate
      * MOUSE_OVER never fires while a button covers it).
      */

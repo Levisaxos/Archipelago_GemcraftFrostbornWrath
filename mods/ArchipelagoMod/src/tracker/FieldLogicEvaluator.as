@@ -202,15 +202,6 @@ package tracker {
             return _freeStages[strId] == true;
         }
 
-        /**
-         * Tier-style label for tooltips. The new prereq-graph logic doesn't
-         * use tiers; return -1 so callers (e.g. FieldTooltipOverlay) hide
-         * the tier line. Kept as a method to avoid breaking call sites.
-         */
-        public function getStageTier(strId:String):int {
-            return -1;
-        }
-
         // -----------------------------------------------------------------------
         // Public queries
 
@@ -681,7 +672,7 @@ package tracker {
 
         /**
          * Returns [text, color] line pairs describing why this stage isn't
-         * in logic. Used by FieldTooltipOverlay. Lines cover unmet counter
+         * in logic. Used by WizStashes. Lines cover unmet counter
          * requirements (talismanRow:N etc.) — "Requires N matching rows".
          * Field_<sid> prereq status lives in getFieldPrereqLine so callers
          * can render the green "Requirement met" banner independently of
@@ -797,73 +788,6 @@ package tracker {
         }
 
         /**
-         * Hint object describing why a stage isn't in logic. Returns null
-         * when the stage is already in logic, free, or has no rules. Used
-         * by tooltips to render quick "missing token" / "missing prereq"
-         * banners.
-         */
-        public function getBlockingTokenReq(strId:String):Object {
-            if (_stageRequirements == null || _freeStages[strId] == true)
-                return null;
-            recompute();
-            if (_inLogicByStrId[strId] == true)
-                return null;
-
-            var tokens:Object = AV.sessionData.tokensByStrId;
-            return {
-                missingToken: !(tokens != null && tokens[strId] == true)
-            };
-        }
-
-        /**
-         * "Got pouch …" / "Needs pouch …" suffix for the Journey line.
-         * Returns null when pouch gating is off or the stage has no
-         * gempouch requirement, so the caller appends nothing in that case.
-         *
-         * Suffix shape mirrors the YAML gem_pouch_granularity option so
-         * the player sees the actual item to hunt for:
-         *   off (0)                   → null (caller skips line)
-         *   per_tile / progressive (1, 2)         → "pouch (X)"
-         *   global (5)                            → "pouch"   (no suffix)
-         *
-         * Verb (`Got` / `Needs`) is decided by `hasPouchForPrefix`, which
-         * is itself granularity-aware (SessionData.as) — so the verb
-         * always agrees with the live unlock check.
-         */
-        public function getPouchLabel(strId:String):String {
-            if (_stageSkills == null) return null;
-            var required:Array = _stageSkills[strId] as Array;
-            if (required == null || required.length == 0) return null;
-            var mode:int = _pouchMode();
-            if (mode == 0) return null;
-            for each (var skillName:String in required) {
-                var lower:String = skillName.toLowerCase().split(" ").join("");
-                if (lower.indexOf("gempouch:") != 0) continue;
-                var prefix:String = skillName.split(":")[1];
-                if (prefix == null) continue;
-                prefix = _trimStr(prefix);
-                var hasPouch:Boolean = AV.sessionData.hasPouchForPrefix(prefix);
-                // Free starter stage without pouch yet: Hollow Gems get the
-                // player past the WIZLOCK gate (mirrors the carve-out in
-                // `_skillGateMet`). Hide the pouch suffix so the green
-                // Journey line doesn't look like a contradiction with a
-                // "Needs pouch" hint — the pouch isn't actually required
-                // to clear this level yet.
-                if (!hasPouch && _freeStages[strId] == true)
-                    return null;
-                var verb:String = hasPouch ? "Got" : "Needs";
-                var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts == null)
-                    return verb + " pouch (" + prefix + ")";
-                if (mode == 5)
-                    return verb + " pouch";
-                // mode 1 / 2: per_tile (progressive) — tile letter is the right hint.
-                return verb + " pouch (" + prefix + ")";
-            }
-            return null;
-        }
-
-        /**
          * "Got key (X)" / "Needs key (X)" suffix for the Stash line.
          * Stashes always require a key so this always returns a label —
          * granularity-aware so the player knows which item it points at:
@@ -882,26 +806,6 @@ package tracker {
             }
             // 0 (off), 5 (global) — no extra suffix needed.
             return verb + " key";
-        }
-
-        /**
-         * "Missing field token" tooltip line, shaped to the YAML
-         * field_token_granularity so the player knows which token to hunt:
-         *   per_stage / progressive (0, 1)        → "Missing field token"
-         *   per_tile / progressive (2, 3)         → "Missing tile token (X)"
-         * Falls back to the plain string whenever opts data isn't
-         * available, so a misconfigured seed never crashes the tooltip.
-         */
-        public function getMissingTokenLabel(strId:String):String {
-            var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-            if (opts == null) return "Missing field token";
-            var g:int = int(opts.fieldTokenGranularity);
-            if (g == 2 || g == 3) {
-                if (strId == null || strId.length == 0)
-                    return "Missing field token";
-                return "Missing tile token (" + strId.charAt(0) + ")";
-            }
-            return "Missing field token";
         }
 
         /**

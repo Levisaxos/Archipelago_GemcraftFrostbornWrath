@@ -77,7 +77,6 @@ package {
     import patch.RitualSpawnPatcher;
     import patch.AchievementPanelPatcher;
     import patch.ApStatsTab;
-    import patch.FieldTooltipOverlay;
     import patch.SaveSlotDeleteFix;
     import patch.LoadSlotBadgePatch;
     import patch.SkillsTooltipOverlay;
@@ -197,7 +196,6 @@ package {
         // (SaveManager stats, attempt/outcome recording) keeps running underneath.
         // Flip to true to re-enable the UI once it's finished.
         private static const SHOW_AP_STATS_TAB:Boolean = false;
-        private var _fieldTooltipOverlay:FieldTooltipOverlay;
         private var _iconTooltipPreview:IconTooltipPreview;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
@@ -407,7 +405,6 @@ package {
                 _achievementUnlocker.onAchievementSkipped = _onExcludedAchievementUnlocked;
 
                 _stageTinter = new StageTinter(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
-                _fieldTooltipOverlay = new FieldTooltipOverlay(_logger, MOD_NAME, _fieldLogicEvaluator, _connectionManager);
                 _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator, _achievementLogicEvaluator);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
                 _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
@@ -1286,16 +1283,12 @@ package {
                 // In-game tracker: recolor stage lights based on logic state.
                 if (_stageTinter != null) _stageTinter.apply(mc);
                 // While the Slot Settings window is up (a modal overlay) the
-                // field tokens underneath keep firing hover events, so both the
-                // vanilla field tooltip (McInfoPanel, appended by
-                // _fieldTooltipOverlay) and the custom replacement panel
-                // (_iconTooltipPreview) would still pop up behind/over it. Force
-                // both off while it's open: skip the overlay, and hide() the
+                // field tokens underneath keep firing hover events, so the
+                // custom replacement panel (_iconTooltipPreview) would still pop
+                // up behind/over it. Force it off while it's open: hide() the
                 // custom panel so it dismisses immediately.
                 var settingsOpen:Boolean =
                         (_slotSettings != null && _slotSettings.isOpen);
-                if (_fieldTooltipOverlay != null && !settingsOpen)
-                    _fieldTooltipOverlay.onSelectorFrame(mc);
                 // Custom icon-based field tooltip (replaces the vanilla one on the map).
                 if (_iconTooltipPreview != null) {
                     if (settingsOpen)
