@@ -762,8 +762,8 @@ achievement_requirements = {
     "Stirring Up the Nest": {
         "ap_id": 2520,
         "game_id": 203,
-        "description": "Deliver gem bomb and wasp kills only, with at least 30 kills total. (Corrected vanilla bug: the in-game text omits the 30-kill minimum.)",
-        "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed. (Corrected vanilla bug: vanilla text omits the 30-kill minimum.)",
+        "description": "Deliver gem bomb and wasp kills only, with at least 30 kills total.",
+        "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed.",
         "vanilla_correction": True,
         "requirements": ["min_wl:20"],
         "required_effort": "Minor",
@@ -980,7 +980,7 @@ achievement_requirements = {
         "game_id": 404,
         "description": "Destroy 15 beacons.",
         "details": "Destroy 15 beacons in one battle.",
-        "requirements": ["tDarkMasonry"],
+        "requirements": ["tDarkMasonry", "minWave:20"],
         "required_effort": "Minor",
     },
     "Lost Signal": {
@@ -988,7 +988,7 @@ achievement_requirements = {
         "game_id": 405,
         "description": "Destroy 35 beacons.",
         "details": "Destroy 35 beacons in one battle.",
-        "requirements": ["tDarkMasonry", "fieldToken:30", "talismanRow:1"],
+        "requirements": ["tDarkMasonry", "minWave:40", "talismanRow:1", "min_wl:40"],
         "required_effort": "Major",
     },
     "Beacon Hunt": {
@@ -1101,8 +1101,8 @@ achievement_requirements = {
     "Getting Rid of Them": {
         "ap_id": 2212,
         "game_id": 344,
-        "description": "Drop 48 gem bombs on beacons or jars of wasps. (Corrected vanilla bug: the in-game text lists only beacons, but gem bombs on jars of wasps also count.)",
-        "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle. (Corrected vanilla bug: vanilla text lists only beacons.)",
+        "description": "Drop 48 gem bombs on beacons or jars of wasps.",
+        "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle.",
         "vanilla_correction": True,
         "requirements": ["eBeacon:4", "tDarkMasonry"],
         "required_effort": "Minor",
@@ -1980,8 +1980,8 @@ achievement_requirements = {
     "Green Vial": {
         "ap_id": 2224,
         "game_id": 204,
-        "description": "Have more than 74% of the monster kills caused by poison. (Corrected vanilla bug: the in-game text says 75%, but the code checks >74%.)",
-        "details": "In one battle, more than 74% of kills are from poison damage. (Corrected vanilla bug: vanilla text says 75%.)",
+        "description": "Have more than 74% of the monster kills caused by poison.",
+        "details": "In one battle, more than 74% of kills are from poison damage.",
         "vanilla_correction": True,
         "requirements": ["sPoison", "sTraps"],        
         "required_effort": "Minor",
@@ -2196,9 +2196,9 @@ achievement_requirements = {
     "Deal Some Damage Too": {
         "ap_id": 2116,
         "game_id": 469,
-        "description": "Have 6 traps with bolt enhanced gems in them. (Corrected vanilla bug: the in-game text says 5, but the check runs before the newly enhanced gem counts, so 6 are actually required.)",
+        "description": "Have 6 traps with bolt enhanced gems in them.",
         "vanilla_correction": True,
-        "requirements": ["sBolt", "eTraps"],
+        "requirements": ["sBolt", "sTraps"],
         "required_effort": "Minor",
     },
     "Shovel Swing": {
@@ -2349,7 +2349,7 @@ achievement_requirements = {
         "game_id": 205,
         "description": "Kill a giant with one shot.",
         "details": "Kill a giant in a single hit.",
-        "requirements": ["sBolt"],
+        "requirements": ["sBolt", "mGiant:1"],
         "required_effort": "Minor",
     },
     "Great Survivor": {
@@ -2640,7 +2640,7 @@ achievement_requirements = {
         "ap_id": 2350,
         "game_id": 446,
         "description": "Kill 125 bleeding monsters with barrage.",
-        "requirements": ["sBarrage", "sBleeding"],
+        "requirements": ["sBarrage", "sBleeding", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Easy Kill": {
@@ -2691,7 +2691,7 @@ achievement_requirements = {
     "Absolute Zero": {
         "ap_id": 2003,
         "game_id": 126,
-        "description": "Kill 273 frozen monsters that are not in a whiteout. (Corrected vanilla bug: the in-game text omits that frozen monsters also in a whiteout don't count.)",
+        "description": "Kill 273 frozen monsters that are not in a whiteout.",
         "vanilla_correction": True,
         "requirements": ["sFreeze"],
         "required_effort": "Major",
@@ -2699,8 +2699,8 @@ achievement_requirements = {
     "Snow Dust": {
         "ap_id": 2496,
         "game_id": 193,
-        "description": "Kill 100 frozen monsters while it's snowing. (Corrected vanilla bug: the in-game text says 95, but the code requires 100.)",
-        "details": "Kill 100 frozen monsters during snow weather. (Corrected vanilla bug: vanilla text says 95.)",
+        "description": "Kill 100 frozen monsters while it's snowing.",
+        "details": "Kill 100 frozen monsters during snow weather.",
         "vanilla_correction": True,
         "requirements": ["sFreeze", "wSnow"],
         "required_effort": "Major",
@@ -2709,7 +2709,7 @@ achievement_requirements = {
         "ap_id": 2495,
         "game_id": 178,
         "description": "Kill 20 frozen monsters with barrage.",
-        "requirements": ["sBarrage", "sFreeze"],
+        "requirements": ["sBarrage", "sFreeze", "min_wl:20"],
         "required_effort": "Minor",
     },
     "Icecracker": {
@@ -2717,7 +2717,7 @@ achievement_requirements = {
         "game_id": 181,
         "description": "Kill 90 frozen monsters with barrage.",
         "details": "Kill 90 frozen monsters using Barrage-enhanced gems.",
-        "requirements": ["sBarrage", "sFreeze"],
+        "requirements": ["sBarrage", "sFreeze", "min_wl:30"],
         "required_effort": "Major",
     },
     "Violet Ray": {
@@ -2725,7 +2725,7 @@ achievement_requirements = {
         "game_id": 177,
         "description": "Kill 20 frozen monsters with beam.",
         "details": "Kill 20 frozen monsters using Beam-enhanced gems.",
-        "requirements": ["sBeam", "sFreeze"],
+        "requirements": ["sBeam", "sFreeze", "min_wl:20"],
         "required_effort": "Minor",
     },
     "White Ray": {
@@ -2733,14 +2733,14 @@ achievement_requirements = {
         "game_id": 180,
         "description": "Kill 90 frozen monsters with beam.",
         "details": "Kill 90 frozen monsters using Beam-enhanced gems.",
-        "requirements": ["sBeam", "sFreeze"],
+        "requirements": ["sBeam", "sFreeze", "min_wl:30"],
         "required_effort": "Major",
     },
     "Shattering": {
         "ap_id": 2474,
         "game_id": 179,
         "description": "Kill 90 frozen monsters with bolt.",
-        "requirements": ["sBolt", "sFreeze", "minMonsters:90"],
+        "requirements": ["sBolt", "sFreeze", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Thin Ice": {
@@ -2748,13 +2748,13 @@ achievement_requirements = {
         "game_id": 158,
         "description": "Kill 20 frozen monsters with gems in traps.",
         "details": "Kill 20 frozen monsters with traps.",
-        "requirements": ["sFreeze", "eTraps"],
+        "requirements": ["sFreeze", "eTraps", "min_wl:20"],
         "required_effort": "Major",
     },
     "Crunchy Bites": {
         "ap_id": 2112,
         "game_id": 206,
-        "description": "Kill 160 frozen swarmlings while they're in a whiteout. (Corrected vanilla bug: the in-game text omits the whiteout requirement.)",
+        "description": "Kill 160 frozen swarmlings while they're in a whiteout.",
         "vanilla_correction": True,
         "requirements": ["sFreeze", "sWhiteout"],
         "required_effort": "Major",
@@ -3416,7 +3416,7 @@ achievement_requirements = {
         "ap_id": 2054,
         "game_id": 118,
         "description": "Reach 20.000 monsters killed through all the battles.",
-        "requirements": ["min_wl:10"],
+        "requirements": ["min_wl:30"],
         "required_effort": "Major",
     },
     "Crimson Journal": {
@@ -3440,7 +3440,7 @@ achievement_requirements = {
         "game_id": 300,
         "description": "Reach 1.000 poison kills through all the battles.",
         "details": "Cumulative across all battles: 1,000 kills with poison.",
-        "requirements": ["sPoison", "min_wl:10"],
+        "requirements": ["sPoison", "sTraps", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Deadly Curse": {
@@ -3448,7 +3448,7 @@ achievement_requirements = {
         "game_id": 307,
         "description": "Reach 5.000 poison kills through all the battles.",
         "details": "Cumulative across all battles: 5,000 kills with poison.",
-        "requirements": ["sPoison", "min_wl:30"],
+        "requirements": ["sPoison", "sTraps", "min_wl:35"],
         "required_effort": "Major",
     },
     "Nothing Prevails": {
@@ -3456,7 +3456,7 @@ achievement_requirements = {
         "game_id": 330,
         "description": "Reach 25.000 poison kills through all the battles.",
         "details": "Cumulative across all battles: 25,000 kills with poison.",
-        "requirements": ["sPoison", "min_wl:50"],
+        "requirements": ["sPoison", "sTraps", "min_wl:40"],
         "required_effort": "Extreme",
     },
     "Deathball": {
@@ -3841,8 +3841,8 @@ achievement_requirements = {
         "ap_id": 2265,
         "game_id": 434,
         "description": "Reach 500 strike spells cast through all the battles.",
-        "requirements": ["strikeSpells:1"],
-        "required_effort": "Minor",
+        "requirements": ["strikeSpells:1", "min_wl:25"],
+        "required_effort": "Major",
     },
     "Build Along": {
         "ap_id": 2071,
@@ -3871,7 +3871,7 @@ achievement_requirements = {
         "ap_id": 2142,
         "game_id": 10,
         "description": "Reach 500 waves started early through all the battles.",
-        "requirements": ["min_wl:30"],
+        "requirements": ["min_wl:10"],
         "required_effort": "Minor",
     },
     "White Wand": {
@@ -4154,7 +4154,7 @@ achievement_requirements = {
     "Ablatio Retinae": {
         "ap_id": 2002,
         "game_id": 311,
-        "description": "Whiteout 90 whited out monsters. (Corrected vanilla bug: the in-game text says 111, but the code unlocks at 90.)",
+        "description": "Whiteout 90 whited out monsters.",
         "vanilla_correction": True,
         "requirements": ["sWhiteout", "skillPoints:50"],
         "required_effort": "Minor",
@@ -4774,7 +4774,7 @@ achievement_requirements = {
     "Green Path": {
         "ap_id": 2223,
         "game_id": 609,
-        "description": "Kill 9.000 green blooded monsters. (Corrected vanilla bug: the in-game text says 9.900, but the code unlocks at 9.000.)",
+        "description": "Kill 9.000 green blooded monsters.",
         "vanilla_correction": True,
         "requirements": [],
         "required_effort": "Extreme",

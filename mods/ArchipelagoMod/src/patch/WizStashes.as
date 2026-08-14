@@ -377,7 +377,7 @@ package patch {
          * Per-frame: append "Locked — requires Wizard Stash {strId} Key" to the
          * in-level hover tooltip when the player is hovering a locked stash.
          *
-         * Pattern matches FieldTooltipOverlay: detect a freshly-rendered panel
+         * Pattern matches AchievementTooltipOverlay: detect a freshly-rendered panel
          * (vIp.isImageRendered), append textfields, dispose the bitmap, and let
          * vanilla's doEnterFrame re-render. A marker text guards against
          * appending twice for the same hovered cell.

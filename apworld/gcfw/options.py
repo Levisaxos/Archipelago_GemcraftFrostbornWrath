@@ -8,6 +8,7 @@ class RandomStartingStages(Range):
 
     0 = don't roll — start on exactly the fields you list in Starting Stages instead.
     1-4 = start on that many randomly-chosen W fields.
+
     Set this to `random` to roll the count itself (which can land on 0 = your specific list), or `random-range-1-4` to always roll a random 1 to 4.
     """
     display_name = "Random Starting Stages"
@@ -19,7 +20,10 @@ class RandomStartingStages(Range):
 class StartingStages(OptionSet):
     """The exact W fields you start on, used when Random Starting Stages is 0.
 
-    List one or more of W1, W2, W3, W4 — every one you list is playable from the menu immediately; all other stages must be unlocked through Archipelago. Must contain at least one field. Starting on more than one field only makes a difference with per-stage field-token granularity (with per-tile, the whole W tile is already free from any single W starter).
+    List one or more of W1, W2, W3, W4 — every one you list is playable from the menu immediately; all other stages must be unlocked through Archipelago.
+    Must contain at least one field.
+
+    Starting on more than one field only makes a difference with per-stage field-token granularity (with per-tile, the whole W tile is already free from any single W starter).
     """
     display_name = "Starting Stages"
     valid_keys = frozenset({"W1", "W2", "W3", "W4"})
@@ -60,6 +64,7 @@ class Goal(Choice):
 
 class FieldsRequired(Range):
     """Number of Journey stages that must be completed to win.
+
     Only used when Goal is set to 'fields_count'.
 
     The game has 122 stages total.
@@ -73,7 +78,10 @@ class FieldsRequired(Range):
 class XpTomeBonus(Range):
     """Approximate total wizard levels granted by all XP tomes you'll find combined.
 
-    XP tomes come as Tattered Scrolls, Worn Tomes, and Ancient Grimoires (40 in total), with progressively larger level rewards. This option scales their combined value. Lower for a slower XP curve, higher for a faster one.
+    XP tomes come as Tattered Scrolls, Worn Tomes, and Ancient Grimoires (40 in total), with progressively larger level rewards.
+    This option scales their combined value.
+    Lower for a slower XP curve, higher for a faster one.
+
     These levels are "bonus" and not counted towards progression; adding more XP tomes makes the game easier.
     """
     display_name = "XP Tome Bonus"
@@ -85,10 +93,10 @@ class XpTomeBonus(Range):
 class DeathLinkPunishment(Choice):
     """What happens when a DeathLink signal is received.
 
-    gem_loss:     A percentage of placed gems (and their towers/traps) are destroyed.
-    wave_surge:   A set of enraged waves is injected immediately.
-    instant_fail: The current level fails immediately (traditional DeathLink).
-    spawn_horde:  A flood of vanilla-strength monsters from the current wave is spawned at once.
+    gem_loss:      A percentage of placed gems (and their towers/traps) are destroyed.
+    wave_surge:    A set of enraged waves is injected immediately.
+    instant_fail:  The current level fails immediately (traditional DeathLink).
+    spawn_horde:   A flood of vanilla-strength monsters from the current wave is spawned at once.
     spawn_special: A burst of special enemies (Apparitions / Specters / etc.) is spawned with HP scaled to ~10 waves above the current one.
     """
     display_name = "DeathLink Punishment"
@@ -102,6 +110,7 @@ class DeathLinkPunishment(Choice):
 
 class GemLossPercent(Range):
     """Percentage of placed gems destroyed on a DeathLink (gem_loss punishment only).
+
     Always rounded up — so even 1 gem with 10% loses that gem.
     """
     display_name = "Gem Loss Percent"
@@ -137,7 +146,8 @@ class SpawnHordeCount(Range):
 class SpawnSpecialElements(OptionSet):
     """Special enemy types that may be spawned on a DeathLink (spawn_special only).
 
-    Each of the N spawns picks a random type from this set. Leave the default to allow all five types.
+    Each of the N spawns picks a random type from this set.
+    Leave the default to allow all five types.
     """
     display_name = "Spawn Special Elements"
     valid_keys = frozenset({
@@ -177,7 +187,7 @@ class DeathLinkCooldown(Range):
 class StartingWizardLevel(Range):
     """Wizard level the player starts at, before any XP tomes are collected.
 
-    Setting this above 1 grants bonus wizard levels at game start, giving extra skill points to spend before the run is in full swing. 
+    Setting this above 1 grants bonus wizard levels at game start, giving extra skill points to spend before the run is in full swing.
     """
     display_name = "Starting Wizard Level"
     range_start = 1
@@ -206,7 +216,8 @@ class DisableTrial(Toggle):
 class EnemyHpMultiplier(Range):
     """Percentage multiplier applied to every enemy's HP at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher. 
+    100 = no change.
+    Values below 100 make enemies weaker; values above 100 make enemies tougher.
     """
     display_name = "Enemy HP Multiplier"
     range_start = 50
@@ -217,7 +228,8 @@ class EnemyHpMultiplier(Range):
 class EnemyArmorMultiplier(Range):
     """Percentage multiplier applied to every enemy's armor level at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher.
+    100 = no change.
+    Values below 100 make enemies weaker; values above 100 make enemies tougher.
     """
     display_name = "Enemy Armor Multiplier"
     range_start = 50
@@ -228,7 +240,8 @@ class EnemyArmorMultiplier(Range):
 class EnemyShieldMultiplier(Range):
     """Percentage multiplier applied to every enemy's shield HP at the start of each wave.
 
-    100 = no change.  Values below 100 make enemies weaker; values above 100 make enemies tougher.
+    100 = no change.
+    Values below 100 make enemies weaker; values above 100 make enemies tougher.
     """
     display_name = "Enemy Shield Multiplier"
     range_start = 50
@@ -239,7 +252,10 @@ class EnemyShieldMultiplier(Range):
 class EnemiesPerWaveMultiplier(Range):
     """Percentage multiplier applied to the number of monsters in every wave.
 
-    100 = no change. 150 = 50% more monsters per wave. 50 = half as many. The wave bar tooltip reflects the actual counts you'll face.
+    100 = no change.
+    150 = 50% more monsters per wave.
+    50 = half as many.
+    The wave bar tooltip reflects the actual counts you'll face.
     """
     display_name = "Enemies Per Wave Multiplier"
     range_start = 50
@@ -262,7 +278,8 @@ class ExtraWaveCount(Range):
 class GemPouchGranularity(Choice):
     """How collectible gems on the field are gated by Archipelago items.
 
-    By default GemCraft stages spawn loose gem orbs you can pick up to grow your mana pool. This option lets you lock those orbs behind Gem Pouch items, so stages stay "dry" until you receive a pouch that covers them.
+    By default GemCraft stages spawn loose gem orbs you can pick up to grow your mana pool.
+    This option lets you lock those orbs behind Gem Pouch items, so stages stay "dry" until you receive a pouch that covers them.
 
     off:                  Gems are never gated. Every stage spawns gem orbs as normal.
     per_tile:             One pouch per map tile (26 total). A stage spawns no gem orbs until you receive the pouch for its tile.
@@ -282,9 +299,13 @@ class GemPouchGranularity(Choice):
 class FieldTokenGranularity(Choice):
     """How coarse the items that unlock new stages are.
 
-    Stages start locked and require Field Tokens to access. This option controls whether each stage has its own token or whole groups of stages unlock together. Coarser settings put fewer unique tokens in the pool but each token unlocks more stages; finer settings give you more individual unlocks but a larger item pool overall.
+    Stages start locked and require Field Tokens to access.
+    This option controls whether each stage has its own token or whole groups of stages unlock together.
+    Coarser settings put fewer unique tokens in the pool but each token unlocks more stages; finer settings give you more individual unlocks but a larger item pool overall.
 
-    Each granularity has a "_progressive" sibling. Progressive variants use a single generic token that appears multiple times in the pool, and the Nth copy you receive unlocks the Nth stage/tile in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
+    Each granularity has a "_progressive" sibling.
+    Progressive variants use a single generic token that appears multiple times in the pool, and the Nth copy you receive unlocks the Nth stage/tile in a randomized order.
+    The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
 
     per_stage:             One token per stage (122 tokens). Each stage has its own unlock.
     per_stage_progressive: 122 generic tokens. Each one unlocks the next stage in a randomized order.
@@ -302,9 +323,13 @@ class FieldTokenGranularity(Choice):
 class StashKeyGranularity(Choice):
     """How coarse the items that unlock Wizard Stashes are.
 
-    Wizard Stashes start locked and need a key to open. This option controls whether each stash needs its own key or groups of stashes unlock together. Coarser settings mean fewer unique keys but each key opens more stashes.
+    Wizard Stashes start locked and need a key to open.
+    This option controls whether each stash needs its own key or groups of stashes unlock together.
+    Coarser settings mean fewer unique keys but each key opens more stashes.
 
-    Like Field Tokens, each granularity has a "_progressive" sibling that uses a generic key. The Nth copy unlocks the Nth stash in a randomized order. The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
+    Like Field Tokens, each granularity has a "_progressive" sibling that uses a generic key.
+    The Nth copy unlocks the Nth stash in a randomized order.
+    The in-game effect is identical, but progressive variants tend to produce faster and more reliable seeds.
 
     off:                  Stashes are not gated. Every Wizard Stash is open from the start — no keys exist.
     per_tile:             One key per map tile (26 keys). A tile's key unlocks every stash on that tile.
@@ -325,7 +350,8 @@ class StashKeyGranularity(Choice):
 class StartingOvercrowd(Toggle):
     """When enabled, the Overcrowd battle trait is active from the start of the run.
 
-    Overcrowd makes more monsters arrive each wave, increasing the difficulty of every stage from the very start. With this on, you receive Overcrowd up front and it won't appear as a collectible item anywhere in the multiworld.
+    Overcrowd makes more monsters arrive each wave, increasing the difficulty of every stage from the very start.
+    With this on, you receive Overcrowd up front and it won't appear as a collectible item anywhere in the multiworld.
     """
     display_name = "Start with Overcrowd"
     default = 0
@@ -334,7 +360,8 @@ class StartingOvercrowd(Toggle):
 class AchievementRequiredEffort(Choice):
     """How many of the in-game achievements count as Archipelago checks.
 
-    Each level includes every achievement from the levels below it, so the check counts are cumulative. Counts exclude achievements that can't be tracked (RNG-based or hidden ones); disabling Endurance mode removes a few more.
+    Each level includes every achievement from the levels below it, so the check counts are cumulative.
+    Counts exclude achievements that can't be tracked (RNG-based or hidden ones); disabling Endurance mode removes a few more.
 
     off:      no achievement checks.
     trivial:  124 checks - collectable through normal vanilla play.
@@ -342,7 +369,8 @@ class AchievementRequiredEffort(Choice):
     major:    474 checks - adds 139 that need some time investment.
     extreme:  570 checks - adds 96 that need massive time investment and luck.
 
-    Trivial achievements are always included while this option is on, so the randomizer has enough locations for its progression items. More achievements means more checks to find and a longer seed.
+    Trivial achievements are always included while this option is on, so the randomizer has enough locations for its progression items.
+    More achievements means more checks to find and a longer seed.
     """
     display_name = "Achievement Required Effort"
     option_off      = 0
@@ -356,9 +384,16 @@ class AchievementRequiredEffort(Choice):
 class Difficulty(Choice):
     """Overall randomizer difficulty.
 
-    Fields unlock based on your wizard level, which you raise by clearing fields. Difficulty acts as a bonus or penalty on how much wizard-level progress each clear is worth: Easy clears grant the most, Extreme clears the least, with Medium and Hard in between.
-    So the two ends trade off against each other. Easy makes battles forgiving and each win pushes your wizard level up the fastest, so you blow through the unlock gates quickly. Extreme makes battles punishing and each win is worth the least, so the climb to each gate is the slowest and most gradual. The gates themselves sit at the same wizard levels on every difficulty.
-    Hard and Extreme MUST have Endurance mode enabled (disable_endurance off): their clears grant little XP, so Endurance runs are the catch-up path to reach the gates if you get stuck. Generation fails if Hard or Extreme is chosen with Endurance disabled.
+    Fields unlock based on your wizard level, which you raise by clearing fields.
+    Difficulty acts as a bonus or penalty on how much wizard-level progress each clear is worth: Easy clears grant the most, Extreme clears the least, with Medium and Hard in between.
+
+    So the two ends trade off against each other.
+    Easy makes battles forgiving and each win pushes your wizard level up the fastest, so you blow through the unlock gates quickly.
+    Extreme makes battles punishing and each win is worth the least, so the climb to each gate is the slowest and most gradual.
+    The gates themselves sit at the same wizard levels on every difficulty.
+
+    Hard and Extreme MUST have Endurance mode enabled (disable_endurance off): their clears grant little XP, so Endurance runs are the catch-up path to reach the gates if you get stuck.
+    Generation fails if Hard or Extreme is chosen with Endurance disabled.
     """
     display_name = "Difficulty"
     option_easy    = 0
@@ -371,9 +406,12 @@ class Difficulty(Choice):
 class ExtraShadowCoresPerWave(Range):
     """Mod-only quality-of-life option that makes shadow cores easier to earn.
 
-    Grants this many extra shadow cores for every wave you get through in a battle. The extra cores drop into your normal shadow core pool exactly like vanilla drops, and are banked at the end of the level (on victory or defeat). Beating a 30-wave field at 5 gives 150 extra cores; losing a 50-wave field after 30 waves still gives 150.
+    Grants this many extra shadow cores for every wave you get through in a battle.
+    The extra cores are added to your normal shadow core pool and scaled by Seeker Sense exactly like vanilla drops (at max Seeker Sense, each per-wave core counts double), then banked at the end of the level (on victory or defeat).
+    Beating a 30-wave field at 5/wave gives 150 extra cores before Seeker Sense; losing a 50-wave field after 30 waves still gives the same 30-wave total.
 
-    0 disables the feature. This option has no effect on generation, item placement, or logic.
+    0 disables the feature.
+    This option has no effect on generation, item placement, or logic.
     """
     display_name = "Extra Shadow Cores per Wave"
     range_start = 0
@@ -396,7 +434,7 @@ class GCFWOptions(PerGameCommonOptions):
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial
     xp_tome_bonus:             XpTomeBonus
-    starting_overcrowd:        StartingOvercrowd    
+    starting_overcrowd:        StartingOvercrowd
     starting_wizard_level:     StartingWizardLevel
     extra_shadow_cores_per_wave: ExtraShadowCoresPerWave
     enemy_hp_multiplier:         EnemyHpMultiplier

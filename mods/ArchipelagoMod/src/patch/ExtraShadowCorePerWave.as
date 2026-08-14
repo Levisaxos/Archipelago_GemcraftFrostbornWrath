@@ -1,6 +1,7 @@
 package patch {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+    import com.giab.games.gcfw.constants.SkillId;
     import data.AV;
 
     /**
@@ -16,6 +17,13 @@ package patch {
      *   - losing a 50-wave field after 30 waves still grants 150 cores.
      * No second pool, no separate post-level grant — the reward flows through
      * the game's own drop-tally and outcome panel.
+     *
+     * Seeker Sense parity: vanilla shadow-core drops are scaled at creation by
+     * (1 + skillEffectiveValues[SEEKER_SENSE][0]) — +5%/level, up to 2x at 20
+     * levels (IngamePopulator.as:267).  Because these per-wave cores are banked
+     * directly into ocLootShadowCoreNum (past the point where drops get scaled),
+     * we apply the same multiplier here so the reward tracks the skill exactly
+     * like a real drop would: at max Seeker Sense, 5/wave becomes 10/wave.
      *
      * Detection reuses the delta pattern from LinkedWaveEarlyCredit: watch
      * IngameCore.currentWave (starts at -1, +1 per wave spawned; linked pairs
@@ -73,13 +81,27 @@ package patch {
 
                 var waveDelta:int = curWave - _prevWave;
                 if (waveDelta > 0) {
-                    core.ocLootShadowCoreNum.s(core.ocLootShadowCoreNum.g() + per * waveDelta);
+                    var granted:int = Math.round(per * waveDelta * _seekerSenseMultiplier(core));
+                    core.ocLootShadowCoreNum.s(core.ocLootShadowCoreNum.g() + granted);
                 }
 
                 _prevWave = curWave;
             } catch (err:Error) {
                 _logger.log(_modName, "ExtraShadowCorePerWave.onIngameFrame ERROR: " + err.message);
             }
+        }
+
+        // -----------------------------------------------------------------------
+
+        /**
+         * Mirror vanilla's shadow-core drop scaling: (1 + Seeker Sense effect 0).
+         * Falls back to 1.0 (no bonus) if the skill table isn't populated yet.
+         */
+        private function _seekerSenseMultiplier(core:*):Number {
+            var sev:* = core.skillEffectiveValues;
+            if (sev == null || sev[SkillId.SEEKER_SENSE] == null || sev[SkillId.SEEKER_SENSE][0] == null)
+                return 1.0;
+            return 1 + Number(sev[SkillId.SEEKER_SENSE][0].g());
         }
     }
 }

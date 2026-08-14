@@ -19,7 +19,7 @@ package patch {
      * The panel is already drawn by the time we see it, so we edit the
      * matching textfield in place, dispose the cached bitmap and re-run
      * doEnterFrame to redraw — the same intercept pattern as
-     * FieldTooltipOverlay. Layout below the line is left untouched: the
+     * AchievementTooltipOverlay. Layout below the line is left untouched: the
      * shortened text simply occupies one line instead of two.
      */
     public class SkillTypeTooltipOverlay {

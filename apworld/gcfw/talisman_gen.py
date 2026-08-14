@@ -288,14 +288,30 @@ def _calculate(seed, rarity, ftype, upgrade_level):
             "property_values": values}
 
 
-def _cell_specs():
-    """25 grid cells: uniform tiling (interior right/down = tab, left/up = notch)
-    → each cell's (type, shape_id), and rune = row index."""
+def _cell_specs(rng):
+    """25 grid cells: a RANDOM legal jigsaw tiling → each cell's (type, shape_id),
+    with rune = row index.
+
+    Each interior boundary independently picks whether the tab (1) sits on the
+    upper/left cell or the lower/right one; the neighbour gets the complementary
+    notch (-1), and every outer edge stays flat (0).  This keeps the tiling legal
+    (fragments still interlock) and preserves each cell's TYPE — border position,
+    not the pip pattern, decides the flat-edge count — so only the shape varies.
+    rune_id, rarity, type and properties are untouched; the seed search just
+    targets a different (still valid) shape_id per cell, giving real fragment-
+    shape variety instead of the old uniform (-1,1,-1,1) interior."""
+    # h[r][c] = link on the RIGHT of cell (r,c) for the vertical boundary c|c+1;
+    # v[r][c] = link on the DOWN of cell (r,c) for the horizontal boundary r|r+1.
+    # The neighbour across each boundary gets the negation, so edges stay paired.
+    h = [[1 if rng.random() < 0.5 else -1 for _ in range(4)] for _ in range(5)]
+    v = [[1 if rng.random() < 0.5 else -1 for _ in range(5)] for _ in range(4)]
     specs = []
     for pos in range(25):
         r, c = divmod(pos, 5)
-        links = (-1 if r > 0 else 0, 1 if r < 4 else 0,
-                 -1 if c > 0 else 0, 1 if c < 4 else 0)
+        links = (0 if r == 0 else -v[r - 1][c],
+                 0 if r == 4 else v[r][c],
+                 0 if c == 0 else -h[r][c - 1],
+                 0 if c == 4 else h[r][c])
         n_flat = links.count(0)
         ftype = CORNER if n_flat == 2 else (EDGE if n_flat == 1 else INNER)
         specs.append({"pos": pos, "type": ftype, "rune": r,
@@ -325,7 +341,7 @@ def _search_cell(spec, rng, need_prop, rarity):
 
 
 def _build(rng):
-    specs = _cell_specs()
+    specs = _cell_specs(rng)
     outer = [s for s in specs if s["type"] in (EDGE, CORNER)]
     rng.shuffle(outer)
     freeze_pos = {s["pos"] for s in outer[:FREEZE_CELLS]}

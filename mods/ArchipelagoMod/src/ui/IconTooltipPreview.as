@@ -30,8 +30,11 @@ package ui {
     import tracker.AchievementLogicEvaluator;
 
     /**
-     * PREVIEW of the proposed icon-based field tooltip \u2014 the panel intended to
-     * eventually replace the vanilla field hover tooltip.
+     * The icon-based field hover tooltip. This is the LIVE field tooltip on the
+     * world map \u2014 it fully replaces the vanilla one (and the retired
+     * McInfoPanel-append `FieldTooltipOverlay`): on field hover it force-hides
+     * `GV.mcInfoPanel` and draws this panel instead. (Class name keeps its
+     * original "Preview" suffix for continuity; it is no longer a preview.)
      *
      * Content is LIVE for whichever field token the cursor is over:
      *   - stage name, wave count, first-wave HP  (from GV.stageCollection)
@@ -90,7 +93,7 @@ package ui {
         private var _anchorY:Number = 170;
         // True while we're forcing the vanilla info panel hidden.
         private var _suppressed:Boolean = false;
-        // Logic source for journey/stash reachability (same one FieldTooltipOverlay uses).
+        // Logic source for journey/stash reachability.
         private var _evaluator:FieldLogicEvaluator;
         // Achievement logic — supplies the per-field "doable here" achievement
         // block (specific + global split). May be null before AP connect.
@@ -565,8 +568,7 @@ package ui {
             return 0;
         }
 
-        /** Tester-only gate for the XP/WL debug lines (mirrors the old
-         *  FieldTooltipOverlay._debugWlLines gate). */
+        /** Tester-only gate for the XP/WL debug lines. */
         private function _isTesterSlot():Boolean {
             return AV.currentSlot != null
                 && AV.currentSlot.toLowerCase().indexOf("levisaxos") == 0;
@@ -595,7 +597,7 @@ package ui {
          *  player can create them (a pouch is held, or pouch gating is off), a
          *  single desaturated hollow gem on a free starter with no pouch yet, or
          *  nothing on a non-free stage without a pouch. Mirrors SelectorRenderer's
-         *  gem rendering + the old FieldTooltipOverlay hollow-gem behaviour. */
+         *  gem rendering + the HollowGemInjector hollow-gem behaviour. */
         private function addGems(sid:int, strId:String, y:Number):Number {
             var pouchMode:int = 0;
             try {
