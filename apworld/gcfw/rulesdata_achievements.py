@@ -3527,14 +3527,22 @@ achievement_requirements = {
         "ap_id": 2352,
         "game_id": 442,
         "description": "Reach 5.000 strike spell hits through all the battles.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Major",
     },
     "Frozen Crowd": {
         "ap_id": 2199,
         "game_id": 443,
         "description": "Reach 10.000 strike spell hits through all the battles.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Major",
     },
     "Drop the Ice": {
@@ -3542,7 +3550,11 @@ achievement_requirements = {
         "game_id": 444,
         "description": "Reach 50.000 strike spell hits through all the battles.",
         "details": "Cumulative across all battles: 50,000 strike spell hits.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Major",
     },
     "Ice for Everyone": {
@@ -3550,14 +3562,22 @@ achievement_requirements = {
         "game_id": 445,
         "description": "Reach 100.000 strike spell hits through all the battles.",
         "details": "Cumulative across all battles: 100,000 strike spell hits.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Extreme",
     },
     "Stormbringer": {
         "ap_id": 2525,
         "game_id": 435,
         "description": "Reach 1.000 strike spells cast through all the battles.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Minor",
     },
     "Ice Mage": {
@@ -3565,7 +3585,11 @@ achievement_requirements = {
         "game_id": 436,
         "description": "Reach 2.500 strike spells cast through all the battles.",
         "details": "Cumulative across all battles: cast 2,500 strike spells.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Major",
     },
     "Frostborn": {
@@ -3573,7 +3597,11 @@ achievement_requirements = {
         "game_id": 437,
         "description": "Reach 5.000 strike spells cast through all the battles.",
         "details": "Cumulative across all battles: cast 5,000 strike spells.",
-        "requirements": ["strikeSpells:1", "min_wl:50"],
+        "requirements": [
+            ["strikeSpells:1", "min_wl:50"],
+            ["strikeSpells:2", "min_wl:40"],
+            ["strikeSpells:3", "min_wl:30"]
+        ]
         "required_effort": "Extreme",
     },
     "Brickery": {
@@ -3841,7 +3869,7 @@ achievement_requirements = {
         "ap_id": 2265,
         "game_id": 434,
         "description": "Reach 500 strike spells cast through all the battles.",
-        "requirements": ["strikeSpells:1", "min_wl:25"],
+        "requirements": ["strikeSpells:1"],
         "required_effort": "Major",
     },
     "Build Along": {
