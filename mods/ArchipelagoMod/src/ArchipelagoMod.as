@@ -808,22 +808,15 @@ package {
         }
 
         /**
-         * Debug-menu "Achievements" tab: the whole trackable, still-missing
-         * achievement pool as Array of { apId, name }. Untrackables and
-         * gen-excluded achievements (effort / Trial / Endurance) are filtered
-         * out by the unlocker. Empty before AP connect.
+         * Debug-menu "Achievements" tab: the trackable, still-missing (not yet
+         * collected) achievement pool as Array of { apId, name }. Untrackables
+         * and gen-excluded achievements (effort / Trial / Endurance) are always
+         * filtered out by the unlocker. When onlyInLogic is true (the "Only in
+         * logic" toggle, default on) achievements not yet reachable are also
+         * hidden; pass false to include out-of-logic ones. Empty before AP connect.
          */
-        public function getDebugAchievementPool():Array {
-            return (_achievementUnlocker != null) ? _achievementUnlocker.getTrackableMissingAchievements() : [];
-        }
-
-        /**
-         * Debug-menu "Achievements" tab, alternate view: every non-excluded
-         * achievement the player has NOT yet earned in-game (ignores whether the
-         * AP check was already sent). Empty before AP connect.
-         */
-        public function getUnearnedAchievementPool():Array {
-            return (_achievementUnlocker != null) ? _achievementUnlocker.getUnearnedTrackableAchievements() : [];
+        public function getDebugAchievementPool(onlyInLogic:Boolean = true):Array {
+            return (_achievementUnlocker != null) ? _achievementUnlocker.getTrackableMissingAchievements(onlyInLogic) : [];
         }
 
         /**

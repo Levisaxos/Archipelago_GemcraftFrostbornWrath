@@ -372,13 +372,18 @@ package unlockers {
          * Whole trackable achievement pool for the debug "Achievements" tab:
          * every achievement that has a real AP location (getSkipReason == null —
          * i.e. not untrackable, not above the effort threshold, not Trial-only,
-         * not Endurance-disabled) and is still missing on the server. Returns an
-         * Array of { apId:int, name:String } sorted by name.
+         * not Endurance-disabled) and is still missing on the server (not yet
+         * collected). Returns an Array of { apId:int, name:String } sorted by
+         * name.
          *
-         * Reachability is NOT considered — this is the full pool, not the
-         * in-logic subset (AchievementLogicEvaluator.getInLogicAchApIds()).
+         * When onlyInLogic is true (the default), the pool is further narrowed to
+         * achievements currently reachable in logic — this keeps the debug menu
+         * from offering checks the player couldn't legitimately reach yet. Pass
+         * false to include out-of-logic achievements as well. See
+         * AchievementLogicEvaluator.isAchievementInLogic(). If the evaluator
+         * isn't wired (null), the in-logic filter is skipped as a fallback.
          */
-        public function getTrackableMissingAchievements():Array {
+        public function getTrackableMissingAchievements(onlyInLogic:Boolean = true):Array {
             var result:Array = [];
             if (AV.saveData == null) return result;
             var missing:Object = AV.saveData.missingLocations;
@@ -391,38 +396,14 @@ package unlockers {
                 if (apId < 2000 || apId > 2636) continue;
                 if (missing[apId] != true) continue;
                 if (getSkipReason(achData) != null) continue;
-                result.push({ apId: apId, name: name });
-            }
-            result.sortOn("name", Array.CASEINSENSITIVE);
-            return result;
-        }
-
-        /**
-         * Every non-excluded achievement the player has NOT yet earned in-game,
-         * regardless of whether the AP location check has been sent. Used by the
-         * debug menu's "not yet earned" achievements view. Filters:
-         *   - has a real AP location (getSkipReason == null)
-         *   - GV.ppd.gainedAchis[game_id] !== true (not earned in this slot)
-         * Returns an Array of { apId:int, name:String } sorted by name.
-         *
-         * Differs from getTrackableMissingAchievements, which filters on the
-         * AP server's missing-locations set (i.e. hides already-checked ones);
-         * this filters on the game's own earned state instead.
-         */
-        public function getUnearnedTrackableAchievements():Array {
-            var result:Array = [];
-            var gainedAchis:Array = (GV.ppd != null) ? GV.ppd.gainedAchis : null;
-
-            for (var name:String in _achievementData) {
-                var achData:Object = _achievementData[name];
-                if (!achData || achData.apId == null) continue;
-                var apId:int = int(achData.apId);
-                if (apId < 2000 || apId > 2636) continue;
-                if (getSkipReason(achData) != null) continue;
-                if (achData.game_id != null && gainedAchis != null) {
-                    var gameId:int = int(achData.game_id);
-                    if (gameId >= 0 && gameId < gainedAchis.length && gainedAchis[gameId] === true)
-                        continue;
+                if (onlyInLogic && _achievementLogicEvaluator != null) {
+                    try {
+                        if (!Boolean(_achievementLogicEvaluator.isAchievementInLogic(name, achData)))
+                            continue;
+                    } catch (eLogic:Error) {
+                        _logger.log(_modName, "getTrackableMissingAchievements: isAchievementInLogic threw for '"
+                            + name + "': " + eLogic.message);
+                    }
                 }
                 result.push({ apId: apId, name: name });
             }

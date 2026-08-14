@@ -209,8 +209,8 @@ package ui {
          * the menu is first constructed. Caller is responsible for (re)wiring
          * the freshly-built achievementPanels.
          */
-        public function rebuildAchievementsContents(pool:Array, showingUnearned:Boolean = false):void {
-            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool, showingUnearned);
+        public function rebuildAchievementsContents(pool:Array, onlyInLogic:Boolean = true):void {
+            _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool, onlyInLogic);
             if (tabStrip != null && tabStrip.activeIndex == TAB_ACHIEVEMENTS) {
                 _showTab(TAB_ACHIEVEMENTS);
             }
@@ -220,9 +220,9 @@ package ui {
         // Tab builders
 
         private function _buildDisclaimerTab():Array {
-            var arr:Array = [];
-            arr.push(new DebugDisclaimerView(200, CONTENT_START_Y, 760));
-            return arr;
+            // Multiple stacked blocks (not one tall TextField) so the shared
+            // viewport can scroll them — see DebugDisclaimerView.
+            return DebugDisclaimerView.build(200, CONTENT_START_Y, 760);
         }
 
         private function _buildLevelsTab():Array {
@@ -409,7 +409,7 @@ package ui {
          * ScrDebugOptions._onAchievementClick. `pool` is Array of { apId, name };
          * null/empty renders a placeholder prompting the player to connect.
          */
-        private function _buildAchievementsTab(pool:Array, showingUnearned:Boolean = false):Array {
+        private function _buildAchievementsTab(pool:Array, onlyInLogic:Boolean = true):Array {
             var arr:Array = [];
             achievementPanels = [];
 
@@ -417,18 +417,18 @@ package ui {
             arr.push(new McOptTitle("Send Achievement Checks", TITLE_X, vY));
             vY += ROW_HEIGHT_NORM;
 
-            // View-mode toggle: "missing checks only" (server missing set) vs
-            // "not yet earned" (every non-excluded achievement not earned in-game).
-            var toggleLabel:String = showingUnearned
-                ? "Show: Not yet earned  (tap for missing only)"
-                : "Show: Missing checks only  (tap for not yet earned)";
-            achievementModeBtn = new McOptPanel(toggleLabel, TITLE_X, vY, false);
+            // "Only in logic" checkbox toggle. Checked (frame 2) = hide
+            // out-of-logic achievements (default); unchecked = show them all.
+            // ScrDebugOptions keeps the frame in sync each render tick; set it
+            // here too so it's correct on first paint.
+            achievementModeBtn = new McOptPanel("Only in logic", TITLE_X, vY, false);
+            achievementModeBtn.btn.gotoAndStop(onlyInLogic ? 2 : 1);
             arr.push(achievementModeBtn);
             vY += ROW_HEIGHT_NORM;
 
             if (pool == null || pool.length == 0) {
-                var emptyMsg:String = showingUnearned
-                    ? "(no un-earned achievements to show)"
+                var emptyMsg:String = onlyInLogic
+                    ? "(no in-logic achievements — connect to AP, or toggle off)"
                     : "(connect to AP to list achievements)";
                 arr.push(new McOptTitle(emptyMsg, TITLE_X, vY));
                 return arr;

@@ -26,9 +26,10 @@ package ui {
         private var _scroll:ScrollablePanel;
         private var _isOpen:Boolean = false;
         private var _wiredStageModes:Object = {}; // mode -> true once wired
-        // Achievements tab view mode: false = still-missing checks only,
-        // true = every non-excluded achievement not yet earned in-game.
-        private var _showUnearnedAchievements:Boolean = false;
+        // Achievements tab "Only in logic" toggle. On (default) = only show
+        // still-missing achievements currently reachable in logic; off = show all
+        // still-missing achievements, including out-of-logic ones.
+        private var _onlyInLogic:Boolean = true;
 
         public function get isOpen():Boolean { return _isOpen; }
 
@@ -115,10 +116,8 @@ package ui {
          * whenever the toggle flips.
          */
         private function _rebuildAchievementsTab():void {
-            var pool:Array = _showUnearnedAchievements
-                ? _mod.getUnearnedAchievementPool()
-                : _mod.getDebugAchievementPool();
-            _mc.rebuildAchievementsContents(pool, _showUnearnedAchievements);
+            var pool:Array = _mod.getDebugAchievementPool(_onlyInLogic);
+            _mc.rebuildAchievementsContents(pool, _onlyInLogic);
             _wireAchievementPanels();
 
             // Wire the freshly-built view-mode toggle button.
@@ -130,7 +129,7 @@ package ui {
         }
 
         private function _onAchievementModeToggle(e:MouseEvent):void {
-            _showUnearnedAchievements = !_showUnearnedAchievements;
+            _onlyInLogic = !_onlyInLogic;
             _rebuildAchievementsTab();
             _scroll.refreshContents();
             _scroll.renderViewport();
@@ -432,6 +431,10 @@ package ui {
                     break;
 
                 case McDebugOptions.TAB_ACHIEVEMENTS:
+                    // "Only in logic" toggle: checked (frame 2) when the filter is on.
+                    if (_mc.achievementModeBtn != null) {
+                        _mc.achievementModeBtn.btn.gotoAndStop(_onlyInLogic ? 2 : 1);
+                    }
                     _renderGrantPanelsCollected(_mc.achievementPanels);
                     break;
 
