@@ -1323,7 +1323,7 @@ achievement_requirements = {
         "game_id": 314,
         "description": "Freeze 111 frozen monsters.",
         "details": "Freeze 111 already-frozen monsters (re-freeze).",
-        "requirements": ["sFreeze"],
+        "requirements": ["sFreeze", "minMonsters:222"],
         "required_effort": "Major",
     },
     "Hold Still": {
@@ -1331,7 +1331,7 @@ achievement_requirements = {
         "game_id": 313,
         "description": "Freeze 130 whited out monsters.",
         "details": "Freeze 130 already-whited-out monsters (Whiteout first, then Freeze).",
-        "requirements": ["sFreeze", "sWhiteout"],
+        "requirements": ["sFreeze", "sWhiteout", "minMonsters:260"],
         "required_effort": "Major",
     },
     "Splash Swim Splash": {
@@ -2648,7 +2648,7 @@ achievement_requirements = {
         "game_id": 455,
         "description": "Kill 120 bleeding monsters.",
         "details": "Kill 120 bleeding monsters.",
-        "requirements": ["sBleeding"],
+        "requirements": ["sBleeding", "minMonsters:120"],
         "required_effort": "Minor",
     },
     "Hurtified": {
@@ -2656,7 +2656,7 @@ achievement_requirements = {
         "game_id": 456,
         "description": "Kill 240 bleeding monsters.",
         "details": "Kill 240 bleeding monsters.",
-        "requirements": ["sBleeding"],
+        "requirements": ["sBleeding", "minMonsters:240"],
         "required_effort": "Major",
     },
     "Bleed Out": {
@@ -2693,7 +2693,7 @@ achievement_requirements = {
         "game_id": 126,
         "description": "Kill 273 frozen monsters that are not in a whiteout.",
         "vanilla_correction": True,
-        "requirements": ["sFreeze"],
+        "requirements": ["sFreeze", "minMonsters:556"],
         "required_effort": "Major",
     },
     "Snow Dust": {
@@ -2702,7 +2702,7 @@ achievement_requirements = {
         "description": "Kill 100 frozen monsters while it's snowing.",
         "details": "Kill 100 frozen monsters during snow weather.",
         "vanilla_correction": True,
-        "requirements": ["sFreeze", "wSnow"],
+        "requirements": ["sFreeze", "wSnow", "minMonsters:200"],
         "required_effort": "Major",
     },
     "Snow Blower": {
@@ -2756,7 +2756,7 @@ achievement_requirements = {
         "game_id": 206,
         "description": "Kill 160 frozen swarmlings while they're in a whiteout.",
         "vanilla_correction": True,
-        "requirements": ["sFreeze", "sWhiteout"],
+        "requirements": ["sFreeze", "sWhiteout", "minSwarmlings:480"],
         "required_effort": "Major",
     },
     "Purged": {
@@ -2910,7 +2910,7 @@ achievement_requirements = {
         "game_id": 191,
         "description": "Kill 85 poisoned monsters while it's raining.",
         "details": "Kill 85 poisoned monsters during rain weather.",
-        "requirements": ["sPoison", "wRain"],
+        "requirements": ["sPoison", "wRain", "minMonsters:85"],
         "required_effort": "Minor",
     },
     "Twice the Terror": {
