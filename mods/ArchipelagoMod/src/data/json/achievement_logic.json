@@ -1273,7 +1273,8 @@
       "description": "Destroy 15 beacons.",
       "required_effort": "Minor",
       "requirements": [
-        "tDarkMasonry"
+        "tDarkMasonry",
+        "minWave:20"
       ],
       "details": "Destroy 15 beacons in one battle."
     },
@@ -1284,8 +1285,9 @@
       "required_effort": "Major",
       "requirements": [
         "tDarkMasonry",
-        "fieldToken:30",
-        "talismanRow:1"
+        "minWave:40",
+        "talismanRow:1",
+        "min_wl:40"
       ],
       "details": "Destroy 35 beacons in one battle."
     },
@@ -1717,7 +1719,8 @@
       "description": "Freeze 111 frozen monsters.",
       "required_effort": "Major",
       "requirements": [
-        "sFreeze"
+        "sFreeze",
+        "minMonsters:222"
       ],
       "details": "Freeze 111 already-frozen monsters (re-freeze)."
     },
@@ -1728,7 +1731,8 @@
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
-        "sWhiteout"
+        "sWhiteout",
+        "minMonsters:260"
       ],
       "details": "Freeze 130 already-whited-out monsters (Whiteout first, then Freeze)."
     },
@@ -2064,9 +2068,7 @@
       "game_id": 51,
       "description": "Have a grade 1 gem with 100 hits.",
       "required_effort": "Minor",
-      "requirements": [
-        "min_wl:20"
-      ]
+      "requirements": []
     },
     "Seen Battle": {
       "apId": 2463,
@@ -3094,7 +3096,7 @@
       "required_effort": "Minor",
       "requirements": [
         "sBolt",
-        "mGiant:1"
+        "minGiants:1"
       ],
       "details": "Kill a giant in a single hit."
     },
@@ -3499,7 +3501,8 @@
       "description": "Kill 120 bleeding monsters.",
       "required_effort": "Minor",
       "requirements": [
-        "sBleeding"
+        "sBleeding",
+        "minMonsters:120"
       ],
       "details": "Kill 120 bleeding monsters."
     },
@@ -3509,7 +3512,8 @@
       "description": "Kill 240 bleeding monsters.",
       "required_effort": "Major",
       "requirements": [
-        "sBleeding"
+        "sBleeding",
+        "minMonsters:240"
       ],
       "details": "Kill 240 bleeding monsters."
     },
@@ -3561,7 +3565,8 @@
       "description": "Kill 273 frozen monsters that are not in a whiteout.",
       "required_effort": "Major",
       "requirements": [
-        "sFreeze"
+        "sFreeze",
+        "minMonsters:556"
       ],
       "vanilla_correction": true
     },
@@ -3572,7 +3577,8 @@
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
-        "wSnow"
+        "wSnow",
+        "minMonsters:200"
       ],
       "details": "Kill 100 frozen monsters during snow weather.",
       "vanilla_correction": true
@@ -3654,7 +3660,8 @@
       "required_effort": "Major",
       "requirements": [
         "sFreeze",
-        "sWhiteout"
+        "sWhiteout",
+        "minSwarmlings:480"
       ],
       "vanilla_correction": true
     },
@@ -3868,7 +3875,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sPoison",
-        "wRain"
+        "wRain",
+        "minMonsters:85"
       ],
       "details": "Kill 85 poisoned monsters during rain weather."
     },
@@ -4721,8 +4729,18 @@
       "description": "Reach 5.000 strike spell hits through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ]
     },
     "Frozen Crowd": {
@@ -4731,8 +4749,18 @@
       "description": "Reach 10.000 strike spell hits through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ]
     },
     "Drop the Ice": {
@@ -4741,8 +4769,18 @@
       "description": "Reach 50.000 strike spell hits through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ],
       "details": "Cumulative across all battles: 50,000 strike spell hits."
     },
@@ -4752,8 +4790,18 @@
       "description": "Reach 100.000 strike spell hits through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ],
       "details": "Cumulative across all battles: 100,000 strike spell hits."
     },
@@ -4763,8 +4811,18 @@
       "description": "Reach 1.000 strike spells cast through all the battles.",
       "required_effort": "Minor",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ]
     },
     "Ice Mage": {
@@ -4773,8 +4831,18 @@
       "description": "Reach 2.500 strike spells cast through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ],
       "details": "Cumulative across all battles: cast 2,500 strike spells."
     },
@@ -4784,8 +4852,18 @@
       "description": "Reach 5.000 strike spells cast through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:50"
+        [
+          "strikeSpells:1",
+          "min_wl:50"
+        ],
+        [
+          "strikeSpells:2",
+          "min_wl:40"
+        ],
+        [
+          "strikeSpells:3",
+          "min_wl:30"
+        ]
       ],
       "details": "Cumulative across all battles: cast 5,000 strike spells."
     },
@@ -5146,8 +5224,7 @@
       "description": "Reach 500 strike spells cast through all the battles.",
       "required_effort": "Major",
       "requirements": [
-        "strikeSpells:1",
-        "min_wl:25"
+        "strikeSpells:1"
       ]
     },
     "Build Along": {

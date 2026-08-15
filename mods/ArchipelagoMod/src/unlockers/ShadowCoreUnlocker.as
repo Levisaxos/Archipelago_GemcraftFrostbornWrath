@@ -61,6 +61,25 @@ package unlockers {
             pushSelectorEvent(5, [oldAmount, oldAmount + amount]); // 5 = SC_INCREASING
         }
 
+        /**
+         * Debug-only flat grant, repeatable.
+         *
+         * Deliberately NOT an AP item: nothing is recorded in SessionData, and
+         * _totalGranted is left alone so the next full-sync delta
+         * (syncShadowCores) neither double-counts nor claws these back — sync
+         * only ever adds a positive delta, so debug cores just ride on top.
+         */
+        public function grantDebugShadowCores(amount:int):void {
+            if (amount <= 0) return;
+            if (!ensurePpdExists("grantDebugShadowCores")) {
+                return;
+            }
+            var oldAmount:Number = GV.ppd.shadowCoreAmount.g();
+            GV.ppd.shadowCoreAmount.s(oldAmount + amount);
+            logAction("Debug shadow cores +" + amount + " (new total " + (oldAmount + amount) + ")");
+            pushSelectorEvent(5, [oldAmount, oldAmount + amount]); // 5 = SC_INCREASING
+        }
+
         // -----------------------------------------------------------------------
         // Full sync (ReceivedItems index == 0)
 

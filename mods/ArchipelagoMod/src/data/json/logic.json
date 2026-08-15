@@ -8,9 +8,12 @@
       "requiredSkills": [
         "gemPouch:W"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
       "waveCount": 6,
-      "note": "Starting stage â€” no field token needed"
+      "requirements": []
     },
     {
       "strId": "W2",
@@ -20,8 +23,12 @@
       "requiredSkills": [
         "gemPouch:W"
       ],
-      "availableGems": ["Armor Tear", "Poison"],
-      "waveCount": 8
+      "availableGems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 8,
+      "requirements": []
     },
     {
       "strId": "W3",
@@ -31,8 +38,12 @@
       "requiredSkills": [
         "gemPouch:W"
       ],
-      "availableGems": ["Leech", "Slow"],
-      "waveCount": 12
+      "availableGems": [
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 12,
+      "requirements": []
     },
     {
       "strId": "W4",
@@ -42,8 +53,11 @@
       "requiredSkills": [
         "gemPouch:W"
       ],
-      "availableGems": ["Poison"],
-      "waveCount": 14
+      "availableGems": [
+        "Poison"
+      ],
+      "waveCount": 14,
+      "requirements": []
     },
     {
       "strId": "S1",
@@ -54,16 +68,26 @@
       "requiredSkills": [
         "gemPouch:S"
       ],
-      "availableGems": ["Leech", "Slow"],
-      "waveCount": 14
+      "availableGems": [
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 14,
+      "requirements": []
     },
     {
       "strId": "S2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:S"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Slow"],
-      "waveCount": 16
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 16,
+      "requirements": []
     },
     {
       "strId": "S3",
@@ -73,8 +97,12 @@
       "requiredSkills": [
         "gemPouch:S"
       ],
-      "availableGems": ["Crit", "Slow"],
-      "waveCount": 14
+      "availableGems": [
+        "Crit",
+        "Slow"
+      ],
+      "waveCount": 14,
+      "requirements": []
     },
     {
       "strId": "S4",
@@ -84,8 +112,13 @@
       "requiredSkills": [
         "gemPouch:S"
       ],
-      "availableGems": ["Crit", "Leech", "Armor Tear"],
-      "waveCount": 20
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "waveCount": 20,
+      "requirements": []
     },
     {
       "strId": "V1",
@@ -95,8 +128,12 @@
       "requiredSkills": [
         "gemPouch:V"
       ],
-      "availableGems": ["Armor Tear", "Poison"],
-      "waveCount": 20
+      "availableGems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 20,
+      "requirements": []
     },
     {
       "strId": "V2",
@@ -107,16 +144,25 @@
       "requiredSkills": [
         "gemPouch:V"
       ],
-      "availableGems": ["Crit", "Leech"],
-      "waveCount": 22
+      "availableGems": [
+        "Crit",
+        "Leech"
+      ],
+      "waveCount": 22,
+      "requirements": []
     },
     {
       "strId": "V3",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:V"
       ],
-      "availableGems": ["Poison", "Slow"],
-      "waveCount": 24
+      "availableGems": [
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 24,
+      "requirements": []
     },
     {
       "strId": "V4",
@@ -126,8 +172,13 @@
       "requiredSkills": [
         "gemPouch:V"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Slow"],
-      "waveCount": 24
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 24,
+      "requirements": []
     },
     {
       "strId": "R1",
@@ -137,8 +188,12 @@
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Leech", "Armor Tear"],
-      "waveCount": 22
+      "availableGems": [
+        "Leech",
+        "Armor Tear"
+      ],
+      "waveCount": 22,
+      "requirements": []
     },
     {
       "strId": "R2",
@@ -148,8 +203,12 @@
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 22
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 22,
+      "requirements": []
     },
     {
       "strId": "R3",
@@ -159,8 +218,12 @@
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Leech", "Bleed"],
-      "waveCount": 30
+      "availableGems": [
+        "Leech",
+        "Bleed"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "R4",
@@ -170,8 +233,12 @@
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
-      "waveCount": 30
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "R5",
@@ -182,8 +249,12 @@
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Crit", "Poison"],
-      "waveCount": 32
+      "availableGems": [
+        "Crit",
+        "Poison"
+      ],
+      "waveCount": 32,
+      "requirements": []
     },
     {
       "strId": "Q1",
@@ -193,8 +264,12 @@
       "requiredSkills": [
         "gemPouch:Q"
       ],
-      "availableGems": ["Crit", "Bleed"],
-      "waveCount": 24
+      "availableGems": [
+        "Crit",
+        "Bleed"
+      ],
+      "waveCount": 24,
+      "requirements": []
     },
     {
       "strId": "Q2",
@@ -204,8 +279,12 @@
       "requiredSkills": [
         "gemPouch:Q"
       ],
-      "availableGems": ["Crit", "Poison"],
-      "waveCount": 22
+      "availableGems": [
+        "Crit",
+        "Poison"
+      ],
+      "waveCount": 22,
+      "requirements": []
     },
     {
       "strId": "Q3",
@@ -216,8 +295,12 @@
       "requiredSkills": [
         "gemPouch:Q"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
-      "waveCount": 24
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 24,
+      "requirements": []
     },
     {
       "strId": "Q4",
@@ -227,8 +310,12 @@
       "requiredSkills": [
         "gemPouch:Q"
       ],
-      "availableGems": ["Bleed", "Slow"],
-      "waveCount": 26
+      "availableGems": [
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 26,
+      "requirements": []
     },
     {
       "strId": "Q5",
@@ -238,8 +325,13 @@
       "requiredSkills": [
         "gemPouch:Q"
       ],
-      "availableGems": ["Crit", "Leech", "Poison"],
-      "waveCount": 26
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Poison"
+      ],
+      "waveCount": 26,
+      "requirements": []
     },
     {
       "strId": "T1",
@@ -249,8 +341,12 @@
       "requiredSkills": [
         "gemPouch:T"
       ],
-      "availableGems": ["Bleed", "Armor Tear"],
-      "waveCount": 26
+      "availableGems": [
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 26,
+      "requirements": []
     },
     {
       "strId": "T2",
@@ -260,8 +356,12 @@
       "requiredSkills": [
         "gemPouch:T"
       ],
-      "availableGems": ["Crit", "Leech"],
-      "waveCount": 28
+      "availableGems": [
+        "Crit",
+        "Leech"
+      ],
+      "waveCount": 28,
+      "requirements": []
     },
     {
       "strId": "T3",
@@ -271,8 +371,12 @@
       "requiredSkills": [
         "gemPouch:T"
       ],
-      "availableGems": ["Poison", "Slow"],
-      "waveCount": 28
+      "availableGems": [
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 28,
+      "requirements": []
     },
     {
       "strId": "T4",
@@ -282,8 +386,13 @@
       "requiredSkills": [
         "gemPouch:T"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Slow"],
-      "waveCount": 30
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "U1",
@@ -294,8 +403,12 @@
       "requiredSkills": [
         "gemPouch:U"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 30
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "U2",
@@ -305,16 +418,25 @@
       "requiredSkills": [
         "gemPouch:U"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
-      "waveCount": 32
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 32,
+      "requirements": []
     },
     {
       "strId": "U3",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:U"
       ],
-      "availableGems": ["Crit", "Leech"],
-      "waveCount": 30
+      "availableGems": [
+        "Crit",
+        "Leech"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "U4",
@@ -324,8 +446,13 @@
       "requiredSkills": [
         "gemPouch:U"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear"],
-      "waveCount": 30
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "Y1",
@@ -335,8 +462,12 @@
       "requiredSkills": [
         "gemPouch:Y"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 32
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 32,
+      "requirements": []
     },
     {
       "strId": "Y2",
@@ -346,8 +477,12 @@
       "requiredSkills": [
         "gemPouch:Y"
       ],
-      "availableGems": ["Crit", "Armor Tear"],
-      "waveCount": 35
+      "availableGems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "waveCount": 35,
+      "requirements": []
     },
     {
       "strId": "Y3",
@@ -357,8 +492,13 @@
       "requiredSkills": [
         "gemPouch:Y"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Poison"],
-      "waveCount": 30
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 30,
+      "requirements": []
     },
     {
       "strId": "Y4",
@@ -368,8 +508,14 @@
       "requiredSkills": [
         "gemPouch:Y"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Slow"],
-      "waveCount": 40
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 40,
+      "requirements": []
     },
     {
       "strId": "X1",
@@ -380,16 +526,26 @@
       "requiredSkills": [
         "gemPouch:X"
       ],
-      "availableGems": ["Armor Tear", "Poison"],
-      "waveCount": 42
+      "availableGems": [
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 42,
+      "requirements": []
     },
     {
       "strId": "X2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:X"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Slow"],
-      "waveCount": 48
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 48,
+      "requirements": []
     },
     {
       "strId": "X3",
@@ -399,16 +555,27 @@
       "requiredSkills": [
         "gemPouch:X"
       ],
-      "availableGems": ["Bleed", "Armor Tear"],
-      "waveCount": 44
+      "availableGems": [
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 44,
+      "requirements": []
     },
     {
       "strId": "X4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:X"
       ],
-      "availableGems": ["Crit", "Leech", "Armor Tear", "Poison"],
-      "waveCount": 46
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "Z1",
@@ -420,32 +587,54 @@
       "requiredSkills": [
         "gemPouch:Z"
       ],
-      "availableGems": ["Crit", "Bleed", "Poison"],
-      "waveCount": 44
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 44,
+      "requirements": []
     },
     {
       "strId": "Z2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:Z"
       ],
-      "availableGems": ["Armor Tear", "Poison", "Slow"],
-      "waveCount": 46
+      "availableGems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "Z3",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:Z"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Slow"],
-      "waveCount": 46
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "Z4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:Z"
       ],
-      "availableGems": ["Leech", "Bleed"],
-      "waveCount": 48
+      "availableGems": [
+        "Leech",
+        "Bleed"
+      ],
+      "waveCount": 48,
+      "requirements": []
     },
     {
       "strId": "O1",
@@ -456,16 +645,25 @@
       "requiredSkills": [
         "gemPouch:O"
       ],
-      "availableGems": ["Leech", "Poison"],
-      "waveCount": 34
+      "availableGems": [
+        "Leech",
+        "Poison"
+      ],
+      "waveCount": 34,
+      "requirements": []
     },
     {
       "strId": "O2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:O"
       ],
-      "availableGems": ["Crit", "Armor Tear"],
-      "waveCount": 35
+      "availableGems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "waveCount": 35,
+      "requirements": []
     },
     {
       "strId": "O3",
@@ -475,8 +673,12 @@
       "requiredSkills": [
         "gemPouch:O"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 32
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 32,
+      "requirements": []
     },
     {
       "strId": "O4",
@@ -486,8 +688,14 @@
       "requiredSkills": [
         "gemPouch:O"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 33
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 33,
+      "requirements": []
     },
     {
       "strId": "N1",
@@ -498,40 +706,66 @@
       "requiredSkills": [
         "gemPouch:N"
       ],
-      "availableGems": ["Leech", "Slow"],
-      "waveCount": 35
+      "availableGems": [
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 35,
+      "requirements": []
     },
     {
       "strId": "N2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:N"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 36
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 36,
+      "requirements": []
     },
     {
       "strId": "N3",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:N"
       ],
-      "availableGems": ["Crit", "Armor Tear"],
-      "waveCount": 38
+      "availableGems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "waveCount": 38,
+      "requirements": []
     },
     {
       "strId": "N4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:N"
       ],
-      "availableGems": ["Bleed", "Armor Tear", "Poison"],
-      "waveCount": 70
+      "availableGems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 70,
+      "requirements": []
     },
     {
       "strId": "N5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:N"
       ],
-      "availableGems": ["Crit", "Leech", "Slow"],
-      "waveCount": 68
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 68,
+      "requirements": []
     },
     {
       "strId": "P1",
@@ -542,16 +776,25 @@
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Leech", "Slow"],
-      "waveCount": 38
+      "availableGems": [
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 38,
+      "requirements": []
     },
     {
       "strId": "P2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
-      "waveCount": 42
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 42,
+      "requirements": []
     },
     {
       "strId": "P3",
@@ -562,8 +805,12 @@
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Crit", "Armor Tear"],
-      "waveCount": 40
+      "availableGems": [
+        "Crit",
+        "Armor Tear"
+      ],
+      "waveCount": 40,
+      "requirements": []
     },
     {
       "strId": "P4",
@@ -573,17 +820,26 @@
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear", "Slow"],
-      "waveCount": 40
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 40,
+      "requirements": []
     },
     {
       "strId": "P5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Leech", "Poison"],
+      "availableGems": [
+        "Leech",
+        "Poison"
+      ],
       "waveCount": 40,
-      "note": "towers can't be placed, therefore,",
       "requirements": [
         [
           "sTraps"
@@ -598,8 +854,12 @@
       "requiredSkills": [
         "gemPouch:L"
       ],
-      "availableGems": ["Crit", "Bleed"],
-      "waveCount": 44
+      "availableGems": [
+        "Crit",
+        "Bleed"
+      ],
+      "waveCount": 44,
+      "requirements": []
     },
     {
       "strId": "L2",
@@ -609,8 +869,12 @@
       "requiredSkills": [
         "gemPouch:L"
       ],
-      "availableGems": ["Poison", "Slow"],
-      "waveCount": 46
+      "availableGems": [
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "L3",
@@ -621,8 +885,12 @@
       "requiredSkills": [
         "gemPouch:L"
       ],
-      "availableGems": ["Leech", "Armor Tear"],
-      "waveCount": 46
+      "availableGems": [
+        "Leech",
+        "Armor Tear"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "L4",
@@ -632,8 +900,14 @@
       "requiredSkills": [
         "gemPouch:L"
       ],
-      "availableGems": ["Crit", "Leech", "Armor Tear", "Poison"],
-      "waveCount": 50
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 50,
+      "requirements": []
     },
     {
       "strId": "L5",
@@ -643,7 +917,12 @@
       "requiredSkills": [
         "gemPouch:L"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
       "waveCount": 64,
       "requirements": [
         [
@@ -662,8 +941,13 @@
       "requiredSkills": [
         "gemPouch:K"
       ],
-      "availableGems": ["Crit", "Leech", "Armor Tear"],
-      "waveCount": 46
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "K2",
@@ -673,8 +957,12 @@
       "requiredSkills": [
         "gemPouch:K"
       ],
-      "availableGems": ["Leech", "Slow"],
-      "waveCount": 46
+      "availableGems": [
+        "Leech",
+        "Slow"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "K3",
@@ -684,8 +972,12 @@
       "requiredSkills": [
         "gemPouch:K"
       ],
-      "availableGems": ["Bleed", "Poison"],
-      "waveCount": 50
+      "availableGems": [
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 50,
+      "requirements": []
     },
     {
       "strId": "K4",
@@ -695,8 +987,14 @@
       "requiredSkills": [
         "gemPouch:K"
       ],
-      "availableGems": ["Leech", "Bleed", "Armor Tear", "Slow"],
-      "waveCount": 46
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 46,
+      "requirements": []
     },
     {
       "strId": "H1",
@@ -706,8 +1004,13 @@
       "requiredSkills": [
         "gemPouch:H"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear"],
-      "waveCount": 64
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 64,
+      "requirements": []
     },
     {
       "strId": "H2",
@@ -717,8 +1020,13 @@
       "requiredSkills": [
         "gemPouch:H"
       ],
-      "availableGems": ["Leech", "Bleed", "Poison"],
-      "waveCount": 66
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 66,
+      "requirements": []
     },
     {
       "strId": "H3",
@@ -728,8 +1036,12 @@
       "requiredSkills": [
         "gemPouch:H"
       ],
-      "availableGems": ["Armor Tear", "Slow"],
-      "waveCount": 64
+      "availableGems": [
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 64,
+      "requirements": []
     },
     {
       "strId": "H4",
@@ -739,8 +1051,14 @@
       "requiredSkills": [
         "gemPouch:H"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 70
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 70,
+      "requirements": []
     },
     {
       "strId": "G1",
@@ -752,16 +1070,27 @@
       "requiredSkills": [
         "gemPouch:G"
       ],
-      "availableGems": ["Crit", "Bleed", "Poison"],
-      "waveCount": 50
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 50,
+      "requirements": []
     },
     {
       "strId": "G2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:G"
       ],
-      "availableGems": ["Leech", "Poison", "Slow"],
-      "waveCount": 52
+      "availableGems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 52,
+      "requirements": []
     },
     {
       "strId": "G3",
@@ -772,8 +1101,14 @@
       "requiredSkills": [
         "gemPouch:G"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
-      "waveCount": 55
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 55,
+      "requirements": []
     },
     {
       "strId": "G4",
@@ -783,8 +1118,12 @@
       "requiredSkills": [
         "gemPouch:G"
       ],
-      "availableGems": ["Crit", "Leech"],
-      "waveCount": 56
+      "availableGems": [
+        "Crit",
+        "Leech"
+      ],
+      "waveCount": 56,
+      "requirements": []
     },
     {
       "strId": "J1",
@@ -795,16 +1134,26 @@
       "requiredSkills": [
         "gemPouch:J"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Slow"],
-      "waveCount": 55
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 55,
+      "requirements": []
     },
     {
       "strId": "J2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:J"
       ],
-      "availableGems": ["Crit", "Poison"],
-      "waveCount": 54
+      "availableGems": [
+        "Crit",
+        "Poison"
+      ],
+      "waveCount": 54,
+      "requirements": []
     },
     {
       "strId": "J3",
@@ -814,16 +1163,27 @@
       "requiredSkills": [
         "gemPouch:J"
       ],
-      "availableGems": ["Armor Tear", "Poison", "Slow"],
-      "waveCount": 56
+      "availableGems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 56,
+      "requirements": []
     },
     {
       "strId": "J4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:J"
       ],
-      "availableGems": ["Crit", "Leech", "Armor Tear"],
-      "waveCount": 58
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Armor Tear"
+      ],
+      "waveCount": 58,
+      "requirements": []
     },
     {
       "strId": "M1",
@@ -833,8 +1193,13 @@
       "requiredSkills": [
         "gemPouch:M"
       ],
-      "availableGems": ["Leech", "Bleed", "Slow"],
-      "waveCount": 60
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 60,
+      "requirements": []
     },
     {
       "strId": "M2",
@@ -844,8 +1209,13 @@
       "requiredSkills": [
         "gemPouch:M"
       ],
-      "availableGems": ["Crit", "Poison", "Slow"],
-      "waveCount": 62
+      "availableGems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 62,
+      "requirements": []
     },
     {
       "strId": "M3",
@@ -856,8 +1226,13 @@
       "requiredSkills": [
         "gemPouch:M"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Poison"],
-      "waveCount": 64
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 64,
+      "requirements": []
     },
     {
       "strId": "M4",
@@ -867,8 +1242,13 @@
       "requiredSkills": [
         "gemPouch:M"
       ],
-      "availableGems": ["Bleed", "Armor Tear", "Poison"],
-      "waveCount": 66
+      "availableGems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 66,
+      "requirements": []
     },
     {
       "strId": "F1",
@@ -878,16 +1258,27 @@
       "requiredSkills": [
         "gemPouch:F"
       ],
-      "availableGems": ["Leech", "Poison", "Slow"],
-      "waveCount": 60
+      "availableGems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 60,
+      "requirements": []
     },
     {
       "strId": "F2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:F"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear"],
-      "waveCount": 64
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 64,
+      "requirements": []
     },
     {
       "strId": "F3",
@@ -897,16 +1288,27 @@
       "requiredSkills": [
         "gemPouch:F"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed"],
-      "waveCount": 85
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
+      "waveCount": 85,
+      "requirements": []
     },
     {
       "strId": "F4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:F"
       ],
-      "availableGems": ["Crit", "Bleed", "Slow"],
-      "waveCount": 88
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 88,
+      "requirements": []
     },
     {
       "strId": "E1",
@@ -916,8 +1318,13 @@
       "requiredSkills": [
         "gemPouch:E"
       ],
-      "availableGems": ["Crit", "Poison", "Slow"],
-      "waveCount": 70
+      "availableGems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 70,
+      "requirements": []
     },
     {
       "strId": "E2",
@@ -927,8 +1334,13 @@
       "requiredSkills": [
         "gemPouch:E"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Poison"],
-      "waveCount": 62
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 62,
+      "requirements": []
     },
     {
       "strId": "E3",
@@ -938,8 +1350,13 @@
       "requiredSkills": [
         "gemPouch:E"
       ],
-      "availableGems": ["Leech", "Bleed", "Slow"],
-      "waveCount": 74
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 74,
+      "requirements": []
     },
     {
       "strId": "E4",
@@ -950,8 +1367,14 @@
       "requiredSkills": [
         "gemPouch:E"
       ],
-      "availableGems": ["Bleed", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 74
+      "availableGems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 74,
+      "requirements": []
     },
     {
       "strId": "D1",
@@ -961,8 +1384,13 @@
       "requiredSkills": [
         "gemPouch:D"
       ],
-      "availableGems": ["Leech", "Poison", "Slow"],
-      "waveCount": 72
+      "availableGems": [
+        "Leech",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 72,
+      "requirements": []
     },
     {
       "strId": "D2",
@@ -973,8 +1401,13 @@
       "requiredSkills": [
         "gemPouch:D"
       ],
-      "availableGems": ["Crit", "Bleed", "Slow"],
-      "waveCount": 75
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 75,
+      "requirements": []
     },
     {
       "strId": "D3",
@@ -984,16 +1417,28 @@
       "requiredSkills": [
         "gemPouch:D"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
-      "waveCount": 77
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 77,
+      "requirements": []
     },
     {
       "strId": "D4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:D"
       ],
-      "availableGems": ["Crit", "Bleed", "Poison"],
-      "waveCount": 70
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 70,
+      "requirements": []
     },
     {
       "strId": "B1",
@@ -1003,8 +1448,13 @@
       "requiredSkills": [
         "gemPouch:B"
       ],
-      "availableGems": ["Crit", "Bleed", "Slow"],
-      "waveCount": 76
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Slow"
+      ],
+      "waveCount": 76,
+      "requirements": []
     },
     {
       "strId": "B2",
@@ -1015,24 +1465,43 @@
       "requiredSkills": [
         "gemPouch:B"
       ],
-      "availableGems": ["Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 80
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 80,
+      "requirements": []
     },
     {
       "strId": "B3",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:B"
       ],
-      "availableGems": ["Bleed", "Armor Tear", "Slow"],
-      "waveCount": 86
+      "availableGems": [
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 86,
+      "requirements": []
     },
     {
       "strId": "B4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:B"
       ],
-      "availableGems": ["Leech", "Armor Tear", "Poison"],
-      "waveCount": 80
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 80,
+      "requirements": []
     },
     {
       "strId": "C1",
@@ -1043,16 +1512,27 @@
       "requiredSkills": [
         "gemPouch:C"
       ],
-      "availableGems": ["Leech", "Bleed", "Poison"],
-      "waveCount": 82
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Poison"
+      ],
+      "waveCount": 82,
+      "requirements": []
     },
     {
       "strId": "C2",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:C"
       ],
-      "availableGems": ["Crit", "Armor Tear", "Slow"],
-      "waveCount": 80
+      "availableGems": [
+        "Crit",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 80,
+      "requirements": []
     },
     {
       "strId": "C3",
@@ -1062,8 +1542,13 @@
       "requiredSkills": [
         "gemPouch:C"
       ],
-      "availableGems": ["Crit", "Poison", "Slow"],
-      "waveCount": 84
+      "availableGems": [
+        "Crit",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 84,
+      "requirements": []
     },
     {
       "strId": "C4",
@@ -1073,8 +1558,13 @@
       "requiredSkills": [
         "gemPouch:C"
       ],
-      "availableGems": ["Leech", "Bleed", "Armor Tear"],
-      "waveCount": 87
+      "availableGems": [
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 87,
+      "requirements": []
     },
     {
       "strId": "C5",
@@ -1084,8 +1574,14 @@
       "requiredSkills": [
         "gemPouch:C"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear"],
-      "waveCount": 90
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear"
+      ],
+      "waveCount": 90,
+      "requirements": []
     },
     {
       "strId": "A1",
@@ -1095,8 +1591,15 @@
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 90
+      "availableGems": [
+        "Crit",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 90,
+      "requirements": []
     },
     {
       "strId": "A2",
@@ -1106,8 +1609,15 @@
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Slow"],
-      "waveCount": 90
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Slow"
+      ],
+      "waveCount": 90,
+      "requirements": []
     },
     {
       "strId": "A3",
@@ -1117,16 +1627,32 @@
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison"],
-      "waveCount": 90
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 90,
+      "requirements": []
     },
     {
       "strId": "A4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
-      "waveCount": 100
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 100,
+      "requirements": []
     },
     {
       "strId": "I2",
@@ -1136,8 +1662,13 @@
       "requiredSkills": [
         "gemPouch:I"
       ],
-      "availableGems": ["Bleed", "Poison", "Slow"],
-      "waveCount": 78
+      "availableGems": [
+        "Bleed",
+        "Poison",
+        "Slow"
+      ],
+      "waveCount": 78,
+      "requirements": []
     },
     {
       "strId": "I3",
@@ -1147,115 +1678,187 @@
       "requiredSkills": [
         "gemPouch:I"
       ],
-      "availableGems": ["Bleed", "Armor Tear", "Poison"],
-      "waveCount": 80
+      "availableGems": [
+        "Bleed",
+        "Armor Tear",
+        "Poison"
+      ],
+      "waveCount": 80,
+      "requirements": []
     },
     {
       "strId": "I4",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:I"
       ],
-      "availableGems": ["Bleed"],
-      "waveCount": 82
+      "availableGems": [
+        "Bleed"
+      ],
+      "waveCount": 82,
+      "requirements": []
     },
     {
       "strId": "Z5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:Z"
       ],
-      "availableGems": ["Leech"],
+      "availableGems": [
+        "Leech"
+      ],
       "waveCount": 50,
-      "note": "Secret â€” trial-locked (FLDZ5 in Z4 trial drop)"
+      "requirements": []
     },
     {
       "strId": "T5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:T"
       ],
-      "availableGems": ["Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 40,
-      "note": "Secret â€” trial-locked"
+      "requirements": []
     },
     {
       "strId": "R6",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:R"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
       "waveCount": 36,
-      "note": "Secret â€” trial-locked (FLDR6 in N1 trial drop)"
+      "requirements": []
     },
     {
       "strId": "P6",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:P"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 40,
-      "note": "Secret â€” trial-locked (FLDP6 in P5 trial drop)"
+      "requirements": []
     },
     {
       "strId": "K5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:K"
       ],
-      "availableGems": ["Crit", "Poison"],
+      "availableGems": [
+        "Crit",
+        "Poison"
+      ],
       "waveCount": 54,
-      "note": "Secret â€” trial-locked (FLDK5 in G2 trial drop)"
+      "requirements": []
     },
     {
       "strId": "H5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:H"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 68,
-      "note": "Secret â€” trial-locked (FLDH5 in H2 trial drop)"
+      "requirements": []
     },
     {
       "strId": "F5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:F"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 90,
-      "note": "Secret â€” trial-locked"
+      "requirements": []
     },
     {
       "strId": "E5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:E"
       ],
-      "availableGems": ["Crit", "Poison"],
+      "availableGems": [
+        "Crit",
+        "Poison"
+      ],
       "waveCount": 78,
-      "note": "Secret â€” trial-locked"
+      "requirements": []
     },
     {
       "strId": "B5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:B"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed", "Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed",
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 84,
-      "note": "Secret â€” trial-locked (FLDB5 in B2 trial drop)"
+      "requirements": []
     },
     {
       "strId": "A5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Armor Tear", "Poison", "Slow"],
+      "availableGems": [
+        "Armor Tear",
+        "Poison",
+        "Slow"
+      ],
       "waveCount": 96,
-      "note": "Trial-locked (FLDA5 in A3 trial drop)"
+      "requirements": []
     },
     {
       "strId": "A6",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:A"
       ],
-      "availableGems": ["Crit", "Leech", "Bleed"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
       "waveCount": 99,
-      "note": "Trial-locked (FLDA6 in A4 trial drop)"
+      "requirements": []
     },
     {
       "strId": "I1",
@@ -1265,18 +1868,27 @@
       "requiredSkills": [
         "gemPouch:I"
       ],
-      "availableGems": ["Bleed", "Poison", "Slow"],
+      "availableGems": [
+        "Crit",
+        "Leech",
+        "Bleed"
+      ],
       "waveCount": 76,
-      "note": "Trial-locked (FLDI1); accessible via AP token"
+      "requirements": []
     },
     {
       "strId": "D5",
+      "unlocks": [],
       "requiredSkills": [
         "gemPouch:D"
       ],
-      "availableGems": ["Crit", "Bleed", "Armor Tear"],
+      "availableGems": [
+        "Leech",
+        "Armor Tear",
+        "Slow"
+      ],
       "waveCount": 78,
-      "note": "Trial-locked (FLDD5); accessible via AP token"
+      "requirements": []
     }
   ],
   "matchingTalismans": {

@@ -72,6 +72,13 @@ package ui {
             _wireGrantPanels(_mc.corePanels,     _onCoreClick);
             _wireGrantPanels(_mc.xpPanels,       _onXpTomeClick);
 
+            // Repeatable flat shadow-core grant (Cores tab, above the AP items)
+            if (_mc.debugCoresBtn != null) {
+                _mc.debugCoresBtn.addEventListener(MouseEvent.CLICK, _onDebugCoresBtnClick, false, 0, false);
+                _mc.debugCoresBtn.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                _mc.debugCoresBtn.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
+            }
+
             // Initial stage mode wiring (per-stage panels exist by default)
             _wireStageModeHandlers(_mc.stageMode);
 
@@ -86,6 +93,27 @@ package ui {
                 var pnl:McOptPanel = McOptPanel(entry.panel);
                 var apId:int = int(entry.apId);
                 pnl.addEventListener(MouseEvent.CLICK, _makeGrantHandler(onClick, apId), false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
+                pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
+            }
+        }
+
+        /**
+         * Wire click + hover handlers for the Pouches / Keys tabs. Like the
+         * Achievements tab these are rebuilt on every open() from slot_data,
+         * so this must run after each rebuildGatingContents().
+         */
+        private function _wireCoarseGatingPanels():void {
+            _wireGatingRegistry(_mc.pouchPanels);
+            _wireGatingRegistry(_mc.keyPanels);
+        }
+
+        private function _wireGatingRegistry(arr:Array):void {
+            if (arr == null) return;
+            for (var i:int = 0; i < arr.length; i++) {
+                var entry:Object = arr[i];
+                var pnl:McOptPanel = McOptPanel(entry.panel);
+                pnl.addEventListener(MouseEvent.CLICK, _makeCoarseGatingHandler(entry), false, 0, false);
                 pnl.plate.addEventListener(MouseEvent.MOUSE_OVER, _scroll.ehBtnMouseOver, false, 0, false);
                 pnl.plate.addEventListener(MouseEvent.MOUSE_OUT,  _scroll.ehBtnMouseOut,  false, 0, false);
             }
@@ -191,6 +219,11 @@ package ui {
             _mc.setStageMode(desiredMode);
             _wireStageModeHandlers(desiredMode);
 
+            // Pouches / Keys tabs — granularity and tile order come from
+            // slot_data, so rebuild every open and (re)wire the fresh panels.
+            _mc.rebuildGatingContents();
+            _wireCoarseGatingPanels();
+
             // Achievements tab — the trackable pool depends on AP state (missing
             // locations, server options), so rebuild every open and (re)wire the
             // fresh panels.
@@ -278,24 +311,35 @@ package ui {
             _renderDebugOptions();
         }
 
+        // Skills / traits toggle through the full AP grant + revoke pipeline, NOT
+        // through the bare unlockSkill / unlockBattleTrait wrappers. Those only
+        // touch GV.ppd, which leaves the skill off ProgressionBlocker's
+        // AP-authority whitelist — and onSaveSave reverts anything not on it, so
+        // debug-granted skills silently disappeared at the next save (entering a
+        // battle, or the selector queue draining after an XP tome).
         private function _onSkillClick(gameId:int):void {
             if (GV.ppd == null) return;
-            if (GV.ppd.gainedSkillTomes[gameId]) {
-                GV.ppd.gainedSkillTomes[gameId] = false;
-                GV.ppd.setSkillLevel(gameId, -1);
-            } else {
-                _mod.unlockSkill(700 + gameId);
-            }
+            var skillApId:int = 700 + gameId;
+            if (_mod.debugIsItemCollected(skillApId))
+                _mod.debugRevokeSkillOrTrait(skillApId);
+            else
+                _mod.debugGrantItem(skillApId);
             _renderDebugOptions();
         }
 
         private function _onTraitClick(gameId:int):void {
             if (GV.ppd == null) return;
-            if (GV.ppd.gainedBattleTraits[gameId]) {
-                GV.ppd.gainedBattleTraits[gameId] = false;
-            } else {
-                _mod.unlockBattleTrait(800 + gameId);
-            }
+            var traitApId:int = 800 + gameId;
+            if (_mod.debugIsItemCollected(traitApId))
+                _mod.debugRevokeSkillOrTrait(traitApId);
+            else
+                _mod.debugGrantItem(traitApId);
+            _renderDebugOptions();
+        }
+
+        private function _onDebugCoresBtnClick(e:MouseEvent):void {
+            _mod.debugLog("[Debug] shadow cores +" + McDebugOptions.DEBUG_SHADOW_CORE_AMOUNT);
+            _mod.debugGrantShadowCores(McDebugOptions.DEBUG_SHADOW_CORE_AMOUNT);
             _renderDebugOptions();
         }
 
@@ -322,6 +366,23 @@ package ui {
                 if (allUnlocked) _mod.lockStage(sid);
                 else if (!_mod.isStageUnlocked(sid)) _mod.unlockStage(sid);
             }
+            _renderDebugOptions();
+        }
+
+        /**
+         * Pouches / Keys click. Progressive entries are fungible singletons —
+         * the same apId is added to the pool once per tile — so each click must
+         * grant another copy; debugGrantItem's collected-once guard would make
+         * every click after the first a silent no-op.
+         */
+        private function _onCoarseGatingClick(entry:Object):void {
+            var apId:int = int(entry.apId);
+            var progressive:Boolean = (entry.progressive === true);
+            _mod.debugLog("[Debug] gating click apId=" + apId + " progressive=" + progressive);
+            if (progressive)
+                _mod.debugGrantProgressiveItem(apId);
+            else
+                _mod.debugGrantItem(apId);
             _renderDebugOptions();
         }
 
@@ -365,6 +426,9 @@ package ui {
         private function _makeTileClickHandler(letter:String):Function {
             return function(e:MouseEvent):void { _onTileClick(letter); };
         }
+        private function _makeCoarseGatingHandler(entry:Object):Function {
+            return function(e:MouseEvent):void { _onCoarseGatingClick(entry); };
+        }
         private function _makeGrantHandler(handler:Function, apId:int):Function {
             return function(e:MouseEvent):void { handler(apId); };
         }
@@ -396,15 +460,21 @@ package ui {
                     _renderGrantPanelsCollected(_mc.xpPanels);
                     break;
 
+                // Checkbox reads the AP-collected state, not GV.ppd, so it always
+                // agrees with what a click does. It's also the state that
+                // survives: ProgressionBlocker strips any ppd skill/trait that
+                // AP didn't grant, so a ppd-only unlock is not a real unlock.
                 case McDebugOptions.TAB_SKILLS:
                     for (var i:int = 0; i < _mc.skillPanels.length; i++) {
-                        McOptPanel(_mc.skillPanels[i]).btn.gotoAndStop(GV.ppd.getSkillLevel(i) >= 0 ? 2 : 1);
+                        McOptPanel(_mc.skillPanels[i]).btn.gotoAndStop(
+                            _mod.debugIsItemCollected(700 + i) ? 2 : 1);
                     }
                     break;
 
                 case McDebugOptions.TAB_TRAITS:
                     for (var j:int = 0; j < _mc.traitPanels.length; j++) {
-                        McOptPanel(_mc.traitPanels[j]).btn.gotoAndStop(GV.ppd.gainedBattleTraits[j] ? 2 : 1);
+                        McOptPanel(_mc.traitPanels[j]).btn.gotoAndStop(
+                            _mod.debugIsItemCollected(800 + j) ? 2 : 1);
                     }
                     break;
 
@@ -422,11 +492,23 @@ package ui {
                     }
                     break;
 
+                case McDebugOptions.TAB_POUCHES:
+                    _renderCoarseGatingPanels(_mc.pouchPanels);
+                    break;
+
+                case McDebugOptions.TAB_KEYS:
+                    _renderCoarseGatingPanels(_mc.keyPanels);
+                    break;
+
                 case McDebugOptions.TAB_TALISMANS:
                     _renderGrantPanelsCollected(_mc.talismanPanels);
                     break;
 
                 case McDebugOptions.TAB_CORES:
+                    // The flat grant is repeatable and has no collected state,
+                    // so it stays on the unchecked frame permanently.
+                    if (_mc.debugCoresBtn != null)
+                        _mc.debugCoresBtn.btn.gotoAndStop(1);
                     _renderGrantPanelsCollected(_mc.corePanels);
                     break;
 
@@ -440,6 +522,35 @@ package ui {
 
                 default:
                     break;
+            }
+        }
+
+        /**
+         * Render the Pouches / Keys panels. Distinct and master items are plain
+         * one-shot grants and just show collected/not. Progressive entries are
+         * click-repeatedly, so a checkbox says nothing useful — their label
+         * carries a live "N/total" count plus the tile the next click unlocks,
+         * and the check only lights once every copy is in.
+         */
+        private function _renderCoarseGatingPanels(arr:Array):void {
+            if (arr == null) return;
+            for (var i:int = 0; i < arr.length; i++) {
+                var entry:Object = arr[i];
+                var pnl:McOptPanel = McOptPanel(entry.panel);
+                var apId:int = int(entry.apId);
+                if (entry.progressive !== true) {
+                    pnl.btn.gotoAndStop(_mod.debugIsItemCollected(apId) ? 2 : 1);
+                    continue;
+                }
+                var order:Array = entry.order as Array;
+                var total:int = (order != null && order.length > 0) ? order.length : 26;
+                var count:int = _mod.debugItemCount(apId);
+                var label:String = String(entry.baseLabel) + "  (" + count + "/" + total + ")";
+                if (order != null && count < order.length)
+                    label += "  next: " + String(order[count]);
+                if (pnl.tf.text != label)
+                    pnl.tf.text = label;
+                pnl.btn.gotoAndStop(count >= total ? 2 : 1);
             }
         }
 

@@ -114,6 +114,18 @@ package patch {
             if (gameId >= 0 && gameId < 15) _apGrantedTraits[gameId] = true;
         }
 
+        /** Drop a skill's AP-granted mark (debug menu re-lock). Without this the
+         *  whitelist would keep protecting a skill the player just took away, so
+         *  the next syncWithAP would hand it straight back. */
+        public function clearSkillGranted(gameId:int):void {
+            if (gameId >= 0 && gameId < 24) _apGrantedSkills[gameId] = false;
+        }
+
+        /** Drop a battle trait's AP-granted mark (debug menu re-lock). */
+        public function clearTraitGranted(gameId:int):void {
+            if (gameId >= 0 && gameId < 15) _apGrantedTraits[gameId] = false;
+        }
+
         /**
          * Provide the wiz stash talisman data map (str_id → "seed/rarity/type/upgradeLevel")
          * from slot_data so the blocker knows which fragment seed to remove per stage.

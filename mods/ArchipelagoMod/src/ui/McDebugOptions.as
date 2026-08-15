@@ -22,13 +22,16 @@ package ui {
      * McOptions directly).
      *
      * Tabs:
-     *   0 Wizard     — level preset toggles + XP tomes
-     *   1 Skills     — 24 skill toggles
-     *   2 Traits     — 15 battle-trait toggles
-     *   3 Stages     — YAML-aware: per-stage / per-tile toggles
-     *   4 Talismans  — the 25 AP "perfect placement" fragment one-shot grants
-     *   5 Cores      — base shadow-core stash (1000–1016) one-shot grants
-     *   6 XP         — XP-tome drop-icon grants (Tattered/Worn/Ancient/Filler)
+     *   0 Disclaimer — usage / cheating notice
+     *   1 Levels     — level preset toggles + XP tomes
+     *   2 Skills     — 24 skill toggles
+     *   3 Traits     — 15 battle-trait toggles
+     *   4 Stages     — YAML-aware: per-stage / per-tile toggles
+     *   5 Pouches    — granularity-aware Gempouch grants
+     *   6 Keys       — granularity-aware Wizard Stash key grants
+     *   7 Talismans  — the 25 AP "perfect placement" fragment one-shot grants
+     *   8 Cores      — base shadow-core stash (1000–1016) one-shot grants
+     *   9 Achievements — click-to-send location checks
      *
      * Each tab owns an Array of display objects (each with `yReal`). On tab
      * switch the active array is assigned to `_inner.arrCntContents` and its
@@ -43,9 +46,11 @@ package ui {
         public static const TAB_SKILLS:int       = 2;
         public static const TAB_TRAITS:int       = 3;
         public static const TAB_STAGES:int       = 4;
-        public static const TAB_TALISMANS:int    = 5;
-        public static const TAB_CORES:int        = 6;
-        public static const TAB_ACHIEVEMENTS:int = 7;
+        public static const TAB_POUCHES:int      = 5; // Gempouch gating items
+        public static const TAB_KEYS:int         = 6; // Wizard Stash key gating items
+        public static const TAB_TALISMANS:int    = 7;
+        public static const TAB_CORES:int        = 8;
+        public static const TAB_ACHIEVEMENTS:int = 9;
 
         // ── Public state for ScrDebugOptions handlers ───────────────────────────
         public var levelPanels:Array;       // Array of { panel:McOptPanel, level:int }
@@ -55,11 +60,21 @@ package ui {
         public var stageIdToPanel:Object;    // strId -> McOptPanel (per-stage mode)
         public var tilePanels:Object;        // letter -> McOptPanel (per-tile mode)
         public var tilesByLetter:Object;     // letter -> Array<strId>
+        // Coarse-gating registries. Entries are
+        // { panel:McOptPanel, apId:int, progressive:Boolean, baseLabel:String, order:Array }
+        // — `progressive` marks the fungible singleton items (one apId added to
+        // the pool N times), which must be grantable repeatedly and render an
+        // "N/total" readout instead of a checkbox.
+        public var pouchPanels:Array;
+        public var keyPanels:Array;
         public var talismanPanels:Array;     // Array of { panel:McOptPanel, apId:int }
         public var corePanels:Array;         // Array of { panel:McOptPanel, apId:int }
         public var xpPanels:Array;           // Array of { panel:McOptPanel, apId:int }
         public var achievementPanels:Array;  // Array of { panel:McOptPanel, apId:int }
         public var achievementModeBtn:McOptPanel; // toggles the achievements view mode
+        public var debugCoresBtn:McOptPanel;      // repeatable flat shadow-core grant
+        /** Flat amount the Cores tab's repeatable debug button grants per click. */
+        public static const DEBUG_SHADOW_CORE_AMOUNT:int = 10000;
         public var stageMode:String = "stage"; // "stage" | "tile"
 
         public var tabStrip:DebugTabStrip;
@@ -134,6 +149,10 @@ package ui {
                 tile:  _buildStagesPerTile()
             };
             _tabContents[TAB_STAGES]    = _stagesByMode.stage;
+            // Pouches / Keys depend on slot_data that may not have landed yet;
+            // built here so the arrays exist and rebuilt on every open().
+            _tabContents[TAB_POUCHES]   = _buildPouchesTab();
+            _tabContents[TAB_KEYS]      = _buildKeysTab();
             _tabContents[TAB_TALISMANS] = _buildTalismansTab();
             _tabContents[TAB_CORES]     = _buildCoresTab();
             // Achievements pool depends on AP connection state; built empty here
@@ -142,7 +161,7 @@ package ui {
 
             // Tab strip (sits on _inner above the scrollable cnt area)
             tabStrip = new DebugTabStrip(
-                ["Disclaimer","Levels","Skills","Traits","Stages","Talismans","Cores","Achievements"],
+                ["Disclaimer","Levels","Skills","Traits","Stages","Pouches","Keys","Talismans","Cores","Achievements"],
                 TAB_STRIP_X, TAB_STRIP_Y, TAB_STRIP_W);
             _inner.addChild(tabStrip);
 
@@ -209,6 +228,20 @@ package ui {
          * the menu is first constructed. Caller is responsible for (re)wiring
          * the freshly-built achievementPanels.
          */
+        /**
+         * Rebuild the Pouches / Keys tabs from current AP state. Both are
+         * driven entirely by slot_data (granularity mode + tile order), which
+         * isn't available when the menu is first constructed — so call this on
+         * every open(). Caller is responsible for (re)wiring the fresh panels.
+         */
+        public function rebuildGatingContents():void {
+            _tabContents[TAB_POUCHES] = _buildPouchesTab();
+            _tabContents[TAB_KEYS]    = _buildKeysTab();
+            if (tabStrip == null) return;
+            if (tabStrip.activeIndex == TAB_POUCHES || tabStrip.activeIndex == TAB_KEYS)
+                _showTab(tabStrip.activeIndex);
+        }
+
         public function rebuildAchievementsContents(pool:Array, onlyInLogic:Boolean = true):void {
             _tabContents[TAB_ACHIEVEMENTS] = _buildAchievementsTab(pool, onlyInLogic);
             if (tabStrip != null && tabStrip.activeIndex == TAB_ACHIEVEMENTS) {
@@ -375,6 +408,112 @@ package ui {
             return arr;
         }
 
+        /**
+         * Gem Pouches tab. Gempouches don't mutate game state — they gate gem
+         * availability purely through SessionData item counts — so granting one
+         * here is exactly equivalent to receiving it from AP.
+         */
+        private function _buildPouchesTab():Array {
+            var arr:Array = [];
+            pouchPanels = [];
+            var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var progId:int = (opts != null && int(opts.gemPouchProgressiveId) > 0)
+                ? int(opts.gemPouchProgressiveId) : 652;
+            _appendCoarseGatingSection(arr, pouchPanels, "Gem Pouches", opts,
+                (opts != null) ? int(opts.gemPouchGranularity) : -1,
+                626, "Gempouch (", ")",
+                progId, "Progressive Gempouch",
+                1614, "Master Gempouch");
+            return arr;
+        }
+
+        /**
+         * Wizard Stash Keys tab. Note stash keys have no per-stage granularity
+         * any more (retired apworld-side), so the per-stage 1400-1521 ids never
+         * appear here — only per-tile / per-tile-progressive / global.
+         */
+        private function _buildKeysTab():Array {
+            var arr:Array = [];
+            keyPanels = [];
+            var opts:* = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var progId:int = (opts != null && int(opts.stashKeyPerTileProgressiveId) > 0)
+                ? int(opts.stashKeyPerTileProgressiveId) : 1620;
+            _appendCoarseGatingSection(arr, keyPanels, "Wizard Stash Keys", opts,
+                (opts != null) ? int(opts.stashKeyGranularity) : -1,
+                1522, "Wizard Stash Tile ", " Key",
+                progId, "Progressive Stash Tile Key",
+                1561, "Wizard Stash Master Key");
+            return arr;
+        }
+
+        /**
+         * Build one coarse-gating section. Gem pouches and stash keys share the
+         * granularity encoding AND the per-tile id layout (base + index into
+         * gemPouchPlayOrder), so a single builder covers both:
+         *
+         *   -1 no serverOptions yet  → "connect to AP" placeholder
+         *    0 off                   → nothing to grant for this slot
+         *    1 per_tile              → one panel per prefix, apId = tileBase + index
+         *    2 per_tile_progressive  → one repeatable panel for the fungible id
+         *    5 global                → the single master item
+         *
+         * Distinct per-tile ids are assigned from gemPouchPlayOrder (canonical
+         * order), while the progressive readout counts against
+         * progressiveTileOrder (starter-first) — the same split the grant paths
+         * in ArchipelagoMod use, so the "next: X" line matches what a click
+         * actually unlocks.
+         */
+        private function _appendCoarseGatingSection(arr:Array, registry:Array,
+                title:String, opts:*, mode:int,
+                tileBase:int, tilePre:String, tilePost:String,
+                progId:int, progLabel:String,
+                masterId:int, masterLabel:String):void {
+            var vY:Number = CONTENT_START_Y;
+            arr.push(new McOptTitle(title, TITLE_X, vY));
+            vY += ROW_HEIGHT_NORM;
+
+            if (mode < 0) {
+                arr.push(new McOptTitle("(connect to AP to list these)", TITLE_X, vY));
+                return;
+            }
+            if (mode == 0) {
+                arr.push(new McOptTitle("(disabled for this slot — nothing to grant)", TITLE_X, vY));
+                return;
+            }
+            if (mode == 5) {
+                var mPnl:McOptPanel = new McOptPanel(masterLabel, COL_LEFT_X, vY, false);
+                registry.push({ panel: mPnl, apId: masterId, progressive: false });
+                arr.push(mPnl);
+                return;
+            }
+
+            var playOrder:Array = (opts != null) ? opts.gemPouchPlayOrder as Array : null;
+            if (playOrder == null || playOrder.length == 0) {
+                arr.push(new McOptTitle("(no tile order in slot data)", TITLE_X, vY));
+                return;
+            }
+
+            if (mode == 2) {
+                var order:Array = (opts != null) ? opts.progressiveTileOrder as Array : null;
+                if (order == null || order.length == 0)
+                    order = playOrder;
+                var pPnl:McOptPanel = new McOptPanel(progLabel, COL_LEFT_X, vY, false);
+                registry.push({ panel: pPnl, apId: progId, progressive: true,
+                                baseLabel: progLabel, order: order });
+                arr.push(pPnl);
+                return;
+            }
+
+            for (var i:int = 0; i < playOrder.length; i++) {
+                var prefix:String = String(playOrder[i]);
+                var px:Number = (i % 2 == 0) ? COL_LEFT_X : COL_RIGHT_X;
+                var pnl:McOptPanel = new McOptPanel(tilePre + prefix + tilePost, px, vY, false);
+                registry.push({ panel: pnl, apId: tileBase + i, progressive: false });
+                arr.push(pnl);
+                if (i % 2 == 1) vY += ROW_HEIGHT_NORM;
+            }
+        }
+
         private function _buildTalismansTab():Array {
             var arr:Array = [];
             talismanPanels = [];
@@ -394,9 +533,19 @@ package ui {
             corePanels = [];
             var nameMap:Object = (AV.serverData != null) ? AV.serverData.shadowCoreNameMap : null;
 
+            // Repeatable flat grant, above the AP items. Not an AP item at all —
+            // no id, nothing recorded in SessionData — so it never shows a
+            // collected check and can be clicked as often as needed.
+            var vY:Number = CONTENT_START_Y;
+            arr.push(new McOptTitle("Debug Grant", TITLE_X, vY));
+            vY += ROW_HEIGHT_NORM;
+            debugCoresBtn = new McOptPanel("+" + DEBUG_SHADOW_CORE_AMOUNT + " Shadow Cores",
+                COL_LEFT_X, vY, false);
+            arr.push(debugCoresBtn);
+            vY += ROW_HEIGHT_NORM + SECTION_GAP;
+
             // Only the base per-field stashes (1000–1016) are AP items now; the
             // extra shadow cores (1300–1351) were retired.
-            var vY:Number = CONTENT_START_Y;
             _appendGrantSection(arr, corePanels, "Base Shadow Cores (1000-1016)",
                 1000, 1016, nameMap, "Shadow Cores", vY);
             return arr;

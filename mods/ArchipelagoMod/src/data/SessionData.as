@@ -302,6 +302,34 @@ package data {
             }
         }
 
+        /**
+         * Reverse a skill (700-723) or trait (800-814) receipt. Debug menu only
+         * — AP never un-sends an item, so this exists purely so the Skills /
+         * Traits toggles can put the session back exactly as it was before the
+         * click: item count, collected sets, AND skillCountByCategory (which
+         * backs the skills:N achievement gates and would otherwise drift up by
+         * one on every lock/unlock cycle). No-op outside those two ranges or if
+         * the item was never received.
+         */
+        public function undoSkillOrTraitItem(apId:int):void {
+            if (!hasItem(apId)) return;
+            if (apId >= 700 && apId <= 723) {
+                delete collectedSkills[apId];
+                var gameId:int = apId - 700;
+                if (gameId >= 0 && gameId < SKILL_NAMES.length && _skillNameToCategory != null) {
+                    var cat:String = _skillNameToCategory[SKILL_NAMES[gameId]];
+                    if (cat != null)
+                        skillCountByCategory[cat] = Math.max(0, int(skillCountByCategory[cat]) - 1);
+                }
+            } else if (apId >= 800 && apId <= 814) {
+                delete collectedTraits[apId];
+            } else {
+                return;
+            }
+            delete collectedItems[String(apId)];
+            delete itemCounts[String(apId)];
+        }
+
         /** Mark an achievement as collected (sent check or received from another player). */
         public function onAchievementCollected(apId:int):void {
             if (apId >= 2000 && apId <= 2636) {

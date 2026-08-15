@@ -42,6 +42,25 @@ package unlockers {
             showToast("Received " + traitName, ItemColors.forApId(apId));
         }
 
+        /**
+         * Re-lock a battle trait (debug menu only — AP never un-sends an item).
+         * Mirrors unlockBattleTrait's ppd write; the SessionData /
+         * ProgressionBlocker bookkeeping that goes with it is handled by the
+         * caller (ArchipelagoMod.debugRevokeSkillOrTrait).
+         */
+        public function lockBattleTrait(apId:int):void {
+            var gameId:int = apId - 800;
+            if (gameId < 0 || gameId > 14) {
+                logAction("lockBattleTrait: invalid AP ID " + apId);
+                return;
+            }
+            if (!ensurePpdExists("lockBattleTrait")) {
+                return;
+            }
+            GV.ppd.gainedBattleTraits[gameId] = false;
+            logAction("Locked battle trait game_id=" + gameId + " (AP ID=" + apId + ")");
+        }
+
         /** Returns the human-readable trait name for an AP ID (800-814), or null if out of range. */
         public function getTraitName(apId:int):String {
             var gameId:int = apId - 800;

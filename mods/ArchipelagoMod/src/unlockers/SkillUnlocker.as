@@ -54,6 +54,26 @@ package unlockers {
         }
 
         /**
+         * Re-lock a skill (debug menu only — AP never un-sends an item).
+         * Mirrors unlockSkill's ppd writes; the SessionData / ProgressionBlocker
+         * bookkeeping that goes with it is handled by the caller
+         * (ArchipelagoMod.debugRevokeSkillOrTrait).
+         */
+        public function lockSkill(apId:int):void {
+            var gameId:int = apId - 700;
+            if (gameId < 0 || gameId > 23) {
+                logAction("lockSkill: invalid AP ID " + apId);
+                return;
+            }
+            if (!ensurePpdExists("lockSkill")) {
+                return;
+            }
+            GV.ppd.gainedSkillTomes[gameId] = false;
+            GV.ppd.setSkillLevel(gameId, -1);
+            logAction("Locked skill game_id=" + gameId + " (AP ID=" + apId + ")");
+        }
+
+        /**
          * Force-complete game_id 367 ("Regaining Knowledge") when the player has received
          * SKILLS_FOR_REGAINING_KNOWLEDGE skill tomes. AchievementUnlocker observes the
          * resulting status>=2 and sends the AP location check on its next frame tick.

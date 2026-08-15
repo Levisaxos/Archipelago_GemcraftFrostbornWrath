@@ -772,9 +772,14 @@ package {
 
         // -----------------------------------------------------------------------
         // Delegating wrappers — used by ScrDebugOptions and external callers.
+        //
+        // Deliberately NO unlockSkill / unlockBattleTrait passthroughs. They
+        // existed, and the debug menu used them, which was the bug: they only
+        // write GV.ppd, so the skill never lands on ProgressionBlocker's
+        // AP-authority whitelist and onSaveSave reverts it at the next save.
+        // Grant skills and traits with debugGrantItem(700+id / 800+id), which
+        // goes through grantItem and does the whole job.
 
-        public function unlockSkill(apId:int):void { _skillUnlocker.unlockSkill(apId); }
-        public function unlockBattleTrait(apId:int):void { _traitUnlocker.unlockBattleTrait(apId); }
         public function unlockStage(stageStrId:String):void { _stageUnlocker.unlockStage(stageStrId); }
         public function lockStage(stageStrId:String):void { _stageUnlocker.lockStage(stageStrId); }
         public function isStageUnlocked(stageStrId:String):Boolean { return _stageUnlocker.isStageUnlocked(stageStrId); }
@@ -798,6 +803,60 @@ package {
             }
             grantItem(apId);
             return true;
+        }
+
+        /**
+         * Debug-menu entry point for fungible progressive items (Progressive
+         * Gempouch, Progressive Stash Tile Key, ...). These are a single apId
+         * added to the pool once per tile/stage, and the Nth copy unlocks the
+         * Nth entry of the relevant order — so every click has to grant another
+         * copy. debugGrantItem's collected-once guard is deliberately bypassed;
+         * it exists for one-shot items, where a second grant would be a lie.
+         */
+        public function debugGrantProgressiveItem(apId:int):void {
+            grantItem(apId);
+        }
+
+        /** Number of copies of apId AV.sessionData has recorded (0 if never).
+         *  Backs the debug menu's progressive "N/total" readout. */
+        public function debugItemCount(apId:int):int {
+            return (AV.sessionData != null) ? AV.sessionData.getItemCount(apId) : 0;
+        }
+
+        /**
+         * Debug-menu Skills / Traits toggle, un-grant direction.
+         *
+         * The grant direction is plain debugGrantItem, which routes through
+         * grantItem so SessionData AND ProgressionBlocker's AP-authority
+         * whitelist are updated exactly as a live receipt would. This is its
+         * mirror. Both halves matter: ProgressionBlocker.onSaveSave reverts any
+         * gainedSkillTome / gainedBattleTrait that isn't on that whitelist, so a
+         * grant that skips it silently vanishes at the next save (entering a
+         * battle, or the selector event queue draining after an XP tome) — and a
+         * re-lock that skips it leaves the item in SessionData for the next
+         * syncWithAP to hand straight back.
+         */
+        public function debugRevokeSkillOrTrait(apId:int):void {
+            if (AV.sessionData != null) AV.sessionData.undoSkillOrTraitItem(apId);
+            if (apId >= 700 && apId <= 723) {
+                if (_progressionBlocker != null) _progressionBlocker.clearSkillGranted(apId - 700);
+                _skillUnlocker.lockSkill(apId);
+            } else if (apId >= 800 && apId <= 814) {
+                if (_progressionBlocker != null) _progressionBlocker.clearTraitGranted(apId - 800);
+                _traitUnlocker.lockBattleTrait(apId);
+            } else {
+                _logger.log(MOD_NAME, "debugRevokeSkillOrTrait: apId " + apId + " is not a skill or trait");
+                return;
+            }
+            if (_fieldLogicEvaluator != null) _fieldLogicEvaluator.markDirty();
+            if (_achievementLogicEvaluator != null) _achievementLogicEvaluator.markDirty();
+            if (_achPanelPatcher != null) _achPanelPatcher.markDotsDirty();
+        }
+
+        /** Debug-menu Cores tab: repeatable flat shadow-core grant (not an AP
+         *  item — see ShadowCoreUnlocker.grantDebugShadowCores). */
+        public function debugGrantShadowCores(amount:int):void {
+            _shadowCoreUnlocker.grantDebugShadowCores(amount);
         }
 
         /** True if AV.sessionData has recorded apId as collected (live AP
@@ -1253,7 +1312,7 @@ package {
             // Sync tile visibility once per selector session.
             if (!_mapTilesUnlocked) {
                 _stageUnlocker.syncMapTilesWithStages();
-                GV.selectorCore.renderer.setMapTilesVisibility();
+                _stageUnlocker.refreshMapTiles();
                 _mapTilesUnlocked = true;
             }
 

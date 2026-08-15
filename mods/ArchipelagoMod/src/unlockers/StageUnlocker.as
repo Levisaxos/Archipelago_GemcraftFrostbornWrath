@@ -75,8 +75,47 @@ package unlockers {
         /** Refreshes field-token and tile visibility on the selector if it is open. */
         public function refreshSelectorIfOpen():void {
             if (GV.selectorCore == null || GV.selectorCore.renderer == null) return;
-            GV.selectorCore.renderer.setMapTilesVisibility();
+            refreshMapTiles();
             GV.selectorCore.renderer.adjustFieldTokens();
+        }
+
+        /**
+         * setMapTilesVisibility() + restore the map's mouse-drag surface.
+         *
+         * ALWAYS go through this instead of calling the renderer directly.
+         * SelectorRenderer.setMapTilesVisibility() opens with
+         * `cntMapTiles.removeChildren()`, which throws away mcEventPlate — the
+         * invisible Sprite SelectorInputHandler.startMapDrag is registered on.
+         * Vanilla only ever calls it from SelectorCore.initiate(), which re-adds
+         * the plate a few lines later (SelectorCore.as:192), so vanilla never
+         * notices. Every call we make happens AFTER initiate(), so without the
+         * re-add the plate stays off the display list and mouse-dragging the
+         * world map silently dies for the rest of the selector session —
+         * keyboard panning keeps working (SelectorInputHandler.doEnterFrame
+         * doesn't touch the plate), which is exactly what makes it read as a
+         * mouse bug rather than a map bug.
+         */
+        public function refreshMapTiles():void {
+            if (GV.selectorCore == null || GV.selectorCore.renderer == null) return;
+            GV.selectorCore.renderer.setMapTilesVisibility();
+            restoreMapEventPlate();
+        }
+
+        /**
+         * Put mcEventPlate back on top of cntMapTiles, mirroring initiate().
+         * Skipped while a drag is in flight: startMapDrag re-parents the plate
+         * to mc for the duration, so removeChildren() never touched it and
+         * yanking it back mid-drag would only fight the game.
+         */
+        public function restoreMapEventPlate():void {
+            try {
+                if (GV.selectorCore == null || GV.selectorCore.isMapDragged) return;
+                var mc:* = GV.selectorCore.mc;
+                if (mc == null || mc.cntMapTiles == null || mc.mcEventPlate == null) return;
+                mc.cntMapTiles.addChild(mc.mcEventPlate);
+            } catch (e:Error) {
+                _logger.log(_modName, "restoreMapEventPlate failed: " + e.message);
+            }
         }
 
         /**

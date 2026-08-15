@@ -2349,7 +2349,7 @@ achievement_requirements = {
         "game_id": 205,
         "description": "Kill a giant with one shot.",
         "details": "Kill a giant in a single hit.",
-        "requirements": ["sBolt", "mGiant:1"],
+        "requirements": ["sBolt", "minGiants:1"],
         "required_effort": "Minor",
     },
     "Great Survivor": {
@@ -3531,7 +3531,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Major",
     },
     "Frozen Crowd": {
@@ -3542,7 +3542,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Major",
     },
     "Drop the Ice": {
@@ -3554,7 +3554,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Major",
     },
     "Ice for Everyone": {
@@ -3566,7 +3566,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Extreme",
     },
     "Stormbringer": {
@@ -3577,7 +3577,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Minor",
     },
     "Ice Mage": {
@@ -3589,7 +3589,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Major",
     },
     "Frostborn": {
@@ -3601,7 +3601,7 @@ achievement_requirements = {
             ["strikeSpells:1", "min_wl:50"],
             ["strikeSpells:2", "min_wl:40"],
             ["strikeSpells:3", "min_wl:30"]
-        ]
+        ],
         "required_effort": "Extreme",
     },
     "Brickery": {

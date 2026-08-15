@@ -32,6 +32,13 @@ package ui {
         public static const TAB_HEIGHT:Number   = 32; // informational; native plate sets real height
         private static const TAB_GAP:Number     = 6;
 
+        // Label point size. Drops to NARROW once the strip is split enough ways
+        // that a tab can't hold the longest label ("Achievements") at the base
+        // size — with 10 tabs across 980px each one is only ~92px wide.
+        private static const TX_SIZE_BASE:int   = 16;
+        private static const TX_SIZE_NARROW:int = 13;
+        private static const TX_NARROW_BELOW:Number = 110;
+
         // Label colours per state (the plate art supplies the fill/border).
         private static const TX_NORMAL:uint = 0xB0A09A;
         private static const TX_HOVER:uint  = 0xE8DCD0;
@@ -99,7 +106,8 @@ package ui {
             var plateH:Number = btn.plate.getBounds(btn).height;
 
             // Our own centred label.
-            var fmt:TextFormat = new TextFormat("Celtic Garamond for GemCraft", 16, TX_NORMAL, true);
+            var size:int = (_tabW >= TX_NARROW_BELOW) ? TX_SIZE_BASE : TX_SIZE_NARROW;
+            var fmt:TextFormat = new TextFormat("Celtic Garamond for GemCraft", size, TX_NORMAL, true);
             fmt.align = TextFormatAlign.CENTER;
             var tf:TextField = new TextField();
             tf.defaultTextFormat = fmt;
