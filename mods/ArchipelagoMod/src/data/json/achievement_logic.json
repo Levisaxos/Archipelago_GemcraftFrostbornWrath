@@ -5572,10 +5572,11 @@
     "Bang": {
       "apId": 2030,
       "game_id": 343,
-      "description": "Throw 30 gem bombs.",
+      "description": "Throw 32 gem bombs.",
       "required_effort": "Trivial",
       "requirements": [],
-      "details": "Throw 30 gem bombs in one battle."
+      "details": "Throw 32 gem bombs in one battle.",
+      "vanilla_correction": true
     },
     "Ages Old Memories": {
       "apId": 2011,

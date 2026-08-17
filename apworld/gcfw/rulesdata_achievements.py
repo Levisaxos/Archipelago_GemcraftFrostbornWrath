@@ -519,7 +519,7 @@ achievement_requirements = {
         "ap_id": 2427,
         "game_id": 590,
         "description": "Cast 4 ice shards on the same monster.",
-        "requirements": ["sIceShards"],
+        "requirements": ["sIceShards", "min_wl:30"],
         "required_effort": "Minor",
     },
     "Shardalot": {
@@ -1432,7 +1432,7 @@ achievement_requirements = {
         "ap_id": 2090,
         "game_id": 243,
         "description": "Gain 140 xp with Ice Shards spell crowd hits.",
-        "requirements": ["sIceShards"],
+        "requirements": ["sIceShards", "min_wl:25"],
         "required_effort": "Minor",
     },
     "Battle Heat": {
@@ -1620,7 +1620,7 @@ achievement_requirements = {
         "game_id": 475,
         "description": "Have a pure armor tearing gem with 3.000 hits.",
         "details": "Reach 3,000 hits on a pure armor-tearing gem.",
-        "requirements": ["sArmorTearing", "sBeam"],
+        "requirements": ["sArmorTearing", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
     },
     "Damage Support": {
@@ -1651,7 +1651,7 @@ achievement_requirements = {
         "game_id": 476,
         "description": "Have a pure poison gem with 3.500 hits.",
         "details": "Reach 3,500 hits on a pure poison gem.",
-        "requirements": ["sPoison", "sBeam"],
+        "requirements": ["sPoison", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
     },
     "Army Glue": {
@@ -1659,7 +1659,7 @@ achievement_requirements = {
         "game_id": 477,
         "description": "Have a pure slowing gem with 4.000 hits.",
         "details": "Reach 4,000 hits on a pure slowing gem.",
-        "requirements": ["sSlowing", "sBeam"],
+        "requirements": ["sSlowing", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
     },
     "Instant Spawn": {
@@ -3802,7 +3802,7 @@ achievement_requirements = {
         "game_id": 18,
         "description": "Reach 100 monster eggs cracked through all the battles.",
         "requirements": ["eSwarmQueen"],
-        "required_effort": "Major",
+        "required_effort": "Minor",
     },
     "Omelette": {
         "ap_id": 2384,
@@ -3810,7 +3810,7 @@ achievement_requirements = {
         "description": "Reach 200 monster eggs cracked through all the battles.",
         "details": "Cumulative across all battles: crack 200 eggs.",
         "requirements": ["eSwarmQueen"],
-        "required_effort": "Minor",
+        "required_effort": "Major",
     },
     "Frittata": {
         "ap_id": 2195,
@@ -3818,7 +3818,7 @@ achievement_requirements = {
         "description": "Reach 500 monster eggs cracked through all the battles.",
         "details": "Cumulative across all battles: crack 500 eggs.",
         "requirements": ["eSwarmQueen"],
-        "required_effort": "Major",
+        "required_effort": "Extreme",
     },
     "Smoke in the Sky": {
         "ap_id": 2493,
@@ -4143,8 +4143,9 @@ achievement_requirements = {
     "Bang": {
         "ap_id": 2030,
         "game_id": 343,
-        "description": "Throw 30 gem bombs.",
-        "details": "Throw 30 gem bombs in one battle.",
+        "description": "Throw 32 gem bombs.",
+        "details": "Throw 32 gem bombs in one battle.",
+        "vanilla_correction": True,
         "requirements": [],
         "required_effort": "Trivial",
     },
