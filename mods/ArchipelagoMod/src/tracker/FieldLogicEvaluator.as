@@ -205,6 +205,36 @@ package tracker {
         // -----------------------------------------------------------------------
         // Public queries
 
+        /**
+         * True iff the player can ENTER this stage — i.e. holds its field
+         * token (or it is a free/starter stage).
+         *
+         * Deliberately WEAKER than isStageInLogic: no WIZLOCK skill gate, no
+         * soft wizard-level gate, no prereq chain, no gem pouch. Walking into
+         * a field to trigger something mid-run and then losing needs none of
+         * those. Mirrors the apworld's `_can_enter_stage_cached`, which is
+         * likewise just the field-token check with the WL gate deliberately
+         * NOT folded in (see `_STAGE_ENTER_RULES` in rules.py).
+         *
+         * Backs `field_need: "enter"` achievements. Needs no recompute(): it
+         * doesn't depend on the WL fixed point.
+         */
+        public function isStageEnterable(strId:String):Boolean {
+            if (_freeStages[strId] == true) return true;
+            if (AV.sessionData == null) return false;
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            return tokens != null && tokens[strId] == true;
+        }
+
+        /** Every stage id known to the level-stat table. Used by the unbound
+         *  `gemPouch` check, which has no candidate list to iterate. */
+        public function allStageIds():Array {
+            var out:Array = [];
+            if (_levelStats == null) return out;
+            for (var sid:String in _levelStats) out.push(sid);
+            return out;
+        }
+
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
             recompute();

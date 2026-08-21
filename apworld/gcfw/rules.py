@@ -113,9 +113,14 @@ def _get_caches(state, player: int):
         state._gcfw_caches = allc
     bundle = allc.get(player)
     if bundle is None or bundle[0] != key:
-        bundle = (key, {}, {}, {})
+        bundle = (key, {}, {}, {}, {}, {}, {})
         allc[player] = bundle
-    return bundle  # (key, counter_dict, clear_dict, or_dict)
+    # (key, counter_dict, clear_dict, or_dict, enter_dict, pouch_dict, enter_or_dict)
+    #   enter_dict     sid -> field token held (the ENTER gate; see
+    #                  `_can_enter_stage_cached`)
+    #   pouch_dict     sid -> that stage's gem pouch owned
+    #   enter_or_dict  (id(stages), need_pouch) -> OR result
+    return bundle
 
 
 def _get_counter_cache(state, player: int) -> dict:
@@ -700,6 +705,125 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
     return _clear_in(_get_caches(state, player)[2], state, player, sid)
 
 
+# Compiled stage-ENTER rules: (player, sid) -> (state) -> bool. Populated in
+# set_rules alongside `_STAGE_CLEAR_RULES`, but holding ONLY the field-token
+# check — no gem pouch, no WIZLOCK skills, no vanilla DNF prereqs, and
+# deliberately NO wizard-level soft gate (unlike the clear rules, which get the
+# WL gate folded in by the WL loop). Holding a field's token is the whole
+# requirement to walk into that field and play it.
+#
+# Stages absent from this dict are unconditionally enter-able (start / free
+# stages, whose token is precollected) — same convention as _STAGE_CLEAR_RULES.
+_STAGE_ENTER_RULES: dict = {}
+
+# Compiled per-stage gem-pouch checks: (player, sid) -> (state) -> bool.
+# Mirrors the `pouch_ok` used by the clear rules (so free stages, where Hollow
+# Gems substitute, and POUCH_OFF both short-circuit to true). Consulted only by
+# the `gemPouch` achievement token — an ENTER achievement that has to KILL
+# something needs usable gems on the field it enters.
+_STAGE_POUCH_RULES: dict = {}
+
+
+def _enter_in(data, state, player: int, sid: str) -> bool:
+    """Core stage-enterability against a PRE-FETCHED enter-dict
+    (`data == _get_caches(state, player)[4]`). Same shape as `_clear_in`."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
+    rule = _STAGE_ENTER_RULES.get((player, sid))
+    ok = True if rule is None else rule(state)
+    data[sid] = ok
+    return ok
+
+
+def _pouch_in(data, state, player: int, sid: str) -> bool:
+    """Core per-stage gem-pouch ownership against a PRE-FETCHED pouch-dict
+    (`data == _get_caches(state, player)[5]`)."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
+    rule = _STAGE_POUCH_RULES.get((player, sid))
+    ok = True if rule is None else rule(state)
+    data[sid] = ok
+    return ok
+
+
+def _can_enter_stage_cached(state, player: int, sid: str) -> bool:
+    """True iff the player HOLDS the field token for `sid` — i.e. can enter the
+    field and play it, whether or not they could ever finish it.
+
+    Strictly weaker than `_can_clear_stage_cached`: no gem pouch, no skill
+    prereqs, no WL gate. Backs the ENTER-class achievements (`field_need:
+    "enter"`), which only need to do something mid-run and may then lose.
+    """
+    return _enter_in(_get_caches(state, player)[4], state, player, sid)
+
+
+def _can_enter_any_stage(state, player: int, stages, need_pouch: bool = False) -> bool:
+    """True if the player can ENTER any of the given stages (and, when
+    `need_pouch`, owns that same stage's gem pouch).
+
+    The ENTER counterpart of `_can_reach_any_stage`, with the same two-level
+    memoisation: a per-(stages-list, need_pouch) OR result keyed by `id()` of
+    the compile-time qualifying list, over per-stage results reused across
+    every OR scan for this state signature.
+
+    `need_pouch` binds the pouch to the SAME stage that satisfies the token —
+    entering a field you have the token for is useless for a kill-flavoured
+    achievement if your gems there are unusable.
+    """
+    caches = _get_caches(state, player)
+    or_dict = caches[6]
+    key = (id(stages), need_pouch)
+    cached = or_dict.get(key, _CACHE_MISS)
+    if cached is not _CACHE_MISS:
+        return cached
+    enter_dict = caches[4]
+    pouch_dict = caches[5]
+    result = False
+    for sid in stages:
+        if not _enter_in(enter_dict, state, player, sid):
+            continue
+        if need_pouch and not _pouch_in(pouch_dict, state, player, sid):
+            continue
+        result = True
+        break
+    or_dict[key] = result
+    return result
+
+
+def _any_enterable_stage_with_pouch(state, player: int) -> bool:
+    """True iff the player can ENTER some stage whose gem pouch they own.
+
+    The UNBOUND form of the `gemPouch` token — used when the achievement has no
+    per-stage requirement for the pouch to bind to (a Ritual-broadened
+    `eApparition`, a Wizard Stash, a pure counter). Such an achievement isn't
+    picky about WHICH field, so the question degrades to "is there anywhere at
+    all I can go and do damage".
+
+    In practice this is satisfied from sphere 0 — the starter field is
+    pouch-exempt (Hollow Gems substitute) and Hollow Gems still deal damage —
+    but it is expressed rather than assumed, so it stays correct if the
+    starter/pouch rules ever change.
+    """
+    caches = _get_caches(state, player)
+    or_dict = caches[6]
+    key = ("__any_enterable_with_pouch__",)
+    cached = or_dict.get(key, _CACHE_MISS)
+    if cached is not _CACHE_MISS:
+        return cached
+    enter_dict = caches[4]
+    pouch_dict = caches[5]
+    result = False
+    for _s in GAME_DATA["stages"]:
+        _sid = _s["str_id"]
+        if _enter_in(enter_dict, state, player, _sid)                 and _pouch_in(pouch_dict, state, player, _sid):
+            result = True
+            break
+    or_dict[key] = result
+    return result
+
+
 def _can_clear_any_stage(state, player: int, stages) -> bool:
     """Return True if the player can clear (reach Journey) any of the given
     stages. Stricter than `_can_reach_any_stage` — stash reachability does
@@ -1087,6 +1211,13 @@ def _compile_req(req: str, world, is_progressive: bool):
                 return False
         return (_ach_reachable, _COST_REACH, None)
 
+    if req == "gemPouch":
+        # Bare form of the group modifier — see the `gemPouch:N` branch below.
+        raise ValueError(
+            "gemPouch is a group-level modifier and must be compiled via "
+            "_compile_dnf, not _compile_req"
+        )
+
     if req in mode_tokens:
         return (_always_false, _COST_CONST, None)
 
@@ -1144,6 +1275,17 @@ def _compile_req(req: str, world, is_progressive: bool):
         # achievement ungated / permanently in logic.
         if group_name == "min_wl":
             return (_always_true, _COST_CONST, None)
+
+        # `gemPouch` is consumed by `_compile_dnf` as a group modifier before
+        # it ever reaches here (it has to bind to the group's stage, which
+        # only the consolidated check knows). Reaching this branch means a
+        # caller compiled a requirement outside `_compile_dnf` — fail loud
+        # rather than let the pouch requirement evaporate.
+        if group_name == "gemPouch":
+            raise ValueError(
+                "gemPouch is a group-level modifier and must be compiled via "
+                "_compile_dnf, not _compile_req"
+            )
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _compile_req. Reachable iff any group member is reachable.
@@ -1331,9 +1473,54 @@ def _compose_or(group_fns):
     return lambda state: any(g(state) for g in gs)
 
 
-def _compile_dnf(groups: list, world, is_progressive: bool):
+def _beat_only_tokens(group) -> list:
+    """Return tokens in `group` that a `field_need: "enter"` tag would SILENTLY
+    DOWNGRADE — i.e. beat-only tokens that ride the consolidated per-stage
+    check and would therefore inherit the weaker enter gate.
+
+    Only `Field_<sid>` qualifies. It is a clear prereq that compiles WITH a
+    `static_set`, so it gets folded into the one consolidated reach check and
+    would quietly become "hold that field's token" under enter mode.
+
+    The other beat-flavoured tokens are safe to leave in an ENTER group, and
+    are deliberately NOT flagged: `fieldToken:N`, `gemSkills:N` and the gem
+    `sX` tokens all compile to GLOBAL closures (`static_set is None`), so they
+    keep their own clearability check and run alongside the consolidated one.
+    e.g. *Prismatic Takeaway* (`eSpecter` + `gemSkills:6`) is correctly ENTER —
+    you can lose the battle after the steal — while `gemSkills:6` still demands
+    a clearable 6-gem field to have built the gem on.
+    """
+    return [r.strip() for r in group
+            if isinstance(r, str) and r.strip().startswith("Field_")]
+
+
+def _compile_dnf(groups: list, world, is_progressive: bool, field_need: str = "beat"):
     """Compile a DNF requirement structure (list of AND-groups, outer OR) into
     a single (state) -> bool closure.
+
+    `field_need` selects how the consolidated per-stage check is satisfied:
+      * `"beat"` (default, and what every stage-prereq DNF uses) — the stage
+        must be CLEARABLE (`_can_reach_any_stage`): token + pouch + prereqs +
+        the WL soft gate.
+      * `"enter"` — the stage need only be ENTER-ABLE (`_can_enter_any_stage`):
+        the field token, nothing else. For achievements you can earn mid-run
+        and then lose. Pacing for these comes from the achievement's own
+        `min_wl:N` / effort-tier floor, NOT from the field.
+    `"none"` / `"mode"` behave as `"beat"` — they carry no per-stage token, so
+    the distinction is moot.
+
+    The `gemPouch` token is a GROUP MODIFIER, not a standalone predicate: it
+    means "you must also be able to use gems on the stage this group binds
+    to". It has to fold into the consolidated check because that check is what
+    picks the stage — a standalone pouch closure could be satisfied by a
+    different field than the one carrying the elements. Gems are the only way
+    the player deals damage, so every ENTER achievement that kills or destroys
+    something carries it.
+
+    When the group has no statically bindable per-stage token (a pure counter,
+    a Wizard Stash, a Ritual-broadened `eApparition`), `gemPouch` degrades to
+    its UNBOUND form — "usable gems on SOME stage I can enter" — rather than
+    being dropped or raising.
 
     Two-level cost ordering for short-circuit:
       * AND-group: predicates sorted cheap-first so a False on a 1-µs
@@ -1359,9 +1546,53 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
     player = world.player
     compiled_groups: list = []
     group_min_costs: list = []
+    if field_need not in ("enter", "beat"):
+        # Strict binary: every achievement either needs a field it can ENTER or
+        # one it can BEAT. There is no third case — achievements only ever
+        # trigger inside a field, and a value we don't recognise would silently
+        # fall through to "beat" and over-gate.
+        raise ValueError(
+            f"field_need must be \"enter\" or \"beat\", got {field_need!r}"
+        )
+    want_enter = field_need == "enter"
     for group in groups:
         if not isinstance(group, list):
             group = [group]
+        if want_enter:
+            _bad = _beat_only_tokens(group)
+            if _bad:
+                raise ValueError(
+                    f"field_need mismatch: achievement tagged \"enter\" carries "
+                    f"beat-only token(s) {_bad}. Either the classification is "
+                    f"wrong or the requirement is — fix the data, don't downgrade "
+                    f"the gate silently."
+                )
+        # `gemPouch` is a group modifier (see the docstring), so pull it out
+        # before compiling: it never becomes a predicate of its own.
+        #
+        # ONLY the bare form is valid here. `gemPouch:<prefix>` is a different
+        # token — the per-tile stage gate used by STAGE_RULES / the WIZLOCK
+        # builder ("do you own tile A's pouch"), which the mod also implements
+        # separately. Accepting it here would silently DISCARD the prefix and
+        # substitute "the pouch for whatever stage this group binds to".
+        for _r in group:
+            if isinstance(_r, str) and _r.strip().startswith("gemPouch:"):
+                raise ValueError(
+                    f"{_r.strip()!r}: the per-prefix `gemPouch:<prefix>` form is a "
+                    "STAGE requirement, not an achievement one. Achievements use "
+                    "the bare `gemPouch`, which binds to the stage the group "
+                    "already selects."
+                )
+        need_pouch = any(
+            isinstance(r, str) and r.strip() == "gemPouch" for r in group
+        )
+        if need_pouch:
+            group = [r for r in group
+                     if not (isinstance(r, str) and r.strip() == "gemPouch")]
+            # On a BEAT group the pouch is already part of clearability, so the
+            # token is redundant rather than wrong — drop it.
+            if not want_enter:
+                need_pouch = False
         # A group with 2+ gem `sX` tokens must satisfy all its colors on ONE
         # stage. Compiling each gem via its own global `_gem_token` closure lets
         # two colors be satisfied on two different beatable stages (Rotten Aura
@@ -1394,6 +1625,18 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
         if dead_group:
             continue  # this AND-group can never satisfy
         if not joint_gems and not globals_list and not static_sets:
+            if need_pouch:
+                # Unbound `gemPouch`: no per-stage token in this group, so it
+                # means "somewhere I can enter and use gems" (see
+                # `_any_enterable_stage_with_pouch`). Not a no-op group — fall
+                # through and emit it as this group's only predicate.
+                globals_list.append(
+                    ((lambda state: _any_enterable_stage_with_pouch(state, player)),
+                     _COST_REACH)
+                )
+                compiled_groups.append([fn for fn, _ in globals_list])
+                group_min_costs.append(_COST_REACH)
+                continue
             # All predicates were always_true → group is unconditionally true,
             # so the whole DNF is true regardless of other groups.
             return _always_true
@@ -1412,16 +1655,39 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
             # The joint checker binds the colors AND the other per-stage tokens
             # (via stage_constraint) to a single clearable stage, so it replaces
             # the standalone consolidated reach check for this group.
+            #
+            # Note this branch stays CLEAR-based even under `want_enter`: a
+            # multi-color group needs a field you can actually build those gems
+            # on. That is conservative (stricter than the enter gate), never
+            # looser, so it can't put an achievement in logic too early.
             gem_check = _compile_gems_joint(world, joint_gems, stage_constraint)
             if gem_check is _always_false:
                 continue  # no stage can host all colors (with the constraint)
             globals_list.append((gem_check, _COST_REACH))
         elif stage_constraint is not None:
             # One consolidated reach check replaces every individual static
-            # per-stage closure in this AND-group.
+            # per-stage closure in this AND-group. `want_enter` swaps the
+            # clearable requirement for the far weaker "hold the token", and
+            # `need_pouch` binds gem usability to that same stage.
+            if want_enter:
+                globals_list.append(
+                    ((lambda state, _stages=stage_constraint, _p=need_pouch:
+                          _can_enter_any_stage(state, player, _stages, _p)),
+                     _COST_REACH)
+                )
+            else:
+                globals_list.append(
+                    ((lambda state, _stages=stage_constraint:
+                          _can_reach_any_stage(state, player, _stages)),
+                     _COST_REACH)
+                )
+        elif need_pouch:
+            # Per-stage tokens existed but none was statically bindable (a
+            # state-dependent path like Wizard Stash or Apparition+Ritual), so
+            # there is no single stage to attach the pouch to. Fall back to the
+            # unbound form: usable gems SOMEWHERE you can enter.
             globals_list.append(
-                ((lambda state, _stages=stage_constraint:
-                      _can_reach_any_stage(state, player, _stages)),
+                ((lambda state: _any_enterable_stage_with_pouch(state, player)),
                  _COST_REACH)
             )
         # Sort cheap predicates first inside the group.
@@ -1786,6 +2052,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # also short-circuit — see pouch_free_sids comment above.
             pouch_ok = (_always_true if sid in pouch_free_sids
                         else _compile_gempouch_checker(world, sid))
+            # ENTER gate = the field token, full stop. Registered here so it
+            # shares `token_check` with the clear rule and can never drift from
+            # it. NOTE: the WL loop below rewraps _STAGE_CLEAR_RULES with the
+            # soft wizard-level gate — it must NOT do the same to these, or
+            # ENTER achievements would inherit the very gate this decouples
+            # them from.
+            _STAGE_ENTER_RULES[(player, sid)] = token_check
+            _STAGE_POUCH_RULES[(player, sid)] = pouch_ok
             # Skip the vanilla DNF for free stages — the starter group
             # is reachable from sphere 0 by definition, regardless of any
             # vanilla `Field_<sid>` chains pointing at stages outside the
@@ -1966,6 +2240,12 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # R2 stage location correctly stays out. This is exactly the region-
             # gate divergence the _STAGE_CLEAR_RULES comment warns about, and it
             # restores parity with the mod's isStageInLogic (soft gate applied).
+            #
+            # `_STAGE_ENTER_RULES` is deliberately NOT rewrapped here. The WL
+            # gate models "are you strong enough to BEAT this field"; entering
+            # one to trigger a mid-run achievement (and then losing) needs no
+            # such strength. ENTER-class pacing lives on the achievement's own
+            # `min_wl` floor instead.
             _clear = _STAGE_CLEAR_RULES.get((player, _sid))
             if _clear is not None:
                 _STAGE_CLEAR_RULES[(player, _sid)] = (
@@ -2061,14 +2341,44 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 #         behaviour for those.
                 _components = []
                 _reqs = ach_data.get("requirements", [])
+                # `field_need` decides whether this achievement's per-stage
+                # tokens want a CLEARABLE field or merely an ENTER-ABLE one
+                # (see rulesdata_achievements.py). It is REQUIRED — a missing
+                # tag would quietly fall through to the stricter gate and
+                # over-gate the achievement, so make it loud.
+                _fn = ach_data.get("field_need")
+                if _fn is None:
+                    raise ValueError(
+                        f"achievement {ach_name!r} has no field_need tag "
+                        "(must be \"enter\" or \"beat\")"
+                    )
+                # SOFT WL floor. An explicit `min_wl:N` on the achievement is
+                # a deliberately authored gate and ALWAYS binds — it encodes a
+                # real player-power requirement (mana, spell recharge, gem
+                # grade) that field access alone doesn't cover.
+                #
+                # The EFFORT-TIER DEFAULT (ACH_MIN_WL[effort]) is BEAT-ONLY.
+                # That default stands in for "am I strong enough to finish this
+                # field", which is meaningless for something you trigger
+                # mid-run and then lose: an ENTER achievement is gated by field
+                # ACCESS (the token) plus, when it deals damage, the gem pouch.
+                # Applying a tier floor on top would re-impose exactly the
+                # pacing this change removed — "call 35 waves early" needs the
+                # field, not player power.
                 _wl_override = _extract_min_wl(_reqs)
-                _min_wl = (_wl_override if _wl_override is not None
-                           else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
+                if _wl_override is not None:
+                    _min_wl = _wl_override
+                elif _fn == "beat":
+                    _min_wl = int(_dg.ACH_MIN_WL.get(ach_effort, 0))
+                else:
+                    _min_wl = 0
                 if _min_wl > 0:
-                    _components.append(lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
+                    _components.append(
+                        lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
                 if _reqs:
                     _dnf = _compile_dnf(_normalize_requirements(_reqs), world,
-                                        is_progressive=is_progressive)
+                                        is_progressive=is_progressive,
+                                        field_need=_fn)
                     if _dnf is not _always_true:
                         _components.append(_dnf)
                 if _components:

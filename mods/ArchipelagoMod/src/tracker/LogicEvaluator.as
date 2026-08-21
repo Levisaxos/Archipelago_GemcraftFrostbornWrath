@@ -107,8 +107,15 @@ package tracker {
          *  this, multi-token requirements (Prismatic family, "in a battle"
          *  achievements like Flying Multikill) would falsely pass when
          *  each token was satisfied by a different stage. */
-        public function evaluateRequirements(requirements:Array):Boolean {
+        public function evaluateRequirements(requirements:Array,
+                                             fieldNeed:String = "beat"):Boolean {
             if (requirements == null || requirements.length == 0) return true;
+            // `field_need` (from achievement_logic.json) picks how a bound
+            // per-stage group is satisfied: "enter" = merely hold that field's
+            // token, "beat" = the field must be fully in logic. Mirrors the
+            // apworld's _compile_dnf(field_need=...). Anything unrecognised
+            // falls back to the stricter "beat", matching the old behaviour.
+            var wantEnter:Boolean = (fieldNeed == "enter");
             // Ensure AV.sessionData.fieldsInLogic is current before any
             // same-stage binding or fieldToken:N counter consults it. The
             // field evaluator's recompute is a no-op when not dirty, so this
@@ -122,11 +129,11 @@ package tracker {
                 for each (var group:* in requirements) {
                     var andGroup:Array = group as Array;
                     if (andGroup == null) continue;
-                    if (_evaluateAndGroupBound(andGroup)) return true;
+                    if (_evaluateAndGroupBound(andGroup, wantEnter)) return true;
                 }
                 return false;
             }
-            return _evaluateAndGroupBound(requirements);
+            return _evaluateAndGroupBound(requirements, wantEnter);
         }
 
         /**
@@ -185,7 +192,8 @@ package tracker {
         }
 
         /** AND-group with same-stage binding.  See evaluateRequirements doc. */
-        private function _evaluateAndGroupBound(andGroup:Array):Boolean {
+        private function _evaluateAndGroupBound(andGroup:Array,
+                                                wantEnter:Boolean = false):Boolean {
             // A group with 2+ gem `sX` tokens must field all its colours on ONE
             // stage — evaluating each gem via its own global broadening let two
             // colours be satisfied on two different in-logic stages (Rotten Aura
@@ -198,9 +206,21 @@ package tracker {
             }
             var jointGems:Boolean = gemNames.length >= 2;
 
+            // Bare `gemPouch` is a GROUP MODIFIER, not a predicate: it means
+            // "and you must be able to use gems on the stage this group binds
+            // to". Gems are the player's only damage source, so every
+            // kill/destroy achievement carries it. Pulled out here so it never
+            // reaches evaluateRequirement (which only knows the per-prefix
+            // `gemPouch:<prefix>` STAGE form — a different token).
+            var needPouch:Boolean = false;
+            for each (var pScan:* in andGroup) {
+                if (_trim(String(pScan)) == "gemPouch") { needPouch = true; break; }
+            }
+
             var staticCandidates:Array = null;  // null = no per-stage constraint yet
             for each (var groupReq:* in andGroup) {
                 var rs:String = _trim(String(groupReq));
+                if (rs == "gemPouch") continue; // handled via needPouch below
                 if (jointGems && _gemNameForToken(rs) != null)
                     continue; // handled by the joint gem check below
                 var stages:Array = _qualifyingStagesForToken(rs);
@@ -220,12 +240,25 @@ package tracker {
                 // tokens (staticCandidates) to a single in-logic stage.
                 return _jointGemStageInLogic(gemNames, staticCandidates);
             }
-            if (staticCandidates == null) return true;
+            if (staticCandidates == null) {
+                // No per-stage token to bind to. An unbound `gemPouch` still
+                // has to mean something: usable gems SOMEWHERE enterable.
+                return needPouch ? _anyEnterableStageWithPouch() : true;
+            }
             if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
                 return false;
             var fil:Object = AV.sessionData.fieldsInLogic;
             for each (var sid:String in staticCandidates) {
-                if (fil[sid] == true) return true;
+                // ENTER: holding the field token is the whole gate. BEAT: the
+                // stage must be fully in logic. The pouch (when required)
+                // binds to the SAME stage — entering a field you can't use
+                // gems on is useless for a kill-flavoured achievement.
+                var stageOk:Boolean = wantEnter
+                    ? (_fieldEvaluator != null && _fieldEvaluator.isStageEnterable(sid))
+                    : (fil[sid] == true);
+                if (!stageOk) continue;
+                if (needPouch && !_ownsPouchForStage(sid)) continue;
+                return true;
             }
             return false;
         }
@@ -365,7 +398,8 @@ package tracker {
          * Used by tooltip overlays to show why an achievement is not yet in logic.
          * For DNF, shows failing reqs from the group closest to passing.
          */
-        public function getFailingReqDescriptions(requirements:Array):Array {
+        public function getFailingReqDescriptions(requirements:Array,
+                                                  fieldNeed:String = "beat"):Array {
             if (requirements == null || requirements.length == 0) return [];
             if (requirements[0] is Array) {
                 // DNF: find the group with the most passing reqs, show its failures
@@ -389,7 +423,8 @@ package tracker {
                     // same-stage binding hold; individual reqs can pass
                     // while binding fails (no single stage satisfies all
                     // per-stage tokens).
-                    if (failing.length == 0 && _evaluateAndGroupBound(andGroup))
+                    if (failing.length == 0
+                            && _evaluateAndGroupBound(andGroup, fieldNeed == "enter"))
                         return [];
                     if (passCount > bestPassCount) {
                         bestPassCount = passCount;
@@ -412,6 +447,12 @@ package tracker {
         /** Returns a human-readable label for a single requirement string. */
         public function describeRequirement(req:String):String {
             var lower:String = req.toLowerCase();
+
+            // Bare `gemPouch` (achievement form) — the pouch is bound to
+            // whichever qualifying field the group settles on, so there is no
+            // single tile to name here.
+            if (req == "gemPouch")
+                return "Gem pouch for a qualifying field";
 
             // ---- New prefix vocabulary descriptions ---------------------
             if (req == "mTrial" || req == "mEndurance")
@@ -557,6 +598,14 @@ package tracker {
         /** Evaluate a single requirement string.  Unknown patterns return true. */
         public function evaluateRequirement(req:String):Boolean {
             var lower:String = req.toLowerCase();
+
+            // Bare `gemPouch` is normally consumed as a group modifier by
+            // _evaluateAndGroupBound (which binds it to the group's stage).
+            // It only reaches here on the per-token tooltip pass, where there
+            // is no group context — answer the unbound question so a player
+            // with no usable pouch anywhere still sees it listed as missing.
+            if (req == "gemPouch")
+                return _anyEnterableStageWithPouch();
 
             // ---- New prefix vocabulary -----------------------------------
             // Mode tokens: journey-only mod, so trial/endurance never satisfy.
@@ -816,33 +865,7 @@ package tracker {
             //   progressive(2) → state.count("Progressive Gempouch") >= idx+1
             //   global (5)     → state.has("Master Gempouch")
             if (lower.indexOf("gempouch:") == 0) {
-                var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
-                if (mode == 0) return true;
-                if (mode == 5) {
-                    return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
-                }
-                var pouchPrefix:String = _trim(req.substring(req.indexOf(":") + 1));
-                if (mode == 1) {
-                    // per_tile (distinct): canonical order for ID lookup.
-                    var orderD:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
-                    if (orderD == null) return true;
-                    var idxD:int = orderD.indexOf(pouchPrefix);
-                    if (idxD < 0) return true;
-                    return AV.sessionData.hasItem(626 + idxD);
-                }
-                if (mode == 2) {
-                    // per_tile_progressive: starter-first count threshold.
-                    var orderP:Array = AV.serverData.serverOptions.progressiveTileOrder;
-                    if (orderP == null || orderP.length == 0)
-                        orderP = AV.serverData.serverOptions.gemPouchPlayOrder;
-                    if (orderP == null) return true;
-                    var idxP:int = orderP.indexOf(pouchPrefix);
-                    if (idxP < 0) return true;
-                    var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
-                    if (progId <= 0) progId = 652;
-                    return AV.sessionData.getItemCount(progId) >= idxP + 1;
-                }
-                return true;
+                return _ownsPouchForPrefix(_trim(req.substring(req.indexOf(":") + 1)));
             }
 
             if (lower.indexOf("battletraits") == 0) {
@@ -1725,6 +1748,67 @@ package tracker {
 
         /** Map a lowercased counter-token head to its `levelStats` field name.
          *  Returns null for tokens that aren't simple per-stage stats. */
+        /**
+         * Own the gem pouch covering tile `prefix`? Granularity-aware:
+         *   off (0)        → no gating, always true
+         *   per_tile (1)   → the distinct "Gempouch (<prefix>)" item
+         *   progressive(2) → Progressive Gempouch count >= idx+1
+         *   global (5)     → Master Gempouch
+         * Shared by the `gemPouch:<prefix>` STAGE token and the bare
+         * `gemPouch` ACHIEVEMENT token, so the two can never drift.
+         */
+        private function _ownsPouchForPrefix(prefix:String):Boolean {
+            if (AV.serverData == null || AV.serverData.serverOptions == null)
+                return true;
+            var mode:int = AV.serverData.serverOptions.gemPouchGranularity;
+            if (mode == 0) return true;
+            if (mode == 5) return AV.sessionData.hasItem(1614); // POUCH_MASTER_ID
+            if (mode == 1) {
+                // per_tile (distinct): canonical order for ID lookup.
+                var orderD:Array = AV.serverData.serverOptions.gemPouchPlayOrder;
+                if (orderD == null) return true;
+                var idxD:int = orderD.indexOf(prefix);
+                if (idxD < 0) return true;
+                return AV.sessionData.hasItem(626 + idxD);
+            }
+            if (mode == 2) {
+                // per_tile_progressive: starter-first count threshold.
+                var orderP:Array = AV.serverData.serverOptions.progressiveTileOrder;
+                if (orderP == null || orderP.length == 0)
+                    orderP = AV.serverData.serverOptions.gemPouchPlayOrder;
+                if (orderP == null) return true;
+                var idxP:int = orderP.indexOf(prefix);
+                if (idxP < 0) return true;
+                var progId:int = AV.serverData.serverOptions.gemPouchProgressiveId;
+                if (progId <= 0) progId = 652;
+                return AV.sessionData.getItemCount(progId) >= idxP + 1;
+            }
+            return true;
+        }
+
+        /** Own the pouch for the tile this stage belongs to (e.g. "A4" -> "A"). */
+        private function _ownsPouchForStage(strId:String):Boolean {
+            if (strId == null || strId.length == 0) return true;
+            return _ownsPouchForPrefix(strId.charAt(0));
+        }
+
+        /**
+         * UNBOUND `gemPouch`: is there ANY stage the player can enter whose
+         * pouch they also own? Used when the AND-group has no per-stage token
+         * to bind the pouch to (a pure counter, a Wizard Stash, a
+         * Ritual-broadened eApparition). Mirrors the apworld's
+         * `_any_enterable_stage_with_pouch`.
+         */
+        private function _anyEnterableStageWithPouch():Boolean {
+            if (_fieldEvaluator == null) return false;
+            var sids:Array = _fieldEvaluator.allStageIds();
+            for each (var sid:String in sids) {
+                if (_fieldEvaluator.isStageEnterable(sid) && _ownsPouchForStage(sid))
+                    return true;
+            }
+            return false;
+        }
+
         private function _statKeyForCounter(lower:String):String {
             if (lower.indexOf("minwave") == 0)          return "WaveCount";
             if (lower.indexOf("beforewave") == 0)       return "WaveCount";

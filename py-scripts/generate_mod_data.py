@@ -149,6 +149,16 @@ def build_element_stages(level_requirements: dict) -> dict:
     return out
 
 
+def _require_field_need(name: str, data: dict) -> str:
+    """Read the achievement's `field_need`, refusing to guess one."""
+    value = data.get("field_need")
+    if value not in ("enter", "beat"):
+        raise SystemExit(
+            f"{name}: field_need must be \"enter\" or \"beat\", got {value!r}"
+        )
+    return value
+
+
 def build_achievements(achievements: dict) -> dict:
     """Achievement table for the mod.  Strips Python-side fields that
     aren't needed at runtime (modes, etc.) and renames `ap_id` -> `apId`
@@ -160,6 +170,12 @@ def build_achievements(achievements: dict) -> dict:
             "game_id": int(data.get("game_id", -1)),
             "description": data.get("description", ""),
             "required_effort": data.get("required_effort", "Trivial"),
+            # Enter-vs-beat field gate, a strict binary. The mod must use the
+            # SAME value the apworld compiled against or UT and the in-game map
+            # disagree — so it is copied, never re-derived (`minWave:N` is
+            # overloaded and can't be read by verb). Fail loud rather than
+            # defaulting: a silent "beat" would over-gate the achievement.
+            "field_need": _require_field_need(name, data),
             "requirements": data.get("requirements", []),
         }
         if "details" in data and data["details"]:

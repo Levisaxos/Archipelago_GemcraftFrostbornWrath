@@ -178,8 +178,18 @@ package tracker {
          *  + set_rules override. */
         private
         function achMinWl(achData: Object): int {
+            // An explicit `min_wl:N` on the achievement ALWAYS binds — it
+            // encodes a real player-power requirement that field access alone
+            // doesn't cover.
             var wlOverride: int = _extractMinWl(achData ? achData.requirements as Array : null);
             if (wlOverride >= 0) return wlOverride;
+            // The EFFORT-TIER DEFAULT is BEAT-ONLY, mirroring apworld set_rules.
+            // It stands in for "strong enough to finish this field", which an
+            // ENTER achievement never needs: those are gated by field ACCESS
+            // plus, when they deal damage, the gem pouch. Anything not
+            // explicitly "enter" keeps the tier, so a missing/unknown tag
+            // stays conservative.
+            if (achData && String(achData.field_need) == "enter") return 0;
             var effort: String = (achData && achData.required_effort)
                 ? String(achData.required_effort) : "Trivial";
             var map: Object = (AV.serverData != null && AV.serverData.serverOptions != null)
@@ -228,10 +238,18 @@ package tracker {
         function isAchievementInLogic(achName: String, achData: Object): Boolean {
             if (!achData) return false;
             if (_fieldEvaluator == null) return true;
+            // SOFT WL floor — BEAT ONLY, mirroring apworld set_rules. Wizard
+            // level models "can I finish this field", which is meaningless for
+            // an achievement triggered mid-run that you can then lose: those
+            // are gated by field ACCESS (the token) plus, when they deal
+            // damage, the gem pouch. Anything not explicitly "enter" keeps the
+            // floor, so a missing/unknown tag stays conservative.
             if (_fieldEvaluator.derivedWizardLevel() < achMinWl(achData))
                 return false;
             if (_logicEvaluator != null
-                    && !_logicEvaluator.evaluateRequirements(achData.requirements as Array))
+                    && !_logicEvaluator.evaluateRequirements(
+                            achData.requirements as Array,
+                            achData.field_need as String))
                 return false;
             return true;
         }
@@ -330,7 +348,8 @@ package tracker {
                 if (d == null || int(d.apId) != apId) continue;
                 var reqs: Array = d.requirements as Array;
                 if (reqs == null || reqs.length == 0) return [];
-                var descs: Array = _logicEvaluator.getFailingReqDescriptions(reqs);
+                var descs: Array = _logicEvaluator.getFailingReqDescriptions(
+                        reqs, d.field_need as String);
                 var result: Array = [];
                 for each(var desc: String in descs) {
                     if (desc != null) result.push([desc, 0xCCCCCC]);
