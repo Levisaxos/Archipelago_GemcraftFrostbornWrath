@@ -15,6 +15,7 @@ package save {
      * and TalismanUnlocker (genericTalismansGranted) so ArchipelagoMod stays a thin shell.
      *
      * Slot file fields: host, port, slot, password, bonusWizardLevel,
+     *                   legacyTrialXpCleared,
      *                   totalShadowCoresGranted, genericTalismansGranted,
      *                   completed, deathLinkEnabled, deathLinksSent,
      *                   deathLinksReceived, standalone, seenOfflineApIds,
@@ -123,6 +124,7 @@ package save {
             _currentSlot = slotId;
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
+            _levelUnlocker.legacyTrialXpCleared = false;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
             AV.sessionData.reset();
@@ -143,6 +145,8 @@ package save {
                 if (slotData.slot             !== undefined) _connectionManager.apSlot       = String(slotData.slot);
                 if (slotData.password         !== undefined) _connectionManager.apPassword   = String(slotData.password);
                 if (slotData.bonusWizardLevel !== undefined) _levelUnlocker.bonusWizardLevel = int(slotData.bonusWizardLevel);
+                if (slotData.legacyTrialXpCleared !== undefined)
+                    _levelUnlocker.legacyTrialXpCleared = slotData.legacyTrialXpCleared === true;
                 if (slotData.totalShadowCoresGranted !== undefined && _shadowCoreUnlocker != null)
                     _shadowCoreUnlocker.totalGranted = int(slotData.totalShadowCoresGranted);
                 if (slotData.grantedTalismanApIds !== undefined && _talismanUnlocker != null) {
@@ -215,6 +219,7 @@ package save {
                 slot:             _connectionManager.apSlot,
                 password:         _connectionManager.apPassword,
                 bonusWizardLevel: _levelUnlocker.bonusWizardLevel,
+                legacyTrialXpCleared: _levelUnlocker.legacyTrialXpCleared,
                 totalShadowCoresGranted: _shadowCoreUnlocker != null ? _shadowCoreUnlocker.totalGranted : 0,
                 grantedTalismanApIds: grantedTalIds,
                 completed:        _slotCompleted,
@@ -253,6 +258,7 @@ package save {
             // cannot resurrect the old slot name and trigger an auto-connect.
             _connectionManager.resetSettings();
             _levelUnlocker.bonusWizardLevel = 0;
+            _levelUnlocker.legacyTrialXpCleared = false;
             if (_shadowCoreUnlocker != null) _shadowCoreUnlocker.totalGranted = 0;
             if (_talismanUnlocker != null) _talismanUnlocker.grantedApIds = {};
             AV.sessionData.reset();

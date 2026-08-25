@@ -1,7 +1,9 @@
 package unlockers {
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
-    import flash.utils.getDefinitionByName;
+    import com.giab.common.utils.NumberFormatter;
+    import patch.ApCalculator;
+    import tracker.WizardLevelCalc;
     import ui.ReceivedToast;
     import ui.ItemColors;
 
@@ -10,14 +12,19 @@ package unlockers {
      * XP tomes use AP IDs 1100-1199 (see levelsForApId).
      * Per-tome level values are configured from slot_data via configure().
      *
-     * Bonus wizard levels are persisted in the slot JSON file and injected into
-     * A4's trial XP slot so the game's own XP sum picks them up automatically.
-     * A4 trial is used because it is the final stage and unlikely to be played
-     * in a randomizer context.
+     * Bonus levels are applied by swapping GV.calculator for an ApCalculator,
+     * which shifts the level curve so the bonus stacks ON TOP of the level the
+     * player's own XP earned (see ApCalculator for why that one override covers
+     * every wizard-level consumer in the game). GV.ppd.getXp() therefore stays
+     * pure natural XP and the XP bar shows real progress toward the next level.
+     *
+     * Before this, the XP cost of the bonus levels was written into A4's Trial
+     * slot so the game's own XP sum would pick it up. That made every XP earned
+     * afterwards pay the inflated level's price, and only recomputed when a tome
+     * arrived. clearLegacyTrialInjection() migrates saves carrying that leftover.
      */
     public class LevelUnlocker extends BaseUnlocker {
         private var _bonusWizardLevel:int = 0;
-        private var _naturalWizardLevel:int = 1;
         private var _xpBarDirty:Boolean = false;
 
         // Per-tome level values — set from slot_data on connect; fallback to 1/2/3 defaults.
@@ -29,6 +36,19 @@ package unlockers {
         // persisted — it is re-applied from slot_data each time the player connects.
         private var _startingLevelBonus:int = 0;
 
+        // The installed ApCalculator and the vanilla instance it displaced, so
+        // _deactivateApMode can hand a standalone slot back an unmodified curve.
+        private var _apCalc:ApCalculator = null;
+        private var _vanillaCalc:* = null;
+
+        // One-time migration flag, persisted in the slot JSON. See clearLegacyTrialInjection().
+        private var _legacyTrialXpCleared:Boolean = false;
+        // Set once the migration has run this session. A late-arriving DataStorage
+        // Retrieved can max-merge the stale A4 value back in after the flag was
+        // already persisted, so the migration has to stay armed until the slot is
+        // switched — hence "cleared this session" rather than a pure one-shot.
+        private var _legacyTrialXpClearedThisSession:Boolean = false;
+
         /** Called after granting XP so the caller can persist the updated state. */
         public var onDataChanged:Function; // ():void
 
@@ -39,16 +59,42 @@ package unlockers {
         public function get bonusWizardLevel():int { return _bonusWizardLevel; }
         public function set bonusWizardLevel(value:int):void { _bonusWizardLevel = value; }
 
-        /** The natural (non-AP) wizard level; updated each time applyBonusLevels() runs. */
-        public function get naturalWizardLevel():int { return _naturalWizardLevel; }
+        public function get legacyTrialXpCleared():Boolean { return _legacyTrialXpCleared; }
+        public function set legacyTrialXpCleared(value:Boolean):void {
+            _legacyTrialXpCleared = value;
+            _legacyTrialXpClearedThisSession = false;
+        }
+
+        /**
+         * The level the player's OWN XP has earned, 1-indexed, with no AP bonus.
+         * Computed live off the unshifted curve (WizardLevelCalc is the validated
+         * port of Calculator.calculatePlayerLevelXpReq), so it stays correct
+         * regardless of which calculator is installed or whether it is suspended.
+         */
+        public function get naturalWizardLevel():int {
+            if (GV.ppd == null)
+                return 1;
+            return WizardLevelCalc.levelFromXp(GV.ppd.getXp()) + 1;
+        }
+
+        /** AP-granted levels stacked on top: XP tomes + the starting_wizard_level option. */
+        public function get grantedWizardLevels():int {
+            return _bonusWizardLevel + _startingLevelBonus;
+        }
+
+        /** The starting_wizard_level share of grantedWizardLevels; XP tomes are the rest. */
+        public function get startingLevelBonus():int {
+            return _startingLevelBonus;
+        }
 
         /**
          * The wizard level currently displayed by the game (1-indexed, includes AP bonus).
          * Returns 1 if GV.ppd is unavailable.
          */
         public function getDisplayedWizardLevel():int {
-            if (GV.ppd == null) return 1;
-            return currentWizardLevel(GV.ppd.getXp());
+            if (GV.ppd == null)
+                return 1;
+            return int(GV.ppd.getWizLevel()) + 1;
         }
 
         /**
@@ -81,11 +127,40 @@ package unlockers {
          * or the selector renderer is unavailable.
          */
         public function renderXpBarIfDirty():Boolean {
-            if (!_xpBarDirty) return false;
-            if (GV.selectorCore == null || GV.selectorCore.renderer == null) return false;
-            GV.selectorCore.renderer.renderXpBar(GV.ppd.getXp());
+            if (!_xpBarDirty)
+                return false;
+            if (GV.ppd == null || GV.selectorCore == null || GV.selectorCore.renderer == null)
+                return false;
+            var xp:Number = GV.ppd.getXp();
+            GV.selectorCore.renderer.renderXpBar(xp);
+            _fixZeroXpLevelPlate(xp);
             _xpBarDirty = false;
             return true;
+        }
+
+        /**
+         * SelectorRenderer.renderXpBar short-circuits at pXp == 0 and hard-codes
+         * the plate to "1", never consulting the curve. A fresh run with a
+         * starting_wizard_level bonus and no XP yet hits exactly that case, so
+         * repaint the plate ourselves. Everything else on the bar is correct at
+         * zero XP (empty strip), so only the label and its backing plate move.
+         */
+        private function _fixZeroXpLevelPlate(xp:Number):void {
+            if (xp != 0)
+                return;
+            var displayed:int = getDisplayedWizardLevel();
+            if (displayed <= 1)
+                return;
+            try {
+                var bar:* = GV.selectorCore.renderer.mc.mcXpBar;
+                bar.wizLevelTf.text = NumberFormatter.format(displayed);
+                // Mirrors the vanilla plate-width steps, which key off the
+                // 0-indexed level (displayed - 1).
+                var lvl:int = displayed - 1;
+                bar.wizLevelPlate.scaleX = lvl > 1000 ? 1.3 : (lvl > 100 ? 1.18 : (lvl > 10 ? 1.05 : 1));
+            } catch (err:Error) {
+                logAction("_fixZeroXpLevelPlate error: " + err.message);
+            }
         }
 
         /**
@@ -94,119 +169,131 @@ package unlockers {
          */
         public function grantXpFromApId(apId:int, label:String = ""):void {
             var levels:int = levelsForApId(apId);
-            if (levels <= 0) return;
+            if (levels <= 0)
+                return;
 
-            if (label == null || label == "") label = "XP Tome";
-
-            var oldXp:Number = (GV.ppd != null) ? GV.ppd.getXp() : 0;
+            if (label == null || label == "")
+                label = "XP Tome";
 
             _bonusWizardLevel += levels;
-            if (onDataChanged != null) onDataChanged();
+            if (onDataChanged != null)
+                onDataChanged();
             applyBonusLevels();
-
-            if (GV.ppd != null) {
-                var newXp:Number = GV.ppd.getXp();
-                if (pushSelectorEvent(4, [oldXp, newXp])) {
-                    _xpBarDirty = false;
-                }
-            }
 
             logAction(label + " → +" + levels + " wizard levels (bonus total: " + _bonusWizardLevel + ")");
             showToast("Received " + label, ItemColors.forApId(apId));
         }
 
         /**
-         * Inject bonus wizard levels into the game by storing the required XP
-         * in A4's trial slot. The game's own XP sum picks it up and updates the
-         * wizard level display automatically.
+         * Push the current bonus into the shifted level curve.
+         * Call after setting bonusWizardLevel (on item grant, sync, or load).
          *
-         * Call this after setting bonusWizardLevel (on item grant, sync, or load).
-         *
-         * NOTE: We cannot call Calculator.calculatePlayerLevelXpReq() directly
-         * because Calculator → Monster → IngameRenderer pulls in mcStat UI classes
-         * absent from the SWC stub (VerifyError #1014). The formula is replicated
-         * locally via apXpForWizLevel().
+         * Unlike the old A4-trial injection this does NOT need re-running when
+         * the player earns XP — the curve is shifted, not the XP total, so the
+         * displayed level tracks the natural one automatically.
          */
         public function applyBonusLevels():void {
-            if (GV.ppd == null || GV.stageCollection == null) return;
+            if (GV.ppd == null)
+                return;
+            installCalculator();
+            if (_apCalc == null)
+                return;
+
             var totalBonus:int = _bonusWizardLevel + _startingLevelBonus;
-            if (totalBonus <= 0) {
-                // Clear any previously stored bonus.
-                var clearIdx:int = GV.getFieldId("A4");
-                if (clearIdx >= 0) GV.ppd.stageHighestXpsTrial[clearIdx].s(-1);
-                _xpBarDirty = true;
+            _apCalc.bonusLevels = totalBonus;
+            _xpBarDirty = true;
+
+            logAction("applyBonusLevels: apBonus=" + _bonusWizardLevel
+                + " startingBonus=" + _startingLevelBonus
+                + " naturalLevel=" + naturalWizardLevel
+                + " displayedLevel=" + getDisplayedWizardLevel());
+        }
+
+        /** Swap GV.calculator for the shifted-curve one. Idempotent. */
+        public function installCalculator():void {
+            if (_apCalc != null && GV.calculator == _apCalc)
+                return;
+            if (GV.calculator is ApCalculator) {
+                _apCalc = GV.calculator as ApCalculator;
                 return;
             }
+            _vanillaCalc = GV.calculator;
+            _apCalc = new ApCalculator();
+            GV.calculator = _apCalc;
+            logAction("ApCalculator installed (GV.calculator swapped)");
+        }
+
+        /**
+         * Put the vanilla calculator back. GV.calculator is process-global, so
+         * without this a standalone slot loaded after an AP run would keep the
+         * AP slot's level shift.
+         */
+        public function restoreVanillaCalculator():void {
+            if (_apCalc == null)
+                return;
+            if (GV.calculator == _apCalc && _vanillaCalc != null)
+                GV.calculator = _vanillaCalc;
+            else if (GV.calculator == _apCalc)
+                _apCalc.bonusLevels = 0;
+            _apCalc = null;
+            _vanillaCalc = null;
+            _xpBarDirty = true;
+            logAction("ApCalculator removed (vanilla GV.calculator restored)");
+        }
+
+        /**
+         * Hide the bonus while the LOADGAME screen is up.
+         * LoaderSaver.renderMcLoadGame draws a wizard level for EVERY slot off
+         * the same global calculator, so standalone and vanilla slots would
+         * otherwise be listed with the AP slot's bonus added on.
+         */
+        public function set bonusSuspended(value:Boolean):void {
+            if (_apCalc == null)
+                return;
+            if (_apCalc.suspended == value)
+                return;
+            _apCalc.suspended = value;
+            _xpBarDirty = true;
+        }
+
+        /**
+         * Migration for saves written before the ApCalculator swap: those stored
+         * the XP cost of the bonus levels in A4's Trial slot, which now double-
+         * counts against the shifted curve. Wipe it once, then never again so a
+         * genuine A4 Trial run (possible when the run allows Trial mode) is kept.
+         *
+         * Must run AFTER ApStateSync.applyPendingState — that max-merges the
+         * server's copy of the XP arrays back in, leftover A4 value included.
+         * The cleared array is pushed back to AP by the next pushIfChanged, so
+         * the server-side copy is fixed in the same session.
+         *
+         * Returns true if a value was actually cleared.
+         */
+        public function clearLegacyTrialInjection():Boolean {
+            if (_legacyTrialXpCleared && !_legacyTrialXpClearedThisSession)
+                return false;
+            if (GV.ppd == null || GV.stageCollection == null)
+                return false;
 
             var a4Idx:int = GV.getFieldId("A4");
             if (a4Idx < 0) {
-                logAction("applyBonusLevels: A4 field id not found");
-                return;
-            }
-
-            // Sum all normal XP, excluding the A4 trial slot we use for our bonus.
-            var normalXp:Number = 0;
-            var metas:Array = GV.stageCollection.stageMetas;
-            for (var i:int = 0; i < metas.length; i++) {
-                var meta:* = metas[i];
-                if (meta == null) continue;
-                normalXp += Math.max(0, GV.ppd.stageHighestXpsJourney[meta.id].g());
-                normalXp += Math.max(0, GV.ppd.stageHighestXpsEndurance[meta.id].g());
-                if (meta.id != a4Idx) {
-                    normalXp += Math.max(0, GV.ppd.stageHighestXpsTrial[meta.id].g());
-                }
-            }
-
-            _naturalWizardLevel = currentWizardLevel(normalXp);
-
-            var bonusXp:Number = Math.max(0, apXpForWizLevel(_naturalWizardLevel + totalBonus) - normalXp);
-
-            GV.ppd.stageHighestXpsTrial[a4Idx].s(bonusXp > 0 ? bonusXp : -1);
-            _xpBarDirty = true;
-            logAction("applyBonusLevels: apBonus=" + _bonusWizardLevel
-                + " startingBonus=" + _startingLevelBonus
-                + " normalXp=" + normalXp
-                + " bonusXp=" + bonusXp);
-        }
-
-        /**
-         * Approximate current wizard level from raw XP total.
-         * Inverts apXpForWizLevel() by linear search (levels are small in practice).
-         */
-        private function currentWizardLevel(xp:Number):int {
-            var level:int = 1;
-            while (apXpForWizLevel(level + 1) <= xp) level++;
-            return level;
-        }
-
-        /**
-         * XP required to reach wizard level pLevel.
-         * Replicated from Calculator.calculatePlayerLevelXpReq() to avoid
-         * linking Calculator (and its mcStat dependency chain) into our SWF.
-         */
-        private function apXpForWizLevel(pLevel:int):Number {
-            var vDelta2:Number = 30 + (pLevel - 1) * 5;
-            var vDelta:Number  = 600 + vDelta2 / 2 * (pLevel - 1);
-            return -10 + 10 * Math.round(0.8 * (300 + vDelta / 2 * (pLevel - 1)) / 10);
-        }
-
-        /**
-         * Push a SelectorEvent to GV.selectorCore.eventQueue, triggering UPDATING_STAGES
-         * if the selector is currently idle so the animation plays immediately.
-         * Returns true if the event was pushed (selector available); false otherwise.
-         */
-        private function pushSelectorEvent(type:int, args:Array):Boolean {
-            try {
-                var core:* = GV.selectorCore;
-                if (core == null) return false;
-                var SelectorEventClass:Class = getDefinitionByName("com.giab.games.gcfw.struct.SelectorEvent") as Class;
-                core.eventQueue.push(new SelectorEventClass(type, args));
-                if (core.screenStatus == 4) core.screenStatus = 3; // STAGES_IDLE → UPDATING_STAGES
-                return true;
-            } catch (err:Error) {
-                logAction("pushSelectorEvent error: " + err.message);
+                logAction("clearLegacyTrialInjection: A4 field id not found");
                 return false;
             }
+
+            var stale:Number = GV.ppd.stageHighestXpsTrial[a4Idx].g();
+            var alreadyPersisted:Boolean = _legacyTrialXpCleared;
+            _legacyTrialXpCleared = true;
+            _legacyTrialXpClearedThisSession = true;
+            if (!alreadyPersisted && onDataChanged != null)
+                onDataChanged();
+            if (stale <= 0)
+                return false;
+
+            GV.ppd.stageHighestXpsTrial[a4Idx].s(-1);
+            _xpBarDirty = true;
+            logAction("clearLegacyTrialInjection: dropped " + stale + " legacy XP from A4 Trial");
+            return true;
         }
     }
 }

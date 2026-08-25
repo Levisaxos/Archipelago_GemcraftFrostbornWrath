@@ -81,6 +81,7 @@ package {
     import patch.LoadSlotBadgePatch;
     import patch.SkillsTooltipOverlay;
     import patch.SkillTypeTooltipOverlay;
+    import patch.XpBarTooltipOverlay;
 
     import save.FileHandler;
     import save.SaveManager;
@@ -199,6 +200,7 @@ package {
         private var _iconTooltipPreview:IconTooltipPreview;
         private var _skillsTooltipOverlay:SkillsTooltipOverlay;
         private var _skillTypeTooltipOverlay:SkillTypeTooltipOverlay;
+        private var _xpBarTooltipOverlay:XpBarTooltipOverlay;
         private var _saveSlotDeleteFix:SaveSlotDeleteFix;
         private var _loadSlotBadgePatch:LoadSlotBadgePatch;
 
@@ -363,10 +365,14 @@ package {
                     if (_apStateSync.pendingState != null) {
                         var changes:int = _apStateSync.applyPendingState();
                         if (changes > 0) {
-                            // Restored XP changes natural wizard level, so
-                            // applyBonusLevels has to recompute the A4-trial
-                            // bonus offset to keep the displayed level consistent.
-                            if (_levelUnlocker != null) _levelUnlocker.applyBonusLevels();
+                            // The restore max-merges the server's XP arrays back
+                            // in, which can resurrect the pre-ApCalculator A4
+                            // Trial injection — drop it again before refreshing
+                            // the level display.
+                            if (_levelUnlocker != null) {
+                                _levelUnlocker.clearLegacyTrialInjection();
+                                _levelUnlocker.applyBonusLevels();
+                            }
                             if (_saveManager != null) _saveManager.saveSlotData();
                         }
                     }
@@ -408,6 +414,7 @@ package {
                 _iconTooltipPreview = new IconTooltipPreview(_fieldLogicEvaluator, _achievementLogicEvaluator);
                 _skillsTooltipOverlay = new SkillsTooltipOverlay(_logger, MOD_NAME, _achievementUnlocker);
                 _skillTypeTooltipOverlay = new SkillTypeTooltipOverlay(_logger, MOD_NAME);
+                _xpBarTooltipOverlay = new XpBarTooltipOverlay(_logger, MOD_NAME, _levelUnlocker);
 
                 // Button factory — owns all mod buttons on selector + main menu
                 _modButtons = new ModButtons(_logger, MOD_NAME, _connectionManager, _fieldLogicEvaluator);
@@ -608,6 +615,15 @@ package {
             // next shows vanilla text.
             if (_achievementUnlocker != null) _achievementUnlocker.applyDescriptionCorrections();
 
+            // Swap GV.calculator for the shifted level curve, so AP wizard
+            // levels stack on top of the XP-derived level instead of being
+            // baked into the XP total. GV.calculator is a per-process global,
+            // so _deactivateApMode calls restoreVanillaCalculator — otherwise a
+            // standalone slot loaded next keeps this slot's level shift.
+            // applyBonusLevels installs it too, but that only runs on connect;
+            // installing here covers an AP slot opened while offline.
+            if (_levelUnlocker != null) _levelUnlocker.applyBonusLevels();
+
             _logger.log(MOD_NAME, "AP MODE ACTIVATED — slot=" + (_saveManager != null ? _saveManager.currentSlot : -1));
         }
 
@@ -687,6 +703,10 @@ package {
             // GV.selectorCore.traitsXpMult persists until vanilla recomputes it —
             // restore the vanilla base now so standalone never sees AP scaling.
             DifficultyXpScaler.restoreVanilla();
+            // Put the vanilla wizard-level curve back. GV.calculator is global
+            // (per-process), so a standalone slot loaded next would otherwise be
+            // rendered at this slot's AP level bonus.
+            if (_levelUnlocker != null) _levelUnlocker.restoreVanillaCalculator();
 
             // Connection
             if (_connectionManager != null) _connectionManager.disconnectAndReset();
@@ -1051,6 +1071,14 @@ package {
                 _loadSlotBadgePatch.onLoadGameFrame();
             }
 
+            // LoaderSaver.renderMcLoadGame draws a wizard level for EVERY slot
+            // off the global GV.calculator, so the AP slot's level bonus would
+            // inflate the standalone/vanilla rows next to it. Hide the bonus
+            // while that screen is up. The setter no-ops when unchanged.
+            if (_levelUnlocker != null) {
+                _levelUnlocker.bonusSuspended = (screen == ScreenId.LOADGAME);
+            }
+
             // Routing trigger — fires once after the player leaves LOADGAME
             // with a chosen slot. startConnectionForSlot inspects the slot
             // file and either activates AP, enters standalone, or shows
@@ -1350,6 +1378,7 @@ package {
                 }
                 if (_skillsTooltipOverlay != null) _skillsTooltipOverlay.onSelectorFrame();
                 if (_skillTypeTooltipOverlay != null) _skillTypeTooltipOverlay.onSelectorFrame();
+                if (_xpBarTooltipOverlay != null) _xpBarTooltipOverlay.onSelectorFrame();
 
                 // Achievement panel patcher — idempotent once patched.
                 if (_achPanelPatcher != null) {
@@ -3395,16 +3424,18 @@ package {
             // --- Restore stage XP --- (lost-save recovery)
             // If a Retrieved came back before sync completed, apply the stored
             // XP arrays here. Late-arriving Retrieved is handled by the
-            // onDataStorageRetrieved handler in bind(). Restoring XP changes
-            // normalXp, so applyBonusLevels has to recompute to keep the
-            // displayed wizard level consistent.
+            // onDataStorageRetrieved handler in bind().
             var stageXpRestored:int = 0;
             if (_apStateSync != null) {
                 stageXpRestored = _apStateSync.applyPendingState();
-                if (stageXpRestored > 0) {
-                    _levelUnlocker.applyBonusLevels();
-                }
             }
+            // Migrate saves written before the ApCalculator swap: those stored
+            // the bonus levels' XP cost in A4's Trial slot, which now double-
+            // counts on top of the shifted curve. Runs after applyPendingState
+            // because that max-merges the server's copy (stale A4 included)
+            // back in; the cleaned array goes back up on the next push.
+            _levelUnlocker.clearLegacyTrialInjection();
+            _levelUnlocker.applyBonusLevels();
 
             // --- Skill points --- (reconcile from canonical state; auto-heals
             // any prior over-deduction from the pre-RC5 bug where the per-
