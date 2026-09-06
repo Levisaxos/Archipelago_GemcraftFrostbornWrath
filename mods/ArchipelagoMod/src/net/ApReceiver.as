@@ -357,50 +357,63 @@ package net {
             if (onDeathLinkReceived != null) onDeathLinkReceived(source);
         }
 
+        /**
+         * Every line the server prints. The panel is a text client, so the log
+         * is UNFILTERED — other players' item sends, hints, joins, countdowns
+         * and command replies all land in it. Slot checks below gate only the
+         * side effects (HUD toast, drop icon), never what reaches the log.
+         */
         public function handlePrintJSON(p:Object):void {
             var msgType:String = (p.type != null) ? String(p.type) : "";
 
+            // On an ItemSend, `item.player` is the finder and `receiving` the
+            // recipient. Both are read up front: the finder doubles as the
+            // default owner for any item_id part that omits its own player.
+            var receiving:int  = (p.receiving != null) ? int(p.receiving) : -1;
+            var senderSlot:int = (p.item != null && p.item.player != null) ? int(p.item.player) : -1;
+
+            var lineText:String = resolvePartsText(p.data, senderSlot);
+            var lineHtml:String = resolvePartsHtml(p.data, senderSlot);
+            if (lineText.length > 0) {
+                _logger.log(_modName, "  PrintJSON[" + msgType + "]: " + lineText);
+                if (_messageLog != null)
+                    _messageLog.add(lineText, 0xFFFFFF, MessageLog.SOURCE_SYSTEM, lineHtml);
+            }
+
+            // Our own finds drive the sent-item toast and the post-level drop icon.
             if (msgType == "ItemSend") {
-                var receiving:int  = int(p.receiving);
-                var senderSlot:int = int(p.item.player);
-                if (receiving != _mySlot && senderSlot != _mySlot) return;
+                if (senderSlot != _mySlot)
+                    return;
 
-                var logText:String = resolvePartsText(p.data, senderSlot);
-                var logHtml:String = resolvePartsHtml(p.data, senderSlot);
-                _logger.log(_modName, "  ItemSend: " + logText);
-                if (_messageLog != null) _messageLog.add(logText, 0xFFFFFF, MessageLog.SOURCE_SYSTEM, logHtml);
+                var sentItemId:int      = int(p.item.item);
+                var sentLocId:int       = int(p.item.location);
+                var sentFlags:int       = (p.item.flags != null) ? int(p.item.flags) : 0;
+                var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
+                var sentLocName:String  = resolveLocationNameForSlot(sentLocId, _mySlot);
+                var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
+                var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
 
-                if (senderSlot == _mySlot) {
-                    var sentItemId:int      = int(p.item.item);
-                    var sentLocId:int       = int(p.item.location);
-                    var sentFlags:int       = (p.item.flags != null) ? int(p.item.flags) : 0;
-                    var sentItemName:String = resolveItemNameForSlot(sentItemId, receiving);
-                    var sentLocName:String  = resolveLocationNameForSlot(sentLocId, _mySlot);
-                    var recvPlayer:PlayerData = AV.archipelagoData.players[receiving] as PlayerData;
-                    var recvName:String = (recvPlayer != null) ? recvPlayer.name : ("Slot " + receiving);
+                // Item appears in its Archipelago importance colour;
+                // surrounding text stays the toast's default white.
+                var itemHex:String = _hex6(ItemColors.forFlags(sentFlags));
+                var html:String = "Sent <font color=\"#" + itemHex + "\">"
+                    + _escapeHtml(sentItemName) + "</font> to "
+                    + _escapeHtml(recvName)
+                    + " (Found at " + _escapeHtml(sentLocName) + ")";
+                var plain:String = "Sent " + sentItemName + " to " + recvName
+                    + " (Found at " + sentLocName + ")";
+                _toast.addRichMessage(html, plain);
 
-                    // Item appears in its Archipelago importance colour;
-                    // surrounding text stays the toast's default white.
-                    var itemHex:String = _hex6(ItemColors.forFlags(sentFlags));
-                    var html:String = "Sent <font color=\"#" + itemHex + "\">"
-                        + _escapeHtml(sentItemName) + "</font> to "
-                        + _escapeHtml(recvName)
-                        + " (Found at " + _escapeHtml(sentLocName) + ")";
-                    var plain:String = "Sent " + sentItemName + " to " + recvName
-                        + " (Found at " + sentLocName + ")";
-                    _toast.addRichMessage(html, plain);
-
-                    var isForMe:Boolean = (receiving == _mySlot);
-                    if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe, sentFlags);
-                }
+                var isForMe:Boolean = (receiving == _mySlot);
+                if (onItemSent != null) onItemSent(sentItemName, sentItemId, recvName, isForMe, sentFlags);
                 return;
             }
 
-            if (msgType == "Chat" || msgType == "ServerChat") {
-                var chatText:String = resolvePartsText(p.data);
-                _logger.log(_modName, "  Chat: " + chatText);
-                _toast.addMessage(chatText, 0xFFFFFFDD);
-            }
+            // Only conversational lines earn a HUD toast; the rest would spam it.
+            // addRichMessage (not addMessage) because the log entry is written
+            // above — addMessage would record a second, duplicate copy.
+            if (msgType == "Chat" || msgType == "ServerChat" || msgType == "CommandResult")
+                _toast.addRichMessage(lineHtml, lineText);
         }
 
         public function handleDataPackage(p:Object):void {

@@ -490,6 +490,17 @@ package net {
             }
         }
 
+        /**
+         * Send a chat line (or a server command such as `!hint <item>`) typed
+         * into the message-log panel. Silently dropped when offline — the
+         * caller surfaces the "not connected" feedback.
+         */
+        public function sendChat(text:String):void {
+            if (!_isConnected)
+                return;
+            _sender.sendSay(text);
+        }
+
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
         public function sendDeathLink(source:String):void {
             if (!_isConnected) return;
