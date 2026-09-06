@@ -2,7 +2,9 @@ package ui {
     import flash.display.Bitmap;
     import flash.display.BitmapData;
     import flash.display.Shape;
+    import flash.display.DisplayObject;
     import flash.display.Sprite;
+    import flash.events.MouseEvent;
     import flash.geom.Matrix;
     import flash.geom.Point;
     import flash.geom.Rectangle;
@@ -94,6 +96,15 @@ package ui {
         private var _anchorY:Number = 170;
         // True while we're forcing the vanilla info panel hidden.
         private var _suppressed:Boolean = false;
+        // The topmost mouse target under the cursor, as routed by the Flash
+        // player itself (recorded from a stage MOUSE_MOVE listener). This is
+        // the z-order truth the geometry hit-test in findHoveredToken lacks: a
+        // token only counts as hovered when this target lives inside the token
+        // container, so any window drawn over the map (mod panels on GV.main /
+        // stage, vanilla popups) occludes the tokens beneath it exactly like it
+        // does for the game's own eventPlate MOUSE_OVER.
+        private var _mouseTarget:DisplayObject = null;
+        private var _moveListenerAdded:Boolean = false;
         // Logic source for journey/stash reachability.
         private var _evaluator:FieldLogicEvaluator;
         // Achievement logic — supplies the per-field "doable here" achievement
@@ -148,6 +159,8 @@ package ui {
                     return;
                 }
             } catch (eScr:Error) {}
+
+            ensureMoveListener();
 
             // Only on the map screen. STAGES_IDLE is the resting map;
             // UPDATING_STAGES is the post-battle XP tally / token-appear
@@ -256,6 +269,59 @@ package ui {
             }
         }
 
+        /** Full teardown for AP-mode deactivation / mod unload: hide, drop the
+         *  stage mouse listener and detach so nothing lingers into a standalone
+         *  session. onSelectorFrame re-arms the listener if AP comes back. */
+        public function dispose():void {
+            hide();
+            if (_moveListenerAdded) {
+                try {
+                    GV.main.stage.removeEventListener(MouseEvent.MOUSE_MOVE, onStageMouseMove);
+                } catch (e:Error) {}
+                _moveListenerAdded = false;
+            }
+            _mouseTarget = null;
+            if (this.parent != null)
+                this.parent.removeChild(this);
+        }
+
+        /** Bubble-phase stage listener (nothing in vanilla stops propagation,
+         *  and the stage itself is the target when the cursor is over nothing
+         *  mouse-enabled, which a capture-phase listener would never see). */
+        private function ensureMoveListener():void {
+            if (_moveListenerAdded)
+                return;
+            try {
+                var stg:* = GV.main.stage;
+                if (stg == null)
+                    return;
+                stg.addEventListener(MouseEvent.MOUSE_MOVE, onStageMouseMove, false, 0, true);
+                _moveListenerAdded = true;
+            } catch (e:Error) {}
+        }
+
+        private function onStageMouseMove(e:MouseEvent):void {
+            _mouseTarget = e.target as DisplayObject;
+        }
+
+        /** True when the player-routed mouse target sits inside `cnt` (the
+         *  token container), i.e. no window / button / panel is drawn over the
+         *  tokens at the cursor. Also true when no move has been seen yet
+         *  (nothing to contradict the geometry test). A stale target whose
+         *  window has since closed reads as "not over a token" until the next
+         *  mouse move, which is how vanilla behaves too. */
+        private function isMouseTargetInside(cnt:*):Boolean {
+            if (_mouseTarget == null)
+                return true;
+            var d:DisplayObject = _mouseTarget;
+            while (d != null) {
+                if (d === cnt)
+                    return true;
+                d = d.parent;
+            }
+            return false;
+        }
+
         /** Force a field token's plate to its highlighted (on) or base (off)
          *  frame — mirrors the game's own ehStageIconOver / ehStageIconOut
          *  (SelectorInputHandler), which set plate frame plateFrame+1 / plateFrame.
@@ -336,13 +402,18 @@ package ui {
             return false;
         }
 
-        /** Hit-test the field-token container; return the hovered token or null. */
+        /** Hit-test the field-token container; return the hovered token or null.
+         *  The bounds test below ignores z-order, so it is only trusted when the
+         *  Flash-routed mouse target (see _mouseTarget) is itself inside the
+         *  token container: anything drawn over the map — a mod window, a
+         *  vanilla popup, a selector button — occludes the tokens beneath it. */
         private function findHoveredToken(mc:*):* {
             var cnt:* = mc.cntFieldTokens;
             if (cnt == null) return null;
-            // A button drawn over a field token wins the hover — don't pop the
-            // field tooltip behind it. (The bounds test below ignores z-order,
-            // so without this a button covering a token would still trigger.)
+            if (!isMouseTargetInside(cnt))
+                return null;
+            // Belt and braces for the selector's own buttons (also covered by
+            // the target check once a mouse move has been seen).
             if (SelectorHitTest.isOverSelectorButton(mc)) return null;
             try {
                 var mx:Number = cnt.mouseX;

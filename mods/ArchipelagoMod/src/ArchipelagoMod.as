@@ -482,6 +482,10 @@ package {
                 _talismanShop.dispose();
                 _talismanShop = null;
             }
+            if (_iconTooltipPreview != null) {
+                _iconTooltipPreview.dispose();
+                _iconTooltipPreview = null;
+            }
             _talismanFragmentTooltip = null;
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
@@ -669,6 +673,11 @@ package {
             // Remove the AP Shop button + popup from the (persistent) talisman
             // panel so it doesn't linger into a standalone save.
             if (_talismanShop != null) _talismanShop.dispose();
+            // Drop the custom field tooltip's stage MOUSE_MOVE listener (and
+            // the panel itself) so a standalone save gets the vanilla tooltip
+            // with zero AP leftovers. Re-armed by onSelectorFrame on next AP run.
+            if (_iconTooltipPreview != null)
+                _iconTooltipPreview.dispose();
 
             // Reset the per-battle AP patchers. Their per-stage decision locks
             // (GemPouchSuppressor._lockedSuppress, HollowGemInjector._lockedActive
