@@ -9,6 +9,8 @@ package patch {
     import Bezel.Logger;
     import com.giab.common.utils.NumberFormatter;
     import com.giab.games.gcfw.GV;
+
+    import ui.MouseTargetTracker;
     import com.giab.games.gcfw.SB;
     import com.giab.games.gcfw.constants.GemComponentType;
     import com.giab.games.gcfw.constants.IngameStatus;
@@ -302,8 +304,12 @@ package patch {
             }
             var mx:Number = _button.mouseX;
             var my:Number = _button.mouseY;
+            // Rect test ignores z-order; also require the routed mouse target
+            // to be the button itself so the stage-level message log (or any
+            // other overlay) covering it doesn't pop the tooltip from behind.
             var hovered:Boolean = mx >= 0 && mx < _BTN_HIT_W
-                               && my >= 0 && my < _BTN_HIT_H;
+                               && my >= 0 && my < _BTN_HIT_H
+                               && MouseTargetTracker.isInside(_button);
             if (hovered) {
                 if (GV.ingameCore != null
                         && GV.ingameCore.ingameStatus == IngameStatus.PLAYING) {

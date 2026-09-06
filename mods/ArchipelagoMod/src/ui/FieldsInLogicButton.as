@@ -72,10 +72,13 @@ package ui {
         public function onFrame():void {
             // Hover panel is driven by hit-test, not by mouse events, so that
             // it tracks the cursor position in global stage coordinates.
+            // hitTestPoint ignores z-order, so the routed mouse target must be
+            // this button too — a window drawn over it must not pop the panel.
             if (stage == null || !visible) {
                 _hidePanel();
             } else {
-                if (hitTestPoint(stage.mouseX, stage.mouseY, true)) {
+                if (hitTestPoint(stage.mouseX, stage.mouseY, true)
+                        && MouseTargetTracker.isInside(this)) {
                     if (!_panelShown) _showPanel();
                     else              GV.mcInfoPanel.doEnterFrame();
                 } else {
