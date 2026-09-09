@@ -5,7 +5,7 @@ A randomizer mod for **GemCraft: Frostborn Wrath** built on the [Archipelago](ht
 ## For players
 
 - **Install & setup, options, and troubleshooting:** see the main [README](../README.md).
-- **Disclaimer & credits:** [disclaimer.md](disclaimer.md).
+- **Disclaimer, AI usage & credits:** [disclaimer.md](disclaimer.md).
 
 That's everything you need to play. Download `ArchipelagoMod.swf` and `gcfw.apworld` from the [Releases](../../releases) page and follow the main README.
 
