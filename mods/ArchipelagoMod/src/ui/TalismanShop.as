@@ -291,6 +291,15 @@ package ui {
 
         private function _updateHover(pnl:*):void {
             if (_btn == null) return;
+            // The rect tests below are coordinate-only and ignore z-order. Bail
+            // (closing the popup if it is up) when the Flash-routed mouse target
+            // is not inside the talisman panel: a mod window / the message log
+            // drawn over the panel must not open or hold the shop from behind.
+            if (!MouseTargetTracker.isInside(pnl.mc)) {
+                if (_open)
+                    _closePopup(pnl);
+                return;
+            }
             var mx:Number = pnl.mc.mouseX;
             var my:Number = pnl.mc.mouseY;
             var overBtn:Boolean = _inRect(mx, my, _btn.x, _btn.y, _btnW, _btnH);

@@ -22,6 +22,7 @@ package {
     import ui.ModButtons;
     import ui.TalismanShop;
     import ui.IconTooltipPreview;
+    import ui.MouseTargetTracker;
     import ui.ScrSlotSettings;
     import ui.SystemToast;
     import ui.ReceivedToast;
@@ -482,6 +483,11 @@ package {
                 _talismanShop.dispose();
                 _talismanShop = null;
             }
+            if (_iconTooltipPreview != null) {
+                _iconTooltipPreview.dispose();
+                _iconTooltipPreview = null;
+            }
+            MouseTargetTracker.disable();
             _talismanFragmentTooltip = null;
             if (_bezel != null) _bezel.removeEventListener(EventTypes.SAVE_SAVE, onSaveSave);
             if (_connectionManager != null) {
@@ -570,6 +576,11 @@ package {
             if (_active) return;
             _active     = true;
             _standalone = false;
+
+            // Z-order truth for the mod's coordinate-driven hovers (field
+            // tooltip, AP Shop, locked-mode tooltips, Hollow Gem button,
+            // In-Logic button). Installs its stage listener lazily on first use.
+            MouseTargetTracker.enable();
 
             // Game hooks
             _bezel.addEventListener(EventTypes.SAVE_SAVE, onSaveSave);
@@ -669,6 +680,12 @@ package {
             // Remove the AP Shop button + popup from the (persistent) talisman
             // panel so it doesn't linger into a standalone save.
             if (_talismanShop != null) _talismanShop.dispose();
+            // Detach the custom field tooltip panel so a standalone save gets
+            // the vanilla tooltip with zero AP leftovers.
+            if (_iconTooltipPreview != null)
+                _iconTooltipPreview.dispose();
+            // Drop the shared stage MOUSE_MOVE listener behind the hover gates.
+            MouseTargetTracker.disable();
 
             // Reset the per-battle AP patchers. Their per-stage decision locks
             // (GemPouchSuppressor._lockedSuppress, HollowGemInjector._lockedActive

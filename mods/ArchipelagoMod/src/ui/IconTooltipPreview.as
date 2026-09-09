@@ -256,6 +256,14 @@ package ui {
             }
         }
 
+        /** Full teardown for AP-mode deactivation / mod unload: hide and
+         *  detach so nothing lingers into a standalone session. */
+        public function dispose():void {
+            hide();
+            if (this.parent != null)
+                this.parent.removeChild(this);
+        }
+
         /** Force a field token's plate to its highlighted (on) or base (off)
          *  frame — mirrors the game's own ehStageIconOver / ehStageIconOut
          *  (SelectorInputHandler), which set plate frame plateFrame+1 / plateFrame.
@@ -336,13 +344,18 @@ package ui {
             return false;
         }
 
-        /** Hit-test the field-token container; return the hovered token or null. */
+        /** Hit-test the field-token container; return the hovered token or null.
+         *  The bounds test below ignores z-order, so it is only trusted when the
+         *  Flash-routed mouse target (MouseTargetTracker) is itself inside the
+         *  token container: anything drawn over the map — a mod window, a
+         *  vanilla popup, a selector button — occludes the tokens beneath it. */
         private function findHoveredToken(mc:*):* {
             var cnt:* = mc.cntFieldTokens;
             if (cnt == null) return null;
-            // A button drawn over a field token wins the hover — don't pop the
-            // field tooltip behind it. (The bounds test below ignores z-order,
-            // so without this a button covering a token would still trigger.)
+            if (!MouseTargetTracker.isInside(cnt))
+                return null;
+            // Belt and braces for the selector's own buttons (also covered by
+            // the target check once a mouse move has been seen).
             if (SelectorHitTest.isOverSelectorButton(mc)) return null;
             try {
                 var mx:Number = cnt.mouseX;

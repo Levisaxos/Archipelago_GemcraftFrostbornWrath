@@ -3,6 +3,8 @@ package patch {
     import flash.filters.GlowFilter;
     import Bezel.Logger;
     import com.giab.games.gcfw.GV;
+
+    import ui.MouseTargetTracker;
     import data.AV;
 
     /**
@@ -195,9 +197,14 @@ package patch {
             } else if (stgSt.stage != null) {
                 var mx:Number = stgSt.stage.mouseX;
                 var my:Number = stgSt.stage.mouseY;
+                // hitTestPoint ignores z-order: only trust it when the routed
+                // mouse target is inside the settings panel, i.e. no window is
+                // drawn over the buttons at the cursor.
+                var unobscured:Boolean = MouseTargetTracker.isInside(stgSt);
 
-                var overEndurance:Boolean = lockEndurance && stgSt.btnEndurance.hitTestPoint(mx, my, true);
-                var overTrial:Boolean     = lockTrial && stgSt.btnTrial.visible
+                var overEndurance:Boolean = unobscured && lockEndurance
+                                            && stgSt.btnEndurance.hitTestPoint(mx, my, true);
+                var overTrial:Boolean     = unobscured && lockTrial && stgSt.btnTrial.visible
                                             && stgSt.btnTrial.hitTestPoint(mx, my, true);
 
                 if (overEndurance) {
