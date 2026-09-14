@@ -24,7 +24,14 @@ package ui {
 
         public function ScrGameElements(evaluator:FieldLogicEvaluator) {
             _evaluator = evaluator;
-            _scroll    = new ScrollablePanel();
+            _scroll    = _makeScroll();
+        }
+
+        /** The grid scrolls under the fixed icon strip, so clip it at the strip's bottom rather than the shared panel top. */
+        private function _makeScroll():ScrollablePanel {
+            var sp:ScrollablePanel = new ScrollablePanel();
+            sp.clipTop = McGameElements.SCROLL_CLIP_TOP;
+            return sp;
         }
 
         private function _initPanel():void {
@@ -78,7 +85,7 @@ package ui {
         public function dispose():void {
             close();
             _mc     = null;
-            _scroll = new ScrollablePanel();
+            _scroll = _makeScroll();
         }
 
         // -----------------------------------------------------------------------

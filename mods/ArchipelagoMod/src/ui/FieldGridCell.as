@@ -11,10 +11,12 @@ package ui {
     /**
      * One field in the results grid (a single stage, e.g. "N3").
      *
-     * Three states:
-     *   NEUTRAL — no filters selected; shown plain and clickable.
-     *   MATCHED — matches the current AND filter; green.
-     *   DIMMED  — filters active but this field doesn't match; faded.
+     * States:
+     *   NEUTRAL     — no filters selected; shown plain and clickable.
+     *   MATCHED     — matches the current AND filter AND the field is in logic; green.
+     *   MATCHED_OOL — matches the current AND filter but the field is out of logic; red.
+     *   DIMMED      — filters active but this field doesn't match; faded.
+     *   LOCKED      — field the player doesn't have; inert.
      *
      * Hover fires onHover(strId) / onHover(null); click fires onClick(strId).
      * Exposes `yReal` for ScrollablePanel.
@@ -25,6 +27,7 @@ package ui {
         public static const MATCHED:int = 1;
         public static const DIMMED:int  = 2;
         public static const LOCKED:int  = 3;  // field the player doesn't have — inert
+        public static const MATCHED_OOL:int = 4;  // matches the filter but the field is out of logic — red
 
         private static const FONT:String = "Celtic Garamond for GemCraft";
 
@@ -116,6 +119,9 @@ package ui {
             switch (_state) {
                 case MATCHED:
                     plate = 0x1E3A24; border = 0x66DD66; text = 0xC8F5C9;
+                    break;
+                case MATCHED_OOL:
+                    plate = 0x3A1E1E; border = 0xDD6666; text = 0xF5C8C8;
                     break;
                 case DIMMED:
                     plate = 0x10161C; border = 0x232D36; text = 0x55636E; alpha = 0.55;
