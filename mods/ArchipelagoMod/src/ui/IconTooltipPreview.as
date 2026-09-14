@@ -59,6 +59,7 @@ package ui {
         private static const FONT:String        = "Celtic Garamond for GemCraft";
         private static const PLATE_COLOR:uint    = 0xB7000000;
         private static const PANEL_W:int         = 416; // matches vanilla plate (320 * 1.3)
+        private static const NEXT_FIELDS_NAMED:int = 3; // fields named in the "Beat X, Y, Z +N more" line
         private static const PANEL_H:int         = 388; // max height; clamps the anchor + sizes the hover hit-test
         // Padding below the hover-detail text before the frame's bottom edge.
         private static const BOTTOM_PAD:int      = 14;
@@ -410,6 +411,13 @@ package ui {
             cy = addLine(waves + waveWord + "   \u00B7   first wave " + fhp + " HP",
                          COL_STAT, 12, cy, 26);
 
+            // What logic expects next, shown up front for a field that is out of logic: the next fields by name, the rest as a count (see fieldsToBeatText).
+            if (_evaluator != null && !_evaluator.canCompleteStage(strId)) {
+                var nextText:String = fieldsToBeatText(strId);
+                if (nextText != null)
+                    cy = addLine(nextText, COL_RED, 12, cy, 24);
+            }
+
             // XP / WL debug (tester slots only): the field's expected eff-XP
             // (what it feeds the WL derivation), the XP actually collected on it
             // in Journey + the trait multiplier RECORDED for that field's XP, and
@@ -475,7 +483,7 @@ package ui {
                             && _evaluator.stageHasInLogicMissing(strId, false, true);
                     showS  = true;
                     sColor = sDone ? COL_GREY : (sIn ? COL_GREEN : COL_RED);
-                    sHtml  = entryHtml("Stash", stashBody(strId, sDone, sIn), sColor);
+                    sHtml  = stashHtml(strId, sDone, sIn, sColor);
                 }
             } catch (e:Error) {}
 
@@ -546,34 +554,46 @@ package ui {
             return wlNeededBody(strId);
         }
 
-        /** Body line for the Stash check. Blocked either by the stage's WL/tier
-         *  gate or by a missing Wizard Stash Key — distinguish the two so the
-         *  line reads "Needs key (…)" rather than a generic "Blocked". */
-        private function stashBody(strId:String, done:Boolean, inLogic:Boolean):String {
-            if (done) return "Completed";
-            if (inLogic) return "In Logic";
-            // If the stage itself is clearable, the only remaining blocker is
-            // the stash key — show the granularity-aware key label.
-            if (_evaluator != null && _evaluator.canCompleteStage(strId))
-                return _evaluator.getStashKeyLabel(strId);
-            return wlNeededBody(strId);
+        /** Detail html for the Stash check. A stash always needs its key, so the key line is always shown, in its own colour: green when held, red when not.
+         *  Below it: "In Logic", or the beat-N-fields text while the stage itself can't be cleared yet, so a held key and a WL block are both visible at once. */
+        private function stashHtml(strId:String, done:Boolean, inLogic:Boolean, color:uint):String {
+            var hex:String = toHex(color);
+            var html:String = "<font color='" + hex + "'><b>Stash</b></font>";
+            if (done)
+                return html + "<br><font color='" + hex + "'>Completed</font>";
+            var haveKey:Boolean = AV.sessionData != null && AV.sessionData.isStashUnlocked(strId);
+            var keyLabel:String = (_evaluator != null) ? _evaluator.getStashKeyLabel(strId) : (haveKey ? "Got key" : "Needs key");
+            html += "<br><font color='" + toHex(haveKey ? COL_GREEN : COL_RED) + "'>" + esc(keyLabel) + "</font>";
+            if (inLogic)
+                html += "<br><font color='" + hex + "'>In Logic</font>";
+            else if (_evaluator != null && !_evaluator.canCompleteStage(strId))
+                html += "<br><font color='" + hex + "'>" + esc(wlNeededBody(strId)) + "</font>";
+            return html;
         }
 
-        /** Out-of-logic field: point the player at the real lever, without a
-         *  number. The derived-WL gate is a pure function of collected AP items
-         *  (which field tokens you hold), NOT the wizard level the player sees
-         *  in-game and NOT their earned XP — so "Needs Wizard Level N" reads as
-         *  wrong, and "get more XP" is actively misleading (grinding XP never
-         *  moves the gate). Derived WL only rises as more field tokens come in,
-         *  so "Requires more field unlocks" is the honest cue. A hovered field
-         *  always holds its own token (you can't hover a field without its
-         *  tile), so the only remaining blocker here is the WL soft-gate.
+        /** Out-of-logic field: say what logic expects the player to do next, in field counts and field names, never in wizard levels.
+         *  The derived-WL gate is a pure function of beaten fields, NOT the level the player sees in-game, so "Needs Wizard Level N" reads as wrong and "get more XP" is actively misleading (grinding never moves the gate).
+         *  fieldsToBeatText() walks logic's expected path from the fields actually beaten: the next few fields by name, the rest as a count.
+         *  A hovered field always holds its own token (you can't hover a field without its tile), so the WL soft gate is the only blocker described here.
          *  (Testers still see the exact gate in the XP/WL debug lines.) */
         private function wlNeededBody(strId:String):String {
             var gate:int = stageGate(strId);
             if (gate <= 0)
                 return "Blocked";
-            return "Requires more field unlocks";
+            var text:String = fieldsToBeatText(strId);
+            return (text != null) ? text : "Requires more field unlocks";
+        }
+
+        /** "Beat S3, V1, V2 +4 more": the first NEXT_FIELDS_NAMED fields logic expects next, the rest as a count. Null when the WL gate is met (or no data yet). */
+        private function fieldsToBeatText(strId:String):String {
+            if (_evaluator == null)
+                return null;
+            var need:Array = _evaluator.fieldsToBeatFor(strId);
+            if (need == null || need.length == 0)
+                return null;
+            var named:Array = need.slice(0, NEXT_FIELDS_NAMED);
+            var rest:int = need.length - named.length;
+            return "Beat " + named.join(", ") + ((rest > 0) ? " +" + rest + " more" : "");
         }
 
         /** Required wizard level for a stage, from shipped slot_data gates. */

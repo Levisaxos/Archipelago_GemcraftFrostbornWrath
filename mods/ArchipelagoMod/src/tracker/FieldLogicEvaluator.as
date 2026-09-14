@@ -182,17 +182,73 @@ package tracker {
                     base += Number(x);
             }
 
+            var n:int = _heldXpTraitCount();
+            var mult:Array = opts.xpTraitMultiplier as Array;
+            var minWl:Array = opts.xpTraitMinWl as Array;
+            return WizardLevelCalc.derivedWl(base, n, mult, minWl);
+        }
+
+        /** Number of the XP-scaling traits (xpTraitApIds) the player holds. */
+        private function _heldXpTraitCount():int {
+            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            if (opts == null || AV.sessionData == null)
+                return 0;
             var n:int = 0;
             var traitIds:Array = opts.xpTraitApIds as Array;
-            if (traitIds != null && AV.sessionData != null) {
+            if (traitIds != null) {
                 for each (var tid:* in traitIds) {
                     if (AV.sessionData.getItemCount(int(tid)) > 0)
                         n++;
                 }
             }
+            return n;
+        }
+
+        /**
+         * The fields logic expects the player to beat before strId's WL gate is met, in the order logic expects them.
+         * Starts from the XP of the fields ACTUALLY beaten in Journey, not the fixed-point set, because this answers "what do I still have to do".
+         * Candidates are every unbeaten field other than strId whose gate is at or below strId's gate, walked cheapest gate first (ties: lowest XP), i.e. the same cumulative-rank order the gates were baked from.
+         * Fields are taken until the shared WL curve reaches the gate, so the count is exact for the path logic expects and drops on its own when the player beats fields out of order.
+         * Returns [] when the gate is already met, strId is beaten, or slot_data hasn't shipped the tables yet.
+         * Token ownership is deliberately ignored: the list names the fields logic expects, whether or not their tokens are held yet.
+         */
+        public function fieldsToBeatFor(strId:String):Array {
+            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+            var effXp:Object = (opts != null) ? opts.wlEffXp : null;
+            if (effXp == null || opts.stageGates == null)
+                return [];
+            var gate:int = _stageGate(strId);
+            if (gate <= 0 || _isFieldBeatenJourney(strId))
+                return [];
+
+            var n:int = _heldXpTraitCount();
             var mult:Array = opts.xpTraitMultiplier as Array;
             var minWl:Array = opts.xpTraitMinWl as Array;
-            return WizardLevelCalc.derivedWl(base, n, mult, minWl);
+
+            var base:Number = 0;
+            var candidates:Array = [];
+            for (var sid:String in effXp) {
+                var x:Number = Number(effXp[sid]);
+                if (_isFieldBeatenJourney(sid)) {
+                    base += x;
+                    continue;
+                }
+                if (sid == strId || _stageGate(sid) > gate)
+                    continue;
+                candidates.push({ sid: sid, gate: _stageGate(sid), xp: x });
+            }
+            if (WizardLevelCalc.derivedWl(base, n, mult, minWl) >= gate)
+                return [];
+
+            candidates.sortOn(["gate", "xp", "sid"], [Array.NUMERIC, Array.NUMERIC, 0]);
+            var result:Array = [];
+            for each (var c:Object in candidates) {
+                base += Number(c.xp);
+                result.push(String(c.sid));
+                if (WizardLevelCalc.derivedWl(base, n, mult, minWl) >= gate)
+                    break;
+            }
+            return result;
         }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
