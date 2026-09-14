@@ -85,6 +85,21 @@ package net {
             _ws.send(packet);
         }
 
+        /**
+         * Send a free-text chat line to the AP server.
+         *
+         * The same packet carries server commands — anything starting with `!`
+         * (e.g. `!hint Amethyst Gem`) is interpreted by the server rather than
+         * broadcast as chat. Replies come back as PrintJSON.
+         */
+        public function sendSay(text:String):void {
+            if (_ws == null || text == null || text.length == 0)
+                return;
+            var packet:String = '[{"cmd":"Say","text":"' + _jsonEscape(text) + '"}]';
+            _logger.log(_modName, "AP >> Say  " + text);
+            _ws.send(packet);
+        }
+
         /** Send a DeathLink bounce to all DeathLink-tagged players. */
         public function sendDeathLink(source:String):void {
             if (_ws == null) return;

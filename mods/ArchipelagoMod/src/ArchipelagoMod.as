@@ -284,6 +284,7 @@ package {
                 _receivedToast = new ReceivedToast();
                 _systemToast.messageLog = _messageLog;
                 _messageLogPanel = new MessageLogPanel(_messageLog);
+                _messageLogPanel.onSubmit = onChatSubmit;
                 _fileHandler   = new FileHandler(_logger, MOD_NAME);
                 _skillUnlocker      = new SkillUnlocker(_logger, MOD_NAME, _receivedToast);
                 _traitUnlocker      = new TraitUnlocker(_logger, MOD_NAME, _receivedToast);
@@ -520,6 +521,7 @@ package {
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
             }
             _messageLogPanel = null;
+            if (_messageLog != null) _messageLog.flushPending();
             _messageLog = null;
             _messageLogOnStage = false;
             if (_keyListenerAdded && this.stage != null) {
@@ -722,6 +724,7 @@ package {
                 if (_messageLogPanel.isOpen) _messageLogPanel.close();
                 if (_messageLogPanel.parent != null) _messageLogPanel.parent.removeChild(_messageLogPanel);
             }
+            if (_messageLog != null) _messageLog.flushPending();
             _messageLogOnStage = false;
             if (_disconnectPanel != null && _disconnectPanel.parent != null) {
                 _disconnectPanel.parent.removeChild(_disconnectPanel);
@@ -1115,6 +1118,10 @@ package {
                 this.stage.addChild(_messageLogPanel);
                 _messageLogOnStage = true;
             }
+            // The log now carries the whole multiworld feed, so entries are
+            // buffered and written one batch per frame instead of one file open
+            // per message.
+            if (_messageLog != null) _messageLog.flushPending();
             if (!_disconnectPanelOnStage && _disconnectPanel != null && this.stage != null) {
                 this.stage.addChild(_disconnectPanel);
                 _disconnectPanelOnStage = true;
@@ -1488,6 +1495,20 @@ package {
                 }
                 return;
             }
+        }
+
+        /**
+         * Message-log panel input — forwards the typed line to Archipelago as a
+         * Say packet. Server commands (`!hint <item>`, `!help`) travel the same
+         * way; the server answers with PrintJSON, which lands back in the log.
+         */
+        private function onChatSubmit(text:String):void {
+            if (_connectionManager == null || !_connectionManager.isConnected) {
+                if (_messageLog != null)
+                    _messageLog.add("Not connected to Archipelago - message not sent", 0xFFAA44, MessageLog.SOURCE_SYSTEM);
+                return;
+            }
+            _connectionManager.sendChat(text);
         }
 
         private function _toggleDebugOptions():void {

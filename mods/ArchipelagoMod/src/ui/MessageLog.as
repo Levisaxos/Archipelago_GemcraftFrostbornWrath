@@ -18,12 +18,14 @@ package ui {
         public static const SOURCE_COLLECTION:String  = "collection";
 
         private var _entries:Array; // { text:String, color:uint, source:String, time:Date }
+        private var _pending:Array; // entries not yet written to disk
 
         private var _fileHandler:FileHandler;
         private var _slotId:int;
 
         public function MessageLog() {
             _entries = [];
+            _pending = [];
         }
 
         /**
@@ -31,9 +33,11 @@ package ui {
          * for all subsequent add() calls. Call once per slot open.
          */
         public function init(fileHandler:FileHandler, slotId:int):void {
+            flushPending();
             _fileHandler = fileHandler;
             _slotId      = slotId;
             _entries     = _fileHandler.loadLog(slotId);
+            _pending     = [];
         }
 
         /** Add a message to the log (and persist it to disk if a slot is active).
@@ -49,9 +53,23 @@ package ui {
             };
             if (html != null) entry.html = html;
             _entries.push(entry);
+            // Buffered, not written here: the log carries the whole multiworld
+            // feed now, and a file open per line would hitch on a burst.
+            // flushPending() runs once a frame.
+            _pending.push(entry);
+        }
+
+        /**
+         * Write everything buffered since the last call in a single file open.
+         * Driven from ArchipelagoMod's per-frame tick, and again on teardown so
+         * the last frame's messages are not lost.
+         */
+        public function flushPending():void {
+            if (_pending.length == 0) return;
             if (_fileHandler != null && _slotId > 0) {
-                _fileHandler.appendLogEntry(_slotId, entry);
+                _fileHandler.appendLogEntries(_slotId, _pending);
             }
+            _pending.length = 0;
         }
 
         /** Number of entries in the log. */

@@ -185,27 +185,33 @@ package save {
         }
 
         /**
-         * Append a single log entry to slot_N_log.jsonl.
+         * Append log entries to slot_N_log.jsonl in ONE file open.
+         *
+         * One open per line would hitch on a burst now that the log carries the
+         * whole multiworld feed — a mass release can land a hundred lines in a
+         * single frame. MessageLog buffers per frame and calls this.
          * Time is serialized as epoch milliseconds.
          */
-        public function appendLogEntry(slotId:int, entry:Object):void {
-            if (slotId <= 0 || _configDir == null) return;
+        public function appendLogEntries(slotId:int, entries:Array):void {
+            if (slotId <= 0 || _configDir == null || entries == null || entries.length == 0) return;
             try {
                 if (!_configDir.exists) _configDir.createDirectory();
                 var f:File = _configDir.resolvePath("slot_" + slotId + "_log.jsonl");
                 var stream:FileStream = new FileStream();
                 stream.open(f, FileMode.APPEND);
-                var serialized:Object = {
-                    text:   entry.text,
-                    color:  entry.color,
-                    source: entry.source,
-                    time:   (entry.time as Date).time
-                };
-                if (entry.html != null) serialized.html = entry.html;
-                stream.writeUTFBytes(JSON.stringify(serialized) + "\n");
+                for each (var entry:Object in entries) {
+                    var serialized:Object = {
+                        text:   entry.text,
+                        color:  entry.color,
+                        source: entry.source,
+                        time:   (entry.time as Date).time
+                    };
+                    if (entry.html != null) serialized.html = entry.html;
+                    stream.writeUTFBytes(JSON.stringify(serialized) + "\n");
+                }
                 stream.close();
             } catch (err:Error) {
-                _logger.log(_modName, "appendLogEntry ERROR: " + err.message);
+                _logger.log(_modName, "appendLogEntries ERROR: " + err.message);
             }
         }
 
