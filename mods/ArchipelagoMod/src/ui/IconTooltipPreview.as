@@ -571,17 +571,25 @@ package ui {
             return html;
         }
 
-        /** Out-of-logic field: say what logic expects the player to do next, in field counts and field names, never in wizard levels.
+        /** Out-of-logic field: say what logic expects the player to do next, in items, field counts and field names, never in wizard levels.
+         *  A hovered field always holds its own token (you can't hover a field without its tile), so the remaining blockers are items and the WL soft gate.
+         *  Missing items come first ("Needs Traps skill" on P5, "Needs Beam, Bolt, Barrage, Freeze skills" on L5, a missing Gempouch anywhere), so a field whose WL gate is already met still names what it's waiting on.
          *  The derived-WL gate is a pure function of beaten fields, NOT the level the player sees in-game, so "Needs Wizard Level N" reads as wrong and "get more XP" is actively misleading (grinding never moves the gate).
          *  fieldsToBeatText() walks logic's expected path from the fields actually beaten: the next few fields by name, the rest as a count.
-         *  A hovered field always holds its own token (you can't hover a field without its tile), so the WL soft gate is the only blocker described here.
          *  (Testers still see the exact gate in the XP/WL debug lines.) */
         private function wlNeededBody(strId:String):String {
-            var gate:int = stageGate(strId);
-            if (gate <= 0)
-                return "Blocked";
-            var text:String = fieldsToBeatText(strId);
-            return (text != null) ? text : "Requires more field unlocks";
+            var parts:Array = [];
+            var missing:Array = (_evaluator != null) ? _evaluator.getMissingStageItems(strId) : [];
+            if (missing.length > 0)
+                parts.push("Needs " + missing.join(", "));
+            if (stageGate(strId) > 0) {
+                var text:String = fieldsToBeatText(strId);
+                if (text != null)
+                    parts.push(text);
+            }
+            if (parts.length > 0)
+                return parts.join("; ");
+            return (stageGate(strId) > 0) ? "Requires more field unlocks" : "Blocked";
         }
 
         /** "Beat S3, V1, V2 +4 more": the first NEXT_FIELDS_NAMED fields logic expects next, the rest as a count. Null when the WL gate is met (or no data yet). */
