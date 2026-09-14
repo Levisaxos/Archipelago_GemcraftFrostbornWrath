@@ -18,9 +18,9 @@ package ui {
      *   - A fixed toolbar (on _inner) holds a compact strip of requirement-type
      *     toggle icons plus a hover readout.
      *   - The scrolling area (cnt) holds a 26x6 grid of fields — one row per tile
-     *     letter A-Z, one column per number 1-6. A field is green when it matches
-     *     every selected filter (AND); with no filters selected all fields are
-     *     neutral.
+     *     letter A-Z, one column per number 1-6. A field that matches every
+     *     selected filter (AND) is green when it is in logic and red when it is
+     *     not; with no filters selected all fields are neutral.
      *
      * Hovering a field shows a tooltip of everything on it; clicking a field
      * asks the owner to close the window and pan the selector to it.
@@ -49,6 +49,8 @@ package ui {
         private static const STRIP_ROW1_Y:Number = 124;
         private static const STRIP_ROW2_Y:Number = 178;
         private static const PLATE:Number        = 40;
+        /** Where the scrolling grid may start: just under the second icon row. ScrGameElements feeds this to ScrollablePanel.clipTop. */
+        public static const SCROLL_CLIP_TOP:Number = STRIP_ROW2_Y + PLATE + 4;
         private static const ICON_FIT:Number     = 32;
 
         // Explicit two-row strip. Top row = structures (ends on Jar of Wasps);
@@ -285,9 +287,12 @@ package ui {
                     cell.setState(FieldGridCell.LOCKED);
                 else if (!active)
                     cell.setState(FieldGridCell.NEUTRAL);
+                else if (matchSet[cell.strId] != true)
+                    cell.setState(FieldGridCell.DIMMED);
                 else
-                    cell.setState(matchSet[cell.strId] == true
-                        ? FieldGridCell.MATCHED : FieldGridCell.DIMMED);
+                    // A match is only useful if the field can actually be beaten now: green in logic, red out of logic (same clearability as the field tooltip's Journey orb).
+                    cell.setState(_evaluator.canCompleteStage(cell.strId)
+                        ? FieldGridCell.MATCHED : FieldGridCell.MATCHED_OOL);
             }
         }
 

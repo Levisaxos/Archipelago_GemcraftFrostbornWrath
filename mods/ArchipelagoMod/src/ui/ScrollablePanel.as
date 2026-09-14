@@ -39,6 +39,10 @@ package ui {
         public static const SCROLL_STEP:Number      = 30;
         public static const KNOB_DRAG_OFFSET:Number = 18;
 
+        // Top edge of the scrolling viewport for THIS panel. Defaults to the shared CLIP_TOP.
+        // A panel with a fixed toolbar above its scrolling content (Game Elements) raises it to the toolbar's bottom so scrolled rows disappear under the toolbar instead of showing through its gaps.
+        public var clipTop:Number = CLIP_TOP;
+
         // Current panel MovieClip (typed * because it may be McOptions-derived)
         private var _mc:*;
 
@@ -177,7 +181,7 @@ package ui {
             for (var i:int = 0; i < items.length; i++) {
                 var item:* = items[i];
                 item.y       = item.yReal - _vpY;
-                item.visible = item.y > CLIP_TOP && item.y < CLIP_BOTTOM;
+                item.visible = item.y > clipTop && item.y < CLIP_BOTTOM;
             }
         }
 
