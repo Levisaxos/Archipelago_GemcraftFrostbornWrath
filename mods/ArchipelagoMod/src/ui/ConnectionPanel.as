@@ -1,5 +1,6 @@
 package ui {
     import flash.display.DisplayObjectContainer;
+    import flash.display.Shape;
     import flash.display.Sprite;
     import flash.display.Stage;
     import flash.events.KeyboardEvent;
@@ -59,6 +60,8 @@ package ui {
         private var _btnConnect:Sprite;
         private var _btnCancel:Sprite;
         private var _btnStandalone:Sprite;
+        private var _standaloneSep:Shape;
+        private var _standaloneAllowed:Boolean = true;
         private var _tfConnectLabel:TextField;
         private var _tfStatus:TextField;
         private var _blockingOverlay:Sprite;
@@ -134,10 +137,13 @@ package ui {
             _btnCancel.addEventListener(MouseEvent.MOUSE_OUT,  onBtnOut,          false, 0, true);
             addChild(_btnCancel);
 
-            // Standalone button -- full-width separator below Connect/Cancel
-            graphics.lineStyle(1, COL_BORDER, 0.3);
-            graphics.moveTo(PADDING, PANEL_H - 54);
-            graphics.lineTo(PANEL_W - PADDING, PANEL_H - 54);
+            // Standalone button -- full-width separator below Connect/Cancel.
+            // Drawn on its own Shape so setStandaloneAllowed can hide it with the button.
+            _standaloneSep = new Shape();
+            _standaloneSep.graphics.lineStyle(1, COL_BORDER, 0.3);
+            _standaloneSep.graphics.moveTo(PADDING, PANEL_H - 54);
+            _standaloneSep.graphics.lineTo(PANEL_W - PADDING, PANEL_H - 54);
+            addChild(_standaloneSep);
 
             var saW:Number = PANEL_W - PADDING * 2;
             _btnStandalone = makeButton("Play without randomizer", COL_BTN_SA, saW, 28);
@@ -312,6 +318,8 @@ package ui {
         }
 
         private function onStandaloneClicked(e:MouseEvent):void {
+            if (!_standaloneAllowed)
+                return;
             if (onStandalone != null) onStandalone();
         }
 
@@ -328,6 +336,15 @@ package ui {
         }
 
         /** Reset the panel to its idle state (call after a failed connection attempt). */
+        /** Show or hide the "Play without randomizer" choice. Only a slot that has never connected to Archipelago may still pick standalone; a save started with AP always reconnects as AP (see ArchipelagoMod.ensureConnectionOverlay). */
+        public function setStandaloneAllowed(allowed:Boolean):void {
+            _standaloneAllowed = allowed;
+            if (_btnStandalone != null)
+                _btnStandalone.visible = allowed;
+            if (_standaloneSep != null)
+                _standaloneSep.visible = allowed;
+        }
+
         public function resetState():void {
             _isConnecting = false;
             setConnecting(false);

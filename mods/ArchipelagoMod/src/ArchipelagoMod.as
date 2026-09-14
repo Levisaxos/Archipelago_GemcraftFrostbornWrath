@@ -1653,9 +1653,13 @@ package {
                 _connectionManager.apSlot,
                 _connectionManager.apPassword
             );
+            // The standalone choice exists only for a slot that has never connected.
+            // Credentials are persisted on the first successful connect, so a slot that has them was started as an AP save and must stay one: a reconnect after a port change (PATH 2 auto-connect failing into onConnectionError) only offers Connect / Cancel.
+            var allowStandalone:Boolean = !_fileHandler.slotHasApCredentials(_saveManager.currentSlot);
+            _connectionPanel.setStandaloneAllowed(allowStandalone);
             if (!_connectionPanel.isShowing) {
                 _connectionPanel.showWithOverlay(this.stage, _systemToast, _messageLogPanel);
-                _logger.log(MOD_NAME, "Connection overlay shown");
+                _logger.log(MOD_NAME, "Connection overlay shown  standaloneAllowed=" + allowStandalone);
             }
         }
 
