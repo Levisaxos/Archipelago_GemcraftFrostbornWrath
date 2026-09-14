@@ -902,6 +902,86 @@ package tracker {
             return missing;
         }
 
+        /** Player-facing labels for every item-based blocker on a field besides its token and the WL gate, e.g. ["Gempouch (L)", "Beam, Bolt, Barrage, Freeze skills"] or ["Traps skill"].
+         *  Covers the WIZLOCK gate (getMissingStageSkills) and the non-Field requirement clauses (L5 needs the four spell skills, P5 needs Traps).
+         *  Requirements are DNF, so only the AND-group closest to passing is reported; nothing is reported when any group already passes.
+         *  Empty when nothing item-based is missing. */
+        public function getMissingStageItems(strId:String):Array {
+            var skills:Array = [];
+            var others:Array = [];
+            for each (var wiz:String in getMissingStageSkills(strId)) {
+                if (SessionData.SKILL_NAMES.indexOf(wiz) >= 0)
+                    skills.push(wiz);
+                else
+                    others.push(wiz);
+            }
+
+            for each (var req:String in _closestFailingRequirementGroup(strId)) {
+                var skillName:String = _skillNameForToken(req);
+                if (skillName != null) {
+                    if (skills.indexOf(skillName) < 0)
+                        skills.push(skillName);
+                    continue;
+                }
+                if (req.indexOf("Field_") == 0) {
+                    others.push("Field " + req.substr(6));
+                    continue;
+                }
+                var desc:String = (_logicEvaluator != null) ? _logicEvaluator.describeRequirement(req) : null;
+                if (desc != null && desc.indexOf("Requires ") == 0)
+                    desc = desc.substr(9);
+                others.push(desc != null ? desc : req);
+            }
+
+            var labels:Array = [];
+            if (skills.length > 0)
+                labels.push(skills.join(", ") + (skills.length == 1 ? " skill" : " skills"));
+            return labels.concat(others);
+        }
+
+        /** The unmet tokens of the stage's requirement AND-group with the fewest unmet tokens, using the same per-token checks as _requirementsGateMet.
+         *  Empty when the stage has no requirements or any group already passes. */
+        private function _closestFailingRequirementGroup(strId:String):Array {
+            var reqs:Array = _stageRequirements != null ? (_stageRequirements[strId] as Array) : null;
+            if (reqs == null || reqs.length == 0)
+                return [];
+            var groups:Array = (reqs[0] is Array) ? reqs : [reqs];
+            var ftProgressive:Boolean = _isFieldTokenProgressive();
+            var best:Array = null;
+            for each (var group:Array in groups) {
+                if (group == null)
+                    continue;
+                var failing:Array = [];
+                for each (var req:String in group) {
+                    if (req == null)
+                        continue;
+                    var ok:Boolean;
+                    if (req.indexOf("Field_") == 0)
+                        ok = ftProgressive || _stageReachable(req.substr(6));
+                    else
+                        ok = (_logicEvaluator != null) ? _logicEvaluator.evaluateRequirement(req) : _evalCounterReq(req);
+                    if (!ok)
+                        failing.push(req);
+                }
+                if (failing.length == 0)
+                    return [];
+                if (best == null || failing.length < best.length)
+                    best = failing;
+            }
+            return (best != null) ? best : [];
+        }
+
+        /** "sTraps" -> "Traps", "sSeekerSense" -> "Seeker Sense"; null when the token isn't a skill token. */
+        private static function _skillNameForToken(req:String):String {
+            if (req == null || req.length < 2 || req.charAt(0) != "s")
+                return null;
+            for each (var name:String in SessionData.SKILL_NAMES) {
+                if ("s" + name.split(" ").join("") == req)
+                    return name;
+            }
+            return null;
+        }
+
         // -----------------------------------------------------------------------
         // Recompute
 
