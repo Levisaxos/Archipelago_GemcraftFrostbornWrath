@@ -495,6 +495,44 @@ package tracker {
             return candidate;
         }
 
+        /** The label a filter name appears under in getFieldContents lines — gems use their short label ("Crit Hit" -> "Crit"), everything else its own name. */
+        public function getContentsLabel(name:String):String {
+            var raw:String = GEM_DISPLAY_TO_RAW[name];
+            return (raw != null) ? raw : name;
+        }
+
+        // Game Elements count filters in display order, and each one's level_stats key.
+        public static const COUNT_FILTERS:Array = ["Reaver", "Swarmling", "Giant", "Waves"];
+        private static const COUNT_FILTER_STAT:Object = {
+            "Reaver":    "ReaverCount",
+            "Swarmling": "SwarmlingCount",
+            "Giant":     "GiantCount",
+            "Waves":     "WaveCount"
+        };
+
+        /** True for a filter matched by an "at least N" count (monster type or waves) rather than by presence. */
+        public static function isCountFilter(name:String):Boolean {
+            return COUNT_FILTER_STAT.hasOwnProperty(name);
+        }
+
+        /** strIds with at least `min` of a count filter's monster type / waves, as a strId -> true set. Reads level stats, so free stages (W1-W4) are included. */
+        public function getStagesWithMinCount(name:String, min:int):Object {
+            var out:Object = {};
+            for (var sid:String in _levelStats) {
+                if (_countFilterValue(sid, name) >= min)
+                    out[sid] = true;
+            }
+            return out;
+        }
+
+        private function _countFilterValue(strId:String, name:String):int {
+            var stats:Object = (_levelStats != null) ? _levelStats[strId] : null;
+            var key:String = COUNT_FILTER_STAT[name];
+            if (stats == null || key == null)
+                return 0;
+            return int(stats[key]);
+        }
+
         private function _stagesForRequirement(name:String):Array {
             if (_elementToStages[name] != null) return _elementToStages[name] as Array;
             if (_monsterToStages[name] != null) return _monsterToStages[name] as Array;
@@ -554,6 +592,12 @@ package tracker {
             for each (var mo:String in getStageMonsters(strId)) {
                 var moc:int = getStageElementCount(strId, mo);
                 out.push(moc > 0 ? (mo + " x" + moc) : mo);
+            }
+            // Wave and monster-type totals, labelled like the count filters so the tooltip can highlight them.
+            for each (var cf:String in COUNT_FILTERS) {
+                var cfn:int = _countFilterValue(strId, cf);
+                if (cfn > 0)
+                    out.push(cf + " x" + cfn);
             }
             var byStage:Object = (AV.serverData != null) ? AV.serverData.stageAvailableGems : null;
             var gemsArr:Array = (byStage != null) ? byStage[strId] as Array : null;

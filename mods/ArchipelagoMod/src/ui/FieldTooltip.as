@@ -19,6 +19,7 @@ package ui {
         private static const PAD:Number         = 10;
         private static const BORDER_COLOR:uint  = 0x88CCFF;
         private static const BG_ALPHA:Number    = 0.92;
+        private static const HIGHLIGHT_COLOR:uint = 0xFF5A5A;
 
         private var _bg:Shape;
         private var _title:TextField;
@@ -46,13 +47,18 @@ package ui {
         /**
          * Populate + position the tooltip. `atX`/`atY` are in this sprite's
          * parent coordinate space; `maxX` clamps the right edge on-screen.
+         * `highlight` is an optional label -> true set; each whole occurrence of a label in the body is coloured red.
          */
         public function showFor(title:String, lines:Array, atX:Number, atY:Number,
-                                maxX:Number):void {
+                                maxX:Number, highlight:Object = null):void {
             _title.text = title;
-            _body.text  = (lines != null && lines.length > 0)
+            var body:String = (lines != null && lines.length > 0)
                 ? lines.join("\n")
                 : "(nothing listed)";
+            _body.text = body;
+            _body.setTextFormat(_body.defaultTextFormat);
+            if (highlight != null)
+                _highlightTerms(body, highlight);
 
             _body.y = PAD + _title.height + 4;
 
@@ -80,6 +86,30 @@ package ui {
 
         public function hide():void {
             visible = false;
+        }
+
+        /**
+         * Colour every whole occurrence of each label red. A match must start a line or follow ": " / ", " and end the line or precede "," / " x" — so "Tower" doesn't hit inside "Wizard Tower" and gem labels match inside the "Gems: a, b" line.
+         */
+        private function _highlightTerms(body:String, highlight:Object):void {
+            var fmt:TextFormat = new TextFormat(null, null, HIGHLIGHT_COLOR);
+            for (var term:String in highlight) {
+                if (highlight[term] != true || term.length == 0)
+                    continue;
+                var from:int = 0;
+                var at:int;
+                while ((at = body.indexOf(term, from)) >= 0) {
+                    var end:int = at + term.length;
+                    from = end;
+                    var before:String = body.substring(Math.max(0, at - 2), at);
+                    var startOk:Boolean = at == 0 || body.charAt(at - 1) == "\n"
+                        || before == ": " || before == ", ";
+                    var endOk:Boolean = end == body.length || body.charAt(end) == "\n"
+                        || body.charAt(end) == "," || body.substr(end, 2) == " x";
+                    if (startOk && endOk)
+                        _body.setTextFormat(fmt, at, end);
+                }
+            }
         }
 
         private function _makeTf(size:int, bold:Boolean, color:uint):TextField {
