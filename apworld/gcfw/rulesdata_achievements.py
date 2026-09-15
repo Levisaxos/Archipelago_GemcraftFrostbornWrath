@@ -3328,8 +3328,9 @@ achievement_requirements = {
     "Enhance Like No Tomorrow": {
         "ap_id": 2154,
         "game_id": 440,
-        "description": "Reach 2.500 enhancement spells cast through all the battles.",
-        "details": "Cumulative across all battles: cast 2,500 enhancement spells.",
+        "description": "Reach 2.000 enhancement spells cast through all the battles.",
+        "details": "Cumulative across all battles: cast 2,000 enhancement spells.",
+        "vanilla_correction": True,
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Extreme",
     },
@@ -3982,8 +3983,9 @@ achievement_requirements = {
     "Stronger Than Before": {
         "ap_id": 2528,
         "game_id": 355,
-        "description": "Set corrupted banishment to level 12 and banish a monster 3 times.",
-        "details": "Win with tCorruptedBanishment at level 12.",
+        "description": "Set corrupted banishment to level 6 or higher and banish a monster 3 times.",
+        "details": "With Corrupted Banishment at level 6 or higher, banish the same monster 3 times.",
+        "vanilla_correction": True,
         "requirements": ["tCorruptedBanishment"],
         "required_effort": "Major",
     },

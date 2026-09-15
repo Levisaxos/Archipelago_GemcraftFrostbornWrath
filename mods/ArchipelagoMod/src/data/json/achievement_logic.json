@@ -650,7 +650,8 @@
       "description": "Cast 4 ice shards on the same monster.",
       "required_effort": "Minor",
       "requirements": [
-        "sIceShards"
+        "sIceShards",
+        "min_wl:30"
       ]
     },
     "Shardalot": {
@@ -1868,7 +1869,8 @@
       "description": "Gain 140 xp with Ice Shards spell crowd hits.",
       "required_effort": "Minor",
       "requirements": [
-        "sIceShards"
+        "sIceShards",
+        "min_wl:25"
       ]
     },
     "Battle Heat": {
@@ -2109,7 +2111,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sArmorTearing",
-        "sBeam"
+        "sBeam",
+        "min_wl:25"
       ],
       "details": "Reach 3,000 hits on a pure armor-tearing gem."
     },
@@ -2153,7 +2156,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sPoison",
-        "sBeam"
+        "sBeam",
+        "min_wl:25"
       ],
       "details": "Reach 3,500 hits on a pure poison gem."
     },
@@ -2164,7 +2168,8 @@
       "required_effort": "Minor",
       "requirements": [
         "sSlowing",
-        "sBeam"
+        "sBeam",
+        "min_wl:25"
       ],
       "details": "Reach 4,000 hits on a pure slowing gem."
     },
@@ -4460,12 +4465,13 @@
     "Enhance Like No Tomorrow": {
       "apId": 2154,
       "game_id": 440,
-      "description": "Reach 2.500 enhancement spells cast through all the battles.",
+      "description": "Reach 2.000 enhancement spells cast through all the battles.",
       "required_effort": "Extreme",
       "requirements": [
         "enhancementSpells:1"
       ],
-      "details": "Cumulative across all battles: cast 2,500 enhancement spells."
+      "details": "Cumulative across all battles: cast 2,000 enhancement spells.",
+      "vanilla_correction": true
     },
     "Charge Fire Repeat": {
       "apId": 2087,
@@ -5129,7 +5135,7 @@
       "apId": 2085,
       "game_id": 18,
       "description": "Reach 100 monster eggs cracked through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "requirements": [
         "eSwarmQueen"
       ]
@@ -5138,7 +5144,7 @@
       "apId": 2384,
       "game_id": 78,
       "description": "Reach 200 monster eggs cracked through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Major",
       "requirements": [
         "eSwarmQueen"
       ],
@@ -5148,7 +5154,7 @@
       "apId": 2195,
       "game_id": 83,
       "description": "Reach 500 monster eggs cracked through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Extreme",
       "requirements": [
         "eSwarmQueen"
       ],
@@ -5360,12 +5366,13 @@
     "Stronger Than Before": {
       "apId": 2528,
       "game_id": 355,
-      "description": "Set corrupted banishment to level 12 and banish a monster 3 times.",
+      "description": "Set corrupted banishment to level 6 or higher and banish a monster 3 times.",
       "required_effort": "Major",
       "requirements": [
         "tCorruptedBanishment"
       ],
-      "details": "Win with tCorruptedBanishment at level 12."
+      "details": "With Corrupted Banishment at level 6 or higher, banish the same monster 3 times.",
+      "vanilla_correction": true
     },
     "Under Pressure": {
       "apId": 2587,
