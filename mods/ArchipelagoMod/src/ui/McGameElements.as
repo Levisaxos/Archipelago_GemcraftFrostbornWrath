@@ -17,6 +17,7 @@ package ui {
      *
      *   - A fixed toolbar (on _inner) holds a compact strip of requirement-type
      *     toggle icons plus a hover readout.
+     *   - A third toolbar row holds count filters (Reaver / Swarmling / Giant / Waves): selecting one shows an "at least N" box next to it, and only fields with at least that many (blank = any) match.
      *   - The scrolling area (cnt) holds a 26x6 grid of fields — one row per tile
      *     letter A-Z, one column per number 1-6. A field that matches every
      *     selected filter (AND) is green when it is in logic and red when it is
@@ -34,6 +35,8 @@ package ui {
         private var _evaluator:FieldLogicEvaluator;
 
         private var _selected:Object = {};   // requirement name -> true
+        private var _countSelected:Object = {};  // count filter name -> true
+        private var _countBoxes:Object = {};     // count filter name -> CountInputBox
         private var _fieldCells:Array = [];  // Array<FieldGridCell>
         private var _iconCells:Array = [];   // Array<IconToggleCell> (filter strip)
         private var _ownedSet:Object = {};   // strId -> true for fields the player has
@@ -48,10 +51,13 @@ package ui {
         private static const HOVER_Y:Number      = 96;
         private static const STRIP_ROW1_Y:Number = 124;
         private static const STRIP_ROW2_Y:Number = 178;
+        private static const COUNT_ROW_Y:Number  = 232;
         private static const PLATE:Number        = 40;
-        /** Where the scrolling grid may start: just under the second icon row. ScrGameElements feeds this to ScrollablePanel.clipTop. */
-        public static const SCROLL_CLIP_TOP:Number = STRIP_ROW2_Y + PLATE + 4;
+        /** Where the scrolling grid may start: just under the count-filter row. ScrGameElements feeds this to ScrollablePanel.clipTop. */
+        public static const SCROLL_CLIP_TOP:Number = COUNT_ROW_Y + PLATE + 4;
         private static const ICON_FIT:Number     = 32;
+        private static const COUNT_BOX_GAP:Number   = 6;    // count icon -> its "at least" box
+        private static const COUNT_GROUP_GAP:Number = 34;   // box -> next count icon
 
         // Explicit two-row strip. Top row = structures (ends on Jar of Wasps);
         // bottom row = creatures, a gap, weather, a gap, gems. `null` = gap.
@@ -71,7 +77,7 @@ package ui {
             "Crit Hit", "Mana Leech", "Bleeding", "Armor Tearing", "Poison", "Slowing"
         ];
 
-        private static const GRID_TOP:Number     = 262;
+        private static const GRID_TOP:Number     = 316;
         private static const ROW_LABEL_X:Number  = 178;
         private static const CELL_X0:Number       = 214;
         private static const COL_STEP:Number     = 152;
@@ -163,7 +169,7 @@ package ui {
          *  type from the current selection so it can't blank the grid. */
         private function _updateIconAvailability():void {
             for each (var cell:IconToggleCell in _iconCells) {
-                var stages:Object = _evaluator.getStagesMatching([cell.reqName]);
+                var stages:Object = _stagesFor(cell.reqName);
                 var avail:Boolean = false;
                 for (var sid:String in stages) {
                     if (_ownedSet[sid] == true) {
@@ -173,10 +179,27 @@ package ui {
                 }
                 if (!avail && cell.selected) {
                     cell.setSelected(false);
-                    _selected[cell.reqName] = false;
+                    _setFilterSelected(cell.reqName, false);
                 }
                 cell.setEnabled(avail);
             }
+        }
+
+        /** Fields carrying a single filter; a count filter needs at least one of its monster type / waves. */
+        private function _stagesFor(name:String):Object {
+            if (FieldLogicEvaluator.isCountFilter(name))
+                return _evaluator.getStagesWithMinCount(name, 1);
+            return _evaluator.getStagesMatching([name]);
+        }
+
+        /** Record a filter's selection; a count filter also shows/hides its "at least" box. */
+        private function _setFilterSelected(name:String, selected:Boolean):void {
+            if (FieldLogicEvaluator.isCountFilter(name)) {
+                _countSelected[name] = selected;
+                (_countBoxes[name] as CountInputBox).visible = selected;
+            }
+            else
+                _selected[name] = selected;
         }
 
         // -----------------------------------------------------------------------
@@ -185,6 +208,33 @@ package ui {
         private function _buildStrip():void {
             _placeRow(TOP_ROW, STRIP_ROW1_Y);
             _placeRow(BOTTOM_ROW, STRIP_ROW2_Y);
+            _placeCountRow(COUNT_ROW_Y);
+        }
+
+        /** Count filters, left-aligned at STRIP_X0: each icon is followed by its "at least N" box, shown only while the icon is selected. */
+        private function _placeCountRow(y:Number):void {
+            var x:Number = STRIP_X0;
+            for each (var nm:String in FieldLogicEvaluator.COUNT_FILTERS) {
+                var icon:DisplayObject = RequirementIconRegistry.makeIcon(nm, ICON_FIT);
+                var cell:IconToggleCell = new IconToggleCell(
+                    nm, icon, PLATE, false, RequirementIconRegistry.needsFix(nm));
+                cell.x        = x;
+                cell.y        = y;
+                cell.onToggle = _onToggleFilter;
+                cell.onHover  = _onIconHover;
+                _inner.addChild(cell);
+                _iconCells.push(cell);
+
+                var box:CountInputBox = new CountInputBox();
+                box.x        = x + PLATE + COUNT_BOX_GAP;
+                box.y        = y + (PLATE - CountInputBox.BOX_H) * 0.5;
+                box.visible  = false;
+                box.onChange = _applyFilters;
+                _inner.addChild(box);
+                _countBoxes[nm] = box;
+
+                x += PLATE + COUNT_BOX_GAP + CountInputBox.BOX_W + COUNT_GROUP_GAP;
+            }
         }
 
         /** Place a row's icons evenly across STRIP_SPAN (skipping null gaps).
@@ -267,7 +317,9 @@ package ui {
         // Filtering
 
         private function _onToggleFilter(name:String, selected:Boolean):void {
-            _selected[name] = selected;
+            _setFilterSelected(name, selected);
+            if (selected && FieldLogicEvaluator.isCountFilter(name))
+                (_countBoxes[name] as CountInputBox).focusInput();
             _applyFilters();
         }
 
@@ -277,8 +329,17 @@ package ui {
                 if (_selected[k] == true)
                     names.push(k);
             }
-            var active:Boolean = names.length > 0;
-            var matchSet:Object = active ? _evaluator.getStagesMatching(names) : null;
+            // null = no filter active; otherwise the strId -> true set matching every selected filter (AND).
+            var matchSet:Object = (names.length > 0) ? _evaluator.getStagesMatching(names) : null;
+            for (var cn:String in _countSelected) {
+                if (_countSelected[cn] != true)
+                    continue;
+                // A blank or 0 box still requires the type to be present on the field.
+                var min:int = Math.max(1, (_countBoxes[cn] as CountInputBox).value);
+                var hits:Object = _evaluator.getStagesWithMinCount(cn, min);
+                matchSet = (matchSet == null) ? hits : _intersect(matchSet, hits);
+            }
+            var active:Boolean = matchSet != null;
 
             for each (var cell:FieldGridCell in _fieldCells) {
                 // Ownership wins: a field the player doesn't have is always
@@ -296,6 +357,15 @@ package ui {
             }
         }
 
+        private static function _intersect(a:Object, b:Object):Object {
+            var out:Object = {};
+            for (var sid:String in a) {
+                if (a[sid] == true && b[sid] == true)
+                    out[sid] = true;
+            }
+            return out;
+        }
+
         // -----------------------------------------------------------------------
         // Field hover / click
 
@@ -305,7 +375,24 @@ package ui {
                 return;
             }
             var lines:Array = (_evaluator != null) ? _evaluator.getFieldContents(strId) : null;
-            _tooltip.showFor(strId, lines, this.mouseX, this.mouseY, STRIP_RIGHT);
+            _tooltip.showFor(strId, lines, this.mouseX, this.mouseY, STRIP_RIGHT, _selectedLabels());
+        }
+
+        /** Selected filters as the labels they carry in the field tooltip, so the tooltip can colour them. */
+        private function _selectedLabels():Object {
+            var out:Object = {};
+            if (_evaluator == null)
+                return out;
+            for (var k:String in _selected) {
+                if (_selected[k] == true)
+                    out[_evaluator.getContentsLabel(k)] = true;
+            }
+            // Count filters appear in the tooltip under their own name ("Reaver x358").
+            for (var cn:String in _countSelected) {
+                if (_countSelected[cn] == true)
+                    out[cn] = true;
+            }
+            return out;
         }
 
         private function _onFieldClick(strId:String):void {
@@ -338,6 +425,10 @@ package ui {
         private function _onIconHover(name:String):void {
             if (name == null) {
                 _resetHover();
+                return;
+            }
+            if (FieldLogicEvaluator.isCountFilter(name)) {
+                _hoverRow.setText(name + ": select, then type the minimum in the box (blank = any)", 0xFFE9A8);
                 return;
             }
             var flagged:Boolean = RequirementIconRegistry.needsFix(name);

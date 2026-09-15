@@ -101,6 +101,14 @@ package ui {
             "Marked Monster":     "McMonsterBase"
         };
 
+        // Path D — auto-named Flash library symbols (GemCraftFrostbornWrath_fla.*). Monster bodies are sprite-sheet parts with no mcDyn class.
+        private static const FLA:Object = {
+            "Reaver":    "mcNormalBody_254",
+            "Swarmling": "mcSwarmBody_255",
+            "Giant":     "mcGiantHead_246",
+            "Waves":     "waveBrickBody_78"
+        };
+
         // Path B — gem component ids (com.giab.games.gcfw.constants.GemComponentType)
         private static const GEM:Object = {
             "Crit Hit":      GemComponentType.CRITHIT,
@@ -141,6 +149,8 @@ package ui {
                     return _gem(int(GEM[name]), box);
                 if (MC.hasOwnProperty(name))
                     return _mcSnapshot(String(MC[name]), box, name);
+                if (FLA.hasOwnProperty(name))
+                    return _snapshot(_fla(String(FLA[name])), box, name);
             } catch (e:Error) {
             }
             return _placeholder(box);
