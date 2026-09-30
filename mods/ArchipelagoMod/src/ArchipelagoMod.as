@@ -5,8 +5,9 @@ package {
     import flash.events.KeyboardEvent;
 
     import Bezel.Bezel;
-    import Bezel.BezelMod;
+    import Bezel.BezelCoreMod;
     import Bezel.Logger;
+    import Bezel.Lattice.Lattice;
     import Bezel.GCFW.Events.EventTypes;
     import com.giab.games.gcfw.GV;
     import com.giab.games.gcfw.constants.DropType;
@@ -39,6 +40,8 @@ package {
     import ui.MainMenuUI;
 
     import deathlink.DeathLinkHandler;
+
+    import coremod.ManaLeechCounterPatcher;
 
     import patch.ModeSelectorInterceptor;
     import patch.ProgressionBlocker;
@@ -109,7 +112,7 @@ package {
      *   ReceivedToast            — On-screen received-item notifications
      *   ScrDebugOptions          — Debug panel
      */
-    public class ArchipelagoMod extends MovieClip implements BezelMod {
+    public class ArchipelagoMod extends MovieClip implements BezelCoreMod {
 
         // VERSION is the authoritative mod version: shown on the main menu and
         // handed to UpdateChecker.fetchReleases() to compare against the latest
@@ -121,6 +124,8 @@ package {
         public function get BEZEL_VERSION():String     { return "2.1.1"; }
         public function get APWORLD_VERSION():String   { return "0.6.2"; }
         public function get RELEASE_CHANNEL():String   { return ""; }
+        // Bump whenever a coremod patcher (src/coremod/) changes: a new value makes Bezel rebuild the patched game SWF on next launch.
+        public function get COREMOD_VERSION():String   { return "1"; }
 
         private static const TOAST_OFFSET_X:Number      = 52;
         private static const TOAST_OFFSET_Y:Number      = 10;
@@ -267,6 +272,12 @@ package {
 
         // -----------------------------------------------------------------------
         // Lifecycle
+
+        // Called by Bezel before the game SWF loads. Only submits Lattice bytecode patchers (src/coremod/); they apply to every save, standalone included.
+        public function loadCoreMod(lattice:Lattice):void
+        {
+            ManaLeechCounterPatcher.submitAll(lattice, _logger, MOD_NAME);
+        }
 
         public function bind(bezel:Bezel, gameObjects:Object):void
         {
