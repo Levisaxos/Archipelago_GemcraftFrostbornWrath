@@ -25,6 +25,8 @@ package tracker {
      *        contains no Field_ entries at all.
      *     4. Non-Field requirements (talismanRow:N, talismanColumn:N,
      *        skillPoints:N, ...) are all satisfied.
+     *     5. Vanilla parent gate: fieldParents[sid] (if any) is itself in
+     *        logic (recursive, so the whole vanilla ancestor chain holds).
      */
     public class FieldLogicEvaluator {
 
@@ -52,12 +54,9 @@ package tracker {
         private var _inLogicByStrId:Object = {};
         // Logical (derived) wizard level from the LAST recompute — a pure
         // function of collected items, cached so derivedWizardLevel() is O(1)
-        // between item changes. See recompute()'s fixed-point loop.
+        // between item changes. Only achievement floors still use it; it is
+        // derived from the final in-logic set (see recompute()).
         private var _derivedWl:int = 0;
-        // WL held fixed for the DURATION of the current fixed-point iteration.
-        // _stageReachable compares a stage's soft gate against this; the outer
-        // loop raises it as more stages become clearable, then re-runs.
-        private var _iterWl:int = 0;
         // Re-entrancy guard: a nested recompute() (e.g. a stat-counter stage
         // requirement routing back through LogicEvaluator) returns immediately
         // and reads the in-progress _inLogicByStrId rather than corrupting it.
@@ -131,7 +130,7 @@ package tracker {
         }
 
         /**
-         * DERIVED wizard level — the logic WL. Mirrors apworld
+         * DERIVED wizard level — the logic WL, used for achievement floors only. Mirrors apworld
          * difficulty_gates.derived_wl bit-for-bit (validated by wl_test_vectors):
          *   levelFromXp( sum(wlEffXp[strId] over CLEARABLE-IN-LOGIC fields) * mult[n] )
          *
@@ -139,13 +138,9 @@ package tracker {
          * derives WL from the "<sid> Cleared" events, which are collected as
          * soon as a stage is REACHABLE (its Journey access rule passes): the
          * fill/tracker assumes a stage you can reach can be beaten, so its XP
-         * counts and RAISES the WL that unlocks the next stages. That's a
-         * fixed point (more in-logic stages -> higher WL -> more in-logic
-         * stages), resolved for us by recompute()'s loop. Reading the live
-         * "which fields did the player actually finish" state instead made the
-         * mod lag UT: after W1-W4 the mod showed only S3 (derived WL 4) while
-         * UT already showed S1/S2/S3 (S3 assumed beaten -> WL rises -> tile
-         * opens). n = how many of xpTraitApIds are held (cap 4).
+         * counts. Reading the live "which fields did the player actually
+         * finish" state instead would make the mod lag UT. n = how many of
+         * xpTraitApIds are held (cap 4).
          *
          * Value is computed inside recompute() and cached in _derivedWl, so
          * this is O(1) between item changes. Falls back to the live level only
@@ -162,10 +157,10 @@ package tracker {
         }
 
         /**
-         * Logical WL from the CURRENT _inLogicByStrId set (one step of the
-         * fixed point). Sums wlEffXp over every stage flagged in logic, applies
-         * the XP-trait multiplier, and runs the shared WL curve. Assumes
-         * _inLogicByStrId is populated (called from recompute mid-iteration).
+         * Logical WL from the CURRENT _inLogicByStrId set. Sums wlEffXp over
+         * every stage flagged in logic, applies the XP-trait multiplier, and
+         * runs the shared WL curve. Assumes _inLogicByStrId is populated
+         * (called at the end of recompute).
          */
         private function _deriveWlFromInLogic():int {
             var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
@@ -205,50 +200,22 @@ package tracker {
         }
 
         /**
-         * The fields logic expects the player to beat before strId's WL gate is met, in the order logic expects them.
-         * Starts from the XP of the fields ACTUALLY beaten in Journey, not the fixed-point set, because this answers "what do I still have to do".
-         * Candidates are every unbeaten field other than strId whose gate is at or below strId's gate, walked cheapest gate first (ties: lowest XP), i.e. the same cumulative-rank order the gates were baked from.
-         * Fields are taken until the shared WL curve reaches the gate, so the count is exact for the path logic expects and drops on its own when the player beats fields out of order.
-         * Returns [] when the gate is already met, strId is beaten, or slot_data hasn't shipped the tables yet.
-         * Token ownership is deliberately ignored: the list names the fields logic expects, whether or not their tokens are held yet.
+         * The vanilla ancestors of strId the player has NOT yet beaten in Journey, root first: the fields to beat before strId's parent gate is met.
+         * Uses fields ACTUALLY beaten, not the in-logic set, because this answers "what do I still have to do".
+         * Returns [] when strId is beaten, has no parent (starter group / root), or slot_data hasn't shipped the parents yet.
          */
         public function fieldsToBeatFor(strId:String):Array {
-            var opts:Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
-            var effXp:Object = (opts != null) ? opts.wlEffXp : null;
-            if (effXp == null || opts.stageGates == null)
+            if (_isFieldBeatenJourney(strId))
                 return [];
-            var gate:int = _stageGate(strId);
-            if (gate <= 0 || _isFieldBeatenJourney(strId))
-                return [];
-
-            var n:int = _heldXpTraitCount();
-            var mult:Array = opts.xpTraitMultiplier as Array;
-            var minWl:Array = opts.xpTraitMinWl as Array;
-
-            var base:Number = 0;
-            var candidates:Array = [];
-            for (var sid:String in effXp) {
-                var x:Number = Number(effXp[sid]);
-                if (_isFieldBeatenJourney(sid)) {
-                    base += x;
-                    continue;
-                }
-                if (sid == strId || _stageGate(sid) > gate)
-                    continue;
-                candidates.push({ sid: sid, gate: _stageGate(sid), xp: x });
+            var chain:Array = [];
+            var sid:String = _fieldParent(strId);
+            var guard:int = 0;
+            while (sid != null && guard++ < 200) {
+                if (!_isFieldBeatenJourney(sid))
+                    chain.unshift(sid);
+                sid = _fieldParent(sid);
             }
-            if (WizardLevelCalc.derivedWl(base, n, mult, minWl) >= gate)
-                return [];
-
-            candidates.sortOn(["gate", "xp", "sid"], [Array.NUMERIC, Array.NUMERIC, 0]);
-            var result:Array = [];
-            for each (var c:Object in candidates) {
-                base += Number(c.xp);
-                result.push(String(c.sid));
-                if (WizardLevelCalc.derivedWl(base, n, mult, minWl) >= gate)
-                    break;
-            }
-            return result;
+            return chain;
         }
 
         public function get hasRules():Boolean { return _stageRequirements != null; }
@@ -1052,26 +1019,17 @@ package tracker {
          * check is gone: derived WL no longer reads the player's in-game level
          * or which fields they actually finished.)
          *
-         * Gating mirrors the apworld (rules.set_rules after the WL block):
-         * field-in-logic = HARD gate AND SOFT gate, resolved as a FIXED POINT.
+         * Gating mirrors the apworld (rules.set_rules vanilla parent block):
+         * field-in-logic = HARD gate AND parent gate.
          *   HARD: own field token + WIZLOCK skills + prereq chain (_stageReachable).
-         *   SOFT: _iterWl >= stageGates[str_id], folded INTO _stageReachable so
-         *         a Field_<sid> prereq only counts when <sid> passes the WL
-         *         gate too (matches apworld's _wl inside _STAGE_CLEAR_RULES).
-         *
-         * The apworld resolves the WL<->reachability circularity by its
-         * monotonic event sweep: clearing what you can raises WL, which opens
-         * more. We reproduce that by iterating: hold WL fixed (_iterWl), rebuild
-         * the in-logic set, re-derive WL from that set, and repeat until WL
-         * stops rising. WL only ever grows (more in-logic -> more XP), so this
-         * converges in a handful of passes (bounded by stage count). Starters
-         * (free stages, gate 0) always pass both gates and seed the first pass.
+         *   PARENT: fieldParents[str_id] is itself in logic, folded INTO
+         *         _stageReachable (recursive + memoised), matching the
+         *         apworld's state.has("<parent> Cleared") — the Cleared event is
+         *         collectable exactly when the parent is clearable in logic.
+         * The derived WL (achievement floors only) is computed once from the
+         * final in-logic set, matching the apworld's _xp_of over the Cleared
+         * events.
          */
-        // Safety bound on the fixed-point loop: WL strictly increases each
-        // non-final pass, and there are ~122 stages, so it always converges
-        // well within this. Guards against a pathological/broken data cycle.
-        private static const WL_FIXED_POINT_CAP:int = 200;
-
         public function recompute():void {
             if (!_dirty) return;
             // Re-entrant call (a stage requirement routed back here): don't
@@ -1079,33 +1037,21 @@ package tracker {
             if (_computing) return;
             _computing = true;
 
-            var gates:Object = (AV.serverData != null && AV.serverData.serverOptions != null)
-                    ? AV.serverData.serverOptions.stageGates : null;
+            _inLogicByStrId = {};
 
-            var wl:int = 0;
-            for (var iter:int = 0; iter < WL_FIXED_POINT_CAP; iter++) {
-                _iterWl = wl;
-                _inLogicByStrId = {};
-
-                // HARD + SOFT gate at _iterWl: token + WIZLOCK + WL gate +
-                // prereq chain, recursive + memoised into _inLogicByStrId
-                // (see _stageReachable). Free stages short-circuit true.
-                if (gates != null) {
-                    for (var hsid:String in gates)
-                        _stageReachable(hsid);
+            // HARD + parent gate: token + WIZLOCK + vanilla parent + prereq
+            // chain, recursive + memoised into _inLogicByStrId (see
+            // _stageReachable). Free stages short-circuit true.
+            if (GV.stageCollection != null && GV.stageCollection.stageMetas != null) {
+                for each (var meta:* in GV.stageCollection.stageMetas) {
+                    if (meta != null && meta.strId != null)
+                        _stageReachable(String(meta.strId));
                 }
-                for (var freeSid:String in _freeStages)
-                    _inLogicByStrId[freeSid] = true;
-
-                // Re-derive WL from the set we just built. If it didn't rise,
-                // we've hit the fixed point — the set can't grow further.
-                var newWl:int = _deriveWlFromInLogic();
-                if (newWl == wl)
-                    break;
-                wl = newWl;
             }
+            for (var freeSid:String in _freeStages)
+                _inLogicByStrId[freeSid] = true;
 
-            _derivedWl = wl;
+            _derivedWl = _deriveWlFromInLogic();
             _computing = false;
             _dirty = false;
             AV.sessionData.fieldsInLogic = _inLogicByStrId;
@@ -1140,20 +1086,19 @@ package tracker {
                 _inLogicByStrId[strId] = false;
                 return false;
             }
-            // Clause 2.5: SOFT wizard-level gate — derived WL >= the stage's
-            // gate. Compared against _iterWl (the WL held fixed for this
-            // recompute pass); the fixed-point loop raises it as more stages
-            // become clearable. Folded in HERE (not as a post-overlay) so a
-            // Field_<sid> prereq is only satisfied when <sid> clears its WL
-            // gate too — mirrors apworld folding _wl into _STAGE_CLEAR_RULES.
-            if (_iterWl < _stageGate(strId)) {
-                _inLogicByStrId[strId] = false;
-                return false;
-            }
-            // Pre-mark false before recursing into requirements — this is the
-            // cycle guard. The DAG should be acyclic by construction, but a
-            // broken edit would otherwise loop forever.
+            // Pre-mark false before recursing (parent / requirements) — this is
+            // the cycle guard. The vanilla tree is acyclic by construction, but
+            // a broken edit would otherwise loop forever.
             _inLogicByStrId[strId] = false;
+            // Clause 2.5: vanilla parent gate — the parent must itself be in
+            // logic (whole ancestor chain), mirroring the apworld's
+            // state.has("<parent> Cleared"). Folded in HERE (not as a
+            // post-overlay) so a Field_<sid> prereq is only satisfied when <sid>
+            // passes its parent gate too — mirrors apworld folding the gate into
+            // _STAGE_CLEAR_RULES.
+            var parent:String = _fieldParent(strId);
+            if (parent != null && !_stageReachable(parent))
+                return false;
             var ok:Boolean = _requirementsGateMet(strId);
             _inLogicByStrId[strId] = ok;
             return ok;
@@ -1366,18 +1311,18 @@ package tracker {
             return true;
         }
 
-        // Soft wizard-level gate for a stage: the derived WL required before
-        // it enters logic. Ships in slot_data (difficulty_gates.GATE) via
-        // ServerOptions.stageGates. 0 (starters / free stages / unknown) means
-        // no WL gate.
-        private function _stageGate(strId:String):int {
+        // Vanilla parent of a stage: the field that must be in logic before it
+        // enters logic. Ships in slot_data (field_parents) via
+        // ServerOptions.fieldParents. null (starter group / root / unknown)
+        // means no parent gate.
+        private function _fieldParent(strId:String):String {
             if (AV.serverData == null || AV.serverData.serverOptions == null)
-                return 0;
-            var gates:Object = AV.serverData.serverOptions.stageGates;
-            if (gates == null)
-                return 0;
-            var g:* = gates[strId];
-            return (g != null) ? int(g) : 0;
+                return null;
+            var parents:Object = AV.serverData.serverOptions.fieldParents;
+            if (parents == null)
+                return null;
+            var p:* = parents[strId];
+            return (p != null) ? String(p) : null;
         }
 
         // Active gem-pouch granularity:

@@ -1645,8 +1645,8 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # `<sid> Field Token`, per_tile uses `<prefix> Tile Field Token`.
     from . import gating as _gating
     ft_gran = world.options.field_token_granularity.value
-    # sid -> (token_name, token_count); lets the WL loop below FUSE the token
-    # and WL predicates into ONE entrance closure instead of composing them.
+    # sid -> (token_name, token_count); lets the gate loop below FUSE the token
+    # and fields-beaten predicates into ONE entrance closure instead of composing them.
     _entrance_token: dict = {}
     for stage in stages:
         str_id = stage["str_id"]
@@ -1843,22 +1843,23 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     from ._timing import log as _tlog
     _tlog(f"  set_rules: stage rules ({len(stages)} stages): {(_t.perf_counter()-_t_stages)*1000:.1f} ms")
 
-    # === WIZARD-LEVEL SOFT GATE (orthogonal to the field-token hard gate) ===
+    # === VANILLA PARENT GATE (orthogonal to the field-token hard gate) ===
     # Field access has two independent gates:
     #   HARD: the field token (+ WIZLOCK skills / gem pouch / stash key / DNF
     #         prereqs) built into the stage rules above — what you must COLLECT.
-    #   SOFT: wizard level — wl(state) >= gate[sid] — derived from cleared fields.
-    # We COMPOSE the WL gate ONTO the existing hard-gate rules (we do NOT replace
-    # them). A stage is in logic iff its token/WIZLOCK/prereq rules pass AND
-    # wl(state) >= gate[sid]. Clearing a stage grants its difficulty-scaled XP via
-    # the "Beat <sid>" event; wl(state) is the curve of total beaten XP, so
-    # clearing what you can raises WL and opens more stages.
-    # The 4 XP-scaling traits (Haste/Overcrowd/Ritual/Dark Masonry) multiply the
-    # summed XP by up to 1.2^(count held) — RETROACTIVELY over all cleared fields —
-    # so collecting one is a WL power spike, but each trait only counts once the
-    # harness gate (XP_TRAIT_MIN_WL, greedy step-up) is met. Inlined here for fill
-    # speed but must equal difficulty_gates.derived_wl / effective_trait_wl
-    # bit-for-bit (validated by the vectors in wl_test_vectors.json).
+    #   SOFT: the field's vanilla parent is beaten — state.has("<parent>
+    #         Cleared"). Vanilla unlocks fields as a strict tree (each field's
+    #         token drops from exactly one parent's orb or wizard stash, see
+    #         vanilla_tree.py), so this reproduces the vanilla order: beating a
+    #         field implies its whole ancestor chain.
+    # We COMPOSE the gate ONTO the existing hard-gate rules (we do NOT replace
+    # them). Clearing a stage collects its "<sid> Cleared" event, which opens
+    # its vanilla children.
+    #
+    # Achievement floors still use the derived wizard level (WL) below: the
+    # summed difficulty-scaled XP of cleared fields, compared against
+    # min_wl / ACH_MIN_WL. Inlined here for fill speed but must equal
+    # difficulty_gates.derived_wl bit-for-bit (wl_test_vectors.json).
     from . import difficulty_gates as _dg
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
@@ -1899,69 +1900,72 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         # its inverse) but skips this binary search.
         return _lvl(_xp_of(state))
 
-    _plxp = _dg.player_level_xp_req  # WL gate -> minimum XP that reaches it
+    _plxp = _dg.player_level_xp_req  # WL floor -> minimum XP that reaches it
 
-    def _wl_threshold(sid):
-        """Raw-XP threshold for this stage's WL soft gate, or None when exempt.
-        The starter GROUP is always reachable: the start stage AND its
+    from . import vanilla_tree as _fg
+
+    def _gate_parent(sid):
+        """Vanilla parent whose "Cleared" event gates this stage, or None when
+        exempt. The starter GROUP is always reachable: the start stage AND its
         immediately-playable tile mates (free_sids, tokens precollected).
         Exempting the whole group matches "play the starter tile right away" and
-        keeps parity with the shipped stage_gates (fill_slot_data ships gate 0
-        for exactly this set). `_xp_of >= xp(g)` is exactly
-        `level_from_xp(_xp_of) >= g`, but a single int compare with no bisect."""
+        keeps parity with the shipped field_parents (omitted for this set)."""
         if sid in world.start_sids or sid in free_sids:
             return None
-        g = int(_dg.GATE.get(sid, 0))
-        if g <= 0:
-            return None
-        return _plxp(g)
+        return _fg.VANILLA_PARENT.get(sid)
 
-    def _wl_rule(sid):
-        _t = _wl_threshold(sid)
-        if _t is None:
+    # Exempted parent map for slot_data (fill_slot_data ships it as field_parents).
+    world.field_parents = {}
+    for _s in stages:
+        _par = _gate_parent(_s["str_id"])
+        if _par is not None:
+            world.field_parents[_s["str_id"]] = _par
+
+    def _gate_rule(sid):
+        _par = _gate_parent(sid)
+        if _par is None:
             return _always_true
-        return lambda state, _t=_t: _xp_of(state) >= _t
+        return lambda state, _c=f"{_par} Cleared": state.has(_c, player)
 
     for _stage in stages:
         _sid = _stage["str_id"]
-        _wl = _wl_rule(_sid)
-        # Compose the WL soft gate onto the stage-entry connection(s), which
+        _gate = _gate_rule(_sid)
+        # Compose the parent gate onto the stage-entry connection(s), which
         # already carry the field-token hard gate. Region reachability then
-        # enforces token AND WL for every location in the stage. Skip the
-        # compose when the stage has no WL gate (start stage / gate 0) so we
-        # don't pay an extra always-true call.
-        if _wl is not _always_true:
+        # enforces token AND parent for every location in the stage. Skip the
+        # compose when the stage has no gate (starter group / root) so we don't
+        # pay an extra always-true call.
+        if _gate is not _always_true:
             _ents = multiworld.get_region(_sid, player).entrances
             _tok = _entrance_token.get(_sid)
-            _xg = _wl_threshold(_sid)
+            _pc = f"{_gate_parent(_sid)} Cleared"
             if _FUSE_ENTRANCE and _tok is not None and len(_ents) == 1:
-                # FUSE token + WL into a SINGLE closure. Composing them costs 3
+                # FUSE token + gate into a SINGLE closure. Composing them costs 3
                 # Python frames per evaluation (compose wrapper + token lambda +
-                # WL lambda) and AP's region BFS re-evaluates every stage
+                # gate lambda) and AP's region BFS re-evaluates every stage
                 # entrance on each state change, making this one of the hottest
                 # rules in fill. Fused it's 1 frame + an inline C-level
-                # state.has/.count + the _xp_of read. Same boolean, no logic change.
+                # 2 C-level state.has/.count calls. Same boolean, no logic change.
                 _tn, _tc = _tok
                 if _tc == 1:
                     _ents[0].access_rule = (
-                        lambda state, tok=_tn, t=_xg:
-                            state.has(tok, player) and _xp_of(state) >= t
+                        lambda state, tok=_tn, pc=_pc:
+                            state.has(tok, player) and state.has(pc, player)
                     )
                 else:
                     _ents[0].access_rule = (
-                        lambda state, tok=_tn, n=_tc, t=_xg:
-                            state.count(tok, player) >= n and _xp_of(state) >= t
+                        lambda state, tok=_tn, n=_tc, pc=_pc:
+                            state.count(tok, player) >= n and state.has(pc, player)
                     )
             else:
                 for _ent in _ents:
-                    _ent.access_rule = _compose_and([_ent.access_rule, _wl])
-            # Also compose the WL gate into the direct-call clearability rule.
+                    _ent.access_rule = _compose_and([_ent.access_rule, _gate])
+            # Also compose the gate into the direct-call clearability rule.
             # `_can_clear_stage_cached` calls _STAGE_CLEAR_RULES[sid] DIRECTLY
-            # (bypassing can_reach for speed), so the entrance WL gate above is
+            # (bypassing can_reach for speed), so the entrance gate above is
             # invisible to it — and it backs the achievement requirement checks
             # (_can_reach_any_stage) and Field_<sid> prereqs. Without this a
-            # token-unlocked but WL-locked stage (e.g. R2 held-token at WL 11,
-            # gate 13) reads as clearable, so its gem/monster-gated achievements
+            # token-unlocked but gate-locked stage reads as clearable, so its gem/monster-gated achievements
             # (sPoison / sBleeding / minMonsters:400) show in logic while every
             # R2 stage location correctly stays out. This is exactly the region-
             # gate divergence the _STAGE_CLEAR_RULES comment warns about, and it
@@ -1969,14 +1973,15 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             _clear = _STAGE_CLEAR_RULES.get((player, _sid))
             if _clear is not None:
                 _STAGE_CLEAR_RULES[(player, _sid)] = (
-                    lambda state, r=_clear, w=_wl: r(state) and w(state)
+                    lambda state, r=_clear, w=_gate: r(state) and w(state)
                 )
             else:
-                _STAGE_CLEAR_RULES[(player, _sid)] = _wl
-        # The "Clear <sid>" XP event fires on CLEAR, so it mirrors the Journey
+                _STAGE_CLEAR_RULES[(player, _sid)] = _gate
+        # The "Clear <sid>" event fires on CLEAR, so it mirrors the Journey
         # location's clearability rule (WIZLOCK skills + pouch + DNF prereqs);
-        # region reachability already supplies token + WL. Without this the
-        # event would be collectable on mere reach, over-estimating WL.
+        # region reachability already supplies token + parent. Without this the
+        # event would be collectable on mere reach, opening its children too
+        # early (and over-estimating the achievement WL).
         try:
             _journey = multiworld.get_location(f"Complete {_sid} - Journey", player)
             _beat = multiworld.get_location(f"Clear {_sid}", player)

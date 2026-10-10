@@ -962,11 +962,12 @@ class GemcraftFrostbornWrathWorld(World):
             GCFWItem("Victory", ItemClassification.progression, None, self.player)
         )
 
-        # WL-gating: place each stage's "<sid> Cleared" XP marker (locked) on
-        # its "Clear <sid>" event location. Named as a location:item pair so the
-        # spoiler reads "Clear S1: S1 Cleared" instead of "Beat S1: Beat S1".
-        from .difficulty_gates import GATE as _WL_GATE
-        for sid in _WL_GATE:
+        # Place each stage's "<sid> Cleared" marker (locked) on its "Clear <sid>"
+        # event location. The markers drive the vanilla parent gate (fields) and
+        # the derived WL (achievement floors). Named as a location:item pair so
+        # the spoiler reads "Clear S1: S1 Cleared".
+        from .vanilla_tree import VANILLA_DEPTH as _ALL_SIDS
+        for sid in _ALL_SIDS:
             try:
                 loc = self.multiworld.get_location(f"Clear {sid}", self.player)
             except KeyError:
@@ -1150,11 +1151,13 @@ class GemcraftFrostbornWrathWorld(World):
                     continue
                 achievement_requirements_map[ach_name] = requirements
 
-        # --- Difficulty / wizard-level gating data for the mod tracker ---
-        # The mod computes a DERIVED wizard level from cleared fields (identical
-        # to the apworld's _wl_of / difficulty_gates.derived_wl) and compares it
-        # against these gates — NOT the game's live GV.ppd.getWizLevel().
-        #   stage_gates:        {str_id: required wizard level}
+        # --- Field / achievement gating data for the mod tracker ---
+        # Fields: a field is in logic once its vanilla parent is in logic
+        # (clearable), mirroring the apworld's "<parent> Cleared" gate:
+        #   field_parents:      {str_id: vanilla parent str_id}; the starter
+        #                       group and the root are omitted (see set_rules).
+        # Achievements still use a DERIVED wizard level from cleared fields
+        # (identical to the apworld's _wl_of / difficulty_gates.derived_wl):
         #   achievement_min_wl: {effort tier: required wizard level}
         #   wl_eff_xp:          {str_id: per-field XP for THIS difficulty} — the
         #                       mod sums these over cleared fields for derived WL.
@@ -1166,20 +1169,17 @@ class GemcraftFrostbornWrathWorld(World):
         # See difficulty_gates.py for the canonical formula + wl_test_vectors.json
         # (the parity contract the mod's ported level_from_xp must reproduce).
         from .difficulty_gates import (
-            GATE as _DG_GATE, ACH_MIN_WL as _DG_ACH,
+            ACH_MIN_WL as _DG_ACH,
             EFF_XP as _DG_EFF, DIFFICULTIES as _DG_DIFFS,
             XP_TRAIT_ITEM_NAMES as _DG_XPT, XP_TRAIT_MULTIPLIER as _DG_XPM,
             XP_TRAIT_MIN_WL as _DG_XPMINWL,
         )
-        stage_gates = {sid: int(g) for sid, g in _DG_GATE.items()}
         # The starter GROUP — the start stage plus its immediately-playable
-        # tile mates (free_stages, tokens precollected) — is always
-        # reachable, so ship gate 0 for all of them. Without this a non-W
-        # starter tile (curve gates > 0) reads out-of-logic at WL 0 and no
-        # journey is available. The apworld's WL rule exempts the same set
-        # (see set_rules _wl_rule), so both sides agree.
+        # tile mates (free_stages, tokens precollected) — is always reachable,
+        # so it has no parent entry. set_rules publishes the same exempted map.
+        field_parents = dict(getattr(self, "field_parents", {}))
         for _fsid in free_stages:
-            stage_gates[_fsid] = 0
+            field_parents.pop(_fsid, None)
         achievement_min_wl = {k: int(v) for k, v in _DG_ACH.items()}
         _wl_diff_name = _DG_DIFFS[self.options.difficulty.value]
         wl_eff_xp = {sid: int(x) for sid, x in _DG_EFF[_wl_diff_name].items()}
@@ -1219,7 +1219,7 @@ class GemcraftFrostbornWrathWorld(World):
         return {
             "goal":                  self.options.goal.value,
             "difficulty":            self.options.difficulty.value,
-            "stage_gates":           stage_gates,
+            "field_parents":         field_parents,
             "achievement_min_wl":    achievement_min_wl,
             # Derived-WL inputs for the mod (mirror difficulty_gates.derived_wl).
             "wl_eff_xp":             wl_eff_xp,
