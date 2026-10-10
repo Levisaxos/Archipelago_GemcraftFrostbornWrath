@@ -92,6 +92,10 @@ package data {
         // the apworld's floor() formula).
         public var fieldsRequiredCount:int;
         public var achievementRequiredEffort:int; // 0=Off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
+        // grindy_achievements: false = achievements flagged `grindy` in
+        // achievement_logic.json are not AP locations (like untrackable);
+        // true = they are locations (filler only on the apworld side).
+        public var grindyAchievements:Boolean;
 
         // Death Link Settings
         public var deathLinkEnabled:Boolean;
@@ -145,6 +149,7 @@ package data {
 
             fieldsRequiredCount = 0;
             achievementRequiredEffort = 0;
+            grindyAchievements = false;
 
             deathLinkEnabled = false;
         }
