@@ -247,8 +247,8 @@ package net {
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
                 if (sd.difficulty !== undefined)
                     AV.serverData.serverOptions.difficulty = int(sd.difficulty);
-                if (sd.stage_gates !== undefined)
-                    AV.serverData.serverOptions.stageGates = sd.stage_gates;
+                if (sd.field_parents !== undefined)
+                    AV.serverData.serverOptions.fieldParents = sd.field_parents;
                 if (sd.achievement_min_wl !== undefined)
                     AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
                 if (sd.wl_eff_xp !== undefined)

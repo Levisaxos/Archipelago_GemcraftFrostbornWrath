@@ -7,10 +7,12 @@ package data {
         // Goal and Primary Settings
         public var goal:int;                     // 0=beat_game, 1=swarm_queen, 2=fields_count
         public var difficulty:int;               // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
-        // Wizard-level gating (mirrors the apworld exactly). A stage is in logic
-        // once the player's DERIVED wizard level >= stageGates[str_id]; an
-        // achievement once derived WL >= achievementMinWl[effort tier].
-        public var stageGates:Object;            // str_id -> required wizard level
+        // Field gating (mirrors the apworld exactly). A stage is in logic once
+        // its vanilla parent fieldParents[str_id] is in logic (the apworld's
+        // "<parent> Cleared" gate); the starter group and the root W1 have no
+        // entry. An achievement is in logic once the DERIVED wizard level >=
+        // achievementMinWl[effort tier].
+        public var fieldParents:Object;          // str_id -> vanilla parent str_id
         public var achievementMinWl:Object;      // effort tier name -> required wizard level
         // Derived-WL inputs (mirror difficulty_gates.derived_wl). Derived WL =
         // levelFromXp( sum(wlEffXp[strId] over cleared fields) * xpTraitMultiplier[eff] ),
@@ -101,7 +103,7 @@ package data {
         public function initialize():void {
             goal = 0;
             difficulty = 1;
-            stageGates = {};
+            fieldParents = {};
             achievementMinWl = {};
             wlEffXp = {};
             xpTraitApIds = [];

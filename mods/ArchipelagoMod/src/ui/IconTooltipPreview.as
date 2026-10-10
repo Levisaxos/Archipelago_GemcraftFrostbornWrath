@@ -428,9 +428,9 @@ package ui {
                 var collected:int = 0;
                 try { collected = int(GV.ppd.stageHighestXpsJourney[sid].g()); } catch (eXp:Error) {}
                 var wl:int = (_evaluator != null) ? _evaluator.derivedWizardLevel() : 0;
-                var gate:int = stageGate(strId);
+                var parentSid:String = stageParent(strId);
                 cy = addLine("Field XP: " + (effXp != null ? String(int(effXp)) : "?")
-                           + "   \u00B7   WL " + wl + " / gate " + gate,
+                           + "   \u00B7   WL " + wl + "   \u00B7   parent " + (parentSid != null ? parentSid : "-"),
                            COL_MUTED, 11, cy, 20);
                 var endurance:int = 0;
                 try { endurance = int(GV.ppd.stageHighestXpsEndurance[sid].g()); } catch (eEnd:Error) {}
@@ -571,28 +571,26 @@ package ui {
             return html;
         }
 
-        /** Out-of-logic field: say what logic expects the player to do next, in items, field counts and field names, never in wizard levels.
-         *  A hovered field always holds its own token (you can't hover a field without its tile), so the remaining blockers are items and the WL soft gate.
-         *  Missing items come first ("Needs Traps skill" on P5, "Needs Beam, Bolt, Barrage, Freeze skills" on L5, a missing Gempouch anywhere), so a field whose WL gate is already met still names what it's waiting on.
-         *  The derived-WL gate is a pure function of beaten fields, NOT the level the player sees in-game, so "Needs Wizard Level N" reads as wrong and "get more XP" is actively misleading (grinding never moves the gate).
-         *  fieldsToBeatText() walks logic's expected path from the fields actually beaten: the next few fields by name, the rest as a count.
-         *  (Testers still see the exact gate in the XP/WL debug lines.) */
+        /** Out-of-logic field: say what logic expects the player to do next, in items and field names, never in wizard levels.
+         *  A hovered field always holds its own token (you can't hover a field without its tile), so the remaining blockers are items and the vanilla parent gate.
+         *  Missing items come first ("Needs Traps skill" on P5, "Needs Beam, Bolt, Barrage, Freeze skills" on L5, a missing Gempouch anywhere), so a field whose parent is already beaten still names what it's waiting on.
+         *  fieldsToBeatText() names the unbeaten vanilla ancestors, root first: the next few by name, the rest as a count. */
         private function wlNeededBody(strId:String):String {
             var parts:Array = [];
             var missing:Array = (_evaluator != null) ? _evaluator.getMissingStageItems(strId) : [];
             if (missing.length > 0)
                 parts.push("Needs " + missing.join(", "));
-            if (stageGate(strId) > 0) {
+            if (stageParent(strId) != null) {
                 var text:String = fieldsToBeatText(strId);
                 if (text != null)
                     parts.push(text);
             }
             if (parts.length > 0)
                 return parts.join("; ");
-            return (stageGate(strId) > 0) ? "Requires more field unlocks" : "Blocked";
+            return (stageParent(strId) != null) ? "Requires " + stageParent(strId) + " to be in logic" : "Blocked";
         }
 
-        /** "Beat S3, V1, V2 +4 more": the first NEXT_FIELDS_NAMED fields logic expects next, the rest as a count. Null when the WL gate is met (or no data yet). */
+        /** "Beat S3, V1, V2 +4 more": the first NEXT_FIELDS_NAMED unbeaten vanilla ancestors (root first), the rest as a count. Null when the parent is beaten (or no data yet). */
         private function fieldsToBeatText(strId:String):String {
             if (_evaluator == null)
                 return null;
@@ -604,15 +602,15 @@ package ui {
             return "Beat " + named.join(", ") + ((rest > 0) ? " +" + rest + " more" : "");
         }
 
-        /** Required wizard level for a stage, from shipped slot_data gates. */
-        private function stageGate(strId:String):int {
+        /** Vanilla parent of a stage from shipped slot_data field_parents, or null (starter group / root). */
+        private function stageParent(strId:String):String {
             try {
                 var opts:* = AV.serverData != null ? AV.serverData.serverOptions : null;
-                if (opts != null && opts.stageGates != null
-                        && opts.stageGates[strId] !== undefined)
-                    return int(opts.stageGates[strId]);
+                if (opts != null && opts.fieldParents != null
+                        && opts.fieldParents[strId] != null)
+                    return String(opts.fieldParents[strId]);
             } catch (e:Error) {}
-            return 0;
+            return null;
         }
 
         /** Tester-only gate for the XP/WL debug lines. */
