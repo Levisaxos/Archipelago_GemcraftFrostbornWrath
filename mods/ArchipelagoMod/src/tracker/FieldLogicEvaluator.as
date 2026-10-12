@@ -279,6 +279,17 @@ package tracker {
             return false;
         }
 
+        /** Number of stages currently in logic — the tracker's mirror of the apworld's held "<sid> Cleared" count. */
+        public function countFieldsInLogic():int {
+            recompute();
+            var n:int = 0;
+            for (var sid:String in _inLogicByStrId) {
+                if (_inLogicByStrId[sid] === true)
+                    n++;
+            }
+            return n;
+        }
+
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
             recompute();

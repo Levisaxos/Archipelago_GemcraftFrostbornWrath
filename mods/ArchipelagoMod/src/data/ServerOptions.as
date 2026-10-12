@@ -10,10 +10,9 @@ package data {
         // Field gating (mirrors the apworld exactly). A stage is in logic once
         // its vanilla parent fieldParents[str_id] is in logic (the apworld's
         // "<parent> Cleared" gate); the starter group and the root W1 have no
-        // entry. An achievement is in logic once the DERIVED wizard level >=
-        // achievementMinWl[effort tier].
+        // entry. Achievement progress floors are `fieldsBeaten:N` tokens inside
+        // each achievement's requirements (achievement_logic.json).
         public var fieldParents:Object;          // str_id -> vanilla parent str_id
-        public var achievementMinWl:Object;      // effort tier name -> required wizard level
         // Derived-WL inputs (mirror difficulty_gates.derived_wl). Derived WL =
         // levelFromXp( sum(wlEffXp[strId] over cleared fields) * xpTraitMultiplier[eff] ),
         // where eff is the effective XP-trait count after the harness gate:
@@ -104,7 +103,6 @@ package data {
             goal = 0;
             difficulty = 1;
             fieldParents = {};
-            achievementMinWl = {};
             wlEffXp = {};
             xpTraitApIds = [];
             xpTraitMultiplier = [1.0, 1.0, 1.0, 1.0, 1.0]; // DROPPED 2026-07-19: trait multiplier no longer affects WL. Slot_data ships [1,1,1,1,1]; this fallback matches.

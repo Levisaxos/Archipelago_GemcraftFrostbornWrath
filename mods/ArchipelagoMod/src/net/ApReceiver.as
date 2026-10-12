@@ -249,8 +249,6 @@ package net {
                     AV.serverData.serverOptions.difficulty = int(sd.difficulty);
                 if (sd.field_parents !== undefined)
                     AV.serverData.serverOptions.fieldParents = sd.field_parents;
-                if (sd.achievement_min_wl !== undefined)
-                    AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
                 if (sd.wl_eff_xp !== undefined)
                     AV.serverData.serverOptions.wlEffXp = sd.wl_eff_xp;
                 if (sd.xp_trait_ap_ids !== undefined)
