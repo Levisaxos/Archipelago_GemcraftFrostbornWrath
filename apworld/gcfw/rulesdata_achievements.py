@@ -19,6 +19,22 @@ Fields per achievement (in file order):
                      list-of-lists [["a", "b"], ["c", "d"]] (DNF: any
                      inner group satisfied).
   required_effort  - Effort level: "Trivial", "Minor", "Major", "Extreme"
+  field_need       - REQUIRED. How much access to a qualifying field the
+                     achievement needs (each level includes the previous):
+                       "enter"  - the field is open in logic: its token is
+                                  held and its vanilla parent is beaten. No
+                                  gems, need not be beatable. E.g. call waves
+                                  early, have N monsters on the field. With no
+                                  field-specific requirement, any open field
+                                  qualifies (the starter tile always does).
+                       "engage" - enter + gems on that same field (its gem
+                                  pouch). E.g. enrage waves, kill or damage
+                                  monsters, create / amplify / enhance gems.
+                       "beat"   - engage + the field is beatable (its WIZLOCK /
+                                  skill gates). E.g. beat N waves, win the
+                                  battle.
+                     Classify by the description's VERB, not by the tokens:
+                     `minWave:N` only means "a field with >= N waves exists".
   untrackable      - (optional) True -> location is forced EXCLUDED, no access
                      rules are set, and it can only hold a filler item. Used
                      when the achievement either (a) depends on RNG that AP
@@ -37,6 +53,7 @@ achievement_requirements = {
         "details": "Acquire all skills and raise each to level 5+.",
         "requirements": ["skills:24"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Regaining Knowledge": {
         "ap_id": 2441,
@@ -45,6 +62,7 @@ achievement_requirements = {
         "details": "Acquire any 5 skills.",
         "requirements": ["skills:5"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "In for a Trait": {
         "ap_id": 2274,
@@ -53,6 +71,7 @@ achievement_requirements = {
         "details": "Activate at least one battle trait at the start of a battle.",
         "requirements": ["battleTraits:1"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Weather Tower": {
         "ap_id": 2609,
@@ -61,6 +80,7 @@ achievement_requirements = {
         "details": "Activate a shrine during rain weather.",
         "requirements": ["eShrine:1", "wRain"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Awakening": {
         "ap_id": 2029,
@@ -69,6 +89,7 @@ achievement_requirements = {
         "details": "Activate a shrine for the first time.",
         "requirements": ["eShrine:1"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Earthquake": {
         "ap_id": 2144,
@@ -77,6 +98,7 @@ achievement_requirements = {
         "details": "Activate shrines 4 times total in one battle (any combination).",
         "requirements": ["eShrine", "minWave:30"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Addicted": {
         "ap_id": 2006,
@@ -88,6 +110,7 @@ achievement_requirements = {
             ["eShrine:2", "minWave:65"],
         ],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Double Strike": {
         "ap_id": 2134,
@@ -96,6 +119,7 @@ achievement_requirements = {
         "details": "Activate the same shrine 2 times in one battle.",
         "requirements": ["eShrine"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Power Node": {
         "ap_id": 2410,
@@ -104,6 +128,7 @@ achievement_requirements = {
         "details": "Activate the same shrine 5 times in one battle.",
         "requirements": ["eShrine", "minWave:40"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Second Thoughts": {
         "ap_id": 2462,
@@ -112,6 +137,7 @@ achievement_requirements = {
         "details": "Cast a different enhancement spell on an already-enhanced gem.",
         "requirements": ["enhancementSpells:2"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Starter Pack": {
         "ap_id": 2509,
@@ -119,6 +145,7 @@ achievement_requirements = {
         "description": "Add 8 talisman fragments to your shape collection.",
         "requirements": ["min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Puzzling Bunch": {
         "ap_id": 2425,
@@ -126,6 +153,7 @@ achievement_requirements = {
         "description": "Add 16 talisman fragments to your shape collection.",
         "requirements": ["min_wl:40"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "In Focus": {
         "ap_id": 2272,
@@ -133,6 +161,7 @@ achievement_requirements = {
         "description": "Amplify a gem with 8 other gems.",
         "requirements": ["sAmplifiers", "minWave:50", "talismanRow:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Pat on the Back": {
         "ap_id": 2399,
@@ -144,6 +173,7 @@ achievement_requirements = {
             ["eAmplifiers:1"]
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Teleport Lag": {
         "ap_id": 2541,
@@ -152,6 +182,7 @@ achievement_requirements = {
         "details": "Banish the same monster 5 or more times.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Rising Tide": {
         "ap_id": 2447,
@@ -160,6 +191,7 @@ achievement_requirements = {
         "details": "Banish 150 monsters with at least 2 wraiths alive.",
         "requirements": ["tRitual", "eWraith", "minMonsters:300"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Mixing Up": {
         "ap_id": 2348,
@@ -168,6 +200,7 @@ achievement_requirements = {
         "details": "Beat 50 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
         "requirements": ["tSwarmlingDomination", "tGiantDomination", "minWave:50", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Size Matters": {
         "ap_id": 2484,
@@ -175,6 +208,7 @@ achievement_requirements = {
         "description": "Beat 100 waves on max Swarmling and Giant domination traits.",
         "requirements": ["tSwarmlingDomination", "tGiantDomination", "minWave:100", "talismanRow:3"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Elementary": {
         "ap_id": 2150,
@@ -183,6 +217,7 @@ achievement_requirements = {
         "details": "Beat 30 waves with only grade-2 or lower gems.",
         "requirements": ["minWave:30"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Keeping Low": {
         "ap_id": 2297,
@@ -191,6 +226,7 @@ achievement_requirements = {
         "details": "Beat 40 waves with only grade-2 or lower gems.",
         "requirements": ["minWave:40"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "It Has to Do": {
         "ap_id": 2281,
@@ -198,6 +234,7 @@ achievement_requirements = {
         "description": "Beat 50 waves using at most grade 2 gems.",
         "requirements": ["minWave:50"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Need Lots of Them": {
         "ap_id": 2359,
@@ -205,6 +242,7 @@ achievement_requirements = {
         "description": "Beat 60 waves using at most grade 2 gems.",
         "requirements": ["minWave:60"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "No Armor Area": {
         "ap_id": 2364,
@@ -213,6 +251,7 @@ achievement_requirements = {
         "details": "Beat 90 waves using only armor-tearing gems.",
         "requirements": ["sArmorTearing", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Blood Clot": {
         "ap_id": 2052,
@@ -220,6 +259,7 @@ achievement_requirements = {
         "description": "Beat 90 waves using only bleeding gems.",
         "requirements": ["sBleeding", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Shooting Where it Hurts": {
         "ap_id": 2478,
@@ -228,6 +268,7 @@ achievement_requirements = {
         "details": "Beat 90 waves using only critical-hit gems.",
         "requirements": ["sCriticalHit", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "All Your Mana Belongs to Us": {
         "ap_id": 2013,
@@ -236,6 +277,7 @@ achievement_requirements = {
         "details": "Beat 90 waves using only mana-leech gems.",
         "requirements": ["sManaLeech", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Too Long to Hold Your Breath": {
         "ap_id": 2575,
@@ -243,6 +285,7 @@ achievement_requirements = {
         "description": "Beat 90 waves using only poison gems.",
         "requirements": ["sPoison", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Slowly but Surely": {
         "ap_id": 2492,
@@ -251,6 +294,7 @@ achievement_requirements = {
         "details": "Beat 90 waves using only slowing gems.",
         "requirements": ["sSlowing", "minWave:90"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Getting Wet": {
         "ap_id": 2215,
@@ -258,6 +302,7 @@ achievement_requirements = {
         "description": "Beat 30 waves.",
         "requirements": ["minWave:30"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Still Alive": {
         "ap_id": 2512,
@@ -265,6 +310,7 @@ achievement_requirements = {
         "description": "Beat 60 waves.",
         "requirements": ["minWave:60"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Tomb Raiding": {
         "ap_id": 2571,
@@ -273,6 +319,7 @@ achievement_requirements = {
         "details": "Break a tomb before wave 15 starts.",
         "requirements": ["eTomb:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Is Anyone in There?": {
         "ap_id": 2279,
@@ -280,6 +327,7 @@ achievement_requirements = {
         "description": "Break a tomb open.",
         "requirements": ["eTomb"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Too Curious": {
         "ap_id": 2573,
@@ -288,6 +336,7 @@ achievement_requirements = {
         "details": "Break 2 tombs in one battle.",
         "requirements": ["eTomb:2"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Tasting the Darkness": {
         "ap_id": 2540,
@@ -296,6 +345,7 @@ achievement_requirements = {
         "details": "Break 3 tombs in one battle.",
         "requirements": ["eTomb:3"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Power Sharing": {
         "ap_id": 2412,
@@ -304,6 +354,7 @@ achievement_requirements = {
         "details": "Build 5 amplifiers in one battle.",
         "requirements": ["sAmplifiers", "talismanRow:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Power Flow": {
         "ap_id": 2409,
@@ -311,6 +362,7 @@ achievement_requirements = {
         "description": "Build 15 amplifiers.",
         "requirements": ["sAmplifiers", "talismanRow:1"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Power Exchange": {
         "ap_id": 2408,
@@ -318,6 +370,7 @@ achievement_requirements = {
         "description": "Build 25 amplifiers.",
         "requirements": ["sAmplifiers", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Amplifinity": {
         "ap_id": 2020,
@@ -326,6 +379,7 @@ achievement_requirements = {
         "details": "Build 45 amplifiers in one battle.",
         "requirements": ["sAmplifiers", "fieldToken:75", "talismanRow:3"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Connected": {
         "ap_id": 2101,
@@ -333,6 +387,7 @@ achievement_requirements = {
         "description": "Build an amplifier.",
         "requirements": ["sAmplifiers"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Towerful": {
         "ap_id": 2576,
@@ -341,6 +396,7 @@ achievement_requirements = {
         "details": "Build 5 towers in one battle.",
         "requirements": ["eTower"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Settlement": {
         "ap_id": 2464,
@@ -349,6 +405,7 @@ achievement_requirements = {
         "details": "Build 15 towers in one battle.",
         "requirements": ["eTower", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Fortress": {
         "ap_id": 2190,
@@ -357,6 +414,7 @@ achievement_requirements = {
         "details": "Build 30 towers in one battle.",
         "requirements": ["eTower", "fieldToken:10"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Bastion": {
         "ap_id": 2034,
@@ -365,6 +423,7 @@ achievement_requirements = {
         "details": "Build 90 towers in one battle.",
         "requirements": ["eTower", "fieldToken:60", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Sparse Snares": {
         "ap_id": 2504,
@@ -373,6 +432,7 @@ achievement_requirements = {
         "details": "Build 10 traps in one battle.",
         "requirements": ["sTraps", "min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Entrenched": {
         "ap_id": 2162,
@@ -381,6 +441,7 @@ achievement_requirements = {
         "details": "Build 20 traps in one battle.",
         "requirements": ["sTraps", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Watch Your Step": {
         "ap_id": 2602,
@@ -388,6 +449,7 @@ achievement_requirements = {
         "description": "Build 40 traps.",
         "requirements": ["sTraps", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Razor Path": {
         "ap_id": 2437,
@@ -396,6 +458,7 @@ achievement_requirements = {
         "details": "Build 60 traps in one battle.",
         "requirements": ["sTraps", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Rageroom": {
         "ap_id": 2433,
@@ -404,6 +467,7 @@ achievement_requirements = {
         "details": "In one battle: build 100 walls AND start 100 enraged waves.",
         "requirements": ["eWall", "minWave:100"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Minor Detour": {
         "ap_id": 2347,
@@ -412,6 +476,7 @@ achievement_requirements = {
         "details": "Build 15 walls in one battle.",
         "requirements": ["eWall"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Confusion Junction": {
         "ap_id": 2100,
@@ -420,6 +485,7 @@ achievement_requirements = {
         "details": "Build 30 walls in one battle.",
         "requirements": ["eWall"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Zigzag Corridor": {
         "ap_id": 2635,
@@ -428,6 +494,7 @@ achievement_requirements = {
         "details": "Build 60 walls in one battle.",
         "requirements": ["eWall", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Stone Monument": {
         "ap_id": 2523,
@@ -435,6 +502,7 @@ achievement_requirements = {
         "description": "Build 240 walls.",
         "requirements": ["eWall", "min_wl:50", "talismanRow:1"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Call in the Wave!": {
         "ap_id": 2076,
@@ -443,6 +511,7 @@ achievement_requirements = {
         "details": "Call 1 wave early.",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Bloodrush": {
         "ap_id": 2056,
@@ -451,6 +520,7 @@ achievement_requirements = {
         "details": "Call an enraged wave early.",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Skylark": {
         "ap_id": 2486,
@@ -459,6 +529,7 @@ achievement_requirements = {
         "details": "Call every wave early in a single battle (no waves arrive on their own timer).",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Short Tempered": {
         "ap_id": 2479,
@@ -467,6 +538,7 @@ achievement_requirements = {
         "details": "Call 5 waves early in one battle.",
         "requirements": ["minWave:5"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Restless": {
         "ap_id": 2444,
@@ -475,6 +547,7 @@ achievement_requirements = {
         "details": "Call 35 waves early in one battle.",
         "requirements": ["minWave:35"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Agitated": {
         "ap_id": 2012,
@@ -483,6 +556,7 @@ achievement_requirements = {
         "details": "Call 70 waves early in one battle.",
         "requirements": ["minWave:70"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Fire Away": {
         "ap_id": 2179,
@@ -491,6 +565,7 @@ achievement_requirements = {
         "details": "Cast 1 enhancement spell.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Strike Anywhere": {
         "ap_id": 2527,
@@ -499,6 +574,7 @@ achievement_requirements = {
         "details": "Cast 1 strike spell.",
         "requirements": ["strikeSpells:1"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Stay Some More": {
         "ap_id": 2511,
@@ -506,6 +582,7 @@ achievement_requirements = {
         "description": "Cast freeze on an apparition 3 times.",
         "requirements": ["sFreeze", "tRitual"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Double Sharded": {
         "ap_id": 2132,
@@ -514,6 +591,7 @@ achievement_requirements = {
         "details": "Cast 2 ice shards onto the same monster.",
         "requirements": ["sIceShards"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Quadpierced": {
         "ap_id": 2427,
@@ -521,6 +599,7 @@ achievement_requirements = {
         "description": "Cast 4 ice shards on the same monster.",
         "requirements": ["sIceShards", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Shardalot": {
         "ap_id": 2468,
@@ -528,6 +607,7 @@ achievement_requirements = {
         "description": "Cast 6 ice shards on the same monster.",
         "requirements": ["sIceShards", "minWave:35"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Care to Die Already?": {
         "ap_id": 2080,
@@ -536,6 +616,7 @@ achievement_requirements = {
         "details": "Cast 8 ice shards onto the same monster.",
         "requirements": ["sIceShards", "minWave:50"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Scare Tactics": {
         "ap_id": 2460,
@@ -544,6 +625,7 @@ achievement_requirements = {
         "details": "Cast 5 strike spells in one battle.",
         "requirements": ["strikeSpells:1", "minWave:15"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "No Place to Hide": {
         "ap_id": 2370,
@@ -555,6 +637,7 @@ achievement_requirements = {
             ["strikeSpells:3", "minWave:20"],
         ],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "At my Fingertips": {
         "ap_id": 2027,
@@ -566,6 +649,7 @@ achievement_requirements = {
             ["strikeSpells:3", "minWave:52"],
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Zap Away": {
         "ap_id": 2633,
@@ -574,6 +658,7 @@ achievement_requirements = {
         "details": "Cast 175 strike spells in one battle.",
         "requirements": ["strikeSpells:3", "minWave:75"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Special Purpose": {
         "ap_id": 2505,
@@ -582,6 +667,7 @@ achievement_requirements = {
         "details": "Change a gem's target priority by clicking it.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Dichromatic": {
         "ap_id": 2124,
@@ -590,6 +676,7 @@ achievement_requirements = {
         "details": "Combine two gems of different colors.",
         "requirements": ["gemSkills:2"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Shapeshifter": {
         "ap_id": 2466,
@@ -597,6 +684,7 @@ achievement_requirements = {
         "description": "Complete your talisman fragment shape collection.",
         "requirements": ["min_wl:80"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Eggnog": {
         "ap_id": 2148,
@@ -605,6 +693,7 @@ achievement_requirements = {
         "details": "Crack a monster egg while time is frozen (Whiteout active).",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Tricolor": {
         "ap_id": 2579,
@@ -613,6 +702,7 @@ achievement_requirements = {
         "details": "Combine a 3-component gem.",
         "requirements": ["gemSkills:3"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Prismatic": {
         "ap_id": 2415,
@@ -621,6 +711,7 @@ achievement_requirements = {
         "details": "Combine a 6-component gem.",
         "requirements": ["gemSkills:6"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Third Grade": {
         "ap_id": 2560,
@@ -629,6 +720,7 @@ achievement_requirements = {
         "details": "Create a grade-3 gem.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Fifth Grader": {
         "ap_id": 2174,
@@ -637,6 +729,7 @@ achievement_requirements = {
         "details": "Create a grade-5 gem.",
         "requirements": ["min_wl:15"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Biohazard": {
         "ap_id": 2043,
@@ -645,6 +738,7 @@ achievement_requirements = {
         "details": "Create a grade-12 pure poison gem.",
         "requirements": ["sPoison", "min_wl:100", "talismanRow:3"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Sting Stack": {
         "ap_id": 2516,
@@ -653,6 +747,7 @@ achievement_requirements = {
         "details": "Land 1,000 wasp stings on enemy buildings.",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Slow Drain": {
         "ap_id": 2490,
@@ -660,6 +755,7 @@ achievement_requirements = {
         "description": "Deal 10.000 poison damage to a monster.",
         "requirements": ["sPoison", "minMonsterHP:15000"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Roof Knocking": {
         "ap_id": 2448,
@@ -667,6 +763,7 @@ achievement_requirements = {
         "description": "Deal 20 gem wasp stings to buildings.",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Drumroll": {
         "ap_id": 2137,
@@ -681,6 +778,7 @@ achievement_requirements = {
             ["eObelisk"],
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Pointed Pain": {
         "ap_id": 2404,
@@ -689,6 +787,7 @@ achievement_requirements = {
         "details": "Land 50 wasp stings on monsters in one battle.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Needle Storm": {
         "ap_id": 2361,
@@ -697,6 +796,7 @@ achievement_requirements = {
         "details": "Land 350 wasp stings on monsters.",
         "requirements": ["minMonsters:50"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Puncture Therapy": {
         "ap_id": 2418,
@@ -705,6 +805,7 @@ achievement_requirements = {
         "details": "Land 950 wasp stings on monsters.",
         "requirements": ["minMonsters:150"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Weather of Wasps": {
         "ap_id": 2610,
@@ -712,6 +813,7 @@ achievement_requirements = {
         "description": "Deal 3950 gem wasp stings to creatures.",
         "requirements": ["minMonsters:500"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Overpecked": {
         "ap_id": 2396,
@@ -719,6 +821,7 @@ achievement_requirements = {
         "description": "Deal 100 gem wasp stings to the same monster.",
         "requirements": ["minMonsterHP:1000"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Stingy Downfall": {
         "ap_id": 2519,
@@ -727,6 +830,7 @@ achievement_requirements = {
         "details": "Land 400 wasp stings on a single spire.",
         "requirements": ["tRitual", "eSpire"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Derangement": {
         "ap_id": 2121,
@@ -735,6 +839,7 @@ achievement_requirements = {
         "details": "Decrease a gem's range with a duplicator (or similar mechanic).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Barbed Sphere": {
         "ap_id": 2031,
@@ -742,6 +847,7 @@ achievement_requirements = {
         "description": "Deliver 1.200 banishments with your orb.",
         "requirements": ["minMonsters:2400", "talismanRow:1"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Stinging Sphere": {
         "ap_id": 2517,
@@ -750,6 +856,7 @@ achievement_requirements = {
         "details": "Banish 100 monsters using the orb (orb gem with banishment effect).",
         "requirements": ["minMonsters:100"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Thorned Sphere": {
         "ap_id": 2561,
@@ -758,6 +865,7 @@ achievement_requirements = {
         "details": "Banish 400 monsters using the orb.",
         "requirements": ["minMonsters:400"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Stirring Up the Nest": {
         "ap_id": 2520,
@@ -767,6 +875,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Puncturing Shots": {
         "ap_id": 2420,
@@ -775,6 +884,7 @@ achievement_requirements = {
         "details": "Score 75 one-hit kills in one battle.",
         "requirements": ["minMonsters:75"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Impaling Charges": {
         "ap_id": 2266,
@@ -782,6 +892,7 @@ achievement_requirements = {
         "description": "Deliver 250 one hit kills.",
         "requirements": ["minMonsters:250"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "One by One": {
         "ap_id": 2389,
@@ -790,6 +901,7 @@ achievement_requirements = {
         "details": "Score 750 one-hit kills cumulatively.",
         "requirements": ["minMonsters:750", "min_wl:100"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Vantage Point Down": {
         "ap_id": 2594,
@@ -800,6 +912,7 @@ achievement_requirements = {
             ["ePylons:1"],
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Groundfill": {
         "ap_id": 2227,
@@ -811,6 +924,7 @@ achievement_requirements = {
             ["sTraps"]
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Stones to Dust": {
         "ap_id": 2524,
@@ -819,6 +933,7 @@ achievement_requirements = {
         "details": "Demolish your own structure once.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Landing Spot": {
         "ap_id": 2301,
@@ -827,6 +942,7 @@ achievement_requirements = {
         "details": "Demolish 20+ walls using falling spires (the spire crash kills the wall).",
         "requirements": ["tRitual", "eSpire", "eWall"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Keep Losing Keep Harvesting": {
         "ap_id": 2295,
@@ -835,6 +951,7 @@ achievement_requirements = {
         "details": "Deplete a mana shard while a shadow is on the field.",
         "requirements": ["tRitual", "eManaShard", "eShadow"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Mana First": {
         "ap_id": 2323,
@@ -843,6 +960,7 @@ achievement_requirements = {
         "details": "Deplete a mana shard while at least 300 swarmlings are on the field.",
         "requirements": ["eManaShard", "minSwarmlings:300"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Blackout": {
         "ap_id": 2046,
@@ -854,6 +972,7 @@ achievement_requirements = {
             ["tDarkMasonry"],
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Omnibomb": {
         "ap_id": 2385,
@@ -865,6 +984,7 @@ achievement_requirements = {
             ["tRitual", "eMonsterNest:1"],
         ],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Urban Warfare": {
         "ap_id": 2593,
@@ -873,6 +993,7 @@ achievement_requirements = {
         "details": "Destroy a dwelling AND kill a monster with the same gem bomb.",
         "requirements": ["eAbandonedDwelling"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "It was Abandoned Anyway": {
         "ap_id": 2283,
@@ -880,6 +1001,7 @@ achievement_requirements = {
         "description": "Destroy a dwelling.",
         "requirements": ["eAbandonedDwelling"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Busted": {
         "ap_id": 2072,
@@ -888,6 +1010,7 @@ achievement_requirements = {
         "details": "Destroy a full-HP obelisk with a single gem bomb.",
         "requirements": ["eObelisk", "fieldToken:25", "talismanRow:1"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Catch and Release": {
         "ap_id": 2084,
@@ -895,6 +1018,7 @@ achievement_requirements = {
         "description": "Destroy a jar of wasps, but don't have any wasp kills.",
         "requirements": ["eJarOfWasps:1"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Has Stood Long Enough": {
         "ap_id": 2233,
@@ -903,6 +1027,7 @@ achievement_requirements = {
         "details": "Destroy a monster nest after the very last wave has started.",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "One Less Problem": {
         "ap_id": 2388,
@@ -914,6 +1039,7 @@ achievement_requirements = {
             ["tRitual", "eMonsterNest:1", "eWraith"],
         ],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Fire in the Hole": {
         "ap_id": 2180,
@@ -921,6 +1047,7 @@ achievement_requirements = {
         "description": "Destroy a monster nest.",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Stash No More": {
         "ap_id": 2510,
@@ -929,6 +1056,7 @@ achievement_requirements = {
         "details": "Destroy an opened wizard stash in the same battle you opened it.",
         "requirements": ["eWizardStash"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "No You Won't!": {
         "ap_id": 2375,
@@ -937,6 +1065,7 @@ achievement_requirements = {
         "details": "Destroy a watchtower before it gets to fire.",
         "requirements": ["sBolt", "eWatchtower", "min_wl:80"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Flying Multikill": {
         "ap_id": 2186,
@@ -945,6 +1074,7 @@ achievement_requirements = {
         "details": "Kill an apparition, specter, wraith, AND shadow all in one battle.",
         "requirements": ["tRitual", "eApparition", "eShadow", "eSpecter", "eWraith"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Route Planning": {
         "ap_id": 2455,
@@ -952,6 +1082,7 @@ achievement_requirements = {
         "description": "Destroy 5 barricades.",
         "requirements": ["eBarricade:5"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Broken Siege": {
         "ap_id": 2068,
@@ -963,6 +1094,7 @@ achievement_requirements = {
             ["min_wl:30", "tDarkMasonry"],
         ],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Popping Lights": {
         "ap_id": 2407,
@@ -974,6 +1106,7 @@ achievement_requirements = {
             ["tDarkMasonry"],
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Stormed Beacons": {
         "ap_id": 2526,
@@ -982,6 +1115,7 @@ achievement_requirements = {
         "details": "Destroy 15 beacons in one battle.",
         "requirements": ["tDarkMasonry", "minWave:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Lost Signal": {
         "ap_id": 2317,
@@ -990,6 +1124,7 @@ achievement_requirements = {
         "details": "Destroy 35 beacons in one battle.",
         "requirements": ["tDarkMasonry", "minWave:40", "talismanRow:1", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Beacon Hunt": {
         "ap_id": 2039,
@@ -998,6 +1133,7 @@ achievement_requirements = {
         "details": "Destroy 55 beacons in one battle.",
         "requirements": ["tDarkMasonry", "minWave:50", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Ruined Ghost Town": {
         "ap_id": 2457,
@@ -1005,6 +1141,7 @@ achievement_requirements = {
         "description": "Destroy 5 dwellings.",
         "requirements": ["eAbandonedDwelling:5"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Healing Denied": {
         "ap_id": 2236,
@@ -1015,6 +1152,7 @@ achievement_requirements = {
             ["Field_T3"]
         ],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Nest Blaster": {
         "ap_id": 2362,
@@ -1023,6 +1161,7 @@ achievement_requirements = {
         "details": "Destroy 2 monster nests before wave 12 starts.",
         "requirements": ["eMonsterNest:2"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Nest Buster": {
         "ap_id": 2363,
@@ -1031,6 +1170,7 @@ achievement_requirements = {
         "details": "Destroy 3 monster nests before wave 6 starts.",
         "requirements": ["eMonsterNest:3"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Root Canal": {
         "ap_id": 2449,
@@ -1038,6 +1178,7 @@ achievement_requirements = {
         "description": "Destroy 2 monster nests.",
         "requirements": ["eMonsterNest:2"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Major Shutdown": {
         "ap_id": 2320,
@@ -1045,6 +1186,7 @@ achievement_requirements = {
         "description": "Destroy 3 monster nests.",
         "requirements": ["eMonsterNest:3"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Denested": {
         "ap_id": 2120,
@@ -1052,6 +1194,7 @@ achievement_requirements = {
         "description": "Destroy 5 monster nests.",
         "requirements": ["eMonsterNest:5"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Shieldbreaker": {
         "ap_id": 2477,
@@ -1059,6 +1202,7 @@ achievement_requirements = {
         "description": "Destroy 3 shield beacons.",
         "requirements": ["tDarkMasonry"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Let Them Hatch": {
         "ap_id": 2305,
@@ -1067,6 +1211,7 @@ achievement_requirements = {
         "details": "Beat the battle without cracking any swarm queen egg yourself.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Marmalade": {
         "ap_id": 2335,
@@ -1074,6 +1219,7 @@ achievement_requirements = {
         "description": "Don't destroy any of the jars of wasps.",
         "requirements": ["eJarOfWasps:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Eggcracker": {
         "ap_id": 2147,
@@ -1082,6 +1228,7 @@ achievement_requirements = {
         "details": "Beat the battle without letting any swarm queen egg hatch.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Well Defended": {
         "ap_id": 2611,
@@ -1089,6 +1236,7 @@ achievement_requirements = {
         "description": "Don't let any monster touch your orb for 20 beaten waves.",
         "requirements": ["minWave:20"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Tightly Secured": {
         "ap_id": 2564,
@@ -1097,6 +1245,7 @@ achievement_requirements = {
         "details": "60 consecutive waves with no monster touching the orb.",
         "requirements": ["minWave:60"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Getting Rid of Them": {
         "ap_id": 2212,
@@ -1106,6 +1255,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["eBeacon:4", "tDarkMasonry"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Raindrop": {
         "ap_id": 2436,
@@ -1114,6 +1264,7 @@ achievement_requirements = {
         "details": "Throw 18 gem bombs during rain weather.",
         "requirements": ["wRain"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Snowball": {
         "ap_id": 2497,
@@ -1122,6 +1273,7 @@ achievement_requirements = {
         "details": "Throw 27 gem bombs during snow weather.",
         "requirements": ["wSnow"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Sharpened": {
         "ap_id": 2470,
@@ -1130,6 +1282,7 @@ achievement_requirements = {
         "details": "Cast Bolt/Beam/Barrage on a gem that's inside a trap.",
         "requirements": ["eTraps", "enhancementSpells:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Might Need it Later": {
         "ap_id": 2343,
@@ -1142,6 +1295,7 @@ achievement_requirements = {
             ["eAmplifiers:1", "enhancementSpells:1"],
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Why Not": {
         "ap_id": 2621,
@@ -1149,6 +1303,7 @@ achievement_requirements = {
         "description": "Enhance a gem in the enraging socket.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Enhancement Storage": {
         "ap_id": 2155,
@@ -1157,6 +1312,7 @@ achievement_requirements = {
         "details": "Cast Bolt/Beam/Barrage on a gem in your inventory.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Bleeding For Everyone": {
         "ap_id": 2049,
@@ -1164,6 +1320,7 @@ achievement_requirements = {
         "description": "Enhance a pure bleeding gem having random priority with beam.",
         "requirements": ["sBeam", "sBleeding"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Just Breathe In": {
         "ap_id": 2290,
@@ -1172,6 +1329,7 @@ achievement_requirements = {
         "details": "Enhance a pure poison gem with Beam (random target priority).",
         "requirements": ["sBeam", "sPoison"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Slow Motion": {
         "ap_id": 2491,
@@ -1179,6 +1337,7 @@ achievement_requirements = {
         "description": "Enhance a pure slowing gem having random priority with beam.",
         "requirements": ["sBeam", "sSlowing"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Socketed Rage": {
         "ap_id": 2502,
@@ -1187,6 +1346,7 @@ achievement_requirements = {
         "details": "Enrage 1 wave.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Ten Angry Waves": {
         "ap_id": 2542,
@@ -1195,6 +1355,7 @@ achievement_requirements = {
         "details": "Manually enrage 10 waves in a single battle.",
         "requirements": ["minWave:10"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Rageout": {
         "ap_id": 2432,
@@ -1202,6 +1363,7 @@ achievement_requirements = {
         "description": "Enrage 30 waves.",
         "requirements": ["minWave:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Raging Habit": {
         "ap_id": 2434,
@@ -1210,6 +1372,7 @@ achievement_requirements = {
         "details": "Manually enrage 80 waves cumulatively across all battles (or in one battle, depending on stat).",
         "requirements": ["minWave:80"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Jewel Box": {
         "ap_id": 2287,
@@ -1218,6 +1381,7 @@ achievement_requirements = {
         "details": "Fill every inventory slot with gems.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Sigil": {
         "ap_id": 2483,
@@ -1226,6 +1390,7 @@ achievement_requirements = {
         "details": "All talisman sockets filled, every fragment upgraded to level 5+.",
         "requirements": ["min_wl:100"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Charm": {
         "ap_id": 2089,
@@ -1234,6 +1399,7 @@ achievement_requirements = {
         "details": "All talisman sockets filled, every fragment upgraded to its maximum level.",
         "requirements": ["min_wl:100"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Amulet": {
         "ap_id": 2021,
@@ -1241,6 +1407,7 @@ achievement_requirements = {
         "description": "Fill all the sockets in your talisman.",
         "requirements": ["min_wl:80"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "First Puzzle Piece": {
         "ap_id": 2183,
@@ -1248,6 +1415,7 @@ achievement_requirements = {
         "description": "Find a talisman fragment.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Core Pack": {
         "ap_id": 2104,
@@ -1255,6 +1423,7 @@ achievement_requirements = {
         "description": "Find 20 shadow cores.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Core Pile": {
         "ap_id": 2105,
@@ -1262,6 +1431,7 @@ achievement_requirements = {
         "description": "Find 60 shadow cores.",
         "requirements": ["min_wl:30"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Core Haul": {
         "ap_id": 2103,
@@ -1270,6 +1440,7 @@ achievement_requirements = {
         "details": "Find 180 shadow cores in one battle.",
         "requirements": ["min_wl:75"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Fortunate": {
         "ap_id": 2191,
@@ -1277,6 +1448,7 @@ achievement_requirements = {
         "description": "Find 2 talisman fragments.",
         "requirements": ["min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Ground Luck": {
         "ap_id": 2226,
@@ -1284,6 +1456,7 @@ achievement_requirements = {
         "description": "Find 3 talisman fragments.",
         "requirements": ["min_wl:75"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Broken Seal": {
         "ap_id": 2067,
@@ -1291,6 +1464,7 @@ achievement_requirements = {
         "description": "Free a sealed gem.",
         "requirements": ["eSealedGem:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Freezing Wounds": {
         "ap_id": 2193,
@@ -1299,6 +1473,7 @@ achievement_requirements = {
         "details": "Freeze the same monster 3 times.",
         "requirements": ["sFreeze"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Frosting": {
         "ap_id": 2198,
@@ -1310,6 +1485,7 @@ achievement_requirements = {
             ["sFreeze", "tRitual", "eSpecter", "wSnow"],
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Not So Fast": {
         "ap_id": 2377,
@@ -1317,6 +1493,7 @@ achievement_requirements = {
         "description": "Freeze a specter.",
         "requirements": ["sFreeze", "tRitual", "eSpecter"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Refrost": {
         "ap_id": 2440,
@@ -1325,6 +1502,7 @@ achievement_requirements = {
         "details": "Freeze 111 already-frozen monsters (re-freeze).",
         "requirements": ["sFreeze", "minMonsters:222"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Hold Still": {
         "ap_id": 2246,
@@ -1333,6 +1511,7 @@ achievement_requirements = {
         "details": "Freeze 130 already-whited-out monsters (Whiteout first, then Freeze).",
         "requirements": ["sFreeze", "sWhiteout", "minMonsters:260"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Splash Swim Splash": {
         "ap_id": 2508,
@@ -1341,6 +1520,7 @@ achievement_requirements = {
         "details": "Fill all 9 inventory slots with pure Slowing gems.",
         "requirements": ["sSlowing"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Still Chill": {
         "ap_id": 2513,
@@ -1349,6 +1529,7 @@ achievement_requirements = {
         "details": "Gain 1,500 xp from Freeze crowd hits.",
         "requirements": ["sFreeze", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Sliced Ice": {
         "ap_id": 2487,
@@ -1357,6 +1538,7 @@ achievement_requirements = {
         "details": "Gain 1,800 xp from Ice Shards crowd hits.",
         "requirements": ["sIceShards", "min_wl:50"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Icepicked": {
         "ap_id": 2264,
@@ -1365,6 +1547,7 @@ achievement_requirements = {
         "details": "Gain 3,200 xp from Ice Shards crowd hits.",
         "requirements": ["sIceShards", "min_wl:100"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "White Ring of Death": {
         "ap_id": 2619,
@@ -1373,6 +1556,7 @@ achievement_requirements = {
         "details": "Gain 4,900 xp from Ice Shards crowd hits in one battle.",
         "requirements": ["sIceShards", "min_wl:100"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Snowdust Blindness": {
         "ap_id": 2498,
@@ -1381,6 +1565,7 @@ achievement_requirements = {
         "details": "Gain 2,300 xp from Whiteout crowd hits.",
         "requirements": ["sWhiteout"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Outwhited": {
         "ap_id": 2394,
@@ -1389,6 +1574,7 @@ achievement_requirements = {
         "details": "Gain 4,700 xp from Whiteout crowd hits in one battle.",
         "requirements": ["sWhiteout", "minMonsters:1000"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Finders": {
         "ap_id": 2178,
@@ -1396,6 +1582,7 @@ achievement_requirements = {
         "description": "Gain 200 mana from drops.",
         "requirements": ["eDropHolder:3", "sBolt"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Keepers": {
         "ap_id": 2296,
@@ -1404,6 +1591,7 @@ achievement_requirements = {
         "details": "Gain 800 mana from drops in one battle.",
         "requirements": ["eDropHolder:4", "sBolt"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Adventurer": {
         "ap_id": 2010,
@@ -1412,6 +1600,7 @@ achievement_requirements = {
         "details": "Gain 600 xp from drops in one battle.",
         "requirements": ["Field_F1"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Ice Snap": {
         "ap_id": 2260,
@@ -1420,6 +1609,7 @@ achievement_requirements = {
         "details": "Gain 90 xp from Freeze crowd hits.",
         "requirements": ["sFreeze"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Cold Wisdom": {
         "ap_id": 2096,
@@ -1427,6 +1617,7 @@ achievement_requirements = {
         "description": "Gain 700 xp with Freeze spell crowd hits.",
         "requirements": ["sFreeze", "minWave:50"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Chilling Edges": {
         "ap_id": 2090,
@@ -1434,6 +1625,7 @@ achievement_requirements = {
         "description": "Gain 140 xp with Ice Shards spell crowd hits.",
         "requirements": ["sIceShards", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Battle Heat": {
         "ap_id": 2036,
@@ -1442,6 +1634,7 @@ achievement_requirements = {
         "details": "Gain 200 xp from kill chains in one battle.",
         "requirements": ["minMonsters:450"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Limited Vision": {
         "ap_id": 2310,
@@ -1449,6 +1642,7 @@ achievement_requirements = {
         "description": "Gain 100 xp with Whiteout spell crowd hits.",
         "requirements": ["sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Precious": {
         "ap_id": 2414,
@@ -1457,6 +1651,7 @@ achievement_requirements = {
         "details": "Get a free gem from a drop holder.",
         "requirements": ["eDropHolder:1", "sBolt"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Zapped": {
         "ap_id": 2634,
@@ -1464,6 +1659,7 @@ achievement_requirements = {
         "description": "Get your Orb destroyed by a wizard tower.",
         "requirements": ["Field_L5"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Catalyst": {
         "ap_id": 2083,
@@ -1471,6 +1667,7 @@ achievement_requirements = {
         "description": "Give a Gem 200 Poison Damage by Amplification.",
         "requirements": ["sAmplifiers", "sPoison", "talismanRow:3"],        
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Not Worth It": {
         "ap_id": 2379,
@@ -1479,6 +1676,7 @@ achievement_requirements = {
         "details": "Harvest 9,000 mana from a corrupted mana shard.",
         "requirements": ["eCorruptedManaShard"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Dry Puddle": {
         "ap_id": 2138,
@@ -1487,6 +1685,7 @@ achievement_requirements = {
         "details": "Fully harvest a mana shard in one battle.",
         "requirements": ["eManaShard"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Extorted": {
         "ap_id": 2168,
@@ -1495,6 +1694,7 @@ achievement_requirements = {
         "details": "Fully harvest 3 mana shards in one battle.",
         "requirements": ["eManaShard:3"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Brought Some Mana": {
         "ap_id": 2069,
@@ -1503,6 +1703,7 @@ achievement_requirements = {
         "details": "Have at least 5,000 starting mana.",
         "requirements": ["min_wl:40"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Well Prepared": {
         "ap_id": 2614,
@@ -1510,6 +1711,7 @@ achievement_requirements = {
         "description": "Have 20.000 initial mana.",
         "requirements": ["min_wl:60", "talismanRow:2"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Mana in a Bottle": {
         "ap_id": 2331,
@@ -1518,6 +1720,7 @@ achievement_requirements = {
         "details": "Have at least 40,000 starting mana.",
         "requirements": ["min_wl:80", "talismanRow:3"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Mana Hack": {
         "ap_id": 2325,
@@ -1526,6 +1729,7 @@ achievement_requirements = {
         "details": "Have at least 80,000 starting mana.",
         "requirements": ["talismanRow:3", "min_wl:100"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "It's Lagging Alright": {
         "ap_id": 2284,
@@ -1534,6 +1738,7 @@ achievement_requirements = {
         "details": "Have 1,200 monsters on the field at the same time.",
         "requirements": ["minMonsters:1200"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Plentiful": {
         "ap_id": 2403,
@@ -1541,6 +1746,7 @@ achievement_requirements = {
         "description": "Have 1.000 shadow cores at the start of the battle.",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "How About Some Skill Points": {
         "ap_id": 2248,
@@ -1549,6 +1755,7 @@ achievement_requirements = {
         "details": "Start a battle with at least 5,000 shadow cores in your stash.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Endgame Balance": {
         "ap_id": 2152,
@@ -1557,6 +1764,7 @@ achievement_requirements = {
         "details": "Start a battle with at least 25,000 shadow cores in your stash.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Disco Ball": {
         "ap_id": 2126,
@@ -1567,6 +1775,7 @@ achievement_requirements = {
             ["eLanterns:1", "gemSkills:6"]
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Getting Serious": {
         "ap_id": 2213,
@@ -1575,6 +1784,7 @@ achievement_requirements = {
         "details": "Reach 1,500 hits on a grade-1 gem.",
         "requirements": ["sBeam"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Time to Upgrade": {
         "ap_id": 2567,
@@ -1583,6 +1793,7 @@ achievement_requirements = {
         "details": "Reach 4,500 hits on a grade-1 gem.",
         "requirements": ["sBeam", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Warming Up": {
         "ap_id": 2597,
@@ -1590,6 +1801,7 @@ achievement_requirements = {
         "description": "Have a grade 1 gem with 100 hits.",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Seen Battle": {
         "ap_id": 2463,
@@ -1598,6 +1810,7 @@ achievement_requirements = {
         "details": "Reach 500 hits on a grade-1 gem.",
         "requirements": ["sBeam"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Barrage Battery": {
         "ap_id": 2032,
@@ -1606,6 +1819,7 @@ achievement_requirements = {
         "details": "Charge the Barrage spell to 300%.",
         "requirements": ["sBarrage", "tmBarrageCharge:100"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Ice Cube": {
         "ap_id": 2258,
@@ -1614,6 +1828,7 @@ achievement_requirements = {
         "details": "Charge the Freeze spell to 300%.",
         "requirements": ["sFreeze", "tmFreezeCharge:100"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Shred Some Armor": {
         "ap_id": 2481,
@@ -1622,6 +1837,7 @@ achievement_requirements = {
         "details": "Reach 3,000 hits on a pure armor-tearing gem.",
         "requirements": ["sArmorTearing", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Damage Support": {
         "ap_id": 2113,
@@ -1630,6 +1846,7 @@ achievement_requirements = {
         "details": "Reach 2,500 hits on a pure bleeding gem.",
         "requirements": ["sBleeding", "sBeam"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Lots of Crit Hits": {
         "ap_id": 2318,
@@ -1637,6 +1854,7 @@ achievement_requirements = {
         "description": "Have a pure critical hit gem with 2.000 hits.",
         "requirements": ["sCriticalHit", "sBeam"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Got the Price Back": {
         "ap_id": 2220,
@@ -1645,6 +1863,7 @@ achievement_requirements = {
         "details": "Reach 4,500 hits on a pure mana-leech gem.",
         "requirements": ["sManaLeech", "sBeam", "minWave:40"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Epidemic Gem": {
         "ap_id": 2163,
@@ -1653,6 +1872,7 @@ achievement_requirements = {
         "details": "Reach 3,500 hits on a pure poison gem.",
         "requirements": ["sPoison", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Army Glue": {
         "ap_id": 2026,
@@ -1661,6 +1881,7 @@ achievement_requirements = {
         "details": "Reach 4,000 hits on a pure slowing gem.",
         "requirements": ["sSlowing", "sBeam", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Instant Spawn": {
         "ap_id": 2277,
@@ -1668,6 +1889,7 @@ achievement_requirements = {
         "description": "Have a shadow spawn a monster while time is frozen.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Prismatic Takeaway": {
         "ap_id": 2416,
@@ -1676,6 +1898,7 @@ achievement_requirements = {
         "details": "Let a specter steal a 6-component gem (then kill it or end the battle).",
         "requirements": ["eSpecter", "gemSkills:6"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Going for the Weak": {
         "ap_id": 2219,
@@ -1684,6 +1907,7 @@ achievement_requirements = {
         "details": "Have a watchtower kill a poisoned monster.",
         "requirements": ["sPoison", "eWatchtower"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "No Honor Among Thieves": {
         "ap_id": 2366,
@@ -1691,6 +1915,7 @@ achievement_requirements = {
         "description": "Have a watchtower kill a specter.",
         "requirements": ["tRitual", "eSpecter", "eWatchtower"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "You Could Be my Apprentice": {
         "ap_id": 2628,
@@ -1699,6 +1924,7 @@ achievement_requirements = {
         "details": "Have a watchtower kill a wizard hunter.",
         "requirements": ["eWatchtower", "eWizardHunter", 'tRitual'],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Get Them": {
         "ap_id": 2209,
@@ -1707,6 +1933,7 @@ achievement_requirements = {
         "details": "Have a watchtower kill 39 monsters in one battle.",
         "requirements": ["eWatchtower"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "What Are You Waiting For?": {
         "ap_id": 2617,
@@ -1714,6 +1941,7 @@ achievement_requirements = {
         "description": "Have all spells charged to 200%.",
         "requirements": ["strikeSpells:3"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Multiline": {
         "ap_id": 2353,
@@ -1721,6 +1949,7 @@ achievement_requirements = {
         "description": "Have at least 5 different talisman properties.",
         "requirements": ["min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Versatile Charm": {
         "ap_id": 2595,
@@ -1728,6 +1957,7 @@ achievement_requirements = {
         "description": "Have at least 10 different talisman properties.",
         "requirements": ["min_wl:40"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Quite a List": {
         "ap_id": 2430,
@@ -1736,6 +1966,7 @@ achievement_requirements = {
         "details": "Talisman must hold 15 different distinct properties at once.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Almost Like Hacked": {
         "ap_id": 2015,
@@ -1744,6 +1975,7 @@ achievement_requirements = {
         "details": "Talisman must hold 20 different distinct properties at once (cumulative across socketed fragments).",
         "requirements": ["min_wl:75"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Twice the Blast": {
         "ap_id": 2582,
@@ -1751,6 +1983,7 @@ achievement_requirements = {
         "description": "Have 2 barrage enhanced gems at the same time.",
         "requirements": ["sBarrage"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "No Need to Aim": {
         "ap_id": 2369,
@@ -1758,6 +1991,7 @@ achievement_requirements = {
         "description": "Have 4 barrage enhanced gems at the same time.",
         "requirements": ["sBarrage"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Shell Shock": {
         "ap_id": 2476,
@@ -1765,6 +1999,7 @@ achievement_requirements = {
         "description": "Have 8 barrage enhanced gems at the same time.",
         "requirements": ["sBarrage", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Firefall": {
         "ap_id": 2181,
@@ -1773,6 +2008,7 @@ achievement_requirements = {
         "details": "Have 16 barrage-enhanced gems active at once.",
         "requirements": ["sBarrage", "min_wl:60"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Heavy Support": {
         "ap_id": 2239,
@@ -1781,6 +2017,7 @@ achievement_requirements = {
         "details": "Dark Masonry trait spawns extra beacons during play; the 20 isn't a static stage stat.",
         "requirements": ["tDarkMasonry"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Dual Pulse": {
         "ap_id": 2140,
@@ -1789,6 +2026,7 @@ achievement_requirements = {
         "details": "Have 2 beam-enhanced gems active at once.",
         "requirements": ["sBeam"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Friday Night": {
         "ap_id": 2194,
@@ -1796,6 +2034,7 @@ achievement_requirements = {
         "description": "Have 4 beam enhanced gems at the same time.",
         "requirements": ["sBeam"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Laser Slicer": {
         "ap_id": 2302,
@@ -1803,6 +2042,7 @@ achievement_requirements = {
         "description": "Have 8 beam enhanced gems at the same time.",
         "requirements": ["sBeam", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Fusion Core": {
         "ap_id": 2205,
@@ -1811,6 +2051,7 @@ achievement_requirements = {
         "details": "Have 16 beam-enhanced gems active at once.",
         "requirements": ["sBeam", "min_wl:60"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Double Punch": {
         "ap_id": 2131,
@@ -1818,6 +2059,7 @@ achievement_requirements = {
         "description": "Have 2 bolt enhanced gems at the same time.",
         "requirements": ["sBolt"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Heavy Hitting": {
         "ap_id": 2238,
@@ -1825,6 +2067,7 @@ achievement_requirements = {
         "description": "Have 4 bolt enhanced gems at the same time.",
         "requirements": ["sBolt"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Impenetrable": {
         "ap_id": 2267,
@@ -1832,6 +2075,7 @@ achievement_requirements = {
         "description": "Have 8 bolt enhanced gems at the same time.",
         "requirements": ["sBolt", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Rugged Defense": {
         "ap_id": 2456,
@@ -1840,6 +2084,7 @@ achievement_requirements = {
         "details": "Have 16 bolt-enhanced gems active at once.",
         "requirements": ["sBolt", "min_wl:60"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "A Bright Start": {
         "ap_id": 2000,
@@ -1847,6 +2092,7 @@ achievement_requirements = {
         "description": "Have 30 fields lit in Journey mode.",
         "requirements": ["fieldToken:30"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Connecting the Dots": {
         "ap_id": 2102,
@@ -1854,6 +2100,7 @@ achievement_requirements = {
         "description": "Have 50 fields lit in Journey mode.",
         "requirements": ["fieldToken:50"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Light My Path": {
         "ap_id": 2308,
@@ -1861,6 +2108,7 @@ achievement_requirements = {
         "description": "Have 70 fields lit in Journey mode.",
         "requirements": ["fieldToken:70"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Cartographer": {
         "ap_id": 2082,
@@ -1868,6 +2116,7 @@ achievement_requirements = {
         "description": "Have 90 fields lit in Journey mode.",
         "requirements": ["fieldToken:90"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Stockpile": {
         "ap_id": 2521,
@@ -1875,6 +2124,7 @@ achievement_requirements = {
         "description": "Have 30 fragments in your talisman inventory.",
         "requirements": ["min_wl:20"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Gearing Up": {
         "ap_id": 2206,
@@ -1882,6 +2132,7 @@ achievement_requirements = {
         "description": "Have 5 fragments socketed in your talisman.",
         "requirements": ["min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Glowing Armada": {
         "ap_id": 2217,
@@ -1890,6 +2141,7 @@ achievement_requirements = {
         "details": "End a battle with 240 wasps on the field.",
         "requirements": ["min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Buzz Feed": {
         "ap_id": 2073,
@@ -1898,6 +2150,7 @@ achievement_requirements = {
         "details": "Have 99 wasps on the field at once.",
         "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Swift Deployment": {
         "ap_id": 2534,
@@ -1906,6 +2159,7 @@ achievement_requirements = {
         "details": "Have 20 gems on the field before wave 5 starts.",
         "requirements": ["fieldToken:20", "min_wl:30"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Well Laid": {
         "ap_id": 2613,
@@ -1913,6 +2167,7 @@ achievement_requirements = {
         "description": "Have 10 gems on the battlefield.",
         "requirements": ["min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Bazaar": {
         "ap_id": 2037,
@@ -1921,6 +2176,7 @@ achievement_requirements = {
         "details": "Have 30 gems on the field at once.",
         "requirements": ["fieldToken:20", "min_wl:50"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Fully Shining": {
         "ap_id": 2204,
@@ -1929,6 +2185,7 @@ achievement_requirements = {
         "details": "Have 60 gems on the field at once.",
         "requirements": ["fieldToken:30", "talismanRow:1"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Is This a Match-3 or What?": {
         "ap_id": 2280,
@@ -1937,6 +2194,7 @@ achievement_requirements = {
         "details": "Have 90 gems on the field at once.",
         "requirements": ["fieldToken:40", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Breath of Cold": {
         "ap_id": 2064,
@@ -1945,6 +2203,7 @@ achievement_requirements = {
         "details": "Have 90 monsters frozen at the same instant.",
         "requirements": ["sFreeze"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Meet the Spartans": {
         "ap_id": 2339,
@@ -1953,6 +2212,7 @@ achievement_requirements = {
         "details": "Have 300 monsters on the field at the same time.",
         "requirements": ["minMonsters:300"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Crowded Queue": {
         "ap_id": 2111,
@@ -1960,6 +2220,7 @@ achievement_requirements = {
         "description": "Have 600 monsters on the battlefield at the same time.",
         "requirements": ["minMonsters:600"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Lagging Already?": {
         "ap_id": 2300,
@@ -1968,6 +2229,7 @@ achievement_requirements = {
         "details": "Have 900 monsters on the field at the same time.",
         "requirements": ["minMonsters:900"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Time Bent": {
         "ap_id": 2565,
@@ -1976,6 +2238,7 @@ achievement_requirements = {
         "details": "Have 90 monsters slowed at the same instant.",
         "requirements": ["sSlowing", "minMonsters:90"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Green Vial": {
         "ap_id": 2224,
@@ -1985,6 +2248,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sPoison", "sTraps"],        
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Unarmed": {
         "ap_id": 2586,
@@ -1993,6 +2257,7 @@ achievement_requirements = {
         "details": "Have zero gems on the battlefield when wave 20 starts.",
         "requirements": ["minWave:20"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Nature Takes Over": {
         "ap_id": 2356,
@@ -2001,6 +2266,7 @@ achievement_requirements = {
         "details": "End a battle with no friendly buildings remaining (demolish them all yourself).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "By Three They Go": {
         "ap_id": 2074,
@@ -2011,6 +2277,7 @@ achievement_requirements = {
             ["eWatchtower"],
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Impudence": {
         "ap_id": 2270,
@@ -2022,6 +2289,7 @@ achievement_requirements = {
             ["eWatchtower"]
         ],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Take Them I Have More": {
         "ap_id": 2535,
@@ -2030,6 +2298,7 @@ achievement_requirements = {
         "details": "Have 12 of your gems destroyed or stolen by enemies.",
         "requirements": ["eWatchtower"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Enough is Enough": {
         "ap_id": 2158,
@@ -2038,6 +2307,7 @@ achievement_requirements = {
         "details": "Have 24 of your gems destroyed or stolen by enemies.",
         "requirements": ["eWatchtower"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Still Lit": {
         "ap_id": 2514,
@@ -2048,6 +2318,7 @@ achievement_requirements = {
             ["tDarkMasonry", "minWave:10", "eBeacon:5"],
         ],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Put Those Down Now!": {
         "ap_id": 2424,
@@ -2056,6 +2327,7 @@ achievement_requirements = {
         "details": "Have 10 orblets carried by monsters at once.",
         "requirements": ["sOrbOfPresence", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Locked and Loaded": {
         "ap_id": 2312,
@@ -2066,6 +2338,7 @@ achievement_requirements = {
             ["ePylons:3"]
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Core Pouch": {
         "ap_id": 2106,
@@ -2073,6 +2346,7 @@ achievement_requirements = {
         "description": "Have 100 shadow cores at the start of the battle.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "So Enduring": {
         "ap_id": 2501,
@@ -2081,6 +2355,7 @@ achievement_requirements = {
         "details": "Win a battle with the Adaptive Carapace trait at level 6 or higher.",
         "requirements": ["tAdaptiveCarapace", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Time to Rise": {
         "ap_id": 2566,
@@ -2089,6 +2364,7 @@ achievement_requirements = {
         "details": "Win a battle with the Awakening trait at level 6 or higher.",
         "requirements": ["tAwakening", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Deluminati": {
         "ap_id": 2119,
@@ -2097,6 +2373,7 @@ achievement_requirements = {
         "details": "Win a battle with the Dark Masonry trait at level 6 or higher.",
         "requirements": ["tDarkMasonry", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "On the Shoulders of Giants": {
         "ap_id": 2386,
@@ -2105,6 +2382,7 @@ achievement_requirements = {
         "details": "Win a battle with the Giant Domination trait at level 6 or higher.",
         "requirements": ["tGiantDomination", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "No Time to Rest": {
         "ap_id": 2372,
@@ -2112,6 +2390,7 @@ achievement_requirements = {
         "description": "Have the Haste trait set to level 6 or higher and win the battle.",
         "requirements": ["tHaste", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Hateful": {
         "ap_id": 2234,
@@ -2120,6 +2399,7 @@ achievement_requirements = {
         "details": "Win a battle with the Hatred trait at level 6 or higher.",
         "requirements": ["tHatred", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Ionized Air": {
         "ap_id": 2278,
@@ -2128,6 +2408,7 @@ achievement_requirements = {
         "details": "Win a battle with the Insulation trait at level 6 or higher.",
         "requirements": ["tInsulation", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Crowd Control": {
         "ap_id": 2110,
@@ -2136,6 +2417,7 @@ achievement_requirements = {
         "details": "Win a battle with the Overcrowd trait at level 6 or higher.",
         "requirements": ["tOvercrowd", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Forces Within my Comprehension": {
         "ap_id": 2188,
@@ -2144,6 +2426,7 @@ achievement_requirements = {
         "details": "Win a battle with the Ritual trait at level 6 or higher.",
         "requirements": ["tRitual", "eNonMonsters:1", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Thin Them Out": {
         "ap_id": 2559,
@@ -2152,6 +2435,7 @@ achievement_requirements = {
         "details": "Win a battle with the Strength in Numbers trait at level 6 or higher.",
         "requirements": ["tStrengthInNumbers", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Tumbling Billows": {
         "ap_id": 2581,
@@ -2160,6 +2444,7 @@ achievement_requirements = {
         "details": "Win a battle with the Swarmling Domination trait at level 6 or higher.",
         "requirements": ["tSwarmlingDomination", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Face the Phobia": {
         "ap_id": 2169,
@@ -2168,6 +2453,7 @@ achievement_requirements = {
         "details": "Win a battle with the Swarmling Parasites trait at level 6 or higher.",
         "requirements": ["tSwarmlingParasites", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Guarding the Fallen Gate": {
         "ap_id": 2228,
@@ -2176,6 +2462,7 @@ achievement_requirements = {
         "details": "Win a battle with the tCorruptedBanishment at level 6 or higher.",
         "requirements": ["tCorruptedBanishment", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Just Fire More at Them": {
         "ap_id": 2291,
@@ -2184,6 +2471,7 @@ achievement_requirements = {
         "details": "Win a battle with the Thick Air trait at level 6 or higher.",
         "requirements": ["tThickAir", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Spectrin Tetramer": {
         "ap_id": 2506,
@@ -2192,6 +2480,7 @@ achievement_requirements = {
         "details": "Win a battle with the Vital Link trait at level 6 or higher.",
         "requirements": ["tVitalLink", "min_wl:25"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Deal Some Damage Too": {
         "ap_id": 2116,
@@ -2200,6 +2489,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sBolt", "sTraps"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Shovel Swing": {
         "ap_id": 2480,
@@ -2207,6 +2497,7 @@ achievement_requirements = {
         "description": "Hit 15 frozen monsters with shrines.",
         "requirements": ["sFreeze", "eShrine"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Melting Pulse": {
         "ap_id": 2342,
@@ -2214,6 +2505,7 @@ achievement_requirements = {
         "description": "Hit 75 frozen monsters with shrines.",
         "requirements": ["sFreeze", "eShrine"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Shattered Waves": {
         "ap_id": 2473,
@@ -2222,6 +2514,7 @@ achievement_requirements = {
         "details": "Hit 225 frozen monsters with shrines.",
         "requirements": ["sFreeze", "eShrine", "minMonsters:225"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Shaken Ice": {
         "ap_id": 2465,
@@ -2230,6 +2523,7 @@ achievement_requirements = {
         "details": "Hit 475 frozen monsters with shrines.",
         "requirements": ["sFreeze", "eShrine", "minMonsters:475"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Twice the Shock": {
         "ap_id": 2583,
@@ -2238,6 +2532,7 @@ achievement_requirements = {
         "details": "Hit the same monster 2x with shrines.",
         "requirements": ["eShrine"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Stumbling": {
         "ap_id": 2529,
@@ -2249,6 +2544,7 @@ achievement_requirements = {
             ["eTraps:1", "minMonsterHP:1000"],
         ],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Salvation": {
         "ap_id": 2459,
@@ -2257,6 +2553,7 @@ achievement_requirements = {
         "details": "Hit 150 whited-out monsters with shrines.",
         "requirements": ["sWhiteout", "eShrine"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Hope has fallen": {
         "ap_id": 2247,
@@ -2264,6 +2561,7 @@ achievement_requirements = {
         "description": "In field T4, destroy all 8 dwellings.",
         "requirements": ["Field_T4", "min_wl:50"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Quicksave": {
         "ap_id": 2429,
@@ -2272,6 +2570,7 @@ achievement_requirements = {
         "details": "Drop a gem directly into your inventory using the instant-pickup hotkey.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "I am Tougher": {
         "ap_id": 2257,
@@ -2280,6 +2579,7 @@ achievement_requirements = {
         "details": "Kill 1,360 monsters with at least 2 wraiths alive.",
         "requirements": ["tRitual", "eWraith", "minMonsters:1600"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Waspocalypse": {
         "ap_id": 2601,
@@ -2287,6 +2587,7 @@ achievement_requirements = {
         "description": "Kill 1.080 monsters with gem bombs and wasps.",
         "requirements": ["minMonsters:1000"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Trembling": {
         "ap_id": 2578,
@@ -2295,6 +2596,7 @@ achievement_requirements = {
         "details": "Kill 1,500 monsters with traps in one battle.",
         "requirements": ["sTraps", "minMonsters:1500"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Multinerf": {
         "ap_id": 2354,
@@ -2303,6 +2605,7 @@ achievement_requirements = {
         "details": "Kill 1,600 monsters with prismatic wasps.",
         "requirements": ["gemSkills:6", "minMonsters:1000"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Taste All The Affixes": {
         "ap_id": 2539,
@@ -2311,6 +2614,7 @@ achievement_requirements = {
         "details": "Kill 2,500 monsters with prismatic wasps.",
         "requirements": ["gemSkills:6", "minMonsters:2500"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Can't Take Any Risks": {
         "ap_id": 2079,
@@ -2319,6 +2623,7 @@ achievement_requirements = {
         "details": "Kill a bleeding giant with poison damage.",
         "requirements": ["sBleeding", "sPoison", "minGiants:1"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Rooting From Afar": {
         "ap_id": 2450,
@@ -2327,6 +2632,7 @@ achievement_requirements = {
         "details": "Kill a gatekeeper fang using a Barrage shell hit.",
         "requirements": ["sBarrage", "eGatekeeper"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Implosion": {
         "ap_id": 2268,
@@ -2335,6 +2641,7 @@ achievement_requirements = {
         "details": "Kill a gatekeeper fang using a gem bomb.",
         "requirements": ["eGatekeeper"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Overheated": {
         "ap_id": 2395,
@@ -2343,6 +2650,7 @@ achievement_requirements = {
         "details": "Kill a giant with a single Beam shot.",
         "requirements": ["sBeam", "minGiants:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Troll's Eye": {
         "ap_id": 2580,
@@ -2351,6 +2659,7 @@ achievement_requirements = {
         "details": "Kill a giant in a single hit.",
         "requirements": ["sBolt", "minGiants:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Great Survivor": {
         "ap_id": 2221,
@@ -2359,6 +2668,7 @@ achievement_requirements = {
         "details": "Kill a wave-1 monster after wave 20 has already started (the monster survived 19+ waves).",
         "requirements": ["minWave:20"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Beastmaster": {
         "ap_id": 2041,
@@ -2367,6 +2677,7 @@ achievement_requirements = {
         "details": "Kill a single monster with at least 100,000 HP and 1,000 armor.",
         "requirements": ["minMonsterHP:100000", "minMonsterArmor:1000"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "No Use of Vitality": {
         "ap_id": 2374,
@@ -2374,6 +2685,7 @@ achievement_requirements = {
         "description": "Kill a monster having at least 20.000 hit points.",
         "requirements": ["minMonsterHP:20000"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Through All Layers": {
         "ap_id": 2562,
@@ -2382,6 +2694,7 @@ achievement_requirements = {
         "details": "Kill a monster that has at least 200 armor.",
         "requirements": ["minMonsterArmor:200"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Out of Misery": {
         "ap_id": 2392,
@@ -2389,6 +2702,7 @@ achievement_requirements = {
         "description": "Kill a monster that is whited out, poisoned, frozen and slowed at the same time.",
         "requirements": ["sFreeze", "sPoison", "sSlowing", "sWhiteout"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Peek Into The Abyss": {
         "ap_id": 2401,
@@ -2397,6 +2711,7 @@ achievement_requirements = {
         "details": "Win a battle with every battle trait at its maximum level.",
         "requirements": ["battleTraits:12"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Almost": {
         "ap_id": 2014,
@@ -2405,6 +2720,7 @@ achievement_requirements = {
         "details": "Kill a monster whose attack would otherwise destroy your orb (watchtower or wizard hunter blink shot).",
         "requirements": ["eWatchtower", "eWizardHunter"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "First Blood": {
         "ap_id": 2182,
@@ -2413,6 +2729,7 @@ achievement_requirements = {
         "details": "Kill 1 monster.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Enough Frozen Time Trickery": {
         "ap_id": 2157,
@@ -2420,6 +2737,7 @@ achievement_requirements = {
         "description": "Kill a shadow while time is frozen.",
         "requirements": ["eShadow"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Sharp Shot": {
         "ap_id": 2469,
@@ -2428,6 +2746,7 @@ achievement_requirements = {
         "details": "Kill a shadow using a gem that has hit at least 5,000 times.",
         "requirements": ["eShadow", "sBeam"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "The Messenger Must Die": {
         "ap_id": 2550,
@@ -2435,6 +2754,7 @@ achievement_requirements = {
         "description": "Kill a shadow.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "I Warned You...": {
         "ap_id": 2256,
@@ -2443,6 +2763,7 @@ achievement_requirements = {
         "details": "Kill a specter while it is carrying a gem.",
         "requirements": ["tRitual", "eSpecter"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Whacked": {
         "ap_id": 2616,
@@ -2450,6 +2771,7 @@ achievement_requirements = {
         "description": "Kill a specter with one hit.",
         "requirements": ["tRitual", "eSpecter"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Don't Touch it!": {
         "ap_id": 2129,
@@ -2458,6 +2780,7 @@ achievement_requirements = {
         "details": "Kill a specter (any method).",
         "requirements": ["eSpecter"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Final Touch": {
         "ap_id": 2177,
@@ -2466,6 +2789,7 @@ achievement_requirements = {
         "details": "Kill a spire using a wasp.",
         "requirements": ["tRitual", "eSpire"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Bye Bye Hideous": {
         "ap_id": 2075,
@@ -2474,6 +2798,7 @@ achievement_requirements = {
         "details": "Kill a spire (any method).",
         "requirements": ["eSpire"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Supply Line Cut": {
         "ap_id": 2531,
@@ -2482,6 +2807,7 @@ achievement_requirements = {
         "details": "Kill the swarm queen using a Barrage shell hit.",
         "requirements": ["sBarrage", "eSwarmQueen"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Popped Eggs": {
         "ap_id": 2406,
@@ -2489,6 +2815,7 @@ achievement_requirements = {
         "description": "Kill a swarm queen with a bolt.",
         "requirements": ["sBolt", "eSwarmQueen"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Hedgehog": {
         "ap_id": 2240,
@@ -2497,6 +2824,7 @@ achievement_requirements = {
         "details": "Kill a swarmling that has at least 100 armor.",
         "requirements": ["minSwarmlingArmor:100"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "That Was Your Last Move": {
         "ap_id": 2544,
@@ -2505,6 +2833,7 @@ achievement_requirements = {
         "details": "Kill a wizard hunter while it is attacking one of your buildings.",
         "requirements": ["eWizardHunter"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Well Trained for This": {
         "ap_id": 2615,
@@ -2513,6 +2842,7 @@ achievement_requirements = {
         "details": "Kill a wraith using a gem that has hit at least 1,000 times.",
         "requirements": ["tRitual", "eWraith", "sBeam"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Eat my Light": {
         "ap_id": 2146,
@@ -2520,6 +2850,7 @@ achievement_requirements = {
         "description": "Kill a wraith with a shrine strike.",
         "requirements": ["tRitual", "eShrine", "eWraith"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "One Hit is All it Takes": {
         "ap_id": 2387,
@@ -2528,6 +2859,7 @@ achievement_requirements = {
         "details": "Kill a wraith with a single hit.",
         "requirements": ["tRitual", "eWraith"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Glitter Cloud": {
         "ap_id": 2216,
@@ -2536,6 +2868,7 @@ achievement_requirements = {
         "details": "Kill an apparition using a gem bomb.",
         "requirements": ["tRitual", "eApparition:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "End of the Tunnel": {
         "ap_id": 2151,
@@ -2544,6 +2877,7 @@ achievement_requirements = {
         "details": "Kill an apparition with a shrine activation.",
         "requirements": ["tRitual", "eApparition", "eShrine"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Farewell": {
         "ap_id": 2171,
@@ -2551,6 +2885,7 @@ achievement_requirements = {
         "description": "Kill an apparition with one hit.",
         "requirements": ["tRitual","eApparition:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "I Saw Something": {
         "ap_id": 2255,
@@ -2559,6 +2894,7 @@ achievement_requirements = {
         "details": "Kill an apparition.",
         "requirements": ["tRitual","eApparition"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "They Are Still Here": {
         "ap_id": 2556,
@@ -2567,6 +2903,7 @@ achievement_requirements = {
         "details": "Kill 2 apparitions in one battle.",
         "requirements": ["tRitual","eApparition"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Popped": {
         "ap_id": 2405,
@@ -2574,6 +2911,7 @@ achievement_requirements = {
         "description": "Kill at least 30 gatekeeper fangs.",
         "requirements": ["Field_A4"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "No More Rounds": {
         "ap_id": 2368,
@@ -2581,6 +2919,7 @@ achievement_requirements = {
         "description": "Kill 60 banished monsters with shrines.",
         "requirements": ["eShrine", "minMonsters:120"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "You Had Your Chance": {
         "ap_id": 2629,
@@ -2589,6 +2928,7 @@ achievement_requirements = {
         "details": "Kill 260 banished monsters with shrines.",
         "requirements": ["eShrine", "minMonsters:520"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "And Don't Come Back": {
         "ap_id": 2022,
@@ -2597,6 +2937,7 @@ achievement_requirements = {
         "details": "Kill 460 banished monsters with shrines.",
         "requirements": ["eShrine", "minMonsters:920", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Scour You All": {
         "ap_id": 2461,
@@ -2605,6 +2946,7 @@ achievement_requirements = {
         "details": "Kill 660 banished monsters with shrines.",
         "requirements": ["eShrine", "minMonsters:1320"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Come Again": {
         "ap_id": 2097,
@@ -2612,6 +2954,7 @@ achievement_requirements = {
         "description": "Kill 190 banished monsters.",
         "requirements": ["minMonsters:380"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Fool Me Once": {
         "ap_id": 2187,
@@ -2619,6 +2962,7 @@ achievement_requirements = {
         "description": "Kill 390 banished monsters.",
         "requirements": ["minMonsters:780"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "The Price of Obsession": {
         "ap_id": 2552,
@@ -2627,6 +2971,7 @@ achievement_requirements = {
         "details": "Kill 590 banished monsters.",
         "requirements": ["minMonsters:1080"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Be Gone For Good": {
         "ap_id": 2038,
@@ -2635,6 +2980,7 @@ achievement_requirements = {
         "details": "Kill 790 banished monsters.",
         "requirements": ["minMonsters:1580"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "More Wounds": {
         "ap_id": 2350,
@@ -2642,6 +2988,7 @@ achievement_requirements = {
         "description": "Kill 125 bleeding monsters with barrage.",
         "requirements": ["sBarrage", "sBleeding", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Easy Kill": {
         "ap_id": 2145,
@@ -2650,6 +2997,7 @@ achievement_requirements = {
         "details": "Kill 120 bleeding monsters.",
         "requirements": ["sBleeding", "minMonsters:120"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Hurtified": {
         "ap_id": 2251,
@@ -2658,6 +3006,7 @@ achievement_requirements = {
         "details": "Kill 240 bleeding monsters.",
         "requirements": ["sBleeding", "minMonsters:240"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Bleed Out": {
         "ap_id": 2048,
@@ -2665,6 +3014,7 @@ achievement_requirements = {
         "description": "Kill 480 bleeding monsters.",
         "requirements": ["sBleeding", "minMonsters:480"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Final Cut": {
         "ap_id": 2176,
@@ -2672,6 +3022,7 @@ achievement_requirements = {
         "description": "Kill 960 bleeding monsters.",
         "requirements": ["sBleeding", "minMonsters:960"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Rage Control": {
         "ap_id": 2431,
@@ -2679,6 +3030,7 @@ achievement_requirements = {
         "description": "Kill 400 enraged swarmlings with barrage.",
         "requirements": ["sBarrage", "minSwarmlings:400"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Ice Stand": {
         "ap_id": 2261,
@@ -2687,6 +3039,7 @@ achievement_requirements = {
         "details": "Kill 5 frozen monsters that are carrying orblets.",
         "requirements": ["sFreeze", "sOrbOfPresence", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Absolute Zero": {
         "ap_id": 2003,
@@ -2695,6 +3048,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sFreeze", "minMonsters:556"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Snow Dust": {
         "ap_id": 2496,
@@ -2704,6 +3058,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sFreeze", "wSnow", "minMonsters:200"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Snow Blower": {
         "ap_id": 2495,
@@ -2711,6 +3066,7 @@ achievement_requirements = {
         "description": "Kill 20 frozen monsters with barrage.",
         "requirements": ["sBarrage", "sFreeze", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Icecracker": {
         "ap_id": 2263,
@@ -2719,6 +3075,7 @@ achievement_requirements = {
         "details": "Kill 90 frozen monsters using Barrage-enhanced gems.",
         "requirements": ["sBarrage", "sFreeze", "min_wl:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Violet Ray": {
         "ap_id": 2596,
@@ -2727,6 +3084,7 @@ achievement_requirements = {
         "details": "Kill 20 frozen monsters using Beam-enhanced gems.",
         "requirements": ["sBeam", "sFreeze", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "White Ray": {
         "ap_id": 2618,
@@ -2735,6 +3093,7 @@ achievement_requirements = {
         "details": "Kill 90 frozen monsters using Beam-enhanced gems.",
         "requirements": ["sBeam", "sFreeze", "min_wl:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Shattering": {
         "ap_id": 2474,
@@ -2742,6 +3101,7 @@ achievement_requirements = {
         "description": "Kill 90 frozen monsters with bolt.",
         "requirements": ["sBolt", "sFreeze", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Thin Ice": {
         "ap_id": 2558,
@@ -2750,6 +3110,7 @@ achievement_requirements = {
         "details": "Kill 20 frozen monsters with traps.",
         "requirements": ["sFreeze", "eTraps", "min_wl:20"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Crunchy Bites": {
         "ap_id": 2112,
@@ -2758,6 +3119,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sFreeze", "sWhiteout", "minSwarmlings:480"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Purged": {
         "ap_id": 2421,
@@ -2765,6 +3127,7 @@ achievement_requirements = {
         "description": "Kill 179 marked monsters.",
         "requirements": ["markedMonster:179"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Avenged": {
         "ap_id": 2028,
@@ -2773,6 +3136,7 @@ achievement_requirements = {
         "details": "Kill 15 monsters carrying orblets.",
         "requirements": ["sOrbOfPresence", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Wash Away": {
         "ap_id": 2598,
@@ -2781,6 +3145,7 @@ achievement_requirements = {
         "details": "Kill 110 monsters during rain weather.",
         "requirements": ["wRain", "min_wl:40"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Frozen Grave": {
         "ap_id": 2200,
@@ -2789,6 +3154,7 @@ achievement_requirements = {
         "details": "Kill 220 monsters during snow weather.",
         "requirements": ["wSnow", "min_wl:40"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Twice the Steepness": {
         "ap_id": 2584,
@@ -2796,6 +3162,7 @@ achievement_requirements = {
         "description": "Kill 170 monsters while there are at least 2 wraiths in the air.",
         "requirements": ["tRitual", "eWraith", "minMonsters:340"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Ok Flier": {
         "ap_id": 2383,
@@ -2804,6 +3171,7 @@ achievement_requirements = {
         "details": "Kill 340 monsters while at least 2 wraiths are alive on the field.",
         "requirements": ["tRitual", "eWraith", "minMonsters:680"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Hunt For Hard Targets": {
         "ap_id": 2250,
@@ -2812,6 +3180,7 @@ achievement_requirements = {
         "details": "Kill 680 monsters with at least 2 wraiths alive.",
         "requirements": ["tRitual", "eWraith", "minMonsters:1360"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "In a Blink of an Eye": {
         "ap_id": 2273,
@@ -2823,6 +3192,7 @@ achievement_requirements = {
             ["min_wl:30"]           
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Like a Necro": {
         "ap_id": 2309,
@@ -2831,6 +3201,7 @@ achievement_requirements = {
         "details": "Kill 25 monsters using frozen-corpse explosions.",
         "requirements": ["sFreeze"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "From Above": {
         "ap_id": 2196,
@@ -2838,6 +3209,7 @@ achievement_requirements = {
         "description": "Kill 40 monsters with gem bombs and wasps.",
         "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Thunderstruck": {
         "ap_id": 2563,
@@ -2845,6 +3217,7 @@ achievement_requirements = {
         "description": "Kill 120 monsters with gem bombs and wasps.",
         "requirements": ["minMonsters:120", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Wasp Storm": {
         "ap_id": 2600,
@@ -2852,6 +3225,7 @@ achievement_requirements = {
         "description": "Kill 360 monsters with gem bombs and wasps.",
         "requirements": ["minMonsters:360", "min_wl:60"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Ensnared": {
         "ap_id": 2160,
@@ -2863,6 +3237,7 @@ achievement_requirements = {
             ["sTraps"]
         ],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Rough Path": {
         "ap_id": 2452,
@@ -2873,6 +3248,7 @@ achievement_requirements = {
             ["sTraps", "minMonsters:60"],            
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Minefield": {
         "ap_id": 2345,
@@ -2881,6 +3257,7 @@ achievement_requirements = {
         "details": "Kill 300 monsters with traps in one battle.",
         "requirements":["sTraps", "minMonsters:300"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Couldn't Decide": {
         "ap_id": 2108,
@@ -2888,6 +3265,7 @@ achievement_requirements = {
         "description": "Kill 400 monsters with prismatic gem wasps.",
         "requirements": ["gemSkills:6", "minMonsters:400"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Rainbow Strike": {
         "ap_id": 2435,
@@ -2896,6 +3274,7 @@ achievement_requirements = {
         "details": "Kill 900 monsters with prismatic (6-component) wasps.",
         "requirements": ["gemSkills:6", "minMonsters:900"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Path of Splats": {
         "ap_id": 2400,
@@ -2904,6 +3283,7 @@ achievement_requirements = {
         "details": "Kill 400 monsters in one battle.",
         "requirements": ["minMonsters:400"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Acid Rain": {
         "ap_id": 2004,
@@ -2912,6 +3292,7 @@ achievement_requirements = {
         "details": "Kill 85 poisoned monsters during rain weather.",
         "requirements": ["sPoison", "wRain", "minMonsters:85"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Twice the Terror": {
         "ap_id": 2585,
@@ -2920,6 +3301,7 @@ achievement_requirements = {
         "details": "Kill 2 shadows in one battle.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Darkness Walk With Me": {
         "ap_id": 2114,
@@ -2928,6 +3310,7 @@ achievement_requirements = {
         "details": "Kill 3 shadows in one battle.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Not Chasing Shadows Anymore": {
         "ap_id": 2376,
@@ -2936,6 +3319,7 @@ achievement_requirements = {
         "details": "Kill 4 shadows in one battle.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "In Flames": {
         "ap_id": 2271,
@@ -2943,6 +3327,7 @@ achievement_requirements = {
         "description": "Kill 400 spawnlings.",
         "requirements": ["eTomb"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Gem Lust": {
         "ap_id": 2207,
@@ -2950,6 +3335,7 @@ achievement_requirements = {
         "description": "Kill 2 specters.",
         "requirements": ["tRitual", "eSpecter"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Dual Downfall": {
         "ap_id": 2139,
@@ -2957,6 +3343,7 @@ achievement_requirements = {
         "description": "Kill 2 spires.",
         "requirements": ["tRitual", "eSpire"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Pest Control": {
         "ap_id": 2402,
@@ -2965,6 +3352,7 @@ achievement_requirements = {
         "details": "Kill 333 swarmlings in one battle.",
         "requirements": ["minSwarmlings:333"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Diabolic Trophy": {
         "ap_id": 2123,
@@ -2972,6 +3360,7 @@ achievement_requirements = {
         "description": "Kill 666 swarmlings.",
         "requirements": ["minSwarmlings:666"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Swarmling Season": {
         "ap_id": 2532,
@@ -2980,6 +3369,7 @@ achievement_requirements = {
         "details": "Kill 999 swarmlings in one battle.",
         "requirements": ["minSwarmlings:999"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Swift Death": {
         "ap_id": 2533,
@@ -2987,6 +3377,7 @@ achievement_requirements = {
         "description": "Kill the gatekeeper with a bolt.",
         "requirements": ["sBolt", "eGatekeeper"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Enter The Gate": {
         "ap_id": 2161,
@@ -2994,6 +3385,7 @@ achievement_requirements = {
         "description": "Kill the gatekeeper.",
         "requirements": ["Field_A4"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Double Splash": {
         "ap_id": 2133,
@@ -3002,6 +3394,7 @@ achievement_requirements = {
         "details": "Kill 2 non-monsters with one gem bomb.",
         "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Can't Crawl Away": {
         "ap_id": 2077,
@@ -3009,6 +3402,7 @@ achievement_requirements = {
         "description": "Kill 30 whited out monsters with barrage.",
         "requirements": ["sBarrage", "sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Blind Hit": {
         "ap_id": 2050,
@@ -3016,6 +3410,7 @@ achievement_requirements = {
         "description": "Kill 30 whited out monsters with beam.",
         "requirements": ["sBeam", "sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Jinx Blast": {
         "ap_id": 2288,
@@ -3024,6 +3419,7 @@ achievement_requirements = {
         "details": "Kill 30 whited-out monsters using Bolt-enhanced gems.",
         "requirements": ["sBolt", "sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Spitting Darkness": {
         "ap_id": 2507,
@@ -3032,6 +3428,7 @@ achievement_requirements = {
         "details": "Leave a gatekeeper alive long enough that it launches 100 projectiles.",
         "requirements": ["eGatekeeper"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Almost Ruined": {
         "ap_id": 2016,
@@ -3040,6 +3437,7 @@ achievement_requirements = {
         "details": "Leave a monster nest at exactly 1 HP at the end of the battle.",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Let it Go": {
         "ap_id": 2306,
@@ -3051,6 +3449,7 @@ achievement_requirements = {
             ["eApparition:1"]
         ],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Tapped Essence": {
         "ap_id": 2537,
@@ -3058,6 +3457,7 @@ achievement_requirements = {
         "description": "Leech 1.500 mana from bleeding monsters.",
         "requirements": ["sBleeding", "sManaLeech", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Painful Leech": {
         "ap_id": 2397,
@@ -3065,6 +3465,7 @@ achievement_requirements = {
         "description": "Leech 3.200 mana from bleeding monsters.",
         "requirements": ["sBleeding", "sManaLeech", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Mana Cult": {
         "ap_id": 2322,
@@ -3073,6 +3474,7 @@ achievement_requirements = {
         "details": "Leech 6,500 mana from bleeding monsters.",
         "requirements": ["sBleeding", "sManaLeech", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Rotten Aura": {
         "ap_id": 2451,
@@ -3080,6 +3482,7 @@ achievement_requirements = {
         "description": "Leech 1.100 mana from poisoned monsters.",
         "requirements": ["sManaLeech", "sPoison", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Mana of the Dying": {
         "ap_id": 2333,
@@ -3087,6 +3490,7 @@ achievement_requirements = {
         "description": "Leech 2.300 mana from poisoned monsters.",
         "requirements": ["sManaLeech", "sPoison", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "To the Last Drop": {
         "ap_id": 2569,
@@ -3095,6 +3499,7 @@ achievement_requirements = {
         "details": "Leech 4,700 mana from poisoned monsters.",
         "requirements": ["sManaLeech", "sPoison", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Stolen Shine": {
         "ap_id": 2522,
@@ -3102,6 +3507,7 @@ achievement_requirements = {
         "description": "Leech 2.700 mana from whited out monsters.",
         "requirements": ["sManaLeech", "sWhiteout", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Weakened Wallet": {
         "ap_id": 2608,
@@ -3109,6 +3515,7 @@ achievement_requirements = {
         "description": "Leech 5.400 mana from whited out monsters.",
         "requirements": ["sManaLeech", "sWhiteout", "min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Just Give Me That Mana": {
         "ap_id": 2292,
@@ -3117,6 +3524,7 @@ achievement_requirements = {
         "details": "Leech 7,200 mana from whited-out monsters.",
         "requirements": ["sManaLeech", "sWhiteout", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Your Mana is Mine": {
         "ap_id": 2632,
@@ -3124,6 +3532,7 @@ achievement_requirements = {
         "description": "Leech 10.000 mana with gems.",
         "requirements": ["sManaLeech", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Red Orange": {
         "ap_id": 2438,
@@ -3132,6 +3541,7 @@ achievement_requirements = {
         "details": "Leech 700 mana from bleeding monsters.",
         "requirements": ["sBleeding", "sManaLeech", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Last Minute Mana": {
         "ap_id": 2303,
@@ -3139,6 +3549,7 @@ achievement_requirements = {
         "description": "Leech 500 mana from poisoned monsters.",
         "requirements": ["sManaLeech", "sPoison", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Mana Blinded": {
         "ap_id": 2321,
@@ -3147,6 +3558,7 @@ achievement_requirements = {
         "details": "Leech 900 mana from whited-out monsters.",
         "requirements": ["sManaLeech", "sWhiteout", "min_wl:40"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Return of Investment": {
         "ap_id": 2445,
@@ -3154,6 +3566,7 @@ achievement_requirements = {
         "description": "Leech 900 mana with a grade 1 gem.",
         "requirements": ["sManaLeech", "eTraps", 'sBeam'],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "The Horror": {
         "ap_id": 2547,
@@ -3162,6 +3575,7 @@ achievement_requirements = {
         "details": "Lose 3,333 mana to shadows.",
         "requirements": ["tRitual", "eShadow", "min_wl:50", "talismanRow:1"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Shattered Orb": {
         "ap_id": 2472,
@@ -3170,6 +3584,7 @@ achievement_requirements = {
         "details": "Lose a battle (orb destroyed).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "That Was Rude": {
         "ap_id": 2543,
@@ -3178,6 +3593,7 @@ achievement_requirements = {
         "details": "Have a watchtower steal back a gem that has hit at least 1,000 times.",
         "requirements": ["eWatchtower", "sBeam"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Mass Awakening": {
         "ap_id": 2336,
@@ -3186,6 +3602,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: lure 2,500 monsters from sleeping hives.",
         "requirements": ["eSleepingHive:1", "min_wl:50", "talismanRow:2"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Come Out": {
         "ap_id": 2098,
@@ -3193,6 +3610,7 @@ achievement_requirements = {
         "description": "Lure 20 swarmlings out of a sleeping hive.",
         "requirements": ["eSleepingHive:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Come Out, Come Out": {
         "ap_id": 2099,
@@ -3200,6 +3618,7 @@ achievement_requirements = {
         "description": "Lure 100 swarmlings out of a sleeping hive.",
         "requirements": ["eSleepingHive:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Morning March": {
         "ap_id": 2351,
@@ -3207,6 +3626,7 @@ achievement_requirements = {
         "description": "Lure 500 swarmlings out of a sleeping hive.",
         "requirements": ["eSleepingHive:1"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Let's Have a Look": {
         "ap_id": 2307,
@@ -3215,6 +3635,7 @@ achievement_requirements = {
         "details": "Open a drop holder.",
         "requirements": ["eDropHolder:1", "sBolt"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Tomb No Matter What": {
         "ap_id": 2570,
@@ -3223,6 +3644,7 @@ achievement_requirements = {
         "details": "Open a tomb while a spire is active on the field.",
         "requirements": ["eTomb:1", "eSpire", "tRitual"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Knowledge Seeker": {
         "ap_id": 2299,
@@ -3231,6 +3653,7 @@ achievement_requirements = {
         "details": "Open a wizard stash (built-in feature on stash maps).",
         "requirements": ["eWizardStash"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Hiding Spot": {
         "ap_id": 2242,
@@ -3238,6 +3661,7 @@ achievement_requirements = {
         "description": "Open 3 drop holders before wave 3.",
         "requirements": ["eDropHolder:3", "sBolt"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "No Stone Unturned": {
         "ap_id": 2371,
@@ -3245,6 +3669,7 @@ achievement_requirements = {
         "description": "Open 5 drop holders.",
         "requirements": ["eDropHolder:5", "sBolt"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "A Shrubbery!": {
         "ap_id": 2001,
@@ -3253,6 +3678,7 @@ achievement_requirements = {
         "details": "Place a shrub-style wall.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Inedible": {
         "ap_id": 2275,
@@ -3261,6 +3687,7 @@ achievement_requirements = {
         "details": "Poison 111 already-frozen monsters.",
         "requirements": ["sFreeze", "sPoison"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Slow Creep": {
         "ap_id": 2489,
@@ -3268,6 +3695,7 @@ achievement_requirements = {
         "description": "Poison 130 whited out monsters.",
         "requirements": ["sPoison", "sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Mastery": {
         "ap_id": 2337,
@@ -3276,6 +3704,7 @@ achievement_requirements = {
         "details": "Raise any single skill to level 70.",
         "requirements": ["skills:1", "min_wl:100"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Fierce Encounter": {
         "ap_id": 2173,
@@ -3284,6 +3713,7 @@ achievement_requirements = {
         "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers).",
         "requirements": ["min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Close Quarter": {
         "ap_id": 2095,
@@ -3291,6 +3721,7 @@ achievement_requirements = {
         "description": "Reach -12% decreased banishment cost with your orb.",
         "requirements": ["sAmplifiers", "sOrbOfPresence", "min_wl:20"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Desperate Clash": {
         "ap_id": 2122,
@@ -3298,6 +3729,7 @@ achievement_requirements = {
         "description": "Reach -16% decreased banishment cost with your orb.",
         "requirements": ["sAmplifiers", "sOrbOfPresence", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Insane Investment": {
         "ap_id": 2276,
@@ -3306,6 +3738,7 @@ achievement_requirements = {
         "details": "Reach -20% banishment cost on the orb.",
         "requirements": ["sAmplifiers", "sOrbOfPresence", "min_wl:80"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Shatter Them All": {
         "ap_id": 2471,
@@ -3317,6 +3750,7 @@ achievement_requirements = {
             ["tDarkMasonry"],
         ],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Gemhancement": {
         "ap_id": 2208,
@@ -3324,6 +3758,7 @@ achievement_requirements = {
         "description": "Reach 1.000 enhancement spells cast through all the battles.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Enhance Like No Tomorrow": {
         "ap_id": 2154,
@@ -3332,6 +3767,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 2,500 enhancement spells.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Charge Fire Repeat": {
         "ap_id": 2087,
@@ -3340,6 +3776,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 5,000 enhancement spells.",
         "requirements": ["enhancementSpells:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Angry Wasps": {
         "ap_id": 2023,
@@ -3348,6 +3785,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 1,000 wasp kills.",
         "requirements": ["fieldToken:15"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Stingy Cloud": {
         "ap_id": 2518,
@@ -3356,6 +3794,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 5,000 wasp kills.",
         "requirements": ["fieldToken:25"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Drone Warfare": {
         "ap_id": 2135,
@@ -3364,6 +3803,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 20,000 wasp kills.",
         "requirements": ["fieldToken:20"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Tiny but Deadly": {
         "ap_id": 2568,
@@ -3372,6 +3812,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 50,000 wasp kills.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Resourceful": {
         "ap_id": 2443,
@@ -3379,6 +3820,7 @@ achievement_requirements = {
         "description": "Reach 5.000 mana harvested from shards through all the battles.",
         "requirements": ["eManaShard"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Mana Tap": {
         "ap_id": 2329,
@@ -3387,6 +3829,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: harvest 10,000 mana from shards.",
         "requirements": ["eManaShard:1"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Shard Siphon": {
         "ap_id": 2467,
@@ -3395,6 +3838,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: harvest 20,000 mana from shards.",
         "requirements": ["eManaShard"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "The Mana Reaper": {
         "ap_id": 2549,
@@ -3403,6 +3847,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: harvest 100,000 mana from shards.",
         "requirements": ["eManaShard"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Eggs Royale": {
         "ap_id": 2149,
@@ -3411,6 +3856,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: crack 1,000 eggs.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Blood on my Hands": {
         "ap_id": 2054,
@@ -3418,6 +3864,7 @@ achievement_requirements = {
         "description": "Reach 20.000 monsters killed through all the battles.",
         "requirements": ["min_wl:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Crimson Journal": {
         "ap_id": 2109,
@@ -3426,6 +3873,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 100,000 monster kills.",
         "requirements": ["min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "The Killing Will Never Stop": {
         "ap_id": 2548,
@@ -3434,6 +3882,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 200,000 monster kills.",
         "requirements": ["min_wl:100"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Necrotrophic": {
         "ap_id": 2358,
@@ -3442,6 +3891,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 1,000 kills with poison.",
         "requirements": ["sPoison", "sTraps", "min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Deadly Curse": {
         "ap_id": 2115,
@@ -3450,6 +3900,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 5,000 kills with poison.",
         "requirements": ["sPoison", "sTraps", "min_wl:35"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Nothing Prevails": {
         "ap_id": 2380,
@@ -3458,6 +3909,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 25,000 kills with poison.",
         "requirements": ["sPoison", "sTraps", "min_wl:40"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Deathball": {
         "ap_id": 2117,
@@ -3469,6 +3921,7 @@ achievement_requirements = {
             ["min_wl:10", "ePylons:1"],
         ],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Bouncy Zap": {
         "ap_id": 2063,
@@ -3480,6 +3933,7 @@ achievement_requirements = {
             ["min_wl:20", "ePylons:1"],
         ],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Pylons of Destruction": {
         "ap_id": 2426,
@@ -3491,6 +3945,7 @@ achievement_requirements = {
             ["min_wl:50", "ePylons:1"],
         ],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Blastwave": {
         "ap_id": 2047,
@@ -3498,6 +3953,7 @@ achievement_requirements = {
         "description": "Reach 1.000 shrine kills through all the battles.",
         "requirements": ["eShrine", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Hard Reset": {
         "ap_id": 2232,
@@ -3506,6 +3962,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 5,000 monsters with shrines.",
         "requirements": ["eShrine", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Don't Look at the Light": {
         "ap_id": 2128,
@@ -3514,6 +3971,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 10,000 monsters with shrines.",
         "requirements": ["eShrine", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Shrinemaster": {
         "ap_id": 2482,
@@ -3522,6 +3980,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 20,000 monsters with shrines.",
         "requirements": ["eShrine", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Multifreeze": {
         "ap_id": 2352,
@@ -3533,6 +3992,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Frozen Crowd": {
         "ap_id": 2199,
@@ -3544,6 +4004,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Drop the Ice": {
         "ap_id": 2136,
@@ -3556,6 +4017,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Ice for Everyone": {
         "ap_id": 2262,
@@ -3568,6 +4030,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Stormbringer": {
         "ap_id": 2525,
@@ -3579,6 +4042,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Ice Mage": {
         "ap_id": 2259,
@@ -3591,6 +4055,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Frostborn": {
         "ap_id": 2197,
@@ -3603,6 +4068,7 @@ achievement_requirements = {
             ["strikeSpells:3", "min_wl:30"]
         ],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Brickery": {
         "ap_id": 2065,
@@ -3611,6 +4077,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: build 1,000 structures.",
         "requirements": ["min_wl:50"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Megalithic": {
         "ap_id": 2340,
@@ -3619,6 +4086,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: build 2,000 structures.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Riding the Waves": {
         "ap_id": 2446,
@@ -3627,6 +4095,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: beat 1,000 waves.",
         "requirements": ["min_wl:50"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Waves for Breakfast": {
         "ap_id": 2605,
@@ -3635,6 +4104,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: beat 2,000 waves.",
         "requirements": ["min_wl:50"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Wave Smasher": {
         "ap_id": 2604,
@@ -3643,6 +4113,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: beat 10,000 waves.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "So Early": {
         "ap_id": 2500,
@@ -3651,6 +4122,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 1,000 waves called early.",
         "requirements": ["min_wl:50"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Getting Waves Done": {
         "ap_id": 2214,
@@ -3659,6 +4131,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 2,000 waves called early.",
         "requirements": ["min_wl:50"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "No Time to Waste": {
         "ap_id": 2373,
@@ -3667,6 +4140,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 5,000 waves called early.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "They Are Millions": {
         "ap_id": 2555,
@@ -3675,6 +4149,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 1,000,000 monster kills.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Lots of Scratches": {
         "ap_id": 2319,
@@ -3682,6 +4157,7 @@ achievement_requirements = {
         "description": "Reach a kill chain of 300.",
         "requirements": ["minMonsters:300", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Carnage": {
         "ap_id": 2081,
@@ -3689,6 +4165,7 @@ achievement_requirements = {
         "description": "Reach a kill chain of 600.",
         "requirements": ["minMonsters:600", "min_wl:30"],
         "required_effort": "Major",
+        "field_need": "beat",
     },
     "Can't Stop": {
         "ap_id": 2078,
@@ -3697,6 +4174,7 @@ achievement_requirements = {
         "details": "Reach a kill chain of 900 in one battle.",
         "requirements": ["minMonsters:900", "min_wl:30"],
         "required_effort": "Extreme",
+        "field_need": "beat",
     },
     "Eagle Eye": {
         "ap_id": 2141,
@@ -3705,6 +4183,7 @@ achievement_requirements = {
         "details": "Have a gem reach 18+ range while inside an amplifier.",
         "requirements": ["sAmplifiers", "min_wl:50", "talismanRow:2"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Just Started": {
         "ap_id": 2293,
@@ -3713,6 +4192,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: win 10 battles.",
         "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "I Have Experience": {
         "ap_id": 2253,
@@ -3720,6 +4200,7 @@ achievement_requirements = {
         "description": "Reach 50 battles won.",
         "requirements": ["min_wl:30"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Forged in Battle": {
         "ap_id": 2189,
@@ -3727,6 +4208,7 @@ achievement_requirements = {
         "description": "Reach 200 battles won.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Well Earned": {
         "ap_id": 2612,
@@ -3735,6 +4217,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: win 500 battles.",
         "requirements": ["min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Unsupportive": {
         "ap_id": 2591,
@@ -3742,6 +4225,7 @@ achievement_requirements = {
         "description": "Reach 100 beacons destroyed through all the battles.",
         "requirements": ["tDarkMasonry", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "No Beacon Zone": {
         "ap_id": 2365,
@@ -3750,6 +4234,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: destroy 200 beacons.",
         "requirements": ["tDarkMasonry", "min_wl:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Beacons Be Gone": {
         "ap_id": 2040,
@@ -3758,6 +4243,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: destroy 500 beacons.",
         "requirements": ["tDarkMasonry", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Adept Enhancer": {
         "ap_id": 2008,
@@ -3766,6 +4252,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 500 enhancement spells.",
         "requirements": ["enhancementSpells:1", "min_wl:20"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Filled 5 Times": {
         "ap_id": 2175,
@@ -3774,6 +4261,7 @@ achievement_requirements = {
         "details": "Reach mana pool level 5.",
         "requirements": ["min_wl:30"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Flows Through my Veins": {
         "ap_id": 2185,
@@ -3781,6 +4269,7 @@ achievement_requirements = {
         "description": "Reach mana pool level 10.",
         "requirements": ["min_wl:40", "talismanRow:1", "talismanColumn:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Power Overwhelming": {
         "ap_id": 2411,
@@ -3788,6 +4277,7 @@ achievement_requirements = {
         "description": "Reach mana pool level 15.",
         "requirements": ["min_wl:50", "talismanRow:2", "talismanColumn:2"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Mana Singularity": {
         "ap_id": 2328,
@@ -3796,6 +4286,7 @@ achievement_requirements = {
         "details": "Reach mana pool level 20.",
         "requirements": ["min_wl:60", "talismanRow:3", "talismanColumn:3"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Century Egg": {
         "ap_id": 2085,
@@ -3803,6 +4294,7 @@ achievement_requirements = {
         "description": "Reach 100 monster eggs cracked through all the battles.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Omelette": {
         "ap_id": 2384,
@@ -3811,6 +4303,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: crack 200 eggs.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Frittata": {
         "ap_id": 2195,
@@ -3819,6 +4312,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: crack 500 eggs.",
         "requirements": ["eSwarmQueen"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Smoke in the Sky": {
         "ap_id": 2493,
@@ -3826,6 +4320,7 @@ achievement_requirements = {
         "description": "Reach 20 non-monsters killed through all the battles.",
         "requirements": ["tRitual", "eNonMonsters:1"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "High Targets": {
         "ap_id": 2244,
@@ -3834,6 +4329,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 100 non-monster kills.",
         "requirements": ["tRitual", "eNonMonsters:1", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Wings and Tentacles": {
         "ap_id": 2623,
@@ -3842,6 +4338,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 200 non-monster kills.",
         "requirements": ["tRitual", "eNonMonsters:1", "min_wl:30"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Paranormal Paragon": {
         "ap_id": 2398,
@@ -3850,6 +4347,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 500 non-monster kills.",
         "requirements": ["tRitual", "eNonMonsters:1", "min_wl:50"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Long Lasting": {
         "ap_id": 2314,
@@ -3857,6 +4355,7 @@ achievement_requirements = {
         "description": "Reach 500 poison kills through all the battles.",
         "requirements": ["sPoison"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Charged for the Kill": {
         "ap_id": 2088,
@@ -3864,6 +4363,7 @@ achievement_requirements = {
         "description": "Reach 200 pylon kills through all the battles.",
         "requirements": ["sPylons"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Icy Fingers": {
         "ap_id": 2265,
@@ -3871,6 +4371,7 @@ achievement_requirements = {
         "description": "Reach 500 strike spells cast through all the battles.",
         "requirements": ["strikeSpells:1"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Build Along": {
         "ap_id": 2071,
@@ -3879,6 +4380,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: build 200 structures.",
         "requirements": ["min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Ambitious Builder": {
         "ap_id": 2018,
@@ -3887,6 +4389,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: build 500 structures.",
         "requirements": ["min_wl:30"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Wavy": {
         "ap_id": 2606,
@@ -3894,6 +4397,7 @@ achievement_requirements = {
         "description": "Reach 500 waves beaten through all the battles.",
         "requirements": ["min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "beat",
     },
     "Early Bird": {
         "ap_id": 2142,
@@ -3901,6 +4405,7 @@ achievement_requirements = {
         "description": "Reach 500 waves started early through all the battles.",
         "requirements": ["min_wl:10"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "White Wand": {
         "ap_id": 2620,
@@ -3909,6 +4414,7 @@ achievement_requirements = {
         "details": "Reach wizard level 10.",
         "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Yellow Wand": {
         "ap_id": 2627,
@@ -3917,6 +4423,7 @@ achievement_requirements = {
         "details": "Reach wizard level 20.",
         "requirements": ["min_wl:20"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Orange Wand": {
         "ap_id": 2390,
@@ -3925,6 +4432,7 @@ achievement_requirements = {
         "details": "Reach wizard level 40.",
         "requirements": ["min_wl:40"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Green Wand": {
         "ap_id": 2225,
@@ -3932,6 +4440,7 @@ achievement_requirements = {
         "description": "Reach wizard level 60.",
         "requirements": ["min_wl:60"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Blue Wand": {
         "ap_id": 2058,
@@ -3940,6 +4449,7 @@ achievement_requirements = {
         "details": "Reach wizard level 100.",
         "requirements": ["min_wl:100"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Mana Trader": {
         "ap_id": 2330,
@@ -3947,6 +4457,7 @@ achievement_requirements = {
         "description": "Salvage 8.000 mana from gems.",
         "requirements": ["min_wl:40", "talismanRow:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Mana Salvation": {
         "ap_id": 2327,
@@ -3955,6 +4466,7 @@ achievement_requirements = {
         "details": "Salvage mana by destroying a gem.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "There it is!": {
         "ap_id": 2553,
@@ -3963,6 +4475,7 @@ achievement_requirements = {
         "details": "Click on (select) a building.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "That one!": {
         "ap_id": 2545,
@@ -3971,6 +4484,7 @@ achievement_requirements = {
         "details": "Click on (select) a monster.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "High Stakes": {
         "ap_id": 2243,
@@ -3978,6 +4492,7 @@ achievement_requirements = {
         "description": "Set a battle trait to level 12.",
         "requirements": ["battleTraits:1"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Stronger Than Before": {
         "ap_id": 2528,
@@ -3986,6 +4501,7 @@ achievement_requirements = {
         "details": "Win with tCorruptedBanishment at level 12.",
         "requirements": ["tCorruptedBanishment"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Under Pressure": {
         "ap_id": 2587,
@@ -3993,6 +4509,7 @@ achievement_requirements = {
         "description": "Shoot down 340 shadow projectiles.",
         "requirements": ["tRitual", "eShadow"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Wasp Defense": {
         "ap_id": 2599,
@@ -4000,6 +4517,7 @@ achievement_requirements = {
         "description": "Smash 3 jars of wasps before wave 3.",
         "requirements": ["eJarOfWasps:3"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Amplification": {
         "ap_id": 2019,
@@ -4008,6 +4526,7 @@ achievement_requirements = {
         "details": "Spend 18,000 mana on amplifiers in one battle.",
         "requirements": ["sAmplifiers", "min_wl:40", "talismanRow:2"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "It Hurts!": {
         "ap_id": 2282,
@@ -4015,6 +4534,7 @@ achievement_requirements = {
         "description": "Spend 9.000 mana on banishment.",
         "requirements": ["min_wl:40", "talismanRow:1"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Don't Break it!": {
         "ap_id": 2127,
@@ -4023,6 +4543,7 @@ achievement_requirements = {
         "details": "Spend a cumulative total of 90,000 mana on banishments.",
         "requirements": ["min_wl:40", "talismanRow:3"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "Ouch!": {
         "ap_id": 2391,
@@ -4031,6 +4552,7 @@ achievement_requirements = {
         "details": "Spend a cumulative total of 900 mana on banishments in one battle.",
         "requirements": ["min_wl:10"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Am I a Joke to You?": {
         "ap_id": 2017,
@@ -4039,6 +4561,7 @@ achievement_requirements = {
         "details": "Call an enraged wave early while a Wizard Hunter is on the battlefield.",
         "requirements": ["eWizardHunter", "tRitual"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Armored Orb": {
         "ap_id": 2025,
@@ -4047,6 +4570,7 @@ achievement_requirements = {
         "details": "Drop a gem onto the orb of presence to strengthen it.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Added Protection": {
         "ap_id": 2005,
@@ -4055,6 +4579,7 @@ achievement_requirements = {
         "details": "Place a gem in an amplifier adjacent to the orb.",
         "requirements": ["sAmplifiers"],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Safe and Secure": {
         "ap_id": 2458,
@@ -4063,6 +4588,7 @@ achievement_requirements = {
         "details": "Have 7 gems in amplifiers connected to the orb.",
         "requirements": ["sAmplifiers", "min_wl:40", "talismanRow:2"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Near Death": {
         "ap_id": 2357,
@@ -4070,6 +4596,7 @@ achievement_requirements = {
         "description": "Suffer mana loss from a shadow projectile when under 200 mana.",
         "requirements": ["eShadow"],
         "required_effort": "Extreme",
+        "field_need": "enter",
     },
     "More Than Enough": {
         "ap_id": 2349,
@@ -4078,6 +4605,7 @@ achievement_requirements = {
         "details": "Summon 1,000 monsters by enraging waves.",
         "requirements": ["min_wl:40"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Wave Pecking": {
         "ap_id": 2603,
@@ -4085,6 +4613,7 @@ achievement_requirements = {
         "description": "Summon 20 monsters by enraging waves.",
         "requirements": ["minWave:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Uninvited": {
         "ap_id": 2590,
@@ -4093,6 +4622,7 @@ achievement_requirements = {
         "details": "Summon 100 monsters by enraging waves.",
         "requirements": ["minWave:30", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "The Gathering": {
         "ap_id": 2546,
@@ -4101,6 +4631,7 @@ achievement_requirements = {
         "details": "Summon 500 monsters by enraging waves.",
         "requirements": ["minWave:100"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Miniblasts": {
         "ap_id": 2346,
@@ -4109,6 +4640,7 @@ achievement_requirements = {
         "details": "Tear 1,250 armor with wasp stings.",
         "requirements": ["sArmorTearing", "min_wl:40"],
         "required_effort": "Minor",
+        "field_need": "engage",
     },
     "Punching Deep": {
         "ap_id": 2417,
@@ -4117,6 +4649,7 @@ achievement_requirements = {
         "details": "Tear 2,500 armor with wasp stings.",
         "requirements": ["sArmorTearing", "min_wl:50"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Corrosive Stings": {
         "ap_id": 2107,
@@ -4124,6 +4657,7 @@ achievement_requirements = {
         "description": "Tear a total of 5.000 armor with wasp stings.",
         "requirements": ["sArmorTearing", "min_wl:60"],
         "required_effort": "Major",
+        "field_need": "engage",
     },
     "Melting Armor": {
         "ap_id": 2341,
@@ -4131,6 +4665,7 @@ achievement_requirements = {
         "description": "Tear a total of 10.000 armor with wasp stings.",
         "requirements": ["sArmorTearing", "min_wl:70"],
         "required_effort": "Extreme",
+        "field_need": "engage",
     },
     "Boom": {
         "ap_id": 2062,
@@ -4139,6 +4674,7 @@ achievement_requirements = {
         "details": "Throw 1 gem bomb.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Bang": {
         "ap_id": 2030,
@@ -4148,6 +4684,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Ages Old Memories": {
         "ap_id": 2011,
@@ -4156,6 +4693,7 @@ achievement_requirements = {
         "details": "Unlock a wizard tower.",
         "requirements": ["Field_L5"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Need More Rage": {
         "ap_id": 2360,
@@ -4164,6 +4702,7 @@ achievement_requirements = {
         "details": "Upgrade a gem while it sits in an enraging socket.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
     },
     "Juggler": {
         "ap_id": 2289,
@@ -4172,6 +4711,7 @@ achievement_requirements = {
         "details": "Use the Demolition spell 7 times in a single battle.",
         "requirements": ["sDemolition"],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Even if You Thaw": {
         "ap_id": 2164,
@@ -4179,6 +4719,7 @@ achievement_requirements = {
         "description": "Whiteout 120 frozen monsters.",
         "requirements": ["sFreeze", "sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Ablatio Retinae": {
         "ap_id": 2002,
@@ -4187,6 +4728,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": ["sWhiteout", "skillPoints:50"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Shavings All Around": {
         "ap_id": 2475,
@@ -4194,6 +4736,7 @@ achievement_requirements = {
         "description": "Win a battle using only armor tearing gems.",
         "requirements": ["sArmorTearing"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Blood Magic": {
         "ap_id": 2053,
@@ -4201,6 +4744,7 @@ achievement_requirements = {
         "description": "Win a battle using only bleeding gems.",
         "requirements": ["sBleeding"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Targeting Weak Points": {
         "ap_id": 2538,
@@ -4209,6 +4753,7 @@ achievement_requirements = {
         "details": "Win a battle using only critical-hit gems.",
         "requirements": ["sCriticalHit"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Mana Magnet": {
         "ap_id": 2326,
@@ -4217,6 +4762,7 @@ achievement_requirements = {
         "details": "Win a battle using only mana-leech gems.",
         "requirements": ["sManaLeech"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Nox Mist": {
         "ap_id": 2381,
@@ -4225,6 +4771,7 @@ achievement_requirements = {
         "details": "Win a battle using only poison gems.",
         "requirements": ["sPoison"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "Long Crawl": {
         "ap_id": 2313,
@@ -4232,6 +4779,7 @@ achievement_requirements = {
         "description": "Win a battle using only slowing gems.",
         "requirements": ["sSlowing"],
         "required_effort": "Trivial",
+        "field_need": "beat",
     },
     "You're Safe With Me": {
         "ap_id": 2631,
@@ -4240,6 +4788,7 @@ achievement_requirements = {
         "details": "Win a battle with at least 10 orblets remaining unharvested.",
         "requirements": ["sOrbOfPresence", "min_wl:80"],
         "required_effort": "Major",
+        "field_need": "enter",
     },
     "Mana is All I Need": {
         "ap_id": 2332,
@@ -4248,6 +4797,7 @@ achievement_requirements = {
         "details": "Win a battle with 0 skill points spent AND at least one battle trait at maximum level.",
         "requirements": ["battleTraits:1", "min_wl:20"],
         "required_effort": "Minor",
+        "field_need": "enter",
     },
     "Clean Orb": {
         "ap_id": 2092,
@@ -4256,6 +4806,7 @@ achievement_requirements = {
         "details": "Win a battle without any monster touching the orb of presence.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
     },
     "Heavily Modified": {
         "ap_id": 2237,
@@ -4264,6 +4815,7 @@ achievement_requirements = {
         "details": "Activate every Hidden Mod toggle in one battle.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Uraj and Khalis": {
@@ -4272,6 +4824,7 @@ achievement_requirements = {
         "description": "Activate the lanterns",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Half Full": {
@@ -4280,6 +4833,7 @@ achievement_requirements = {
         "description": "Add 32 talisman fragments to your shape collection.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Deckard Would Be Proud": {
@@ -4289,6 +4843,7 @@ achievement_requirements = {
         "details": "Reference: Diablo. Build a 6-component prismatic talisman (random property RNG).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True, #todo: Can we make this happen with 25 static talismans?
     },
     "I Never Asked For This": {
@@ -4298,6 +4853,7 @@ achievement_requirements = {
         "details": "Reference: Deus Ex. Win a battle with all skill points spent (no unspent points).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Trapland": {
@@ -4307,6 +4863,7 @@ achievement_requirements = {
         "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
         "requirements": ["eTraps:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Basic Gem Tactics": {
@@ -4315,6 +4872,7 @@ achievement_requirements = {
         "description": "Beat 120 waves and don't use any gem enhancement spells.",
         "requirements": ["minWave:120", "mEndurance"],
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Clear Sky": {
@@ -4324,6 +4882,7 @@ achievement_requirements = {
         "details": "Beat 120 waves without casting any strike spells.",
         "requirements": ["minWave:120", "mEndurance"],
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Purist": {
@@ -4333,6 +4892,7 @@ achievement_requirements = {
         "details": "Beat 120 waves without casting any strike OR enhancement spells.",
         "requirements": ["minWave:120", "mEndurance"],
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Enhancing Challenge": {
@@ -4342,6 +4902,7 @@ achievement_requirements = {
         "details": "Beat 200 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
         "requirements": ["tSwarmlingDomination", "tGiantDomination", "minWave:200", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Worst of Both Sizes": {
@@ -4351,6 +4912,7 @@ achievement_requirements = {
         "details": "Beat 300 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
         "requirements": ["tSwarmlingDomination", "tGiantDomination", "minWave:300", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Feels Like Endurance": {
@@ -4359,6 +4921,7 @@ achievement_requirements = {
         "description": "Beat 120 waves.",
         "requirements": ["minWave:120", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Long Run": {
@@ -4367,6 +4930,7 @@ achievement_requirements = {
         "description": "Beat 360 waves.",
         "requirements": ["minWave:360", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Ful Ir": {
@@ -4376,6 +4940,7 @@ achievement_requirements = {
         "details": "Reference: Ultima 'fireball' spell. Throw 1000 gem bombs across all battles.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Tomb Stomping": {
@@ -4385,6 +4950,7 @@ achievement_requirements = {
         "details": "Break 4 tombs in one battle.",        
         "requirements": ["eTomb:4"],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Renzokuken": {
@@ -4394,6 +4960,7 @@ achievement_requirements = {
         "details": "Reference: FF8 Squall limit break. Throw N gem bombs while time is frozen by Whiteout.",
         "requirements": ["sFreeze"],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "There's No Time": {
@@ -4403,6 +4970,7 @@ achievement_requirements = {
         "details": "Call 140 waves early in one battle.",
         "requirements": ["minWave:140", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Mighty": {
@@ -4411,6 +4979,7 @@ achievement_requirements = {
         "description": "Create a gem with a raw minimum damage of 3.000 or higher.",
         "requirements": ["gemSkills:1"],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Legendary": {
@@ -4420,6 +4989,7 @@ achievement_requirements = {
         "details": "Create a gem with at least 30,000 minimum raw damage.",
         "requirements": ["gemSkills:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Mythic Ancient Legendary": {
@@ -4429,6 +4999,7 @@ achievement_requirements = {
         "details": "Create a gem with at least 300,000 minimum raw damage.",
         "requirements": ["gemSkills:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Powerful": {
@@ -4438,6 +5009,7 @@ achievement_requirements = {
         "details": "Create a gem with at least 300 minimum raw damage.",
         "requirements": ["gemSkills:1"],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Quick Circle": {
@@ -4447,6 +5019,7 @@ achievement_requirements = {
         "details": "Create a grade-12 gem before wave 12 starts.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Super Gem": {
@@ -4455,6 +5028,7 @@ achievement_requirements = {
         "description": "Create a grade 3 gem with 300 effective max damage.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Adept Grade": {
@@ -4464,6 +5038,7 @@ achievement_requirements = {
         "details": "Create a grade-8 gem (gem grade is RNG-influenced; flagged untrackable).",
         "requirements": ["minWave:60", "sFusion", "talismanRow:2"],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Round Cut": {
@@ -4472,6 +5047,7 @@ achievement_requirements = {
         "description": "Create a grade 12 gem.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Round Cut Plus": {
@@ -4481,6 +5057,7 @@ achievement_requirements = {
         "details": "Create a grade-16 gem.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "The Peeler": {
@@ -4490,6 +5067,7 @@ achievement_requirements = {
         "details": "Create a grade-12 pure armor-tearing gem (untrackable).",
         "requirements": ["sArmorTearing"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Punctured Texture": {
@@ -4499,6 +5077,7 @@ achievement_requirements = {
         "details": "Land 5,000 wasp stings on enemy buildings (cross-battle).",
         "requirements": ["eMonsterNest:1"],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Black Blood": {
@@ -4507,6 +5086,7 @@ achievement_requirements = {
         "description": "Deal 5.000 poison damage to a shadow.",
         "requirements": ["sPoison", "eShadow"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Itchy Sphere": {
@@ -4516,6 +5096,7 @@ achievement_requirements = {
         "details": "Deliver 3,600 orb banishments in a SINGLE battle (game checks per-battle this.stats.banishmentsByOrb); exceeds any Journey field's monster count, so Endurance-only.",
         "requirements": ["minMonsters:3600", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Every Hit Counts": {
@@ -4525,6 +5106,7 @@ achievement_requirements = {
         "details": "Score 3,750 one-hit kills in a SINGLE battle (game checks per-battle this.stats.oneHitKills); exceeds any Journey field's monster count, so Endurance-only.",
         "requirements": ["minMonsters:3750", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Still No Match": {
@@ -4533,6 +5115,7 @@ achievement_requirements = {
         "description": "Destroy an omnibeacon.",
         "requirements": [],  # ["eOmniBeacon:1"] removed - omnibeacon element not represented yet (requires mods)
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Not So Omni Anymore": {
@@ -4541,6 +5124,7 @@ achievement_requirements = {
         "description": "Destroy 10 omnibeacons.",
         "requirements": ["tDarkMasonry"], #omni beacon requires mods
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "It's a Trap": {
@@ -4550,6 +5134,7 @@ achievement_requirements = {
         "details": "Survive 120 consecutive waves without any monster reaching the orb.",
         "requirements": ["minWave:120", "mEndurance"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "You Shall Not Pass": {
@@ -4559,6 +5144,7 @@ achievement_requirements = {
         "details": "Survive 240 consecutive waves without any monster reaching the orb.",
         "requirements": ["minWave:240", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Enraged is the New Norm": {
@@ -4568,6 +5154,7 @@ achievement_requirements = {
         "details": "Manually enrage 240 waves cumulatively.",
         "requirements": ["minWave:240", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Green Eyed Ninja": {
@@ -4577,6 +5164,7 @@ achievement_requirements = {
         "details": "Reference: 'Entering: The Wilderness'. Hidden Mod-only achievement.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Boatload of Cores": {
@@ -4586,6 +5174,7 @@ achievement_requirements = {
         "details": "Find 540 shadow cores in one battle.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Frag Rain": {
@@ -4595,6 +5184,7 @@ achievement_requirements = {
         "details": "Find 5 talisman fragments (random drops; varies per seed).",
         "requirements": ["minWave:245", "mEndurance"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Takers": {
@@ -4604,6 +5194,7 @@ achievement_requirements = {
         "details": "Gain 1,600 mana from drops in one battle.",
         "requirements": ["eDropHolder:19", "sBolt"],
         "required_effort": "Major",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Snatchers": {
@@ -4613,6 +5204,7 @@ achievement_requirements = {
         "details": "Gain 3,200 mana from drops in one battle.",
         "requirements": ["eDropHolder:19", "sBolt"],
         "required_effort": "Extreme",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Frozen Over": {
@@ -4622,6 +5214,7 @@ achievement_requirements = {
         "details": "Gain 4,500 xp from Freeze crowd hits in one battle.",
         "requirements": ["sFreeze"],
         "required_effort": "Extreme",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Bloodmaster": {
@@ -4631,6 +5224,7 @@ achievement_requirements = {
         "details": "Gain 1,200 xp from kill chains in one battle.",
         "requirements": ["minMonsters:1800", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Chainsaw": {
@@ -4639,6 +5233,7 @@ achievement_requirements = {
         "description": "Gain 3.200 xp with kill chains.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Killed So Many": {
@@ -4648,6 +5243,7 @@ achievement_requirements = {
         "details": "Gain 7,200 kill-chain XP in a SINGLE battle (game checks per-battle this.stats.xpFromLongKillChains); needs the monster density of an Endurance run, so Endurance-only.",
         "requirements": ["minMonsters:13000", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Bright Weakening": {
@@ -4656,6 +5252,7 @@ achievement_requirements = {
         "description": "Gain 1.200 xp with Whiteout spell crowd hits.",
         "requirements": ["sWhiteout"],
         "required_effort": "Minor",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Behold Aurora": {
@@ -4665,6 +5262,7 @@ achievement_requirements = {
         "details": "Kill 5 wraiths with shrines while raining (or as listed by the IngameAchiChecker logic).",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Early Harvest": {
@@ -4673,6 +5271,7 @@ achievement_requirements = {
         "description": "Harvest 2.500 mana from shards before wave 3 starts.",
         "requirements": ["eManaShard"],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Fully Lit": {
@@ -4682,6 +5281,7 @@ achievement_requirements = {
         "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
         "requirements": ["mEndurance", "mTrial"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Hacked Gem": {
@@ -4691,6 +5291,7 @@ achievement_requirements = {
         "details": "Create a grade-3 gem with at least 1200 effective max damage.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Hyper Gem": {
@@ -4700,6 +5301,7 @@ achievement_requirements = {
         "details": "Create a grade-3 gem with at least 600 effective max damage.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Wicked Gem": {
@@ -4709,6 +5311,7 @@ achievement_requirements = {
         "details": "Create a grade-3 gem with at least 900 effective max damage.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Helping Hand": {
@@ -4718,6 +5321,7 @@ achievement_requirements = {
         "details": "Have a watchtower kill a possessed monster.",
         "requirements": ["eWatchtower", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Getting My Feet Wet": {
@@ -4726,6 +5330,7 @@ achievement_requirements = {
         "description": "Have 20 fields lit in Endurance mode.",
         "requirements": ["mEndurance", "fieldToken:20"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Xp Harvest": {
@@ -4734,6 +5339,7 @@ achievement_requirements = {
         "description": "Have 40 fields lit in Endurance mode.",
         "requirements": ["mEndurance", "fieldToken:40"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Longrunner": {
@@ -4742,6 +5348,7 @@ achievement_requirements = {
         "description": "Have 60 fields lit in Endurance mode.",
         "requirements": ["mEndurance", "fieldToken:60"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Endured a Lot": {
@@ -4750,6 +5357,7 @@ achievement_requirements = {
         "description": "Have 80 fields lit in Endurance mode.",
         "requirements": ["mEndurance", "fieldToken:80"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Disciple": {
@@ -4758,6 +5366,7 @@ achievement_requirements = {
         "description": "Have 10 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:10"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Adept": {
@@ -4766,6 +5375,7 @@ achievement_requirements = {
         "description": "Have 30 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:30"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Expert": {
@@ -4774,6 +5384,7 @@ achievement_requirements = {
         "description": "Have 50 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:50"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Worthy": {
@@ -4782,6 +5393,7 @@ achievement_requirements = {
         "description": "Have 70 fields lit in Trial mode.",
         "requirements": ["mTrial", "fieldToken:70"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Blood Censorship": {
@@ -4790,6 +5402,7 @@ achievement_requirements = {
         "description": "Kill 2.100 green blooded monsters.",
         "requirements": [],
         "required_effort": "Minor",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Chlorophyll": {
@@ -4798,6 +5411,7 @@ achievement_requirements = {
         "description": "Kill 4.500 green blooded monsters.",
         "requirements": [],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Green Path": {
@@ -4807,6 +5421,7 @@ achievement_requirements = {
         "vanilla_correction": True,
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Bloodstream": {
@@ -4816,6 +5431,7 @@ achievement_requirements = {
         "details": "Kill 4,000 monsters in one battle.",
         "requirements": ["minMonsters:4000", "mEndurance"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "They Keep Coming": {
@@ -4825,6 +5441,7 @@ achievement_requirements = {
         "details": "Kill 12,000 monsters in one battle.",
         "requirements": ["minMonsters:12000", "mEndurance"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Unending Flow": {
@@ -4834,6 +5451,7 @@ achievement_requirements = {
         "details": "Kill 24,000 monsters in one battle.",
         "requirements": ["minMonsters:24000", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "No Land for Swarmlings": {
@@ -4843,6 +5461,7 @@ achievement_requirements = {
         "details": "Kill 3,333 swarmlings in a SINGLE battle (game checks per-battle this.stats.killedSwarmlings); exceeds any Journey field's swarmling count, so Endurance-only.",
         "requirements": ["minSwarmlings:3333", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Doom Drop": {
@@ -4851,6 +5470,7 @@ achievement_requirements = {
         "description": "Kill a possessed giant with barrage.",
         "requirements": ["sBarrage", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Out of Nowhere": {
@@ -4860,6 +5480,7 @@ achievement_requirements = {
         "details": "Kill a whited-out possessed monster with a Bolt shot.",
         "requirements": ["sBolt", "sWhiteout", "mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Family Friendlier": {
@@ -4868,6 +5489,7 @@ achievement_requirements = {
         "description": "Kill 900 green blooded monsters.",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Bone Shredder": {
@@ -4877,6 +5499,7 @@ achievement_requirements = {
         "details": "Kill 600 monsters before wave 12 starts. .",
         "requirements": ["mEndurance", "minMonstersBeforeWave12:600"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Bath Bomb": {
@@ -4885,6 +5508,7 @@ achievement_requirements = {
         "description": "Kill 30 monsters with orblet explosions.",
         "requirements": ["sOrbOfPresence"],
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True, #requires ingame mods. We dont support that yet
     },
     "Antitheft": {
@@ -4893,6 +5517,7 @@ achievement_requirements = {
         "description": "Kill 90 monsters with orblet explosions.",
         "requirements": ["sOrbOfPresence"],
         "required_effort": "Minor",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Liquid Explosive": {
@@ -4901,6 +5526,7 @@ achievement_requirements = {
         "description": "Kill 180 monsters with orblet explosions.",
         "requirements": ["sOrbOfPresence"],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Handle With Care": {
@@ -4909,6 +5535,7 @@ achievement_requirements = {
         "description": "Kill 300 monsters with orblet explosions.",
         "requirements": ["sOrbOfPresence"],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Exorcism": {
@@ -4918,6 +5545,7 @@ achievement_requirements = {
         "details": "Kill 199 possessed monsters in one battle.",
         "requirements": ["mEndurance"],  # ePossessedMonster removed - not represented yet
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Hint of Darkness": {
@@ -4926,6 +5554,7 @@ achievement_requirements = {
         "description": "Kill 189 twisted monsters.",
         "requirements": [],  # ["eTwistedMonster"] removed - twisted-monster element not represented yet
         "required_effort": "Trivial",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Mana Greedy": {
@@ -4934,6 +5563,7 @@ achievement_requirements = {
         "description": "Leech 1.800 mana with a grade 1 gem.",
         "requirements": ["sManaLeech"],
         "required_effort": "Minor",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Hungry Little Gem": {
@@ -4943,6 +5573,7 @@ achievement_requirements = {
         "details": "Leech 3,600 mana with a grade-1 gem (in a trap).",
         "requirements": ["sManaLeech", "skillPoints:200"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Max Trap Max leech": {
@@ -4952,6 +5583,7 @@ achievement_requirements = {
         "details": "Leech 6,300 mana with a grade-1 gem in a trap.",
         "requirements": ["sManaLeech"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "We Just Wanna Be Free": {
@@ -4960,6 +5592,7 @@ achievement_requirements = {
         "description": "More than blue triangles",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Slime Block": {
@@ -4969,6 +5602,7 @@ achievement_requirements = {
         "details": "Reference: Minecraft. Have 9 specific items (slimeball-equivalent — undocumented).",
         "requirements": ["minMonsterHP:20000"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Hazardous Materials": {
@@ -4978,6 +5612,7 @@ achievement_requirements = {
         "details": "Reference: Half-Life HEV suit. Reach 1000 specific stat (mod logic only — exact trigger undocumented). Have atleast 1.000 enemies poisoned and alive on a field",
         "requirements": ["sPoison"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Something Special": {
@@ -4991,6 +5626,7 @@ achievement_requirements = {
             # ["min_wl:10", "mEndurance", "eTwistedMonster:1", "minWave:70"],
         ],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Marked Targets": {
@@ -5005,6 +5641,7 @@ achievement_requirements = {
             # ["min_wl:50", "mEndurance", "eTwistedMonster:1"],
         ],
         "required_effort": "Major",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Unholy Stack": {
@@ -5019,6 +5656,7 @@ achievement_requirements = {
             # ["min_wl:100", "mEndurance", "eTwistedMonster", "minWave:70"],
         ],
         "required_effort": "Extreme",
+        "field_need": "engage",
         "untrackable": True,
     },
     "Cleansing the Wilderness": {
@@ -5033,6 +5671,7 @@ achievement_requirements = {
             # ["mEndurance", "eTwistedMonster", "minWave:70"],
         ],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Boiling Red": {
@@ -5042,6 +5681,7 @@ achievement_requirements = {
         "details": "Reach a kill chain of 2,400 in one battle.",
         "requirements": ["minMonsters:2400", "mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Purple Wand": {
@@ -5050,6 +5690,7 @@ achievement_requirements = {
         "description": "Reach wizard level 200.",
         "requirements": ["mEndurance"],
         "required_effort": "Major",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Brown Wand": {
@@ -5059,6 +5700,7 @@ achievement_requirements = {
         "details": "Reach wizard level 300.",
         "requirements": ["mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Red Wand": {
@@ -5068,6 +5710,7 @@ achievement_requirements = {
         "details": "Reach wizard level 500.",
         "requirements": ["mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Black Wand": {
@@ -5077,6 +5720,7 @@ achievement_requirements = {
         "details": "Reach wizard level 1,000.",
         "requirements": ["mEndurance"],
         "required_effort": "Extreme",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Going Deviant": {
@@ -5085,6 +5729,7 @@ achievement_requirements = {
         "description": "Rook to a9",
         "requirements": [],
         "required_effort": "Trivial",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Just Take My Mana!": {
@@ -5094,6 +5739,7 @@ achievement_requirements = {
         "details": "Spend a cumulative total of 900,000 mana on banishments.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Oh Ven": {
@@ -5103,6 +5749,7 @@ achievement_requirements = {
         "details": "Reference: Ultima 'poison' spell. Spread poison to 90 monsters in a single battle. 90 monsters poisoned at the same time",
         "requirements": ["sPoison"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Flip Flop": {
@@ -5111,6 +5758,7 @@ achievement_requirements = {
         "description": "Win a flipped field battle.",
         "requirements": [],
         "required_effort": "Extreme",
+        "field_need": "enter",
         "untrackable": True,
     },
     "Too Easy": {
@@ -5120,6 +5768,7 @@ achievement_requirements = {
         "details": "Win a Trial battle with at least 3 waves enraged.",
         "requirements": ["minWave:3", "mTrial"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Get This Done Quick": {
@@ -5129,6 +5778,7 @@ achievement_requirements = {
         "details": "Win a Trial battle with at least 3 waves called early.",
         "requirements": ["minWave:3", "mTrial"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "Impressive": {
@@ -5137,6 +5787,7 @@ achievement_requirements = {
         "description": "Win a Trial battle without any monster reaching your Orb.",
         "requirements": ["mTrial"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
     "So Attached": {
@@ -5145,6 +5796,7 @@ achievement_requirements = {
         "description": "Win a Trial battle without losing any orblets.",
         "requirements": ["mTrial"],
         "required_effort": "Trivial",
+        "field_need": "beat",
         "untrackable": True,
     },
 }
