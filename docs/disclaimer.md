@@ -8,18 +8,22 @@ You must own a legitimate copy of GemCraft: Frostborn Wrath to use this mod. The
 
 Parts of this project were made with the help of AI tools. To be upfront about exactly where:
 
+**Tools used:** Claude Code (documentation, brainstorming and Python code) and ChatGPT (image generation for a few art assets).
+
 **AI was used for:**
 
-- **Documentation** — README files, guides, setup instructions and other written material.
-- **Brainstorming** — exploring design options, weighing trade-offs and rubber-ducking ideas.
-- **The Python side of the Archipelago world (`apworld/`)** — the code that runs on the Archipelago server was written mostly by AI, with manual adjustments on top. My own Python and Archipelago knowledge is limited, so this is where AI did the heavy lifting.
-- **A handful of art assets** — the tome, pouch and key icons are AI-generated.
+- **Documentation** (Claude Code) — README files, guides, setup instructions and other written material. These are AI-drafted from my notes, then edited by me.
+- **Brainstorming** (Claude Code) — exploring design options, weighing trade-offs and rubber-ducking ideas. All design decisions are my own.
+- **The Python side of the Archipelago world (`apworld/`) and development helper scripts** (Claude Code) — the code that runs on the Archipelago server was written mostly by AI, with manual adjustments on top. My own Python and Archipelago knowledge is limited, so this is where AI did the heavy lifting. I specify what the code must do, then review, test and correct it.
+- **A handful of art assets** (ChatGPT) — only the tome, pouch and key icons are AI-generated.
 
 **AI was not used for:**
 
 - **The game mod** — all ActionScript in `mods/ArchipelagoMod/` is hand-written.
 - **The randomizer logic** — the JSON logic data that defines what gates what, and every requirement in it, is hand-crafted.
 - **Anything else** — no other part of this project was AI-assisted.
+
+**Human review:** all of it. Nothing AI-produced ships without me reading it, testing it in-game and through seed generation, and fixing it where needed. As a rough measure, I spend about twice as much time reviewing and testing as the AI spends producing.
 
 I have fifteen years of professional development experience. That is what makes this workable: I can tell AI what the solution should look like, spot when it is going the wrong way, and read and test everything it produces before it ships. Nothing lands here that I have not gone over myself.
 
