@@ -556,6 +556,7 @@ class GemcraftFrostbornWrathWorld(World):
                 ver = state._gcfw_ver = {}
             ver[self.player] = ver.get(self.player, 0) + 1
             self._wl_base_delta(state, item, +1)
+            self._beaten_delta(state, item, +1)
         return change
 
     def remove(self, state, item) -> bool:
@@ -566,6 +567,7 @@ class GemcraftFrostbornWrathWorld(World):
                 ver = state._gcfw_ver = {}
             ver[self.player] = ver.get(self.player, 0) + 1
             self._wl_base_delta(state, item, -1)
+            self._beaten_delta(state, item, -1)
         return change
 
     # Running wizard-level base maintained incrementally so rules._wl_of is O(1)
@@ -596,6 +598,27 @@ class GemcraftFrostbornWrathWorld(World):
         else:
             base_map[p] = sum(x for n, x in self._wl_xp_items
                               if state.prog_items[p].get(n, 0) > 0)
+
+    # Running fields-beaten count (held "<sid> Cleared" markers) so
+    # rules._fields_beaten is O(1) for `fieldsBeaten:N`. `_beaten_marker_names`
+    # is published on the world in rules.set_rules; before that it's absent and
+    # this is a no-op. Same 0<->1 transition and bare-copy recount semantics as
+    # _wl_base_delta.
+    def _beaten_delta(self, state, item, sign: int) -> None:
+        names = getattr(self, "_beaten_marker_names", None)
+        if names is None or item.name not in names:
+            return
+        p = self.player
+        count = state.prog_items[p].get(item.name, 0)
+        if not ((sign > 0 and count == 1) or (sign < 0 and count == 0)):
+            return  # not a 0<->1 transition; count unchanged
+        beaten_map = getattr(state, "_gcfw_fields_beaten", None)
+        if beaten_map is None:
+            beaten_map = state._gcfw_fields_beaten = {}
+        if p in beaten_map:
+            beaten_map[p] += sign
+        else:
+            beaten_map[p] = sum(1 for n in names if state.prog_items[p].get(n, 0) > 0)
 
     def _lock_field_tokens_in_own_world(self) -> None:
         """Pull this player's Field Tokens out of the pool and fill_restrictive
@@ -761,17 +784,13 @@ class GemcraftFrostbornWrathWorld(World):
                     else:
                         r_lower = r.lower()
                         # Keep loadout tokens (trait / skill), Achievement:
-                        # chain tokens, AND the min_wl:N pacing gate. min_wl is
-                        # NOT an element / stage-reach requirement — it's a pure
-                        # WL floor that rules._extract_min_wl reads downstream —
-                        # so dropping it here silently collapses the achievement's
-                        # floor to the effort-tier default (e.g. `battleTraits:1`
-                        # contains the substring "trait", so this branch fired
-                        # and ate `min_wl:20`, letting the achievement into logic
-                        # ~12 WL early).
+                        # chain tokens, AND the fieldsBeaten:N progress floor.
+                        # fieldsBeaten is NOT an element / stage-reach
+                        # requirement, and every requirement set must keep
+                        # exactly one (rules._check_fields_beaten_tokens).
                         if ("trait" in r_lower or "skill" in r_lower
                                 or r.startswith("Achievement:")
-                                or r_lower.startswith("min_wl")):
+                                or r_lower.startswith("fieldsbeaten")):
                             result.append(r)
                 return result
 
@@ -1156,9 +1175,9 @@ class GemcraftFrostbornWrathWorld(World):
         # (clearable), mirroring the apworld's "<parent> Cleared" gate:
         #   field_parents:      {str_id: vanilla parent str_id}; the starter
         #                       group and the root are omitted (see set_rules).
-        # Achievements still use a DERIVED wizard level from cleared fields
-        # (identical to the apworld's _wl_of / difficulty_gates.derived_wl):
-        #   achievement_min_wl: {effort tier: required wizard level}
+        # Achievement floors are `fieldsBeaten:N` tokens inside the requirements
+        # (shipped via achievement_logic.json), so no achievement WL ships here.
+        # The derived-WL inputs below stay until the WL cleanup (step 08):
         #   wl_eff_xp:          {str_id: per-field XP for THIS difficulty} — the
         #                       mod sums these over cleared fields for derived WL.
         #   xp_trait_ap_ids:    AP item ids of the 4 XP-scaling traits; the mod
@@ -1169,7 +1188,6 @@ class GemcraftFrostbornWrathWorld(World):
         # See difficulty_gates.py for the canonical formula + wl_test_vectors.json
         # (the parity contract the mod's ported level_from_xp must reproduce).
         from .difficulty_gates import (
-            ACH_MIN_WL as _DG_ACH,
             EFF_XP as _DG_EFF, DIFFICULTIES as _DG_DIFFS,
             XP_TRAIT_ITEM_NAMES as _DG_XPT, XP_TRAIT_MULTIPLIER as _DG_XPM,
             XP_TRAIT_MIN_WL as _DG_XPMINWL,
@@ -1180,7 +1198,6 @@ class GemcraftFrostbornWrathWorld(World):
         field_parents = dict(getattr(self, "field_parents", {}))
         for _fsid in free_stages:
             field_parents.pop(_fsid, None)
-        achievement_min_wl = {k: int(v) for k, v in _DG_ACH.items()}
         _wl_diff_name = _DG_DIFFS[self.options.difficulty.value]
         wl_eff_xp = {sid: int(x) for sid, x in _DG_EFF[_wl_diff_name].items()}
         xp_trait_ap_ids = [item_table[n].id for n in _DG_XPT]
@@ -1220,7 +1237,6 @@ class GemcraftFrostbornWrathWorld(World):
             "goal":                  self.options.goal.value,
             "difficulty":            self.options.difficulty.value,
             "field_parents":         field_parents,
-            "achievement_min_wl":    achievement_min_wl,
             # Derived-WL inputs for the mod (mirror difficulty_gates.derived_wl).
             "wl_eff_xp":             wl_eff_xp,
             "xp_trait_ap_ids":       xp_trait_ap_ids,
