@@ -113,9 +113,13 @@ def _get_caches(state, player: int):
         state._gcfw_caches = allc
     bundle = allc.get(player)
     if bundle is None or bundle[0] != key:
-        bundle = (key, {}, {}, {})
+        bundle = (key, {}, {}, {}, {}, {}, {})
         allc[player] = bundle
-    return bundle  # (key, counter_dict, clear_dict, or_dict)
+    # (key, counter_dict, clear_dict, or_dict, enter_dict, pouch_dict, enter_or_dict)
+    #   enter_dict     sid -> stage open in logic (see `_can_enter_stage_cached`)
+    #   pouch_dict     sid -> that stage's gem pouch usable
+    #   enter_or_dict  (id(stages), need_pouch) -> OR result
+    return bundle
 
 
 def _get_counter_cache(state, player: int) -> dict:
@@ -698,6 +702,109 @@ def _can_clear_stage_cached(state, player: int, sid: str) -> bool:
     state-version in the clear-dict; calls the compiled `_STAGE_CLEAR_RULES`
     rule directly (skips `state.can_reach`)."""
     return _clear_in(_get_caches(state, player)[2], state, player, sid)
+
+
+# Compiled stage-ENTER rules: (player, sid) -> (state) -> bool. Populated in
+# set_rules alongside `_STAGE_CLEAR_RULES`: the field-token check, with the
+# vanilla parent gate folded in by the parent-gate loop (the same region gate
+# the stage entrance carries). No gem pouch, no WIZLOCK skills, no vanilla DNF
+# prereqs: a stage is ENTER-able when it is open in logic, whether or not it
+# could ever be beaten. Backs `field_need: "enter"` / `"engage"` achievements.
+#
+# Stages absent from this dict are unconditionally enter-able (start stage) —
+# same convention as _STAGE_CLEAR_RULES.
+_STAGE_ENTER_RULES: dict = {}
+
+# Compiled per-stage gem-pouch checks: (player, sid) -> (state) -> bool. The
+# same `pouch_ok` the clear rules use, so free stages (Hollow Gems substitute)
+# and pouch granularity OFF short-circuit to true. Consulted by
+# `field_need: "engage"`: gems are needed on the field it engages.
+_STAGE_POUCH_RULES: dict = {}
+
+
+def _enter_in(data, state, player: int, sid: str) -> bool:
+    """Core stage-enterability against a PRE-FETCHED enter-dict
+    (`data == _get_caches(state, player)[4]`). Same shape as `_clear_in`."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
+    rule = _STAGE_ENTER_RULES.get((player, sid))
+    if rule is None:
+        data[sid] = True
+        return True
+    # Cycle guard (defensive): the parent gate recurses through the Cleared
+    # event, never back into the enter rules.
+    data[sid] = False
+    ok = rule(state)
+    data[sid] = ok
+    return ok
+
+
+def _pouch_in(data, state, player: int, sid: str) -> bool:
+    """Core per-stage gem-pouch usability against a PRE-FETCHED pouch-dict
+    (`data == _get_caches(state, player)[5]`)."""
+    ok = data.get(sid, _CACHE_MISS)
+    if ok is not _CACHE_MISS:
+        return ok
+    rule = _STAGE_POUCH_RULES.get((player, sid))
+    ok = True if rule is None else rule(state)
+    data[sid] = ok
+    return ok
+
+
+def _can_enter_stage_cached(state, player: int, sid: str) -> bool:
+    """True iff `sid` is open in logic: its field token is held and its vanilla
+    parent is beaten. Strictly weaker than `_can_clear_stage_cached`."""
+    return _enter_in(_get_caches(state, player)[4], state, player, sid)
+
+
+def _can_enter_any_stage(state, player: int, stages, need_pouch: bool = False) -> bool:
+    """True if any of `stages` is enter-able (and, when `need_pouch`, that SAME
+    stage's gem pouch is usable). The ENTER / ENGAGE counterpart of
+    `_can_reach_any_stage`, with the same two-level memoisation (per-(list,
+    need_pouch) OR result over per-stage results)."""
+    caches = _get_caches(state, player)
+    or_dict = caches[6]
+    key = (id(stages), need_pouch)
+    cached = or_dict.get(key, _CACHE_MISS)
+    if cached is not _CACHE_MISS:
+        return cached
+    enter_dict = caches[4]
+    pouch_dict = caches[5]
+    result = False
+    for sid in stages:
+        if not _enter_in(enter_dict, state, player, sid):
+            continue
+        if need_pouch and not _pouch_in(pouch_dict, state, player, sid):
+            continue
+        result = True
+        break
+    or_dict[key] = result
+    return result
+
+
+def _any_engageable_stage(state, player: int) -> bool:
+    """True iff some stage is enter-able AND has a usable gem pouch. The UNBOUND
+    form of `field_need: "engage"`, for groups with no per-stage token to bind
+    to (pure counters, a Wizard Stash, a Ritual-broadened eApparition): "is
+    there anywhere I can go and use gems". Satisfied from sphere 0 in practice
+    (the starter is pouch-exempt via Hollow Gems) but expressed, not assumed."""
+    caches = _get_caches(state, player)
+    or_dict = caches[6]
+    key = ("__any_engageable__",)
+    cached = or_dict.get(key, _CACHE_MISS)
+    if cached is not _CACHE_MISS:
+        return cached
+    enter_dict = caches[4]
+    pouch_dict = caches[5]
+    result = False
+    for _s in GAME_DATA["stages"]:
+        _sid = _s["str_id"]
+        if _enter_in(enter_dict, state, player, _sid) and _pouch_in(pouch_dict, state, player, _sid):
+            result = True
+            break
+    or_dict[key] = result
+    return result
 
 
 def _can_clear_any_stage(state, player: int, stages) -> bool:
@@ -1331,9 +1438,35 @@ def _compose_or(group_fns):
     return lambda state: any(g(state) for g in gs)
 
 
-def _compile_dnf(groups: list, world, is_progressive: bool):
+FIELD_NEEDS = ("enter", "engage", "beat")
+
+
+def _beat_only_tokens(group) -> list:
+    """Tokens in `group` that a weaker `field_need` ("enter" / "engage") would
+    SILENTLY downgrade: `Field_<sid>` compiles with a `static_set`, so it folds
+    into the consolidated per-stage check and would quietly become "that field
+    is open". Other beat-flavoured tokens (`fieldToken:N`, `gemSkills:N`, gem
+    `sX`) compile to global closures with their own clearability check, so they
+    stay correct in any group and are not flagged."""
+    return [r.strip() for r in group
+            if isinstance(r, str) and r.strip().startswith("Field_")]
+
+
+def _compile_dnf(groups: list, world, is_progressive: bool, field_need: str = "beat"):
     """Compile a DNF requirement structure (list of AND-groups, outer OR) into
     a single (state) -> bool closure.
+
+    `field_need` selects how the consolidated per-stage check is satisfied:
+      * `"beat"` (default, and what every stage-prereq DNF uses) — the stage
+        must be CLEARABLE (`_can_reach_any_stage`).
+      * `"engage"` — the stage must be open in logic AND its gem pouch usable
+        (`_can_enter_any_stage(..., need_pouch=True)`). With no per-stage token
+        to bind to: some open stage with a usable pouch.
+      * `"enter"` — the stage need only be open in logic (token + vanilla
+        parent beaten). With no per-stage token: any open stage, which the
+        starter always is, so no extra predicate.
+    Multi-colour gem groups stay CLEAR-based under every level (a field you can
+    actually build those gems on) — conservative, never looser.
 
     Two-level cost ordering for short-circuit:
       * AND-group: predicates sorted cheap-first so a False on a 1-µs
@@ -1356,12 +1489,24 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
     if not groups:
         return _always_true
 
+    if field_need not in FIELD_NEEDS:
+        raise ValueError(f"field_need must be one of {FIELD_NEEDS}, got {field_need!r}")
+    want_enter = field_need != "beat"
+    need_pouch = field_need == "engage"
     player = world.player
     compiled_groups: list = []
     group_min_costs: list = []
     for group in groups:
         if not isinstance(group, list):
             group = [group]
+        if want_enter:
+            _bad = _beat_only_tokens(group)
+            if _bad:
+                raise ValueError(
+                    f"field_need mismatch: {field_need!r} group carries beat-only "
+                    f"token(s) {_bad}. Fix the classification or the requirement — "
+                    f"don't downgrade the gate silently."
+                )
         # A group with 2+ gem `sX` tokens must satisfy all its colors on ONE
         # stage. Compiling each gem via its own global `_gem_token` closure lets
         # two colors be satisfied on two different beatable stages (Rotten Aura
@@ -1394,6 +1539,12 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
         if dead_group:
             continue  # this AND-group can never satisfy
         if not joint_gems and not globals_list and not static_sets:
+            if need_pouch:
+                # Unbound ENGAGE: no per-stage token, so "some open stage with
+                # usable gems" is this group's only predicate.
+                compiled_groups.append([lambda state: _any_engageable_stage(state, player)])
+                group_min_costs.append(_COST_REACH)
+                continue
             # All predicates were always_true → group is unconditionally true,
             # so the whole DNF is true regardless of other groups.
             return _always_true
@@ -1418,11 +1569,26 @@ def _compile_dnf(groups: list, world, is_progressive: bool):
             globals_list.append((gem_check, _COST_REACH))
         elif stage_constraint is not None:
             # One consolidated reach check replaces every individual static
-            # per-stage closure in this AND-group.
+            # per-stage closure in this AND-group. ENTER / ENGAGE swap the
+            # clearable requirement for "open in logic" (+ that same stage's
+            # pouch for ENGAGE).
+            if want_enter:
+                globals_list.append(
+                    ((lambda state, _stages=stage_constraint, _p=need_pouch:
+                          _can_enter_any_stage(state, player, _stages, _p)),
+                     _COST_REACH)
+                )
+            else:
+                globals_list.append(
+                    ((lambda state, _stages=stage_constraint:
+                          _can_reach_any_stage(state, player, _stages)),
+                     _COST_REACH)
+                )
+        elif need_pouch:
+            # Per-stage tokens existed but none was statically bindable (Wizard
+            # Stash, Apparition+Ritual), so fall back to the unbound ENGAGE form.
             globals_list.append(
-                ((lambda state, _stages=stage_constraint:
-                      _can_reach_any_stage(state, player, _stages)),
-                 _COST_REACH)
+                ((lambda state: _any_engageable_stage(state, player)), _COST_REACH)
             )
         # Sort cheap predicates first inside the group.
         globals_list.sort(key=lambda t: t[1])
@@ -1629,6 +1795,14 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     player = world.player
     multiworld = world.multiworld
 
+    # The compiled per-stage rule dicts are module-level and keyed by
+    # (player, sid). Drop this player's entries from any earlier generation in
+    # the same process (e.g. a UT regen with a different starter), so a stage
+    # that is now a start stage can't keep a stale rule.
+    for _rules in (_STAGE_CLEAR_RULES, _STAGE_ENTER_RULES, _STAGE_POUCH_RULES):
+        for _k in [k for k in _rules if k[0] == player]:
+            del _rules[_k]
+
     stages = GAME_DATA["stages"]
 
     # The primary starting stage (world.start_sid) is the region hub whose
@@ -1786,6 +1960,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             # also short-circuit — see pouch_free_sids comment above.
             pouch_ok = (_always_true if sid in pouch_free_sids
                         else _compile_gempouch_checker(world, sid))
+            # ENTER gate = the field token (the parent-gate loop below folds the
+            # vanilla parent in, as it does for the clear rules). Shares
+            # `token_check` with the clear rule so the two can never drift.
+            _STAGE_ENTER_RULES[(player, sid)] = token_check
+            _STAGE_POUCH_RULES[(player, sid)] = pouch_ok
             # Skip the vanilla DNF for free stages — the starter group
             # is reachable from sphere 0 by definition, regardless of any
             # vanilla `Field_<sid>` chains pointing at stages outside the
@@ -1977,6 +2156,16 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 )
             else:
                 _STAGE_CLEAR_RULES[(player, _sid)] = _gate
+            # Same for the ENTER rules: a stage is only open in logic once its
+            # vanilla parent is beaten (the region gate), so `field_need`
+            # "enter" / "engage" achievements see exactly what the region sees.
+            _enter = _STAGE_ENTER_RULES.get((player, _sid))
+            if _enter is not None:
+                _STAGE_ENTER_RULES[(player, _sid)] = (
+                    lambda state, r=_enter, w=_gate: r(state) and w(state)
+                )
+            else:
+                _STAGE_ENTER_RULES[(player, _sid)] = _gate
         # The "Clear <sid>" event fires on CLEAR, so it mirrors the Journey
         # location's clearability rule (WIZLOCK skills + pouch + DNF prereqs);
         # region reachability already supplies token + parent. Without this the
@@ -2066,14 +2255,27 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 #         behaviour for those.
                 _components = []
                 _reqs = ach_data.get("requirements", [])
+                # `field_need` decides how much access to a qualifying field
+                # the achievement needs (enter / engage / beat, see
+                # rulesdata_achievements.py). REQUIRED: a missing tag would
+                # silently fall through to the strictest gate.
+                _fn = ach_data.get("field_need")
+                if _fn not in FIELD_NEEDS:
+                    raise ValueError(
+                        f"achievement {ach_name!r} has field_need {_fn!r} "
+                        f"(must be one of {FIELD_NEEDS})"
+                    )
                 _wl_override = _extract_min_wl(_reqs)
                 _min_wl = (_wl_override if _wl_override is not None
                            else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
                 if _min_wl > 0:
                     _components.append(lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
+                if not _reqs and _fn == "engage":
+                    _components.append(lambda state: _any_engageable_stage(state, player))
                 if _reqs:
                     _dnf = _compile_dnf(_normalize_requirements(_reqs), world,
-                                        is_progressive=is_progressive)
+                                        is_progressive=is_progressive,
+                                        field_need=_fn)
                     if _dnf is not _always_true:
                         _components.append(_dnf)
                 if _components:

@@ -228,6 +228,57 @@ package tracker {
         // -----------------------------------------------------------------------
         // Public queries
 
+        /**
+         * True iff the stage is OPEN in logic: a free/starter stage, or its field
+         * token is held AND its vanilla parent is in logic. Weaker than
+         * isStageInLogic: no WIZLOCK skill gate, no gem pouch, no requirements.
+         * Mirrors the apworld's `_can_enter_stage_cached` (token + parent gate).
+         * Backs `field_need: "enter"` / `"engage"` achievements.
+         */
+        public function isStageEnterable(strId:String):Boolean {
+            if (_freeStages[strId] == true)
+                return true;
+            if (AV.sessionData == null)
+                return false;
+            var tokens:Object = AV.sessionData.tokensByStrId;
+            if (tokens == null || tokens[strId] != true)
+                return false;
+            var parent:String = _fieldParent(strId);
+            if (parent == null)
+                return true;
+            recompute();
+            return _inLogicByStrId[parent] == true;
+        }
+
+        /**
+         * True iff gems are usable on this stage: pouch gating off, a free/starter
+         * stage (Hollow Gems substitute), or the pouch for its tile is held.
+         * Mirrors the apworld's per-stage `pouch_ok`.
+         */
+        public function isStagePouchUsable(strId:String):Boolean {
+            if (_pouchMode() == 0)
+                return true;
+            if (_freeStages[strId] == true)
+                return true;
+            if (strId == null || strId.length == 0 || AV.sessionData == null)
+                return false;
+            return AV.sessionData.hasPouchForPrefix(strId.charAt(0));
+        }
+
+        /** True iff some stage is enter-able AND has usable gems: the unbound form of `field_need: "engage"`. Mirrors the apworld's `_any_engageable_stage`. */
+        public function anyEngageableStage():Boolean {
+            if (GV.stageCollection == null || GV.stageCollection.stageMetas == null)
+                return false;
+            for each (var meta:* in GV.stageCollection.stageMetas) {
+                if (meta == null || meta.strId == null)
+                    continue;
+                var sid:String = String(meta.strId);
+                if (isStageEnterable(sid) && isStagePouchUsable(sid))
+                    return true;
+            }
+            return false;
+        }
+
         /** True if this stage is currently reachable (in logic). */
         public function isStageInLogic(strId:String):Boolean {
             recompute();
