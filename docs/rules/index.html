@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCFW Rules Viewer</title>
+<meta name="description" content="Browse and edit the GemCraft Frostborn Wrath Archipelago logic: achievements, fields, stash keys and gem pouches.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1>GCFW Rules Viewer</h1>
+    <span class="sub">Archipelago logic for GemCraft: Frostborn Wrath</span>
+  </div>
+  <div class="source">
+    <label>Source
+      <select id="srcSelect"></select>
+    </label>
+    <label class="btn ghost" title="Load rulesdata files from your disk (select the apworld/gcfw files, plus data/*.json)">
+      Open files…<input id="fileInput" type="file" multiple accept=".py,.json" hidden>
+    </label>
+    <button id="reloadBtn" class="btn ghost" title="Reload from source">Reload</button>
+  </div>
+  <div class="editbar">
+    <label class="switch" title="Edit mode: changes stay in this browser until you export">
+      <input id="editToggle" type="checkbox"><span>Edit</span>
+    </label>
+    <span id="dirtyInfo" class="dirty" hidden></span>
+    <button id="exportAch" class="btn" hidden>Export rulesdata_achievements.py</button>
+    <button id="exportLv" class="btn" hidden>Export rulesdata_levels.py</button>
+    <button id="discardBtn" class="btn ghost danger" hidden>Discard</button>
+  </div>
+</header>
+<div id="meta" class="meta"></div>
+<nav class="tabs" id="tabs">
+  <button data-tab="achievements" class="on">Achievements <b id="cntAch"></b></button>
+  <button data-tab="fields">Fields <b id="cntLv"></b></button>
+  <button data-tab="gating">Stash keys &amp; gem pouches</button>
+  <button data-tab="legend">Tag legend</button>
+  <button data-tab="problems">Problems <b id="cntProb"></b></button>
+</nav>
+<main>
+  <section id="tab-achievements" class="tab on">
+    <div class="filters">
+      <input id="q" type="search" placeholder="Search name, description, tag…">
+      <select id="fEffort"><option value="">Any effort</option></select>
+      <select id="fNeed"><option value="">Any field need</option></select>
+      <select id="fStatus">
+        <option value="">Any status</option>
+        <option value="tracked">In logic (trackable)</option>
+        <option value="untrackable">Untrackable (excluded)</option>
+        <option value="error">Has tag errors</option>
+        <option value="warn">Has tag warnings</option>
+        <option value="never">Has never-in-logic group</option>
+        <option value="nologic">No requirements</option>
+        <option value="dirty">Edited (unsaved)</option>
+      </select>
+      <select id="fChecked">
+        <option value="">Any last-checked</option>
+        <option value="never">Never checked</option>
+        <option value="30">Older than 30 days</option>
+        <option value="90">Older than 90 days</option>
+        <option value="checked">Checked</option>
+      </select>
+      <select id="fSort">
+        <option value="name">Sort: name</option>
+        <option value="ap">Sort: AP id</option>
+        <option value="checked">Sort: last checked (oldest first)</option>
+        <option value="effort">Sort: effort</option>
+      </select>
+      <span id="tagFilter" class="tagfilter" hidden></span>
+      <span id="achCount" class="count"></span>
+      <button id="bulkCheck" class="btn ghost" hidden title="Set last_checked to today on every achievement in the current list">Mark shown as checked today</button>
+    </div>
+    <div class="tablewrap"><table class="grid" id="achTable"></table></div>
+  </section>
+  <section id="tab-fields" class="tab">
+    <div class="filters">
+      <input id="qf" type="search" placeholder="Search field, tag, element…">
+      <select id="fTile"><option value="">All tiles</option></select>
+      <select id="fFieldChecked">
+        <option value="">Any last-checked</option>
+        <option value="never">Never checked</option>
+        <option value="30">Older than 30 days</option>
+        <option value="checked">Checked</option>
+      </select>
+      <span id="lvCount" class="count"></span>
+    </div>
+    <div class="tablewrap"><table class="grid" id="lvTable"></table></div>
+  </section>
+  <section id="tab-gating" class="tab">
+    <div class="explain" id="gatingExplain"></div>
+    <div class="filters" id="gatingOpts"></div>
+    <div class="tablewrap"><table class="grid" id="gatingTable"></table></div>
+  </section>
+  <section id="tab-legend" class="tab"><div id="legend"></div></section>
+  <section id="tab-problems" class="tab"><div id="problems"></div></section>
+</main>
+<aside id="drawer" class="drawer" hidden>
+  <div class="drawer-head">
+    <h2 id="drawerTitle"></h2>
+    <button id="drawerClose" class="btn ghost" aria-label="Close">✕</button>
+  </div>
+  <div id="drawerBody" class="drawer-body"></div>
+</aside>
+<div id="loading" class="loading">Loading rules…</div>
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
