@@ -111,10 +111,27 @@ package tracker {
         }
 
         /**
-         * Return apId->true for every achievement marked `untrackable` in the
-         * data file (RNG-dependent, hidden-mod-only, or otherwise not gateable
-         * at gen time). These always receive a filler item and are excluded
-         * from logic. The set is static — call once after loadData().
+         * True when an achievement is design-excluded from the AP pool: flagged
+         * `untrackable`, or flagged `grindy` while the grindy_achievements
+         * option is off. Mirrors the matching clauses of apworld
+         * _should_skip_achievement.
+         */
+        public static function isDesignExcluded(achData: Object): Boolean {
+            if (achData == null) return true;
+            if (achData.untrackable === true) return true;
+            if (achData.grindy === true) {
+                var opts: Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
+                if (opts == null || !Boolean(opts.grindyAchievements)) return true;
+            }
+            return false;
+        }
+
+        /**
+         * Return apId->true for every design-excluded achievement (see
+         * isDesignExcluded): `untrackable` ones (RNG-dependent, hidden-mod-only,
+         * or otherwise not gateable at gen time) and `grindy` ones while the
+         * grindy_achievements option is off. They have no AP location. Depends
+         * on slot_data, so call after the Connected packet.
          */
         public
         function getExcludedAchApIds(): Object {
@@ -122,7 +139,7 @@ package tracker {
             for (var achName: String in _achievementData) {
                 var achData: Object = _achievementData[achName];
                 if (!achData || !achData.apId) continue;
-                if (achData.untrackable === true) {
+                if (isDesignExcluded(achData)) {
                     result[int(achData.apId)] = true;
                 }
             }
@@ -132,7 +149,7 @@ package tracker {
         /**
          * Return apId->true for every achievement filtered out by the yaml
          * achievement_required_effort setting (effort exceeds the threshold).
-         * Excludes untrackable achievements (they are in getExcludedAchApIds).
+         * Excludes design-excluded achievements (they are in getExcludedAchApIds).
          */
         public
         function getEffortExcludedAchApIds(): Object {
@@ -143,7 +160,7 @@ package tracker {
             for (var achName: String in _achievementData) {
                 var achData: Object = _achievementData[achName];
                 if (!achData || !achData.apId) continue;
-                if (achData.untrackable === true) continue;
+                if (isDesignExcluded(achData)) continue;
                 var modes: Array = achData.modes as Array;
                 if (modes != null && modes.indexOf("journey") < 0) continue;
                 var achEffort: String = achData.required_effort || "Trivial";
@@ -259,7 +276,7 @@ package tracker {
                     var achData: Object = _achievementData[achName];
                     if (!achData || !achData.apId) continue;
 
-                    if (achData.untrackable === true) continue;
+                    if (isDesignExcluded(achData)) continue;
 
                     var modes: Array = achData.modes as Array;
                     if (modes != null && modes.indexOf("journey") < 0) continue;
@@ -377,8 +394,8 @@ package tracker {
 
                 var apId: int = int(achData.apId);
 
-                // Untrackable achievements are design-excluded, never in logic
-                if (achData.untrackable === true) continue;
+                // Untrackable / grindy-off achievements are design-excluded, never in logic
+                if (isDesignExcluded(achData)) continue;
 
                 // Journey-only check
                 var modes: Array = achData.modes as Array;
