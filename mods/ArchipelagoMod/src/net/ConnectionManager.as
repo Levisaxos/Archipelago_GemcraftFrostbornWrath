@@ -38,19 +38,43 @@ package net {
         private var _archipelagoPassword:String = "";
         private var _saveSlot:int               = 0;
 
-        private static function isSecureHost(host:String):Boolean {
-            return host.toLowerCase() == "archipelago.gg";
+        // Transport selection — see connect().
+        // _scheme:        "wss" / "ws" when the player typed one, "" = auto.
+        // _attemptSecure: transport of the attempt currently in flight.
+        // _wsOpened:      the current attempt got past the HTTP upgrade.
+        private var _scheme:String          = "";
+        private var _attemptSecure:Boolean  = false;
+        private var _wsOpened:Boolean       = false;
+
+        /**
+         * Pull an explicit "wss://" / "ws://" prefix off the raw Host field.
+         * Returns "wss", "ws", or "" when the player gave no scheme.
+         */
+        private static function schemeOf(host:String):String {
+            if (host == null) return "";
+            var lower:String = host.replace(/^\s+/, "").toLowerCase();
+            if (lower.indexOf("wss://") == 0) return "wss";
+            if (lower.indexOf("ws://") == 0) return "ws";
+            return "";
+        }
+
+        /**
+         * Loopback hosts default to plain: the README's stunnel relay listens
+         * on 127.0.0.1 and expects an unencrypted connection. An explicit
+         * "wss://" still overrides this.
+         */
+        private static function isLoopbackHost(host:String):Boolean {
+            var lower:String = host.toLowerCase();
+            return lower == "localhost" || lower == "::1" || lower == "[::1]" || lower.indexOf("127.") == 0;
         }
 
         /**
          * Clean up a host string before it reaches Socket.connect().
          *
          * Players routinely copy the "wss://archipelago.gg" form off the AP
-         * room page and paste it whole into the Host field. Two things go
-         * wrong if the scheme is left on: Socket.connect() treats it as a
-         * literal hostname and fails instantly, and — less obviously — the
-         * string equality in isSecureHost() no longer matches, silently
-         * downgrading archipelago.gg from TLS to a plain socket.
+         * room page and paste it whole into the Host field. Socket.connect()
+         * would treat the scheme as a literal hostname and fail instantly, so
+         * it is stripped here — connect() reads it first via schemeOf().
          *
          * Deliberately does not split a trailing ":port" — that would break
          * bare IPv6 literals and silently overwrite the user's Port field.
@@ -289,6 +313,7 @@ package net {
         }
 
         public function unload():void {
+            _attemptSecure = false; // no plain-ws fallback on a deliberate close
             if (_webSocketClient != null) {
                 _webSocketClient.disconnect();
                 _webSocketClient = null;
@@ -304,6 +329,7 @@ package net {
             // straight from save data, which may already hold a malformed host
             // from an earlier session. Storing the cleaned value also heals the
             // slot file on the next save.
+            _scheme = schemeOf(host);
             var cleanHost:String = normalizeHost(host);
             if (cleanHost != host) _logger.log(_modName, "Normalised host '" + host + "' → '" + cleanHost + "'");
 
@@ -318,16 +344,52 @@ package net {
                 _reconnecting = false;
                 _toast.addMessage("Connecting to " + _archipelagoHost + ":" + port
                     + " as " + slot + " (Slot " + _saveSlot + ")...", 0xFFFFDD55);
-                _webSocketClient.connect(_archipelagoHost, port, isSecureHost(_archipelagoHost));
-                _logger.log(_modName, "Connecting to " + _archipelagoHost + ":" + port + "  slot=" + slot);
+                // Explicit scheme wins. Otherwise mirror the official AP
+                // clients: try TLS first and fall back to plain if that
+                // attempt dies before the upgrade (see _tryPlainFallback).
+                var secure:Boolean;
+                if (_scheme == "wss")
+                    secure = true;
+                else if (_scheme == "ws")
+                    secure = false;
+                else
+                    secure = !isLoopbackHost(_archipelagoHost);
+                _startAttempt(secure);
+                _logger.log(_modName, "Connecting to " + _archipelagoHost + ":" + port + "  slot=" + slot
+                    + "  scheme=" + (_scheme == "" ? "auto" : _scheme));
             }
         }
 
+        private function _startAttempt(secure:Boolean):void {
+            _attemptSecure = secure;
+            _wsOpened = false;
+            _logger.log(_modName, "Transport attempt: " + (secure ? "wss (TLS)" : "ws (plain)"));
+            _webSocketClient.connect(_archipelagoHost, _archipelagoPort, secure);
+        }
+
+        /**
+         * In auto mode, a TLS attempt that fails before the WebSocket opens is
+         * retried once over a plain socket (self-hosted servers often run
+         * without TLS). Returns true when the retry was started, in which case
+         * the caller must not report the failure.
+         */
+        private function _tryPlainFallback(reason:String):Boolean {
+            if (_scheme != "" || !_attemptSecure || _wsOpened) return false;
+            _logger.log(_modName, "TLS attempt failed (" + reason + ") — retrying with plain ws://");
+            _reconnecting = true;
+            _webSocketClient.disconnect();
+            _reconnecting = false;
+            _startAttempt(false);
+            return true;
+        }
+
         public function disconnect():void {
+            _attemptSecure = false; // no plain-ws fallback on a deliberate close
             if (_webSocketClient != null) _webSocketClient.disconnect();
         }
 
         public function disconnectAndReset():void {
+            _attemptSecure = false; // no plain-ws fallback on a deliberate close
             if (_webSocketClient != null) {
                 _reconnecting = false;
                 _webSocketClient.disconnect();
@@ -351,6 +413,7 @@ package net {
         // WebSocket callbacks
 
         private function wsOnOpen():void {
+            _wsOpened = true;
             _logger.log(_modName, "WS onOpen — TCP+WS handshake done, waiting for AP Connected packet");
             if (onError != null) onError("Authenticating...");
         }
@@ -379,6 +442,7 @@ package net {
         private function wsOnError(msg:String):void {
             _logger.log(_modName, "WS onError — _isConnected: " + _isConnected + " → false  msg=" + msg);
             _isConnected = false;
+            if (_tryPlainFallback(msg)) return;
             if (onPanelReset != null) onPanelReset();
             var failMsg:String = "Failed to connect to " + _archipelagoHost + ":" + _archipelagoPort
                 + " with name " + _archipelagoSlot;
@@ -394,6 +458,8 @@ package net {
             var wasConnected:Boolean = _isConnected;
             _logger.log(_modName, "WS onClose — _isConnected: " + _isConnected + " → false  _reconnecting=" + _reconnecting);
             _isConnected = false;
+            // A plain server may just drop the TLS ClientHello (close, not error).
+            if (!_reconnecting && _tryPlainFallback("closed by remote")) return;
             if (!_reconnecting && onPanelReset != null) onPanelReset();
             if (!_reconnecting && wasConnected) {
                 _toast.addMessage("AP disconnected", 0xFFFFAA44);
