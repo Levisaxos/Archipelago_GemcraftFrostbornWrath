@@ -366,8 +366,10 @@ class AchievementRequiredEffort(Choice):
     off:      no achievement checks.
     trivial:  124 checks - collectable through normal vanilla play.
     minor:    335 checks - adds 211 that need some special actions.
-    major:    474 checks - adds 139 that need some time investment.
-    extreme:  570 checks - adds 96 that need massive time investment and luck.
+    major:    466 checks - adds 131 that need some time investment.
+    extreme:  542 checks - adds 76 that need massive time investment and luck.
+
+    Grindy achievements are not counted here; see Grindy Achievements.
 
     Trivial achievements are always included while this option is on, so the randomizer has enough locations for its progression items.
     More achievements means more checks to find and a longer seed.
@@ -379,6 +381,19 @@ class AchievementRequiredEffort(Choice):
     option_major    = 3
     option_extreme  = 4
     default = 2
+
+
+class GrindyAchievements(Toggle):
+    """Include the grindy achievements as checks.
+
+    Grindy achievements are pure cumulative grind far beyond one full Journey, such as killing 1,000,000 monsters or beating 10,000 waves.
+    There are 28 of them: They Are Millions, The Killing Will Never Stop, Crimson Journal, Blood on my Hands, Wave Smasher, Waves for Breakfast, Getting Waves Done, No Time to Waste, Tiny but Deadly, Drone Warfare, Stingy Cloud, Ice for Everyone, Drop the Ice, Frostborn, Charge Fire Repeat, Enhance Like No Tomorrow, The Mana Reaper, Shard Siphon, Nothing Prevails, Shrinemaster, Don't Look at the Light, Hard Reset, Pylons of Destruction, Megalithic, Shatter Them All, Eggs Royale, Frittata and Paranormal Paragon.
+
+    Off: they are not checks.
+    On: they are checks (if within Achievement Required Effort), but only ever hold filler, so they never block anyone's progress.
+    """
+    display_name = "Grindy Achievements"
+    default = 0
 
 
 class Difficulty(Choice):
@@ -430,6 +445,7 @@ class GCFWOptions(PerGameCommonOptions):
     random_starting_stages:      RandomStartingStages
     starting_stages:             StartingStages
     achievement_required_effort: AchievementRequiredEffort
+    grindy_achievements:         GrindyAchievements
     difficulty:                Difficulty
     disable_endurance:         DisableEndurance
     disable_trial:             DisableTrial

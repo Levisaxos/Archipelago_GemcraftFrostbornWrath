@@ -245,6 +245,8 @@ package net {
                     AV.serverData.serverOptions.fieldsRequiredCount = int(sd.fields_required_count);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.grindy_achievements !== undefined)
+                    AV.serverData.serverOptions.grindyAchievements = Boolean(sd.grindy_achievements);
                 if (sd.difficulty !== undefined)
                     AV.serverData.serverOptions.difficulty = int(sd.difficulty);
                 if (sd.field_parents !== undefined)

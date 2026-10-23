@@ -145,6 +145,7 @@ package unlockers {
          * Returns the human-readable reason this achievement was omitted from
          * AP gen, or null if it IS in AP. Reasons:
          *   - "untrackable"            — flagged untrackable in rulesdata
+         *   - "grindy"                 — flagged grindy, grindy_achievements off
          *   - "excluded by effort"     — required_effort above slot threshold
          *   - "Trial-mode only"        — "Trial" in requirements (no AP hook)
          *   - "Endurance disabled"     — "Endurance" requirement, mode off
@@ -166,6 +167,9 @@ package unlockers {
 
             if (achData.untrackable === true)
                 return "untrackable";
+
+            if (achData.grindy === true && !Boolean(serverOptions.grindyAchievements))
+                return "grindy";
 
             var reqs:Array = (achData.requirements is Array) ? (achData.requirements as Array) : null;
             if (reqs != null) {
