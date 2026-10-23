@@ -149,6 +149,19 @@ def build_element_stages(level_requirements: dict) -> dict:
     return out
 
 
+FIELD_NEEDS = ("enter", "engage", "beat")
+
+
+def _require_field_need(name: str, data: dict) -> str:
+    """Read the achievement's `field_need`, refusing to guess one: the mod must
+    use the SAME value the apworld compiled against, or UT and the in-game
+    tracker disagree."""
+    value = data.get("field_need")
+    if value not in FIELD_NEEDS:
+        raise SystemExit(f"{name}: field_need must be one of {FIELD_NEEDS}, got {value!r}")
+    return value
+
+
 def build_achievements(achievements: dict) -> dict:
     """Achievement table for the mod.  Strips Python-side fields that
     aren't needed at runtime (modes, etc.) and renames `ap_id` -> `apId`
@@ -160,6 +173,7 @@ def build_achievements(achievements: dict) -> dict:
             "game_id": int(data.get("game_id", -1)),
             "description": data.get("description", ""),
             "required_effort": data.get("required_effort", "Trivial"),
+            "field_need": _require_field_need(name, data),
             "requirements": data.get("requirements", []),
         }
         if "details" in data and data["details"]:

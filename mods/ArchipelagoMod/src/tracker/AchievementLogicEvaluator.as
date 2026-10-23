@@ -231,7 +231,8 @@ package tracker {
             if (_fieldEvaluator.derivedWizardLevel() < achMinWl(achData))
                 return false;
             if (_logicEvaluator != null
-                    && !_logicEvaluator.evaluateRequirements(achData.requirements as Array))
+                    && !_logicEvaluator.evaluateRequirements(achData.requirements as Array,
+                            String(achData.field_need)))
                 return false;
             return true;
         }
@@ -330,7 +331,7 @@ package tracker {
                 if (d == null || int(d.apId) != apId) continue;
                 var reqs: Array = d.requirements as Array;
                 if (reqs == null || reqs.length == 0) return [];
-                var descs: Array = _logicEvaluator.getFailingReqDescriptions(reqs);
+                var descs: Array = _logicEvaluator.getFailingReqDescriptions(reqs, String(d.field_need));
                 var result: Array = [];
                 for each(var desc: String in descs) {
                     if (desc != null) result.push([desc, 0xCCCCCC]);
