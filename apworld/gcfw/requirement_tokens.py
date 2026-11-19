@@ -112,6 +112,18 @@ element_prefix_map = {
     "eNonMonsters": [
         "Apparition", "Shadow", "Specter", "Spire", "Wizard Hunter", "Wraith",
     ],
+
+    # Group token: any enemy building a gem wasp can sting. The game credits a
+    # wasp sting "to buildings" (vs "to creatures") whenever the target is not a
+    # creature, and the only non-creature structures a wasp ever targets are
+    # beacons, monster nests, sealed gems, possession obelisks and gatekeeper
+    # fangs (GemWasp.tryToFindTarget). This is the set the "N wasp stings to
+    # buildings" achievements need present on a reachable stage. It MUST stay a
+    # multi-member group: the "eBuilding:N" tokens resolve as "any member
+    # reachable", so there is no per-stage BuildingCount field to look up.
+    "eBuilding": [
+        "Beacon", "Monster Nest", "Sealed gem", "Obelisk", "Gatekeeper",
+    ],
 }
 
 # Mode tokens — journey-only mod, both unsatisfiable.
