@@ -559,6 +559,7 @@ package tracker {
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+            if (lower.indexOf("fieldsbeaten")      == 0) return "Requires " + n + " fields beaten (" + _countFieldsInLogic() + " in logic)";
             if (lower.indexOf("shadowcore")        == 0) return "Requires " + n + "+ Shadow Core stash items";
             if (lower.indexOf("wizardlevel")       == 0) return "Requires " + ((n + 1) >> 1) + "+ XP items (toward wizard level " + n + ")";
             if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
@@ -904,6 +905,15 @@ package tracker {
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countFieldsInLogic() >= ftNeed;
+            }
+
+            // "fieldsBeaten: N" — the achievement's hand-tuned progress floor:
+            // N fields in logic. Mirrors the apworld's count of held "<sid>
+            // Cleared" events (a Cleared event is collectable exactly when its
+            // field is clearable in logic).
+            if (lower.indexOf("fieldsbeaten") == 0) {
+                var fbNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return fbNeed <= 0 || _countFieldsInLogic() >= fbNeed;
             }
 
             // "shadowCore: N" — sum core amounts of held shadow-core stash

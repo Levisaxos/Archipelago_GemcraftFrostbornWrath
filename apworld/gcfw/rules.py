@@ -271,7 +271,7 @@ _TALISMAN_FRAGMENT_COUNTERS: dict[str, frozenset] = {
 # Field-token floor layered on top of the talismanFragments counter gate so
 # the achievement locations that test it don't open before the player has made
 # enough world progress. talismanRow / talismanColumn intentionally carry NO
-# such floor — any additional gate (minWave, fieldToken, min_wl, ...) belongs in
+# such floor — any additional gate (minWave, fieldToken, fieldsBeaten, ...) belongs in
 # the achievement's own requirements list, not bound to the metric.
 # count_needed -> minimum effectively-unlocked stages required.
 _TALISMAN_FRAGMENTS_TOKEN_FLOOR: dict[int, int] = {25: 75}
@@ -1241,16 +1241,23 @@ def _compile_req(req: str, world, is_progressive: bool):
                 f"(count after ':' must be an integer)"
             ) from None
 
-        # `min_wl:N` is a pacing token, NOT a DNF predicate: the WL floor it
-        # names is enforced separately as its own component in set_rules (via
-        # _extract_min_wl) and by the stage WL soft gate. Inside a requirement
-        # DNF it's a no-op, so compile it to _always_true — _compile_dnf then
-        # drops it from the AND-group. Without this branch the token falls
-        # through to the "unrecognized counter" raise below, which (swallowed
-        # by the per-achievement try/except) leaves EVERY min_wl-bearing
-        # achievement ungated / permanently in logic.
+        # `fieldsBeaten:N`: the achievement's hand-tuned progress floor — at
+        # least N fields beaten in logic (held "<sid> Cleared" events). Every
+        # achievement requirement set carries exactly one (validated in
+        # set_rules). A global closure (no per-stage binding).
+        if group_name == "fieldsBeaten":
+            if count_needed <= 0:
+                return (_always_true, _COST_CONST, None)
+            return ((lambda state, n=count_needed: _fields_beaten(state, player) >= n),
+                    _COST_HAS, None)
+
+        # `min_wl:N` was the derived-wizard-level floor; replaced by
+        # `fieldsBeaten:N` (progression rework step 02b). Fail loud rather
+        # than silently ignore a stale token.
         if group_name == "min_wl":
-            return (_always_true, _COST_CONST, None)
+            raise ValueError(
+                f"Unknown gate: '{req}' — min_wl:N was retired, use fieldsBeaten:N"
+            )
 
         # Group token with count (eNonMonsters:1 etc.) — count is ignored,
         # mirrors _compile_req. Reachable iff any group member is reachable.
@@ -1397,7 +1404,7 @@ def _compile_req(req: str, world, is_progressive: bool):
             # achievement that lists it (Ablatio Retinae skillPoints:50, and the
             # sManaLeech skillPoints:200 one) UNREACHABLE. The intent is a no-op
             # pacing token (the mod still tracks real SP client-side for the
-            # tooltip); compile it to _always_true, exactly like `min_wl:N`.
+            # tooltip); compile it to _always_true.
             return (_always_true, _COST_CONST, None)
 
         raise ValueError(f"Unknown gate: unrecognized counter requirement '{req}'")
@@ -1439,6 +1446,29 @@ def _compose_or(group_fns):
 
 
 FIELD_NEEDS = ("enter", "engage", "beat")
+
+# Per-player set of "<sid> Cleared" event names, published by set_rules. The
+# number of them held is the "fields beaten" count behind `fieldsBeaten:N`.
+_BEATEN_NAMES: dict = {}
+
+
+def _fields_beaten(state, player: int) -> int:
+    """Number of "<sid> Cleared" events this player holds (= fields beaten in
+    logic). O(1): GemcraftFrostbornWrathWorld._beaten_delta keeps a running
+    count on the state across collect/remove. A bare CollectionState.copy()
+    doesn't carry custom attrs, so it falls back to counting once and caches
+    the result on the copy (later collects apply their delta on top)."""
+    beaten_map = getattr(state, "_gcfw_fields_beaten", None)
+    if beaten_map is not None and player in beaten_map:
+        return beaten_map[player]
+    n = 0
+    for name in _BEATEN_NAMES.get(player, ()):
+        if state.has(name, player):
+            n += 1
+    if beaten_map is None:
+        beaten_map = state._gcfw_fields_beaten = {}
+    beaten_map[player] = n
+    return n
 
 
 def _beat_only_tokens(group) -> list:
@@ -1696,31 +1726,21 @@ def _ach_progression_blocked(requirements) -> bool:
     return bool(groups) and all(_branch_has_wholepool_counter(g) for g in groups)
 
 
-def _extract_min_wl(requirements):
-    """Return the per-achievement WL floor from a `min_wl:N` token in
-    `requirements`, or None if absent. Scans both flat (`["a", "b"]`) and DNF
-    (`[["a", "b"], ...]`) shapes — the token is treated as a top-level pacing
-    override, so the largest N found wins regardless of which OR-group it sits
-    in. Overrides the effort-tier default (ACH_MIN_WL[effort]) in set_rules."""
+def _check_fields_beaten_tokens(ach_name, requirements):
+    """Fail loud unless every requirement set of an achievement carries exactly
+    one `fieldsBeaten:N` token. Flat lists are one set; DNF lists check each
+    inner AND-group."""
     if not requirements:
-        return None
+        raise ValueError(f"achievement {ach_name!r} has no requirements; it needs at least fieldsBeaten:N")
     groups = requirements if isinstance(requirements[0], list) else [requirements]
-    best = None
     for group in groups:
-        for tok in group:
-            if not isinstance(tok, str):
-                continue
-            head, _, cnt = tok.strip().partition(":")
-            if head.strip() != "min_wl":
-                continue
-            try:
-                n = int(cnt.strip())
-            except ValueError:
-                continue
-            if best is None or n > best:
-                best = n
-    return best
-
+        n = sum(1 for tok in group
+                if isinstance(tok, str) and tok.strip().startswith("fieldsBeaten:"))
+        if n != 1:
+            raise ValueError(
+                f"achievement {ach_name!r}: requirement set {group!r} has {n} "
+                f"fieldsBeaten:N tokens (must be exactly 1)"
+            )
 
 def _compile_skill_trait_gate(requirements, player):
     """(state)->bool gating on ONLY the skill/trait tokens in `requirements`
@@ -2035,10 +2055,9 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # them). Clearing a stage collects its "<sid> Cleared" event, which opens
     # its vanilla children.
     #
-    # Achievement floors still use the derived wizard level (WL) below: the
-    # summed difficulty-scaled XP of cleared fields, compared against
-    # min_wl / ACH_MIN_WL. Inlined here for fill speed but must equal
-    # difficulty_gates.derived_wl bit-for-bit (wl_test_vectors.json).
+    # The derived wizard level (WL) below is no longer a gate anywhere
+    # (achievement floors moved to `fieldsBeaten:N` in step 02b); it is kept
+    # only until the WL cleanup (progression rework step 08).
     from . import difficulty_gates as _dg
     _diff = _dg.DIFFICULTIES[world.options.difficulty.value]
     _eff = _dg.EFF_XP[_diff]
@@ -2049,6 +2068,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
     # is a plain accumulated sum, so it never needs the old 122-event re-sum on
     # the fill hot path — see GemcraftFrostbornWrathWorld.collect + _wl_of below.
     world._wl_xp_items = _xp_items
+    # Publish the "<sid> Cleared" names for the fields-beaten counter
+    # (`fieldsBeaten:N`): module-level for _fields_beaten, and on the world so
+    # its collect/remove overrides can keep the running count.
+    _BEATEN_NAMES[player] = frozenset(f"{_s['str_id']} Cleared" for _s in stages)
+    world._beaten_marker_names = _BEATEN_NAMES[player]
     world._wl_xp_by_item = {name: x for name, x in _xp_items}
 
     def _xp_of(state, _items=_xp_items, _p=player):
@@ -2236,14 +2260,11 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
             try:
                 location = multiworld.get_location(f"Achievement: {ach_name}", player)
 
-                # Two gates, composed (AND):
-                #   SOFT (WL floor): derived WL >= the achievement's floor —
-                #         paces WHEN the achievement is expected. A per-
-                #         achievement `min_wl:N` token OVERRIDES the effort-tier
-                #         default (ACH_MIN_WL[effort]); otherwise the tier
-                #         default applies. `min_wl:N` compiles to _always_true
-                #         inside the DNF below, so it's enforced only here.
-                #   HARD (full requirement DNF): the SAME `_compile_dnf` used
+                # One gate, the full requirement DNF. Every requirement set
+                # carries a hand-tuned `fieldsBeaten:N` progress floor (N
+                # fields beaten in logic), which paces WHEN the achievement is
+                # expected; the rest is
+                #   the SAME `_compile_dnf` used
                 #         for stage-clear rules — elements (with same-stage
                 #         binding), gemSkills:N / monster-stat counters,
                 #         skills, traits, and Field_ clearability. This mirrors
@@ -2265,11 +2286,10 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                         f"achievement {ach_name!r} has field_need {_fn!r} "
                         f"(must be one of {FIELD_NEEDS})"
                     )
-                _wl_override = _extract_min_wl(_reqs)
-                _min_wl = (_wl_override if _wl_override is not None
-                           else int(_dg.ACH_MIN_WL.get(ach_effort, 0)))
-                if _min_wl > 0:
-                    _components.append(lambda state, _t=_plxp(_min_wl): _xp_of(state) >= _t)
+                # Every requirement set must carry exactly one explicit
+                # `fieldsBeaten:N` (0 allowed): "deliberately 0" must stay
+                # distinguishable from "forgot to tune".
+                _check_fields_beaten_tokens(ach_name, _reqs)
                 if not _reqs and _fn == "engage":
                     _components.append(lambda state: _any_engageable_stage(state, player))
                 if _reqs:
