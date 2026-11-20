@@ -24,6 +24,7 @@ from .options import (
     DeathLinkGracePeriod,
     DeathLinkCooldown,
     AchievementRequiredEffort,
+    GrindyAchievements,
     GemPouchGranularity,
     FieldTokenGranularity,
     StashKeyGranularity,
@@ -102,8 +103,11 @@ def _should_skip_achievement(ach_data: dict, options) -> bool:
       - Achievement has `"untrackable": True` (RNG-dependent, hidden mods, etc.).
       - Requires Trial mode (Archipelago has no hooks into Trial mode).
       - Requires Endurance mode AND the player disabled Endurance.
+      - Flagged `"grindy": True` AND the grindy_achievements option is off.
     """
     if ach_data.get("untrackable", False):
+        return True
+    if ach_data.get("grindy", False) and not options.grindy_achievements.value:
         return True
     requirements = ach_data.get("requirements", [])
     # Both Trial and Endurance are unsupported by AP-side gating — the
@@ -387,6 +391,7 @@ class GCFWWebWorld(WebWorld):
             StartingStages,
             Difficulty,
             AchievementRequiredEffort,
+            GrindyAchievements,
             DisableEndurance,
             DisableTrial,
             ExtraShadowCoresPerWave,
@@ -460,6 +465,7 @@ class GemcraftFrostbornWrathWorld(World):
                     "stash_key_granularity",
                     "gem_pouch_granularity",
                     "achievement_required_effort",
+                    "grindy_achievements",
                     "disable_endurance",
                     "disable_trial",
                     "starting_overcrowd",
@@ -627,6 +633,17 @@ class GemcraftFrostbornWrathWorld(World):
                 sample_size = max(1, int(len(journey_locs) * self._JOURNEY_PRIORITY_FRACTION))
                 for loc in journey_locs[:sample_size]:
                     loc.progress_type = LocationProgressType.PRIORITY
+
+            # Grindy achievements (only locations when grindy_achievements is
+            # on) are EXCLUDED: they only ever hold filler, so hours of farming
+            # never gate anyone's progression.
+            if self.options.grindy_achievements.value:
+                from .rulesdata_achievements import achievement_requirements as _all_ach
+                for loc in self.multiworld.get_locations(self.player):
+                    if not loc.name.startswith("Achievement: "):
+                        continue
+                    if _all_ach.get(loc.name[len("Achievement: "):], {}).get("grindy", False):
+                        loc.progress_type = LocationProgressType.EXCLUDED
 
             placement = self.options.field_token_placement.value
 
@@ -1259,6 +1276,7 @@ class GemcraftFrostbornWrathWorld(World):
             "shadow_core_map":       shadow_core_map,
             "shadow_core_name_map":  shadow_core_name_map,
             "achievement_required_effort": self.options.achievement_required_effort.value,
+            "grindy_achievements":   self.options.grindy_achievements.value,
             "disable_endurance":       bool(self.options.disable_endurance.value),
             "disable_trial":           bool(self.options.disable_trial.value),
             "starting_wizard_level":   self.options.starting_wizard_level.value,
