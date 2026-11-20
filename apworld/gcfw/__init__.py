@@ -553,6 +553,21 @@ class GemcraftFrostbornWrathWorld(World):
                     and self.multiworld.players == 1):
                 raise Exception(f"{self.player_name}: field_token_placement 'own_world' requires more than one player.")
 
+            # own_world / different_world = AP's native local_items / non_local_items for this slot's Field Tokens.
+            # Main applies them as locality item rules after set_rules, and the main fill places the tokens WITH
+            # swapping. (Replaces pre_fill's locked all-state fill_restrictive for own_world and the hand-rolled
+            # item_rule for different_world: the locked pre-fill dead-ended ~3% of own_world/different_world
+            # multiworlds.) Main clears both sets when players == 1, so UT regen of a single slot is unaffected.
+            placement = self.options.field_token_placement.value
+            if placement != FieldTokenPlacement.option_any_world:
+                from . import gating as _gating
+                token_names = set(_gating.field_tokens_for_pool(
+                    self.options.field_token_granularity.value, self.start_sids))
+                if placement == FieldTokenPlacement.option_own_world:
+                    self.options.local_items.value |= token_names
+                else:
+                    self.options.non_local_items.value |= token_names
+
             # Progression talisman: deterministically build the 25-fragment set
             # for this seed. Seed a DEDICATED RNG from a single world.random draw
             # so the (thousands of) search rolls don't perturb the rest of
@@ -564,6 +579,7 @@ class GemcraftFrostbornWrathWorld(World):
                 _random.Random(self.random.getrandbits(64)))
 
     _JOURNEY_PRIORITY_FRACTION = 0.75
+    _PRIORITY_PROGRESSION_CAP = 0.5
 
     # Per-player monotonic version counter, bumped whenever this player's
     # progression items change. rules._gcfw_state_sig reads it as an O(1)
@@ -643,34 +659,31 @@ class GemcraftFrostbornWrathWorld(World):
         else:
             beaten_map[p] = sum(1 for n in names if state.prog_items[p].get(n, 0) > 0)
 
-    def _lock_field_tokens_in_own_world(self) -> None:
-        """Pull this player's Field Tokens out of the pool and fill_restrictive
-        them into this player's own locations (locked). Used for own_world and
-        for the degenerate single-player different_world case (UT regen only —
-        real generation rejects solo different_world)."""
-        from Fill import fill_restrictive
-        from .gating import is_field_token_name
-        tokens = [item for item in self.multiworld.itempool
-                  if item.player == self.player and is_field_token_name(item.name)]
-        for token in tokens:
-            self.multiworld.itempool.remove(token)
-        target_locations = self.multiworld.get_unfilled_locations(self.player)
-        state = self.multiworld.get_all_state(use_cache=False)
-        fill_restrictive(self.multiworld, state, target_locations, tokens,
-                         lock=True, allow_partial=False)
-
     def pre_fill(self) -> None:
         with phase(f"p{self.player} pre_fill"):
             # Bias 75% of Journey checks to hold progression items via main fill.
             # priority_locations is multiworld-safe — items can come from any
             # player's pool; only the destination is preferred.
+            # Capped at half this player's own progression count: AP's priority
+            # fill places progression WITHOUT swapping, and with no deprioritized
+            # progression to fall back on it raises FillError when the last items
+            # only fit priority spots that need them. Coarse pools (per-tile
+            # tokens, stash keys off: ~89 progression vs 91 priority spots) hit
+            # that ~15% of the time.
+            # Skipped entirely with achievements off: Journeys are already half of
+            # the 244 checks, so the bias adds little and was the main cause of
+            # FillErrors there (e.g. per_stage tokens + per_tile keys: 0/20 seeds
+            # filled with the bias, 18/20 without).
             journey_locs = [
                 loc for loc in self.multiworld.get_locations(self.player)
                 if loc.name.endswith(" - Journey")
-            ]
+            ] if self.options.achievement_required_effort.value else []
+            own_progression = sum(1 for item in self.multiworld.itempool
+                                  if item.player == self.player and item.advancement)
             if journey_locs:
                 self.multiworld.random.shuffle(journey_locs)
-                sample_size = max(1, int(len(journey_locs) * self._JOURNEY_PRIORITY_FRACTION))
+                sample_size = max(1, min(int(len(journey_locs) * self._JOURNEY_PRIORITY_FRACTION),
+                                         int(own_progression * self._PRIORITY_PROGRESSION_CAP)))
                 for loc in journey_locs[:sample_size]:
                     loc.progress_type = LocationProgressType.PRIORITY
 
@@ -685,51 +698,34 @@ class GemcraftFrostbornWrathWorld(World):
                     if _all_ach.get(loc.name[len("Achievement: "):], {}).get("grindy", False):
                         loc.progress_type = LocationProgressType.EXCLUDED
 
-            placement = self.options.field_token_placement.value
-
-            if placement == FieldTokenPlacement.option_any_world:
-                return  # normal fill: tokens may land anywhere
-
-            if placement == FieldTokenPlacement.option_own_world:
-                self._lock_field_tokens_in_own_world()
-                return
-
-            # different_world: leave this player's Field Tokens in the itempool
-            # and let MAIN fill place them. We only forbid THIS player's Field
-            # Tokens from THIS player's own locations via an item_rule, so they
-            # can never land at home but are otherwise placed with full
-            # randomization and progression balancing across the other worlds.
-            #
-            # This replaces an earlier approach that removed the tokens and
-            # fill_restrictive'd them into an *unshuffled* cross-player location
-            # list. fill_restrictive is deterministic — it fills the first
-            # eligible spot — and get_unfilled_locations() is grouped by slot,
-            # so every token piled into the first player's world (spilling to
-            # the second only once the first was exhausted). Combined with a
-            # player setting all progression as non_local_items, that funneled
-            # an entire game's field tokens into a single other world.
-            if self.multiworld.players == 1:
-                # Only reachable under UT regen (real gen rejects solo
-                # different_world). No other world exists, so keep them at home.
-                self._lock_field_tokens_in_own_world()
-                return
-
-            from .gating import is_field_token_name
-
-            def _not_own_field_token(item, _p=self.player):
-                return not (item.player == _p
-                            and is_field_token_name(item.name))
-
-            for loc in self.multiworld.get_unfilled_locations(self.player):
-                prev = loc.item_rule  # default is `lambda i: True`
-                loc.item_rule = (
-                    lambda item, _prev=prev, _rule=_not_own_field_token:
-                    _rule(item) and _prev(item)
-                )
+            # field_token_placement own_world / different_world is handled in generate_early via local_items /
+            # non_local_items (core locality rules), not here.
 
     def create_item(self, name: str) -> GCFWItem:
         data = item_table[name]
         return GCFWItem(name, data.classification, data.id, self.player)
+
+    def _trim_pool_to_fit(self, pool: List[GCFWItem], total_locations: int) -> List[GCFWItem]:
+        """The pool has more items than this slot has locations (only possible with achievements off and fine granularity). Drop non-progression items to fit — lowest-value XP tomes first, then Shadow Core stashes — and fail loudly if progression alone still doesn't fit."""
+        progression = sum(1 for item in pool if item.advancement)
+        if progression > total_locations:
+            raise OptionError(
+                f"[{self.player_name}] Item pool needs {progression} progression items but only "
+                f"{total_locations} locations exist. Coarsen field_token_granularity / "
+                f"stash_key_granularity / gem_pouch_granularity, or raise achievement_required_effort.")
+        drop_order = ("Tattered Scroll", "Worn Tome", "Ancient Grimoire")
+
+        def drop_rank(item: GCFWItem):
+            if item.advancement:
+                return None
+            for rank, prefix in enumerate(drop_order):
+                if item.name.startswith(prefix):
+                    return rank, -int(item.name.rsplit("#", 1)[-1])
+            return len(drop_order), item.name  # Shadow Cores (useful) last
+
+        candidates = sorted((item for item in pool if drop_rank(item) is not None), key=drop_rank)
+        drop = set(id(item) for item in candidates[:len(pool) - total_locations])
+        return [item for item in pool if id(item) not in drop]
 
     def create_items(self) -> None:
         import time as _t; _t0 = _t.perf_counter()
@@ -886,6 +882,9 @@ class GemcraftFrostbornWrathWorld(World):
                               if loc.address is not None)
         self.sp_bundle_values: List[int] = sp_slot_data_values()
         remaining = total_locations - len(pool)
+        if remaining < 0:
+            pool = self._trim_pool_to_fit(pool, total_locations)
+            remaining = 0
         if remaining > 0:
             bundles = fixed_bundle_names()
             # If there aren't even enough filler slots for all 40 fixed bundles
