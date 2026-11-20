@@ -7,11 +7,12 @@ package data {
         // Goal and Primary Settings
         public var goal:int;                     // 0=beat_game, 1=swarm_queen, 2=fields_count
         public var difficulty:int;               // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
-        // Wizard-level gating (mirrors the apworld exactly). A stage is in logic
-        // once the player's DERIVED wizard level >= stageGates[str_id]; an
-        // achievement once derived WL >= achievementMinWl[effort tier].
-        public var stageGates:Object;            // str_id -> required wizard level
-        public var achievementMinWl:Object;      // effort tier name -> required wizard level
+        // Field gating (mirrors the apworld exactly). A stage is in logic once
+        // its vanilla parent fieldParents[str_id] is in logic (the apworld's
+        // "<parent> Cleared" gate); the starter group and the root W1 have no
+        // entry. Achievement progress floors are `fieldsBeaten:N` tokens inside
+        // each achievement's requirements (achievement_logic.json).
+        public var fieldParents:Object;          // str_id -> vanilla parent str_id
         // Derived-WL inputs (mirror difficulty_gates.derived_wl). Derived WL =
         // levelFromXp( sum(wlEffXp[strId] over cleared fields) * xpTraitMultiplier[eff] ),
         // where eff is the effective XP-trait count after the harness gate:
@@ -90,6 +91,10 @@ package data {
         // the apworld's floor() formula).
         public var fieldsRequiredCount:int;
         public var achievementRequiredEffort:int; // 0=Off, 1=Trivial, 2=Minor, 3=Major, 4=Extreme
+        // grindy_achievements: false = achievements flagged `grindy` in
+        // achievement_logic.json are not AP locations (like untrackable);
+        // true = they are locations (filler only on the apworld side).
+        public var grindyAchievements:Boolean;
 
         // Death Link Settings
         public var deathLinkEnabled:Boolean;
@@ -101,8 +106,7 @@ package data {
         public function initialize():void {
             goal = 0;
             difficulty = 1;
-            stageGates = {};
-            achievementMinWl = {};
+            fieldParents = {};
             wlEffXp = {};
             xpTraitApIds = [];
             xpTraitMultiplier = [1.0, 1.0, 1.0, 1.0, 1.0]; // DROPPED 2026-07-19: trait multiplier no longer affects WL. Slot_data ships [1,1,1,1,1]; this fallback matches.
@@ -143,6 +147,7 @@ package data {
 
             fieldsRequiredCount = 0;
             achievementRequiredEffort = 0;
+            grindyAchievements = false;
 
             deathLinkEnabled = false;
         }

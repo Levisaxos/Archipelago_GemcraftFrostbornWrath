@@ -107,8 +107,14 @@ package tracker {
          *  this, multi-token requirements (Prismatic family, "in a battle"
          *  achievements like Flying Multikill) would falsely pass when
          *  each token was satisfied by a different stage. */
-        public function evaluateRequirements(requirements:Array):Boolean {
-            if (requirements == null || requirements.length == 0) return true;
+        public function evaluateRequirements(requirements:Array,
+                                             fieldNeed:String = "beat"):Boolean {
+            // `field_need` (achievement_logic.json) picks how a bound per-stage
+            // group is satisfied: "enter" = the stage is open in logic, "engage"
+            // = open + usable gems on it, "beat" = fully in logic (clearable).
+            // Mirrors the apworld's _compile_dnf(field_need=...).
+            if (requirements == null || requirements.length == 0)
+                return fieldNeed != "engage" || (_fieldEvaluator != null && _fieldEvaluator.anyEngageableStage());
             // Ensure AV.sessionData.fieldsInLogic is current before any
             // same-stage binding or fieldToken:N counter consults it. The
             // field evaluator's recompute is a no-op when not dirty, so this
@@ -122,11 +128,11 @@ package tracker {
                 for each (var group:* in requirements) {
                     var andGroup:Array = group as Array;
                     if (andGroup == null) continue;
-                    if (_evaluateAndGroupBound(andGroup)) return true;
+                    if (_evaluateAndGroupBound(andGroup, fieldNeed)) return true;
                 }
                 return false;
             }
-            return _evaluateAndGroupBound(requirements);
+            return _evaluateAndGroupBound(requirements, fieldNeed);
         }
 
         /**
@@ -185,7 +191,10 @@ package tracker {
         }
 
         /** AND-group with same-stage binding.  See evaluateRequirements doc. */
-        private function _evaluateAndGroupBound(andGroup:Array):Boolean {
+        private function _evaluateAndGroupBound(andGroup:Array,
+                                                fieldNeed:String = "beat"):Boolean {
+            var wantEnter:Boolean = (fieldNeed == "enter" || fieldNeed == "engage");
+            var needPouch:Boolean = (fieldNeed == "engage");
             // A group with 2+ gem `sX` tokens must field all its colours on ONE
             // stage — evaluating each gem via its own global broadening let two
             // colours be satisfied on two different in-logic stages (Rotten Aura
@@ -220,12 +229,26 @@ package tracker {
                 // tokens (staticCandidates) to a single in-logic stage.
                 return _jointGemStageInLogic(gemNames, staticCandidates);
             }
-            if (staticCandidates == null) return true;
+            if (staticCandidates == null) {
+                // No per-stage token to bind to. ENGAGE still needs usable gems
+                // somewhere open; ENTER / BEAT need nothing more (any open field,
+                // which the starter always is).
+                return !needPouch || (_fieldEvaluator != null && _fieldEvaluator.anyEngageableStage());
+            }
             if (AV.sessionData == null || AV.sessionData.fieldsInLogic == null)
                 return false;
             var fil:Object = AV.sessionData.fieldsInLogic;
             for each (var sid:String in staticCandidates) {
-                if (fil[sid] == true) return true;
+                // BEAT: the stage must be fully in logic. ENTER: open in logic.
+                // ENGAGE: open + usable gems on that SAME stage.
+                var stageOk:Boolean = wantEnter
+                    ? (_fieldEvaluator != null && _fieldEvaluator.isStageEnterable(sid))
+                    : (fil[sid] == true);
+                if (!stageOk)
+                    continue;
+                if (needPouch && !_fieldEvaluator.isStagePouchUsable(sid))
+                    continue;
+                return true;
             }
             return false;
         }
@@ -365,7 +388,8 @@ package tracker {
          * Used by tooltip overlays to show why an achievement is not yet in logic.
          * For DNF, shows failing reqs from the group closest to passing.
          */
-        public function getFailingReqDescriptions(requirements:Array):Array {
+        public function getFailingReqDescriptions(requirements:Array,
+                                                  fieldNeed:String = "beat"):Array {
             if (requirements == null || requirements.length == 0) return [];
             if (requirements[0] is Array) {
                 // DNF: find the group with the most passing reqs, show its failures
@@ -389,7 +413,7 @@ package tracker {
                     // same-stage binding hold; individual reqs can pass
                     // while binding fails (no single stage satisfies all
                     // per-stage tokens).
-                    if (failing.length == 0 && _evaluateAndGroupBound(andGroup))
+                    if (failing.length == 0 && _evaluateAndGroupBound(andGroup, fieldNeed))
                         return [];
                     if (passCount > bestPassCount) {
                         bestPassCount = passCount;
@@ -535,6 +559,7 @@ package tracker {
             if (lower.indexOf("minwave")            == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("beforewave")        == 0) return "Requires stage with " + n + "+ waves";
             if (lower.indexOf("fieldtoken")        == 0) return "Requires " + n + "+ field tokens";
+            if (lower.indexOf("fieldsbeaten")      == 0) return "Requires " + n + " fields beaten (" + _countFieldsInLogic() + " in logic)";
             if (lower.indexOf("shadowcore")        == 0) return "Requires " + n + "+ Shadow Core stash items";
             if (lower.indexOf("wizardlevel")       == 0) return "Requires " + ((n + 1) >> 1) + "+ XP items (toward wizard level " + n + ")";
             if (lower.indexOf("minmonsterhp")      == 0) return "Requires stage with monster HP " + n + "+";
@@ -880,6 +905,15 @@ package tracker {
             if (lower.indexOf("fieldtoken") == 0) {
                 var ftNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
                 return _countFieldsInLogic() >= ftNeed;
+            }
+
+            // "fieldsBeaten: N" — the achievement's hand-tuned progress floor:
+            // N fields in logic. Mirrors the apworld's count of held "<sid>
+            // Cleared" events (a Cleared event is collectable exactly when its
+            // field is clearable in logic).
+            if (lower.indexOf("fieldsbeaten") == 0) {
+                var fbNeed:int = int(_trim(lower.substring(lower.indexOf(":") + 1)));
+                return fbNeed <= 0 || _countFieldsInLogic() >= fbNeed;
             }
 
             // "shadowCore: N" — sum core amounts of held shadow-core stash

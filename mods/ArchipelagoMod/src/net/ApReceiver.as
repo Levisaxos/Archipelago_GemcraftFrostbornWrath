@@ -245,12 +245,12 @@ package net {
                     AV.serverData.serverOptions.fieldsRequiredCount = int(sd.fields_required_count);
                 if (sd.achievement_required_effort !== undefined)
                     AV.serverData.serverOptions.achievementRequiredEffort = int(sd.achievement_required_effort);
+                if (sd.grindy_achievements !== undefined)
+                    AV.serverData.serverOptions.grindyAchievements = Boolean(sd.grindy_achievements);
                 if (sd.difficulty !== undefined)
                     AV.serverData.serverOptions.difficulty = int(sd.difficulty);
-                if (sd.stage_gates !== undefined)
-                    AV.serverData.serverOptions.stageGates = sd.stage_gates;
-                if (sd.achievement_min_wl !== undefined)
-                    AV.serverData.serverOptions.achievementMinWl = sd.achievement_min_wl;
+                if (sd.field_parents !== undefined)
+                    AV.serverData.serverOptions.fieldParents = sd.field_parents;
                 if (sd.wl_eff_xp !== undefined)
                     AV.serverData.serverOptions.wlEffXp = sd.wl_eff_xp;
                 if (sd.xp_trait_ap_ids !== undefined)
