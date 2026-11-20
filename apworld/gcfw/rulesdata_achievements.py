@@ -43,6 +43,10 @@ Fields per achievement (in file order):
                      depends on a mechanic the AP layer doesn't model yet
                      (gem grade caps, wizard level, mana pool, etc.).
                      Replaces the old `always_as_filler` field name.
+  grindy           - (optional) True -> pure cumulative grind far beyond one
+                     full Journey (e.g. 1,000,000 kills, 10,000 waves).
+                     Not a location unless the `grindy_achievements` option
+                     is on; then the location is EXCLUDED (filler only).
 """
 
 achievement_requirements = {
@@ -3665,7 +3669,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: destroy 1,000 beacons.",
         "requirements": [["eBeacon:1", "fieldsBeaten:20"], ["tDarkMasonry", "fieldsBeaten:45"]],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Gemhancement": {
         "ap_id": 2208,
@@ -3682,7 +3686,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 2,500 enhancement spells.",
         "requirements": ["enhancementSpells:1", "fieldsBeaten:28"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Charge Fire Repeat": {
         "ap_id": 2087,
@@ -3691,7 +3695,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 5,000 enhancement spells.",
         "requirements": ["enhancementSpells:1", "fieldsBeaten:28"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Angry Wasps": {
         "ap_id": 2023,
@@ -3709,7 +3713,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 5,000 wasp kills.",
         "requirements": ["fieldToken:25", "fieldsBeaten:40"],
         "required_effort": "Extreme",
-        "field_need": "beat",
+        "grindy": True,
     },
     "Drone Warfare": {
         "ap_id": 2135,
@@ -3718,7 +3722,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 20,000 wasp kills.",
         "requirements": ["fieldToken:20", "fieldsBeaten:35"],
         "required_effort": "Extreme",
-        "field_need": "beat",
+        "grindy": True,
     },
     "Tiny but Deadly": {
         "ap_id": 2568,
@@ -3727,7 +3731,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 50,000 wasp kills.",
         "requirements": ["fieldsBeaten:15"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Resourceful": {
         "ap_id": 2443,
@@ -3753,7 +3757,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: harvest 20,000 mana from shards.",
         "requirements": ["eManaShard", "fieldsBeaten:28"],
         "required_effort": "Major",
-        "field_need": "enter",
+        "grindy": True,
     },
     "The Mana Reaper": {
         "ap_id": 2549,
@@ -3762,7 +3766,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: harvest 100,000 mana from shards.",
         "requirements": ["eManaShard", "fieldsBeaten:35"],
         "required_effort": "Extreme",
-        "field_need": "enter",
+        "grindy": True,
     },
     "Eggs Royale": {
         "ap_id": 2149,
@@ -3771,7 +3775,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: crack 1,000 eggs.",
         "requirements": ["eSwarmQueen", "fieldsBeaten:47"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Blood on my Hands": {
         "ap_id": 2054,
@@ -3779,7 +3783,7 @@ achievement_requirements = {
         "description": "Reach 20.000 monsters killed through all the battles.",
         "requirements": ["fieldsBeaten:17"],
         "required_effort": "Major",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Crimson Journal": {
         "ap_id": 2109,
@@ -3788,7 +3792,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 100,000 monster kills.",
         "requirements": ["fieldsBeaten:30"],
         "required_effort": "Major",
-        "field_need": "engage",
+        "grindy": True,
     },
     "The Killing Will Never Stop": {
         "ap_id": 2548,
@@ -3797,7 +3801,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 200,000 monster kills.",
         "requirements": ["fieldsBeaten:55"],
         "required_effort": "Major",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Necrotrophic": {
         "ap_id": 2358,
@@ -3824,7 +3828,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 25,000 kills with poison.",
         "requirements": ["sPoison", "sTraps", "fieldsBeaten:38"],
         "required_effort": "Extreme",
-        "field_need": "beat",
+        "grindy": True,
     },
     "Deathball": {
         "ap_id": 2117,
@@ -3851,7 +3855,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 5,000 monsters with pylons.",
         "requirements": [["sPylons", "fieldsBeaten:37"], ["ePylons:1", "fieldsBeaten:37"]],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Blastwave": {
         "ap_id": 2047,
@@ -3868,7 +3872,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 5,000 monsters with shrines.",
         "requirements": ["eShrine", "fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Don't Look at the Light": {
         "ap_id": 2128,
@@ -3877,7 +3881,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 10,000 monsters with shrines.",
         "requirements": ["eShrine", "fieldsBeaten:30"],
         "required_effort": "Major",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Shrinemaster": {
         "ap_id": 2482,
@@ -3886,7 +3890,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: kill 20,000 monsters with shrines.",
         "requirements": ["eShrine", "fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Multifreeze": {
         "ap_id": 2352,
@@ -3911,7 +3915,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 50,000 strike spell hits.",
         "requirements": [["strikeSpells:1", "fieldsBeaten:34"], ["strikeSpells:2", "fieldsBeaten:41"], ["strikeSpells:3", "fieldsBeaten:43"]],
         "required_effort": "Major",
-        "field_need": "enter",
+        "grindy": True,
     },
     "Ice for Everyone": {
         "ap_id": 2262,
@@ -3920,7 +3924,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 100,000 strike spell hits.",
         "requirements": [["strikeSpells:1", "fieldsBeaten:41"], ["strikeSpells:2", "fieldsBeaten:48"], ["strikeSpells:3", "fieldsBeaten:50"]],
         "required_effort": "Extreme",
-        "field_need": "enter",
+        "grindy": True,
     },
     "Stormbringer": {
         "ap_id": 2525,
@@ -3946,7 +3950,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: cast 5,000 strike spells.",
         "requirements": [["strikeSpells:1", "fieldsBeaten:41"], ["strikeSpells:2", "fieldsBeaten:48"], ["strikeSpells:3", "fieldsBeaten:50"]],
         "required_effort": "Extreme",
-        "field_need": "enter",
+        "grindy": True,
     },
     "Brickery": {
         "ap_id": 2065,
@@ -3964,7 +3968,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: build 2,000 structures.",
         "requirements": ["fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "enter",
+        "grindy": True,
     },
     "Riding the Waves": {
         "ap_id": 2446,
@@ -3982,7 +3986,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: beat 2,000 waves.",
         "requirements": ["fieldsBeaten:30"],
         "required_effort": "Major",
-        "field_need": "beat",
+        "grindy": True,
     },
     "Wave Smasher": {
         "ap_id": 2604,
@@ -3991,7 +3995,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: beat 10,000 waves.",
         "requirements": ["fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "beat",
+        "grindy": True,
     },
     "So Early": {
         "ap_id": 2500,
@@ -4009,7 +4013,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 2,000 waves called early.",
         "requirements": ["fieldsBeaten:30"],
         "required_effort": "Major",
-        "field_need": "enter",
+        "grindy": True,
     },
     "No Time to Waste": {
         "ap_id": 2373,
@@ -4018,7 +4022,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 5,000 waves called early.",
         "requirements": ["fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "enter",
+        "grindy": True,
     },
     "They Are Millions": {
         "ap_id": 2555,
@@ -4027,7 +4031,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 1,000,000 monster kills.",
         "requirements": ["fieldsBeaten:37"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Lots of Scratches": {
         "ap_id": 2319,
@@ -4190,7 +4194,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: crack 500 eggs.",
         "requirements": ["eSwarmQueen", "fieldsBeaten:47"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Smoke in the Sky": {
         "ap_id": 2493,
@@ -4225,7 +4229,7 @@ achievement_requirements = {
         "details": "Cumulative across all battles: 500 non-monster kills.",
         "requirements": ["tRitual", "eNonMonsters:1", "fieldsBeaten:53"],
         "required_effort": "Extreme",
-        "field_need": "engage",
+        "grindy": True,
     },
     "Long Lasting": {
         "ap_id": 2314,

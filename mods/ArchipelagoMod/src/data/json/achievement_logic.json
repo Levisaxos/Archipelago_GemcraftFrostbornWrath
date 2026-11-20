@@ -5232,7 +5232,8 @@
           "fieldsBeaten:45"
         ]
       ],
-      "details": "Cumulative across all battles: destroy 1,000 beacons."
+      "details": "Cumulative across all battles: destroy 1,000 beacons.",
+      "grindy": true
     },
     "Gemhancement": {
       "apId": 2208,
@@ -5255,7 +5256,8 @@
         "enhancementSpells:1",
         "fieldsBeaten:28"
       ],
-      "details": "Cumulative across all battles: cast 2,500 enhancement spells."
+      "details": "Cumulative across all battles: cast 2,500 enhancement spells.",
+      "grindy": true
     },
     "Charge Fire Repeat": {
       "apId": 2087,
@@ -5267,7 +5269,8 @@
         "enhancementSpells:1",
         "fieldsBeaten:28"
       ],
-      "details": "Cumulative across all battles: cast 5,000 enhancement spells."
+      "details": "Cumulative across all battles: cast 5,000 enhancement spells.",
+      "grindy": true
     },
     "Angry Wasps": {
       "apId": 2023,
@@ -5291,7 +5294,8 @@
         "fieldToken:25",
         "fieldsBeaten:40"
       ],
-      "details": "Cumulative across all battles: 5,000 wasp kills."
+      "details": "Cumulative across all battles: 5,000 wasp kills.",
+      "grindy": true
     },
     "Drone Warfare": {
       "apId": 2135,
@@ -5303,7 +5307,8 @@
         "fieldToken:20",
         "fieldsBeaten:35"
       ],
-      "details": "Cumulative across all battles: 20,000 wasp kills."
+      "details": "Cumulative across all battles: 20,000 wasp kills.",
+      "grindy": true
     },
     "Tiny but Deadly": {
       "apId": 2568,
@@ -5311,10 +5316,9 @@
       "description": "Reach 50.000 gem wasp kills through all the battles.",
       "required_effort": "Extreme",
       "field_need": "engage",
-      "requirements": [
-        "fieldsBeaten:15"
-      ],
-      "details": "Cumulative across all battles: 50,000 wasp kills."
+      "requirements": [],
+      "details": "Cumulative across all battles: 50,000 wasp kills.",
+      "grindy": true
     },
     "Resourceful": {
       "apId": 2443,
@@ -5349,7 +5353,8 @@
         "eManaShard",
         "fieldsBeaten:28"
       ],
-      "details": "Cumulative across all battles: harvest 20,000 mana from shards."
+      "details": "Cumulative across all battles: harvest 20,000 mana from shards.",
+      "grindy": true
     },
     "The Mana Reaper": {
       "apId": 2549,
@@ -5361,7 +5366,8 @@
         "eManaShard",
         "fieldsBeaten:35"
       ],
-      "details": "Cumulative across all battles: harvest 100,000 mana from shards."
+      "details": "Cumulative across all battles: harvest 100,000 mana from shards.",
+      "grindy": true
     },
     "Eggs Royale": {
       "apId": 2149,
@@ -5373,7 +5379,8 @@
         "eSwarmQueen",
         "fieldsBeaten:47"
       ],
-      "details": "Cumulative across all battles: crack 1,000 eggs."
+      "details": "Cumulative across all battles: crack 1,000 eggs.",
+      "grindy": true
     },
     "Blood on my Hands": {
       "apId": 2054,
@@ -5382,8 +5389,9 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:17"
-      ]
+        "min_wl:30"
+      ],
+      "grindy": true
     },
     "Crimson Journal": {
       "apId": 2109,
@@ -5394,7 +5402,8 @@
       "requirements": [
         "fieldsBeaten:30"
       ],
-      "details": "Cumulative across all battles: 100,000 monster kills."
+      "details": "Cumulative across all battles: 100,000 monster kills.",
+      "grindy": true
     },
     "The Killing Will Never Stop": {
       "apId": 2548,
@@ -5405,7 +5414,8 @@
       "requirements": [
         "fieldsBeaten:55"
       ],
-      "details": "Cumulative across all battles: 200,000 monster kills."
+      "details": "Cumulative across all battles: 200,000 monster kills.",
+      "grindy": true
     },
     "Necrotrophic": {
       "apId": 2358,
@@ -5444,7 +5454,8 @@
         "sTraps",
         "fieldsBeaten:38"
       ],
-      "details": "Cumulative across all battles: 25,000 kills with poison."
+      "details": "Cumulative across all battles: 25,000 kills with poison.",
+      "grindy": true
     },
     "Deathball": {
       "apId": 2117,
@@ -5498,7 +5509,8 @@
           "fieldsBeaten:37"
         ]
       ],
-      "details": "Cumulative across all battles: kill 5,000 monsters with pylons."
+      "details": "Cumulative across all battles: kill 5,000 monsters with pylons.",
+      "grindy": true
     },
     "Blastwave": {
       "apId": 2047,
@@ -5521,7 +5533,8 @@
         "eShrine",
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: kill 5,000 monsters with shrines."
+      "details": "Cumulative across all battles: kill 5,000 monsters with shrines.",
+      "grindy": true
     },
     "Don't Look at the Light": {
       "apId": 2128,
@@ -5533,7 +5546,8 @@
         "eShrine",
         "fieldsBeaten:30"
       ],
-      "details": "Cumulative across all battles: kill 10,000 monsters with shrines."
+      "details": "Cumulative across all battles: kill 10,000 monsters with shrines.",
+      "grindy": true
     },
     "Shrinemaster": {
       "apId": 2482,
@@ -5545,7 +5559,8 @@
         "eShrine",
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: kill 20,000 monsters with shrines."
+      "details": "Cumulative across all battles: kill 20,000 monsters with shrines.",
+      "grindy": true
     },
     "Multifreeze": {
       "apId": 2352,
@@ -5609,7 +5624,8 @@
           "fieldsBeaten:43"
         ]
       ],
-      "details": "Cumulative across all battles: 50,000 strike spell hits."
+      "details": "Cumulative across all battles: 50,000 strike spell hits.",
+      "grindy": true
     },
     "Ice for Everyone": {
       "apId": 2262,
@@ -5631,7 +5647,8 @@
           "fieldsBeaten:50"
         ]
       ],
-      "details": "Cumulative across all battles: 100,000 strike spell hits."
+      "details": "Cumulative across all battles: 100,000 strike spell hits.",
+      "grindy": true
     },
     "Stormbringer": {
       "apId": 2525,
@@ -5696,7 +5713,8 @@
           "fieldsBeaten:50"
         ]
       ],
-      "details": "Cumulative across all battles: cast 5,000 strike spells."
+      "details": "Cumulative across all battles: cast 5,000 strike spells.",
+      "grindy": true
     },
     "Brickery": {
       "apId": 2065,
@@ -5718,7 +5736,8 @@
       "requirements": [
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: build 2,000 structures."
+      "details": "Cumulative across all battles: build 2,000 structures.",
+      "grindy": true
     },
     "Riding the Waves": {
       "apId": 2446,
@@ -5740,7 +5759,8 @@
       "requirements": [
         "fieldsBeaten:30"
       ],
-      "details": "Cumulative across all battles: beat 2,000 waves."
+      "details": "Cumulative across all battles: beat 2,000 waves.",
+      "grindy": true
     },
     "Wave Smasher": {
       "apId": 2604,
@@ -5751,7 +5771,8 @@
       "requirements": [
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: beat 10,000 waves."
+      "details": "Cumulative across all battles: beat 10,000 waves.",
+      "grindy": true
     },
     "So Early": {
       "apId": 2500,
@@ -5773,7 +5794,8 @@
       "requirements": [
         "fieldsBeaten:30"
       ],
-      "details": "Cumulative across all battles: 2,000 waves called early."
+      "details": "Cumulative across all battles: 2,000 waves called early.",
+      "grindy": true
     },
     "No Time to Waste": {
       "apId": 2373,
@@ -5784,7 +5806,8 @@
       "requirements": [
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: 5,000 waves called early."
+      "details": "Cumulative across all battles: 5,000 waves called early.",
+      "grindy": true
     },
     "They Are Millions": {
       "apId": 2555,
@@ -5795,7 +5818,8 @@
       "requirements": [
         "fieldsBeaten:37"
       ],
-      "details": "Cumulative across all battles: 1,000,000 monster kills."
+      "details": "Cumulative across all battles: 1,000,000 monster kills.",
+      "grindy": true
     },
     "Lots of Scratches": {
       "apId": 2319,
@@ -5986,7 +6010,6 @@
       "game_id": 18,
       "description": "Reach 100 monster eggs cracked through all the battles.",
       "required_effort": "Minor",
-      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
         "fieldsBeaten:35"
@@ -5997,7 +6020,6 @@
       "game_id": 78,
       "description": "Reach 200 monster eggs cracked through all the battles.",
       "required_effort": "Major",
-      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
         "fieldsBeaten:40"
@@ -6009,12 +6031,12 @@
       "game_id": 83,
       "description": "Reach 500 monster eggs cracked through all the battles.",
       "required_effort": "Extreme",
-      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
         "fieldsBeaten:47"
       ],
-      "details": "Cumulative across all battles: crack 500 eggs."
+      "details": "Cumulative across all battles: crack 500 eggs.",
+      "grindy": true
     },
     "Smoke in the Sky": {
       "apId": 2493,
@@ -6065,7 +6087,8 @@
         "eNonMonsters:1",
         "fieldsBeaten:53"
       ],
-      "details": "Cumulative across all battles: 500 non-monster kills."
+      "details": "Cumulative across all battles: 500 non-monster kills.",
+      "grindy": true
     },
     "Long Lasting": {
       "apId": 2314,
