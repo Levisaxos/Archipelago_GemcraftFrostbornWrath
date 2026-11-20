@@ -1183,6 +1183,18 @@ def _compile_req(req: str, world, is_progressive: bool):
         return (lambda state: _can_clear_stage_cached(state, player, sid),
                 _COST_REACH, frozenset({sid}))
 
+    # `field:<sid>` — the achievement-side specific-stage requirement (the
+    # progression-rework spelling of `Field_<sid>`). Binds the AND-group to
+    # that one stage via `static_set`, exactly like an element token, so it
+    # FLEXES with the achievement's `field_need`: "beat" needs the stage
+    # clearable, "enter"/"engage" only need it open (+ pouch). Deliberately
+    # NOT reported by `_beat_only_tokens` — unlike the stage-prereq `Field_`
+    # chains, an achievement's `field:` is meant to downgrade with field_need.
+    if req.startswith("field:"):
+        sid = req[len("field:"):].strip()
+        return (lambda state: _can_clear_stage_cached(state, player, sid),
+                _COST_REACH, frozenset({sid}))
+
     if req.startswith("Achievement:"):
         if not is_progressive:
             return (_always_true, _COST_CONST, None)
@@ -1226,6 +1238,19 @@ def _compile_req(req: str, world, is_progressive: bool):
             def _interact_elem(state, n=interact_skill, f=fn):
                 return state.has(n, player) and f(state)
             return (_interact_elem, _COST_REACH, static_set)
+        return (fn,
+                _COST_CONST if fn is _always_true else _COST_REACH,
+                static_set)
+
+    # `r<Creature>` ritual-creature tokens (rApparition, rShadow, rSpecter,
+    # rSpire, rWizardHunter, rWraith) — the progression-rework rename of the
+    # `e<Creature>` non-monster tokens. Resolve through the SAME element
+    # machinery as their `e` equivalents: reachable iff a qualifying stage with
+    # that creature pre-placed is reachable, with Apparition additionally
+    # broadened by the Ritual trait inside `_compile_element_or_full`. The
+    # `"e"+rest in element_prefix_map` guard keeps this to the known creatures.
+    if req[:1] == "r" and ("e" + req[1:]) in element_prefix_map:
+        fn, static_set = _compile_element_or_full(element_prefix_map["e" + req[1:]], player)
         return (fn,
                 _COST_CONST if fn is _always_true else _COST_REACH,
                 static_set)
@@ -1713,13 +1738,41 @@ def _branch_has_wholepool_counter(group) -> bool:
     return False
 
 
+def _branch_fields_beaten_floor(group) -> int:
+    """The `fieldsBeaten:N` floor carried by an AND-group (0 if the token is
+    absent or :0). Every group carries exactly one (enforced by
+    _check_fields_beaten_tokens)."""
+    for tok in group:
+        if isinstance(tok, str) and tok.strip().startswith("fieldsBeaten:"):
+            try:
+                return int(tok.split(":", 1)[1])
+            except ValueError:
+                return 0
+    return 0
+
+
+def _ach_min_fields_beaten(requirements) -> int:
+    """The achievement's EFFECTIVE fields-beaten floor: the minimum
+    `fieldsBeaten:N` across its OR-branches (it becomes reachable via its
+    easiest branch). 0 means at least one branch needs no fields beaten, so the
+    achievement is early-reachable and holds no fields-beaten hazard."""
+    if not requirements:
+        return 0
+    groups = requirements if isinstance(requirements[0], list) else [requirements]
+    return min((_branch_fields_beaten_floor(g) for g in groups), default=0)
+
+
 def _ach_progression_blocked(requirements) -> bool:
     """An achievement may NOT hold progression when EVERY OR-branch is gated on
     a large fraction of a bounded AP-item pool — otherwise a progression item
     could be walled behind most/all of that pool (the one real FillError source,
     see feedback_fill_errors). Generalises the hand-listed
     _NO_PROGRESSION_ACHIEVEMENTS and auto-covers the talisman-set counters that
-    the DNF achievement gate newly hard-enforces."""
+    the DNF achievement gate newly hard-enforces.
+
+    NOTE: the `fieldsBeaten:N` floor is handled separately in set_rules (an
+    achievement whose every branch needs fields beaten is held to useful/filler
+    only, so a field-unlock item can't deadlock behind it)."""
     if not requirements:
         return False
     groups = requirements if isinstance(requirements[0], list) else [requirements]
@@ -2112,7 +2165,18 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
         exempt. The starter GROUP is always reachable: the start stage AND its
         immediately-playable tile mates (free_sids, tokens precollected).
         Exempting the whole group matches "play the starter tile right away" and
-        keeps parity with the shipped field_parents (omitted for this set)."""
+        keeps parity with the shipped field_parents (omitted for this set).
+
+        Under PROGRESSIVE field-token granularity the gate is dropped entirely:
+        the Nth progressive token already imposes a valid unlock order (the same
+        reason `_strip_field_prereqs` removes the vanilla `Field_` chain above),
+        so layering the vanilla-parent order on top is redundant and can
+        CONFLICT — a progressive order that unlocks a tile before its vanilla
+        parent's tile would leave that tile forever unclearable (FillError:
+        "game appears unbeatable"). field_parents ships empty here so the mod
+        agrees."""
+        if ft_progressive:
+            return None
         if sid in world.start_sids or sid in free_sids:
             return None
         return _fg.VANILLA_PARENT.get(sid)
@@ -2307,16 +2371,27 @@ def set_rules(world: "GemcraftFrostbornWrathWorld") -> None:
                 # higher-tier stage locations (where the player has cores).
                 _restrict_talisman_shapes(location, True, True)
 
-                # Whole-pool achievements may only hold useful/filler — never
-                # progression — so no critical item is ever walled behind an
-                # entire item pool. Covers the hand-listed cases (Skillful,
-                # Peek Into The Abyss) plus any achievement whose every branch
-                # is gated on a large fraction of a bounded AP-item pool
-                # (talisman-set / whole-skill counters). Composes with the
-                # talisman shape rule set just above.
+                # --- Item-placement guard: no progression behind a gate it
+                # could be walled by. Two deadlock sources:
+                #   1. Whole-pool achievements (Skillful, talisman-set counters):
+                #      a progression item here is walled behind an entire pool.
+                #   2. `fieldsBeaten:N` floor (every branch N>0): the achievement
+                #      is only reachable once N fields are beatable, so an item
+                #      needed to unlock those fields would deadlock behind it.
+                # A depth-aware rule (allow field-tokens for fields deeper than N)
+                # was tried and measurably REGRESSED fill — letting progression
+                # onto these late achievements congests the late game and starves
+                # the early frontier, so AP strands the field-token chain. The
+                # blunt rule (useful/filler only) keeps progression on early /
+                # stage locations where fill places it cleanly, and tests clean
+                # across every granularity and effort tier. The achievement stays
+                # a real check, still gated by `fieldsBeaten` — it just holds a
+                # non-critical item. (vanilla_tree.DEPTH stays available for the
+                # mod / tuning.)
+                prev_rule = location.item_rule
                 if (ach_name in _NO_PROGRESSION_ACHIEVEMENTS
-                        or _ach_progression_blocked(_reqs)):
-                    prev_rule = location.item_rule
+                        or _ach_progression_blocked(_reqs)
+                        or _ach_min_fields_beaten(_reqs) > 0):
                     location.item_rule = (
                         lambda item, p=prev_rule:
                             (not item.advancement) and p(item)

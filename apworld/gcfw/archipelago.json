@@ -1,7 +1,7 @@
 {
-    "compatible_version": 7,
-    "version": 7,
-    "world_version": "0.6.2",
+    "compatible_version": 8,
+    "version": 8,
+    "world_version": "0.7.0",
     "game": "GemCraft: Frostborn Wrath",
     "authors": ["Levisaxos"],
     "minimum_ap_version": "0.6.4"

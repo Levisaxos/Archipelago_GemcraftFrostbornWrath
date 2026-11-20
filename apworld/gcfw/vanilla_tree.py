@@ -16,11 +16,17 @@ import json
 from importlib.resources import files
 from typing import Dict, Optional
 
-_TREE = json.loads(
+# Full decoded tree: {"stages": {sid: {"parent", "via", "depth", "type"}}}.
+VANILLA_TREE: dict = json.loads(
     files(__package__).joinpath("data/vanilla_tree.json").read_text(encoding="utf-8")
-)["stages"]
+)
+_TREE = VANILLA_TREE["stages"]
 
 # {sid: vanilla parent sid} (None for the root W1)
 VANILLA_PARENT: Dict[str, Optional[str]] = {sid: v["parent"] for sid, v in _TREE.items()}
-# {sid: number of vanilla ancestors}
+# {sid: number of vanilla ancestors}. Beating a depth-D field implies at least D fields beaten before it,
+# so depth is the earliest fields-beaten count at which the field can be cleared. rules.py uses it to decide
+# which field-unlock items are safe to place behind a `fieldsBeaten:N` achievement (depth >= N => never a
+# prerequisite for reaching N).
 VANILLA_DEPTH: Dict[str, int] = {sid: int(v["depth"]) for sid, v in _TREE.items()}
+DEPTH = VANILLA_DEPTH
