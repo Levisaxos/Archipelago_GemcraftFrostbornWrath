@@ -123,6 +123,23 @@ package tracker {
                 var opts: Object = (AV.serverData != null) ? AV.serverData.serverOptions : null;
                 if (opts == null || !Boolean(opts.grindyAchievements)) return true;
             }
+            // Trial / Endurance-only achievements are pruned at gen (apworld _should_skip_achievement), so they have no AP location either. The `modes` field the old filters read is not shipped in achievement_logic.json.
+            if (_requiresMode(achData.requirements as Array))
+                return true;
+            return false;
+        }
+
+        private static function _requiresMode(reqs: Array): Boolean {
+            if (reqs == null)
+                return false;
+            for each (var r: * in reqs) {
+                if (r is Array) {
+                    if (_requiresMode(r as Array))
+                        return true;
+                } else if (String(r) == "mTrial" || String(r) == "mEndurance") {
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -292,23 +309,15 @@ package tracker {
         }
 
         /**
-         * Returns [text, color] pairs describing failing requirements for the
-         * achievement identified by apId.  Empty if in logic, excluded, or not found.
+         * [text, color] lines for EVERY requirement of the achievement identified by apId, each marked met / not met (see LogicEvaluator.getRequirementStatusLines). Empty if not found.
          */
         public
-        function getFailingReqLines(apId: int): Array {
+        function getRequirementLines(apId: int): Array {
             if (_logicEvaluator == null) return [];
             for (var k: String in _achievementData) {
                 var d: Object = _achievementData[k];
                 if (d == null || int(d.apId) != apId) continue;
-                var reqs: Array = d.requirements as Array;
-                if (reqs == null || reqs.length == 0) return [];
-                var descs: Array = _logicEvaluator.getFailingReqDescriptions(reqs, String(d.field_need));
-                var result: Array = [];
-                for each(var desc: String in descs) {
-                    if (desc != null) result.push([desc, 0xCCCCCC]);
-                }
-                return result;
+                return _logicEvaluator.getRequirementStatusLines(d.requirements as Array, String(d.field_need));
             }
             return [];
         }

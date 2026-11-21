@@ -18,6 +18,9 @@ package tracker {
      *   eX            — element-presence check (eBeacon, eMonsterNest…)
      *   eX:N          — element-with-count check (eBeacon:5 = stage with BeaconCount >= 5)
      *   wX            — weather (wRain, wSnow) — modelled as elements
+     *   rX            — Ritual creature (rShadow, rApparition…); alias of eX (see _normalizeToken)
+     *   eBuilding:N   — any wasp-stingable enemy building on the stage; count ignored (see BUILDING_GROUP)
+     *   field:<sid>   — that one stage; alias of Field_<sid>, flexes with field_need
      *   mTrial / mEndurance — mode gates; always-false in journey-only
      *   Field A4      — legacy stage-in-logic check (apworld emits Field_X4 server-side)
      *
@@ -41,6 +44,14 @@ package tracker {
         private static const NON_MONSTERS:Array = [
             "Apparition", "Shadow", "Specter", "Spire", "Wizard Hunter", "Wraith",
         ];
+
+        // `eBuilding[:N]` is a group token: "any enemy building a gem wasp can sting is on the stage". The count is ignored, and the stage set is the union of the members' stages. Mirrors the `eBuilding` entry in apworld/gcfw/requirement_tokens.py element_prefix_map.
+        private static const BUILDING_GROUP:Array = [
+            "Beacon", "Monster Nest", "Sealed gem", "Obelisk", "Gatekeeper",
+        ];
+
+        // Tokens that hit the "unknown requirement" fallback, logged once each so a new apworld token the mod doesn't know yet shows up in the Bezel log.
+        private var _warnedUnknown:Object = {};
 
         // `tm<Spell>Charge:N` token head → TalismanPropertyId (Max-*-Charge).
         // Mirrors apworld rules._TALISMAN_PROPERTY_TOKENS; the per-fragment
@@ -383,64 +394,148 @@ package tracker {
             return out;
         }
 
+        private static const COLOR_REQ_MET:uint    = 0x66DD66;
+        private static const COLOR_REQ_UNMET:uint  = 0xFF6666;
+        private static const COLOR_REQ_HEADER:uint = 0xCCCCCC;
+
         /**
-         * Returns human-readable descriptions of all FAILING requirements.
-         * Used by tooltip overlays to show why an achievement is not yet in logic.
-         * For DNF, shows failing reqs from the group closest to passing.
+         * Every requirement of an achievement with its met state, as [text, color] tooltip lines.
+         * Per-stage tokens are judged by `fieldNeed` (enter = a qualifying field is open, engage = open + usable gems, beat = in logic), the same way _evaluateAndGroupBound binds them.
+         * Groups with 2+ per-stage tokens get an extra "same field" line for the binding itself. DNF groups are listed as "Requirements 1", "or Requirements 2", ... `fieldsBeaten:0` is omitted (no floor).
          */
-        public function getFailingReqDescriptions(requirements:Array,
-                                                  fieldNeed:String = "beat"):Array {
-            if (requirements == null || requirements.length == 0) return [];
-            if (requirements[0] is Array) {
-                // DNF: find the group with the most passing reqs, show its failures
-                var bestFailing:Array = null;
-                var bestPassCount:int = -1;
-                for each (var group:* in requirements) {
-                    var andGroup:Array = group as Array;
-                    if (andGroup == null) continue;
-                    var failing:Array = [];
-                    var passCount:int = 0;
-                    for each (var groupReq:* in andGroup) {
-                        var gs:String = _trim(String(groupReq));
-                        if (!evaluateRequirement(gs)) {
-                            var gd:String = describeRequirement(gs);
-                            if (gd != null) failing.push(gd);
-                        } else {
-                            passCount++;
-                        }
+        public function getRequirementStatusLines(requirements:Array, fieldNeed:String = "beat"):Array {
+            if (fieldNeed != "enter" && fieldNeed != "engage")
+                fieldNeed = "beat";
+            if (_fieldEvaluator != null)
+                _fieldEvaluator.recompute();
+            var out:Array = [[_fieldNeedLabel(fieldNeed), COLOR_REQ_HEADER]];
+            if (requirements == null || requirements.length == 0)
+            {
+                _pushNoStageLines(out, fieldNeed, 0);
+                return out;
+            }
+            var groups:Array = (requirements[0] is Array) ? requirements : [requirements];
+            var multi:Boolean = groups.length > 1;
+            for (var gi:int = 0; gi < groups.length; gi++)
+            {
+                var andGroup:Array = groups[gi] as Array;
+                if (andGroup == null)
+                    continue;
+                if (multi)
+                {
+                    var groupOk:Boolean = _evaluateAndGroupBound(andGroup, fieldNeed);
+                    out.push([(gi == 0 ? "Requirements " : "or Requirements ") + (gi + 1) + (groupOk ? " \u2713" : ""),
+                              groupOk ? COLOR_REQ_MET : COLOR_REQ_HEADER]);
+                }
+                _pushGroupLines(out, andGroup, fieldNeed, multi ? "  " : "");
+            }
+            return out;
+        }
+
+        private function _pushGroupLines(out:Array, andGroup:Array, fieldNeed:String, indent:String):void {
+            var gemCount:int = 0;
+            for each (var scanReq:* in andGroup)
+            {
+                if (_gemNameForToken(_trim(String(scanReq))) != null)
+                    gemCount++;
+            }
+            var jointGems:Boolean = gemCount >= 2;
+            var bound:Array = [];   // the per-stage tokens of this group, for the binding line
+            var shown:int = 0;
+            for each (var tok:* in andGroup)
+            {
+                var rs:String = _trim(String(tok));
+                if (rs.length == 0)
+                    continue;
+                var lowerRs:String = rs.toLowerCase();
+                if (lowerRs.indexOf("fieldsbeaten") == 0
+                        && int(_trim(lowerRs.substring(lowerRs.indexOf(":") + 1))) <= 0)
+                    continue;
+                var met:Boolean;
+                if (jointGems && _gemNameForToken(rs) != null)
+                {
+                    met = evaluateRequirement(rs);
+                    bound.push(rs);
+                }
+                else
+                {
+                    var stages:Array = _qualifyingStagesForToken(rs);
+                    if (stages == null)
+                    {
+                        met = evaluateRequirement(rs);
                     }
-                    // Group fully passes only if every token AND the
-                    // same-stage binding hold; individual reqs can pass
-                    // while binding fails (no single stage satisfies all
-                    // per-stage tokens).
-                    if (failing.length == 0 && _evaluateAndGroupBound(andGroup, fieldNeed))
-                        return [];
-                    if (passCount > bestPassCount) {
-                        bestPassCount = passCount;
-                        bestFailing = failing;
+                    else
+                    {
+                        met = _stageSetMet(stages, fieldNeed);
+                        bound.push(rs);
                     }
                 }
-                return bestFailing != null ? bestFailing : [];
+                var desc:String = describeRequirement(rs);
+                if (desc == null)
+                    desc = (rs == "mTrial" || rs == "mEndurance")
+                        ? "Requires " + rs.substring(1) + " mode (not available in Archipelago)"
+                        : rs;
+                out.push(_statusLine(indent + desc, met));
+                shown++;
             }
-            var result:Array = [];
-            for each (var req:* in requirements) {
-                var s:String = _trim(String(req));
-                if (!evaluateRequirement(s)) {
-                    var desc:String = describeRequirement(s);
-                    if (desc != null) result.push(desc);
-                }
+            if (bound.length >= 2)
+                out.push(_statusLine(indent + "All of the above on the same field", _evaluateAndGroupBound(bound, fieldNeed)));
+            if (bound.length == 0)
+                _pushNoStageLines(out, fieldNeed, shown, indent);
+        }
+
+        /** No per-stage token to bind to: ENGAGE still needs usable gems somewhere open; otherwise say there is nothing else when the group showed no lines. */
+        private function _pushNoStageLines(out:Array, fieldNeed:String, shown:int, indent:String = ""):void {
+            if (fieldNeed == "engage")
+                out.push(_statusLine(indent + "Usable gems on an open field",
+                                     _fieldEvaluator != null && _fieldEvaluator.anyEngageableStage()));
+            else if (shown == 0)
+                out.push(_statusLine(indent + "No other requirements", true));
+        }
+
+        /** True iff some stage in `stages` satisfies `fieldNeed` (mirrors the candidate loop in _evaluateAndGroupBound). */
+        private function _stageSetMet(stages:Array, fieldNeed:String):Boolean {
+            if (stages == null || _fieldEvaluator == null || AV.sessionData == null)
+                return false;
+            var fil:Object = AV.sessionData.fieldsInLogic;
+            var wantEnter:Boolean = (fieldNeed == "enter" || fieldNeed == "engage");
+            for each (var sid:String in stages)
+            {
+                var ok:Boolean = wantEnter ? _fieldEvaluator.isStageEnterable(sid) : (fil != null && fil[sid] == true);
+                if (!ok)
+                    continue;
+                if (fieldNeed == "engage" && !_fieldEvaluator.isStagePouchUsable(sid))
+                    continue;
+                return true;
             }
-            return result;
+            return false;
+        }
+
+        private static function _fieldNeedLabel(fieldNeed:String):String {
+            if (fieldNeed == "enter")
+                return "Needs a field you can enter";
+            if (fieldNeed == "engage")
+                return "Needs a field you can enter with usable gems";
+            return "Needs a field you can beat";
+        }
+
+        private static function _statusLine(text:String, met:Boolean):Array {
+            return [(met ? "\u2713 " : "\u00D7 ") + text, met ? COLOR_REQ_MET : COLOR_REQ_UNMET];
         }
 
         /** Returns a human-readable label for a single requirement string. */
         public function describeRequirement(req:String):String {
+            req = _normalizeToken(req);
             var lower:String = req.toLowerCase();
 
             // ---- New prefix vocabulary descriptions ---------------------
             if (req == "mTrial" || req == "mEndurance")
             {
                 return null;
+            }
+            if (_isBuildingGroupToken(req))
+            {
+                return "Requires an enemy building wasps can sting (" + BUILDING_GROUP.join(" / ") + ")";
             }
             if (req.indexOf("Field_") == 0)
             {
@@ -581,12 +676,25 @@ package tracker {
 
         /** Evaluate a single requirement string.  Unknown patterns return true. */
         public function evaluateRequirement(req:String):Boolean {
+            req = _normalizeToken(req);
             var lower:String = req.toLowerCase();
 
             // ---- New prefix vocabulary -----------------------------------
             // Mode tokens: journey-only mod, so trial/endurance never satisfy.
             if (req == "mTrial" || req == "mEndurance")
             {
+                return false;
+            }
+            // eBuilding[:N] — any member building is on a stage in logic. The count is ignored, like the apworld's multi-member group path.
+            if (_isBuildingGroupToken(req))
+            {
+                for each (var bgName:String in BUILDING_GROUP)
+                {
+                    if (_elementInLogic(bgName))
+                    {
+                        return true;
+                    }
+                }
                 return false;
             }
             // eNonMonsters[:N] — any of the Ritual-spawned creatures is
@@ -1035,8 +1143,42 @@ package tracker {
                 return _countItemsInList(_allFragIds) >= tfgNeed;
             }
 
-            // Unknown requirement — don't block
+            // Unknown requirement — don't block, but say so once: the apworld fails loud on unknown tokens, so one reaching here means the mod is missing a handler.
+            if (_warnedUnknown[req] !== true)
+            {
+                _warnedUnknown[req] = true;
+                if (_logger != null)
+                    _logger.log(_modName, "LogicEvaluator: unknown requirement token '" + req + "' treated as met");
+            }
             return true;
+        }
+
+        /**
+         * Rewrite the progression-rework token spellings onto the forms the evaluator already handles:
+         *   rX          → eX          (rShadow → eShadow; same element machinery, incl. Apparition's Ritual broadening). Only for known creatures, mirroring the apworld's `"e" + rest in element_prefix_map` guard.
+         *   field:<sid> → Field_<sid> (single-stage binding; the bound check already flexes with field_need).
+         *   eMarkedMonster → eMarkedMonster:1 (stage-stat count path, see below).
+         */
+        private function _normalizeToken(req:String):String {
+            if (req == null || req.length < 2)
+                return req;
+            if (req.charAt(0) == "r" && _isUpper(req.charAt(1)) && req.indexOf(":") < 0)
+            {
+                var eForm:String = "e" + req.substring(1);
+                if (_elementPrefixMap[eForm] != null)
+                    return eForm;
+                return req;
+            }
+            if (req.indexOf("field:") == 0)
+                return "Field_" + _trim(req.substring(6));
+            // Bare eMarkedMonster has no element_stages entry (it would read as always met); the apworld gates it on MarkedMonsterCount >= 1, which is exactly the eMarkedMonster:N count path.
+            if (req == "eMarkedMonster")
+                return "eMarkedMonster:1";
+            return req;
+        }
+
+        private function _isBuildingGroupToken(req:String):Boolean {
+            return req == "eBuilding" || req.indexOf("eBuilding:") == 0;
         }
 
         /** Sum the Max-*-Charge value (talisman property `propId`) across the
@@ -1648,7 +1790,31 @@ package tracker {
          *  the same-stage binding. */
         private function _qualifyingStagesForToken(req:String):Array {
             if (req == null || req.length == 0) return null;
+            req = _normalizeToken(req);
             var lower:String = req.toLowerCase();
+
+            // Group token eBuilding[:N]: bindable to the union of its members' stages (no member is state-dependent). Mirrors the apworld's _compile_element_or_full union static_set. Must run before the generic eX:N branch, which would chase a non-existent "BuildingCount" stat.
+            if (_isBuildingGroupToken(req))
+            {
+                if (_elementStages == null)
+                    return null;
+                var bgSeen:Object = {};
+                var bgStages:Array = [];
+                for each (var bgName:String in BUILDING_GROUP)
+                {
+                    var bgList:Array = _elementStages[bgName] as Array;
+                    if (bgList == null)
+                        continue;
+                    for each (var bgSid:String in bgList)
+                    {
+                        if (bgSeen[bgSid] === true)
+                            continue;
+                        bgSeen[bgSid] = true;
+                        bgStages.push(bgSid);
+                    }
+                }
+                return bgStages;
+            }
 
             // Group token eNonMonsters[:N] is state-dependent (its Apparition
             // member broadens via the Ritual trait), so it can't bind to a

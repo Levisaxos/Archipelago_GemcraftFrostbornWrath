@@ -8,7 +8,7 @@
       "field_need": "enter",
       "requirements": [
         "skills:24",
-        "fieldsBeaten:56"
+        "fieldsBeaten:0"
       ],
       "details": "Acquire all skills and raise each to level 5+."
     },
@@ -20,7 +20,7 @@
       "field_need": "enter",
       "requirements": [
         "skills:5",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ],
       "details": "Acquire any 5 skills."
     },
@@ -32,7 +32,7 @@
       "field_need": "enter",
       "requirements": [
         "battleTraits:1",
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ],
       "details": "Activate at least one battle trait at the start of a battle."
     },
@@ -45,7 +45,7 @@
       "requirements": [
         "eShrine:1",
         "wRain",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ],
       "details": "Activate a shrine during rain weather."
     },
@@ -57,7 +57,7 @@
       "field_need": "enter",
       "requirements": [
         "eShrine:1",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Activate a shrine for the first time."
     },
@@ -70,7 +70,7 @@
       "requirements": [
         "eShrine",
         "minWave:30",
-        "fieldsBeaten:20"
+        "fieldsBeaten:0"
       ],
       "details": "Activate shrines 4 times total in one battle (any combination)."
     },
@@ -78,18 +78,12 @@
       "apId": 2006,
       "game_id": 265,
       "description": "Activate shrines a total of 12 times.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "field_need": "beat",
       "requirements": [
         [
-          "eShrine:1",
-          "minWave:150",
-          "fieldsBeaten:24"
-        ],
-        [
           "eShrine:2",
-          "minWave:65",
-          "fieldsBeaten:46"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Activate shrines a total of 12 times across battles."
@@ -99,10 +93,10 @@
       "game_id": 266,
       "description": "Activate the same shrine 2 times.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "engage",
       "requirements": [
-        "eShrine",
-        "fieldsBeaten:8"
+        "eShrine:1",
+        "fieldsBeaten:0"
       ],
       "details": "Activate the same shrine 2 times in one battle."
     },
@@ -115,7 +109,7 @@
       "requirements": [
         "eShrine",
         "minWave:40",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Activate the same shrine 5 times in one battle."
     },
@@ -127,7 +121,7 @@
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:2",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Cast a different enhancement spell on an already-enhanced gem."
     },
@@ -138,7 +132,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:25"
       ]
     },
     "Puzzling Bunch": {
@@ -148,7 +142,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:21"
+        "fieldsBeaten:50"
       ]
     },
     "In Focus": {
@@ -161,7 +155,7 @@
         "sAmplifiers",
         "minWave:50",
         "talismanRow:1",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ]
     },
     "Pat on the Back": {
@@ -173,11 +167,11 @@
       "requirements": [
         [
           "sAmplifiers",
-          "fieldsBeaten:10"
+          "fieldsBeaten:0"
         ],
         [
           "eAmplifiers:1",
-          "fieldsBeaten:9"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Place a gem inside an amplifier (i.e. amplify a gem at least once)."
@@ -189,7 +183,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Banish the same monster 5 or more times."
     },
@@ -201,9 +195,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "minMonsters:300",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Banish 150 monsters with at least 2 wraiths alive."
     },
@@ -218,7 +212,7 @@
         "tGiantDomination",
         "minWave:50",
         "talismanRow:2",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 50 waves in Endurance with Swarmling Domination AND Giant Domination both at max level."
     },
@@ -233,7 +227,7 @@
         "tGiantDomination",
         "minWave:100",
         "talismanRow:3",
-        "fieldsBeaten:63"
+        "fieldsBeaten:0"
       ]
     },
     "Elementary": {
@@ -244,7 +238,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:30",
-        "fieldsBeaten:20"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 30 waves with only grade-2 or lower gems."
     },
@@ -256,7 +250,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:40",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 40 waves with only grade-2 or lower gems."
     },
@@ -268,7 +262,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:50",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ]
     },
     "Need Lots of Them": {
@@ -279,7 +273,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:60",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ]
     },
     "No Armor Area": {
@@ -291,7 +285,7 @@
       "requirements": [
         "sArmorTearing",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 90 waves using only armor-tearing gems."
     },
@@ -304,7 +298,7 @@
       "requirements": [
         "sBleeding",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ]
     },
     "Shooting Where it Hurts": {
@@ -316,7 +310,7 @@
       "requirements": [
         "sCriticalHit",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 90 waves using only critical-hit gems."
     },
@@ -325,11 +319,11 @@
       "game_id": 33,
       "description": "Beat 90 waves using only mana leeching gems.",
       "required_effort": "Minor",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
         "sManaLeech",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 90 waves using only mana-leech gems."
     },
@@ -342,7 +336,7 @@
       "requirements": [
         "sPoison",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ]
     },
     "Slowly but Surely": {
@@ -354,7 +348,7 @@
       "requirements": [
         "sSlowing",
         "minWave:90",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 90 waves using only slowing gems."
     },
@@ -366,7 +360,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:30",
-        "fieldsBeaten:17"
+        "fieldsBeaten:0"
       ]
     },
     "Still Alive": {
@@ -377,7 +371,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:60",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ]
     },
     "Tomb Raiding": {
@@ -388,7 +382,7 @@
       "field_need": "enter",
       "requirements": [
         "eTomb:1",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Break a tomb before wave 15 starts."
     },
@@ -400,7 +394,7 @@
       "field_need": "enter",
       "requirements": [
         "eTomb",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Too Curious": {
@@ -411,7 +405,7 @@
       "field_need": "enter",
       "requirements": [
         "eTomb:2",
-        "fieldsBeaten:39"
+        "fieldsBeaten:0"
       ],
       "details": "Break 2 tombs in one battle."
     },
@@ -423,7 +417,7 @@
       "field_need": "enter",
       "requirements": [
         "eTomb:3",
-        "fieldsBeaten:39"
+        "fieldsBeaten:0"
       ],
       "details": "Break 3 tombs in one battle."
     },
@@ -436,7 +430,7 @@
       "requirements": [
         "sAmplifiers",
         "talismanRow:1",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Build 5 amplifiers in one battle."
     },
@@ -449,7 +443,7 @@
       "requirements": [
         "sAmplifiers",
         "talismanRow:1",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ]
     },
     "Power Exchange": {
@@ -461,7 +455,7 @@
       "requirements": [
         "sAmplifiers",
         "talismanRow:2",
-        "fieldsBeaten:25"
+        "fieldsBeaten:0"
       ]
     },
     "Amplifinity": {
@@ -472,9 +466,8 @@
       "field_need": "beat",
       "requirements": [
         "sAmplifiers",
-        "fieldToken:75",
         "talismanRow:3",
-        "fieldsBeaten:90"
+        "fieldsBeaten:75"
       ],
       "details": "Build 45 amplifiers in one battle."
     },
@@ -486,7 +479,7 @@
       "field_need": "enter",
       "requirements": [
         "sAmplifiers",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ]
     },
     "Towerful": {
@@ -509,7 +502,7 @@
       "field_need": "enter",
       "requirements": [
         "eTower",
-        "fieldsBeaten:9"
+        "fieldsBeaten:15"
       ],
       "details": "Build 15 towers in one battle."
     },
@@ -521,8 +514,7 @@
       "field_need": "beat",
       "requirements": [
         "eTower",
-        "fieldToken:10",
-        "fieldsBeaten:18"
+        "fieldsBeaten:30"
       ],
       "details": "Build 30 towers in one battle."
     },
@@ -531,12 +523,11 @@
       "game_id": 274,
       "description": "Build 90 towers.",
       "required_effort": "Extreme",
-      "field_need": "beat",
+      "field_need": "enter",
       "requirements": [
         "eTower",
-        "fieldToken:60",
         "talismanRow:2",
-        "fieldsBeaten:75"
+        "fieldsBeaten:60"
       ],
       "details": "Build 90 towers in one battle."
     },
@@ -548,7 +539,7 @@
       "field_need": "enter",
       "requirements": [
         "sTraps",
-        "fieldsBeaten:7"
+        "fieldsBeaten:20"
       ],
       "details": "Build 10 traps in one battle."
     },
@@ -560,7 +551,7 @@
       "field_need": "enter",
       "requirements": [
         "sTraps",
-        "fieldsBeaten:12"
+        "fieldsBeaten:40"
       ],
       "details": "Build 20 traps in one battle."
     },
@@ -572,7 +563,7 @@
       "field_need": "enter",
       "requirements": [
         "sTraps",
-        "fieldsBeaten:26"
+        "fieldsBeaten:60"
       ]
     },
     "Razor Path": {
@@ -584,7 +575,7 @@
       "requirements": [
         "sTraps",
         "talismanRow:2",
-        "fieldsBeaten:22"
+        "fieldsBeaten:80"
       ],
       "details": "Build 60 traps in one battle."
     },
@@ -597,7 +588,7 @@
       "requirements": [
         "eWall",
         "minWave:100",
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
       "details": "In one battle: build 100 walls AND start 100 enraged waves."
     },
@@ -609,7 +600,7 @@
       "field_need": "enter",
       "requirements": [
         "eWall",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Build 15 walls in one battle."
     },
@@ -621,7 +612,7 @@
       "field_need": "enter",
       "requirements": [
         "eWall",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Build 30 walls in one battle."
     },
@@ -633,7 +624,7 @@
       "field_need": "enter",
       "requirements": [
         "eWall",
-        "fieldsBeaten:9"
+        "fieldsBeaten:15"
       ],
       "details": "Build 60 walls in one battle."
     },
@@ -645,8 +636,7 @@
       "field_need": "enter",
       "requirements": [
         "eWall",
-        "talismanRow:1",
-        "fieldsBeaten:30"
+        "fieldsBeaten:45"
       ]
     },
     "Call in the Wave!": {
@@ -656,7 +646,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Call 1 wave early."
     },
@@ -667,7 +657,7 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Call an enraged wave early."
     },
@@ -678,7 +668,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Call every wave early in a single battle (no waves arrive on their own timer)."
     },
@@ -690,7 +680,7 @@
       "field_need": "enter",
       "requirements": [
         "minWave:5",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Call 5 waves early in one battle."
     },
@@ -702,7 +692,7 @@
       "field_need": "enter",
       "requirements": [
         "minWave:35",
-        "fieldsBeaten:22"
+        "fieldsBeaten:0"
       ],
       "details": "Call 35 waves early in one battle."
     },
@@ -714,7 +704,7 @@
       "field_need": "enter",
       "requirements": [
         "minWave:70",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Call 70 waves early in one battle."
     },
@@ -726,7 +716,7 @@
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Cast 1 enhancement spell."
     },
@@ -738,7 +728,7 @@
       "field_need": "enter",
       "requirements": [
         "strikeSpells:1",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Cast 1 strike spell."
     },
@@ -751,7 +741,7 @@
       "requirements": [
         "sFreeze",
         "tRitual",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Double Sharded": {
@@ -762,7 +752,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ],
       "details": "Cast 2 ice shards onto the same monster."
     },
@@ -774,7 +764,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ]
     },
     "Shardalot": {
@@ -786,7 +776,7 @@
       "requirements": [
         "sIceShards",
         "minWave:35",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Care to Die Already?": {
@@ -797,8 +787,8 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "minWave:50",
-        "fieldsBeaten:41"
+        "minWave:65",
+        "fieldsBeaten:0"
       ],
       "details": "Cast 8 ice shards onto the same monster."
     },
@@ -811,7 +801,7 @@
       "requirements": [
         "strikeSpells:1",
         "minWave:15",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Cast 5 strike spells in one battle."
     },
@@ -825,17 +815,17 @@
         [
           "strikeSpells:1",
           "minWave:50",
-          "fieldsBeaten:31"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
           "minWave:35",
-          "fieldsBeaten:36"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
           "minWave:20",
-          "fieldsBeaten:38"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -848,13 +838,13 @@
       "requirements": [
         [
           "strikeSpells:2",
-          "minWave:80",
-          "fieldsBeaten:46"
+          "minWave:90",
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "minWave:52",
-          "fieldsBeaten:43"
+          "minWave:60",
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cast 75 strike spells in one battle."
@@ -868,7 +858,7 @@
       "requirements": [
         "strikeSpells:3",
         "minWave:75",
-        "fieldsBeaten:51"
+        "fieldsBeaten:0"
       ],
       "details": "Cast 175 strike spells in one battle."
     },
@@ -891,7 +881,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:2",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Combine two gems of different colors."
     },
@@ -902,7 +892,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ]
     },
     "Eggnog": {
@@ -913,7 +903,7 @@
       "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ],
       "details": "Crack a monster egg while time is frozen (Whiteout active)."
     },
@@ -925,7 +915,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:3",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Combine a 3-component gem."
     },
@@ -937,7 +927,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:6",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Combine a 6-component gem."
     },
@@ -959,7 +949,7 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:10"
       ],
       "details": "Create a grade-5 gem."
     },
@@ -972,7 +962,7 @@
       "requirements": [
         "sPoison",
         "talismanRow:3",
-        "fieldsBeaten:62"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-12 pure poison gem."
     },
@@ -983,8 +973,8 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "eMonsterNest:1",
-        "fieldsBeaten:12"
+        "eBuilding:1",
+        "fieldsBeaten:0"
       ],
       "details": "Land 1,000 wasp stings on enemy buildings."
     },
@@ -997,7 +987,7 @@
       "requirements": [
         "sPoison",
         "minMonsterHP:15000",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "Roof Knocking": {
@@ -1007,8 +997,8 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "eMonsterNest:1",
-        "fieldsBeaten:4"
+        "eBuilding:1",
+        "fieldsBeaten:0"
       ]
     },
     "Drumroll": {
@@ -1019,24 +1009,12 @@
       "field_need": "engage",
       "requirements": [
         [
-          "eBeacon:1",
-          "fieldsBeaten:8"
+          "eBuilding:1",
+          "fieldsBeaten:0"
         ],
         [
           "tDarkMasonry",
-          "fieldsBeaten:33"
-        ],
-        [
-          "eMonsterNest:1",
-          "fieldsBeaten:7"
-        ],
-        [
-          "eSealedGem:1",
-          "fieldsBeaten:43"
-        ],
-        [
-          "eObelisk",
-          "fieldsBeaten:45"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Land 200 wasp stings on enemy buildings."
@@ -1060,7 +1038,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:50",
-        "fieldsBeaten:3"
+        "fieldsBeaten:5"
       ],
       "details": "Land 350 wasp stings on monsters."
     },
@@ -1072,7 +1050,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:150",
-        "fieldsBeaten:11"
+        "fieldsBeaten:15"
       ],
       "details": "Land 950 wasp stings on monsters."
     },
@@ -1084,7 +1062,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:500",
-        "fieldsBeaten:33"
+        "fieldsBeaten:45"
       ]
     },
     "Overpecked": {
@@ -1095,7 +1073,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsterHP:1000",
-        "fieldsBeaten:22"
+        "fieldsBeaten:0"
       ]
     },
     "Stingy Downfall": {
@@ -1106,8 +1084,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpire",
-        "fieldsBeaten:41"
+        "rSpire",
+        "fieldsBeaten:0"
       ],
       "details": "Land 400 wasp stings on a single spire."
     },
@@ -1130,8 +1108,8 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:2400",
-        "talismanRow:1",
-        "fieldsBeaten:46"
+        "talismanRow:2",
+        "fieldsBeaten:50"
       ]
     },
     "Stinging Sphere": {
@@ -1142,7 +1120,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:100",
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "details": "Banish 100 monsters using the orb (orb gem with banishment effect)."
     },
@@ -1154,7 +1132,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:400",
-        "fieldsBeaten:17"
+        "fieldsBeaten:0"
       ],
       "details": "Banish 400 monsters using the orb."
     },
@@ -1165,7 +1143,7 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "In one battle, all kills come from gem bombs and wasps only, and at least 30 monsters are killed.",
       "vanilla_correction": true
@@ -1190,7 +1168,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:250",
-        "fieldsBeaten:9"
+        "fieldsBeaten:25"
       ]
     },
     "One by One": {
@@ -1201,7 +1179,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:750",
-        "fieldsBeaten:55"
+        "fieldsBeaten:50"
       ],
       "details": "Score 750 one-hit kills cumulatively."
     },
@@ -1214,11 +1192,11 @@
       "requirements": [
         [
           "sPylons",
-          "fieldsBeaten:22"
+          "fieldsBeaten:0"
         ],
         [
           "ePylons:1",
-          "fieldsBeaten:14"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -1231,11 +1209,11 @@
       "requirements": [
         [
           "eTraps:1",
-          "fieldsBeaten:4"
+          "fieldsBeaten:0"
         ],
         [
           "sTraps",
-          "fieldsBeaten:7"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Demolish a trap."
@@ -1259,9 +1237,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpire",
+        "rSpire",
         "eWall",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Demolish 20+ walls using falling spires (the spire crash kills the wall)."
     },
@@ -1274,8 +1252,8 @@
       "requirements": [
         "tRitual",
         "eManaShard",
-        "eShadow",
-        "fieldsBeaten:41"
+        "rShadow",
+        "fieldsBeaten:0"
       ],
       "details": "Deplete a mana shard while a shadow is on the field."
     },
@@ -1288,7 +1266,7 @@
       "requirements": [
         "eManaShard",
         "minSwarmlings:300",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Deplete a mana shard while at least 300 swarmlings are on the field."
     },
@@ -1301,11 +1279,11 @@
       "requirements": [
         [
           "eBeacon:1",
-          "fieldsBeaten:5"
+          "fieldsBeaten:0"
         ],
         [
           "tDarkMasonry",
-          "fieldsBeaten:30"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Destroy a beacon."
@@ -1320,12 +1298,12 @@
         [
           "tRitual",
           "eBeacon:1",
-          "fieldsBeaten:46"
+          "fieldsBeaten:0"
         ],
         [
           "tRitual",
           "eMonsterNest:1",
-          "fieldsBeaten:46"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Destroy a building AND kill a non-monster with the same gem bomb."
@@ -1338,7 +1316,7 @@
       "field_need": "engage",
       "requirements": [
         "eAbandonedDwelling",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy a dwelling AND kill a monster with the same gem bomb."
     },
@@ -1350,7 +1328,7 @@
       "field_need": "engage",
       "requirements": [
         "eAbandonedDwelling",
-        "fieldsBeaten:5"
+        "fieldsBeaten:0"
       ]
     },
     "Busted": {
@@ -1358,12 +1336,11 @@
       "game_id": 593,
       "description": "Destroy a full health possession obelisk with one gem bomb blast.",
       "required_effort": "Extreme",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
         "eObelisk",
-        "fieldToken:25",
-        "talismanRow:1",
-        "fieldsBeaten:58"
+        "talismanRow:3",
+        "fieldsBeaten:0"
       ],
       "details": "Destroy a full-HP obelisk with a single gem bomb."
     },
@@ -1375,7 +1352,7 @@
       "field_need": "engage",
       "requirements": [
         "eJarOfWasps:1",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ]
     },
     "Has Stood Long Enough": {
@@ -1386,7 +1363,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:1",
-        "fieldsBeaten:7"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy a monster nest after the very last wave has started."
     },
@@ -1399,14 +1376,14 @@
       "requirements": [
         [
           "eMonsterNest:1",
-          "eWraith",
-          "fieldsBeaten:37"
+          "rWraith",
+          "fieldsBeaten:0"
         ],
         [
           "tRitual",
           "eMonsterNest:1",
-          "eWraith",
-          "fieldsBeaten:46"
+          "rWraith",
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Destroy a monster nest while a wraith is alive on the field."
@@ -1419,7 +1396,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:1",
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ]
     },
     "Stash No More": {
@@ -1443,7 +1420,7 @@
       "requirements": [
         "sBolt",
         "eWatchtower",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy a watchtower before it gets to fire."
     },
@@ -1455,11 +1432,11 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition",
-        "eShadow",
-        "eSpecter",
-        "eWraith",
-        "fieldsBeaten:46"
+        "rApparition",
+        "rShadow",
+        "rSpecter",
+        "rWraith",
+        "fieldsBeaten:0"
       ],
       "details": "Kill an apparition, specter, wraith, AND shadow all in one battle."
     },
@@ -1471,7 +1448,7 @@
       "field_need": "engage",
       "requirements": [
         "eBarricade:5",
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ]
     },
     "Broken Siege": {
@@ -1482,12 +1459,16 @@
       "field_need": "engage",
       "requirements": [
         [
-          "eBeacon:8",
-          "fieldsBeaten:44"
+          "fieldsBeaten:0",
+          "field:J4"
         ],
         [
-          "tDarkMasonry",
-          "fieldsBeaten:38"
+          "field:A3",
+          "talismanRow:2"
+        ],
+        [
+          "field:C1",
+          "talismanRow:2"
         ]
       ],
       "details": "Destroy 8 beacons before wave 8 starts."
@@ -1501,11 +1482,11 @@
       "requirements": [
         [
           "eBeacon:5",
-          "fieldsBeaten:21"
+          "fieldsBeaten:0"
         ],
         [
           "tDarkMasonry",
-          "fieldsBeaten:33"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Destroy 5 beacons in one battle."
@@ -1519,7 +1500,7 @@
       "requirements": [
         "tDarkMasonry",
         "minWave:20",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy 15 beacons in one battle."
     },
@@ -1533,7 +1514,7 @@
         "tDarkMasonry",
         "minWave:40",
         "talismanRow:1",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy 35 beacons in one battle."
     },
@@ -1547,7 +1528,7 @@
         "tDarkMasonry",
         "minWave:50",
         "talismanRow:2",
-        "fieldsBeaten:45"
+        "fieldsBeaten:75"
       ],
       "details": "Destroy 55 beacons in one battle."
     },
@@ -1559,7 +1540,7 @@
       "field_need": "engage",
       "requirements": [
         "eAbandonedDwelling:5",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ]
     },
     "Healing Denied": {
@@ -1570,8 +1551,8 @@
       "field_need": "beat",
       "requirements": [
         [
-          "Field_T3",
-          "fieldsBeaten:19"
+          "field:T3",
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Healing beacons spawn from a dark masonry"
@@ -1584,7 +1565,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:2",
-        "fieldsBeaten:17"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy 2 monster nests before wave 12 starts."
     },
@@ -1596,7 +1577,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:3",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Destroy 3 monster nests before wave 6 starts."
     },
@@ -1608,7 +1589,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:2",
-        "fieldsBeaten:9"
+        "fieldsBeaten:5"
       ]
     },
     "Major Shutdown": {
@@ -1619,7 +1600,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:3",
-        "fieldsBeaten:28"
+        "fieldsBeaten:15"
       ]
     },
     "Denested": {
@@ -1630,7 +1611,7 @@
       "field_need": "engage",
       "requirements": [
         "eMonsterNest:5",
-        "fieldsBeaten:28"
+        "fieldsBeaten:40"
       ]
     },
     "Shieldbreaker": {
@@ -1641,7 +1622,7 @@
       "field_need": "engage",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "Let Them Hatch": {
@@ -1652,7 +1633,7 @@
       "field_need": "enter",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Beat the battle without cracking any swarm queen egg yourself."
     },
@@ -1661,10 +1642,10 @@
       "game_id": 483,
       "description": "Don't destroy any of the jars of wasps.",
       "required_effort": "Trivial",
-      "field_need": "engage",
+      "field_need": "beat",
       "requirements": [
         "eJarOfWasps:1",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ]
     },
     "Eggcracker": {
@@ -1675,7 +1656,7 @@
       "field_need": "enter",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Beat the battle without letting any swarm queen egg hatch."
     },
@@ -1687,7 +1668,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:20",
-        "fieldsBeaten:7"
+        "fieldsBeaten:0"
       ]
     },
     "Tightly Secured": {
@@ -1698,7 +1679,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:60",
-        "fieldsBeaten:32"
+        "fieldsBeaten:50"
       ],
       "details": "60 consecutive waves with no monster touching the orb."
     },
@@ -1711,7 +1692,7 @@
       "requirements": [
         "eBeacon:4",
         "tDarkMasonry",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Throw 48 gem bombs at beacons or jars of wasps in one battle.",
       "vanilla_correction": true
@@ -1724,7 +1705,7 @@
       "field_need": "engage",
       "requirements": [
         "wRain",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ],
       "details": "Throw 18 gem bombs during rain weather."
     },
@@ -1736,7 +1717,7 @@
       "field_need": "engage",
       "requirements": [
         "wSnow",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ],
       "details": "Throw 27 gem bombs during snow weather."
     },
@@ -1749,7 +1730,7 @@
       "requirements": [
         "eTraps",
         "enhancementSpells:1",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Cast Bolt/Beam/Barrage on a gem that's inside a trap."
     },
@@ -1763,12 +1744,12 @@
         [
           "sAmplifiers",
           "enhancementSpells:1",
-          "fieldsBeaten:16"
+          "fieldsBeaten:0"
         ],
         [
           "eAmplifiers:1",
           "enhancementSpells:1",
-          "fieldsBeaten:16"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cast Bolt/Beam/Barrage on a gem inside an amplifier."
@@ -1781,7 +1762,7 @@
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ]
     },
     "Enhancement Storage": {
@@ -1792,7 +1773,7 @@
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ],
       "details": "Cast Bolt/Beam/Barrage on a gem in your inventory."
     },
@@ -1805,7 +1786,7 @@
       "requirements": [
         "sBeam",
         "sBleeding",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ]
     },
     "Just Breathe In": {
@@ -1817,7 +1798,7 @@
       "requirements": [
         "sBeam",
         "sPoison",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Enhance a pure poison gem with Beam (random target priority)."
     },
@@ -1830,7 +1811,7 @@
       "requirements": [
         "sBeam",
         "sSlowing",
-        "fieldsBeaten:42"
+        "fieldsBeaten:0"
       ]
     },
     "Socketed Rage": {
@@ -1848,11 +1829,11 @@
       "apId": 2542,
       "game_id": 335,
       "description": "Enrage 10 waves.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "minWave:10",
-        "fieldsBeaten:5"
+        "fieldsBeaten:0"
       ],
       "details": "Manually enrage 10 waves in a single battle."
     },
@@ -1860,22 +1841,22 @@
       "apId": 2432,
       "game_id": 336,
       "description": "Enrage 30 waves.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "minWave:30",
-        "fieldsBeaten:24"
+        "fieldsBeaten:0"
       ]
     },
     "Raging Habit": {
       "apId": 2434,
       "game_id": 337,
       "description": "Enrage 80 waves.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
         "minWave:80",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Manually enrage 80 waves cumulatively across all battles (or in one battle, depending on stat)."
     },
@@ -1897,7 +1878,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
       "details": "All talisman sockets filled, every fragment upgraded to level 5+."
     },
@@ -1908,7 +1889,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:62"
+        "fieldsBeaten:0"
       ],
       "details": "All talisman sockets filled, every fragment upgraded to its maximum level."
     },
@@ -1919,7 +1900,8 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:40"
+        "fieldsBeaten:0",
+        "talismanFragments:25"
       ]
     },
     "First Puzzle Piece": {
@@ -1927,7 +1909,7 @@
       "game_id": 364,
       "description": "Find a talisman fragment.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "engage",
       "requirements": [
         "fieldsBeaten:0"
       ]
@@ -1949,7 +1931,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:10"
       ]
     },
     "Core Haul": {
@@ -1959,7 +1941,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:31"
+        "fieldsBeaten:25"
       ],
       "details": "Find 180 shadow cores in one battle."
     },
@@ -1970,7 +1952,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:12"
+        "fieldsBeaten:0"
       ]
     },
     "Ground Luck": {
@@ -1980,7 +1962,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:36"
+        "fieldsBeaten:25"
       ]
     },
     "Broken Seal": {
@@ -1991,7 +1973,7 @@
       "field_need": "engage",
       "requirements": [
         "eSealedGem:1",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ]
     },
     "Freezing Wounds": {
@@ -2002,7 +1984,7 @@
       "field_need": "enter",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Freeze the same monster 3 times."
     },
@@ -2015,16 +1997,16 @@
       "requirements": [
         [
           "sFreeze",
-          "eSpecter",
+          "rSpecter",
           "wSnow",
-          "fieldsBeaten:34"
+          "fieldsBeaten:0"
         ],
         [
           "sFreeze",
           "tRitual",
-          "eSpecter",
+          "rSpecter",
           "wSnow",
-          "fieldsBeaten:46"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Freeze a specter during snow weather."
@@ -2038,8 +2020,8 @@
       "requirements": [
         "sFreeze",
         "tRitual",
-        "eSpecter",
-        "fieldsBeaten:38"
+        "rSpecter",
+        "fieldsBeaten:0"
       ]
     },
     "Refrost": {
@@ -2051,7 +2033,7 @@
       "requirements": [
         "sFreeze",
         "minMonsters:222",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Freeze 111 already-frozen monsters (re-freeze)."
     },
@@ -2065,7 +2047,7 @@
         "sFreeze",
         "sWhiteout",
         "minMonsters:260",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ],
       "details": "Freeze 130 already-whited-out monsters (Whiteout first, then Freeze)."
     },
@@ -2077,7 +2059,7 @@
       "field_need": "enter",
       "requirements": [
         "sSlowing",
-        "fieldsBeaten:42"
+        "fieldsBeaten:0"
       ],
       "details": "Fill all 9 inventory slots with pure Slowing gems."
     },
@@ -2089,7 +2071,7 @@
       "field_need": "enter",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 1,500 xp from Freeze crowd hits."
     },
@@ -2101,7 +2083,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 1,800 xp from Ice Shards crowd hits."
     },
@@ -2113,7 +2095,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 3,200 xp from Ice Shards crowd hits."
     },
@@ -2125,7 +2107,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:62"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 4,900 xp from Ice Shards crowd hits in one battle."
     },
@@ -2137,7 +2119,7 @@
       "field_need": "enter",
       "requirements": [
         "sWhiteout",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 2,300 xp from Whiteout crowd hits."
     },
@@ -2150,7 +2132,7 @@
       "requirements": [
         "sWhiteout",
         "minMonsters:1000",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 4,700 xp from Whiteout crowd hits in one battle."
     },
@@ -2163,7 +2145,7 @@
       "requirements": [
         "eDropHolder:3",
         "sBolt",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ]
     },
     "Keepers": {
@@ -2175,7 +2157,7 @@
       "requirements": [
         "eDropHolder:4",
         "sBolt",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 800 mana from drops in one battle."
     },
@@ -2186,8 +2168,13 @@
       "required_effort": "Minor",
       "field_need": "beat",
       "requirements": [
-        "Field_F1",
-        "fieldsBeaten:40"
+        [
+          "field:F1",
+          "fieldsBeaten:0"
+        ],
+        [
+          "fieldsBeaten:75"
+        ]
       ],
       "details": "Gain 600 xp from drops in one battle."
     },
@@ -2199,7 +2186,7 @@
       "field_need": "enter",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 90 xp from Freeze crowd hits."
     },
@@ -2212,7 +2199,7 @@
       "requirements": [
         "sFreeze",
         "minWave:50",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ]
     },
     "Chilling Edges": {
@@ -2223,7 +2210,7 @@
       "field_need": "enter",
       "requirements": [
         "sIceShards",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ]
     },
     "Battle Heat": {
@@ -2233,10 +2220,10 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "minMonsters:450",
-        "fieldsBeaten:12"
+        "minMonsters:600",
+        "fieldsBeaten:0"
       ],
-      "details": "Gain 200 xp from kill chains in one battle."
+      "details": "Gain 200 xp from kill chains in one battle.\nAtleast 422 enemies needed without xp multipliers."
     },
     "Limited Vision": {
       "apId": 2310,
@@ -2246,7 +2233,7 @@
       "field_need": "enter",
       "requirements": [
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Precious": {
@@ -2258,7 +2245,7 @@
       "requirements": [
         "eDropHolder:1",
         "sBolt",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Get a free gem from a drop holder."
     },
@@ -2269,8 +2256,8 @@
       "required_effort": "Minor",
       "field_need": "beat",
       "requirements": [
-        "Field_L5",
-        "fieldsBeaten:32"
+        "field:L5",
+        "fieldsBeaten:0"
       ]
     },
     "Catalyst": {
@@ -2283,7 +2270,7 @@
         "sAmplifiers",
         "sPoison",
         "talismanRow:3",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ]
     },
     "Not Worth It": {
@@ -2294,7 +2281,7 @@
       "field_need": "enter",
       "requirements": [
         "eCorruptedManaShard",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Harvest 9,000 mana from a corrupted mana shard."
     },
@@ -2303,10 +2290,10 @@
       "game_id": 112,
       "description": "Harvest all mana from a mana shard.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "engage",
       "requirements": [
-        "eManaShard",
-        "fieldsBeaten:20"
+        "eManaShard:1",
+        "fieldsBeaten:0"
       ],
       "details": "Fully harvest a mana shard in one battle."
     },
@@ -2315,10 +2302,10 @@
       "game_id": 113,
       "description": "Harvest all mana from 3 mana shards.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "engage",
       "requirements": [
         "eManaShard:3",
-        "fieldsBeaten:27"
+        "fieldsBeaten:25"
       ],
       "details": "Fully harvest 3 mana shards in one battle."
     },
@@ -2329,7 +2316,21 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:21"
+        [
+          "fieldsBeaten:30",
+          "talismanRow:2"
+        ],
+        [
+          "fieldsBeaten:20",
+          "talismanRow:3"
+        ],
+        [
+          "fieldsBeaten:40",
+          "talismanRow:1"
+        ],
+        [
+          "fieldsBeaten:60"
+        ]
       ],
       "details": "Have at least 5,000 starting mana."
     },
@@ -2341,7 +2342,7 @@
       "field_need": "enter",
       "requirements": [
         "talismanRow:2",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ]
     },
     "Mana in a Bottle": {
@@ -2352,7 +2353,7 @@
       "field_need": "enter",
       "requirements": [
         "talismanRow:3",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Have at least 40,000 starting mana."
     },
@@ -2364,7 +2365,7 @@
       "field_need": "enter",
       "requirements": [
         "talismanRow:3",
-        "fieldsBeaten:62"
+        "fieldsBeaten:0"
       ],
       "details": "Have at least 80,000 starting mana."
     },
@@ -2376,7 +2377,7 @@
       "field_need": "enter",
       "requirements": [
         "minMonsters:1200",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ],
       "details": "Have 1,200 monsters on the field at the same time."
     },
@@ -2387,7 +2388,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:10"
       ]
     },
     "How About Some Skill Points": {
@@ -2397,7 +2398,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:25"
       ],
       "details": "Start a battle with at least 5,000 shadow cores in your stash."
     },
@@ -2408,7 +2409,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:75"
       ],
       "details": "Start a battle with at least 25,000 shadow cores in your stash."
     },
@@ -2422,12 +2423,12 @@
         [
           "sLanterns",
           "gemSkills:6",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "eLanterns:1",
           "gemSkills:6",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -2439,7 +2440,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 1,500 hits on a grade-1 gem."
     },
@@ -2451,7 +2452,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 4,500 hits on a grade-1 gem."
     },
@@ -2462,7 +2463,7 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ]
     },
     "Seen Battle": {
@@ -2473,7 +2474,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 500 hits on a grade-1 gem."
     },
@@ -2486,7 +2487,7 @@
       "requirements": [
         "sBarrage",
         "tmBarrageCharge:100",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Charge the Barrage spell to 300%."
     },
@@ -2499,7 +2500,7 @@
       "requirements": [
         "sFreeze",
         "tmFreezeCharge:100",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Charge the Freeze spell to 300%."
     },
@@ -2512,7 +2513,7 @@
       "requirements": [
         "sArmorTearing",
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 3,000 hits on a pure armor-tearing gem."
     },
@@ -2525,7 +2526,7 @@
       "requirements": [
         "sBleeding",
         "sBeam",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 2,500 hits on a pure bleeding gem."
     },
@@ -2538,7 +2539,7 @@
       "requirements": [
         "sCriticalHit",
         "sBeam",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ]
     },
     "Got the Price Back": {
@@ -2551,7 +2552,7 @@
         "sManaLeech",
         "sBeam",
         "minWave:40",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 4,500 hits on a pure mana-leech gem."
     },
@@ -2564,7 +2565,7 @@
       "requirements": [
         "sPoison",
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Reach 3,500 hits on a pure poison gem."
     },
@@ -2573,11 +2574,11 @@
       "game_id": 477,
       "description": "Have a pure slowing gem with 4.000 hits.",
       "required_effort": "Minor",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
         "sSlowing",
         "sBeam",
-        "fieldsBeaten:42"
+        "fieldsBeaten:14"
       ],
       "details": "Reach 4,000 hits on a pure slowing gem."
     },
@@ -2589,8 +2590,8 @@
       "field_need": "enter",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:46"
+        "rShadow",
+        "fieldsBeaten:0"
       ]
     },
     "Prismatic Takeaway": {
@@ -2600,9 +2601,9 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "eSpecter",
+        "rSpecter",
         "gemSkills:6",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Let a specter steal a 6-component gem (then kill it or end the battle)."
     },
@@ -2615,7 +2616,7 @@
       "requirements": [
         "sPoison",
         "eWatchtower",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ],
       "details": "Have a watchtower kill a poisoned monster."
     },
@@ -2627,9 +2628,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpecter",
+        "rSpecter",
         "eWatchtower",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ]
     },
     "You Could Be my Apprentice": {
@@ -2640,9 +2641,9 @@
       "field_need": "engage",
       "requirements": [
         "eWatchtower",
-        "eWizardHunter",
+        "rWizardHunter",
         "tRitual",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ],
       "details": "Have a watchtower kill a wizard hunter."
     },
@@ -2654,7 +2655,7 @@
       "field_need": "engage",
       "requirements": [
         "eWatchtower",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Have a watchtower kill 39 monsters in one battle."
     },
@@ -2666,37 +2667,37 @@
       "field_need": "enter",
       "requirements": [
         "strikeSpells:3",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ]
     },
     "Multiline": {
       "apId": 2353,
       "game_id": 503,
       "description": "Have at least 5 different talisman properties.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:12"
+        "fieldsBeaten:10"
       ]
     },
     "Versatile Charm": {
       "apId": 2595,
       "game_id": 504,
       "description": "Have at least 10 different talisman properties.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:26"
+        "fieldsBeaten:15"
       ]
     },
     "Quite a List": {
       "apId": 2430,
       "game_id": 505,
       "description": "Have at least 15 different talisman properties.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:40"
       ],
       "details": "Talisman must hold 15 different distinct properties at once."
     },
@@ -2707,7 +2708,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:43"
+        "fieldsBeaten:75"
       ],
       "details": "Talisman must hold 20 different distinct properties at once (cumulative across socketed fragments)."
     },
@@ -2719,7 +2720,7 @@
       "field_need": "engage",
       "requirements": [
         "sBarrage",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "No Need to Aim": {
@@ -2730,7 +2731,7 @@
       "field_need": "engage",
       "requirements": [
         "sBarrage",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Shell Shock": {
@@ -2741,7 +2742,7 @@
       "field_need": "engage",
       "requirements": [
         "sBarrage",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ]
     },
     "Firefall": {
@@ -2752,7 +2753,7 @@
       "field_need": "engage",
       "requirements": [
         "sBarrage",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Have 16 barrage-enhanced gems active at once."
     },
@@ -2764,7 +2765,7 @@
       "field_need": "enter",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Dark Masonry trait spawns extra beacons during play; the 20 isn't a static stage stat."
     },
@@ -2776,7 +2777,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Have 2 beam-enhanced gems active at once."
     },
@@ -2788,7 +2789,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "Laser Slicer": {
@@ -2799,7 +2800,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Fusion Core": {
@@ -2810,7 +2811,7 @@
       "field_need": "engage",
       "requirements": [
         "sBeam",
-        "fieldsBeaten:45"
+        "fieldsBeaten:0"
       ],
       "details": "Have 16 beam-enhanced gems active at once."
     },
@@ -2822,7 +2823,7 @@
       "field_need": "engage",
       "requirements": [
         "sBolt",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ]
     },
     "Heavy Hitting": {
@@ -2833,7 +2834,7 @@
       "field_need": "engage",
       "requirements": [
         "sBolt",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ]
     },
     "Impenetrable": {
@@ -2844,7 +2845,7 @@
       "field_need": "engage",
       "requirements": [
         "sBolt",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ]
     },
     "Rugged Defense": {
@@ -2855,7 +2856,7 @@
       "field_need": "engage",
       "requirements": [
         "sBolt",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Have 16 bolt-enhanced gems active at once."
     },
@@ -2866,7 +2867,6 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:30",
         "fieldsBeaten:30"
       ]
     },
@@ -2877,7 +2877,6 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:50",
         "fieldsBeaten:50"
       ]
     },
@@ -2888,7 +2887,6 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:70",
         "fieldsBeaten:70"
       ]
     },
@@ -2899,7 +2897,6 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:90",
         "fieldsBeaten:90"
       ]
     },
@@ -2910,7 +2907,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:14"
+        "fieldsBeaten:0"
       ]
     },
     "Gearing Up": {
@@ -2920,7 +2917,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:15"
       ]
     },
     "Glowing Armada": {
@@ -2930,7 +2927,7 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ],
       "details": "End a battle with 240 wasps on the field."
     },
@@ -2941,7 +2938,7 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "details": "Have 99 wasps on the field at once."
     },
@@ -2952,7 +2949,6 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:20",
         "fieldsBeaten:20"
       ],
       "details": "Have 20 gems on the field before wave 5 starts."
@@ -2964,7 +2960,7 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ]
     },
     "Bazaar": {
@@ -2972,10 +2968,9 @@
       "game_id": 58,
       "description": "Have 30 gems on the battlefield.",
       "required_effort": "Minor",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
-        "fieldToken:20",
-        "fieldsBeaten:25"
+        "fieldsBeaten:10"
       ],
       "details": "Have 30 gems on the field at once."
     },
@@ -2986,9 +2981,8 @@
       "required_effort": "Major",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:30",
         "talismanRow:1",
-        "fieldsBeaten:38"
+        "fieldsBeaten:30"
       ],
       "details": "Have 60 gems on the field at once."
     },
@@ -2999,9 +2993,8 @@
       "required_effort": "Extreme",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:40",
         "talismanRow:2",
-        "fieldsBeaten:55"
+        "fieldsBeaten:50"
       ],
       "details": "Have 90 gems on the field at once."
     },
@@ -3013,7 +3006,7 @@
       "field_need": "enter",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Have 90 monsters frozen at the same instant."
     },
@@ -3025,7 +3018,7 @@
       "field_need": "enter",
       "requirements": [
         "minMonsters:300",
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "Have 300 monsters on the field at the same time."
     },
@@ -3037,7 +3030,7 @@
       "field_need": "enter",
       "requirements": [
         "minMonsters:600",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ]
     },
     "Lagging Already?": {
@@ -3048,7 +3041,7 @@
       "field_need": "enter",
       "requirements": [
         "minMonsters:900",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Have 900 monsters on the field at the same time."
     },
@@ -3061,7 +3054,7 @@
       "requirements": [
         "sSlowing",
         "minMonsters:90",
-        "fieldsBeaten:42"
+        "fieldsBeaten:0"
       ],
       "details": "Have 90 monsters slowed at the same instant."
     },
@@ -3074,7 +3067,7 @@
       "requirements": [
         "sPoison",
         "sTraps",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "In one battle, more than 74% of kills are from poison damage.",
       "vanilla_correction": true
@@ -3087,7 +3080,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:20",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ],
       "details": "Have zero gems on the battlefield when wave 20 starts."
     },
@@ -3110,13 +3103,12 @@
       "field_need": "engage",
       "requirements": [
         [
-          "tRitual",
-          "eSpecter",
-          "fieldsBeaten:41"
+          "rSpecter",
+          "fieldsBeaten:0"
         ],
         [
           "eWatchtower",
-          "fieldsBeaten:32"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -3129,12 +3121,12 @@
       "requirements": [
         [
           "tRitual",
-          "eSpecter",
-          "fieldsBeaten:46"
+          "rSpecter",
+          "fieldsBeaten:0"
         ],
         [
           "eWatchtower",
-          "fieldsBeaten:37"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Have 6 of your gems destroyed or stolen by enemies in one battle."
@@ -3147,7 +3139,7 @@
       "field_need": "engage",
       "requirements": [
         "eWatchtower",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Have 12 of your gems destroyed or stolen by enemies."
     },
@@ -3159,7 +3151,7 @@
       "field_need": "engage",
       "requirements": [
         "eWatchtower",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Have 24 of your gems destroyed or stolen by enemies."
     },
@@ -3173,13 +3165,13 @@
         [
           "tDarkMasonry",
           "minWave:20",
-          "fieldsBeaten:33"
+          "fieldsBeaten:0"
         ],
         [
           "tDarkMasonry",
           "minWave:10",
           "eBeacon:5",
-          "fieldsBeaten:33"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -3191,7 +3183,7 @@
       "field_need": "enter",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Have 10 orblets carried by monsters at once."
     },
@@ -3204,11 +3196,11 @@
       "requirements": [
         [
           "sPylons",
-          "fieldsBeaten:25"
+          "fieldsBeaten:0"
         ],
         [
           "ePylons:3",
-          "fieldsBeaten:21"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -3230,7 +3222,7 @@
       "field_need": "beat",
       "requirements": [
         "tAdaptiveCarapace",
-        "fieldsBeaten:20"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Adaptive Carapace trait at level 6 or higher."
     },
@@ -3242,7 +3234,7 @@
       "field_need": "beat",
       "requirements": [
         "tAwakening",
-        "fieldsBeaten:42"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Awakening trait at level 6 or higher."
     },
@@ -3254,7 +3246,7 @@
       "field_need": "beat",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Dark Masonry trait at level 6 or higher."
     },
@@ -3266,7 +3258,7 @@
       "field_need": "beat",
       "requirements": [
         "tGiantDomination",
-        "fieldsBeaten:28"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Giant Domination trait at level 6 or higher."
     },
@@ -3278,7 +3270,7 @@
       "field_need": "beat",
       "requirements": [
         "tHaste",
-        "fieldsBeaten:12"
+        "fieldsBeaten:0"
       ]
     },
     "Hateful": {
@@ -3289,7 +3281,7 @@
       "field_need": "beat",
       "requirements": [
         "tHatred",
-        "fieldsBeaten:45"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Hatred trait at level 6 or higher."
     },
@@ -3301,7 +3293,7 @@
       "field_need": "beat",
       "requirements": [
         "tInsulation",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Insulation trait at level 6 or higher."
     },
@@ -3313,7 +3305,7 @@
       "field_need": "beat",
       "requirements": [
         "tOvercrowd",
-        "fieldsBeaten:12"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Overcrowd trait at level 6 or higher."
     },
@@ -3325,8 +3317,7 @@
       "field_need": "beat",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Ritual trait at level 6 or higher."
     },
@@ -3338,7 +3329,7 @@
       "field_need": "beat",
       "requirements": [
         "tStrengthInNumbers",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Strength in Numbers trait at level 6 or higher."
     },
@@ -3350,7 +3341,7 @@
       "field_need": "beat",
       "requirements": [
         "tSwarmlingDomination",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Swarmling Domination trait at level 6 or higher."
     },
@@ -3362,7 +3353,7 @@
       "field_need": "beat",
       "requirements": [
         "tSwarmlingParasites",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Swarmling Parasites trait at level 6 or higher."
     },
@@ -3374,7 +3365,7 @@
       "field_need": "beat",
       "requirements": [
         "tCorruptedBanishment",
-        "fieldsBeaten:24"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the tCorruptedBanishment at level 6 or higher."
     },
@@ -3386,7 +3377,7 @@
       "field_need": "beat",
       "requirements": [
         "tThickAir",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Thick Air trait at level 6 or higher."
     },
@@ -3398,7 +3389,7 @@
       "field_need": "beat",
       "requirements": [
         "tVitalLink",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with the Vital Link trait at level 6 or higher."
     },
@@ -3411,7 +3402,7 @@
       "requirements": [
         "sBolt",
         "sTraps",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ],
       "vanilla_correction": true
     },
@@ -3424,7 +3415,7 @@
       "requirements": [
         "sFreeze",
         "eShrine",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ]
     },
     "Melting Pulse": {
@@ -3436,7 +3427,7 @@
       "requirements": [
         "sFreeze",
         "eShrine",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ]
     },
     "Shattered Waves": {
@@ -3449,7 +3440,7 @@
         "sFreeze",
         "eShrine",
         "minMonsters:225",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Hit 225 frozen monsters with shrines."
     },
@@ -3463,7 +3454,7 @@
         "sFreeze",
         "eShrine",
         "minMonsters:475",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Hit 475 frozen monsters with shrines."
     },
@@ -3475,7 +3466,7 @@
       "field_need": "enter",
       "requirements": [
         "eShrine",
-        "fieldsBeaten:11"
+        "fieldsBeaten:0"
       ],
       "details": "Hit the same monster 2x with shrines."
     },
@@ -3489,12 +3480,12 @@
         [
           "sTraps",
           "minMonsterHP:1000",
-          "fieldsBeaten:17"
+          "fieldsBeaten:0"
         ],
         [
           "eTraps:1",
           "minMonsterHP:1000",
-          "fieldsBeaten:17"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Hit the same monster with traps 100 times."
@@ -3508,7 +3499,7 @@
       "requirements": [
         "sWhiteout",
         "eShrine",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Hit 150 whited-out monsters with shrines."
     },
@@ -3519,8 +3510,8 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "Field_T4",
-        "fieldsBeaten:22"
+        "field:T4",
+        "fieldsBeaten:30"
       ]
     },
     "Quicksave": {
@@ -3542,9 +3533,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "minMonsters:1600",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 1,360 monsters with at least 2 wraiths alive."
     },
@@ -3556,7 +3547,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:1000",
-        "fieldsBeaten:34"
+        "fieldsBeaten:75"
       ]
     },
     "Trembling": {
@@ -3568,7 +3559,7 @@
       "requirements": [
         "sTraps",
         "minMonsters:1500",
-        "fieldsBeaten:52"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 1,500 monsters with traps in one battle."
     },
@@ -3581,7 +3572,7 @@
       "requirements": [
         "gemSkills:6",
         "minMonsters:1000",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 1,600 monsters with prismatic wasps."
     },
@@ -3594,7 +3585,7 @@
       "requirements": [
         "gemSkills:6",
         "minMonsters:2500",
-        "fieldsBeaten:56"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 2,500 monsters with prismatic wasps."
     },
@@ -3608,7 +3599,7 @@
         "sBleeding",
         "sPoison",
         "minGiants:1",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a bleeding giant with poison damage."
     },
@@ -3621,7 +3612,7 @@
       "requirements": [
         "sBarrage",
         "eGatekeeper",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a gatekeeper fang using a Barrage shell hit."
     },
@@ -3633,7 +3624,7 @@
       "field_need": "engage",
       "requirements": [
         "eGatekeeper",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a gatekeeper fang using a gem bomb."
     },
@@ -3646,7 +3637,7 @@
       "requirements": [
         "sBeam",
         "minGiants:1",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a giant with a single Beam shot."
     },
@@ -3659,7 +3650,7 @@
       "requirements": [
         "sBolt",
         "minGiants:1",
-        "fieldsBeaten:17"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a giant in a single hit."
     },
@@ -3671,7 +3662,7 @@
       "field_need": "beat",
       "requirements": [
         "minWave:20",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a wave-1 monster after wave 20 has already started (the monster survived 19+ waves)."
     },
@@ -3684,7 +3675,7 @@
       "requirements": [
         "minMonsterHP:100000",
         "minMonsterArmor:1000",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a single monster with at least 100,000 HP and 1,000 armor."
     },
@@ -3696,7 +3687,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsterHP:20000",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ]
     },
     "Through All Layers": {
@@ -3707,7 +3698,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsterArmor:200",
-        "fieldsBeaten:26"
+        "fieldsBeaten:30"
       ],
       "details": "Kill a monster that has at least 200 armor."
     },
@@ -3722,7 +3713,7 @@
         "sPoison",
         "sSlowing",
         "sWhiteout",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ]
     },
     "Peek Into The Abyss": {
@@ -3733,7 +3724,7 @@
       "field_need": "engage",
       "requirements": [
         "battleTraits:12",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with every battle trait at its maximum level."
     },
@@ -3741,12 +3732,12 @@
       "apId": 2014,
       "game_id": 197,
       "description": "Kill a monster with shots blinking to the monster attacking your orb that would otherwise destroy your orb.",
-      "required_effort": "Minor",
+      "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
         "eWatchtower",
-        "eWizardHunter",
-        "fieldsBeaten:32"
+        "rWizardHunter",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a monster whose attack would otherwise destroy your orb (watchtower or wizard hunter blink shot)."
     },
@@ -3768,8 +3759,8 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "eShadow",
-        "fieldsBeaten:37"
+        "rShadow",
+        "fieldsBeaten:0"
       ]
     },
     "Sharp Shot": {
@@ -3779,9 +3770,9 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "eShadow",
+        "rShadow",
         "sBeam",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a shadow using a gem that has hit at least 5,000 times."
     },
@@ -3793,8 +3784,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:38"
+        "rShadow",
+        "fieldsBeaten:0"
       ]
     },
     "I Warned You...": {
@@ -3805,8 +3796,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpecter",
-        "fieldsBeaten:41"
+        "rSpecter",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a specter while it is carrying a gem."
     },
@@ -3818,8 +3809,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpecter",
-        "fieldsBeaten:38"
+        "rSpecter",
+        "fieldsBeaten:0"
       ]
     },
     "Don't Touch it!": {
@@ -3829,8 +3820,8 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "eSpecter",
-        "fieldsBeaten:26"
+        "rSpecter",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a specter (any method)."
     },
@@ -3842,8 +3833,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpire",
-        "fieldsBeaten:41"
+        "rSpire",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a spire using a wasp."
     },
@@ -3854,8 +3845,8 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "eSpire",
-        "fieldsBeaten:34"
+        "rSpire",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a spire (any method)."
     },
@@ -3868,7 +3859,7 @@
       "requirements": [
         "sBarrage",
         "eSwarmQueen",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Kill the swarm queen using a Barrage shell hit."
     },
@@ -3881,18 +3872,18 @@
       "requirements": [
         "sBolt",
         "eSwarmQueen",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ]
     },
     "Hedgehog": {
       "apId": 2240,
       "game_id": 200,
       "description": "Kill a swarmling having at least 100 armor.",
-      "required_effort": "Trivial",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "minSwarmlingArmor:100",
-        "fieldsBeaten:20"
+        "fieldsBeaten:25"
       ],
       "details": "Kill a swarmling that has at least 100 armor."
     },
@@ -3903,8 +3894,8 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "eWizardHunter",
-        "fieldsBeaten:36"
+        "rWizardHunter",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a wizard hunter while it is attacking one of your buildings."
     },
@@ -3916,9 +3907,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "sBeam",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a wraith using a gem that has hit at least 1,000 times."
     },
@@ -3931,8 +3922,8 @@
       "requirements": [
         "tRitual",
         "eShrine",
-        "eWraith",
-        "fieldsBeaten:41"
+        "rWraith",
+        "fieldsBeaten:0"
       ]
     },
     "One Hit is All it Takes": {
@@ -3943,8 +3934,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
-        "fieldsBeaten:41"
+        "rWraith",
+        "fieldsBeaten:0"
       ],
       "details": "Kill a wraith with a single hit."
     },
@@ -3956,8 +3947,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition:1",
-        "fieldsBeaten:41"
+        "rApparition",
+        "fieldsBeaten:0"
       ],
       "details": "Kill an apparition using a gem bomb."
     },
@@ -3969,9 +3960,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition",
+        "rApparition",
         "eShrine",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Kill an apparition with a shrine activation."
     },
@@ -3983,8 +3974,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition:1",
-        "fieldsBeaten:41"
+        "rApparition",
+        "fieldsBeaten:0"
       ]
     },
     "I Saw Something": {
@@ -3995,8 +3986,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition",
-        "fieldsBeaten:38"
+        "rApparition",
+        "fieldsBeaten:0"
       ],
       "details": "Kill an apparition."
     },
@@ -4008,8 +3999,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eApparition",
-        "fieldsBeaten:38"
+        "rApparition",
+        "fieldsBeaten:0"
       ],
       "details": "Kill 2 apparitions in one battle."
     },
@@ -4020,8 +4011,8 @@
       "required_effort": "Major",
       "field_need": "beat",
       "requirements": [
-        "Field_A4",
-        "fieldsBeaten:56"
+        "field:A4",
+        "fieldsBeaten:0"
       ]
     },
     "No More Rounds": {
@@ -4033,7 +4024,7 @@
       "requirements": [
         "eShrine",
         "minMonsters:120",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ]
     },
     "You Had Your Chance": {
@@ -4045,7 +4036,7 @@
       "requirements": [
         "eShrine",
         "minMonsters:520",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 260 banished monsters with shrines."
     },
@@ -4059,7 +4050,7 @@
         "eShrine",
         "minMonsters:920",
         "talismanRow:2",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 460 banished monsters with shrines."
     },
@@ -4072,7 +4063,7 @@
       "requirements": [
         "eShrine",
         "minMonsters:1320",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 660 banished monsters with shrines."
     },
@@ -4084,7 +4075,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:380",
-        "fieldsBeaten:17"
+        "fieldsBeaten:0"
       ]
     },
     "Fool Me Once": {
@@ -4095,7 +4086,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:780",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ]
     },
     "The Price of Obsession": {
@@ -4106,7 +4097,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:1080",
-        "fieldsBeaten:39"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 590 banished monsters."
     },
@@ -4118,7 +4109,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:1580",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 790 banished monsters."
     },
@@ -4131,7 +4122,7 @@
       "requirements": [
         "sBarrage",
         "sBleeding",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ]
     },
     "Easy Kill": {
@@ -4143,7 +4134,7 @@
       "requirements": [
         "sBleeding",
         "minMonsters:120",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 120 bleeding monsters."
     },
@@ -4156,7 +4147,7 @@
       "requirements": [
         "sBleeding",
         "minMonsters:240",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 240 bleeding monsters."
     },
@@ -4169,7 +4160,7 @@
       "requirements": [
         "sBleeding",
         "minMonsters:480",
-        "fieldsBeaten:56"
+        "fieldsBeaten:0"
       ]
     },
     "Final Cut": {
@@ -4181,7 +4172,7 @@
       "requirements": [
         "sBleeding",
         "minMonsters:960",
-        "fieldsBeaten:56"
+        "fieldsBeaten:0"
       ]
     },
     "Rage Control": {
@@ -4193,7 +4184,7 @@
       "requirements": [
         "sBarrage",
         "minSwarmlings:400",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ]
     },
     "Ice Stand": {
@@ -4205,7 +4196,7 @@
       "requirements": [
         "sFreeze",
         "sOrbOfPresence",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 5 frozen monsters that are carrying orblets."
     },
@@ -4232,7 +4223,7 @@
         "sFreeze",
         "wSnow",
         "minMonsters:200",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 100 frozen monsters during snow weather.",
       "vanilla_correction": true
@@ -4246,7 +4237,7 @@
       "requirements": [
         "sBarrage",
         "sFreeze",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Icecracker": {
@@ -4258,7 +4249,7 @@
       "requirements": [
         "sBarrage",
         "sFreeze",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 90 frozen monsters using Barrage-enhanced gems."
     },
@@ -4271,7 +4262,7 @@
       "requirements": [
         "sBeam",
         "sFreeze",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 20 frozen monsters using Beam-enhanced gems."
     },
@@ -4284,7 +4275,7 @@
       "requirements": [
         "sBeam",
         "sFreeze",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 90 frozen monsters using Beam-enhanced gems."
     },
@@ -4297,7 +4288,7 @@
       "requirements": [
         "sBolt",
         "sFreeze",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ]
     },
     "Thin Ice": {
@@ -4309,7 +4300,7 @@
       "requirements": [
         "sFreeze",
         "eTraps",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 20 frozen monsters with traps."
     },
@@ -4323,7 +4314,7 @@
         "sFreeze",
         "sWhiteout",
         "minSwarmlings:480",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ],
       "vanilla_correction": true
     },
@@ -4335,7 +4326,7 @@
       "field_need": "engage",
       "requirements": [
         "markedMonster:179",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ]
     },
     "Avenged": {
@@ -4346,7 +4337,7 @@
       "field_need": "engage",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 15 monsters carrying orblets."
     },
@@ -4358,7 +4349,7 @@
       "field_need": "engage",
       "requirements": [
         "wRain",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 110 monsters during rain weather."
     },
@@ -4370,7 +4361,8 @@
       "field_need": "engage",
       "requirements": [
         "wSnow",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0",
+        "minMonsters:220"
       ],
       "details": "Kill 220 monsters during snow weather."
     },
@@ -4382,9 +4374,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "minMonsters:340",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ]
     },
     "Ok Flier": {
@@ -4395,9 +4387,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "minMonsters:680",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 340 monsters while at least 2 wraiths are alive on the field."
     },
@@ -4409,9 +4401,9 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eWraith",
+        "rWraith",
         "minMonsters:1360",
-        "fieldsBeaten:53"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 680 monsters with at least 2 wraiths alive."
     },
@@ -4424,10 +4416,10 @@
       "requirements": [
         [
           "eShrine",
-          "fieldsBeaten:11"
+          "fieldsBeaten:0"
         ],
         [
-          "fieldsBeaten:12"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Kill 100 monsters during a single time-frozen window."
@@ -4440,7 +4432,7 @@
       "field_need": "engage",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 25 monsters using frozen-corpse explosions."
     },
@@ -4451,7 +4443,7 @@
       "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ]
     },
     "Thunderstruck": {
@@ -4462,7 +4454,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:120",
-        "fieldsBeaten:12"
+        "fieldsBeaten:10"
       ]
     },
     "Wasp Storm": {
@@ -4473,7 +4465,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:360",
-        "fieldsBeaten:34"
+        "fieldsBeaten:30"
       ]
     },
     "Ensnared": {
@@ -4485,11 +4477,11 @@
       "requirements": [
         [
           "eTraps:1",
-          "fieldsBeaten:4"
+          "fieldsBeaten:0"
         ],
         [
           "sTraps",
-          "fieldsBeaten:7"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -4503,12 +4495,12 @@
         [
           "eTraps:2",
           "minMonsters:60",
-          "fieldsBeaten:7"
+          "fieldsBeaten:0"
         ],
         [
           "sTraps",
           "minMonsters:60",
-          "fieldsBeaten:10"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -4521,7 +4513,7 @@
       "requirements": [
         "sTraps",
         "minMonsters:300",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 300 monsters with traps in one battle."
     },
@@ -4534,7 +4526,7 @@
       "requirements": [
         "gemSkills:6",
         "minMonsters:400",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ]
     },
     "Rainbow Strike": {
@@ -4546,7 +4538,7 @@
       "requirements": [
         "gemSkills:6",
         "minMonsters:900",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 900 monsters with prismatic (6-component) wasps."
     },
@@ -4558,7 +4550,7 @@
       "field_need": "engage",
       "requirements": [
         "minMonsters:400",
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 400 monsters in one battle."
     },
@@ -4572,7 +4564,7 @@
         "sPoison",
         "wRain",
         "minMonsters:85",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 85 poisoned monsters during rain weather."
     },
@@ -4584,8 +4576,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:38"
+        "rShadow",
+        "fieldsBeaten:0"
       ],
       "details": "Kill 2 shadows in one battle."
     },
@@ -4597,8 +4589,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:41"
+        "rShadow",
+        "fieldsBeaten:0"
       ],
       "details": "Kill 3 shadows in one battle."
     },
@@ -4610,8 +4602,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:46"
+        "rShadow",
+        "fieldsBeaten:0"
       ],
       "details": "Kill 4 shadows in one battle."
     },
@@ -4623,7 +4615,7 @@
       "field_need": "engage",
       "requirements": [
         "eTomb",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Gem Lust": {
@@ -4634,8 +4626,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpecter",
-        "fieldsBeaten:38"
+        "rSpecter",
+        "fieldsBeaten:10"
       ]
     },
     "Dual Downfall": {
@@ -4646,8 +4638,8 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eSpire",
-        "fieldsBeaten:38"
+        "rSpire",
+        "fieldsBeaten:0"
       ]
     },
     "Pest Control": {
@@ -4658,7 +4650,7 @@
       "field_need": "engage",
       "requirements": [
         "minSwarmlings:333",
-        "fieldsBeaten:18"
+        "fieldsBeaten:20"
       ],
       "details": "Kill 333 swarmlings in one battle."
     },
@@ -4670,7 +4662,7 @@
       "field_need": "engage",
       "requirements": [
         "minSwarmlings:666",
-        "fieldsBeaten:22"
+        "fieldsBeaten:40"
       ]
     },
     "Swarmling Season": {
@@ -4681,7 +4673,7 @@
       "field_need": "engage",
       "requirements": [
         "minSwarmlings:999",
-        "fieldsBeaten:32"
+        "fieldsBeaten:60"
       ],
       "details": "Kill 999 swarmlings in one battle."
     },
@@ -4694,7 +4686,7 @@
       "requirements": [
         "sBolt",
         "eGatekeeper",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ]
     },
     "Enter The Gate": {
@@ -4704,8 +4696,8 @@
       "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "Field_A4",
-        "fieldsBeaten:48"
+        "field:A4",
+        "fieldsBeaten:60"
       ]
     },
     "Double Splash": {
@@ -4716,8 +4708,7 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 2 non-monsters with one gem bomb."
     },
@@ -4730,7 +4721,7 @@
       "requirements": [
         "sBarrage",
         "sWhiteout",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Blind Hit": {
@@ -4742,7 +4733,7 @@
       "requirements": [
         "sBeam",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Jinx Blast": {
@@ -4754,7 +4745,7 @@
       "requirements": [
         "sBolt",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 30 whited-out monsters using Bolt-enhanced gems."
     },
@@ -4766,7 +4757,7 @@
       "field_need": "enter",
       "requirements": [
         "eGatekeeper",
-        "fieldsBeaten:47"
+        "fieldsBeaten:75"
       ],
       "details": "Leave a gatekeeper alive long enough that it launches 100 projectiles."
     },
@@ -4778,7 +4769,7 @@
       "field_need": "beat",
       "requirements": [
         "eMonsterNest:1",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Leave a monster nest at exactly 1 HP at the end of the battle."
     },
@@ -4791,11 +4782,11 @@
       "requirements": [
         [
           "tRitual",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
-          "eApparition:1",
-          "fieldsBeaten:15"
+          "rApparition",
+          "fieldsBeaten:0"
         ]
       ],
       "details": "End a battle with at least one apparition still alive."
@@ -4809,7 +4800,7 @@
       "requirements": [
         "sBleeding",
         "sManaLeech",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ]
     },
     "Painful Leech": {
@@ -4821,7 +4812,7 @@
       "requirements": [
         "sBleeding",
         "sManaLeech",
-        "fieldsBeaten:49"
+        "fieldsBeaten:0"
       ]
     },
     "Mana Cult": {
@@ -4833,7 +4824,7 @@
       "requirements": [
         "sBleeding",
         "sManaLeech",
-        "fieldsBeaten:56"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 6,500 mana from bleeding monsters."
     },
@@ -4846,7 +4837,7 @@
       "requirements": [
         "sManaLeech",
         "sPoison",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "Mana of the Dying": {
@@ -4858,7 +4849,7 @@
       "requirements": [
         "sManaLeech",
         "sPoison",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "To the Last Drop": {
@@ -4870,7 +4861,7 @@
       "requirements": [
         "sManaLeech",
         "sPoison",
-        "fieldsBeaten:45"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 4,700 mana from poisoned monsters."
     },
@@ -4883,7 +4874,7 @@
       "requirements": [
         "sManaLeech",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Weakened Wallet": {
@@ -4895,7 +4886,7 @@
       "requirements": [
         "sManaLeech",
         "sWhiteout",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ]
     },
     "Just Give Me That Mana": {
@@ -4907,7 +4898,7 @@
       "requirements": [
         "sManaLeech",
         "sWhiteout",
-        "fieldsBeaten:50"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 7,200 mana from whited-out monsters."
     },
@@ -4919,7 +4910,7 @@
       "field_need": "engage",
       "requirements": [
         "sManaLeech",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Red Orange": {
@@ -4931,7 +4922,7 @@
       "requirements": [
         "sBleeding",
         "sManaLeech",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 700 mana from bleeding monsters."
     },
@@ -4944,7 +4935,7 @@
       "requirements": [
         "sManaLeech",
         "sPoison",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "Mana Blinded": {
@@ -4956,7 +4947,7 @@
       "requirements": [
         "sManaLeech",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 900 mana from whited-out monsters."
     },
@@ -4970,7 +4961,7 @@
         "sManaLeech",
         "eTraps",
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ]
     },
     "The Horror": {
@@ -4981,9 +4972,8 @@
       "field_need": "enter",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "talismanRow:1",
-        "fieldsBeaten:38"
+        "rShadow",
+        "fieldsBeaten:40"
       ],
       "details": "Lose 3,333 mana to shadows."
     },
@@ -5007,7 +4997,7 @@
       "requirements": [
         "eWatchtower",
         "sBeam",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "details": "Have a watchtower steal back a gem that has hit at least 1,000 times."
     },
@@ -5020,7 +5010,7 @@
       "requirements": [
         "eSleepingHive:1",
         "talismanRow:2",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: lure 2,500 monsters from sleeping hives."
     },
@@ -5028,11 +5018,11 @@
       "apId": 2098,
       "game_id": 109,
       "description": "Lure 20 swarmlings out of a sleeping hive.",
-      "required_effort": "Minor",
-      "field_need": "enter",
+      "required_effort": "Trivial",
+      "field_need": "engage",
       "requirements": [
         "eSleepingHive:1",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ]
     },
     "Come Out, Come Out": {
@@ -5043,7 +5033,7 @@
       "field_need": "enter",
       "requirements": [
         "eSleepingHive:1",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ]
     },
     "Morning March": {
@@ -5054,7 +5044,7 @@
       "field_need": "enter",
       "requirements": [
         "eSleepingHive:1",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ]
     },
     "Let's Have a Look": {
@@ -5062,11 +5052,11 @@
       "game_id": 390,
       "description": "Open a drop holder.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "engage",
       "requirements": [
         "eDropHolder:1",
         "sBolt",
-        "fieldsBeaten:13"
+        "fieldsBeaten:0"
       ],
       "details": "Open a drop holder."
     },
@@ -5078,9 +5068,9 @@
       "field_need": "enter",
       "requirements": [
         "eTomb:1",
-        "eSpire",
+        "rSpire",
         "tRitual",
-        "fieldsBeaten:46"
+        "fieldsBeaten:0"
       ],
       "details": "Open a tomb while a spire is active on the field."
     },
@@ -5105,7 +5095,7 @@
       "requirements": [
         "eDropHolder:3",
         "sBolt",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ]
     },
     "No Stone Unturned": {
@@ -5117,7 +5107,7 @@
       "requirements": [
         "eDropHolder:5",
         "sBolt",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ]
     },
     "A Shrubbery!": {
@@ -5140,7 +5130,7 @@
       "requirements": [
         "sFreeze",
         "sPoison",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Poison 111 already-frozen monsters."
     },
@@ -5153,7 +5143,7 @@
       "requirements": [
         "sPoison",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Mastery": {
@@ -5164,7 +5154,7 @@
       "field_need": "enter",
       "requirements": [
         "skills:1",
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
       "details": "Raise any single skill to level 70."
     },
@@ -5175,7 +5165,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "Reach -8% banishment cost on the orb (requires gems with banishment effects in orb amplifiers)."
     },
@@ -5188,7 +5178,7 @@
       "requirements": [
         "sAmplifiers",
         "sOrbOfPresence",
-        "fieldsBeaten:18"
+        "fieldsBeaten:0"
       ]
     },
     "Desperate Clash": {
@@ -5200,7 +5190,7 @@
       "requirements": [
         "sAmplifiers",
         "sOrbOfPresence",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ]
     },
     "Insane Investment": {
@@ -5212,7 +5202,7 @@
       "requirements": [
         "sAmplifiers",
         "sOrbOfPresence",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
       "details": "Reach -20% banishment cost on the orb."
     },
@@ -5224,40 +5214,34 @@
       "field_need": "engage",
       "requirements": [
         [
-          "eBeacon:1",
-          "fieldsBeaten:20"
-        ],
-        [
           "tDarkMasonry",
-          "fieldsBeaten:45"
+          "fieldsBeaten:70"
         ]
       ],
-      "details": "Cumulative across all battles: destroy 1,000 beacons.",
-      "grindy": true
+      "details": "Cumulative across all battles: destroy 1,000 beacons."
     },
     "Gemhancement": {
       "apId": 2208,
       "game_id": 439,
       "description": "Reach 1.000 enhancement spells cast through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:28"
+        "fieldsBeaten:0"
       ]
     },
     "Enhance Like No Tomorrow": {
       "apId": 2154,
       "game_id": 440,
       "description": "Reach 2.500 enhancement spells cast through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:28"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: cast 2,500 enhancement spells.",
-      "grindy": true
+      "details": "Cumulative across all battles: cast 2,500 enhancement spells."
     },
     "Charge Fire Repeat": {
       "apId": 2087,
@@ -5267,20 +5251,18 @@
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:28"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: cast 5,000 enhancement spells.",
-      "grindy": true
+      "details": "Cumulative across all battles: cast 5,000 enhancement spells."
     },
     "Angry Wasps": {
       "apId": 2023,
       "game_id": 142,
       "description": "Reach 1.000 gem wasp kills through all the battles.",
-      "required_effort": "Major",
-      "field_need": "beat",
+      "required_effort": "Trivial",
+      "field_need": "engage",
       "requirements": [
-        "fieldToken:15",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: 1,000 wasp kills."
     },
@@ -5288,27 +5270,23 @@
       "apId": 2518,
       "game_id": 149,
       "description": "Reach 5.000 gem wasp kills through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:25",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 5,000 wasp kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 5,000 wasp kills."
     },
     "Drone Warfare": {
       "apId": 2135,
       "game_id": 154,
       "description": "Reach 20.000 gem wasp kills through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "beat",
       "requirements": [
-        "fieldToken:20",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 20,000 wasp kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 20,000 wasp kills."
     },
     "Tiny but Deadly": {
       "apId": 2568,
@@ -5316,30 +5294,31 @@
       "description": "Reach 50.000 gem wasp kills through all the battles.",
       "required_effort": "Extreme",
       "field_need": "engage",
-      "requirements": [],
-      "details": "Cumulative across all battles: 50,000 wasp kills.",
-      "grindy": true
+      "requirements": [
+        "fieldsBeaten:0"
+      ],
+      "details": "Cumulative across all battles: 50,000 wasp kills."
     },
     "Resourceful": {
       "apId": 2443,
       "game_id": 105,
       "description": "Reach 5.000 mana harvested from shards through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "eManaShard",
-        "fieldsBeaten:28"
+        "eManaShard:1",
+        "fieldsBeaten:0"
       ]
     },
     "Mana Tap": {
       "apId": 2329,
       "game_id": 106,
       "description": "Reach 10.000 mana harvested from shards through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
         "eManaShard:1",
-        "fieldsBeaten:28"
+        "fieldsBeaten:20"
       ],
       "details": "Cumulative across all battles: harvest 10,000 mana from shards."
     },
@@ -5350,11 +5329,10 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "eManaShard",
-        "fieldsBeaten:28"
+        "eManaShard:1",
+        "fieldsBeaten:40"
       ],
-      "details": "Cumulative across all battles: harvest 20,000 mana from shards.",
-      "grindy": true
+      "details": "Cumulative across all battles: harvest 20,000 mana from shards."
     },
     "The Mana Reaper": {
       "apId": 2549,
@@ -5363,11 +5341,10 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "eManaShard",
-        "fieldsBeaten:35"
+        "eManaShard:1",
+        "fieldsBeaten:75"
       ],
-      "details": "Cumulative across all battles: harvest 100,000 mana from shards.",
-      "grindy": true
+      "details": "Cumulative across all battles: harvest 100,000 mana from shards."
     },
     "Eggs Royale": {
       "apId": 2149,
@@ -5377,33 +5354,30 @@
       "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: crack 1,000 eggs.",
-      "grindy": true
+      "details": "Cumulative across all battles: crack 1,000 eggs."
     },
     "Blood on my Hands": {
       "apId": 2054,
       "game_id": 118,
       "description": "Reach 20.000 monsters killed through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
-        "min_wl:30"
-      ],
-      "grindy": true
+        "fieldsBeaten:0"
+      ]
     },
     "Crimson Journal": {
       "apId": 2109,
       "game_id": 119,
       "description": "Reach 100.000 monsters killed through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 100,000 monster kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 100,000 monster kills."
     },
     "The Killing Will Never Stop": {
       "apId": 2548,
@@ -5412,10 +5386,9 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 200,000 monster kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 200,000 monster kills."
     },
     "Necrotrophic": {
       "apId": 2358,
@@ -5426,7 +5399,7 @@
       "requirements": [
         "sPoison",
         "sTraps",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: 1,000 kills with poison."
     },
@@ -5439,7 +5412,7 @@
       "requirements": [
         "sPoison",
         "sTraps",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: 5,000 kills with poison."
     },
@@ -5452,10 +5425,9 @@
       "requirements": [
         "sPoison",
         "sTraps",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 25,000 kills with poison.",
-      "grindy": true
+      "details": "Cumulative across all battles: 25,000 kills with poison."
     },
     "Deathball": {
       "apId": 2117,
@@ -5466,11 +5438,11 @@
       "requirements": [
         [
           "sPylons",
-          "fieldsBeaten:25"
+          "fieldsBeaten:0"
         ],
         [
           "ePylons:1",
-          "fieldsBeaten:17"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: kill 1,000 monsters with pylons."
@@ -5484,11 +5456,11 @@
       "requirements": [
         [
           "sPylons",
-          "fieldsBeaten:30"
+          "fieldsBeaten:0"
         ],
         [
           "ePylons:1",
-          "fieldsBeaten:22"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: kill 2,000 monsters with pylons."
@@ -5502,39 +5474,37 @@
       "requirements": [
         [
           "sPylons",
-          "fieldsBeaten:37"
+          "fieldsBeaten:0"
         ],
         [
           "ePylons:1",
-          "fieldsBeaten:37"
+          "fieldsBeaten:0"
         ]
       ],
-      "details": "Cumulative across all battles: kill 5,000 monsters with pylons.",
-      "grindy": true
+      "details": "Cumulative across all battles: kill 5,000 monsters with pylons."
     },
     "Blastwave": {
       "apId": 2047,
       "game_id": 349,
       "description": "Reach 1.000 shrine kills through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "eShrine",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ]
     },
     "Hard Reset": {
       "apId": 2232,
       "game_id": 408,
       "description": "Reach 5.000 shrine kills through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "eShrine",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: kill 5,000 monsters with shrines.",
-      "grindy": true
+      "details": "Cumulative across all battles: kill 5,000 monsters with shrines."
     },
     "Don't Look at the Light": {
       "apId": 2128,
@@ -5544,10 +5514,9 @@
       "field_need": "engage",
       "requirements": [
         "eShrine",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: kill 10,000 monsters with shrines.",
-      "grindy": true
+      "details": "Cumulative across all battles: kill 10,000 monsters with shrines."
     },
     "Shrinemaster": {
       "apId": 2482,
@@ -5557,29 +5526,28 @@
       "field_need": "engage",
       "requirements": [
         "eShrine",
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: kill 20,000 monsters with shrines.",
-      "grindy": true
+      "details": "Cumulative across all battles: kill 20,000 monsters with shrines."
     },
     "Multifreeze": {
       "apId": 2352,
       "game_id": 442,
       "description": "Reach 5.000 strike spell hits through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:34"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:43"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -5587,20 +5555,20 @@
       "apId": 2199,
       "game_id": 443,
       "description": "Reach 10.000 strike spell hits through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:34"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:43"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -5613,19 +5581,18 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:34"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:43"
+          "fieldsBeaten:0"
         ]
       ],
-      "details": "Cumulative across all battles: 50,000 strike spell hits.",
-      "grindy": true
+      "details": "Cumulative across all battles: 50,000 strike spell hits."
     },
     "Ice for Everyone": {
       "apId": 2262,
@@ -5636,19 +5603,18 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:48"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:50"
+          "fieldsBeaten:0"
         ]
       ],
-      "details": "Cumulative across all battles: 100,000 strike spell hits.",
-      "grindy": true
+      "details": "Cumulative across all battles: 100,000 strike spell hits."
     },
     "Stormbringer": {
       "apId": 2525,
@@ -5659,15 +5625,15 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:29"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:36"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:38"
+          "fieldsBeaten:0"
         ]
       ]
     },
@@ -5680,15 +5646,15 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:34"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:43"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: cast 2,500 strike spells."
@@ -5702,19 +5668,18 @@
       "requirements": [
         [
           "strikeSpells:1",
-          "fieldsBeaten:41"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:2",
-          "fieldsBeaten:48"
+          "fieldsBeaten:0"
         ],
         [
           "strikeSpells:3",
-          "fieldsBeaten:50"
+          "fieldsBeaten:0"
         ]
       ],
-      "details": "Cumulative across all battles: cast 5,000 strike spells.",
-      "grindy": true
+      "details": "Cumulative across all battles: cast 5,000 strike spells."
     },
     "Brickery": {
       "apId": 2065,
@@ -5723,7 +5688,7 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:30"
+        "fieldsBeaten:50"
       ],
       "details": "Cumulative across all battles: build 1,000 structures."
     },
@@ -5734,10 +5699,9 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:75"
       ],
-      "details": "Cumulative across all battles: build 2,000 structures.",
-      "grindy": true
+      "details": "Cumulative across all battles: build 2,000 structures."
     },
     "Riding the Waves": {
       "apId": 2446,
@@ -5746,7 +5710,7 @@
       "required_effort": "Minor",
       "field_need": "beat",
       "requirements": [
-        "fieldsBeaten:25"
+        "fieldsBeaten:20"
       ],
       "details": "Cumulative across all battles: beat 1,000 waves."
     },
@@ -5757,10 +5721,9 @@
       "required_effort": "Major",
       "field_need": "beat",
       "requirements": [
-        "fieldsBeaten:30"
+        "fieldsBeaten:40"
       ],
-      "details": "Cumulative across all battles: beat 2,000 waves.",
-      "grindy": true
+      "details": "Cumulative across all battles: beat 2,000 waves."
     },
     "Wave Smasher": {
       "apId": 2604,
@@ -5769,10 +5732,9 @@
       "required_effort": "Extreme",
       "field_need": "beat",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:75"
       ],
-      "details": "Cumulative across all battles: beat 10,000 waves.",
-      "grindy": true
+      "details": "Cumulative across all battles: beat 10,000 waves."
     },
     "So Early": {
       "apId": 2500,
@@ -5781,7 +5743,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:25"
+        "fieldsBeaten:10"
       ],
       "details": "Cumulative across all battles: 1,000 waves called early."
     },
@@ -5792,10 +5754,9 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:30"
+        "fieldsBeaten:25"
       ],
-      "details": "Cumulative across all battles: 2,000 waves called early.",
-      "grindy": true
+      "details": "Cumulative across all battles: 2,000 waves called early."
     },
     "No Time to Waste": {
       "apId": 2373,
@@ -5804,10 +5765,9 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:50"
       ],
-      "details": "Cumulative across all battles: 5,000 waves called early.",
-      "grindy": true
+      "details": "Cumulative across all battles: 5,000 waves called early."
     },
     "They Are Millions": {
       "apId": 2555,
@@ -5816,10 +5776,9 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: 1,000,000 monster kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 1,000,000 monster kills."
     },
     "Lots of Scratches": {
       "apId": 2319,
@@ -5829,7 +5788,7 @@
       "field_need": "beat",
       "requirements": [
         "minMonsters:300",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ]
     },
     "Carnage": {
@@ -5837,10 +5796,10 @@
       "game_id": 156,
       "description": "Reach a kill chain of 600.",
       "required_effort": "Major",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
         "minMonsters:600",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ]
     },
     "Can't Stop": {
@@ -5848,10 +5807,10 @@
       "game_id": 157,
       "description": "Reach a kill chain of 900.",
       "required_effort": "Extreme",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
         "minMonsters:900",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ],
       "details": "Reach a kill chain of 900 in one battle."
     },
@@ -5864,7 +5823,7 @@
       "requirements": [
         "sAmplifiers",
         "talismanRow:2",
-        "fieldsBeaten:22"
+        "fieldsBeaten:0"
       ],
       "details": "Have a gem reach 18+ range while inside an amplifier."
     },
@@ -5875,7 +5834,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: win 10 battles."
     },
@@ -5883,20 +5842,20 @@
       "apId": 2253,
       "game_id": 7,
       "description": "Reach 50 battles won.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:17"
+        "fieldsBeaten:10"
       ]
     },
     "Forged in Battle": {
       "apId": 2189,
       "game_id": 8,
       "description": "Reach 200 battles won.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:40"
       ]
     },
     "Well Earned": {
@@ -5906,7 +5865,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:37"
+        "fieldsBeaten:75"
       ],
       "details": "Cumulative across all battles: win 500 battles."
     },
@@ -5914,22 +5873,22 @@
       "apId": 2591,
       "game_id": 302,
       "description": "Reach 100 beacons destroyed through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:33"
+        "fieldsBeaten:40"
       ]
     },
     "No Beacon Zone": {
       "apId": 2365,
       "game_id": 303,
       "description": "Reach 200 beacons destroyed through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:38"
+        "fieldsBeaten:50"
       ],
       "details": "Cumulative across all battles: destroy 200 beacons."
     },
@@ -5940,8 +5899,10 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "tDarkMasonry",
-        "fieldsBeaten:38"
+        [
+          "tDarkMasonry",
+          "fieldsBeaten:60"
+        ]
       ],
       "details": "Cumulative across all battles: destroy 500 beacons."
     },
@@ -5949,11 +5910,11 @@
       "apId": 2008,
       "game_id": 438,
       "description": "Reach 500 enhancement spells cast through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "enhancementSpells:1",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: cast 500 enhancement spells."
     },
@@ -5964,7 +5925,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "Reach mana pool level 5."
     },
@@ -5977,7 +5938,7 @@
       "requirements": [
         "talismanRow:1",
         "talismanColumn:1",
-        "fieldsBeaten:21"
+        "fieldsBeaten:25"
       ]
     },
     "Power Overwhelming": {
@@ -5989,7 +5950,7 @@
       "requirements": [
         "talismanRow:2",
         "talismanColumn:2",
-        "fieldsBeaten:30"
+        "fieldsBeaten:40"
       ]
     },
     "Mana Singularity": {
@@ -6001,7 +5962,7 @@
       "requirements": [
         "talismanRow:3",
         "talismanColumn:3",
-        "fieldsBeaten:41"
+        "fieldsBeaten:75"
       ],
       "details": "Reach mana pool level 20."
     },
@@ -6009,20 +5970,22 @@
       "apId": 2085,
       "game_id": 18,
       "description": "Reach 100 monster eggs cracked through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
+      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:35"
+        "fieldsBeaten:0"
       ]
     },
     "Omelette": {
       "apId": 2384,
       "game_id": 78,
       "description": "Reach 200 monster eggs cracked through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
+      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: crack 200 eggs."
     },
@@ -6030,24 +5993,23 @@
       "apId": 2195,
       "game_id": 83,
       "description": "Reach 500 monster eggs cracked through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
+      "field_need": "engage",
       "requirements": [
         "eSwarmQueen",
-        "fieldsBeaten:47"
+        "fieldsBeaten:0"
       ],
-      "details": "Cumulative across all battles: crack 500 eggs.",
-      "grindy": true
+      "details": "Cumulative across all battles: crack 500 eggs."
     },
     "Smoke in the Sky": {
       "apId": 2493,
       "game_id": 137,
       "description": "Reach 20 non-monsters killed through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "High Targets": {
@@ -6058,8 +6020,7 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:41"
+        "fieldsBeaten:15"
       ],
       "details": "Cumulative across all battles: 100 non-monster kills."
     },
@@ -6071,8 +6032,7 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:46"
+        "fieldsBeaten:40"
       ],
       "details": "Cumulative across all battles: 200 non-monster kills."
     },
@@ -6084,43 +6044,41 @@
       "field_need": "engage",
       "requirements": [
         "tRitual",
-        "eNonMonsters:1",
-        "fieldsBeaten:53"
+        "fieldsBeaten:75"
       ],
-      "details": "Cumulative across all battles: 500 non-monster kills.",
-      "grindy": true
+      "details": "Cumulative across all battles: 500 non-monster kills."
     },
     "Long Lasting": {
       "apId": 2314,
       "game_id": 283,
       "description": "Reach 500 poison kills through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
         "sPoison",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ]
     },
     "Charged for the Kill": {
       "apId": 2088,
       "game_id": 165,
       "description": "Reach 200 pylon kills through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "sPylons",
-        "fieldsBeaten:25"
+        "fieldsBeaten:0"
       ]
     },
     "Icy Fingers": {
       "apId": 2265,
       "game_id": 434,
       "description": "Reach 500 strike spells cast through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
         "strikeSpells:1",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ]
     },
     "Build Along": {
@@ -6130,7 +6088,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ],
       "details": "Cumulative across all battles: build 200 structures."
     },
@@ -6141,7 +6099,7 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:12"
+        "fieldsBeaten:25"
       ],
       "details": "Cumulative across all battles: build 500 structures."
     },
@@ -6149,20 +6107,20 @@
       "apId": 2606,
       "game_id": 14,
       "description": "Reach 500 waves beaten through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "beat",
       "requirements": [
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ]
     },
     "Early Bird": {
       "apId": 2142,
       "game_id": 10,
       "description": "Reach 500 waves started early through all the battles.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:7"
+        "fieldsBeaten:0"
       ]
     },
     "White Wand": {
@@ -6172,7 +6130,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:4"
+        "fieldsBeaten:5"
       ],
       "details": "Reach wizard level 10."
     },
@@ -6183,7 +6141,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:6"
+        "fieldsBeaten:10"
       ],
       "details": "Reach wizard level 20."
     },
@@ -6194,7 +6152,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:18"
+        "fieldsBeaten:20"
       ],
       "details": "Reach wizard level 40."
     },
@@ -6205,7 +6163,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:26"
+        "fieldsBeaten:30"
       ]
     },
     "Blue Wand": {
@@ -6215,7 +6173,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:47"
+        "fieldsBeaten:50"
       ],
       "details": "Reach wizard level 100."
     },
@@ -6227,7 +6185,7 @@
       "field_need": "engage",
       "requirements": [
         "talismanRow:1",
-        "fieldsBeaten:18"
+        "fieldsBeaten:50"
       ]
     },
     "Mana Salvation": {
@@ -6271,7 +6229,7 @@
       "field_need": "enter",
       "requirements": [
         "battleTraits:1",
-        "fieldsBeaten:6"
+        "fieldsBeaten:0"
       ]
     },
     "Stronger Than Before": {
@@ -6282,7 +6240,7 @@
       "field_need": "enter",
       "requirements": [
         "tCorruptedBanishment",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "details": "Win with tCorruptedBanishment at level 12."
     },
@@ -6294,8 +6252,8 @@
       "field_need": "enter",
       "requirements": [
         "tRitual",
-        "eShadow",
-        "fieldsBeaten:41"
+        "rShadow",
+        "fieldsBeaten:0"
       ]
     },
     "Wasp Defense": {
@@ -6306,19 +6264,19 @@
       "field_need": "engage",
       "requirements": [
         "eJarOfWasps:3",
-        "fieldsBeaten:31"
+        "fieldsBeaten:0"
       ]
     },
     "Amplification": {
       "apId": 2019,
       "game_id": 238,
       "description": "Spend 18.000 mana on amplifiers.",
-      "required_effort": "Trivial",
+      "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
         "sAmplifiers",
         "talismanRow:2",
-        "fieldsBeaten:18"
+        "fieldsBeaten:50"
       ],
       "details": "Spend 18,000 mana on amplifiers in one battle."
     },
@@ -6329,19 +6287,18 @@
       "required_effort": "Minor",
       "field_need": "enter",
       "requirements": [
-        "talismanRow:1",
-        "fieldsBeaten:21"
+        "fieldsBeaten:25"
       ]
     },
     "Don't Break it!": {
       "apId": 2127,
       "game_id": 420,
       "description": "Spend 90.000 mana on banishment.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "talismanRow:3",
-        "fieldsBeaten:33"
+        "talismanRow:2",
+        "fieldsBeaten:50"
       ],
       "details": "Spend a cumulative total of 90,000 mana on banishments."
     },
@@ -6352,7 +6309,7 @@
       "required_effort": "Trivial",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "details": "Spend a cumulative total of 900 mana on banishments in one battle."
     },
@@ -6361,11 +6318,10 @@
       "game_id": 492,
       "description": "Start an enraged wave early while there is a wizard hunter on the battlefield.",
       "required_effort": "Trivial",
-      "field_need": "engage",
+      "field_need": "enter",
       "requirements": [
-        "eWizardHunter",
-        "tRitual",
-        "fieldsBeaten:38"
+        "rWizardHunter",
+        "fieldsBeaten:0"
       ],
       "details": "Call an enraged wave early while a Wizard Hunter is on the battlefield."
     },
@@ -6388,7 +6344,7 @@
       "field_need": "engage",
       "requirements": [
         "sAmplifiers",
-        "fieldsBeaten:10"
+        "fieldsBeaten:0"
       ],
       "details": "Place a gem in an amplifier adjacent to the orb."
     },
@@ -6401,7 +6357,7 @@
       "requirements": [
         "sAmplifiers",
         "talismanRow:2",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ],
       "details": "Have 7 gems in amplifiers connected to the orb."
     },
@@ -6412,8 +6368,8 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "eShadow",
-        "fieldsBeaten:49"
+        "rShadow",
+        "fieldsBeaten:0"
       ]
     },
     "More Than Enough": {
@@ -6423,7 +6379,7 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Summon 1,000 monsters by enraging waves."
     },
@@ -6435,7 +6391,7 @@
       "field_need": "engage",
       "requirements": [
         "minWave:20",
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ]
     },
     "Uninvited": {
@@ -6446,7 +6402,7 @@
       "field_need": "engage",
       "requirements": [
         "minWave:30",
-        "fieldsBeaten:19"
+        "fieldsBeaten:0"
       ],
       "details": "Summon 100 monsters by enraging waves."
     },
@@ -6458,7 +6414,7 @@
       "field_need": "engage",
       "requirements": [
         "minWave:100",
-        "fieldsBeaten:55"
+        "fieldsBeaten:0"
       ],
       "details": "Summon 500 monsters by enraging waves."
     },
@@ -6466,11 +6422,11 @@
       "apId": 2346,
       "game_id": 565,
       "description": "Tear a total of 1.250 armor with wasp stings.",
-      "required_effort": "Minor",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:24"
+        "fieldsBeaten:15"
       ],
       "details": "Tear 1,250 armor with wasp stings."
     },
@@ -6478,11 +6434,11 @@
       "apId": 2417,
       "game_id": 566,
       "description": "Tear a total of 2.500 armor with wasp stings.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Tear 2,500 armor with wasp stings."
     },
@@ -6494,7 +6450,7 @@
       "field_need": "engage",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:34"
+        "fieldsBeaten:0"
       ]
     },
     "Melting Armor": {
@@ -6505,7 +6461,7 @@
       "field_need": "engage",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:43"
+        "fieldsBeaten:0"
       ]
     },
     "Boom": {
@@ -6536,10 +6492,14 @@
       "game_id": 103,
       "description": "Unlock a wizard tower.",
       "required_effort": "Trivial",
-      "field_need": "beat",
+      "field_need": "engage",
       "requirements": [
-        "Field_L5",
-        "fieldsBeaten:29"
+        "field:L5",
+        "fieldsBeaten:0",
+        "sBolt",
+        "sBeam",
+        "sBarrage",
+        "sFreeze"
       ],
       "details": "Unlock a wizard tower."
     },
@@ -6562,7 +6522,7 @@
       "field_need": "enter",
       "requirements": [
         "sDemolition",
-        "fieldsBeaten:28"
+        "fieldsBeaten:30"
       ],
       "details": "Use the Demolition spell 7 times in a single battle."
     },
@@ -6575,7 +6535,7 @@
       "requirements": [
         "sFreeze",
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ]
     },
     "Ablatio Retinae": {
@@ -6586,7 +6546,6 @@
       "field_need": "enter",
       "requirements": [
         "sWhiteout",
-        "skillPoints:50",
         "fieldsBeaten:38"
       ],
       "vanilla_correction": true
@@ -6599,7 +6558,7 @@
       "field_need": "beat",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ]
     },
     "Blood Magic": {
@@ -6610,7 +6569,7 @@
       "field_need": "beat",
       "requirements": [
         "sBleeding",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ]
     },
     "Targeting Weak Points": {
@@ -6621,7 +6580,7 @@
       "field_need": "beat",
       "requirements": [
         "sCriticalHit",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle using only critical-hit gems."
     },
@@ -6633,7 +6592,7 @@
       "field_need": "beat",
       "requirements": [
         "sManaLeech",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle using only mana-leech gems."
     },
@@ -6645,7 +6604,7 @@
       "field_need": "beat",
       "requirements": [
         "sPoison",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle using only poison gems."
     },
@@ -6657,7 +6616,7 @@
       "field_need": "beat",
       "requirements": [
         "sSlowing",
-        "fieldsBeaten:39"
+        "fieldsBeaten:0"
       ]
     },
     "You're Safe With Me": {
@@ -6668,7 +6627,7 @@
       "field_need": "enter",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with at least 10 orblets remaining unharvested."
     },
@@ -6680,7 +6639,7 @@
       "field_need": "enter",
       "requirements": [
         "battleTraits:1",
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "details": "Win a battle with 0 skill points spent AND at least one battle trait at maximum level."
     },
@@ -6689,7 +6648,7 @@
       "game_id": 418,
       "description": "Win a battle without any monster getting to your orb.",
       "required_effort": "Trivial",
-      "field_need": "enter",
+      "field_need": "beat",
       "requirements": [
         "fieldsBeaten:0"
       ],
@@ -6725,9 +6684,8 @@
       "required_effort": "Major",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:8"
-      ],
-      "untrackable": true
+        "fieldsBeaten:75"
+      ]
     },
     "Deckard Would Be Proud": {
       "apId": 2118,
@@ -6761,7 +6719,7 @@
       "field_need": "engage",
       "requirements": [
         "eTraps:1",
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "details": "Reference: Trapland video game. Kill a monster using a trap. Complete a level using only traps and no poison gems",
       "untrackable": true
@@ -6775,7 +6733,7 @@
       "requirements": [
         "minWave:120",
         "mEndurance",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -6788,7 +6746,7 @@
       "requirements": [
         "minWave:120",
         "mEndurance",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 120 waves without casting any strike spells.",
       "untrackable": true
@@ -6802,7 +6760,7 @@
       "requirements": [
         "minWave:120",
         "mEndurance",
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 120 waves without casting any strike OR enhancement spells.",
       "untrackable": true
@@ -6818,7 +6776,7 @@
         "tGiantDomination",
         "minWave:200",
         "mEndurance",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 200 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
       "untrackable": true
@@ -6834,7 +6792,7 @@
         "tGiantDomination",
         "minWave:300",
         "mEndurance",
-        "fieldsBeaten:40"
+        "fieldsBeaten:0"
       ],
       "details": "Beat 300 waves in Endurance with Swarmling Domination AND Giant Domination both at max level.",
       "untrackable": true
@@ -6848,7 +6806,7 @@
       "requirements": [
         "minWave:120",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -6861,7 +6819,7 @@
       "requirements": [
         "minWave:360",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -6898,7 +6856,7 @@
       "field_need": "engage",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:26"
+        "fieldsBeaten:0"
       ],
       "details": "Reference: FF8 Squall limit break. Throw N gem bombs while time is frozen by Whiteout.",
       "untrackable": true
@@ -6912,7 +6870,7 @@
       "requirements": [
         "minWave:140",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Call 140 waves early in one battle.",
       "untrackable": true
@@ -6925,7 +6883,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:1",
-        "fieldsBeaten:29"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -6937,7 +6895,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:1",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ],
       "details": "Create a gem with at least 30,000 minimum raw damage.",
       "untrackable": true
@@ -6950,7 +6908,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:1",
-        "fieldsBeaten:36"
+        "fieldsBeaten:0"
       ],
       "details": "Create a gem with at least 300,000 minimum raw damage.",
       "untrackable": true
@@ -6963,7 +6921,7 @@
       "field_need": "engage",
       "requirements": [
         "gemSkills:1",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ],
       "details": "Create a gem with at least 300 minimum raw damage.",
       "untrackable": true
@@ -6975,7 +6933,7 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-12 gem before wave 12 starts.",
       "untrackable": true
@@ -6998,10 +6956,9 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "minWave:60",
         "sFusion",
-        "talismanRow:2",
-        "fieldsBeaten:36"
+        "talismanRow:1",
+        "fieldsBeaten:40"
       ],
       "details": "Create a grade-8 gem (gem grade is RNG-influenced; flagged untrackable).",
       "untrackable": true
@@ -7013,7 +6970,9 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:50",
+        "sFusion",
+        "talismanRow:2"
       ],
       "untrackable": true
     },
@@ -7024,10 +6983,11 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:90",
+        "sFusion",
+        "talismanRow:3"
       ],
-      "details": "Create a grade-16 gem.",
-      "untrackable": true
+      "details": "Create a grade-16 gem."
     },
     "The Peeler": {
       "apId": 2551,
@@ -7037,7 +6997,7 @@
       "field_need": "beat",
       "requirements": [
         "sArmorTearing",
-        "fieldsBeaten:21"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-12 pure armor-tearing gem (untrackable).",
       "untrackable": true
@@ -7049,8 +7009,8 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "eMonsterNest:1",
-        "fieldsBeaten:19"
+        "eBuilding:1",
+        "fieldsBeaten:0"
       ],
       "details": "Land 5,000 wasp stings on enemy buildings (cross-battle).",
       "untrackable": true
@@ -7063,8 +7023,8 @@
       "field_need": "beat",
       "requirements": [
         "sPoison",
-        "eShadow",
-        "fieldsBeaten:35"
+        "rShadow",
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7077,7 +7037,7 @@
       "requirements": [
         "minMonsters:3600",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Deliver 3,600 orb banishments in a SINGLE battle (game checks per-battle this.stats.banishmentsByOrb); exceeds any Journey field's monster count, so Endurance-only.",
       "untrackable": true
@@ -7091,7 +7051,7 @@
       "requirements": [
         "minMonsters:3750",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Score 3,750 one-hit kills in a SINGLE battle (game checks per-battle this.stats.oneHitKills); exceeds any Journey field's monster count, so Endurance-only.",
       "untrackable": true
@@ -7115,7 +7075,7 @@
       "field_need": "engage",
       "requirements": [
         "tDarkMasonry",
-        "fieldsBeaten:30"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7128,7 +7088,7 @@
       "requirements": [
         "minWave:120",
         "mEndurance",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Survive 120 consecutive waves without any monster reaching the orb.",
       "untrackable": true
@@ -7142,7 +7102,7 @@
       "requirements": [
         "minWave:240",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Survive 240 consecutive waves without any monster reaching the orb.",
       "untrackable": true
@@ -7156,7 +7116,7 @@
       "requirements": [
         "minWave:240",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Manually enrage 240 waves cumulatively.",
       "untrackable": true
@@ -7180,7 +7140,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:75"
       ],
       "details": "Find 540 shadow cores in one battle.",
       "untrackable": true
@@ -7194,7 +7154,7 @@
       "requirements": [
         "minWave:245",
         "mEndurance",
-        "fieldsBeaten:8"
+        "fieldsBeaten:75"
       ],
       "details": "Find 5 talisman fragments (random drops; varies per seed).",
       "untrackable": true
@@ -7208,7 +7168,7 @@
       "requirements": [
         "eDropHolder:19",
         "sBolt",
-        "fieldsBeaten:44"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 1,600 mana from drops in one battle.",
       "untrackable": true
@@ -7222,7 +7182,7 @@
       "requirements": [
         "eDropHolder:19",
         "sBolt",
-        "fieldsBeaten:51"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 3,200 mana from drops in one battle.",
       "untrackable": true
@@ -7235,7 +7195,7 @@
       "field_need": "enter",
       "requirements": [
         "sFreeze",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 4,500 xp from Freeze crowd hits in one battle.",
       "untrackable": true
@@ -7249,7 +7209,7 @@
       "requirements": [
         "minMonsters:1800",
         "mEndurance",
-        "fieldsBeaten:54"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 1,200 xp from kill chains in one battle.",
       "untrackable": true
@@ -7261,7 +7221,7 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7274,7 +7234,7 @@
       "requirements": [
         "minMonsters:13000",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Gain 7,200 kill-chain XP in a SINGLE battle (game checks per-battle this.stats.xpFromLongKillChains); needs the monster density of an Endurance run, so Endurance-only.",
       "untrackable": true
@@ -7287,7 +7247,7 @@
       "field_need": "enter",
       "requirements": [
         "sWhiteout",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7311,7 +7271,7 @@
       "field_need": "enter",
       "requirements": [
         "eManaShard",
-        "fieldsBeaten:20"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7324,7 +7284,7 @@
       "requirements": [
         "mEndurance",
         "mTrial",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Have one field beaten in all three modes (Journey, Endurance, Trial).",
       "untrackable": true
@@ -7336,7 +7296,7 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-3 gem with at least 1200 effective max damage.",
       "untrackable": true
@@ -7348,7 +7308,7 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-3 gem with at least 600 effective max damage.",
       "untrackable": true
@@ -7360,7 +7320,7 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Create a grade-3 gem with at least 900 effective max damage.",
       "untrackable": true
@@ -7374,7 +7334,7 @@
       "requirements": [
         "eWatchtower",
         "mEndurance",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Have a watchtower kill a possessed monster.",
       "untrackable": true
@@ -7387,7 +7347,6 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldToken:20",
         "fieldsBeaten:20"
       ],
       "untrackable": true
@@ -7400,7 +7359,6 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldToken:40",
         "fieldsBeaten:40"
       ],
       "untrackable": true
@@ -7413,7 +7371,6 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldToken:60",
         "fieldsBeaten:60"
       ],
       "untrackable": true
@@ -7426,7 +7383,6 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldToken:80",
         "fieldsBeaten:80"
       ],
       "untrackable": true
@@ -7439,7 +7395,6 @@
       "field_need": "beat",
       "requirements": [
         "mTrial",
-        "fieldToken:10",
         "fieldsBeaten:10"
       ],
       "untrackable": true
@@ -7452,7 +7407,6 @@
       "field_need": "beat",
       "requirements": [
         "mTrial",
-        "fieldToken:30",
         "fieldsBeaten:30"
       ],
       "untrackable": true
@@ -7465,7 +7419,6 @@
       "field_need": "beat",
       "requirements": [
         "mTrial",
-        "fieldToken:50",
         "fieldsBeaten:50"
       ],
       "untrackable": true
@@ -7478,7 +7431,6 @@
       "field_need": "beat",
       "requirements": [
         "mTrial",
-        "fieldToken:70",
         "fieldsBeaten:85"
       ],
       "untrackable": true
@@ -7490,7 +7442,7 @@
       "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:3"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7501,7 +7453,7 @@
       "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7512,7 +7464,7 @@
       "required_effort": "Extreme",
       "field_need": "engage",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "untrackable": true,
       "vanilla_correction": true
@@ -7526,7 +7478,7 @@
       "requirements": [
         "minMonsters:4000",
         "mEndurance",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 4,000 monsters in one battle.",
       "untrackable": true
@@ -7540,7 +7492,7 @@
       "requirements": [
         "minMonsters:12000",
         "mEndurance",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 12,000 monsters in one battle.",
       "untrackable": true
@@ -7554,7 +7506,7 @@
       "requirements": [
         "minMonsters:24000",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 24,000 monsters in one battle.",
       "untrackable": true
@@ -7568,7 +7520,7 @@
       "requirements": [
         "minSwarmlings:3333",
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 3,333 swarmlings in a SINGLE battle (game checks per-battle this.stats.killedSwarmlings); exceeds any Journey field's swarmling count, so Endurance-only.",
       "untrackable": true
@@ -7582,7 +7534,7 @@
       "requirements": [
         "sBarrage",
         "mEndurance",
-        "fieldsBeaten:41"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7596,7 +7548,7 @@
         "sBolt",
         "sWhiteout",
         "mEndurance",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Kill a whited-out possessed monster with a Bolt shot.",
       "untrackable": true
@@ -7621,7 +7573,7 @@
       "requirements": [
         "mEndurance",
         "minMonstersBeforeWave12:600",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 600 monsters before wave 12 starts. .",
       "untrackable": true
@@ -7634,7 +7586,7 @@
       "field_need": "engage",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:1"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7646,7 +7598,7 @@
       "field_need": "engage",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:4"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7658,7 +7610,7 @@
       "field_need": "engage",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:9"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7670,7 +7622,7 @@
       "field_need": "engage",
       "requirements": [
         "sOrbOfPresence",
-        "fieldsBeaten:16"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7682,7 +7634,7 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldsBeaten:8"
+        "fieldsBeaten:0"
       ],
       "details": "Kill 199 possessed monsters in one battle.",
       "untrackable": true
@@ -7706,7 +7658,7 @@
       "field_need": "beat",
       "requirements": [
         "sManaLeech",
-        "fieldsBeaten:33"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7719,7 +7671,7 @@
       "requirements": [
         "sManaLeech",
         "skillPoints:200",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 3,600 mana with a grade-1 gem (in a trap).",
       "untrackable": true
@@ -7732,7 +7684,7 @@
       "field_need": "beat",
       "requirements": [
         "sManaLeech",
-        "fieldsBeaten:45"
+        "fieldsBeaten:0"
       ],
       "details": "Leech 6,300 mana with a grade-1 gem in a trap.",
       "untrackable": true
@@ -7756,7 +7708,7 @@
       "field_need": "beat",
       "requirements": [
         "minMonsterHP:20000",
-        "fieldsBeaten:27"
+        "fieldsBeaten:0"
       ],
       "details": "Reference: Minecraft. Have 9 specific items (slimeball-equivalent — undocumented).",
       "untrackable": true
@@ -7769,7 +7721,7 @@
       "field_need": "beat",
       "requirements": [
         "sPoison",
-        "fieldsBeaten:38"
+        "fieldsBeaten:0"
       ],
       "details": "Reference: Half-Life HEV suit. Reach 1000 specific stat (mod logic only — exact trigger undocumented). Have atleast 1.000 enemies poisoned and alive on a field",
       "untrackable": true
@@ -7778,12 +7730,12 @@
       "apId": 2503,
       "game_id": 176,
       "description": "Reach 2.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Trivial",
       "field_need": "engage",
       "requirements": [
         [
           "eMarkedMonster:1",
-          "fieldsBeaten:30"
+          "fieldsBeaten:0"
         ]
       ],
       "untrackable": true
@@ -7792,12 +7744,12 @@
       "apId": 2334,
       "game_id": 185,
       "description": "Reach 10.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Major",
+      "required_effort": "Minor",
       "field_need": "engage",
       "requirements": [
         [
           "eMarkedMonster:1",
-          "fieldsBeaten:30"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: 10,000 kills on monsters with special properties.",
@@ -7807,12 +7759,12 @@
       "apId": 2589,
       "game_id": 186,
       "description": "Reach 20.000 monsters with special properties killed through all the battles.",
-      "required_effort": "Extreme",
+      "required_effort": "Major",
       "field_need": "engage",
       "requirements": [
         [
           "eMarkedMonster:1",
-          "fieldsBeaten:62"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: 20,000 kills on monsters with special properties.",
@@ -7826,10 +7778,9 @@
       "field_need": "beat",
       "requirements": [
         [
-          "mEndurance",
           "eMarkedMonster",
           "minWave:70",
-          "fieldsBeaten:48"
+          "fieldsBeaten:0"
         ]
       ],
       "details": "Cumulative across all battles: 50,000 kills on monsters with special properties.",
@@ -7844,7 +7795,7 @@
       "requirements": [
         "minMonsters:2400",
         "mEndurance",
-        "fieldsBeaten:54"
+        "fieldsBeaten:0"
       ],
       "details": "Reach a kill chain of 2,400 in one battle.",
       "untrackable": true
@@ -7856,10 +7807,8 @@
       "required_effort": "Major",
       "field_need": "beat",
       "requirements": [
-        "mEndurance",
-        "fieldsBeaten:8"
-      ],
-      "untrackable": true
+        "fieldsBeaten:100"
+      ]
     },
     "Brown Wand": {
       "apId": 2070,
@@ -7869,7 +7818,7 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:100"
       ],
       "details": "Reach wizard level 300.",
       "untrackable": true
@@ -7882,7 +7831,7 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:100"
       ],
       "details": "Reach wizard level 500.",
       "untrackable": true
@@ -7895,7 +7844,7 @@
       "field_need": "beat",
       "requirements": [
         "mEndurance",
-        "fieldsBeaten:15"
+        "fieldsBeaten:100"
       ],
       "details": "Reach wizard level 1,000.",
       "untrackable": true
@@ -7918,7 +7867,8 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:75",
+        "talismanRow:3"
       ],
       "details": "Spend a cumulative total of 900,000 mana on banishments.",
       "untrackable": true
@@ -7931,7 +7881,7 @@
       "field_need": "beat",
       "requirements": [
         "sPoison",
-        "fieldsBeaten:23"
+        "fieldsBeaten:0"
       ],
       "details": "Reference: Ultima 'poison' spell. Spread poison to 90 monsters in a single battle. 90 monsters poisoned at the same time",
       "untrackable": true
@@ -7943,7 +7893,7 @@
       "required_effort": "Extreme",
       "field_need": "enter",
       "requirements": [
-        "fieldsBeaten:15"
+        "fieldsBeaten:0"
       ],
       "untrackable": true
     },
@@ -7956,7 +7906,7 @@
       "requirements": [
         "minWave:3",
         "mTrial",
-        "fieldsBeaten:1"
+        "fieldsBeaten:0"
       ],
       "details": "Win a Trial battle with at least 3 waves enraged.",
       "untrackable": true
@@ -7970,7 +7920,7 @@
       "requirements": [
         "minWave:3",
         "mTrial",
-        "fieldsBeaten:1"
+        "fieldsBeaten:0"
       ],
       "details": "Win a Trial battle with at least 3 waves called early.",
       "untrackable": true

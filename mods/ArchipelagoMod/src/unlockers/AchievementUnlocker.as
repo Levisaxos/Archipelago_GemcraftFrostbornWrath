@@ -147,8 +147,8 @@ package unlockers {
          *   - "untrackable"            — flagged untrackable in rulesdata
          *   - "grindy"                 — flagged grindy, grindy_achievements off
          *   - "excluded by effort"     — required_effort above slot threshold
-         *   - "Trial-mode only"        — "Trial" in requirements (no AP hook)
-         *   - "Endurance disabled"     — "Endurance" requirement, mode off
+         *   - "Trial-mode only"        — "mTrial" in requirements (no AP hook)
+         *   - "Endurance-mode only"    — "mEndurance" in requirements; the apworld prunes these regardless of disable_endurance
          */
         public function getSkipReason(achData:Object):String {
             if (!achData)
@@ -173,10 +173,10 @@ package unlockers {
 
             var reqs:Array = (achData.requirements is Array) ? (achData.requirements as Array) : null;
             if (reqs != null) {
-                if (requirementsContain(reqs, "Trial"))
+                if (requirementsContain(reqs, "mTrial"))
                     return "Trial-mode only";
-                if (Boolean(serverOptions.disable_endurance) && requirementsContain(reqs, "Endurance"))
-                    return "Endurance disabled";
+                if (requirementsContain(reqs, "mEndurance"))
+                    return "Endurance-mode only";
             }
             return null;
         }

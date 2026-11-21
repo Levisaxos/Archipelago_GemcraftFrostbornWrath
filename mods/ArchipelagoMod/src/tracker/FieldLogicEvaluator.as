@@ -15,23 +15,15 @@ package tracker {
      * After every recompute, writes the result to AV.sessionData.fieldsInLogic
      * so UI components can read it without holding a reference to this class.
      *
-     * In-logic algorithm (matches apworld rules.set_rules + _eval_req):
-     *   Stage is in logic iff every condition holds:
-     *     1. Stage is in FREE_STAGES (W1-W4), OR has its own Field Token.
-     *     2. WIZLOCK skill gate (stageSkills[sid]) is satisfied.
-     *     3. Field-token prereq gate: at least one Field_<sid> entry in
-     *        stageRequirements[sid] has its token collected — UNLESS the
-     *        prereq list contains a free stage (then auto-satisfied) or
-     *        contains no Field_ entries at all.
-     *     4. Non-Field requirements (talismanRow:N, talismanColumn:N,
-     *        skillPoints:N, ...) are all satisfied.
-     *     5. Vanilla parent gate: fieldParents[sid] (if any) is itself in
-     *        logic (recursive, so the whole vanilla ancestor chain holds).
+     * In-logic algorithm (matches apworld rules.set_rules _STAGE_CLEAR_RULES + the vanilla parent gate):
+     *   A free stage (slot_data free_stages: the starter group) is always in logic. Any other stage is in logic iff every condition holds:
+     *     1. Its own field token is held (tokensByStrId; granularity resolved on grant).
+     *     2. WIZLOCK gate (stageSkills[sid]) is met. In current data that is only `gemPouch:<prefix>` on every stage.
+     *     3. Vanilla parent gate: fieldParents[sid] (if any) is itself in logic (recursive, so the whole vanilla ancestor chain holds). fieldParents ships empty under progressive field tokens.
+     *     4. stageRequirements[sid] (DNF) passes. In current data only L5 (sBeam/sBolt/sBarrage/sFreeze) and P5 (sTraps); any Field_<sid> entry recurses and is skipped under progressive field tokens.
+     * The derived wizard level is no longer a gate (display only, see derivedWizardLevel).
      */
     public class FieldLogicEvaluator {
-
-        // Stages whose Journey location requires ALL 24 skills.
-        public static const ALL_SKILLS_STAGES:Object = { "A4": true };
 
         private var _logger:Logger;
         private var _modName:String;
@@ -301,13 +293,13 @@ package tracker {
          * locations is reachable.  Used by StageTinter (per-frame) and ModButtons.
          *
          * Per-check reachability:
-         *   - Journey: stage tier + WIZLOCK skill gate (+ all 24 skills on A4)
-         *   - Stash:   stage tier + WIZLOCK skill gate + Wizard Stash key item
+         *   - Journey: stage in logic (token + pouch + parent + L5/P5 prereqs)
+         *   - Stash:   stage in logic + Wizard Stash key item
          */
         public function stageHasInLogicMissing(strId:String,
                                                journeyMissing:Boolean,
                                                stashMissing:Boolean):Boolean {
-            // Journey: stage clearable (tier + WIZLOCK / WL gate).
+            // Journey: stage clearable (in logic).
             if (journeyMissing && canCompleteStage(strId))
                 return true;
             // Stash: same clearability PLUS the Wizard Stash Key item
@@ -319,9 +311,7 @@ package tracker {
             return false;
         }
 
-        /** True iff stage is tier-reachable AND its WIZLOCK skill gate is met.
-         *  Mirrors apworld's location access_rule, which applies the same skill
-         *  conditions to Journey and Wizard stash on a given stage. */
+        /** True iff the stage is in logic (see the class header). Mirrors the apworld's Journey access rule, which the stash rule shares (plus its key). */
         public function canCompleteStage(strId:String):Boolean {
             recompute();
             return _inLogicByStrId[strId] == true;
@@ -390,7 +380,7 @@ package tracker {
         }
 
         /** True if at least one stage that has this element can be completed
-         *  (tier + skill gate met).  Mirrors apworld _eval_element_reachable,
+         *  (stage in logic).  Mirrors apworld _eval_element_reachable,
          *  which derives stages from <Pascal>Count fields in
          *  rulesdata_levels.py and requires WIZLOCK skills for completion. */
         public function isElementInLogic(elemName:String):Boolean {
@@ -975,7 +965,7 @@ package tracker {
             return missing;
         }
 
-        /** Player-facing labels for every item-based blocker on a field besides its token and the WL gate, e.g. ["Gempouch (L)", "Beam, Bolt, Barrage, Freeze skills"] or ["Traps skill"].
+        /** Player-facing labels for every item-based blocker on a field besides its token and its vanilla parent, e.g. ["Gempouch (L)", "Beam, Bolt, Barrage, Freeze skills"] or ["Traps skill"].
          *  Covers the WIZLOCK gate (getMissingStageSkills) and the non-Field requirement clauses (L5 needs the four spell skills, P5 needs Traps).
          *  Requirements are DNF, so only the AND-group closest to passing is reported; nothing is reported when any group already passes.
          *  Empty when nothing item-based is missing. */
@@ -1058,20 +1048,6 @@ package tracker {
         // -----------------------------------------------------------------------
         // Recompute
 
-        /**
-         * Recalculate in-logic stages from current item state; write the
-         * result to AV.sessionData.fieldsInLogic. Call after configure() and
-         * after every relevant onItem.
-         *
-         * Mirrors apworld rules.set_rules per-stage gate:
-         *   in-logic iff
-         *     (free stage OR has own field token)
-         *     AND WIZLOCK skill gate met
-         *     AND (no Field_ prereqs in requirements
-         *          OR a free stage appears in prereq list (auto-satisfied)
-         *          OR at least one Field_<sid> prereq token is held)
-         *     AND every non-Field requirement (talismanRow:N etc.) is met.
-         */
         /**
          * Recompute which stages are in logic. Self-guarding on the dirty flag
          * only: the whole result (in-logic set AND derived WL) is a pure
@@ -1317,7 +1293,7 @@ package tracker {
          * plus the per-stage Wizard Stash Key item.
          */
         public function isStashGateMet(strId:String):Boolean {
-            // Stash shares the stage's clearability gate (tier + WIZLOCK / WL)...
+            // Stash shares the stage's clearability gate (in logic)...
             if (!canCompleteStage(strId)) return false;
             // ...AND requires the per-stage Wizard Stash Key item, exactly like
             // the apworld's stash access rule (state.has(stash_key)). The only

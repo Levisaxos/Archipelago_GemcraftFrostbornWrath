@@ -41,7 +41,7 @@ package net {
                 '"game":"GemCraft: Frostborn Wrath",' +
                 '"name":"' + slot + '",' +
                 '"password":"' + password + '",' +
-                '"version":{"major":0,"minor":6,"build":6,"class":"Version"},' +
+                '"version":{"major":0,"minor":6,"build":8,"class":"Version"},' +
                 '"items_handling":7,' +
                 '"tags":[],' +
                 '"uuid":"gcfw-mod"}]';
